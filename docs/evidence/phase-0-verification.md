@@ -97,3 +97,26 @@ STAGED_DIFF_CHECK=PASS
 | Production build | Not Run | The Next.js application is not initialized until Phase 1 |
 
 These `Not Run` results are intentional documentation-gate facts, not passes.
+
+## 5. Initial specification commit
+
+Command:
+
+```powershell
+git commit -m 'docs: add initial Brew ni Cat Connect specification'
+git show -s --format='HASH=%H%nAUTHOR=%an <%ae>%nSUBJECT=%s' HEAD
+```
+
+Relevant literal output (individual `create mode` lines omitted):
+
+```text
+[main (root-commit) b3981d3] docs: add initial Brew ni Cat Connect specification
+21 files changed, 3153 insertions(+)
+HASH=b3981d3f8cc839d316a11722ee9a6adc9e8b4e60
+AUTHOR=Rodnee Glen A. Martin <s.rgamartin@usm.edu.ph>
+SUBJECT=docs: add initial Brew ni Cat Connect specification
+```
+
+**Exit status:** `0`
+
+The author is the user's preconfigured Git identity; no co-author trailer was added.

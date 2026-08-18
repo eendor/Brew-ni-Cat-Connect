@@ -27,5 +27,5 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Issues encountered:** The directory was not a Git repository; the target GitHub repository did not exist; pnpm, Yarn, Bun, Deno, Docker, Supabase CLI, Gradle, and standalone project lint/test tools were not installed.\
 **Resolution:** Initialized the required repository, created the target as private through authenticated GitHub CLI, and selected npm using the available Node.js toolchain. Optional/future tools will be installed only in their justified phase.\
 **Documentation updated:** All initial Phase 0 documents listed in the documentation gate.\
-**Git commit:** Pending at the time of this pre-commit log entry; intended subject: `docs: add initial Brew ni Cat Connect specification`. The completed commit will be identified in repository history and the milestone verification follow-up.\
+**Git commit:** `b3981d3f8cc839d316a11722ee9a6adc9e8b4e60` — `docs: add initial Brew ni Cat Connect specification`.\
 **Next action:** Begin Phase 1 in a separate milestone by scaffolding the verified Next.js/TypeScript foundation, then configure formatting, linting, tests, type checking, build validation, and the first responsive shell.
