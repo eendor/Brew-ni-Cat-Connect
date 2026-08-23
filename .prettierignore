@@ -1,0 +1,13 @@
+node_modules/
+.next/
+out/
+dist/
+build/
+coverage/
+playwright-report/
+test-results/
+blob-report/
+package-lock.json
+
+# Preserve the reviewed Phase 0 Markdown layout without a formatting-only rewrite.
+docs/**/*.md

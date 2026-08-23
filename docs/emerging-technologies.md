@@ -1,9 +1,9 @@
 # Brew ni Cat Connect — Emerging Technologies
 
 **Version:** 0.1 Draft\
-**Date:** 2026-08-18\
-**Document status:** Planning baseline\
-**Implementation status:** All technologies in this document are planned or under evaluation; none is represented here as integrated, deployed, or tested.
+**Date:** 2026-08-23\
+**Document status:** Living technology assessment\
+**Implementation status:** The modern web foundation is implemented and locally tested in Phase 1. Supabase, realtime, Messenger/AI, Android, and POS integration remain planned, candidate, or deferred as marked.
 
 ## 1. Purpose
 
@@ -35,7 +35,7 @@ Each technology must demonstrate:
 
 | Technology | Status | Genuine purpose | Primary limitation | Introduction gate |
 |---|---|---|---|---|
-| Next.js App Router + React + TypeScript | Selected for Phase 1 foundation | Responsive, discoverable business site and customer ordering UI with shared typed web code | Framework/runtime complexity and dependency updates | Initial specification accepted; lint, types, tests, and build configured |
+| Next.js App Router + React + TypeScript | **Implemented and locally verified for the Phase 1 foundation** | Responsive, discoverable business site and later customer ordering UI with shared typed web code | Framework/runtime complexity and dependency updates | Phase 1 shell, lint, types, component/browser tests, and production build verified; feature data and backend remain later work |
 | Supabase cloud platform | Planned for Phase 4 | Managed PostgreSQL, authentication, controlled data access, and optional realtime/storage/server functions | Vendor/platform coupling; correct RLS and key separation require care | Approved data model, threat review, environment strategy, RLS tests |
 | Realtime order updates | Planned after ordering/backend | Timely customer-visible order status across supported channels | Connectivity, ordering, and delivery are not guaranteed; adds subscription cost/complexity | Canonical order-state model and authorization implemented first |
 | Secured Messenger webhook | Deferred to Phase 7 | Meet customers on an existing channel for menu questions, discovery, guided ordering, and tracking | Platform policies, review, message windows, identity linking, webhook security | Stable shared backend and Meta configuration/approval |
@@ -70,6 +70,20 @@ It does not replace the existing POS and must not connect to POS tables or crede
 - Avoid shipping unnecessary JavaScript; measure mobile performance.
 - Treat framework caching as an explicit design decision for availability-sensitive menu data.
 - Use accessible semantic HTML before custom interaction patterns.
+
+### 4.4 Phase 1 as-built state
+
+Phase 1 establishes the web technology boundary without introducing customer-facing business functions prematurely. The repository now contains:
+
+- a Next.js 16.3.2 App Router application at the repository root;
+- React 19.2.8 layout and accessible mobile-navigation components;
+- strict TypeScript configuration and a typed site-navigation configuration;
+- Tailwind CSS 4.3.3 with project-owned warm visual tokens and reduced-motion/focus foundations;
+- route-level loading, error, and not-found experiences;
+- Vitest/Testing Library component checks and Playwright Chromium smoke/responsive checks; and
+- lightweight GitHub Actions configuration for dependency audit, formatting, specification-document validation, lint, types, unit/component tests, and production build.
+
+This increment makes no external API request and stores no menu, order, authentication, loyalty, Messenger, Android, or POS data. Static placeholders use the required owner-confirmation marker where business facts are unknown. The local verification confirms the foundation, not any later emerging-technology integration.
 
 ## 5. Cloud computing with Supabase
 

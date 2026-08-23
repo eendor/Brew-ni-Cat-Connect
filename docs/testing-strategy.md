@@ -2,20 +2,26 @@
 
 **Project:** Brew ni Cat Connect
 **Version:** 0.1 Draft
-**Date:** 2026-08-18
-**Phase:** Phase 0 — Planning and Specification
-**Document status:** Draft; test tooling and application code are not yet initialized.
+**Original date:** 2026-08-18
+**Last updated:** 2026-08-23
+**Phase:** Phase 0 — Planning and Specification baseline, with Phase 1 implementation addendum
+**Document status:** Living draft; Phase 1 foundation tooling and tests are implemented, while later-phase test layers remain planned.
 
 ## 1. Current Test Status
 
-As of this draft:
+The original Phase 0 baseline contained no application runtime or test result. Phase 1 now provides the first implemented test baseline:
 
-- No application test runner is configured.
-- No Brew ni Cat Connect unit, component, integration, end-to-end, performance, accessibility, or security test has been executed.
-- No passing test count, coverage result, build result, or continuous-integration result exists yet.
-- Planned commands and thresholds below are targets for Phase 1 and later, not recorded results.
+- Vitest, Testing Library, `jest-dom`, and a JSDOM environment are configured for unit/component tests.
+- Playwright is configured for Chromium smoke tests against a production build.
+- Four unit/component tests in two files and five Playwright tests passed locally on 2026-08-23.
+- The Playwright responsive matrix covered widths of 320, 375, 768, 1024, and 1440 CSS pixels without horizontal document overflow.
+- Lint, explicit type checking, production build, and the dependency audit exited successfully.
+- A clean temporary-directory `npm ci` added 477 packages, audited 478 packages, and found zero vulnerabilities using only `package.json` and `package-lock.json`; `npm ci --dry-run` also exited successfully.
+- The coverage run reported 96% statements, 88.88% branches, 100% functions, and 95.65% lines. This report covers only source units imported by the current foundation tests; it is not whole-application coverage.
+- Four review screenshots were captured at mobile, tablet, and desktop widths. The developer performed a visual inspection, but teammate manual QA and peer review remain `Not Run` until Renier or another named teammate records them.
+- GitHub Actions is configured for format, lint, typecheck, unit/component test, and production-build validation. A remote workflow result is not claimed until the feature branch/PR workflow has completed.
 
-Test results must be reported only from an actual execution against an identified commit and environment.
+The detailed cases and reproducible local evidence are in `docs/test-cases.md` and `docs/evidence/phase-1-verification.md`. Test results remain valid only for the identified working tree/commit and environment.
 
 ## 2. Objectives
 
@@ -194,6 +200,8 @@ Coverage measures test reach, not correctness. Initial proposed thresholds, to b
 
 Thresholds may be adjusted only through an evidence-based decision; they must not be lowered merely to merge a change.
 
+The 2026-08-23 Phase 1 coverage command reported 96% statements, 88.88% branches, 100% functions, and 95.65% lines for the source files imported by the two current test files. Vitest is not yet configured to include every `src/` file in the denominator, so this is useful targeted evidence rather than proof that the whole application meets the proposed threshold. Whole-source inclusion and an enforced coverage gate will be introduced only after the codebase has enough testable application logic to make the metric representative.
+
 Before merging a relevant pull request, all applicable checks must pass on the reviewed commit:
 
 1. Format check.
@@ -205,12 +213,13 @@ Before merging a relevant pull request, all applicable checks must pass on the r
 7. Security/secret/dependency checks when configured.
 8. Required manual accessibility/responsive evidence for UI work.
 
-## 15. Planned Commands
+## 15. Implemented Commands
 
-Phase 1 will expose stable package scripts. Proposed command names are:
+Phase 1 exposes these stable package scripts:
 
 ```text
 npm run format:check
+npm run audit
 npm run lint
 npm run typecheck
 npm run test
@@ -219,25 +228,28 @@ npm run test:e2e
 npm run build
 ```
 
-CI must call project scripts rather than duplicate hidden command variants. Any necessary service startup, migration, seed, or environment step must be scripted and documented. None of these commands has been executed for application code during Phase 0.
+CI calls project scripts rather than duplicating hidden command variants. The Phase 1 lint, typecheck, test, coverage, E2E, and build commands were executed locally on 2026-08-23 and exited `0`; the literal summaries are recorded in `docs/evidence/phase-1-verification.md`. A lockfile-only clean-install reproduction and `npm ci --dry-run` also exited `0`. Formatting remains a required final/CI check and must be reported from its own completed run. The Phase 0 statement that no application command had run remains a historical fact for that completed phase.
 
 ## 16. Continuous Integration Strategy
 
-When GitHub CI is configured, the planned pull-request pipeline will:
+Phase 1 implements `.github/workflows/ci.yml` for pushes to `main` and `feat/**` branches and pull requests targeting `main`. The job selects Python 3.14, Node.js 24, and the manifest-pinned npm 12.0.2, then runs:
 
-1. Check out the exact commit and install the pinned runtime/dependencies from the lockfile.
-2. Run format, lint, and type checks.
-3. Run unit, component, and isolated integration tests with coverage.
-4. Build the production application.
-5. Run relevant Playwright tests against the built application.
-6. Run configured secret and dependency checks.
-7. Upload limited failure evidence and test reports with a documented retention period.
+1. `npm ci`
+2. `npm run audit`
+3. `npm run format:check`
+4. `python3 scripts/validate_phase0_docs.py`
+5. `npm run lint`
+6. `npm run typecheck`
+7. `npm run test`
+8. `npm run build`
 
-Protected secrets must not be made available to untrusted pull-request code. Production deployment remains a separate environment-gated job. CI status is not considered evidence until the workflow exists and a linked run has completed.
+Playwright is intentionally omitted from the initial hosted workflow to avoid installing and caching browser binaries in this lightweight Phase 1 CI job. `npm run test:e2e` remains a required local pre-review check, and its passing Chromium result is recorded in the Phase 1 verification evidence. The team can add browser CI when critical customer workflows make the added execution cost proportionate.
+
+The workflow grants only read access to repository contents, has a 15-minute timeout, and cancels superseded runs for the same workflow/ref. No protected application credentials are required because Phase 1 has no backend or external integration. Production deployment remains separate and unconfigured. A local result is not represented as a GitHub Actions result; a linked remote run must complete before CI is marked passed.
 
 ## 17. Test Case and Evidence Records
 
-Detailed cases will be maintained in `docs/test-cases.md` with stable IDs such as `TC-001` and columns:
+Detailed cases are maintained in `docs/test-cases.md`. Phase 1 uses stable IDs `TC-P1-001` through `TC-P1-009` and the columns:
 
 | ID | Requirement ID(s) | Module | Scenario | Preconditions | Input | Expected result | Actual result | Status | Evidence |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -267,7 +279,7 @@ Evidence path or run link:
 Related bugs:
 ```
 
-Where practical, store compact text reports under a dated documentation evidence location. Large traces, videos, and screenshots should use CI/GitHub artifacts or approved storage with a stable link and retention note. Do not commit secrets, real customer data, or excessive binary evidence.
+The Phase 1 command record is stored at `docs/evidence/phase-1-verification.md`, and its compact responsive screenshots are stored under `docs/evidence/phase-1/screenshots/`. Large traces, videos, and future repeated evidence should use CI/GitHub artifacts or approved storage with a stable link and retention note. Do not commit secrets, real customer data, or excessive binary evidence.
 
 ## 18. Defect, Regression, and Flaky-Test Handling
 
@@ -287,7 +299,7 @@ Before production launch, Brew ni Cat's authorized business representative will 
 | Phase | Minimum testing outcome before completion |
 | --- | --- |
 | Phase 0 — Specification | Strategy reviewed for consistency; all test results remain truthfully `Not Run` |
-| Phase 1 — Foundation | Tooling configured; sample behavior test; lint, typecheck, tests, and production build executed; responsive shell manually checked |
+| Phase 1 — Foundation | Developer implementation checks complete: tooling configured; 4 unit/component and 5 Chromium E2E tests passed; lint, typecheck, dependency audit, and production build exited 0; developer responsive inspection recorded. Teammate QA and pull-request review remain pending. |
 | Phase 2 — Public showcase | Public navigation/content states, responsive behavior, accessibility, and media performance checked |
 | Phase 3 — Menu/ordering | Critical calculation, product-configuration, cart, checkout-form/domain validation, and pre-submission journey cases pass; no persisted order is claimed before the backend exists |
 | Phase 4 — Backend/accounts | Migration, auth, RLS cross-user denial, server validation, transaction, idempotent order creation, and recovery cases pass in isolation |
@@ -300,4 +312,4 @@ Before production launch, Brew ni Cat's authorized business representative will 
 
 ## 21. Review and Evolution
 
-This strategy is reviewed whenever requirements, architecture, supported clients, data handling, POS integration, or a third-party service changes. Material changes require an entry in `docs/decisions.md`. Actual commands, versions, coverage exclusions, browser targets, and CI links will replace proposed details as the implementation provides evidence.
+This strategy is reviewed whenever requirements, architecture, supported clients, data handling, POS integration, or a third-party service changes. Material changes require an entry in `docs/decisions.md`. The Phase 1 addendum records actual local commands, current coverage scope, Chromium target, and CI boundary without rewriting the Phase 0 planning history. Future CI links and broader browser/manual results replace `Not Run` entries only after those checks occur.

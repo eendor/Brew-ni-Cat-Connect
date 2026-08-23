@@ -1,9 +1,9 @@
 # Brew ni Cat Connect — System Architecture
 
 **Version:** 0.1 Draft\
-**Date:** 2026-08-18\
-**Document status:** Proposed architecture baseline\
-**Implementation status:** Planned; this diagram and component inventory do not claim deployed integrations or application functionality.
+**Date:** 2026-08-23\
+**Document status:** Living architecture baseline\
+**Implementation status:** The Phase 1 public web foundation is implemented and locally verified. Backend, customer-data, Supabase, Messenger, Android, and POS components remain planned or deferred as marked.
 
 ## 1. Architecture objective
 
@@ -47,7 +47,23 @@ flowchart TB
     Adapter <--> POS
 ```
 
-**Current reality:** the application architecture is a specification. Supabase, Messenger, Android, and POS connections are later-phase work. Phase 1 will establish only the selected web application foundation after the documentation gate.
+**Current reality:** Phase 1 implements only the public web foundation: a Next.js App Router shell, reusable React layout components, project-owned Tailwind tokens, typed configuration, placeholder public routes, framework loading/error/not-found states, automated tests, and validation CI. It has no backend, database, authentication, ordering service, customer data, Supabase, Messenger, Android, or POS connection. Those components remain later-phase work.
+
+### 2.1 Phase 1 as-built boundary
+
+```mermaid
+flowchart LR
+    Browser[Customer browser] --> Next[Next.js App Router public shell]
+    Next --> Routes[Static public routes\n/ /menu /about /gallery /contact]
+    Next --> Components[React layout/UI components\nheader, mobile navigation, footer]
+    Components --> Tokens[Tailwind CSS + project-owned tokens]
+
+    Vitest[Vitest + Testing Library] --> Components
+    Playwright[Playwright Chromium] --> Next
+    CI[GitHub Actions validation] --> Checks[audit, format, docs, lint, type-check, unit tests, build]
+```
+
+The only client-side state in this increment controls the accessible mobile navigation. The routes render development placeholders and confirmed project identity only. There are no effectful business operations, cookies introduced by application code, customer records, API routes, server actions, or external-service calls.
 
 ## 3. Proposed container and trust-boundary view
 
@@ -107,9 +123,11 @@ Arrows show logical data flow, not a final deployment topology. Direct client-to
 
 | Component | Responsibility | Status in Version 0.1 |
 |---|---|---|
-| Next.js App Router web application | Public business content, responsive customer UI, route boundaries, later authenticated ordering screens | Selected; not initialized in this documentation milestone |
-| React component layer | Accessible, reusable presentation and interaction components | Planned for Phase 1 |
-| TypeScript domain/contracts | Compile-time types for UI, validation, domain results, and integration boundaries | Planned for Phase 1 onward |
+| Next.js App Router web application | Public business content, responsive customer UI, route boundaries, later authenticated ordering screens | **Implemented and locally verified for the Phase 1 shell** using Next.js 16.3.2 |
+| React component layer | Accessible, reusable presentation and interaction components | **Implemented for Phase 1:** root shell, header, mobile navigation, footer, container, and placeholder-page components |
+| TypeScript types/configuration | Compile-time types for UI, configuration, later domain results, and integration boundaries | **Implemented for the Phase 1 UI/configuration surface**; domain and integration contracts remain later work |
+| Tailwind CSS presentation layer | Project-owned warm design tokens, responsive layout, focus styles, and reduced-motion baseline | **Implemented for Phase 1** using Tailwind CSS 4.3.3 |
+| Automated verification boundary | Component behavior, route smoke checks, representative-width overflow checks, type/lint/build gates | **Implemented for Phase 1:** Vitest/Testing Library, Playwright, and GitHub Actions configuration |
 | Backend-for-frontend/application service layer | Authenticate/authorize, validate requests, calculate authoritative outcomes, coordinate transactions, expose channel-neutral use cases | Proposed; interfaces evolve with requirements |
 | Supabase Auth | Customer identity and session lifecycle | Selected for Phase 4; sign-in methods and provider configuration remain undecided |
 | PostgreSQL | Canonical customer-facing data, constraints, order snapshots/history, loyalty ledger | Planned for Phase 4; schema not yet approved |
@@ -299,21 +317,25 @@ Each environment should have separate credentials and, where practical, separate
 
 Database schema changes use reviewed, version-controlled migrations with a forward/rollback or corrective plan appropriate to the change. Application releases must remain compatible across staged schema/client rollout.
 
-## 13. Proposed repository boundaries
+## 13. Repository boundaries
 
-The exact scaffold will be decided during Phase 1. A proportional target is:
+The Phase 1 as-built structure is intentionally proportional to implemented scope:
 
 ```text
 src/
-  app/                 # Next.js routes, layouts, loading/error boundaries
-  components/          # reusable accessible UI
-  features/            # vertical feature modules
-  domain/              # framework-light business rules and types
-  server/              # server-only use cases, adapters, authorization
-  lib/                 # narrow shared utilities/configuration
-tests/                  # broader integration/e2e support as selected
+  app/                 # App Router layout, public routes, loading/error/not-found states
+  components/
+    layout/            # site header, mobile navigation, footer
+    ui/                # narrow reusable presentation components
+  config/              # typed site navigation/project configuration
+tests/
+  unit/                # Vitest + Testing Library component/page behavior
+  e2e/                 # Playwright route, mobile-menu, 404, and width smoke tests
+.github/workflows/      # lightweight pull-request/push validation
 docs/                   # version-controlled specification and evidence
 ```
+
+`features/`, domain, server, database, and integration directories are deliberately absent because Phase 1 has no implemented feature domain or backend. They will be created only when a justified requirement needs them.
 
 Rules:
 
@@ -363,7 +385,7 @@ Before each later phase begins:
 7. Review database migrations/RLS/integration contracts where applicable.
 8. Update development log and evidence without marking unexecuted work as tested.
 
-The architecture becomes an **as-built** document only as components are implemented and verified; until then the relevant entries remain **Planned** or **Deferred**.
+The Phase 1 web-foundation entries in this document are now **as-built** and locally verified. Every backend or additional channel entry remains **Planned** or **Deferred** until its implementation and evidence exist.
 
 ## 16. Requirements traceability
 

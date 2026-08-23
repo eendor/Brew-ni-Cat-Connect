@@ -2,13 +2,13 @@
 
 **Project:** Brew ni Cat Connect
 **Version:** 0.1 Draft
-**Date:** 2026-08-18
-**Phase:** Phase 0 — Planning and Specification
-**Document status:** Draft; controls in this document are planned unless explicitly marked otherwise.
+**Date:** 2026-08-23
+**Phase:** Phase 1 — Project Foundation
+**Document status:** Living baseline; Phase 1 controls are current only where explicitly marked, and later-feature controls remain planned.
 
 ## 1. Current State and Purpose
 
-Brew ni Cat Connect is currently at the specification stage. No customer-facing application, production database, authentication system, payment integration, Messenger integration, Android application, or POS integration is represented as implemented by this document. No production customer data should be introduced during Phase 0.
+Brew ni Cat Connect now has a locally verified customer-facing **application shell** with public placeholder routes. Phase 1 has no production deployment, backend, database, authentication, order processing, loyalty, payment, analytics, Messenger, Android, or POS integration. Application code collects no customer personal data, sets no application cookies, and calls no external business service. No production customer data should be introduced during Phase 1.
 
 This document establishes an engineering baseline for protecting customer and business information across the future website, shared backend, Android client, Messenger channel, and existing POS integration. It is not a legal opinion or a completed compliance assessment. The business must designate an accountable privacy role and obtain qualified advice when a legal interpretation or formal compliance determination is required.
 
@@ -18,6 +18,19 @@ Status terms used here are:
 - **Planned:** approved direction that still requires implementation and verification.
 - **Proposed:** subject to an architecture or business decision.
 - **Deferred:** intentionally outside the current phase.
+
+### 1.1 Phase 1 verified control state
+
+| Control area | Current Phase 1 state | Evidence / limitation |
+| --- | --- | --- |
+| Secrets | `.env.example` contains variable names with empty values only; `.env`, `.env.*`, and generated outputs are ignored while `.env.example` is explicitly allowed; a focused scan of 62 text files found zero credential-pattern findings and zero non-empty example values | No Supabase, Meta, Android, POS, payment, or other runtime credential is configured; this local pattern check does not replace later managed secret scanning |
+| Public surface | Only `/`, `/menu`, `/about`, `/gallery`, `/contact`, framework error/loading, and not-found UI exist | No API route, server action, form submission, account, database, or effectful business operation exists |
+| Data minimization | UI uses project identity, development placeholder copy, and the owner-confirmation TODO marker | No customer fixture, testimonial, price, address, contact detail, hours, promotion, or production record is embedded |
+| Framework baseline | Strict TypeScript, React strict mode, semantic landmarks, visible focus behavior, and `poweredByHeader: false` are configured | CSP, deployment HTTPS, rate limiting, authentication controls, and production logging must be designed for the phase that introduces those surfaces |
+| Dependencies | Exact direct versions are locked; npm is configured to deny the optional `unrs-resolver` native-fallback install script; a clean temporary-directory `npm ci` added 477 packages, audited 478 packages, reported 0 vulnerabilities, and produced no blocked-script warning | `npm audit --audit-level=high` also returned `found 0 vulnerabilities` with exit status 0 on 2026-08-23; point-in-time results do not replace continuing review |
+| External integrations | None | Supabase, Messenger/AI, Android, and POS controls below remain planned or deferred |
+
+The automated accessibility and route tests verify selected shell behavior only. Renier's independent manual QA and pull-request review remain pending and must not be represented as completed.
 
 ## 2. Security and Privacy Objectives
 
@@ -124,7 +137,7 @@ Threat modeling will be revisited for every material architecture change. Initia
 
 ### Supabase Row Level Security (planned for Phase 4)
 
-RLS is a planned mandatory control for exposed Supabase tables, not an implemented control in Phase 0.
+RLS is a planned mandatory control for exposed Supabase tables, not an implemented control in Phase 1. No Supabase table or Data API is connected in the current application.
 
 1. Enable RLS before a table containing non-public or user-owned data is reachable through the Data API.
 2. Create explicit policies for `SELECT`, `INSERT`, `UPDATE`, and `DELETE`; do not rely on a broad all-operations policy.
@@ -152,7 +165,7 @@ RLS is a planned mandatory control for exposed Supabase tables, not an implement
 ## 9. Secrets and Environment Separation
 
 - Real API keys, service-role keys, passwords, tokens, webhook secrets, private certificates, and production connection strings must never enter Git, examples, screenshots, logs, test fixtures, or client bundles.
-- Commit `.env.example` with names and non-secret descriptions/placeholders only.
+- **Current in Phase 1:** `.env.example` contains only documented variable names with empty values; commit names and non-secret descriptions/placeholders only in later updates.
 - Maintain separate local, preview/test, and production credentials and databases.
 - Use deployment-platform secret storage and restrict access by role.
 - Rotate a credential immediately when exposure is suspected and document the incident without reproducing the secret.
@@ -207,7 +220,7 @@ No production release should proceed until evidence confirms:
 - Backup and restore responsibilities are documented and a restore exercise is recorded.
 - Privacy notice, retention schedule, request handling, incident contacts, and vendor reviews are approved by the accountable business role.
 
-Evidence must include the exact command or procedure, date, commit/deployment identifier, environment, literal result or attached record, and reviewer. Phase 0 has no executed security-test result.
+Evidence must include the exact command or procedure, date, commit/deployment identifier, environment, literal result or attached record, and reviewer. Phase 1 has a successful local dependency audit and public-shell validation, but no authentication, authorization, RLS, backend, integration, or production-environment security test applies yet.
 
 ## 14. Open Decisions and Owner Inputs
 
