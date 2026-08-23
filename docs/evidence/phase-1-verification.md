@@ -340,7 +340,10 @@ This is developer verification, not Renier's independent QA, accessibility appro
 
 `.github/workflows/ci.yml` is configured to select Python 3.14 and npm 12.0.2, then run clean install, dependency audit, format check, specification-document validation, lint, typecheck, unit/component tests, and the production build for relevant pushes and pull requests. Playwright is intentionally omitted from this initial hosted workflow to avoid browser installation overhead; local E2E remains required and passed above.
 
-**Remote workflow result at the time of this record:** Not Run / pending feature-branch push and pull-request workflow. A GitHub Actions pass must be linked separately after it actually completes.
+The first push and pull-request runs for pre-documentation head `193d69c8f17f6d5c91556789bb3fa98f2563e9fc` failed at `npm run format:check` because the Phase 0 README had not yet received the local Phase 1 formatting/documentation commit. No test or build result was hidden. After `fb3e4b82ed7be085d722f6974c4874f9b54a42d4` added the formatted README and evidence, both hosted runs completed successfully:
+
+- [Push workflow run 32613899798](https://github.com/eendor/Brew-ni-Cat-Connect/actions/runs/32613899798) — success
+- [Pull-request workflow run 32613901697](https://github.com/eendor/Brew-ni-Cat-Connect/actions/runs/32613901697) — success
 
 ## 9. Summary
 
@@ -364,6 +367,6 @@ The focused `.gitignore` change/rollback fixture is preserved under `docs/eviden
 | Credential-pattern review | 62 text files scanned; 0 credential patterns; 0 non-empty example values | `0` |
 | Teammate manual QA | Awaiting Renier | Not Run |
 | Peer code review | Awaiting reviewer on open PR | Not Run |
-| GitHub Actions | Awaiting remote workflow run | Not Run at record time |
+| GitHub Actions | Push and pull-request workflows passed on `fb3e4b8` | 2 successful; 0 failing |
 
 No Phase 2 feature, customer data, real business content, backend, Supabase, Messenger, Android, or POS integration was exercised or claimed by this record.
