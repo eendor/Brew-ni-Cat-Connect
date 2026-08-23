@@ -1,0 +1,40 @@
+Brew ni Cat Connect Phase 1 Tool Transaction Verification
+Date: 2026-08-23
+
+Changed branch/field: feat/project-foundation / .gitignore generated TypeScript, test, and lint artifact exclusions (next-env.d.ts, *.tsbuildinfo, *.lcov, .eslintcache)
+Original source: Git object main:.gitignore
+Original SHA256: e8a08878180212d997c45f2bd2cdfb42f14107950be81bc6193bf37957b9f937
+Modified SHA256: 7bf04c8ca0df0610db91010e42f7c104040be66c41f8600187c23f34f776e4b6
+
+Four artifacts:
+1. D:\Documents\BrewniCat\docs\evidence\phase-1\transaction\MODIFIED_FILE
+2. D:\Documents\BrewniCat\docs\evidence\phase-1\transaction\DIFF_FILE
+3. D:\Documents\BrewniCat\docs\evidence\phase-1\transaction\VERIFICATION.txt
+4. D:\Documents\BrewniCat\docs\evidence\phase-1\transaction\ROLLBACK.sh
+
+BASELINE
+Command: python -c "from pathlib import Path; import sys; p=Path(sys.argv[1]); required=['next-env.d.ts','*.tsbuildinfo','*.lcov','.eslintcache']; text=p.read_text(encoding='utf-8-sig'); missing=[item for item in required if item not in text]; print('MISSING: ' + ', '.join(missing) if missing else 'PASS: all Phase 1 generated-artifact ignores present'); sys.exit(1 if missing else 0)" "docs/evidence/phase-1/transaction/ROLLBACK_TEST_COPY"
+Input: ROLLBACK_TEST_COPY containing the exact bytes from main:.gitignore (SHA256 e8a08878180212d997c45f2bd2cdfb42f14107950be81bc6193bf37957b9f937)
+Literal output: MISSING: next-env.d.ts, *.tsbuildinfo, *.lcov, .eslintcache
+Exit status: 1 (expected baseline result)
+
+MODIFIED
+Command: python -c "from pathlib import Path; import sys; p=Path(sys.argv[1]); required=['next-env.d.ts','*.tsbuildinfo','*.lcov','.eslintcache']; text=p.read_text(encoding='utf-8-sig'); missing=[item for item in required if item not in text]; print('MISSING: ' + ', '.join(missing) if missing else 'PASS: all Phase 1 generated-artifact ignores present'); sys.exit(1 if missing else 0)" "docs/evidence/phase-1/transaction/MODIFIED_FILE"
+Input: MODIFIED_FILE copied from feat/project-foundation:.gitignore (SHA256 7bf04c8ca0df0610db91010e42f7c104040be66c41f8600187c23f34f776e4b6)
+Literal output: PASS: all Phase 1 generated-artifact ignores present
+Exit status: 0
+
+ROLLBACK
+Command: & 'C:\Tools\Git\bin\bash.exe' 'docs/evidence/phase-1/transaction/ROLLBACK.sh' 'docs/evidence/phase-1/transaction/ROLLBACK_TEST_COPY'
+Input: A separate ROLLBACK_TEST_COPY initialized from MODIFIED_FILE; MODIFIED_FILE itself was not rolled back.
+Literal output:
+ROLLBACK: restored main:.gitignore fixture
+SHA256: e8a08878180212d997c45f2bd2cdfb42f14107950be81bc6193bf37957b9f937
+Exit status: 0
+
+RESTORED BEHAVIOR
+Command: python -c "from pathlib import Path; import sys; p=Path(sys.argv[1]); required=['next-env.d.ts','*.tsbuildinfo','*.lcov','.eslintcache']; text=p.read_text(encoding='utf-8-sig'); missing=[item for item in required if item not in text]; print('MISSING: ' + ', '.join(missing) if missing else 'PASS: all Phase 1 generated-artifact ignores present'); sys.exit(1 if missing else 0)" "docs/evidence/phase-1/transaction/ROLLBACK_TEST_COPY"
+Input: The separate copy after ROLLBACK.sh restored main:.gitignore.
+Literal output: MISSING: next-env.d.ts, *.tsbuildinfo, *.lcov, .eslintcache
+Exit status: 1 (expected restored baseline behavior)
+Restored status: SHA256 matches the original; baseline behavior is restored on the test copy. MODIFIED_FILE remains changed and passes the modified test.

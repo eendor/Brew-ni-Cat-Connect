@@ -1,7 +1,7 @@
 # Architecture Decision Records
 
 **Document version:** 0.1 Draft\
-**Last updated:** 2026-08-18
+**Last updated:** 2026-08-23
 
 Statuses used here are `Proposed`, `Accepted`, `Superseded`, and `Deferred`. Acceptance records a direction; it does not claim implementation.
 
@@ -11,7 +11,7 @@ Statuses used here are `Proposed`, `Accepted`, `Superseded`, and `Deferred`. Acc
 
 **Decision:** Use Next.js App Router, React, and TypeScript as the Phase 1 web foundation, with Tailwind CSS and project-owned design tokens for styling.\
 **Date:** 2026-08-18\
-**Status:** Accepted; implementation planned for Phase 1\
+**Status:** Accepted and implemented for the Phase 1 foundation\
 **Context:** The public site needs mobile-first usability, accessible interactions, strong visual presentation, discoverable public content, interactive ordering, and later server-only integration endpoints. The academic project also needs maintainable typing, testing, and deployment workflows.\
 **Options considered:**
 
@@ -22,6 +22,8 @@ Statuses used here are `Proposed`, `Accepted`, `Superseded`, and `Deferred`. Acc
 **Chosen approach:** Option 3, with Tailwind constrained by semantic components and design tokens rather than one-off styling.\
 **Reason:** It provides a coherent path from public website to validated customer flows without adding a separate API server before requirements justify one.\
 **Consequences:** The team must understand server/client component boundaries, prevent secrets from entering client bundles, verify version compatibility, monitor bundle performance, and avoid coupling domain logic to framework components.
+
+**Implementation note (2026-08-23):** The repository-root application uses Next.js 16.3.2, React 19.2.8, TypeScript 5.9.3 in strict mode, and Tailwind CSS 4.3.3. The implemented scope is the responsive public shell and placeholder routes only; this acceptance does not imply ordering, backend, authentication, or integration functionality.
 
 ---
 
@@ -87,3 +89,16 @@ Statuses used here are `Proposed`, `Accepted`, `Superseded`, and `Deferred`. Acc
 **Chosen approach:** Private GitHub repository `eendor/Brew-ni-Cat-Connect`, with later visibility review.\
 **Reason:** It enables remote history and collaboration without prematurely publishing client-related work.\
 **Consequences:** Contributors need authorized GitHub access. Real reviews must identify their reviewer and findings; automated or fictitious review evidence is prohibited.
+
+---
+
+## ADR-007 — Phase 1 automated verification boundary
+
+**Decision:** Use Vitest with Testing Library for unit/component behavior, Playwright Chromium for local end-to-end smoke and responsive-width checks, and a lightweight GitHub Actions workflow for dependency audit, formatting, specification-document validation, linting, type checking, unit/component tests, and the production build.\
+**Date:** 2026-08-23\
+**Status:** Accepted and implemented for Phase 1\
+**Context:** The foundation needs fast developer feedback, real browser coverage for responsive navigation and routes, and reproducible pull-request gates. Installing browser binaries in every initial CI run adds material time and network weight before the application has transactional flows.\
+**Options considered:** Framework checks only; one browser-focused test tool for every level; Vitest plus Playwright locally and in CI; Vitest plus Playwright locally with lightweight CI checks.\
+**Chosen approach:** Keep unit/component tests in the DOM-focused Vitest suite, run the five Phase 1 browser smoke tests locally against the production build, and omit Playwright browser installation from the initial CI workflow while retaining it as a required local release check. Pin Node.js 24 and npm 12.0.2 in CI so its install-script policy matches the recorded local toolchain.\
+**Reason:** The split provides quick component feedback and genuine browser evidence without making the first CI gate disproportionately heavy. It also keeps the choice reversible when browser CI provides greater value in a later phase.\
+**Consequences:** Contributors must install the Playwright Chromium binary before the local E2E command. CI does not yet independently prove browser behavior, so the recorded local Playwright result and later manual QA remain required. Reassess browser execution in CI when ordering, authentication, or other critical end-to-end paths are introduced.
