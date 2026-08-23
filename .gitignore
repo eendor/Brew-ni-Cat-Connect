@@ -7,11 +7,14 @@ out/
 dist/
 build/
 coverage/
+next-env.d.ts
+*.tsbuildinfo
 
 # Test artifacts
 playwright-report/
 test-results/
 blob-report/
+*.lcov
 
 # Environment variables and secrets
 .env
@@ -34,6 +37,7 @@ Thumbs.db
 # Local tooling
 .vercel/
 .supabase/
+.eslintcache
 
 # Python helper artifacts
 __pycache__/
