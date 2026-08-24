@@ -117,10 +117,10 @@ This log records completed work and observed evidence. Planned work is explicitl
 
 ## 2026-08-24 — Phase 2 Documentation & Business Content Register Setup
 
-**Date:** 2026-08-24  
-**Phase:** Phase 2 — Production Business Content  
-**Task:** Establish Phase 2 documentation structure, content status register, and verification tracking.  
-**Summary:** Updated core project documentation (`README.md`) to reflect Phase 1 merge status and mark Phase 2 as active. Created `docs/business-content-register.md` to establish Supabase as the source of truth for menu items and pricing while tracking provisional copy needing store owner confirmation. Initialized `docs/evidence/phase-2-verification.md` and captured visual homepage evidence for QA tracking.  
+**Date:** 2026-08-24
+**Phase:** Phase 2 — Production Business Content
+**Task:** Establish Phase 2 documentation structure, content status register, and verification tracking.
+**Summary:** Updated core project documentation (`README.md`) to reflect Phase 1 merge status and mark Phase 2 as active. Created `docs/business-content-register.md` to establish Supabase as the source of truth for menu items and pricing while tracking provisional copy needing store owner confirmation. Initialized `docs/evidence/phase-2-verification.md` and captured visual homepage evidence for QA tracking.
 **Changes:**
 
 - created `docs/business-content-register.md` specifying Supabase single source of truth policy and status register table;
@@ -128,7 +128,7 @@ This log records completed work and observed evidence. Planned work is explicitl
 - initialized `docs/evidence/phase-2-verification.md` skeleton for incoming automated tests, audits, and QA review; and
 - captured and saved homepage visual proof under `docs/evidence/phase-2/screenshots/homepage.png`.
 
-**Files/modules affected:** `README.md`, `docs/business-content-register.md`, `docs/evidence/phase-2-verification.md`, `docs/evidence/phase-2/screenshots/homepage.png`, `docs/development-log.md`.  
-**Testing performed:** Executed `npm run dev` to verify local route rendering and captured visual homepage proof; verified document links, markdown table formatting, and document structure.  
-**Git branch:** `feat/phase-2-documentation`  
+**Files/modules affected:** `README.md`, `docs/business-content-register.md`, `docs/evidence/phase-2-verification.md`, `docs/evidence/phase-2/screenshots/homepage.png`, `docs/development-log.md`.
+**Testing performed:** Executed `npm run dev` to verify local route rendering and captured visual homepage proof; verified document links, markdown table formatting, and document structure.
+**Git branch:** `feat/phase-2-documentation`
 **Next action:** Submit branch and open Pull Request for QA review by Renier.

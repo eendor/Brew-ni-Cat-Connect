@@ -1,7 +1,7 @@
 # Business Content Register
 
-**Last Updated:** 2026-08-24  
-**Maintainer:** Shan (Technical Writer / Documenter)  
+**Last Updated:** 2026-08-24
+**Maintainer:** Shan (Technical Writer / Documenter)
 
 This document tracks all business facts, copy, and media assets for Brew ni Cat Connect. It establishes the single source of truth for project data across Phase 2 and beyond.
 
