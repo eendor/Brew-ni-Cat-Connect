@@ -12,7 +12,7 @@ export default function Loading() {
           className="size-3 animate-pulse rounded-full bg-[var(--accent-solid)]"
           aria-hidden="true"
         />
-        Loading Brew ni Cat Connect…
+        Loading Brew ni Cat…
       </div>
     </Container>
   );

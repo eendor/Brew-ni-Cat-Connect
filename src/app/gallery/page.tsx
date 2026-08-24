@@ -1,18 +1,69 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 
-import { PlaceholderPage } from "@/components/ui/placeholder-page";
+import { Container } from "@/components/ui/container";
+import { PageIntro } from "@/components/ui/page-intro";
+import { galleryImages } from "@/config/gallery";
 
 export const metadata: Metadata = {
   title: "Gallery",
-  description: "Planned gallery page for Brew ni Cat Connect.",
+  description:
+    "Explore approved photos of Brew ni Cat Coffee Shop, its food, café cats, space, and community in Kabacan.",
 };
 
 export default function GalleryPage() {
   return (
-    <PlaceholderPage
-      title="Gallery"
-      plannedPhase="Planned for Phase 2"
-      description="Owner-approved shop and product photography will be added during the public business showcase phase."
-    />
+    <>
+      <PageIntro
+        eyebrow="Life at the shop"
+        title="Gallery"
+        description={
+          <p>
+            A curated look at Brew ni Cat’s café cats, food, welcoming spaces,
+            and community moments.
+          </p>
+        }
+        aside={
+          <div className="max-w-xs rounded-2xl bg-[var(--deep-green)] p-5 text-sm leading-6 text-white shadow-[var(--shadow-subtle)]">
+            <strong className="block text-[#f6cf80]">A small first look</strong>
+            This gallery presents a selected set of approved shop photos for a
+            faster, more focused visit.
+          </div>
+        }
+      />
+
+      <section
+        className="py-12 sm:py-16 lg:py-20"
+        aria-label="Brew ni Cat photo gallery"
+      >
+        <Container>
+          <div className="grid grid-cols-2 items-start gap-3 sm:gap-4 lg:grid-cols-3">
+            {galleryImages.map((image, index) => (
+              <figure
+                key={image.src}
+                className={`group relative overflow-hidden rounded-[1.25rem] bg-[var(--surface-warm)] shadow-[var(--shadow-subtle)] sm:rounded-[1.5rem] ${
+                  image.landscape ? "col-span-2 lg:col-span-2" : ""
+                } ${index === 0 || index === 10 ? "lg:row-span-2" : ""}`}
+              >
+                <Image
+                  src={image.src}
+                  width={image.landscape ? 1024 : 768}
+                  height={image.landscape ? 768 : 1024}
+                  alt={image.alt}
+                  sizes={
+                    image.landscape
+                      ? "(max-width: 639px) 94vw, (max-width: 1023px) 94vw, 62vw"
+                      : "(max-width: 639px) 46vw, (max-width: 1023px) 46vw, 31vw"
+                  }
+                  className={`${
+                    image.landscape ? "aspect-[8/5]" : "aspect-[3/4]"
+                  } h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.015]`}
+                />
+              </figure>
+            ))}
+          </div>
+        </Container>
+      </section>
+    </>
   );
 }

@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 import { siteConfig } from "@/config/site";
@@ -8,24 +9,26 @@ import { MobileNavigation } from "./mobile-navigation";
 export function SiteHeader() {
   return (
     <header className="sticky top-0 z-50 border-b border-[var(--border-soft)] bg-[var(--surface-canvas-translucent)] backdrop-blur-md">
-      <Container className="flex min-h-18 items-center justify-between gap-5 py-3">
+      <Container className="flex min-h-18 items-center justify-between gap-4 py-2.5 lg:min-h-20">
         <Link
           href="/"
-          className="group inline-flex items-center gap-3 rounded-lg"
-          aria-label={siteConfig.name}
+          className="group inline-flex items-center gap-2.5 rounded-lg"
+          aria-label={`${siteConfig.name} home`}
         >
-          <span
-            className="font-display inline-flex size-10 items-center justify-center rounded-full bg-[var(--accent-solid)] text-lg font-bold text-white shadow-sm transition-transform group-hover:-rotate-3"
-            aria-hidden="true"
-          >
-            B
-          </span>
+          <Image
+            src="/images/branding/brew-ni-cat-logo.png"
+            width={52}
+            height={52}
+            alt=""
+            priority
+            className="size-12 object-contain transition-transform group-hover:-rotate-2 lg:size-14"
+          />
           <span className="leading-tight">
             <span className="block text-base font-extrabold tracking-tight text-[var(--text-strong)]">
-              {siteConfig.name}
+              {siteConfig.shortName}
             </span>
-            <span className="block text-[0.68rem] font-bold tracking-[0.16em] text-[var(--accent-strong)] uppercase">
-              Connect
+            <span className="block text-[0.64rem] font-bold tracking-[0.15em] text-[var(--deep-green)] uppercase">
+              Coffee Shop
             </span>
           </span>
         </Link>
@@ -47,10 +50,10 @@ export function SiteHeader() {
 
         <div className="hidden lg:block">
           <Link
-            href="/menu"
-            className="inline-flex min-h-11 items-center justify-center rounded-full bg-[var(--text-strong)] px-5 py-2 text-sm font-bold text-white shadow-sm transition-colors hover:bg-[var(--accent-solid)]"
+            href="/contact"
+            className="inline-flex min-h-11 items-center justify-center rounded-full bg-[var(--deep-green)] px-5 py-2 text-sm font-bold text-white shadow-sm transition-colors hover:bg-[var(--deep-green-hover)]"
           >
-            View menu
+            Visit us
           </Link>
         </div>
 
