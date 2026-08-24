@@ -92,7 +92,7 @@ The `Not Run` handoff table above is retained as the state when the Phase 1 impl
 
 ## 8. Automated Phase 2 Cases
 
-The final Phase 2 branch validation ran on 2026-08-24. Vitest passed 20 of 20 cases in 6 files; the full Playwright suite passed 13 of 13 cases, comprising 5 retained Phase 1 regressions and 8 Phase 2 browser cases.
+The final Phase 2 follow-up validation ran on 2026-08-24. Vitest passed 21 of 21 cases in 6 files; the full Playwright suite passed 13 of 13 cases, comprising 5 retained Phase 1 regressions and 8 Phase 2 browser cases. The follow-up includes `TC-P2-029` and the strengthened favorite-link assertion.
 
 | ID | Requirement ID(s) | Module | Scenario | Preconditions | Input / action | Expected result | Actual result | Status | Evidence |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -124,20 +124,25 @@ The final Phase 2 branch validation ran on 2026-08-24. Vitest passed 20 of 20 ca
 | TC-P2-026 | FR-010, FR-011, FR-015, FR-016 | Browser Menu | Mapped success response | Intercepted deterministic Data API reads | Visit `/menu` | Category/item/options/prices/unavailable render; cart/checkout controls are absent | All assertions matched the expected behavior in the final 13/13 Playwright run | Passed | `tests/e2e/menu.spec.ts` |
 | TC-P2-027 | FR-008 | Browser Menu | Loading then empty response | Delayed intercepted empty reads | Visit `/menu` | Loading status transitions to truthful empty/contact state | All assertions matched the expected behavior in the final 13/13 Playwright run | Passed | `tests/e2e/menu.spec.ts` |
 | TC-P2-028 | FR-008 | Browser Menu | Retrieval failure | Intercepted provider error | Visit `/menu` | Generic retry/contact alert renders without fabricated catalog | All assertions matched the expected behavior in the final 13/13 Playwright run | Passed | `tests/e2e/menu.spec.ts` |
+| TC-P2-029 | FR-011, FR-015 | Menu UI | Zero base-price sentinel with flavor prices | Deterministic flavor-price fixture | Resolve loader | Lowest real flavor price renders as `From ₱40`; variant omits `₱0`; flavor prices remain visible | Assertions passed in the final 21/21 Vitest run | Passed | `tests/unit/menu-catalog.test.tsx` |
 
-**Automated Phase 2 result:** 28 of 28 Phase 2 cases passed: 20 Vitest unit/component cases and 8 Playwright browser cases. The complete Playwright run also passed all 5 retained Phase 1 browser regressions, for 13 of 13 browser tests overall.
+**Final automated Phase 2 follow-up result:** 29 of 29 Phase 2 cases passed: 21 Vitest unit/component cases and 8 Playwright browser cases. The complete Playwright run also passed all 5 retained Phase 1 browser regressions, for 13 of 13 browser tests overall.
 
 ## 9. Phase 2 Live Data and Manual Status
 
 | Check ID | Check | Status | Evidence / blocker |
 | --- | --- | --- | --- |
-| LIVE-P2-001 | Public role reads current categories/items | Blocked | Both public probes returned HTTP 200 with zero rows under existing anonymous policy |
-| LIVE-P2-002 | Representative current names/prices/variants/flavors/combos/availability render publicly | Blocked | Controlled read-only discovery found records, but privileged discovery cannot substitute for public-role acceptance |
-| SEC-P2-001 | Final tracked/staged secret and browser-bundle review | Passed | `.env.local` ignored/untracked; zero real privileged values in tracked files or app bundles; zero privileged names in app bundles |
-| RESP-P2-001 | Developer responsive/overflow check at 320, 375, 768, 1024, 1440 | Passed | 20 route/viewport checks had zero overflow failures; 9 retained captures and report under `docs/evidence/phase-2/` |
+| LIVE-P2-001 | Public role reads current categories/items | Passed | Publishable runtime GET returned 6 categories and 16 items, with 0 unavailable items and 0 unmatched relationships |
+| LIVE-P2-002 | Representative current names/prices/variants/flavors/combos/availability render publicly | Passed | Unmocked `/menu` displayed all current records; Takoyaki correctly shows `From ₱40`; Supabase records, not posters, supplied the values |
+| LIVE-P2-003 | Homepage favorite-card links remain browse-only | Passed | Matcha, Takoyaki, and Fries cards link to `/menu`; no sales statistic or ordering action was added |
+| SEC-P2-001 | Follow-up tracked/staged secret and browser-bundle review | Passed | `.env.local` is ignored/untracked; real local values have zero tracked matches; privileged value/name have zero app/bundle matches; empty `.env.example` assignments remain non-secret |
+| SEC-P2-002 | Public exposure assessment while RLS is disabled | Blocked | HEAD-only/no-body probes found `inventory`, `recipe_mappings`, `expenses`, `orders`, `order_items`, and `app_release` publicly reachable; production hardening required |
+| DB-P2-001 | Follow-up remains read-only for business data | Passed | Catalog GET and HEAD-only/no-body probes performed no RLS, schema, menu, price, inventory, sales, expense, customer, order, or POS data mutation; writes were not tested |
+| RESP-P2-001 | Initial developer responsive/overflow check at 320, 375, 768, 1024, 1440 | Passed | Initial 20 route/viewport checks had zero overflow failures; retained captures and report remain historical evidence |
+| RESP-P2-002 | Live public Menu at 320, 375, 768, 1024, 1440 | Passed | All 6 categories/16 items rendered with zero body overflow and zero console errors; new desktop/mobile captures and `live-menu-review.json` retained |
 | QA-P2-001 | Renier independent Home/navigation QA | Not Run | Pending open Pull Request review |
-| QA-P2-002 | Renier independent Menu/live-policy/error-state QA | Not Run | Pending open Pull Request review; live rows blocked |
+| QA-P2-002 | Renier independent Menu/live-access/error-state QA | Not Run | Pending open Pull Request review; live rows render, but the RLS-disabled security blocker remains open |
 | QA-P2-003 | Renier independent About/Gallery/Contact/content QA | Not Run | Pending open Pull Request review |
 | QA-P2-004 | Renier independent accessibility/responsive/code review | Not Run | Pending open Pull Request review |
 
-The old posters are not an expected-result oracle. Supabase current public records are authoritative after the approved public role can read them. No production mutation test is permitted in Phase 2.
+The old posters are not an expected-result oracle. Current Supabase public records are authoritative. No production mutation test is permitted in Phase 2. Public-read success under manually disabled RLS does not complete the least-privilege security requirement.

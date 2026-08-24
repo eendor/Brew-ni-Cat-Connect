@@ -23,7 +23,7 @@ No unverified claim is made about current business processes, transaction volume
 
 | Role | Intended interaction | Current status |
 | --- | --- | --- |
-| Visitor | View confirmed public business information and the read-only current menu | Phase 2 implemented surface; live anonymous menu rows blocked by existing access policy |
+| Visitor | View confirmed public business information and the read-only current menu | Phase 2 implemented surface; publishable runtime renders 6 categories/16 items; RLS-disabled production security blocker remains |
 | Customer | Order, track orders, and use account features when implemented | Planned |
 | Shop staff | Receive and update online orders through an approved integration workflow | Planned; workflow requires POS analysis |
 | Business owner/authorized manager | Confirm business content, scope, policies, and integration decisions | Required stakeholder |
@@ -77,7 +77,7 @@ Connect will interact through an explicitly designed integration boundary. Direc
 
 ## 5. Business-information boundary
 
-The Phase 2 client brief confirms the public address and landmark, contact details, Facebook/TikTok destinations, Cash/GCash acceptance, ₱10 takeout box, variable-hours notice, official logo, approved shop/customer imagery, and customer-arranged external-rider information. The existing Supabase catalog is the current menu source, although its anonymous policy currently returns zero rows.
+The Phase 2 client brief confirms the public address and landmark, contact details, Facebook/TikTok destinations, Cash/GCash acceptance, ₱10 takeout box, variable-hours notice, official logo, approved shop/customer imagery, and customer-arranged external-rider information. The existing Supabase catalog is the current menu source; its publishable runtime now returns 6 categories and 16 items after the owner manually disabled RLS.
 
 The following values remain unresolved:
 
@@ -130,6 +130,6 @@ Business-specific acceptance targets remain **TODO: Confirm with Brew ni Cat own
 
 Phase 1 was tested, approved by Renier Apal, and merged through Pull Request #1 at merge commit `11c546d`. Phase 2 replaces the placeholders with Home, Menu, About, Gallery, and Contact experiences using the official logo, 19 curated approved photographs, and the client-confirmed facts dated 2026-08-24.
 
-Current-menu retrieval is the one intentional Phase 2 Supabase exception to the original later-backend roadmap. It is read-only, runs at browser request time through public configuration, maps `categories` and `items` into application types, and does not include authentication, customer records, ordering, or mutations. Existing anonymous policy behavior currently returns zero catalog rows, which the public UI reports honestly. A reviewed public-read boundary remains a release prerequisite.
+Current-menu retrieval is the one intentional Phase 2 Supabase exception to the original later-backend roadmap. It is read-only, runs at browser request time through public configuration, maps `categories` and `items` into application types, and does not include authentication, customer records, ordering, or mutations. The initial zero-row state remains historical evidence; the current publishable runtime renders the live catalog. Because RLS is manually disabled and unrelated business tables are publicly reachable, restoring RLS and verifying explicit catalog-only anonymous `SELECT` policies remains a production release prerequisite.
 
 The published independent-rider information does not enable delivery: customers book/pay riders separately and Brew ni Cat does not control fees, availability, or ETA.

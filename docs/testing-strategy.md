@@ -5,7 +5,7 @@
 **Original date:** 2026-08-18
 **Last updated:** 2026-08-24
 **Phase:** Living strategy through Phase 2
-**Document status:** Phase 1 evidence is complete and merged. Phase 2 developer automation and the initial hosted workflows passed; Pull Request #2 is open, and independent QA/review is pending.
+**Document status:** Phase 1 evidence is complete and merged. Phase 2 live public Menu verification and the final local quality-gate rerun passed. Pull Request #2 is open/unmerged, follow-up hosted CI is pending, the RLS-disabled production security blocker remains open, and independent QA/review is pending.
 
 ## 1. Current Test Status
 
@@ -300,7 +300,7 @@ Before production launch, Brew ni Cat's authorized business representative will 
 | --- | --- |
 | Phase 0 — Specification | Strategy reviewed for consistency; all test results remain truthfully `Not Run` |
 | Phase 1 — Foundation | 4 unit/component and 5 Chromium E2E tests, static/build gates, developer inspection, independent Renier QA, and peer review completed; Pull Request #1 merged as `11c546d`. |
-| Phase 2 — Public showcase | Real content/navigation/media and typed menu mapping success/loading/empty/error/availability states pass; build remains live-service independent; read-only public access is compared with representative current records; secret/bundle checks pass; responsive/accessibility developer evidence is recorded; independent Renier QA/review remains required before merge. |
+| Phase 2 — Public showcase | Real content/navigation/media and typed menu mapping success/loading/empty/error/availability states are covered; build remains live-service independent; publishable runtime returned and rendered the current 6-category/16-item catalog at five widths; the final follow-up gates and refreshed secret/bundle scans passed; RLS restoration/least-privilege policy work and independent Renier QA/review remain required before production/merge. |
 | Phase 3 — Menu/ordering | Critical calculation, product-configuration, cart, checkout-form/domain validation, and pre-submission journey cases pass; no persisted order is claimed before the backend exists |
 | Phase 4 — Backend/accounts | Migration, auth, RLS cross-user denial, server validation, transaction, idempotent order creation, and recovery cases pass in isolation |
 | Phase 5 — Customer experience | History, tracking, favorites, reorder, loyalty, concurrency, and authorization cases pass |
@@ -318,16 +318,18 @@ This strategy is reviewed whenever requirements, architecture, supported clients
 
 ### Automated scope
 
-Vitest/Testing Library covers the official Home content and absence of Phase 1 placeholders; one Menu navigation action and distinct Visit action; mobile selection/Escape/focus behavior; catalog mapping from nullable/pipe/JSON rows; Philippine peso formatting; combo description and unavailable status; malformed-data omission; and Menu loading, ready, empty, failure, and retry states. Tests inject deterministic loaders and contain no production credential/value.
+Vitest/Testing Library covers the official Home content and absence of Phase 1 placeholders; one Menu navigation action and distinct Visit action; all three favorite-card links to `/menu`; mobile selection/Escape/focus behavior; catalog mapping from nullable/pipe/JSON rows; Philippine peso formatting; combo description and unavailable status; malformed-data omission; Menu loading, ready, empty, failure, and retry states; and zero-base flavor-priced presentation without a fabricated `₱0`. Tests inject deterministic loaders and contain no production credential/value. The final follow-up run passed all 21 unit/component cases in 6 files.
 
-Playwright must retain 404 and the five responsive widths (320, 375, 768, 1024, and 1440) while exercising the real routes, logo/navigation, business facts, gallery images/alt text, and no horizontal overflow. It may observe the current truthful public-catalog empty state; it must not substitute fake rows as if live.
+Playwright retains the 404 and five responsive widths (320, 375, 768, 1024, and 1440) while exercising the real routes, logo/navigation, business facts, gallery images/alt text, and no horizontal overflow. Deterministic intercepted tests continue to exercise success, loading/empty, and error states. Separate unmocked live evidence must use the actual publishable runtime rather than present fixtures as live data.
 
 ### Live read-only check
 
-A live check must use the public runtime identity and compare representative category/item names, variants/sizes, flavor-specific prices, optional combo descriptions, and availability against current Supabase records. At the 2026-08-24 discovery point, public reads returned HTTP 200 with zero rows, so record-level public verification is **Blocked** by the existing anonymous access policy. A privileged local read-only comparison established that six categories and sixteen items exist but cannot count as successful customer-role acceptance.
+A live check must use the public runtime identity and compare representative category/item names, variants/sizes, flavor-specific prices, optional combo descriptions, and availability against current Supabase records. The initial 2026-08-24 discovery returned HTTP 200 with zero rows; that is retained as **BEFORE** failure-state evidence.
 
-After an approved policy/view change outside this branch, repeat the representative check with the public publishable configuration, record only public business fields, and prove that writes/internal tables remain inaccessible. Never run mutation tests against production.
+After the owner/developer manually disabled RLS on the relevant catalog tables, the same publishable runtime returned 6 categories and 16 items, with 0 unavailable items and 0 unmatched relationships. Unmocked `/menu` inspection at 320, 375, 768, 1024, and 1440 rendered all current records with zero body overflow and zero console errors. `docs/evidence/phase-2/live-menu-review.json` is the machine-readable result. Current Supabase records, not posters, are the expected-result source.
+
+This functional pass is not authorization acceptance. HEAD-only/no-body probes found unrelated business tables publicly reachable, and public writes were not tested. Never run mutation tests against production. Restore RLS and prove intended catalog-only anonymous `SELECT` access plus denial of unrelated tables/writes through an approved policy test before production.
 
 ### Evidence and status
 
-`docs/evidence/phase-2-implementation.md` is the handoff record. Observed local command summaries, counts, exit statuses, screenshot paths, commits, open [Pull Request #2](https://github.com/eendor/Brew-ni-Cat-Connect/pull/2), and initial hosted workflow results are recorded there; the live Pull Request check rollup is authoritative for later handoff-only commits. Automated success moves the card to Testing / Review, not Done; Renier's independent results stay unchecked until performed.
+`docs/evidence/phase-2-implementation.md` is the handoff record. It distinguishes initial and follow-up observations and records command summaries, counts, exit statuses, screenshot paths, commits, open [Pull Request #2](https://github.com/eendor/Brew-ni-Cat-Connect/pull/2), and hosted workflow results. The final local follow-up commands passed; the follow-up commit and live Pull Request check rollup remain pending/authoritative. Automated success moves the card to Testing / Review, not Done; the security blocker remains open and Renier's independent results stay unchecked until performed.

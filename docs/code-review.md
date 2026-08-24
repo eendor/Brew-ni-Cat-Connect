@@ -75,14 +75,16 @@ This document separates developer self-inspection from independent teammate revi
 3. Header navigation contains one Menu destination and a separate Visit us/Contact action, resolving P1-UX-001.
 4. `.gitattributes` and Prettier define LF text, Windows command-script CRLF, and binary media exclusions, resolving the repository policy portion of P1-ENV-001.
 5. Supabase calls are centralized, explicit-field, `SELECT`-only reads. Components consume typed mapped models and injectable loaders.
-6. Only public URL/publishable configuration enters the browser client; missing config and provider errors are customer-safe. Existing anonymous policy yields zero rows, and no privileged fallback exists.
+6. Only public URL/publishable configuration enters the browser client; missing config and provider errors are customer-safe. The current publishable runtime returns the live 6-category/16-item catalog, and no privileged fallback exists.
 7. Current prices are never transcribed from posters. POS-hardcoded add-ons are not represented as live data.
 8. The Gallery uses 19 of 139 approved local files and generic alt text without identifying/inferencing customers.
-9. Phase 1 regression tests remain; the final run passed 20/20 Phase 2 unit/component tests and 13/13 browser tests, including all five retained Phase 1 browser regressions.
+9. Phase 1 regression tests remain; the final follow-up run passed 21/21 unit/component tests and 13/13 browser tests, including all five retained Phase 1 browser regressions.
 
 ### Known limitation / blocker
 
-The production public identities return HTTP 200 with zero `categories` and `items` rows while controlled privileged read-only discovery confirms data exists. This prevents customer-role live-record verification. Resolution requires an approved least-privilege public catalog policy/view outside this no-mutation branch; it must not be bypassed with a privileged browser key.
+The initial production public probes returned HTTP 200 with zero `categories` and `items` rows; that **BEFORE** result is retained historically. After the owner/developer manually disabled RLS, publishable GET requests returned 6 categories and 16 items and `/menu` rendered them at all required widths. The application still uses the publishable identity only and made no RLS or business-data change.
+
+This functional pass exposes a more serious current blocker: public access depends on grants rather than least-privilege RLS, and HEAD-only/no-body probes found unrelated inventory, recipe, expense, order, order-item, and release tables publicly reachable. Restore RLS and test explicit catalog-only anonymous `SELECT` policies before production. Public writes were not tested.
 
 ### Independent Phase 2 handoff
 

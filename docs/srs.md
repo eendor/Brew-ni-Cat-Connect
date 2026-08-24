@@ -3,7 +3,7 @@
 - **Version:** 0.1 Draft
 - **Date:** 2026-08-18; Phase 2 addendum 2026-08-24
 - **Phase:** Living specification through Phase 2
-- **Document status:** Version 0.1 remains a draft. Phase 1 is Tested and merged; the implemented Phase 2 showcase passed developer automation and is in Testing / Review. Public live catalog rows remain blocked by the existing anonymous access policy. Later capabilities remain Planned or Deferred as marked.
+- **Document status:** Version 0.1 remains a draft. Phase 1 is Tested and merged; the implemented Phase 2 showcase is in Testing / Review. Public live catalog rendering and final local follow-up gates are verified; hosted CI and independent review remain pending, and manually RLS-disabled access remains a production security blocker. Later capabilities remain Planned or Deferred as marked.
 
 ## 1. Purpose
 
@@ -110,7 +110,7 @@ Confirmed and open content inputs are:
 - Business address and landmark are confirmed as Segundo St, Poblacion, Kabacan, Cotabato 9407, Philippines, beside Pulido Eatery.
 - Public operating-hours wording is confirmed as variable; the site directs customers to Facebook or the shop contact instead of promising a fixed schedule.
 - The public phone, email, Facebook, and TikTok destinations are confirmed in the Phase 2 client brief.
-- The existing Supabase catalog is authoritative for current menu names, variants, prices, and availability. Existing anonymous access currently returns zero rows; ordering/customization rules remain **TODO: Confirm with Brew ni Cat owner.**
+- The existing Supabase catalog is authoritative for current menu names, variants, prices, and availability. The publishable runtime currently returns 6 categories and 16 items; ordering/customization rules remain **TODO: Confirm with Brew ni Cat owner.**
 - The official logo and local shop/customer images are approved for website use; Phase 2 publishes a curated 19-image selection with privacy-respecting alternatives.
 - Pickup instructions and order lead-time policy: **TODO: Confirm with Brew ni Cat owner.**
 - Cancellation, rejection, refund, privacy, and retention policies: **TODO: Confirm with Brew ni Cat owner.**
@@ -150,7 +150,7 @@ This diagram is a logical target, not an implementation claim. Detailed deployme
 
 - **Web interface:** responsive, keyboard-accessible customer experience over HTTPS.
 - **Backend interface:** versioned, validated service contracts; privileged operations execute server-side.
-- **Public catalog:** Phase 2 introduces a narrow browser-runtime, read-only Supabase catalog boundary using public configuration only. Anonymous reads currently return zero rows under the existing access policy.
+- **Public catalog:** Phase 2 introduces a narrow browser-runtime, read-only Supabase catalog boundary using public configuration only. The publishable identity now returns the live catalog after the owner manually disabled RLS; this grant-based access is not a production least-privilege boundary.
 - **Authentication:** Supabase Auth remains the selected planned provider under ADR-002; authentication, customer data, writes, and realtime activation remain gated to later design.
 - **Realtime:** authenticated order-status subscriptions with a polling/manual-refresh fallback where supported.
 - **Messenger:** verified webhooks and approved API permissions; no secret in client code.
@@ -199,7 +199,7 @@ Only requirements-justified domains will be designed. Candidate domains include 
 ### 10.2 Dependencies
 
 - Selected hosting/cloud platform and service plan.
-- The existing Supabase project for read-only current-menu retrieval; a reviewed least-privilege anonymous catalog policy/view is still required before live rows can be published. Authentication, customer data, writes, and realtime retain their later-phase activation review.
+- The existing Supabase project for read-only current-menu retrieval; live rows now render, but RLS restoration and reviewed least-privilege anonymous catalog policies are still required before production. Authentication, customer data, writes, and realtime retain their later-phase activation review.
 - Meta developer application, permissions, policies, and webhook endpoint for Messenger.
 - Android tooling and distribution credentials for the mobile phase.
 - A documented existing-POS integration contract.
@@ -242,7 +242,7 @@ Each implementation pull request must cite applicable requirement IDs. Each test
 ## 13. Open decisions
 
 1. Select the eventual deployment target; the limited Phase 2 public catalog client is implemented, while Supabase authentication, writes, customer data, and realtime remain gated to later design.
-2. Obtain approval for a least-privilege public catalog policy or dedicated public view; current anonymous reads return zero rows.
+2. Restore RLS and obtain approval for explicit least-privilege public catalog `SELECT` policies or a dedicated public view; current grant-based access exposes unrelated business tables.
 3. Confirm the longer owner-approved About story and any future permanent operating-hours policy.
 4. Define guest checkout policy versus account-required ordering. **TODO: Confirm with Brew ni Cat owner.**
 5. Define allowed order states, staff response expectations, cancellation/rejection handling, and customer notices. **TODO: Confirm with Brew ni Cat owner.**
@@ -267,6 +267,6 @@ The client brief dated 2026-08-24 confirms the Phase 2 public facts and asset pe
 
 The owner-approved final About story is not available. Phase 2 uses only the restrained factual points supplied in the brief and does not invent an owner biography, testimonial, award, mission, or market-leading claim.
 
-The existing Supabase catalog is the authoritative source for current categories, item names, availability, variants, flavor prices, and combo descriptions. Old menu posters are visual reference only. POS and read-only discovery identified `categories` and `items`; the typed browser data layer maps only approved catalog fields. Existing anonymous access returns HTTP 200 with zero rows even though a controlled read-only comparison confirmed records exist. This policy blocker must not be bypassed with privileged browser access or a production mutation.
+The existing Supabase catalog is the authoritative source for current categories, item names, availability, variants, flavor prices, and combo descriptions. Old menu posters are visual reference only. POS and read-only discovery identified `categories` and `items`; the typed browser data layer maps only approved catalog fields. Initial anonymous access returned HTTP 200 with zero rows; after the owner manually disabled RLS, the publishable runtime returned 6 categories/16 items and rendered them without privileged access or a business-data mutation. The current table-grant-based exposure—including publicly reachable unrelated business tables—is a production security blocker, not a least-privilege policy solution.
 
 Phase 2 delivery content is informational: a customer independently books a preferred external rider after arranging the shop order and pays the rider separately. Brew ni Cat does not employ/book the rider or control rider availability, fee, or ETA. Online ordering and delivery integration remain outside this increment.

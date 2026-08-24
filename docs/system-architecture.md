@@ -3,7 +3,7 @@
 **Version:** 0.1 Draft\
 **Date:** 2026-08-24\
 **Document status:** Living architecture baseline\
-**Implementation status:** Phase 1 is Tested and merged. Phase 2 implements the public showcase and typed browser-runtime Supabase catalog reads; the current anonymous policy returns zero catalog rows. Customer data, writes, authentication, realtime, Messenger, Android, and POS integration remain Planned or Deferred.
+**Implementation status:** Phase 1 is Tested and merged. Phase 2 implements the public showcase and typed browser-runtime Supabase catalog reads; the publishable runtime now renders 6 categories/16 items. RLS is manually disabled and unrelated business tables are publicly reachable, so production security hardening remains blocked. Customer data, writes, authentication, realtime, Messenger, Android, and POS integration remain Planned or Deferred.
 
 ## 1. Architecture objective
 
@@ -47,7 +47,7 @@ flowchart TB
     Adapter <--> POS
 ```
 
-**Current reality:** Phase 2 retains the Phase 1 Next.js foundation and replaces placeholders with real Home, Menu, About, Gallery, and Contact routes. It adds approved local media, factual business configuration, and a typed read-only Supabase catalog adapter. The app has no authentication, customer/order data, write operation, ordering service, realtime, Messenger, Android, or POS synchronization. Current anonymous catalog reads are policy-filtered to zero rows and surface a truthful empty state.
+**Current reality:** Phase 2 retains the Phase 1 Next.js foundation and replaces placeholders with real Home, Menu, About, Gallery, and Contact routes. It adds approved local media, factual business configuration, and a typed read-only Supabase catalog adapter. The app has no authentication, customer/order data, write operation, ordering service, realtime, Messenger, Android, or POS synchronization. Current publishable catalog reads return and render 6 categories/16 items; loading, empty, and error states remain implemented/tested fallbacks.
 
 ### 2.1 Phase 1 as-built boundary
 
@@ -129,10 +129,10 @@ Arrows show logical data flow, not a final deployment topology. Direct client-to
 | Tailwind CSS presentation layer | Project-owned warm design tokens, responsive layout, focus styles, and reduced-motion baseline | **Implemented for Phase 1** using Tailwind CSS 4.3.3 |
 | Automated verification boundary | Component behavior, route smoke checks, representative-width overflow checks, type/lint/build gates | **Implemented for Phase 1:** Vitest/Testing Library, Playwright, and GitHub Actions configuration |
 | Backend-for-frontend/application service layer | Authenticate/authorize, validate requests, calculate authoritative outcomes, coordinate transactions, expose channel-neutral use cases | Proposed; interfaces evolve with requirements |
-| Public Supabase catalog client | Read current approved categories/items through public configuration | **Implemented in Phase 2; existing anonymous policy currently returns zero rows** |
+| Public Supabase catalog client | Read current approved categories/items through public configuration | **Implemented in Phase 2; live 6-category/16-item response verified** |
 | Supabase Auth | Customer identity and session lifecycle | Selected for a later phase; sign-in methods and provider configuration remain undecided |
 | PostgreSQL | Canonical customer-facing data, constraints, order snapshots/history, loyalty ledger | Planned for Phase 4; schema not yet approved |
-| Row Level Security | Enforce least-privilege database access | Existing production policy is observed to filter anonymous catalog rows; Phase 2 changes no policy. Customer-scoped RLS design/testing remains later work |
+| Row Level Security | Enforce least-privilege database access | **Current blocker:** owner manually disabled RLS; public table grants expose catalog and unrelated business relations. Restore/test intended-catalog-only policies before production |
 | Realtime | Authorized order-status refresh notifications | Planned after canonical states exist |
 | Messenger webhook | Verify Meta requests, normalize messages, invoke shared services, return policy-compliant responses | Deferred to Phase 7 |
 | Conversational assistant | Grounded interpretation/discovery; never transaction authority | Candidate within Phase 7 subject to evaluation |
@@ -192,8 +192,8 @@ Version 0.1 distinguishes business stewardship, system of record, and integratio
 | Public business identity, location, variable-hours notice, and contact/social facts | Phase 2 typed site configuration sourced from the confirmed client brief; future maintenance UI/CMS remains undecided | Brew ni Cat | Publish only confirmed values; promotions and future maintenance workflow remain owner decisions |
 | Customer authentication credential material | Supabase Auth when activated in Phase 4 | Authentication provider processes credentials under configured terms; business role requires privacy review | Application must never store plaintext passwords |
 | Customer profile | Shared PostgreSQL backend | Customer supplies data; Brew ni Cat intended business steward, subject to confirmation | Collect only fields required by approved features |
-| Product/category/public variants and flavors | Existing Supabase `categories` and `items` catalog, read-only in Phase 2 | Brew ni Cat | Anonymous reads currently return zero rows; POS-hardcoded add-ons are not treated as live catalog data; avoid bidirectional edits |
-| Published price and availability | Existing Supabase `items.variants_json` and `items.is_available`, read-only in Phase 2 | Brew ni Cat | Public access remains policy-blocked; a later checkout server must still revalidate authoritative current values |
+| Product/category/public variants and flavors | Existing Supabase `categories` and `items` catalog, read-only in Phase 2 | Brew ni Cat | Publishable reads currently succeed; POS-hardcoded add-ons are not treated as live catalog data; avoid bidirectional edits |
+| Published price and availability | Existing Supabase `items.variants_json` and `items.is_available`, read-only in Phase 2 | Brew ni Cat | Live browse values render; RLS-disabled exposure is not least privilege, and a later checkout server must still revalidate authoritative current values |
 | Online order request and immutable item/price snapshot | Shared backend initially proposed | Brew ni Cat | POS receives through a controlled interface; final ownership depends on integration design |
 | Acceptance and fulfilment status | Authority undecided pending shop/POS workflow analysis | Authorized shop process | Customer-visible backend state must reconcile rather than guess |
 | Order status history/audit metadata | Shared backend plus required POS audit | Brew ni Cat | Append/history-oriented; retention to be defined |
@@ -386,7 +386,7 @@ Before each later phase begins:
 7. Review database migrations/RLS/integration contracts where applicable.
 8. Update development log and evidence without marking unexecuted work as tested.
 
-The Phase 1 foundation is **Tested and merged**. Phase 2 showcase/catalog code passed developer automation and is in **Testing / Review**, with live public rows **In development** because existing anonymous access returns zero rows. Every mutation, customer-data, backend, or additional-channel entry remains **Planned** or **Deferred** until implementation and evidence exist.
+The Phase 1 foundation is **Tested and merged**. Phase 2 showcase/catalog code is in **Testing / Review**; live public rows are **Implemented**, verified at five widths, and covered by passing final local follow-up gates. Hosted CI and independent review remain pending. The current manually RLS-disabled exposure is a production security blocker. Every mutation, customer-data, backend, or additional-channel entry remains **Planned** or **Deferred** until implementation and evidence exist.
 
 ## 16. Requirements traceability
 
@@ -439,9 +439,9 @@ Compilation, CI, and static route generation do not contact Supabase. Missing pu
 
 ### 17.3 Access blocker and required change boundary
 
-Both public credential probes returned HTTP 200 and zero rows; a controlled privileged read-only comparison found six categories and sixteen items. This is consistent with row filtering by the existing anonymous policy. Phase 2 made no database/RLS change and no production mutation.
+Initial public credential probes returned HTTP 200 and zero rows; a controlled privileged read-only comparison found six categories and sixteen items. That is retained as **BEFORE** evidence. After the owner/developer manually disabled RLS, the website publishable identity returned the current 6-category/16-item catalog. The application/follow-up made no database, RLS, or business-data change.
 
-The required follow-up is a separately reviewed, owner-approved public view or minimum-field `SELECT` policy. Verification must run as the anonymous/public role and prove that approved catalog fields are readable while internal/customer/business records and all writes remain denied. The browser must never receive privileged credentials.
+The required production follow-up is to restore RLS and add a separately reviewed public view or explicit minimum-field/row `SELECT` policies. Verification must run as the anonymous/public role and prove that approved catalog fields are readable while internal/customer/business records and all writes remain denied. Current HEAD-only/no-body probes found unrelated business relations publicly reachable, and writes were not tested. The browser must never receive privileged credentials.
 
 ### 17.4 Media and privacy boundary
 

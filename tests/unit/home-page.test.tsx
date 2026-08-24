@@ -32,6 +32,14 @@ describe("Home page", () => {
       ).toBeInTheDocument();
     }
 
+    const favoriteMenuLinks = screen.getAllByRole("link", {
+      name: "Browse the menu",
+    });
+    expect(favoriteMenuLinks).toHaveLength(3);
+    for (const link of favoriteMenuLinks) {
+      expect(link).toHaveAttribute("href", "/menu");
+    }
+
     expect(screen.getByText("Beside Pulido Eatery")).toBeInTheDocument();
     expect(screen.getByText("Cash and GCash")).toBeInTheDocument();
     expect(screen.getByText(/Operating hours may vary/i)).toBeInTheDocument();

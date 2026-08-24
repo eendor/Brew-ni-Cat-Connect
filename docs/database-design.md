@@ -2,13 +2,13 @@
 
 **Version:** 0.1 Draft
 **Last updated:** 2026-08-24
-**Status:** Phase 2 read-only discovery; no schema implementation or migration
+**Status:** Phase 2 read-only catalog discovery and live public verification; no schema implementation or migration. RLS is currently manually disabled on the relevant catalog tables, which is a production security blocker.
 
 ## 1. Scope
 
 This document records only the production catalog structures observed through existing POS source inspection and controlled read-only Supabase discovery for the Phase 2 public menu. It does not authorize schema changes, administrative access, customer data, ordering, inventory, sales, expenses, or POS synchronization.
 
-No table, policy, function, trigger, migration, or production row was created, changed, or deleted during discovery.
+No table, policy, function, trigger, migration, or production row was created, changed, or deleted by the application or automated follow-up. The owner/developer separately disabled RLS on the relevant catalog tables before the live-menu follow-up.
 
 ## 2. Discovered Catalog Tables
 
@@ -69,7 +69,8 @@ erDiagram
 
 The exact physical SQL types above are based on the existing POS TypeScript/schema use and should be confirmed from an approved migration/schema export before any future schema work. Phase 2 performs no migration.
 
-- Six categories and sixteen items were observed during privileged local read-only discovery; none of the sixteen was unavailable at the observation time.
+- Six categories and sixteen items were observed during the initial privileged local read-only discovery; none of the sixteen was unavailable at that **BEFORE** observation time.
+- The 2026-08-24 publishable-runtime follow-up independently returned the same current counts through public GET requests: 6 categories, 16 items, 0 unavailable items, and 0 unmatched item/category relationships.
 - There is no discovered public menu view, catalog RPC, or explicit display-order field.
 - Phase 2 therefore sorts valid category and item names alphabetically and documents that behavior rather than inventing a business order.
 - Combos/packages are represented by ordinary items and variant descriptions rather than a separate public combo relation.
@@ -79,15 +80,23 @@ Counts are discovery evidence, not a permanent business promise. The current run
 
 ## 5. Public Access and RLS Observation
 
-Read-only Data API probes using both locally available public credentials returned HTTP 200 and zero rows for `categories` and `items`. A controlled privileged read-only comparison confirmed that the production tables contain catalog rows. This behavior is consistent with the existing Row Level Security or API policy filtering anonymous access; the exact policy definition was not changed or inferred beyond the observed response.
+### 5.1 Before the live-menu follow-up
+
+Initial read-only Data API probes using both locally available public credentials returned HTTP 200 and zero rows for `categories` and `items`. A controlled privileged read-only comparison confirmed that the production tables contained catalog rows. This **BEFORE** behavior was consistent with the then-existing RLS/API policy filtering anonymous access.
+
+### 5.2 Current follow-up state
+
+The owner/developer manually disabled RLS on the relevant catalog tables. The application and verification process did not make that configuration change. With the same `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` used by the browser runtime, public GET requests then returned the real 6-category/16-item catalog and the Menu rendered it without a privileged fallback.
+
+This public access depends on table-level grants while RLS is disabled. It is not a least-privilege production design. HEAD-only/no-body checks also showed public reachability for `inventory`, `recipe_mappings`, `expenses`, `orders`, `order_items`, and `app_release`. Probes for `customers`, `sales`, and `payments` returned HTTP 404, which is ambiguous and is not proof of an authorization denial. No unrelated row body or business-data mutation was performed, and public writes were not tested.
 
 Consequences:
 
-1. the browser runtime uses only `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`;
-2. the application shows a truthful empty or recoverable error state when no public catalog can be returned;
-3. it does not use privileged access as a fallback;
-4. a live public catalog requires an owner-approved, least-privilege `SELECT` policy or dedicated public view designed and reviewed outside this no-mutation phase; and
-5. a future policy must expose only approved catalog fields and must be tested from the anonymous role before deployment.
+1. the browser runtime continues to use only the public URL and publishable key;
+2. Supabase remains the source of truth, and no poster-derived or privileged fallback data is present;
+3. loading, empty, and recoverable error states remain valid application behavior and remain tested;
+4. successful rendering is functional evidence, not least-privilege security evidence; and
+5. before production, restore RLS and add/test explicit anonymous `SELECT` policies limited to intended catalog rows and fields while denying unrelated business tables.
 
 ## 6. Application Boundary
 

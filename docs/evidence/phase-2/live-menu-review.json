@@ -1,0 +1,378 @@
+{
+  "generatedAt": "2026-08-24T06:19:17.327Z",
+  "baseUrl": "http://127.0.0.1:3100",
+  "dataSource": "Live public Supabase runtime; no route mocking",
+  "favoriteLinks": [
+    {
+      "text": "Browse current menu",
+      "href": "/menu"
+    },
+    {
+      "text": "Browse the menu",
+      "href": "/menu"
+    },
+    {
+      "text": "Browse the menu",
+      "href": "/menu"
+    },
+    {
+      "text": "Browse the menu",
+      "href": "/menu"
+    }
+  ],
+  "results": [
+    {
+      "viewport": {
+        "width": 320,
+        "height": 900
+      },
+      "httpStatus": 200,
+      "consoleErrors": [],
+      "publicDataRequests": [
+        {
+          "resource": "categories",
+          "method": "GET",
+          "keyClassification": "publishable",
+          "authorizationScheme": "Bearer"
+        },
+        {
+          "resource": "items",
+          "method": "GET",
+          "keyClassification": "publishable",
+          "authorizationScheme": "Bearer"
+        }
+      ],
+      "title": "Current Menu | Brew ni Cat",
+      "heading": "Menu",
+      "categories": [
+        "Buldak & Sedaap",
+        "Cat Treats",
+        "Cat-Tastic Bites",
+        "Cat-Tastic Drinks",
+        "Combos & Packages",
+        "Take-out Box"
+      ],
+      "itemNames": [
+        "Buldak Carbo",
+        "Buldak Cheese",
+        "Sedaap Original",
+        "Sedaap Spicy Chicken",
+        "Cat Treats",
+        "Fries (Cat Claws)",
+        "Nachos (Kitty Litter Crisps)",
+        "Takoyaki (Pawsome Balls)",
+        "Cat-Feine (Classic Coffee)",
+        "Matcha (The Lucky Green Neko)",
+        "Oreo (The Tuxedo Cat)",
+        "Soda (Fizzy Felines)",
+        "Cat Association",
+        "Couple of Cats",
+        "Single-Paw-rtner Combos",
+        "Take-out Box"
+      ],
+      "itemCount": 16,
+      "flavorListCount": 7,
+      "flavorPriceListCount": 4,
+      "minimumCardHeight": 143,
+      "maximumCardHeight": 793,
+      "viewportWidth": 320,
+      "documentWidth": 320,
+      "hasHorizontalOverflow": false,
+      "showsUnavailableMessage": false,
+      "containsOrderingControl": false,
+      "visibleUuidCount": 0,
+      "showsZeroPrice": false,
+      "representativeContent": {
+        "buldak": true,
+        "fries": true,
+        "matcha": true,
+        "takoyaki": true,
+        "combo": true,
+        "takeoutPrice": true
+      }
+    },
+    {
+      "viewport": {
+        "width": 375,
+        "height": 900,
+        "screenshot": "menu-mobile-375.png"
+      },
+      "httpStatus": 200,
+      "consoleErrors": [],
+      "publicDataRequests": [
+        {
+          "resource": "categories",
+          "method": "GET",
+          "keyClassification": "publishable",
+          "authorizationScheme": "Bearer"
+        },
+        {
+          "resource": "items",
+          "method": "GET",
+          "keyClassification": "publishable",
+          "authorizationScheme": "Bearer"
+        }
+      ],
+      "title": "Current Menu | Brew ni Cat",
+      "heading": "Menu",
+      "categories": [
+        "Buldak & Sedaap",
+        "Cat Treats",
+        "Cat-Tastic Bites",
+        "Cat-Tastic Drinks",
+        "Combos & Packages",
+        "Take-out Box"
+      ],
+      "itemNames": [
+        "Buldak Carbo",
+        "Buldak Cheese",
+        "Sedaap Original",
+        "Sedaap Spicy Chicken",
+        "Cat Treats",
+        "Fries (Cat Claws)",
+        "Nachos (Kitty Litter Crisps)",
+        "Takoyaki (Pawsome Balls)",
+        "Cat-Feine (Classic Coffee)",
+        "Matcha (The Lucky Green Neko)",
+        "Oreo (The Tuxedo Cat)",
+        "Soda (Fizzy Felines)",
+        "Cat Association",
+        "Couple of Cats",
+        "Single-Paw-rtner Combos",
+        "Take-out Box"
+      ],
+      "itemCount": 16,
+      "flavorListCount": 7,
+      "flavorPriceListCount": 4,
+      "minimumCardHeight": 143,
+      "maximumCardHeight": 763,
+      "viewportWidth": 375,
+      "documentWidth": 375,
+      "hasHorizontalOverflow": false,
+      "showsUnavailableMessage": false,
+      "containsOrderingControl": false,
+      "visibleUuidCount": 0,
+      "showsZeroPrice": false,
+      "representativeContent": {
+        "buldak": true,
+        "fries": true,
+        "matcha": true,
+        "takoyaki": true,
+        "combo": true,
+        "takeoutPrice": true
+      }
+    },
+    {
+      "viewport": {
+        "width": 768,
+        "height": 900
+      },
+      "httpStatus": 200,
+      "consoleErrors": [],
+      "publicDataRequests": [
+        {
+          "resource": "categories",
+          "method": "GET",
+          "keyClassification": "publishable",
+          "authorizationScheme": "Bearer"
+        },
+        {
+          "resource": "items",
+          "method": "GET",
+          "keyClassification": "publishable",
+          "authorizationScheme": "Bearer"
+        }
+      ],
+      "title": "Current Menu | Brew ni Cat",
+      "heading": "Menu",
+      "categories": [
+        "Buldak & Sedaap",
+        "Cat Treats",
+        "Cat-Tastic Bites",
+        "Cat-Tastic Drinks",
+        "Combos & Packages",
+        "Take-out Box"
+      ],
+      "itemNames": [
+        "Buldak Carbo",
+        "Buldak Cheese",
+        "Sedaap Original",
+        "Sedaap Spicy Chicken",
+        "Cat Treats",
+        "Fries (Cat Claws)",
+        "Nachos (Kitty Litter Crisps)",
+        "Takoyaki (Pawsome Balls)",
+        "Cat-Feine (Classic Coffee)",
+        "Matcha (The Lucky Green Neko)",
+        "Oreo (The Tuxedo Cat)",
+        "Soda (Fizzy Felines)",
+        "Cat Association",
+        "Couple of Cats",
+        "Single-Paw-rtner Combos",
+        "Take-out Box"
+      ],
+      "itemCount": 16,
+      "flavorListCount": 7,
+      "flavorPriceListCount": 4,
+      "minimumCardHeight": 151,
+      "maximumCardHeight": 771,
+      "viewportWidth": 768,
+      "documentWidth": 768,
+      "hasHorizontalOverflow": false,
+      "showsUnavailableMessage": false,
+      "containsOrderingControl": false,
+      "visibleUuidCount": 0,
+      "showsZeroPrice": false,
+      "representativeContent": {
+        "buldak": true,
+        "fries": true,
+        "matcha": true,
+        "takoyaki": true,
+        "combo": true,
+        "takeoutPrice": true
+      }
+    },
+    {
+      "viewport": {
+        "width": 1024,
+        "height": 900
+      },
+      "httpStatus": 200,
+      "consoleErrors": [],
+      "publicDataRequests": [
+        {
+          "resource": "categories",
+          "method": "GET",
+          "keyClassification": "publishable",
+          "authorizationScheme": "Bearer"
+        },
+        {
+          "resource": "items",
+          "method": "GET",
+          "keyClassification": "publishable",
+          "authorizationScheme": "Bearer"
+        }
+      ],
+      "title": "Current Menu | Brew ni Cat",
+      "heading": "Menu",
+      "categories": [
+        "Buldak & Sedaap",
+        "Cat Treats",
+        "Cat-Tastic Bites",
+        "Cat-Tastic Drinks",
+        "Combos & Packages",
+        "Take-out Box"
+      ],
+      "itemNames": [
+        "Buldak Carbo",
+        "Buldak Cheese",
+        "Sedaap Original",
+        "Sedaap Spicy Chicken",
+        "Cat Treats",
+        "Fries (Cat Claws)",
+        "Nachos (Kitty Litter Crisps)",
+        "Takoyaki (Pawsome Balls)",
+        "Cat-Feine (Classic Coffee)",
+        "Matcha (The Lucky Green Neko)",
+        "Oreo (The Tuxedo Cat)",
+        "Soda (Fizzy Felines)",
+        "Cat Association",
+        "Couple of Cats",
+        "Single-Paw-rtner Combos",
+        "Take-out Box"
+      ],
+      "itemCount": 16,
+      "flavorListCount": 7,
+      "flavorPriceListCount": 4,
+      "minimumCardHeight": 151,
+      "maximumCardHeight": 755,
+      "viewportWidth": 1024,
+      "documentWidth": 1024,
+      "hasHorizontalOverflow": false,
+      "showsUnavailableMessage": false,
+      "containsOrderingControl": false,
+      "visibleUuidCount": 0,
+      "showsZeroPrice": false,
+      "representativeContent": {
+        "buldak": true,
+        "fries": true,
+        "matcha": true,
+        "takoyaki": true,
+        "combo": true,
+        "takeoutPrice": true
+      }
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 1000,
+        "screenshot": "menu-desktop-1440.png"
+      },
+      "httpStatus": 200,
+      "consoleErrors": [],
+      "publicDataRequests": [
+        {
+          "resource": "categories",
+          "method": "GET",
+          "keyClassification": "publishable",
+          "authorizationScheme": "Bearer"
+        },
+        {
+          "resource": "items",
+          "method": "GET",
+          "keyClassification": "publishable",
+          "authorizationScheme": "Bearer"
+        }
+      ],
+      "title": "Current Menu | Brew ni Cat",
+      "heading": "Menu",
+      "categories": [
+        "Buldak & Sedaap",
+        "Cat Treats",
+        "Cat-Tastic Bites",
+        "Cat-Tastic Drinks",
+        "Combos & Packages",
+        "Take-out Box"
+      ],
+      "itemNames": [
+        "Buldak Carbo",
+        "Buldak Cheese",
+        "Sedaap Original",
+        "Sedaap Spicy Chicken",
+        "Cat Treats",
+        "Fries (Cat Claws)",
+        "Nachos (Kitty Litter Crisps)",
+        "Takoyaki (Pawsome Balls)",
+        "Cat-Feine (Classic Coffee)",
+        "Matcha (The Lucky Green Neko)",
+        "Oreo (The Tuxedo Cat)",
+        "Soda (Fizzy Felines)",
+        "Cat Association",
+        "Couple of Cats",
+        "Single-Paw-rtner Combos",
+        "Take-out Box"
+      ],
+      "itemCount": 16,
+      "flavorListCount": 7,
+      "flavorPriceListCount": 4,
+      "minimumCardHeight": 151,
+      "maximumCardHeight": 719,
+      "viewportWidth": 1440,
+      "documentWidth": 1440,
+      "hasHorizontalOverflow": false,
+      "showsUnavailableMessage": false,
+      "containsOrderingControl": false,
+      "visibleUuidCount": 0,
+      "showsZeroPrice": false,
+      "representativeContent": {
+        "buldak": true,
+        "fries": true,
+        "matcha": true,
+        "takoyaki": true,
+        "combo": true,
+        "takeoutPrice": true
+      }
+    }
+  ],
+  "violations": []
+}

@@ -1,0 +1,40 @@
+Brew ni Cat Connect Live Menu Follow-up Tool Transaction Verification
+Date: 2026-08-24
+
+Changed branch/field: feat/showcase-website / Menu variant base-price display for flavor-specific live pricing
+Original source: Git object 1781201:src/components/menu/menu-item-card.tsx
+Original SHA256: 377263050579a41d70b0c6eb60acde898f5269227382db7226fda6ac5870949f
+Modified SHA256: f193954d243170a92cf80adde7bb391b0970605b6fd7d7c2973b6a4e4b475642
+
+Four artifacts:
+1. D:\Documents\BrewniCat\docs\evidence\phase-2\live-menu-follow-up\transaction\MODIFIED_FILE
+2. D:\Documents\BrewniCat\docs\evidence\phase-2\live-menu-follow-up\transaction\DIFF_FILE
+3. D:\Documents\BrewniCat\docs\evidence\phase-2\live-menu-follow-up\transaction\VERIFICATION.txt
+4. D:\Documents\BrewniCat\docs\evidence\phase-2\live-menu-follow-up\transaction\ROLLBACK.sh
+
+BASELINE
+Command: python -c "from pathlib import Path; import sys; text=Path(sys.argv[1]).read_text(encoding='utf-8'); fixed=text.count('variant.basePrice === 0') >= 2 and 'flavorPrices.length > 0' in text and 'variant.flavorPrices.length > 0' in text; print('PASS: zero flavor-price sentinel is omitted when flavor prices exist' if fixed else 'FAIL: zero flavor-price sentinel remains customer-visible'); sys.exit(0 if fixed else 1)" "MENU_ITEM_CARD_ORIGINAL"
+Input: Temporary MENU_ITEM_CARD_ORIGINAL containing the exact bytes from 1781201:src/components/menu/menu-item-card.tsx (SHA256 377263050579a41d70b0c6eb60acde898f5269227382db7226fda6ac5870949f)
+Literal output: FAIL: zero flavor-price sentinel remains customer-visible
+Exit status: 1 (expected baseline result)
+
+MODIFIED
+Command: python -c "from pathlib import Path; import sys; text=Path(sys.argv[1]).read_text(encoding='utf-8'); fixed=text.count('variant.basePrice === 0') >= 2 and 'flavorPrices.length > 0' in text and 'variant.flavorPrices.length > 0' in text; print('PASS: zero flavor-price sentinel is omitted when flavor prices exist' if fixed else 'FAIL: zero flavor-price sentinel remains customer-visible'); sys.exit(0 if fixed else 1)" "docs/evidence/phase-2/live-menu-follow-up/transaction/MODIFIED_FILE"
+Input: MODIFIED_FILE copied from feat/showcase-website:src/components/menu/menu-item-card.tsx (SHA256 f193954d243170a92cf80adde7bb391b0970605b6fd7d7c2973b6a4e4b475642)
+Literal output: PASS: zero flavor-price sentinel is omitted when flavor prices exist
+Exit status: 0
+
+ROLLBACK
+Command: & 'C:\Tools\Git\bin\bash.exe' 'docs/evidence/phase-2/live-menu-follow-up/transaction/ROLLBACK.sh' 'docs/evidence/phase-2/live-menu-follow-up/transaction/ROLLBACK_TEST_COPY'
+Input: A separate ROLLBACK_TEST_COPY initialized from MODIFIED_FILE; MODIFIED_FILE itself was not rolled back.
+Literal output:
+ROLLBACK: restored pre-follow-up MenuItemCard fixture
+SHA256: 377263050579a41d70b0c6eb60acde898f5269227382db7226fda6ac5870949f
+Exit status: 0
+
+RESTORED BEHAVIOR
+Command: python -c "from pathlib import Path; import sys; text=Path(sys.argv[1]).read_text(encoding='utf-8'); fixed=text.count('variant.basePrice === 0') >= 2 and 'flavorPrices.length > 0' in text and 'variant.flavorPrices.length > 0' in text; print('PASS: zero flavor-price sentinel is omitted when flavor prices exist' if fixed else 'FAIL: zero flavor-price sentinel remains customer-visible'); sys.exit(0 if fixed else 1)" "ROLLBACK_TEST_COPY"
+Input: The separate copy after ROLLBACK.sh restored 1781201:src/components/menu/menu-item-card.tsx.
+Literal output: FAIL: zero flavor-price sentinel remains customer-visible
+Exit status: 1 (expected restored baseline behavior)
+Restored status: SHA256 matches the original; baseline behavior is restored on the test copy. MODIFIED_FILE remains changed and passes the modified test.

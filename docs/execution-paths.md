@@ -354,4 +354,4 @@ flowchart TD
     I --> J[Customer retries or opens Contact]
 ```
 
-The current production anonymous policy follows the zero-row branch. The application does not use a privileged credential as fallback. The path performs no cart action, order submission, database write, authentication, or rider booking.
+The initial public observation followed the zero-row branch and remains valid failure-state evidence. After the owner/developer manually disabled RLS on the relevant catalog tables, the current publishable runtime follows the rows branch and renders 6 categories/16 items. The application does not use a privileged credential as fallback and performs no cart action, order submission, database write, authentication, or rider booking. The current grant-based/RLS-disabled access is a production security blocker, not a least-privilege resolution.

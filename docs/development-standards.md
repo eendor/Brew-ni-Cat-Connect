@@ -277,7 +277,7 @@ A development item is done only when all applicable statements are true:
 8. No secret, production personal data, build output, or unrelated file is included.
 9. Commit and push/PR status are recorded truthfully.
 
-A phase may move to Testing / Review after its automated gates and developer inspections pass. Phase 2 must remain open and unmerged until Renier completes independent QA and Pull Request review. The live-menu access blocker must remain visible until an approved anonymous read boundary is verified.
+A phase may move to Testing / Review after its automated gates and developer inspections pass. Phase 2 must remain open and unmerged until Renier completes independent QA and Pull Request review. The live Menu now renders through the publishable runtime, but the manually RLS-disabled, table-grant-based access and unrelated public table exposure must remain visible as a production security blocker until RLS and explicit least-privilege catalog policies are restored and verified.
 
 ## 17. Exceptions and Evolution
 

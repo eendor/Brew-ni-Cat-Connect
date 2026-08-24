@@ -4,7 +4,7 @@
 **Version:** 0.1 Draft
 **Date:** 2026-08-24
 **Phase:** Living baseline through Phase 2
-**Document status:** Phase 1 controls are verified historical evidence. Phase 2 public catalog/media controls passed developer validation and await independent review; later-feature controls remain Planned.
+**Document status:** Phase 1 controls are verified historical evidence. Phase 2 public catalog/media implementation is in Testing / Review and awaits independent review. Live public catalog rendering is verified, but the manually RLS-disabled database state is a production security blocker; later-feature controls remain Planned.
 
 ## 1. Current State and Purpose
 
@@ -137,7 +137,11 @@ Threat modeling will be revisited for every material architecture change. Initia
 
 ### Supabase Row Level Security and the Phase 2 public catalog
 
-The Phase 2 application connects to the Supabase Data API only for explicit `SELECT` projections on `categories` and `items`. Public probes currently receive HTTP 200 and zero rows, while a controlled privileged read-only comparison confirmed catalog rows exist. This is consistent with the existing anonymous policy filtering rows; Phase 2 does not modify or weaken that policy.
+The initial Phase 2 public probes returned HTTP 200 with zero `categories` and `items` rows while a controlled privileged read-only comparison confirmed catalog rows existed. That **BEFORE** observation is retained as historical failure-state evidence.
+
+For the live-menu follow-up on 2026-08-24, the project owner/developer manually disabled RLS on the relevant catalog tables. Using the same browser publishable configuration as the application, read-only GET requests then returned 6 categories and 16 items, with 0 unavailable items and 0 unmatched item/category relationships. The application and this follow-up made no RLS, policy, schema, menu, price, inventory, sales, expense, customer, order, or other business-data change.
+
+The current public catalog therefore depends on table-level public grants while RLS is disabled. A successful public read proves availability, not least-privilege authorization. Explicit projections constrain this application request, but they do not prevent another holder of the public key from requesting other granted fields or tables. This state is not an acceptable production authorization boundary.
 
 1. Enable RLS before a table containing non-public or user-owned data is reachable through the Data API.
 2. Create explicit policies for `SELECT`, `INSERT`, `UPDATE`, and `DELETE`; do not rely on a broad all-operations policy.
@@ -165,7 +169,7 @@ The Phase 2 application connects to the Supabase Data API only for explicit `SEL
 ## 9. Secrets and Environment Separation
 
 - Real API keys, service-role keys, passwords, tokens, webhook secrets, private certificates, and production connection strings must never enter Git, examples, screenshots, logs, test fixtures, or client bundles.
-- **Current through Phase 2:** `.env.example` contains documented names with empty values only. Real `.env.local` remains ignored. The browser code references only `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`; server-only names are not runtime dependencies.
+- **Current through Phase 2:** `.env.example` contains documented names with empty values only. Real `.env.local` remains ignored and untracked. The browser code references only `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`; server-only names are not runtime dependencies. The refreshed follow-up scan found zero real local values in tracked files and zero actual privileged values or privileged variable names in application/browser bundles.
 - Maintain separate local, preview/test, and production credentials and databases.
 - Use deployment-platform secret storage and restrict access by role.
 - Rotate a credential immediately when exposure is suspected and document the incident without reproducing the secret.
@@ -220,7 +224,7 @@ No production release should proceed until evidence confirms:
 - Backup and restore responsibilities are documented and a restore exercise is recorded.
 - Privacy notice, retention schedule, request handling, incident contacts, and vendor reviews are approved by the accountable business role.
 
-Evidence must include the exact command or procedure, date, commit/deployment identifier, environment, literal result or attached record, and reviewer. Phase 1 has successful merged evidence. Phase 2 now has read-only access observations plus completed developer secret, bundle/configuration, automation, responsive, and accessibility checks; hosted CI and independent review remain pending. Authentication/customer authorization and write-policy tests do not apply because those features are not implemented.
+Evidence must include the exact command or procedure, date, commit/deployment identifier, environment, literal result or attached record, and reviewer. Phase 1 has successful merged evidence. Phase 2 now has successful public-key catalog reads, live responsive rendering, and a passing final local quality-gate rerun plus earlier developer secret, bundle/configuration, and accessibility checks. Follow-up hosted CI and independent review remain pending. Authentication/customer authorization features are not implemented, and no production write-policy test was attempted.
 
 ## 14. Open Decisions and Owner Inputs
 
@@ -245,13 +249,33 @@ Material changes to personal-data collection, authentication, roles, database ex
 - Queries select only `id`, names/category relation, public flavors/variants/prices, and availability; timestamps and unrelated/internal records are not requested.
 - Raw provider errors and database details are not rendered. Customers receive a generic retry/contact state.
 - Builds and CI need no production credential or network access.
-- No `INSERT`, `UPDATE`, `DELETE`, RPC, migration, policy change, inventory/sales/customer/order query, or production mutation occurs.
+- Application source contains no `INSERT`, `UPDATE`, `DELETE`, RPC, menu mutation, inventory/sales/customer/order operation, or privileged fallback. The follow-up performed catalog GET requests and HEAD-only/no-body accessibility probes; it did not retrieve unrelated table contents or mutate business data.
 
-The local privileged discovery credential was used, if needed, only in an uncommitted read-only diagnostic comparison. No value or diagnostic file is retained. It is not imported by application code, and browser runtime must never depend on it.
+The earlier local privileged discovery credential was used only for the retained **BEFORE** read-only comparison. The live follow-up and evidence screenshots use the browser publishable configuration instead. No credential value or diagnostic payload is retained, and application runtime never depends on a privileged credential.
 
 ### 16.2 RLS/access decision
 
-The current anonymous response is secure-by-default but does not meet the live-menu acceptance objective. The resolution is not to ship a privileged key or disable RLS. The project requires a reviewed public view/policy that exposes only approved catalog columns. Verification must demonstrate: public catalog `SELECT` succeeds; all catalog writes fail; internal/business/customer relations remain unreadable; and client bundles contain no privileged value. This is an owner/database-admin action outside the no-mutation Phase 2 branch.
+The owner/developer manually disabled RLS on the relevant catalog tables to unblock public catalog verification. This allowed the publishable runtime to display the real menu, but it is not a least-privilege security resolution. Current access depends on table grants, and the follow-up did not test writes against production.
+
+Before production deployment, restore RLS and add reviewed, explicit anonymous `SELECT` policies limited to the intended public catalog rows and fields. A non-production or otherwise approved policy test must demonstrate that approved catalog reads succeed, catalog writes fail, unrelated business/customer relations remain unreadable, and client bundles contain no privileged value. This remains an open Phase 2 security limitation and production blocker.
+
+### 16.2.1 Public table exposure assessment
+
+HEAD-only/no-body probes using the publishable identity checked accessibility without dumping sensitive records:
+
+| Relation | Public result | Assessment |
+| --- | --- | --- |
+| `inventory` | Reachable; response count 11 | Unrelated business table publicly readable; production security blocker |
+| `recipe_mappings` | Reachable; response count 20 | Unrelated internal mapping table publicly readable; production security blocker |
+| `expenses` | Reachable; response count 76 | Sensitive business table publicly readable; production security blocker |
+| `orders` | Reachable; response count 1,942 | Sensitive order table publicly readable; production security blocker |
+| `order_items` | Reachable; response count 4,276 | Sensitive order-detail table publicly readable; production security blocker |
+| `app_release` | Reachable; response count 19 | Unrelated table publicly reachable; requires least-privilege review |
+| `customers` | HTTP 404 | Ambiguous: absent, unexposed, or hidden; not proof of denial |
+| `sales` | HTTP 404 | Ambiguous: absent, unexposed, or hidden; not proof of denial |
+| `payments` | HTTP 404 | Ambiguous: absent, unexposed, or hidden; not proof of denial |
+
+No unrelated row body was retrieved. No public write was attempted, so this evidence must not be represented as proof that writes are denied.
 
 ### 16.3 Approved customer photographs
 

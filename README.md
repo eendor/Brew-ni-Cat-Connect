@@ -10,14 +10,14 @@ Brew ni Cat Connect is the customer-facing omnichannel platform for Brew ni Cat 
 
 Phase 1 was independently tested and approved by Renier Apal, then merged to `main` in merge commit `11c546d`. Phase 2 is being developed on `feat/showcase-website` and must remain unmerged until independent QA and pull-request review are complete.
 
-| Area                                    | Status                                                                                                             |
-| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| Phase 0 specification                   | Version 0.1 Draft complete                                                                                         |
-| Phase 1 web foundation                  | Tested, approved, and merged                                                                                       |
-| Phase 2 public showcase                 | Implementation and automated validation complete; independent QA and peer review pending                           |
-| Read-only current menu                  | Typed public integration implemented; anonymous live rows currently blocked by the existing Supabase access policy |
-| Online ordering and accounts            | Deferred to later phases                                                                                           |
-| Messenger, Android, and POS integration | Deferred to their approved roadmap phases                                                                          |
+| Area                                    | Status                                                                                                                       |
+| --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Phase 0 specification                   | Version 0.1 Draft complete                                                                                                   |
+| Phase 1 web foundation                  | Tested, approved, and merged                                                                                                 |
+| Phase 2 public showcase                 | Implementation and automated validation complete; independent QA and peer review pending                                     |
+| Read-only current menu                  | Live publishable runtime verified: 6 categories/16 items render; manually disabled RLS remains a production security blocker |
+| Online ordering and accounts            | Deferred to later phases                                                                                                     |
+| Messenger, Android, and POS integration | Deferred to their approved roadmap phases                                                                                    |
 
 ## Phase 2 Public Experience
 
@@ -71,7 +71,9 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
 
 The Phase 2 browser runtime uses only these public variables. `.env.local` and other value-bearing environment files are ignored. Privileged credentials must never be exposed to browser code or committed.
 
-The existing production project's anonymous policy currently returns an empty catalog for both tested public credentials. The UI therefore presents a safe empty/error state until the business approves a narrowly scoped public-read policy or public catalog view. The application does not fall back to privileged access.
+The initial public probes returned an empty catalog; those **BEFORE** captures remain as failure-state evidence. After the owner/developer manually disabled RLS on the relevant catalog tables, the website's publishable runtime returned and rendered 6 categories and 16 items. The application still uses no privileged fallback and made no business-data or RLS change.
+
+This current access depends on table grants and is not least privilege. HEAD-only/no-body checks found unrelated inventory, recipe, expense, order, order-item, and release tables publicly reachable. Restoring RLS and adding tested, explicit catalog-only anonymous `SELECT` policies is a production security blocker.
 
 ## Running the Development Server
 
@@ -94,7 +96,7 @@ npm run build
 python scripts/validate_phase0_docs.py
 ```
 
-The final local Phase 2 run passed formatting, dependency audit, lint, type checking, 20 of 20 unit/component tests, the production build, 13 of 13 Playwright tests, and the documentation validator. Literal results are recorded in [`docs/evidence/phase-2-implementation.md`](docs/evidence/phase-2-implementation.md). The initial push and pull-request workflows for `67a81db` both passed; live status is recorded on [Pull Request #2](https://github.com/eendor/Brew-ni-Cat-Connect/pull/2). Renier's independent QA remains pending.
+The final local Phase 2 follow-up passed formatting, dependency audit, lint, type checking, 21 of 21 unit/component tests in 6 files, the production build with 7 of 7 static pages, 13 of 13 Playwright tests, and the documentation validator. Literal results and the unmocked five-width live review are recorded in [`docs/evidence/phase-2-implementation.md`](docs/evidence/phase-2-implementation.md). The follow-up commit SHA and hosted CI remain pending. [Pull Request #2](https://github.com/eendor/Brew-ni-Cat-Connect/pull/2) remains open/unmerged, and Renier's independent QA remains pending.
 
 ## End-to-End Tests
 

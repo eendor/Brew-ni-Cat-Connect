@@ -166,4 +166,51 @@ describe("MenuCatalog", () => {
     ).toBeInTheDocument();
     expect(loader).toHaveBeenCalledTimes(2);
   });
+
+  it("TC-P2-029 — treats a zero base as a flavor-price placeholder", async () => {
+    const flavorPricedCatalog: MenuCatalogModel = {
+      categories: [
+        {
+          id: "bites",
+          name: "Cat-Tastic Bites",
+          items: [
+            {
+              id: "takoyaki",
+              name: "Takoyaki",
+              availability: "available",
+              flavors: ["Veggie", "Shrimp"],
+              variants: [
+                {
+                  id: "takoyaki-4",
+                  name: "4pcs",
+                  basePrice: 0,
+                  flavorPrices: [
+                    { flavor: "Veggie", price: 40 },
+                    { flavor: "Shrimp", price: 60 },
+                  ],
+                  description: null,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    render(
+      <MenuCatalog loadMenu={vi.fn().mockResolvedValue(flavorPricedCatalog)} />,
+    );
+
+    const card = (
+      await screen.findByRole("heading", {
+        level: 3,
+        name: "Takoyaki",
+      })
+    ).closest("article");
+
+    expect(card).not.toBeNull();
+    expect(within(card!).getAllByText("₱40").length).toBeGreaterThan(0);
+    expect(within(card!).getByText("₱60")).toBeInTheDocument();
+    expect(within(card!).queryByText("₱0")).not.toBeInTheDocument();
+  });
 });

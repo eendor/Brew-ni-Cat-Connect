@@ -3,7 +3,7 @@
 **Version:** 0.1 Draft
 **Date:** 2026-08-24
 **Branch:** `feat/showcase-website`
-**Status:** Testing / Review; local automation and the initial hosted workflows passed, the branch is pushed, and [Pull Request #2](https://github.com/eendor/Brew-ni-Cat-Connect/pull/2) is open and unmerged; independent QA/review remains pending
+**Status:** Testing / Review; the live publishable-key Menu follow-up and final local quality gates passed, hosted CI is pending, [Pull Request #2](https://github.com/eendor/Brew-ni-Cat-Connect/pull/2) remains open/unmerged, the RLS-disabled production security blocker remains open, and independent QA/review remains pending
 
 ## 1. Implemented Increment
 
@@ -39,7 +39,7 @@ The five menu posters under `public/images/menu/` were reviewed only as visual/b
 
 Eight of these are marked for the Home preview; the Gallery initially renders all 19 through Next.js Image with responsive sizes and native lazy loading outside the eager/featured set.
 
-## 3. Supabase Discovery and Access Evidence
+## 3. Supabase Discovery and Access Evidence — Before Public Access
 
 Existing POS source and controlled read-only API discovery identified:
 
@@ -51,11 +51,11 @@ Existing POS source and controlled read-only API discovery identified:
 - no discovered public catalog view, menu RPC, display-order field, or live add-on relation; and
 - POS add-on constants that are not suitable as authoritative live public data.
 
-Public publishable-key and legacy public-key reads each returned HTTP 200 with zero rows. A privileged local read-only comparison confirmed records exist, so the observed behavior is consistent with the existing anonymous access policy filtering rows. No key value was printed, saved, or committed.
+During the initial **BEFORE** observation, public publishable-key and legacy public-key reads each returned HTTP 200 with zero rows. A privileged local read-only comparison confirmed records existed, so the behavior was consistent with the then-existing anonymous access policy filtering rows. No key value was printed, saved, or committed.
 
-The application uses only `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` at browser runtime. It does not use a privileged key, mutate data, change RLS, or require Supabase during compilation. The current customer-visible result is therefore the truthful empty state until an approved least-privilege public-read boundary exists.
+The application used only `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` at browser runtime and did not use a privileged fallback. At that initial observation, customers therefore saw the truthful unavailable state.
 
-### 3.1 Representative current-record comparison
+### 3.1 Initial representative record comparison
 
 A final controlled read-only comparison on 2026-08-24 again observed HTTP 200 with zero rows for both public tables, then observed six categories and sixteen items through the permitted local discovery credential. Category/item counts were: Buldak & Sedaap (4), Cat Treats (1), Cat-Tastic Bites (3), Cat-Tastic Drinks (4), Combos & Packages (3), and Take-out Box (1). All sixteen items reported available at that observation time.
 
@@ -72,7 +72,24 @@ The same current rows were passed through the application `mapMenuCatalog` bound
 | Combos & Packages | Cat Association | Scaredy Cats ₱450; Lazy Cats ₱340; Grumpy Cats ₱480; Funny Cats ₱470; Super Cats ₱590; combo descriptions remained present |
 | Take-out Box | Take-out Box | Regular ₱10 |
 
-These are point-in-time verification observations, not hardcoded runtime fallback data. Because the customer/public role still receives zero rows, the application cannot render these records publicly yet; public live-record acceptance remains blocked until a reviewed least-privilege policy/view exists. Menu posters were not used for this comparison. The diagnostic made only GET/SELECT requests and performed zero mutations.
+These are historical point-in-time observations, not hardcoded runtime fallback data. At that **BEFORE** point the public role still received zero rows. Menu posters were not used for the comparison, and the diagnostic made only GET/SELECT requests and performed zero mutations.
+
+### 3.2 Live Menu follow-up — after manual RLS disablement
+
+On 2026-08-24, after the owner/developer manually disabled RLS on the relevant catalog tables, the same publishable configuration used by the website returned:
+
+| Public query | Literal result |
+| --- | --- |
+| `categories` explicit-field GET | HTTP 200; 6 rows |
+| `items` explicit-field GET | HTTP 200; 16 rows |
+| Availability check | 0 unavailable items |
+| `items.category_id -> categories.id` mapping check | 0 unmatched items |
+
+The returned categories were Buldak & Sedaap, Cat Treats, Cat-Tastic Bites, Cat-Tastic Drinks, Combos & Packages, and Take-out Box. Representative current rendering included Buldak Carbo from ₱119, Fries (Cat Claws) from ₱30, Matcha (The Lucky Green Neko) from ₱49, Takoyaki (Pawsome Balls) from ₱40, Cat Association from ₱340 with combo descriptions, and Take-out Box at ₱10. Flavors, structured variants, base/flavor prices, combo descriptions, availability, and category relationships passed through the typed mapper with no unmatched item.
+
+The follow-up corrected display handling for a database zero base-price sentinel when real flavor prices exist. Takoyaki now displays `From ₱40` and does not present `₱0` as a customer price. Supabase records remain authoritative; poster prices were not used.
+
+The application and automation made no RLS, policy, schema, menu, product, price, category, variant, availability, inventory, sales, expense, customer, order, or POS data mutation. The owner's manual RLS change is recorded separately and must not be confused with a row-data change.
 
 Detailed fields and relationships are in [`../database-design.md`](../database-design.md).
 
@@ -85,11 +102,11 @@ Detailed fields and relationships are in [`../database-design.md`](../database-d
 
 ## 5. Automated Case Inventory
 
-Phase 1 regression cases are preserved. Phase 2 cases use IDs `TC-P2-001` through `TC-P2-028` and cover real Home content, the navigation correction, mobile keyboard behavior, defensive menu mapping/price formatting, menu UI success/loading/empty/error/retry/availability states, public configuration, and public-route browser behavior. The final run passed 20 of 20 Vitest cases and all 13 Playwright cases: 5 retained Phase 1 regressions plus 8 Phase 2 browser cases. Exact case mapping and status are in [`../test-cases.md`](../test-cases.md).
+Phase 1 regression cases are preserved. Phase 2 cases use IDs `TC-P2-001` through `TC-P2-029` and cover real Home content, favorite-card Menu links, the navigation correction, mobile keyboard behavior, defensive menu mapping/price formatting, zero-base flavor-price display, menu UI success/loading/empty/error/retry/availability states, public configuration, and public-route browser behavior. The final follow-up run passed all 21 Vitest cases in 6 files and all 13 Playwright cases: 5 retained Phase 1 regressions plus 8 Phase 2 browser cases. Exact case mapping and status are in [`../test-cases.md`](../test-cases.md).
 
-## 6. Required Command Record
+## 6. Initial Required Command Record
 
-The following commands ran against the final local implementation and documentation revision on 2026-08-24.
+The following commands ran against the initial Phase 2 implementation and documentation revision on 2026-08-24, before the live-menu follow-up.
 
 | Command | Result | Exit status |
 | --- | --- | --- |
@@ -104,12 +121,29 @@ The following commands ran against the final local implementation and documentat
 
 The [push workflow](https://github.com/eendor/Brew-ni-Cat-Connect/actions/runs/32683571433) and [pull-request workflow](https://github.com/eendor/Brew-ni-Cat-Connect/actions/runs/32683615804) for `67a81db` both completed successfully. The metadata-only commit containing this update must receive the same checks; the live Pull Request check rollup remains authoritative.
 
+### 6.1 Follow-up command record
+
+The final follow-up commands produced these observed results:
+
+| Command | Follow-up result | Exit status |
+| --- | --- | --- |
+| `npm run format:check` | `All matched files use Prettier code style!` | 0 |
+| `npm run audit` | `found 0 vulnerabilities` | 0 |
+| `npm run lint` | ESLint completed with zero errors and zero warnings | 0 |
+| `npm run typecheck` | Next route types generated; `tsc --noEmit` completed | 0 |
+| `npm run test` | 6 files passed; 21 of 21 tests passed | 0 |
+| `npm run build` | Compiled successfully; 7 of 7 static pages generated | 0 |
+| `npm run test:e2e` | Production build passed; Playwright 13 of 13 passed | 0 |
+| `python scripts/validate_phase0_docs.py` | 22 Markdown files; 81 FR IDs; 40 NFR IDs; `ERRORS=0`; `PHASE0_DOC_VALIDATION=PASS` | 0 |
+
+The follow-up commit SHA and hosted push/pull-request workflow results are also pending. Pull Request #2 remains open and unmerged.
+
 ## 7. Developer Inspection Evidence
 
-Nine full-page Chromium captures are retained under `docs/evidence/phase-2/screenshots/`:
+The primary nine-view Chromium evidence set remains under `docs/evidence/phase-2/screenshots/`. The Menu primary captures were regenerated from the live public runtime, and the two earlier unavailable-state captures were retained separately:
 
 - Home at desktop 1440 px and mobile 375 px;
-- the truthful policy-blocked Menu state at desktop 1440 px and mobile 375 px;
+- the live current Menu at desktop 1440 px and mobile 375 px;
 - Gallery at desktop 1440 px and mobile 375 px;
 - About at desktop 1440 px, Contact at mobile 375 px, and the branded 404 at desktop 1440 px.
 
@@ -125,13 +159,28 @@ Nine full-page Chromium captures are retained under `docs/evidence/phase-2/scree
 | Contact — mobile | [`contact-mobile-375.webp`](phase-2/screenshots/contact-mobile-375.webp) |
 | Branded 404 — desktop | [`not-found-desktop-1440.webp`](phase-2/screenshots/not-found-desktop-1440.webp) |
 
+| Historical Menu state | Before evidence |
+| --- | --- |
+| Public catalog unavailable — desktop | [`menu-before-public-access-desktop-1440.webp`](phase-2/screenshots/menu-before-public-access-desktop-1440.webp) |
+| Public catalog unavailable — mobile | [`menu-before-public-access-mobile-375.webp`](phase-2/screenshots/menu-before-public-access-mobile-375.webp) |
+
 [`responsive-review.json`](phase-2/responsive-review.json) records 20 additional Home/Menu/Gallery/Contact checks across 320, 375, 768, 1024, and 1440 CSS pixels. Every response was expected, all 20 had no horizontal overflow, all nine captures had one `h1`, the skip link existed, images finished loading, and no unexpected console error was recorded.
+
+[`live-menu-review.json`](phase-2/live-menu-review.json) records the unmocked follow-up against the actual publishable runtime. At 320, 375, 768, 1024, and 1440 CSS pixels, all 6 categories and 16 items rendered, document width equalled viewport width, no unexpected console error occurred, the unavailable message was absent, and no ordering control appeared. The four Home/Menu links—one primary link plus the Matcha, Takoyaki, and Fries card links—each resolved to `/menu`.
 
 The developer keyboard inspection observed the skip link as the first Tab stop with a 3 px solid focus outline, Enter moved focus to `MAIN#main-content`, the mobile menu expanded by keyboard, and Escape collapsed it and returned focus to the trigger. A reduced-motion browser context computed a `1e-05s` transition duration. Sampled foreground/background design-token contrast ratios ranged from 5.91:1 to 13.77:1; this is focused implementation evidence, not a full WCAG conformance claim.
 
-The final secret review confirmed `.env.local` is ignored and untracked, source has zero privileged-variable-name and mutation-call matches, real local environment values have zero tracked-file matches, and the privileged local value/name has zero matches in `.next/static` and `.next/server/app`. Expected documentation references to `service_role` and the empty `SUPABASE_SECRET_KEY=` example remain non-secret.
+The refreshed follow-up secret review passed. `.env.local` remained ignored and untracked; `.env.example` had zero non-empty assignments; application source had zero privileged-variable-name and mutation-call matches; and every real local environment value had zero tracked-file matches. The actual `SUPABASE_SECRET_KEY` value and its variable name had zero matches in `.next/static` and `.next/server/app`. The expected public URL/publishable values appeared in the browser bundle. One literal `sb_secret_` marker came from the locked Supabase client's key-type detection code, not from a credential; the real secret value had zero bundle matches.
+
+### 7.1 Current RLS and public exposure limitation
+
+RLS is currently manually disabled by the owner/developer on the relevant catalog tables. The application still uses the publishable key only, but public reads now depend on table grants rather than a tested least-privilege RLS policy. HEAD-only/no-body public probes found `inventory` (11), `recipe_mappings` (20), `expenses` (76), `orders` (1,942), `order_items` (4,276), and `app_release` (19) reachable. `customers`, `sales`, and `payments` returned HTTP 404, which cannot distinguish absent/unexposed relations from an authorization boundary.
+
+[`public-access-audit.json`](phase-2/public-access-audit.json) records the method and result without credential values or unrelated row bodies. No unrelated row body was retrieved and no write was attempted. This is a production security blocker. Restore RLS and add/test explicit anonymous `SELECT` policies limited to intended public catalog data before deployment; this hardening work is not complete.
 
 The focused P1-UX-001 change also has a verified copy/diff/rollback transaction: [`MODIFIED_FILE`](phase-2/transaction/MODIFIED_FILE), [`DIFF_FILE`](phase-2/transaction/DIFF_FILE), [`VERIFICATION.txt`](phase-2/transaction/VERIFICATION.txt), and executable [`ROLLBACK.sh`](phase-2/transaction/ROLLBACK.sh). Rollback was exercised on a separate copy; the changed application header remained intact.
+
+The zero-base-price follow-up has its own verified copy/diff/rollback transaction under [`phase-2/live-menu-follow-up/transaction/`](phase-2/live-menu-follow-up/transaction/). The rollback was tested on a separate copy while the application change remained applied.
 
 ## 8. Independent QA Handoff — Renier
 
@@ -146,12 +195,17 @@ All items are intentionally unchecked. Developer automation does not complete th
 
 ### Menu and Supabase
 
-- [ ] Public access behavior matches the current approved Supabase policy.
-- [ ] When public rows are approved, categories, names, current prices, variants/sizes, flavors, descriptions/combos, and availability match representative live records.
+- [ ] The actual live Menu displays 6 current categories and 16 current items through the publishable runtime, without a secret/service-role credential.
+- [ ] Current prices, variants/sizes, flavors, descriptions/combos, and availability match current Supabase records; no poster-derived stale price is used.
+- [ ] Takoyaki displays `From ₱40`, retains its flavor prices, and does not display the zero base-price sentinel as `₱0`.
 - [ ] No POS-hardcoded add-on is presented as authoritative live catalog data; the absent live add-on relation is documented.
 - [ ] Loading, empty, error, retry, unavailable, and category-navigation states are clear, keyboard accessible, and usable at representative mobile widths.
 - [ ] No poster-derived stale prices or Add to Cart/checkout controls appear.
 - [ ] Network/configuration failure exposes no credential or internal error detail.
+- [ ] Matcha, Takoyaki, and Fries favorite cards link to `/menu` without exact sales statistics or ordering actions.
+- [ ] Desktop 1440 and mobile 375 primary Menu evidence show live data; layouts at 320, 375, 768, 1024, and 1440 have no unintended overflow or unusable wrapping.
+- [ ] `.env.local` remains ignored/untracked and no privileged credential appears in source or browser bundles.
+- [ ] Documentation accurately states that RLS is manually disabled, unrelated business tables are publicly reachable, and RLS restoration plus least-privilege catalog policies remain a production blocker.
 
 ### Content and media
 
@@ -171,8 +225,8 @@ Record reviewer name, date, browser/device, actual results, findings, related bu
 
 ## 9. Pull Request State
 
-**Commits:** `0533bde` line endings; `f3949c3` read-only menu foundation; `4d66f95` public showcase and approved assets; `e03293e` Phase 2 tests; `67a81db` documentation and evidence
+**Commits:** `0533bde` line endings; `f3949c3` read-only menu foundation; `4d66f95` public showcase and approved assets; `e03293e` Phase 2 tests; `67a81db` documentation and evidence; follow-up commit pending
 **Pull Request:** [#2 — Phase 2: Build Brew ni Cat public showcase website](https://github.com/eendor/Brew-ni-Cat-Connect/pull/2), open and unmerged
-**Hosted CI:** Initial push and pull-request workflows for `67a81db` passed; the live check rollup covers later handoff-only updates
+**Hosted CI:** Initial push and pull-request workflows for `67a81db` passed; follow-up commit checks pending
 **Review:** Pending Renier
 **Merge:** Prohibited during implementation handoff

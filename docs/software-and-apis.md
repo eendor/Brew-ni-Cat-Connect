@@ -1,7 +1,7 @@
 # Software Libraries and APIs
 
 **Version:** 0.1 Draft\
-**Status:** Phase 2 public showcase dependencies installed and locked; public catalog API integration implemented with an access-policy blocker\
+**Status:** Phase 2 public showcase dependencies installed and locked; live public catalog API rendering verified; manually RLS-disabled access remains a production security blocker\
 **Last updated:** 2026-08-24
 
 ## 1. Current technology state
@@ -85,7 +85,7 @@ No future technology should be added only to increase the tool count. Its requir
 
 | Boundary                           | Intended purpose                                     | Authentication direction                             | Current state                                           |
 | ---------------------------------- | ---------------------------------------------------- | ---------------------------------------------------- | ------------------------------------------------------- |
-| Public website                     | Phase 2 showcase routes and read-only current-menu presentation | Supabase Data API through `@supabase/supabase-js` | Browser-runtime public reads; current anonymous policy yields zero rows |
+| Public website                     | Phase 2 showcase routes and read-only current-menu presentation | Supabase Data API through `@supabase/supabase-js` | Browser publishable runtime returns and renders 6 categories/16 items; no privileged key |
 | Web/Android to shared backend      | Menu, account, order, status, and loyalty operations | Customer session plus RLS/server authorization       | Planned; no endpoint or client exists                   |
 | Messenger to server webhook        | Customer-initiated inquiries and guided actions      | Meta signature verification and server-held token    | Deferred                                                |
 | Connect integration service to POS | Controlled menu/order/status synchronization         | Machine identity with least privilege; mechanism TBD | Deferred pending POS analysis                           |
@@ -124,11 +124,11 @@ The manifest pins npm 12.0.2 through its `packageManager` field. Its `allowScrip
 | Technology / API | Purpose | Version | License | Notes |
 | --- | --- | --- | --- | --- |
 | Supabase JavaScript | Construct the browser public client and issue typed Data API reads | 2.112.3 | MIT | Exact version locked; session persistence/refresh disabled because Phase 2 has no auth |
-| Supabase Data API | Read approved `categories` and `items` catalog fields | Managed existing service | Provider service terms apply | `SELECT` only; public probes return HTTP 200/zero rows under current policy |
+| Supabase Data API | Read approved `categories` and `items` catalog fields | Managed existing service | Provider service terms apply | Application uses explicit `SELECT` only; live public GET succeeds, but RLS is manually disabled and table grants expose unrelated relations |
 | Next.js Image | Optimize the official logo and curated approved gallery images | Included in Next.js 16.3.2 | MIT | No separate gallery/media dependency added |
 
 Queries select explicit fields rather than `*`. The runtime does not query customer, order, inventory, sales, expense, or administrative structures. `src/lib/menu` maps database rows into application-level types so components do not depend directly on unstructured records.
 
 The app intentionally performs retrieval in the browser after render. This keeps `npm run build` and GitHub Actions independent of production network availability and credentials. Missing configuration or denied/empty data produces a controlled customer state.
 
-The five local menu posters are assets, not an API or data source. Current prices must come from Supabase after approved anonymous access exists.
+The five local menu posters are assets, not an API or data source. Current names/prices come from the live Supabase publishable response. That functional data path does not make the current RLS-disabled access least privilege.

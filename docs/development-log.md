@@ -58,12 +58,12 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Pull request:** [#1 — Phase 1: Initialize Brew ni Cat Connect web foundation](https://github.com/eendor/Brew-ni-Cat-Connect/pull/1), open and not merged.\
 **Next action:** Renier performs Phase 1 manual QA and Pull Request review; findings are resolved before merge.
 
-## 2026-08-24 — Phase 2 public showcase implementation
+## 2026-08-24 — Phase 2 public showcase implementation (before live-menu follow-up)
 
 **Date:** 2026-08-24\
 **Phase:** Phase 2 — Public Showcase Website\
 **Task:** Replace the foundation placeholders with Brew ni Cat's real public presence and add a typed read-only current-menu integration without beginning ordering or mutating production.\
-**Summary:** The `feat/showcase-website` branch implements Home, Menu, About, Gallery, and Contact experiences, real approved branding/content/media, a browser-runtime Supabase catalog adapter, customer-safe dynamic states, Phase 2 tests, and cross-platform line-ending rules. The current anonymous Supabase policy returns zero catalog rows, so live public record display/verification remains blocked; the code does not bypass the policy. Local developer validation and the initial hosted push/pull-request workflows for `67a81db` passed. The branch is pushed and Pull Request #2 is open/unmerged; Renier QA/review remains pending.\
+**Summary:** The `feat/showcase-website` branch implements Home, Menu, About, Gallery, and Contact experiences, real approved branding/content/media, a browser-runtime Supabase catalog adapter, customer-safe dynamic states, Phase 2 tests, and cross-platform line-ending rules. At this **BEFORE** observation, the anonymous Supabase policy returned zero catalog rows, so live public record display/verification was blocked; the code did not bypass the policy. Local developer validation and the initial hosted push/pull-request workflows for `67a81db` passed. The branch was pushed and Pull Request #2 opened; Renier QA/review remained pending.\
 **Changes:**
 
 - replaced Phase 1 customer-facing placeholders with business-focused routes and page metadata;
@@ -80,9 +80,35 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Files/modules affected:** `src/app`; shared layout/UI; `src/components/menu`; `src/config`; `src/lib/menu`; `src/lib/supabase`; `src/types`; `public/images`; tests; project/CI/format configuration; README and living documentation.\
 **Testing performed:** `npm run format:check`, `npm run audit`, `npm run lint`, `npm run typecheck`, `npm run test`, `npm run build`, `npm run test:e2e`, and `python scripts/validate_phase0_docs.py` all exited 0. Vitest passed 20/20 in 6 files; Playwright passed 13/13; the build generated 7/7 static pages; the validator checked 22 Markdown files with 0 errors; npm reported 0 vulnerabilities. Twenty route/viewport checks had zero overflow failures, keyboard/reduced-motion/focus checks matched expectations, and the privileged-value source/bundle scan had zero matches. Controlled discovery observed HTTP 200/zero rows with both public credentials and confirmed six categories/sixteen items through a local privileged read-only comparison.\
 **Issues encountered:** The production anonymous role does not currently expose catalog rows. The discovered schema also has no public menu view/RPC, display-order field, or live add-on table; POS add-ons are hardcoded. Old menu posters contain non-authoritative prices.\
-**Resolution:** Kept production unchanged and RLS intact; made the runtime public-key-only with honest empty/error states; documented that an owner-approved minimum-field public view/policy and public-role verification are required. Used deterministic alphabetical order and omitted non-live add-ons. Posters remain visual reference only.\
+**Resolution at that observation:** Kept production unchanged and RLS intact; made the runtime public-key-only with honest empty/error states; documented that an owner-approved minimum-field public view/policy and public-role verification were required. Used deterministic alphabetical order and omitted non-live add-ons. Posters remained visual reference only.\
 **Documentation updated:** README; SRS; project overview; functional requirements; execution paths; emerging technologies; system architecture; database design; software/APIs; security/privacy; development standards; testing strategy/cases; code review; decisions; Phase 2 evidence; and this log.\
 **Git branch:** `feat/showcase-website`\
 **Git commits:** `0533bde` — `fix: standardize repository line endings`; `f3949c3` — `feat: add read-only Supabase menu foundation`; `4d66f95` — `feat: build Brew ni Cat public showcase website`; `e03293e` — `test: add Phase 2 showcase and menu coverage`; `67a81db` — `docs: record Phase 2 implementation evidence`; final PR/CI metadata follows in the commit containing this updated record.\
 **Pull request:** [#2 — Phase 2: Build Brew ni Cat public showcase website](https://github.com/eendor/Brew-ni-Cat-Connect/pull/2), open and unmerged.\
 **Next action:** The handoff-only commit receives the required hosted checks, then Renier independently tests/reviews Pull Request #2. Do not merge, mark Done, or begin Phase 3 before that review.
+
+---
+
+## 2026-08-24 — Phase 2 live Supabase menu follow-up
+
+**Date:** 2026-08-24\
+**Phase:** Phase 2 — Public Showcase Website\
+**Task:** Reverify the real catalog through the website's publishable Supabase identity after the owner manually disabled RLS, refresh live Menu evidence, and record the resulting security limitation without changing business data.\
+**Summary:** Public GET requests using `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` returned 6 categories and 16 items, with 0 unavailable items and 0 unmatched relationships. The real `/menu` page displayed all six categories and sixteen items at 320, 375, 768, 1024, and 1440 CSS pixels with zero document overflow and zero console errors. Phase 2 remains in Testing / Review; Pull Request #2 remains open/unmerged and Renier QA remains pending.\
+**Changes:**
+
+- preserved the previous unavailable-state Menu captures as `menu-before-public-access-desktop-1440.webp` and `menu-before-public-access-mobile-375.webp`;
+- regenerated primary `menu-desktop-1440.webp` and `menu-mobile-375.webp` evidence from the live public runtime with no route mocking;
+- recorded the five-width live inspection in `docs/evidence/phase-2/live-menu-review.json`;
+- corrected customer-facing handling of a zero base-price sentinel when flavor prices exist, so Takoyaki now displays `From ₱40` rather than `From ₱0`;
+- retained loading, empty, retrieval-error/retry, and successful menu-state coverage and added regression coverage for the zero-base/flavor-price case;
+- verified the Matcha, Takoyaki, and Fries favorite-card links continue to lead to `/menu`; and
+- updated living documentation to distinguish the historical blocker from the live result and the current RLS-disabled risk.
+
+**Database/access result:** The owner/developer manually disabled RLS on the relevant catalog tables before this work. The application and automated follow-up made no RLS, policy, schema, menu, product, price, category, variant, availability, inventory, sales, expense, customer, order, or POS data mutation. Public catalog reads now depend on table-level grants and are not least privilege.\
+**Exposure assessment:** HEAD-only/no-body public probes found `inventory` (11), `recipe_mappings` (20), `expenses` (76), `orders` (1,942), `order_items` (4,276), and `app_release` (19) publicly reachable. `customers`, `sales`, and `payments` returned HTTP 404, an ambiguous result rather than proof of denial. No unrelated record body was retrieved and no write was tested. This exposure is a production security blocker; restore RLS and add/test explicit catalog-only anonymous `SELECT` policies before production.\
+**Testing performed:** Live public data access and five-width browser inspection passed as recorded above. The final follow-up gates all exited 0: `npm run format:check` reported `All matched files use Prettier code style!`; `npm run audit` reported `found 0 vulnerabilities`; lint completed with no warnings; typecheck generated route types and completed; Vitest passed 6 files and 21/21 tests; the production build compiled and generated 7/7 static pages; Playwright passed 13/13 tests; and the documentation validator checked 22 Markdown files, 81 FR IDs, and 40 NFR IDs with `ERRORS=0` and `PHASE0_DOC_VALIDATION=PASS`.\
+**Files/modules affected:** Menu presentation; focused unit coverage; live capture tooling/evidence; README and living Phase 2 documentation.\
+**Git branch:** `feat/showcase-website`\
+**Pull request:** [#2 — Phase 2: Build Brew ni Cat public showcase website](https://github.com/eendor/Brew-ni-Cat-Connect/pull/2), open and unmerged.\
+**Next action:** Complete and record the final quality gates and hosted checks, then Renier independently verifies the live menu, security truthfulness, responsive behavior, and code review. Do not merge Pull Request #2 or begin Phase 3 during this follow-up.
