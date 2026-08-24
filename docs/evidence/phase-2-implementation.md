@@ -55,6 +55,25 @@ Public publishable-key and legacy public-key reads each returned HTTP 200 with z
 
 The application uses only `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` at browser runtime. It does not use a privileged key, mutate data, change RLS, or require Supabase during compilation. The current customer-visible result is therefore the truthful empty state until an approved least-privilege public-read boundary exists.
 
+### 3.1 Representative current-record comparison
+
+A final controlled read-only comparison on 2026-08-24 again observed HTTP 200 with zero rows for both public tables, then observed six categories and sixteen items through the permitted local discovery credential. Category/item counts were: Buldak & Sedaap (4), Cat Treats (1), Cat-Tastic Bites (3), Cat-Tastic Drinks (4), Combos & Packages (3), and Take-out Box (1). All sixteen items reported available at that observation time.
+
+The same current rows were passed through the application `mapMenuCatalog` boundary. Representative public fields compared without recording internal IDs were:
+
+| Category | Current product checked | Representative current options/prices checked |
+| --- | --- | --- |
+| Buldak & Sedaap | Buldak Carbo | Plain Carbo Samyang ₱119; Carbo Samyang w/ Milk ₱129; Carbo Samyang w/ Egg ₱135 |
+| Cat Treats | Cat Treats | Regular ₱5 |
+| Cat-Tastic Bites | Fries (Cat Claws) | Small ₱30; Medium ₱50; Large ₱70; Jumbo ₱150; four named flavors remained attached |
+| Cat-Tastic Bites | Takoyaki (Pawsome Balls) | 4pcs flavor prices: Veggie Whiskers ₱40, Cheesy Calico ₱50, Squid Treats ₱55, Shrimp Whisker ₱60 |
+| Cat-Tastic Drinks | Cat-Feine (Classic Coffee) | 12oz ₱49; 16oz ₱59; 22oz ₱79; six named flavors remained attached |
+| Cat-Tastic Drinks | Matcha (The Lucky Green Neko) | 12oz ₱49; 16oz ₱59; 22oz ₱79; four named flavors remained attached |
+| Combos & Packages | Cat Association | Scaredy Cats ₱450; Lazy Cats ₱340; Grumpy Cats ₱480; Funny Cats ₱470; Super Cats ₱590; combo descriptions remained present |
+| Take-out Box | Take-out Box | Regular ₱10 |
+
+These are point-in-time verification observations, not hardcoded runtime fallback data. Because the customer/public role still receives zero rows, the application cannot render these records publicly yet; public live-record acceptance remains blocked until a reviewed least-privilege policy/view exists. Menu posters were not used for this comparison. The diagnostic made only GET/SELECT requests and performed zero mutations.
+
 Detailed fields and relationships are in [`../database-design.md`](../database-design.md).
 
 ## 4. Phase 1 Follow-up Findings
