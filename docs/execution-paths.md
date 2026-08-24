@@ -3,7 +3,7 @@
 **Version:** 0.1 Draft\
 **Date:** 2026-08-18\
 **Document status:** Planning baseline\
-**Implementation status:** Planned; no application execution path described here is implemented or tested yet.
+**Implementation status:** Phase 1 is Tested and merged. Phase 2 public discovery routes and the read-only menu retrieval path passed developer automation and are in Testing / Review; the public live-catalog policy and independent review remain open. Ordering and later paths remain Planned or Deferred.
 
 ## 1. Purpose and notation
 
@@ -86,8 +86,8 @@ Expected success outcome: exactly one order is stored, its line-item snapshot an
 | Duplicate submit or network retry | Reuse the idempotency key and return the original outcome | At most one order created |
 | Server/database timeout before outcome is known | Show a pending/retry-safe state and reconcile by idempotency key | Never advise a blind duplicate submission |
 | Shop rejects order | Persist `rejected`, show a customer-safe reason when supplied, and stop preparation transitions | Order retained for audit/history according to retention policy |
-| Payment workflow needed | `TODO: Confirm with Brew ni Cat owner.` Define supported method, proof, refund, and failure rules before implementation | No payment assumptions in Version 0.1 |
-| Delivery requested | `TODO: Confirm with Brew ni Cat owner.` Delivery is outside the baseline until scope, fees, coverage, and policy are approved | Pickup-only design baseline |
+| Payment workflow needed | Cash and GCash are confirmed for public information. **TODO: Confirm with Brew ni Cat owner.** Define any future online proof/provider, settlement, refund, and failure rules before implementation | No online payment operation or record is created in Phase 2 |
+| Delivery requested | The customer may independently book and pay a preferred external rider after arranging the shop order; Brew ni Cat does not control availability, fee, or ETA. In-app rider booking/integrated delivery remains Deferred | Phase 2 displays information only and collects no delivery data |
 
 ### 4.3 Order state rules
 
@@ -313,8 +313,8 @@ flowchart TD
 
 - `TODO: Confirm with Brew ni Cat owner.` Required customer data and account verification policy.
 - `TODO: Confirm with Brew ni Cat owner.` Pickup workflow, acceptance/rejection reasons, preparation/status terminology, cancellation, and completion policy.
-- `TODO: Confirm with Brew ni Cat owner.` Supported payment workflow and related failure/refund policy.
-- `TODO: Confirm with Brew ni Cat owner.` Whether delivery enters project scope.
+- Cash/GCash are confirmed for display. **TODO: Confirm with Brew ni Cat owner.** Define any future online payment proof/provider and failure/refund policy.
+- Customer-arranged external-rider information is confirmed. **TODO: Confirm with Brew ni Cat owner.** Decide whether any future integrated delivery/location workflow enters scope.
 - `TODO: Confirm with Brew ni Cat owner.` Loyalty earning, redemption, expiry, and reversal rules.
 - POS source-of-truth and interface decisions await a documented assessment of the existing POS.
 - Messenger account linking, human handoff, policy, and data-retention design await the Messenger phase.
@@ -338,3 +338,20 @@ flowchart TD
 ## 15. Acceptance of this draft
 
 Version 0.1 was checked for alignment with the functional requirements, non-functional requirements, architecture, security/privacy plan, and testing strategy. This is specification review, not runtime test evidence. Each implemented path will later link to executable or manual test cases and their recorded results; until then its status remains **Planned**.
+
+## 18. Phase 2 Read-only Public Menu Path
+
+```mermaid
+flowchart TD
+    A[Customer opens Menu] --> B[Public page and loading state render]
+    B --> C[Browser creates public Supabase client]
+    C --> D[SELECT approved fields from categories and items]
+    D --> E{Response}
+    E -->|Rows| F[Defensive mapper normalizes categories items flavors variants prices availability]
+    F --> G[Customer browses catalog by category]
+    E -->|Zero rows| H[Truthful menu-unavailable empty state]
+    E -->|Error or missing config| I[Recoverable error state]
+    I --> J[Customer retries or opens Contact]
+```
+
+The current production anonymous policy follows the zero-row branch. The application does not use a privileged credential as fallback. The path performs no cart action, order submission, database write, authentication, or rider booking.

@@ -57,3 +57,32 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Git commits:** `9c3fdfeae4ee12acea9819fca12b21ebfc0757c2` — `chore: initialize Next.js project foundation`; `90c43cca6b047c6bb11a285660ec5ce2a27d8626` — `test: add application foundation tests`; `193d69c8f17f6d5c91556789bb3fa98f2563e9fc` — `ci: add project validation workflow`; `fb3e4b82ed7be085d722f6974c4874f9b54a42d4` — `docs: record Phase 1 implementation evidence`; the CI-result update is the commit containing this entry.\
 **Pull request:** [#1 — Phase 1: Initialize Brew ni Cat Connect web foundation](https://github.com/eendor/Brew-ni-Cat-Connect/pull/1), open and not merged.\
 **Next action:** Renier performs Phase 1 manual QA and Pull Request review; findings are resolved before merge.
+
+## 2026-08-24 — Phase 2 public showcase implementation
+
+**Date:** 2026-08-24\
+**Phase:** Phase 2 — Public Showcase Website\
+**Task:** Replace the foundation placeholders with Brew ni Cat's real public presence and add a typed read-only current-menu integration without beginning ordering or mutating production.\
+**Summary:** The `feat/showcase-website` branch implements Home, Menu, About, Gallery, and Contact experiences, real approved branding/content/media, a browser-runtime Supabase catalog adapter, customer-safe dynamic states, Phase 2 tests, and cross-platform line-ending rules. The current anonymous Supabase policy returns zero catalog rows, so live public record display/verification remains blocked; the code does not bypass the policy. Local developer validation passed. Hosted CI, branch push, Pull Request, and Renier QA/review remain pending at this documentation checkpoint.\
+**Changes:**
+
+- replaced Phase 1 customer-facing placeholders with business-focused routes and page metadata;
+- configured the official logo and a curated 19-image approved Gallery, with eight Home-preview images and generic privacy-respecting alt text;
+- added confirmed address/landmark/contact/payment/takeout/social/variable-hours and informational independent-rider content;
+- resolved P1-UX-001 with one Menu link plus a distinct Visit us/Contact action;
+- resolved the repository-policy portion of P1-ENV-001 with `.gitattributes`, binary exclusions, and Prettier LF;
+- inspected the existing POS/catalog boundary and discovered `categories`, `items`, pipe-delimited flavors, JSON variants/prices/descriptions, and availability;
+- installed Supabase JavaScript 2.112.3 and created typed public client/fetch/map/format layers using public configuration and `SELECT` only;
+- implemented Menu loading, empty, error/retry, availability, category, product, size/variant, flavor-price, and combo-description presentation with no cart/checkout controls;
+- added Phase 2 unit/component and Playwright cases while preserving Phase 1 regression behavior; and
+- updated requirements, architecture, schema, emerging-tech, dependency, security/privacy, testing, review, decision, evidence, and README documentation.
+
+**Files/modules affected:** `src/app`; shared layout/UI; `src/components/menu`; `src/config`; `src/lib/menu`; `src/lib/supabase`; `src/types`; `public/images`; tests; project/CI/format configuration; README and living documentation.\
+**Testing performed:** `npm run format:check`, `npm run audit`, `npm run lint`, `npm run typecheck`, `npm run test`, `npm run build`, `npm run test:e2e`, and `python scripts/validate_phase0_docs.py` all exited 0. Vitest passed 20/20 in 6 files; Playwright passed 13/13; the build generated 7/7 static pages; the validator checked 22 Markdown files with 0 errors; npm reported 0 vulnerabilities. Twenty route/viewport checks had zero overflow failures, keyboard/reduced-motion/focus checks matched expectations, and the privileged-value source/bundle scan had zero matches. Controlled discovery observed HTTP 200/zero rows with both public credentials and confirmed six categories/sixteen items through a local privileged read-only comparison.\
+**Issues encountered:** The production anonymous role does not currently expose catalog rows. The discovered schema also has no public menu view/RPC, display-order field, or live add-on table; POS add-ons are hardcoded. Old menu posters contain non-authoritative prices.\
+**Resolution:** Kept production unchanged and RLS intact; made the runtime public-key-only with honest empty/error states; documented that an owner-approved minimum-field public view/policy and public-role verification are required. Used deterministic alphabetical order and omitted non-live add-ons. Posters remain visual reference only.\
+**Documentation updated:** README; SRS; project overview; functional requirements; execution paths; emerging technologies; system architecture; database design; software/APIs; security/privacy; development standards; testing strategy/cases; code review; decisions; Phase 2 evidence; and this log.\
+**Git branch:** `feat/showcase-website`\
+**Git commits:** `0533bde` — `fix: standardize repository line endings`; `f3949c3` — `feat: add read-only Supabase menu foundation`; `4d66f95` — `feat: build Brew ni Cat public showcase website`; `e03293e` — `test: add Phase 2 showcase and menu coverage`; documentation/evidence finalization follows in the commit containing this updated record.\
+**Pull request:** Pending creation; must target `main` and remain open for Renier.\
+**Next action:** Complete the final validation/evidence record, push the feature branch, open the unmerged Phase 2 Pull Request, and have Renier independently test/review it. Do not begin Phase 3.

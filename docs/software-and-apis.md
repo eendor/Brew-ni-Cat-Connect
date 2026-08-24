@@ -1,16 +1,16 @@
 # Software Libraries and APIs
 
 **Version:** 0.1 Draft\
-**Status:** Phase 1 web dependencies installed and locked; external APIs deferred\
-**Last updated:** 2026-08-23
+**Status:** Phase 2 public showcase dependencies installed and locked; public catalog API integration implemented with an access-policy blocker\
+**Last updated:** 2026-08-24
 
 ## 1. Current technology state
 
-Phase 1 implements the selected web foundation with **Next.js App Router, React, TypeScript, and Tailwind CSS**. The repository commits `package-lock.json`, pins every direct dependency to an exact version, and requires Node.js 24.x. Vitest and Testing Library provide unit/component testing, Playwright provides browser smoke testing, and ESLint, Prettier, TypeScript, and the Next.js production build form the local quality gate.
+Phase 1 established the web foundation with **Next.js App Router, React, TypeScript, and Tailwind CSS**. Phase 2 retains that foundation and adds the public showcase plus a typed read-only Supabase catalog client. The repository commits `package-lock.json`, pins every direct dependency to an exact version, and requires Node.js 24.x. Vitest and Testing Library provide unit/component testing, Playwright provides browser smoke testing, and ESLint, Prettier, TypeScript, and the Next.js production build form the local quality gate.
 
-The Phase 0 planning register dated 2026-08-18 is retained in repository history. The tables below supersede its registry observations with versions actually installed for Phase 1. An installed version documents the project toolchain; it does not by itself claim that a check passed. Executed results belong in the test evidence and development log.
+The Phase 0 planning register dated 2026-08-18 is retained in repository history. The tables below supersede its registry observations with versions actually installed through Phase 2. An installed version documents the project toolchain; it does not by itself claim that a check passed. Executed results belong in the test evidence and development log.
 
-Supabase, Meta Messenger Platform, Android, and POS dependencies are not installed or connected in Phase 1.
+Supabase JavaScript is installed solely for Phase 2 public read-only catalog retrieval. Meta Messenger Platform and Android dependencies are not installed; no POS mutation/synchronization dependency exists.
 
 ## 2. Runtime and application dependencies
 
@@ -66,15 +66,15 @@ Supabase, Meta Messenger Platform, Android, and POS dependencies are not install
 | `npm run test:coverage` | Run Vitest and create V8 coverage output                       |
 | `npm run test:e2e`      | Build the app and run Playwright against the production server |
 
-## 5. Planned and deferred technologies
+## 5. Current provider boundary and deferred technologies
 
-These technologies remain architecture directions, not installed capabilities:
+This table distinguishes the installed Phase 2 catalog boundary from capabilities that remain future architecture directions:
 
 | Technology                               | Intended purpose                                              | Version                                    | License / terms             | Current status                                                       |
 | ---------------------------------------- | ------------------------------------------------------------- | ------------------------------------------ | --------------------------- | -------------------------------------------------------------------- |
-| Supabase JavaScript                      | Future authentication, database, storage, and realtime client | TBD at Phase 4 compatibility review        | MIT                         | Deferred; no client or credentials in Phase 1                        |
-| PostgreSQL (Supabase managed)            | Planned central relational data store                         | TBD by approved project                    | PostgreSQL License          | Deferred; schema and RLS design required first                       |
-| Zod or an evaluated equivalent           | Runtime validation at trust boundaries                        | TBD when input contracts are introduced    | Verify before install       | Not installed; Phase 1 contains no business-data boundary            |
+| Supabase JavaScript                      | Public read-only catalog client; later evaluated for auth/realtime needs | 2.112.3                                   | MIT                         | Installed in Phase 2; uses public browser configuration only         |
+| PostgreSQL (Supabase managed)            | Existing catalog store now; later central customer/order data store | Existing managed project; service version provider-managed | PostgreSQL License | Phase 2 reads discovered catalog fields only; customer/order schema, migrations, and RLS design remain deferred |
+| Zod or an evaluated equivalent           | Runtime schema validation for future write/external contracts        | TBD when justified                       | Verify before install       | Not installed; Phase 2 uses a narrow defensive catalog mapper, while future write boundaries require a fresh evaluation |
 | Meta Messenger Platform                  | Future customer-initiated messaging channel                   | Recheck supported Graph API during Phase 7 | Platform terms apply        | Deferred until the shared backend is stable                          |
 | Android SDK, Kotlin, and Jetpack Compose | Future native Android client                                  | TBD during Phase 8 architecture gate       | Mixed; verify per component | Deferred                                                             |
 | POS integration adapter                  | Controlled menu/order/status synchronization                  | TBD after POS analysis                     | TBD                         | Deferred to Phase 6; direct public POS database access is prohibited |
@@ -85,13 +85,13 @@ No future technology should be added only to increase the tool count. Its requir
 
 | Boundary                           | Intended purpose                                     | Authentication direction                             | Current state                                           |
 | ---------------------------------- | ---------------------------------------------------- | ---------------------------------------------------- | ------------------------------------------------------- |
-| Public web shell                   | Static Phase 1 presentation and local navigation     | None                                                 | Implemented without customer data or external API calls |
+| Public website                     | Phase 2 showcase routes and read-only current-menu presentation | Supabase Data API through `@supabase/supabase-js` | Browser-runtime public reads; current anonymous policy yields zero rows |
 | Web/Android to shared backend      | Menu, account, order, status, and loyalty operations | Customer session plus RLS/server authorization       | Planned; no endpoint or client exists                   |
 | Messenger to server webhook        | Customer-initiated inquiries and guided actions      | Meta signature verification and server-held token    | Deferred                                                |
 | Connect integration service to POS | Controlled menu/order/status synchronization         | Machine identity with least privilege; mechanism TBD | Deferred pending POS analysis                           |
 | Deployment service to secrets      | Runtime configuration                                | Platform access controls                             | Planned; provider TBD                                   |
 
-No provider keys, webhook secrets, payment identifiers, production endpoints, or real Supabase configuration are defined in this document or the Phase 1 application.
+No provider-key value, webhook secret, payment identifier, or privileged credential is defined in this document or source control. Real local configuration remains in ignored `.env.local`.
 
 ## 7. Dependency decision rules
 
@@ -118,3 +118,17 @@ The manifest pins npm 12.0.2 through its `packageManager` field. Its `allowScrip
 - Android package ownership and Google Play account: **TODO: Confirm with Brew ni Cat owner.**
 - POS interface technology and credentials: **TODO: Confirm with Brew ni Cat owner.**
 - Payment provider, if online payment enters scope: **TODO: Confirm with Brew ni Cat owner.**
+
+## 9. Phase 2 Public Catalog API Contract
+
+| Technology / API | Purpose | Version | License | Notes |
+| --- | --- | --- | --- | --- |
+| Supabase JavaScript | Construct the browser public client and issue typed Data API reads | 2.112.3 | MIT | Exact version locked; session persistence/refresh disabled because Phase 2 has no auth |
+| Supabase Data API | Read approved `categories` and `items` catalog fields | Managed existing service | Provider service terms apply | `SELECT` only; public probes return HTTP 200/zero rows under current policy |
+| Next.js Image | Optimize the official logo and curated approved gallery images | Included in Next.js 16.3.2 | MIT | No separate gallery/media dependency added |
+
+Queries select explicit fields rather than `*`. The runtime does not query customer, order, inventory, sales, expense, or administrative structures. `src/lib/menu` maps database rows into application-level types so components do not depend directly on unstructured records.
+
+The app intentionally performs retrieval in the browser after render. This keeps `npm run build` and GitHub Actions independent of production network availability and credentials. Missing configuration or denied/empty data produces a controlled customer state.
+
+The five local menu posters are assets, not an API or data source. Current prices must come from Supabase after approved anonymous access exists.

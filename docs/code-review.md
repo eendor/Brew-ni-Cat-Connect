@@ -1,7 +1,7 @@
 # Code Review and Inspection Record
 
 **Document version:** 0.1 Draft\
-**Last updated:** 2026-08-23
+**Last updated:** 2026-08-24
 
 This document separates developer self-inspection from independent teammate review. A pull request or automated check is not recorded as peer approval until a named teammate has actually reviewed it.
 
@@ -49,14 +49,46 @@ This document separates developer self-inspection from independent teammate revi
 
 **Status:** Developer self-inspection complete; independent teammate review pending.
 
-## Independent Phase 1 review handoff
+## Independent Phase 1 Review Closure
 
 **Module:** Phase 1 — Project Foundation\
 **Author:** Rodnee\
-**Reviewer:** Pending — Renier\
-**Date:** Pending
+**Reviewer:** Renier Apal\
+**Date:** Review date is not recorded in this document
 
-**Findings:** Pending real teammate review.\
-**Recommendations:** Pending real teammate review.\
+**Findings:** Independent manual QA and peer review passed with no blocking defect. P1-UX-001 (duplicate desktop Menu/View menu actions) and P1-ENV-001 (Windows LF/CRLF Prettier warnings with `core.autocrlf=true`) were accepted as non-blocking Phase 2 follow-ups.\
+**Recommendations:** Resolve the two accepted findings in Phase 2 and preserve the review evidence.\
+**Changes made:** No Phase 1 history was rewritten. Pull Request #1 was approved and merged; Phase 2 resolves the findings on its own branch.\
+**Status:** Approved and merged as `11c546d` through [Pull Request #1](https://github.com/eendor/Brew-ni-Cat-Connect/pull/1).
+
+## Phase 2 — Public Showcase and Read-only Menu
+
+**Module:** Home, Menu, About, Gallery, Contact, shared shell, catalog adapter, local media, tests, and documentation\
+**Author:** Rodnee\
+**Reviewer:** Rodnee — developer pre-PR self-inspection only\
+**Date:** 2026-08-24
+
+### Developer self-inspection findings
+
+1. The branch stays inside the Phase 2 browse/showcase boundary: no cart, checkout, auth, customer/order write, payment, rider booking, Messenger, Android, POS change, migration, or RLS mutation exists.
+2. Public business facts match the confirmed brief; the About copy avoids owner biography/unsupported claims, and variable hours are not presented as a fixed schedule.
+3. Header navigation contains one Menu destination and a separate Visit us/Contact action, resolving P1-UX-001.
+4. `.gitattributes` and Prettier define LF text, Windows command-script CRLF, and binary media exclusions, resolving the repository policy portion of P1-ENV-001.
+5. Supabase calls are centralized, explicit-field, `SELECT`-only reads. Components consume typed mapped models and injectable loaders.
+6. Only public URL/publishable configuration enters the browser client; missing config and provider errors are customer-safe. Existing anonymous policy yields zero rows, and no privileged fallback exists.
+7. Current prices are never transcribed from posters. POS-hardcoded add-ons are not represented as live data.
+8. The Gallery uses 19 of 139 approved local files and generic alt text without identifying/inferencing customers.
+9. Phase 1 regression tests remain; the final run passed 20/20 Phase 2 unit/component tests and 13/13 browser tests, including all five retained Phase 1 browser regressions.
+
+### Known limitation / blocker
+
+The production public identities return HTTP 200 with zero `categories` and `items` rows while controlled privileged read-only discovery confirms data exists. This prevents customer-role live-record verification. Resolution requires an approved least-privilege public catalog policy/view outside this no-mutation branch; it must not be bypassed with a privileged browser key.
+
+### Independent Phase 2 handoff
+
+**Reviewer:** Pending — Renier\
+**Date:** Pending\
+**Findings:** Pending real teammate QA and code review.\
+**Recommendations:** Review the checklist and cases in `docs/evidence/phase-2-implementation.md` and `docs/test-cases.md`; separately verify business facts, public access behavior, mobile/keyboard/media experience, typing, environment separation, and scope.\
 **Changes made:** Not applicable until review findings exist.\
-**Status:** Awaiting review on open [Pull Request #1](https://github.com/eendor/Brew-ni-Cat-Connect/pull/1). The Pull Request has not been merged.
+**Status:** Developer self-inspection and local automation complete. Awaiting branch push, open Pull Request, and Renier's independent review. Do not merge or mark Done before independent review.

@@ -1,57 +1,54 @@
 # Brew ni Cat Connect
 
-**Development status:** Phase 1 — Project Foundation: Testing / Review\
-**Specification version:** 0.1 Draft\
-**Last updated:** 2026-08-23
+**Development status:** Phase 2 — Public Showcase Website: Testing / Review
+**Specification version:** 0.1 Draft (living specification)
+**Last updated:** 2026-08-24
 
-Brew ni Cat Connect is the customer-facing omnichannel platform being developed for Brew ni Cat Coffee Shop. It complements the existing Brew ni Cat POS; it does not recreate the POS or claim that a production integration currently exists.
+Brew ni Cat Connect is the customer-facing omnichannel platform for Brew ni Cat Coffee Shop in Kabacan, Cotabato. It complements the existing Brew ni Cat POS; it does not recreate or expose the POS.
 
 ## Project Status
 
-The Phase 1 web foundation is implemented on `feat/project-foundation` and is awaiting teammate QA and pull-request review. This milestone establishes the application shell and engineering toolchain without beginning the Phase 2 business showcase or later ordering and integration work.
+Phase 1 was independently tested and approved by Renier Apal, then merged to `main` in merge commit `11c546d`. Phase 2 is being developed on `feat/showcase-website` and must remain unmerged until independent QA and pull-request review are complete.
 
-| Area                                  | Status                                      |
-| ------------------------------------- | ------------------------------------------- |
-| Phase 0 specification                 | Version 0.1 Draft complete                  |
-| Phase 1 web foundation                | Testing / Review                            |
-| Phase 2 production business content   | Not implemented                             |
-| Online ordering and customer accounts | Not implemented                             |
-| Supabase backend                      | Deferred to Phase 4                         |
-| Existing POS integration              | Deferred pending Phase 6 analysis           |
-| Messenger assistant                   | Deferred until the shared backend is stable |
-| Android application                   | Deferred to Phase 8                         |
+| Area                                    | Status                                                                                                             |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Phase 0 specification                   | Version 0.1 Draft complete                                                                                         |
+| Phase 1 web foundation                  | Tested, approved, and merged                                                                                       |
+| Phase 2 public showcase                 | Implementation and automated validation complete; independent QA and peer review pending                           |
+| Read-only current menu                  | Typed public integration implemented; anonymous live rows currently blocked by the existing Supabase access policy |
+| Online ordering and accounts            | Deferred to later phases                                                                                           |
+| Messenger, Android, and POS integration | Deferred to their approved roadmap phases                                                                          |
 
-## Implemented Foundation
+## Phase 2 Public Experience
 
-- Next.js App Router application using React and strict TypeScript
-- Tailwind CSS design tokens and responsive global styles
-- Semantic root layout, header, desktop navigation, mobile navigation, main content, and footer
-- Homepage shell and intentionally minimal `/menu`, `/about`, `/gallery`, and `/contact` routes
-- Loading, error-boundary, and not-found foundations
-- Keyboard-accessible navigation and visible focus/reduced-motion foundations
-- Vitest and Testing Library unit/component tests
-- Playwright browser smoke tests
-- ESLint, Prettier, explicit TypeScript checking, production builds, and GitHub Actions CI configuration
+The current increment replaces the Phase 1 placeholders with customer-facing routes for:
+
+- Home, including the official logo, featured customer-favorite groups, gallery and visit previews;
+- a read-only Menu that retrieves the current catalog through Supabase public configuration at browser runtime;
+- About, using restrained facts confirmed for the business;
+- Gallery, using a curated set of 19 approved local shop/customer photographs; and
+- Contact, location, payment, takeout, variable-hours, social, and independent-rider information.
+
+No cart, checkout, account, order write, payment processing, rider booking, or database administration is included. Old menu-poster artwork is a visual reference only and is not the source of current names or prices.
 
 ## Tech Stack
-
-Only the installed Phase 1 web stack is listed here:
 
 - Next.js 16.3.2 with App Router
 - React and React DOM 19.2.8
 - TypeScript 5.9.3
 - Tailwind CSS 4.3.3
+- Supabase JavaScript 2.112.3 for public read-only catalog access
 - Vitest 4.1.11 and Testing Library
 - Playwright 1.62.1
 - ESLint 9.39.5 and Prettier 3.9.6
 
-The complete version and license register is in [`docs/software-and-apis.md`](docs/software-and-apis.md).
+Exact versions and licenses are recorded in [`docs/software-and-apis.md`](docs/software-and-apis.md).
 
 ## Requirements
 
 - Node.js 24.x (`package.json` permits `>=24.0.0 <25`; `.nvmrc` selects 24)
 - npm 12.x
-- Python 3.10+ for the dependency-free specification validator (CI uses 3.14)
+- Python 3.10+ for the dependency-free specification validator
 - Git
 - GitHub access if cloning the private repository
 
@@ -63,7 +60,18 @@ cd Brew-ni-Cat-Connect
 npm ci
 ```
 
-`npm ci` installs the exact direct and transitive versions recorded in `package-lock.json`.
+## Environment Configuration
+
+Copy `.env.example` to `.env.local` and supply deployment-appropriate public values through a local or managed environment store:
+
+```text
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
+```
+
+The Phase 2 browser runtime uses only these public variables. `.env.local` and other value-bearing environment files are ignored. Privileged credentials must never be exposed to browser code or committed.
+
+The existing production project's anonymous policy currently returns an empty catalog for both tested public credentials. The UI therefore presents a safe empty/error state until the business approves a narrowly scoped public-read policy or public catalog view. The application does not fall back to privileged access.
 
 ## Running the Development Server
 
@@ -71,7 +79,7 @@ npm ci
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). The current public routes are `/`, `/menu`, `/about`, `/gallery`, and `/contact`.
+Open [http://localhost:3000](http://localhost:3000). Public routes are `/`, `/menu`, `/about`, `/gallery`, and `/contact`.
 
 ## Quality Checks
 
@@ -86,65 +94,47 @@ npm run build
 python scripts/validate_phase0_docs.py
 ```
 
-Run `npm run test:watch` for an interactive Vitest development loop. Executed results are recorded in the Phase 1 test evidence and development log rather than being assumed from configuration alone.
+The final local Phase 2 run passed formatting, dependency audit, lint, type checking, 20 of 20 unit/component tests, the production build, 13 of 13 Playwright tests, and the documentation validator. Literal results are recorded in [`docs/evidence/phase-2-implementation.md`](docs/evidence/phase-2-implementation.md). Hosted CI and Renier's independent QA remain separate review gates.
 
-## E2E Tests
+## End-to-End Tests
 
-Install the Chromium binary once on a new workstation, then run the browser suite:
+Install Chromium once on a new workstation, then run:
 
 ```bash
 npx playwright install chromium
 npm run test:e2e
 ```
 
-The E2E command creates a production build, starts it locally, and executes the Playwright smoke tests. Generated Playwright reports and test results are ignored by Git.
+The suite builds the production application, starts it locally, and exercises representative desktop/mobile public routes. Generated reports and test results are ignored by Git.
 
 ## Documentation
 
-Start with:
-
 - [`docs/srs.md`](docs/srs.md) — master Software Requirements Specification
-- [`docs/project-overview.md`](docs/project-overview.md) — purpose, users, scope, and boundaries
-- [`docs/functional-requirements.md`](docs/functional-requirements.md) — testable functional requirements
-- [`docs/non-functional-requirements.md`](docs/non-functional-requirements.md) — quality requirements
-- [`docs/system-architecture.md`](docs/system-architecture.md) — current and planned architecture
-- [`docs/development-standards.md`](docs/development-standards.md) — implementation and review conventions
-- [`docs/testing-strategy.md`](docs/testing-strategy.md) — test levels and quality gates
-- [`docs/test-cases.md`](docs/test-cases.md) — stable Phase 1 test cases and results
-- [`docs/code-review.md`](docs/code-review.md) — inspection checklist and pending teammate handoff
-- [`docs/evidence/phase-1-verification.md`](docs/evidence/phase-1-verification.md) — executed Phase 1 validation record
+- [`docs/functional-requirements.md`](docs/functional-requirements.md) — testable requirements and implementation status
+- [`docs/system-architecture.md`](docs/system-architecture.md) — current architecture and trust boundaries
+- [`docs/database-design.md`](docs/database-design.md) — discovered read-only menu schema boundary
+- [`docs/security-and-privacy.md`](docs/security-and-privacy.md) — public-key, RLS, secret, and privacy controls
+- [`docs/testing-strategy.md`](docs/testing-strategy.md) and [`docs/test-cases.md`](docs/test-cases.md) — Phase 2 verification plan and cases
+- [`docs/evidence/phase-2-implementation.md`](docs/evidence/phase-2-implementation.md) — implementation and QA handoff record
 - [`docs/decisions.md`](docs/decisions.md) — architecture decision records
 - [`docs/development-log.md`](docs/development-log.md) — truthful milestone history
 
 ## Current Limitations
 
-Phase 1 intentionally does not implement:
+The following remain outside Phase 2:
 
-- confirmed production business copy, menu data, prices, images, address, opening hours, contact details, or social accounts;
-- online ordering, product customization, cart, checkout, payment, pickup, or delivery;
-- Supabase, a production database, authentication, customer profiles, order tracking, loyalty, favorites, or realtime updates;
-- Messenger integration, the Android application, or existing POS integration; or
-- deployment and production operations.
+- online ordering, product configuration for purchase, cart, checkout, and order submission;
+- customer authentication, profiles, history, tracking, favorites, loyalty, and rewards;
+- payment processing or direct rider booking;
+- Messenger, Android, and POS synchronization changes;
+- database migrations, production-data mutations, or administrative functions; and
+- a permanent weekly-hours promise or owner biography that has not been approved.
 
-Owner-dependent information remains marked:
-
-```text
-TODO: Confirm with Brew ni Cat owner.
-```
-
-Development fixtures, if introduced in a later phase, must remain separated from production data and be labelled:
-
-```text
-MOCK DATA — FOR DEVELOPMENT ONLY
-```
+Operating hours are variable. Customers are directed to the official Facebook page or the shop contact details for the current schedule.
 
 ## Contributing
 
-Use focused feature branches, meaningful Conventional Commit-style messages, appropriate automated tests, and pull requests for reviewable work. Phase 1 remains unmerged so Renier can perform the real QA and peer review. See [`CONTRIBUTING.md`](CONTRIBUTING.md) and [`docs/development-standards.md`](docs/development-standards.md).
-
-## Configuration and Secrets
-
-Phase 1 requires no runtime secrets. `.env.example` reserves later configuration names without supplying credentials. Never commit `.env`, service-role keys, tokens, passwords, webhook secrets, or private certificates.
+Use focused feature branches, meaningful Conventional Commit-style messages, appropriate automated tests, and pull requests for reviewable work. See [`CONTRIBUTING.md`](CONTRIBUTING.md) and [`docs/development-standards.md`](docs/development-standards.md).
 
 ## License
 

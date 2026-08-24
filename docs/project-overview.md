@@ -3,12 +3,12 @@
 **Project:** Brew ni Cat Connect\
 **Academic title:** Development of an Omnichannel Online Ordering and Intelligent Customer Engagement System for Brew ni Cat Coffee Shop\
 **Version:** 0.1 Draft\
-**Status:** Version 0.1 Draft — initial documentation gate complete\
-**Last updated:** 2026-08-18
+**Status:** Version 0.1 Draft — Phase 2 public showcase in Testing / Review\
+**Last updated:** 2026-08-24
 
 ## 1. Purpose
 
-Brew ni Cat Connect is a planned customer-facing digital platform that will establish an official web presence for Brew ni Cat Coffee Shop and progressively support a consistent customer journey across the website, a future Android application, and a future Facebook Messenger assistant.
+Brew ni Cat Connect is a customer-facing digital platform that will establish an official web presence for Brew ni Cat Coffee Shop and progressively support a consistent customer journey across the website, a future Android application, and a future Facebook Messenger assistant.
 
 The platform is intended to solve these documented problems:
 
@@ -23,11 +23,11 @@ No unverified claim is made about current business processes, transaction volume
 
 | Role | Intended interaction | Current status |
 | --- | --- | --- |
-| Visitor | View confirmed public business and menu information | Planned |
+| Visitor | View confirmed public business information and the read-only current menu | Phase 2 implemented surface; live anonymous menu rows blocked by existing access policy |
 | Customer | Order, track orders, and use account features when implemented | Planned |
 | Shop staff | Receive and update online orders through an approved integration workflow | Planned; workflow requires POS analysis |
 | Business owner/authorized manager | Confirm business content, scope, policies, and integration decisions | Required stakeholder |
-| Development team | Design, implement, test, review, deploy, and maintain the system | Active in Phase 0 |
+| Development team | Design, implement, test, review, deploy, and maintain the system | Active through Phase 2 |
 | Academic evaluators | Assess requirements, design evidence, tests, and process artifacts | Planned repository audience |
 
 Role names describe system responsibilities and do not define specific people or permissions. Authorization rules will be specified before protected features are implemented.
@@ -77,22 +77,24 @@ Connect will interact through an explicitly designed integration boundary. Direc
 
 ## 5. Business-information boundary
 
-The following values are intentionally unresolved:
+The Phase 2 client brief confirms the public address and landmark, contact details, Facebook/TikTok destinations, Cash/GCash acceptance, ₱10 takeout box, variable-hours notice, official logo, approved shop/customer imagery, and customer-arranged external-rider information. The existing Supabase catalog is the current menu source, although its anonymous policy currently returns zero rows.
 
-- menu items, product options, prices, availability, and promotions;
-- address, location-map destination, contact information, social links, and opening hours;
-- fulfillment methods, pickup rules, delivery policy/fees, payment methods, cancellation/refund rules, and loyalty rules;
+The following values remain unresolved:
+
+- promotions and future ordering customization/add-on rules;
+- pickup, cancellation/refund, online-payment, and loyalty rules;
+- whether a future integrated delivery workflow will collect location data or calculate any charge;
 - owner/staff identities and operational permissions; and
-- POS technology, interfaces, data ownership, and synchronization rules.
+- the full POS interface, mutation authority, data ownership, and synchronization contract.
 
-For each item: **TODO: Confirm with Brew ni Cat owner.**
+For each unresolved owner decision: **TODO: Confirm with Brew ni Cat owner.**
 
 Development fixtures, if later needed, will be stored separately from production data and visibly labelled `MOCK DATA — FOR DEVELOPMENT ONLY`.
 
 ## 6. Explicit exclusions and constraints
 
 - No existing POS recreation.
-- No delivery until owner approval and testable requirements exist.
+- No in-app delivery, rider booking, fee calculation, or ETA guarantee. Phase 2 may display the confirmed customer-arranged external-rider workflow; any integrated delivery feature still requires approval and testable requirements.
 - No real payment integration until provider, workflow, security, and business policy decisions exist.
 - No AI feature without a defined customer purpose, bounded data access, evaluation criteria, and human-manageable fallback behavior.
 - No production customer or POS data during unapproved development/testing.
@@ -123,3 +125,11 @@ Success will be evaluated against approved requirements rather than invented bus
 - documentation that accurately distinguishes planned and verified work.
 
 Business-specific acceptance targets remain **TODO: Confirm with Brew ni Cat owner.**
+
+## 8. Phase 2 Current Public Boundary
+
+Phase 1 was tested, approved by Renier Apal, and merged through Pull Request #1 at merge commit `11c546d`. Phase 2 replaces the placeholders with Home, Menu, About, Gallery, and Contact experiences using the official logo, 19 curated approved photographs, and the client-confirmed facts dated 2026-08-24.
+
+Current-menu retrieval is the one intentional Phase 2 Supabase exception to the original later-backend roadmap. It is read-only, runs at browser request time through public configuration, maps `categories` and `items` into application types, and does not include authentication, customer records, ordering, or mutations. Existing anonymous policy behavior currently returns zero catalog rows, which the public UI reports honestly. A reviewed public-read boundary remains a release prerequisite.
+
+The published independent-rider information does not enable delivery: customers book/pay riders separately and Brew ni Cat does not control fees, availability, or ETA.

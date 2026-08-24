@@ -1,0 +1,227 @@
+{
+  "checkedAt": "2026-08-24T02:11:23.940Z",
+  "method": "Chromium production build; full-page visual inspection captures plus 20 route/viewport overflow checks",
+  "screenshots": [
+    {
+      "path": "/",
+      "width": 1440,
+      "status": 200,
+      "overflow": false,
+      "h1Count": 1,
+      "skipLink": true,
+      "imagesPending": 0,
+      "unexpectedConsoleErrorCount": 0,
+      "file": "screenshots/home-desktop-1440.webp"
+    },
+    {
+      "path": "/",
+      "width": 375,
+      "status": 200,
+      "overflow": false,
+      "h1Count": 1,
+      "skipLink": true,
+      "imagesPending": 0,
+      "unexpectedConsoleErrorCount": 0,
+      "file": "screenshots/home-mobile-375.webp"
+    },
+    {
+      "path": "/menu",
+      "width": 1440,
+      "status": 200,
+      "overflow": false,
+      "h1Count": 1,
+      "skipLink": true,
+      "imagesPending": 0,
+      "unexpectedConsoleErrorCount": 0,
+      "file": "screenshots/menu-desktop-1440.webp"
+    },
+    {
+      "path": "/menu",
+      "width": 375,
+      "status": 200,
+      "overflow": false,
+      "h1Count": 1,
+      "skipLink": true,
+      "imagesPending": 0,
+      "unexpectedConsoleErrorCount": 0,
+      "file": "screenshots/menu-mobile-375.webp"
+    },
+    {
+      "path": "/gallery",
+      "width": 1440,
+      "status": 200,
+      "overflow": false,
+      "h1Count": 1,
+      "skipLink": true,
+      "imagesPending": 0,
+      "unexpectedConsoleErrorCount": 0,
+      "file": "screenshots/gallery-desktop-1440.webp"
+    },
+    {
+      "path": "/gallery",
+      "width": 375,
+      "status": 200,
+      "overflow": false,
+      "h1Count": 1,
+      "skipLink": true,
+      "imagesPending": 0,
+      "unexpectedConsoleErrorCount": 0,
+      "file": "screenshots/gallery-mobile-375.webp"
+    },
+    {
+      "path": "/about",
+      "width": 1440,
+      "status": 200,
+      "overflow": false,
+      "h1Count": 1,
+      "skipLink": true,
+      "imagesPending": 0,
+      "unexpectedConsoleErrorCount": 0,
+      "file": "screenshots/about-desktop-1440.webp"
+    },
+    {
+      "path": "/contact",
+      "width": 375,
+      "status": 200,
+      "overflow": false,
+      "h1Count": 1,
+      "skipLink": true,
+      "imagesPending": 0,
+      "unexpectedConsoleErrorCount": 0,
+      "file": "screenshots/contact-mobile-375.webp"
+    },
+    {
+      "path": "/phase-two-missing",
+      "width": 1440,
+      "status": 404,
+      "overflow": false,
+      "h1Count": 1,
+      "skipLink": true,
+      "imagesPending": 0,
+      "unexpectedConsoleErrorCount": 0,
+      "file": "screenshots/not-found-desktop-1440.webp"
+    }
+  ],
+  "widthChecks": [
+    {
+      "path": "/",
+      "width": 320,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "path": "/menu",
+      "width": 320,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "path": "/gallery",
+      "width": 320,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "path": "/contact",
+      "width": 320,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "path": "/",
+      "width": 375,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "path": "/menu",
+      "width": 375,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "path": "/gallery",
+      "width": 375,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "path": "/contact",
+      "width": 375,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "path": "/",
+      "width": 768,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "path": "/menu",
+      "width": 768,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "path": "/gallery",
+      "width": 768,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "path": "/contact",
+      "width": 768,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "path": "/",
+      "width": 1024,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "path": "/menu",
+      "width": 1024,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "path": "/gallery",
+      "width": 1024,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "path": "/contact",
+      "width": 1024,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "path": "/",
+      "width": 1440,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "path": "/menu",
+      "width": 1440,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "path": "/gallery",
+      "width": 1440,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "path": "/contact",
+      "width": 1440,
+      "status": 200,
+      "overflow": false
+    }
+  ]
+}

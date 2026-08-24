@@ -3,9 +3,9 @@
 **Project:** Brew ni Cat Connect
 **Version:** 0.1 Draft
 **Original date:** 2026-08-18
-**Last updated:** 2026-08-23
-**Phase:** Phase 0 — Planning and Specification baseline, with Phase 1 implementation addendum
-**Document status:** Living draft; Phase 1 foundation tooling and tests are implemented, while later-phase test layers remain planned.
+**Last updated:** 2026-08-24
+**Phase:** Living strategy through Phase 2
+**Document status:** Phase 1 evidence is complete and merged. Phase 2 developer automation passed; hosted CI and independent QA are pending.
 
 ## 1. Current Test Status
 
@@ -18,7 +18,7 @@ The original Phase 0 baseline contained no application runtime or test result. P
 - Lint, explicit type checking, production build, and the dependency audit exited successfully.
 - A clean temporary-directory `npm ci` added 477 packages, audited 478 packages, and found zero vulnerabilities using only `package.json` and `package-lock.json`; `npm ci --dry-run` also exited successfully.
 - The coverage run reported 96% statements, 88.88% branches, 100% functions, and 95.65% lines. This report covers only source units imported by the current foundation tests; it is not whole-application coverage.
-- Four review screenshots were captured at mobile, tablet, and desktop widths. The developer performed a visual inspection, but teammate manual QA and peer review remain `Not Run` until Renier or another named teammate records them.
+- Four Phase 1 review screenshots and developer inspections were retained. Renier subsequently completed independent manual QA and peer review with no blocking defect; Pull Request #1 was approved and merged as `11c546d`.
 - GitHub Actions is configured for format, lint, typecheck, unit/component test, and production-build validation. A remote workflow result is not claimed until the feature branch/PR workflow has completed.
 
 The detailed cases and reproducible local evidence are in `docs/test-cases.md` and `docs/evidence/phase-1-verification.md`. Test results remain valid only for the identified working tree/commit and environment.
@@ -103,7 +103,7 @@ Component tests should model how a customer perceives and operates the interface
 
 ## 8. Integration and Supabase Testing
 
-When the selected Supabase platform is activated, database and authentication tests will run only against an isolated local or designated test project, never the production database.
+Phase 2 tests mock the typed public menu loader/row mapper and do not mutate or seed production. The controlled live check is `SELECT`-only and compares representative public catalog behavior. Future database/authentication/write tests must use an isolated local or designated test project, never production.
 
 The integration suite will verify:
 
@@ -122,7 +122,7 @@ Seed data must be deterministic, synthetic, minimal, and labeled `MOCK DATA — 
 
 ## 9. End-to-End Testing with Playwright
 
-Playwright will exercise a production-like build and isolated test backend. The initial critical path in Phase 1 is limited to the responsive application shell; ordering workflows are added only when implemented.
+Playwright exercises a production build. Phase 2 expands the shell regression to real Home/About/Gallery/Contact/Menu/404 content, navigation and representative-width overflow; unit/component tests inject deterministic menu loaders. Ordering workflows are added only when implemented.
 
 Planned journeys by phase include:
 
@@ -243,9 +243,9 @@ Phase 1 implements `.github/workflows/ci.yml` for pushes to `main` and `feat/**`
 7. `npm run test`
 8. `npm run build`
 
-Playwright is intentionally omitted from the initial hosted workflow to avoid installing and caching browser binaries in this lightweight Phase 1 CI job. `npm run test:e2e` remains a required local pre-review check, and its passing Chromium result is recorded in the Phase 1 verification evidence. The team can add browser CI when critical customer workflows make the added execution cost proportionate.
+Playwright is intentionally omitted from the hosted lightweight workflow to avoid installing and caching browser binaries on every run. `npm run test:e2e` remains a required local pre-review check, and its passing Chromium result is recorded in the Phase 1 verification evidence. The team can add browser CI when critical customer workflows make the added execution cost proportionate.
 
-The workflow grants only read access to repository contents, has a 15-minute timeout, and cancels superseded runs for the same workflow/ref. No protected application credentials are required because Phase 1 has no backend or external integration. Production deployment remains separate and unconfigured. A local result is not represented as a GitHub Actions result; a linked remote run must complete before CI is marked passed.
+The workflow grants only read access to repository contents, has a 15-minute timeout, and cancels superseded runs for the same workflow/ref. No protected application credentials are required because Phase 2 catalog retrieval starts in the browser at runtime, while automated tests mock or intercept the catalog boundary and the build is live-service independent. Production deployment remains separate and unconfigured. A local result is not represented as a GitHub Actions result; a linked remote run must complete before CI is marked passed.
 
 ## 17. Test Case and Evidence Records
 
@@ -299,8 +299,8 @@ Before production launch, Brew ni Cat's authorized business representative will 
 | Phase | Minimum testing outcome before completion |
 | --- | --- |
 | Phase 0 — Specification | Strategy reviewed for consistency; all test results remain truthfully `Not Run` |
-| Phase 1 — Foundation | Developer implementation checks complete: tooling configured; 4 unit/component and 5 Chromium E2E tests passed; lint, typecheck, dependency audit, and production build exited 0; developer responsive inspection recorded. Teammate QA and pull-request review remain pending. |
-| Phase 2 — Public showcase | Public navigation/content states, responsive behavior, accessibility, and media performance checked |
+| Phase 1 — Foundation | 4 unit/component and 5 Chromium E2E tests, static/build gates, developer inspection, independent Renier QA, and peer review completed; Pull Request #1 merged as `11c546d`. |
+| Phase 2 — Public showcase | Real content/navigation/media and typed menu mapping success/loading/empty/error/availability states pass; build remains live-service independent; read-only public access is compared with representative current records; secret/bundle checks pass; responsive/accessibility developer evidence is recorded; independent Renier QA/review remains required before merge. |
 | Phase 3 — Menu/ordering | Critical calculation, product-configuration, cart, checkout-form/domain validation, and pre-submission journey cases pass; no persisted order is claimed before the backend exists |
 | Phase 4 — Backend/accounts | Migration, auth, RLS cross-user denial, server validation, transaction, idempotent order creation, and recovery cases pass in isolation |
 | Phase 5 — Customer experience | History, tracking, favorites, reorder, loyalty, concurrency, and authorization cases pass |
@@ -313,3 +313,21 @@ Before production launch, Brew ni Cat's authorized business representative will 
 ## 21. Review and Evolution
 
 This strategy is reviewed whenever requirements, architecture, supported clients, data handling, POS integration, or a third-party service changes. Material changes require an entry in `docs/decisions.md`. The Phase 1 addendum records actual local commands, current coverage scope, Chromium target, and CI boundary without rewriting the Phase 0 planning history. Future CI links and broader browser/manual results replace `Not Run` entries only after those checks occur.
+
+## 22. Phase 2 Verification Addendum
+
+### Automated scope
+
+Vitest/Testing Library covers the official Home content and absence of Phase 1 placeholders; one Menu navigation action and distinct Visit action; mobile selection/Escape/focus behavior; catalog mapping from nullable/pipe/JSON rows; Philippine peso formatting; combo description and unavailable status; malformed-data omission; and Menu loading, ready, empty, failure, and retry states. Tests inject deterministic loaders and contain no production credential/value.
+
+Playwright must retain 404 and the five responsive widths (320, 375, 768, 1024, and 1440) while exercising the real routes, logo/navigation, business facts, gallery images/alt text, and no horizontal overflow. It may observe the current truthful public-catalog empty state; it must not substitute fake rows as if live.
+
+### Live read-only check
+
+A live check must use the public runtime identity and compare representative category/item names, variants/sizes, flavor-specific prices, optional combo descriptions, and availability against current Supabase records. At the 2026-08-24 discovery point, public reads returned HTTP 200 with zero rows, so record-level public verification is **Blocked** by the existing anonymous access policy. A privileged local read-only comparison established that six categories and sixteen items exist but cannot count as successful customer-role acceptance.
+
+After an approved policy/view change outside this branch, repeat the representative check with the public publishable configuration, record only public business fields, and prove that writes/internal tables remain inaccessible. Never run mutation tests against production.
+
+### Evidence and status
+
+`docs/evidence/phase-2-implementation.md` is the handoff record. Observed local command summaries, counts, exit statuses, screenshot paths, and commits are recorded there; the PR and hosted workflow result remain pending until created/observed. Automated success moves the card to Testing / Review, not Done; Renier's independent results stay unchecked until performed.

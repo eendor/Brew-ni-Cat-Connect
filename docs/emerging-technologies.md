@@ -1,9 +1,9 @@
 # Brew ni Cat Connect — Emerging Technologies
 
 **Version:** 0.1 Draft\
-**Date:** 2026-08-23\
+**Date:** 2026-08-24\
 **Document status:** Living technology assessment\
-**Implementation status:** The modern web foundation is implemented and locally tested in Phase 1. Supabase, realtime, Messenger/AI, Android, and POS integration remain planned, candidate, or deferred as marked.
+**Implementation status:** Phase 1 is Tested and merged. Phase 2 implements the public showcase and a narrow read-only Supabase catalog client; live anonymous catalog rows are blocked by the existing access policy. Supabase authentication/writes/realtime, Messenger/AI, Android, and POS integration remain Planned or Deferred.
 
 ## 1. Purpose
 
@@ -36,7 +36,7 @@ Each technology must demonstrate:
 | Technology | Status | Genuine purpose | Primary limitation | Introduction gate |
 |---|---|---|---|---|
 | Next.js App Router + React + TypeScript | **Implemented and locally verified for the Phase 1 foundation** | Responsive, discoverable business site and later customer ordering UI with shared typed web code | Framework/runtime complexity and dependency updates | Phase 1 shell, lint, types, component/browser tests, and production build verified; feature data and backend remain later work |
-| Supabase cloud platform | Planned for Phase 4 | Managed PostgreSQL, authentication, controlled data access, and optional realtime/storage/server functions | Vendor/platform coupling; correct RLS and key separation require care | Approved data model, threat review, environment strategy, RLS tests |
+| Supabase cloud platform | **Limited Phase 2 public catalog client implemented; wider platform Planned** | Current read-only catalog now; later managed PostgreSQL, authentication, controlled writes, and optional realtime/storage/server functions | Existing anonymous policy returns zero catalog rows; vendor coupling and key/RLS separation require care | Approved least-privilege public-read boundary, anonymous-role verification, later data model/threat/RLS tests |
 | Realtime order updates | Planned after ordering/backend | Timely customer-visible order status across supported channels | Connectivity, ordering, and delivery are not guaranteed; adds subscription cost/complexity | Canonical order-state model and authorization implemented first |
 | Secured Messenger webhook | Deferred to Phase 7 | Meet customers on an existing channel for menu questions, discovery, guided ordering, and tracking | Platform policies, review, message windows, identity linking, webhook security | Stable shared backend and Meta configuration/approval |
 | Conversational/AI assistance | Candidate within Phase 7; not automatically required | Interpret natural-language discovery questions and improve relevant recommendations | Incorrect or ungrounded output, privacy, cost, latency, explainability | Defined use cases outperform deterministic flow; evaluation and fallback approved |
@@ -273,3 +273,15 @@ Specific retention periods and analytics choices are `TODO: Confirm with Brew ni
 ## 13. Review checklist
 
 Before marking any technology **Implemented** or **Tested**, record its installed version/license, configuration boundary, threat/privacy considerations, test commands and literal results, failure/degraded mode, deployment procedure, monitoring ownership, and rollback/removal approach. Unverified capabilities remain **Planned**.
+
+## 14. Phase 2 Supabase Catalog Increment
+
+Phase 2 brings cloud data into scope only because the existing Supabase catalog is the confirmed source of current menu names and prices. This is a genuine cloud-computing role: one production catalog can serve the POS and future customer channels without transcribing stale posters or creating a second database.
+
+**Purpose and role:** The browser requests approved fields from `categories` and `items` at runtime, then a typed mapper normalizes category membership, pipe-delimited flavors, JSON variants, current prices, optional combo descriptions, and availability. CI/builds do not contact Supabase.
+
+**Credential and trust boundary:** The client accepts only `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`. It disables session persistence because Phase 2 has no authentication. A privileged key is not imported, bundled, logged, or used as a public fallback.
+
+**Observed limitation:** Both available public credentials returned HTTP 200 and zero catalog rows while a controlled privileged read-only comparison confirmed six categories and sixteen items. This is consistent with the existing anonymous policy filtering rows. Phase 2 does not weaken RLS or mutate production; it shows a truthful empty/error state. Publishing live rows requires a reviewed minimum-field public view or `SELECT` policy and anonymous-role verification.
+
+**Scope limit:** Authentication, customer/order data, writes, realtime, Storage, Edge Functions, loyalty, Messenger, Android, and POS synchronization remain outside Phase 2. Supabase JavaScript 2.112.3 is the only newly installed integration library.

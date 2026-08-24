@@ -2,13 +2,13 @@
 
 **Project:** Brew ni Cat Connect
 **Specification version:** 0.1 Draft
-**Test record version:** Phase 1 foundation baseline
-**Date:** 2026-08-23
-**Status:** Developer automation complete; teammate manual QA and peer review pending
+**Test record version:** Phase 2 implementation draft
+**Date:** 2026-08-24
+**Status:** Phase 1 independently approved/merged; Phase 2 automated validation passed and independent QA is pending
 
 ## 1. Scope and Status Rules
 
-This record covers only the implemented Phase 1 application foundation. It does not claim coverage for production business content, ordering, Supabase, authentication, loyalty, Messenger, Android, or POS integration.
+This living record preserves the Phase 1 foundation evidence and specifies the Phase 2 public showcase/read-only catalog cases. It does not claim coverage for ordering, authentication, loyalty, Messenger, Android, POS synchronization, or database mutations.
 
 Statuses follow `docs/testing-strategy.md`:
 
@@ -18,7 +18,7 @@ Statuses follow `docs/testing-strategy.md`:
 - **Blocked:** the execution could not complete and has a recorded blocker.
 - **Deferred:** the approved scope is scheduled for a later phase.
 
-Requirement references below are limited to the Phase 1 foundation aspect exercised by the case; they do not mark an entire Phase 2 requirement as implemented or tested.
+Requirement references identify only the behavior exercised by each case; one passing assertion never marks an entire requirement or phase Tested.
 
 ## 2. Automated Phase 1 Cases
 
@@ -85,3 +85,59 @@ These checks are intentionally left for Renier. Automated/developer evidence doe
 | QA-P1-009 | Unknown route presents the branded 404 experience | Not Run (pending teammate QA) | — |
 
 Renier should record the reviewer name, date, browser/device, actual result, findings, and any related bug IDs before changing a manual status. Peer code-review evidence must remain separate from this developer-authored test record.
+
+## 7. Phase 1 Independent Review Closure
+
+The `Not Run` handoff table above is retained as the state when the Phase 1 implementation was first delivered. It was later superseded by actual independent work: Renier Apal completed manual QA and peer review, approved Pull Request #1, and reported no blocking defect. Phase 1 was merged to `main` as `11c546d`. P1-UX-001 and P1-ENV-001 were accepted as non-blocking Phase 2 follow-ups rather than rewritten as absent from the Phase 1 record.
+
+## 8. Automated Phase 2 Cases
+
+The final Phase 2 branch validation ran on 2026-08-24. Vitest passed 20 of 20 cases in 6 files; the full Playwright suite passed 13 of 13 cases, comprising 5 retained Phase 1 regressions and 8 Phase 2 browser cases.
+
+| ID | Requirement ID(s) | Module | Scenario | Preconditions | Input / action | Expected result | Actual result | Status | Evidence |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| TC-P2-001 | FR-001, FR-004 | Home | Render official brand and CTAs | JSDOM | Render Home | Official logo/brand, Browse current menu, and Plan your visit actions render | All assertions matched the expected behavior in the final 20/20 Vitest run | Passed | `tests/unit/home-page.test.tsx` |
+| TC-P2-002 | FR-003, FR-006 | Home | Render favorites and visit details | JSDOM | Render Home | Matcha, Takoyaki, Fries, landmark, and payment summary render without exact analytics | All assertions matched the expected behavior in the final 20/20 Vitest run | Passed | `tests/unit/home-page.test.tsx` |
+| TC-P2-003 | FR-001, FR-009 | Home | Remove developer placeholder language | JSDOM | Inspect rendered Home text | Phase 1/foundation/future-milestone customer copy is absent | All assertions matched the expected behavior in the final 20/20 Vitest run | Passed | `tests/unit/home-page.test.tsx` |
+| TC-P2-004 | FR-004 | Header | Resolve duplicate menu action | JSDOM | Render header | One desktop Menu link and distinct Visit us link to Contact render | All assertions matched the expected behavior in the final 20/20 Vitest run | Passed | `tests/unit/site-header.test.tsx` |
+| TC-P2-005 | FR-004, NFR-030 | Mobile nav | Open and close by selection | JSDOM/user event | Open then select Menu | Expanded state changes and link selection closes menu | All assertions matched the expected behavior in the final 20/20 Vitest run | Passed | `tests/unit/site-header.test.tsx` |
+| TC-P2-006 | FR-004, NFR-030 | Mobile nav | Escape and focus restore | JSDOM/user event | Open then press Escape | Menu closes and trigger regains focus | All assertions matched the expected behavior in the final 20/20 Vitest run | Passed | `tests/unit/site-header.test.tsx` |
+| TC-P2-007 | FR-011 | Catalog mapper | Normalize flavors and prices | Row fixtures | Map pipe flavors and structured variants | Deduplicated flavors, base prices, and flavor prices map correctly | All assertions matched the expected behavior in the final 20/20 Vitest run | Passed | `tests/unit/menu-mapping.test.ts` |
+| TC-P2-008 | FR-011, FR-015 | Catalog mapper | Preserve combo/unavailable data | JSON-string fixture | Map combo description and false availability | Description is retained and unavailable state is explicit | All assertions matched the expected behavior in the final 20/20 Vitest run | Passed | `tests/unit/menu-mapping.test.ts` |
+| TC-P2-009 | FR-008, FR-011 | Catalog mapper | Reject malformed/null values | Malformed fixtures | Map invalid records | No fabricated names, variants, or prices appear | All assertions matched the expected behavior in the final 20/20 Vitest run | Passed | `tests/unit/menu-mapping.test.ts` |
+| TC-P2-010 | FR-011 | Price display | Format PHP and minimum price | Numeric/null fixtures | Format and select price | Philippine peso output and lowest valid price are correct | All assertions matched the expected behavior in the final 20/20 Vitest run | Passed | `tests/unit/menu-mapping.test.ts` |
+| TC-P2-011 | FR-008 | Menu UI | Loading state | Deferred loader | Render MenuCatalog | Polite status announces current-menu retrieval | All assertions matched the expected behavior in the final 20/20 Vitest run | Passed | `tests/unit/menu-catalog.test.tsx` |
+| TC-P2-012 | FR-010, FR-011, FR-015, FR-016 | Menu UI | Render mapped catalog | Deterministic catalog fixture | Resolve loader | Category, item, size/variant, flavor prices, combo detail, and availability render | All assertions matched the expected behavior in the final 20/20 Vitest run | Passed | `tests/unit/menu-catalog.test.tsx` |
+| TC-P2-013 | FR-008 | Menu UI | Empty response | Empty catalog fixture | Resolve loader | Truthful empty state and Contact route render | All assertions matched the expected behavior in the final 20/20 Vitest run | Passed | `tests/unit/menu-catalog.test.tsx` |
+| TC-P2-014 | FR-008 | Menu UI | Failure and retry | Rejecting then successful loader | Activate Try again | Generic error renders, retry occurs, and raw provider detail stays hidden | All assertions matched the expected behavior in the final 20/20 Vitest run | Passed | `tests/unit/menu-catalog.test.tsx` |
+| TC-P2-015 | FR-002 | About | Confirm factual content | JSDOM | Render About | Opening date, Kabacan context, offerings render; no invented owner biography | All assertions matched the expected behavior in the final 20/20 Vitest run | Passed | `tests/unit/business-pages.test.tsx` |
+| TC-P2-016 | FR-003 | Contact | Confirm visit facts | JSDOM | Render Contact | Exact address/landmark/contact/payment/takeout/variable-hours content renders | All assertions matched the expected behavior in the final 20/20 Vitest run | Passed | `tests/unit/business-pages.test.tsx` |
+| TC-P2-017 | FR-003, FR-030 | Contact | Describe external rider model | JSDOM | Inspect delivery information | Customer books/pays rider; no fee/ETA/in-house guarantee appears | All assertions matched the expected behavior in the final 20/20 Vitest run | Passed | `tests/unit/business-pages.test.tsx` |
+| TC-P2-018 | FR-005 | Gallery | Curated accessible photos | JSDOM | Render Gallery | Approved selection and generic non-empty alt text render | All assertions matched the expected behavior in the final 20/20 Vitest run | Passed | `tests/unit/business-pages.test.tsx` |
+| TC-P2-019 | FR-008, NFR-017 | Supabase config | Missing public config | Cleared public environment | Create client | Typed safe configuration error occurs before provider client creation | All assertions matched the expected behavior in the final 20/20 Vitest run | Passed | `tests/unit/public-supabase-client.test.ts` |
+| TC-P2-020 | FR-011, NFR-017 | Supabase config | Public publishable config only | Non-secret fixtures | Create client | Public values are used and session persistence/refresh/URL detection are disabled | All assertions matched the expected behavior in the final 20/20 Vitest run | Passed | `tests/unit/public-supabase-client.test.ts` |
+| TC-P2-021 | FR-001, FR-003, FR-006 | Browser Home | Official showcase smoke | Production build/Chromium | Visit `/` | Logo, CTAs, favorites, landmark/payment content render; developer text is absent | All assertions matched the expected behavior in the final 13/13 Playwright run | Passed | `tests/e2e/showcase.spec.ts` |
+| TC-P2-022 | FR-004 | Browser header | Duplicate Menu regression | Desktop viewport | Inspect banner/nav | Exactly one Menu action and distinct Visit us/Contact action render | All assertions matched the expected behavior in the final 13/13 Playwright run | Passed | `tests/e2e/showcase.spec.ts` |
+| TC-P2-023 | FR-002 | Browser About | Factual story | Production build | Visit `/about` | Confirmed opening date, Kabacan context and offerings render without owner biography | All assertions matched the expected behavior in the final 13/13 Playwright run | Passed | `tests/e2e/showcase.spec.ts` |
+| TC-P2-024 | FR-005 | Browser Gallery | Curated responsive media | Production build | Visit `/gallery` | 12–24 unique non-empty-alt gallery images attach | All assertions matched the expected behavior in the final 13/13 Playwright run | Passed | `tests/e2e/showcase.spec.ts` |
+| TC-P2-025 | FR-003, FR-030 | Browser Contact | Confirm business/rider facts | Production build | Visit `/contact` | Exact contact/visit/social and independent-rider information render | All assertions matched the expected behavior in the final 13/13 Playwright run | Passed | `tests/e2e/showcase.spec.ts` |
+| TC-P2-026 | FR-010, FR-011, FR-015, FR-016 | Browser Menu | Mapped success response | Intercepted deterministic Data API reads | Visit `/menu` | Category/item/options/prices/unavailable render; cart/checkout controls are absent | All assertions matched the expected behavior in the final 13/13 Playwright run | Passed | `tests/e2e/menu.spec.ts` |
+| TC-P2-027 | FR-008 | Browser Menu | Loading then empty response | Delayed intercepted empty reads | Visit `/menu` | Loading status transitions to truthful empty/contact state | All assertions matched the expected behavior in the final 13/13 Playwright run | Passed | `tests/e2e/menu.spec.ts` |
+| TC-P2-028 | FR-008 | Browser Menu | Retrieval failure | Intercepted provider error | Visit `/menu` | Generic retry/contact alert renders without fabricated catalog | All assertions matched the expected behavior in the final 13/13 Playwright run | Passed | `tests/e2e/menu.spec.ts` |
+
+**Automated Phase 2 result:** 28 of 28 Phase 2 cases passed: 20 Vitest unit/component cases and 8 Playwright browser cases. The complete Playwright run also passed all 5 retained Phase 1 browser regressions, for 13 of 13 browser tests overall.
+
+## 9. Phase 2 Live Data and Manual Status
+
+| Check ID | Check | Status | Evidence / blocker |
+| --- | --- | --- | --- |
+| LIVE-P2-001 | Public role reads current categories/items | Blocked | Both public probes returned HTTP 200 with zero rows under existing anonymous policy |
+| LIVE-P2-002 | Representative current names/prices/variants/flavors/combos/availability render publicly | Blocked | Controlled read-only discovery found records, but privileged discovery cannot substitute for public-role acceptance |
+| SEC-P2-001 | Final tracked/staged secret and browser-bundle review | Passed | `.env.local` ignored/untracked; zero real privileged values in tracked files or app bundles; zero privileged names in app bundles |
+| RESP-P2-001 | Developer responsive/overflow check at 320, 375, 768, 1024, 1440 | Passed | 20 route/viewport checks had zero overflow failures; 9 retained captures and report under `docs/evidence/phase-2/` |
+| QA-P2-001 | Renier independent Home/navigation QA | Not Run | Pending open Pull Request review |
+| QA-P2-002 | Renier independent Menu/live-policy/error-state QA | Not Run | Pending open Pull Request review; live rows blocked |
+| QA-P2-003 | Renier independent About/Gallery/Contact/content QA | Not Run | Pending open Pull Request review |
+| QA-P2-004 | Renier independent accessibility/responsive/code review | Not Run | Pending open Pull Request review |
+
+The old posters are not an expected-result oracle. Supabase current public records are authoritative after the approved public role can read them. No production mutation test is permitted in Phase 2.

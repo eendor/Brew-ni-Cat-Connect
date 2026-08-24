@@ -1,9 +1,9 @@
 # Brew ni Cat Connect — Software Requirements Specification
 
 - **Version:** 0.1 Draft
-- **Date:** 2026-08-18
-- **Phase:** Phase 0 — Planning and Specification
-- **Document status:** Draft; all described product capabilities are **Planned** unless explicitly marked **Deferred**. Nothing in this document is evidence of implementation or testing.
+- **Date:** 2026-08-18; Phase 2 addendum 2026-08-24
+- **Phase:** Living specification through Phase 2
+- **Document status:** Version 0.1 remains a draft. Phase 1 is Tested and merged; the implemented Phase 2 showcase passed developer automation and is in Testing / Review. Public live catalog rows remain blocked by the existing anonymous access policy. Later capabilities remain Planned or Deferred as marked.
 
 ## 1. Purpose
 
@@ -20,7 +20,7 @@ Detailed requirements are maintained in:
 
 ## 2. Product overview
 
-Brew ni Cat Connect is a planned customer-facing omnichannel platform for Brew ni Cat Coffee Shop. It will combine an official business website with digital menu browsing, online ordering, customer accounts, order tracking, loyalty features, a future Facebook Messenger assistant, and a future Android customer application. These channels are intended to share a centralized backend and consistent business data.
+Brew ni Cat Connect is a customer-facing omnichannel platform for Brew ni Cat Coffee Shop. It will combine an official business website with digital menu browsing, online ordering, customer accounts, order tracking, loyalty features, a future Facebook Messenger assistant, and a future Android customer application. These channels are intended to share a centralized backend and consistent business data.
 
 The system addresses the need for customers to discover the shop, inspect accurate menu information, place and track orders, and return through a consistent digital experience. It also creates a controlled integration boundary through which online orders can eventually reach the existing Brew ni Cat POS.
 
@@ -51,7 +51,7 @@ This project uses the following labels consistently:
 | Tested | Acceptance evidence exists for the referenced version. |
 | Deferred | Deliberately postponed pending approval, information, policy, or a later phase. |
 
-At Version 0.1, the requirements in this SRS are Planned except the conditional capabilities explicitly marked Deferred.
+The Version 0.1 baseline was initially Planned. Current implementation status is maintained per requirement and in the dated addenda; historical planning text is not evidence that later work was tested.
 
 ## 4. Goals and success criteria
 
@@ -105,13 +105,13 @@ Release success will be evaluated against the detailed FR and NFR acceptance met
 
 Production business content must come from an owner-approved source. The project must not invent products, prices, hours, address, contact details, payment accounts, delivery fees, promotions, policies, testimonials, or historical figures.
 
-Open content inputs are:
+Confirmed and open content inputs are:
 
-- Business address: **TODO: Confirm with Brew ni Cat owner.**
-- Opening hours: **TODO: Confirm with Brew ni Cat owner.**
-- Contact details and social links: **TODO: Confirm with Brew ni Cat owner.**
-- Menu, prices, customization rules, and availability source: **TODO: Confirm with Brew ni Cat owner.**
-- Branding assets, gallery assets, and usage permission: **TODO: Confirm with Brew ni Cat owner.**
+- Business address and landmark are confirmed as Segundo St, Poblacion, Kabacan, Cotabato 9407, Philippines, beside Pulido Eatery.
+- Public operating-hours wording is confirmed as variable; the site directs customers to Facebook or the shop contact instead of promising a fixed schedule.
+- The public phone, email, Facebook, and TikTok destinations are confirmed in the Phase 2 client brief.
+- The existing Supabase catalog is authoritative for current menu names, variants, prices, and availability. Existing anonymous access currently returns zero rows; ordering/customization rules remain **TODO: Confirm with Brew ni Cat owner.**
+- The official logo and local shop/customer images are approved for website use; Phase 2 publishes a curated 19-image selection with privacy-respecting alternatives.
 - Pickup instructions and order lead-time policy: **TODO: Confirm with Brew ni Cat owner.**
 - Cancellation, rejection, refund, privacy, and retention policies: **TODO: Confirm with Brew ni Cat owner.**
 - Loyalty earning/redemption rules and reward catalog: **TODO: Confirm with Brew ni Cat owner.**
@@ -150,7 +150,8 @@ This diagram is a logical target, not an implementation claim. Detailed deployme
 
 - **Web interface:** responsive, keyboard-accessible customer experience over HTTPS.
 - **Backend interface:** versioned, validated service contracts; privileged operations execute server-side.
-- **Authentication:** Supabase Auth is the selected planned provider under ADR-002; configuration and activation remain gated to Phase 4.
+- **Public catalog:** Phase 2 introduces a narrow browser-runtime, read-only Supabase catalog boundary using public configuration only. Anonymous reads currently return zero rows under the existing access policy.
+- **Authentication:** Supabase Auth remains the selected planned provider under ADR-002; authentication, customer data, writes, and realtime activation remain gated to later design.
 - **Realtime:** authenticated order-status subscriptions with a polling/manual-refresh fallback where supported.
 - **Messenger:** verified webhooks and approved API permissions; no secret in client code.
 - **Android:** authenticated API access using platform-secure credential storage; no service-role credential in the application.
@@ -198,7 +199,7 @@ Only requirements-justified domains will be designed. Candidate domains include 
 ### 10.2 Dependencies
 
 - Selected hosting/cloud platform and service plan.
-- The selected planned Supabase platform, including an owner-approved project, region, service plan, and Phase 4 activation review.
+- The existing Supabase project for read-only current-menu retrieval; a reviewed least-privilege anonymous catalog policy/view is still required before live rows can be published. Authentication, customer data, writes, and realtime retain their later-phase activation review.
 - Meta developer application, permissions, policies, and webhook endpoint for Messenger.
 - Android tooling and distribution credentials for the mobile phase.
 - A documented existing-POS integration contract.
@@ -240,14 +241,15 @@ Each implementation pull request must cite applicable requirement IDs. Each test
 
 ## 13. Open decisions
 
-1. Verify and pin mutually compatible Phase 1 framework/test versions, and select the eventual deployment target; Supabase activation remains gated to Phase 4.
-2. Confirm owner-approved business content and its authoritative source.
-3. Define guest checkout policy versus account-required ordering. **TODO: Confirm with Brew ni Cat owner.**
-4. Define allowed order states, staff response expectations, cancellation/rejection handling, and customer notices. **TODO: Confirm with Brew ni Cat owner.**
-5. Define payment and delivery scope, if any. **TODO: Confirm with Brew ni Cat owner.**
-6. Define loyalty formulas, reward inventory/rules, expiration, and adjustment authority. **TODO: Confirm with Brew ni Cat owner.**
-7. Inspect the existing POS and approve the integration source of truth before Phase 6.
-8. Define personal-data retention and the operational process for privacy requests. **TODO: Confirm with Brew ni Cat owner.**
+1. Select the eventual deployment target; the limited Phase 2 public catalog client is implemented, while Supabase authentication, writes, customer data, and realtime remain gated to later design.
+2. Obtain approval for a least-privilege public catalog policy or dedicated public view; current anonymous reads return zero rows.
+3. Confirm the longer owner-approved About story and any future permanent operating-hours policy.
+4. Define guest checkout policy versus account-required ordering. **TODO: Confirm with Brew ni Cat owner.**
+5. Define allowed order states, staff response expectations, cancellation/rejection handling, and customer notices. **TODO: Confirm with Brew ni Cat owner.**
+6. Define online payment and fulfillment scope; Phase 2 publishes Cash/GCash and the customer-arranged external-rider model as information only. **TODO: Confirm with Brew ni Cat owner.**
+7. Define loyalty formulas, reward inventory/rules, expiration, and adjustment authority. **TODO: Confirm with Brew ni Cat owner.**
+8. Complete the existing POS integration contract and source-of-truth approval before Phase 6; Phase 2 source inspection was limited to catalog discovery.
+9. Define personal-data retention and the operational process for privacy requests. **TODO: Confirm with Brew ni Cat owner.**
 
 ## 14. Approval record
 
@@ -258,3 +260,13 @@ Each implementation pull request must cite applicable requirement IDs. Each test
 | Academic adviser / evaluator, if required | Pending | Pending | Pending |
 
 Version 0.1 remains a draft until review findings and owner-dependent scope items are recorded.
+
+## 15. Phase 2 Public Showcase Addendum
+
+The client brief dated 2026-08-24 confirms the Phase 2 public facts and asset permissions: Brew ni Cat Coffee Shop opened June 12, 2026; its address is Segundo St, Poblacion, Kabacan, Cotabato 9407, Philippines, beside Pulido Eatery; its public phone and email are configured; Cash and GCash are accepted; and a ₱10 takeout box applies. Operating hours are variable, so the website directs customers to Facebook or the shop contact for today's schedule rather than publishing a guaranteed weekly table.
+
+The owner-approved final About story is not available. Phase 2 uses only the restrained factual points supplied in the brief and does not invent an owner biography, testimonial, award, mission, or market-leading claim.
+
+The existing Supabase catalog is the authoritative source for current categories, item names, availability, variants, flavor prices, and combo descriptions. Old menu posters are visual reference only. POS and read-only discovery identified `categories` and `items`; the typed browser data layer maps only approved catalog fields. Existing anonymous access returns HTTP 200 with zero rows even though a controlled read-only comparison confirmed records exist. This policy blocker must not be bypassed with privileged browser access or a production mutation.
+
+Phase 2 delivery content is informational: a customer independently books a preferred external rider after arranging the shop order and pays the rider separately. Brew ni Cat does not employ/book the rider or control rider availability, fee, or ETA. Online ordering and delivery integration remain outside this increment.

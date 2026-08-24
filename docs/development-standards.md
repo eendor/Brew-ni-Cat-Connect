@@ -2,15 +2,15 @@
 
 **Project:** Brew ni Cat Connect
 **Version:** 0.1 Draft
-**Date:** 2026-08-23
-**Phase:** Phase 1 — Project Foundation
-**Document status:** Draft specification with the Phase 1 web toolchain implemented; teammate QA and pull-request review are pending.
+**Date:** 2026-08-24
+**Phase:** Living standards through Phase 2
+**Document status:** Phase 1 is Tested and merged; Phase 2 showcase/catalog standards passed developer verification and await independent review.
 
 ## 1. Purpose and Current State
 
 These standards define how Brew ni Cat Connect will be designed, implemented, reviewed, tested, and documented. They apply to web code, shared backend code, database changes, future integrations, test code, scripts, and documentation.
 
-The Phase 1 web foundation uses **Next.js App Router with React and strict TypeScript**, styled with Tailwind CSS project tokens. Exact installed dependency versions are recorded in `docs/software-and-apis.md` and locked in `package-lock.json`. Local formatter, lint, type-check, unit/component test, end-to-end test, coverage, and production-build commands are configured; command outcomes are reported only in dated test evidence and the development log. GitHub Actions performs the lightweight pull-request validation gate, while Playwright remains a required local Phase 1 check.
+The web application uses **Next.js App Router with React and strict TypeScript**, styled with Tailwind CSS project tokens. Phase 2 adds only the justified read-only Supabase catalog boundary and approved public media. Exact installed dependency versions are recorded in `docs/software-and-apis.md` and locked in `package-lock.json`. Local formatter, lint, type-check, unit/component test, end-to-end test, coverage, and production-build commands are configured; command outcomes are reported only in dated test evidence and the development log. GitHub Actions performs the lightweight pull-request validation gate, while Playwright remains a required local Phase 1 check.
 
 Normative language:
 
@@ -30,7 +30,7 @@ Normative language:
 8. Treat warnings, flaky tests, and bypassed checks as engineering work, not as acceptable background noise.
 9. Apply SOLID principles proportionally where they improve cohesion, substitution, interface clarity, dependency direction, or testability; do not add abstraction layers only to satisfy a label.
 
-## 3. Phase 1 Repository Structure
+## 3. Current Repository Structure
 
 The implemented foundation uses this deliberately small structure:
 
@@ -39,20 +39,25 @@ src/
   app/             App Router pages, root layout, global styles, and state boundaries
   components/
     layout/        Reusable site shell and navigation components
+    menu/          Read-only catalog UI and explicit customer states
     ui/            Small shared presentation primitives
-  config/          Typed project-owned public configuration
+  config/          Typed project-owned public business/gallery configuration
+  lib/
+    menu/          Catalog fetch, mapping, and price display helpers
+    supabase/      Public client creation only
+  types/           Application-level catalog and row boundary types
 tests/
   unit/            Vitest and Testing Library behavior tests
   e2e/             Playwright browser smoke tests
   setup.ts         Shared DOM matcher and cleanup setup
-public/            Static, optimized public assets when a phase introduces them
+public/            Approved official logo, menu reference art, and shop photographs
 docs/              Version-controlled project documentation
 .github/workflows/ Pull-request and branch validation
 ```
 
 Rules:
 
-- Add `features/`, `domain/`, or infrastructure directories only when an approved capability needs them; Phase 1 does not create empty architecture placeholders.
+- Add `features/`, ordering/customer domain, server, or mutation infrastructure only when an approved capability needs it; the Phase 2 catalog folders exist because a real typed read boundary now needs them.
 - Prefer feature-local code until it is demonstrably shared.
 - When a domain layer is introduced, do not import route/UI concerns into it.
 - Wrap external providers behind narrow project-owned interfaces where this improves testability or prevents vendor concepts from spreading.
@@ -106,7 +111,7 @@ Use business vocabulary from the approved requirements. Avoid abbreviations and 
 
 ## 6. Formatting, Linting, and Static Analysis
 
-Phase 1 configures and pins this automated baseline:
+The project configures and pins this automated baseline:
 
 - ESLint with the supported Next.js and TypeScript rules.
 - Prettier for deterministic formatting, unless a documented decision selects one consolidated formatter/linter instead.
@@ -135,7 +140,7 @@ npm run build
 python scripts/validate_phase0_docs.py
 ```
 
-GitHub Actions selects Python 3.14 for the specification-document validator plus Node.js 24 and the manifest-pinned npm 12.0.2, then runs `npm ci`, `audit`, `format:check`, document validation, `lint`, `typecheck`, `test`, and `build`. Playwright is intentionally omitted from the initial CI job to avoid installing browser binaries on every lightweight validation run; `npm run test:e2e` remains a required local Phase 1 command. A command is reported as passing only when its dated execution result has been captured for the relevant revision.
+GitHub Actions selects Python 3.14 for the specification-document validator plus Node.js 24 and the manifest-pinned npm 12.0.2, then runs `npm ci`, `audit`, `format:check`, document validation, `lint`, `typecheck`, `test`, and `build`. Playwright remains a required local pre-review command and is omitted from the lightweight hosted job. CI/builds require no Supabase credential or live response. A command is reported as passing only when its dated execution result has been captured for the relevant revision.
 
 ## 7. Functions, Domain Logic, and Errors
 
@@ -272,8 +277,20 @@ A development item is done only when all applicable statements are true:
 8. No secret, production personal data, build output, or unrelated file is included.
 9. Commit and push/PR status are recorded truthfully.
 
-The Phase 1 implementation may move to Testing / Review after its automated gates and local responsive checks pass. The team phase remains open until an actual teammate completes QA and pull-request review.
+A phase may move to Testing / Review after its automated gates and developer inspections pass. Phase 2 must remain open and unmerged until Renier completes independent QA and Pull Request review. The live-menu access blocker must remain visible until an approved anonymous read boundary is verified.
 
 ## 17. Exceptions and Evolution
 
 Standards may evolve when the team gains evidence. A material exception must be narrow, documented in the pull request, risk-assessed, approved by the appropriate reviewer, and recorded in `docs/decisions.md` when it affects architecture or future work. Exceptions must not be hidden through disabled checks.
+
+## 18. Phase 2 Catalog, Media, and Line-ending Rules
+
+- Raw Supabase calls belong in `src/lib/supabase` or a narrow integration module; JSX consumes typed application models and injected loaders for tests.
+- Browser code may reference only the documented public URL/publishable configuration. Privileged environment names, admin clients, and raw provider errors must not enter Client Components or bundles.
+- Public queries use explicit field lists and `SELECT` only. Phase 2 code must contain no mutation, RPC, auth, order, customer, inventory, sales, or expense operation.
+- Treat nullable/JSON database values as untrusted. Trim text; reject malformed/negative prices; preserve unknown availability; and never invent records/options to mask incomplete data.
+- Current prices come only from mapped live catalog records. Poster artwork and POS-hardcoded add-ons are not catalog fixtures.
+- Public components must implement loading, empty, failure/retry, and availability states without leaking internal details.
+- Gallery configuration must use approved local files, generic factual alt text, responsive Next.js Image sizing, and a curated initial set rather than rendering all 139 files.
+
+Repository text uses LF through `.gitattributes` (`* text=auto eol=lf`) and Prettier `endOfLine: lf`. Windows `.bat`/`.cmd` files remain CRLF. PNG/JPEG/WebP/GIF/ICO assets are explicitly binary and are not line-normalized. Contributors should let Git and Prettier normalize text instead of creating line-ending-only review noise; `npm run format:check` is the verification command.

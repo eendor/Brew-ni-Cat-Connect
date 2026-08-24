@@ -64,5 +64,5 @@ jobs:
       - name: Build production application
         run: npm run build
 
-      # Playwright remains a required local Phase 1 check; browser installation is
-      # intentionally omitted here to keep this initial CI workflow lightweight.
+      # Playwright remains a required local Phase 2 check; browser installation is
+      # intentionally omitted here to keep the pull-request workflow lightweight.
