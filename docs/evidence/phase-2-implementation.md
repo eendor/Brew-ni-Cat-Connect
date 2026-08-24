@@ -3,7 +3,7 @@
 **Version:** 0.1 Draft
 **Date:** 2026-08-24
 **Branch:** `feat/showcase-website`
-**Status:** Testing / Review; automated validation passed, while push, hosted CI, Pull Request, and independent QA remain pending at this checkpoint
+**Status:** Testing / Review; local automation and the initial hosted workflows passed, the branch is pushed, and [Pull Request #2](https://github.com/eendor/Brew-ni-Cat-Connect/pull/2) is open and unmerged; independent QA/review remains pending
 
 ## 1. Implemented Increment
 
@@ -70,7 +70,7 @@ Phase 1 regression cases are preserved. Phase 2 cases use IDs `TC-P2-001` throug
 
 ## 6. Required Command Record
 
-The following commands ran against the final pre-push implementation and documentation revision on 2026-08-24.
+The following commands ran against the final local implementation and documentation revision on 2026-08-24.
 
 | Command | Result | Exit status |
 | --- | --- | --- |
@@ -83,7 +83,7 @@ The following commands ran against the final pre-push implementation and documen
 | `npm run test:e2e` | Production build passed; Playwright 13 of 13 passed in 9.2 seconds | 0 |
 | `python scripts/validate_phase0_docs.py` | 22 Markdown files checked; 81 FR IDs; 40 NFR IDs; 0 errors; `PHASE0_DOC_VALIDATION=PASS` | 0 |
 
-GitHub Actions must remain `Pending` until the pushed commit's actual workflow completes.
+The [push workflow](https://github.com/eendor/Brew-ni-Cat-Connect/actions/runs/32683571433) and [pull-request workflow](https://github.com/eendor/Brew-ni-Cat-Connect/actions/runs/32683615804) for `67a81db` both completed successfully. The metadata-only commit containing this update must receive the same checks; the live Pull Request check rollup remains authoritative.
 
 ## 7. Developer Inspection Evidence
 
@@ -152,7 +152,8 @@ Record reviewer name, date, browser/device, actual results, findings, related bu
 
 ## 9. Pull Request State
 
-**Commits:** `0533bde` line endings; `f3949c3` read-only menu foundation; `4d66f95` public showcase and approved assets; `e03293e` Phase 2 tests
-**Pull Request:** Pending creation
+**Commits:** `0533bde` line endings; `f3949c3` read-only menu foundation; `4d66f95` public showcase and approved assets; `e03293e` Phase 2 tests; `67a81db` documentation and evidence
+**Pull Request:** [#2 — Phase 2: Build Brew ni Cat public showcase website](https://github.com/eendor/Brew-ni-Cat-Connect/pull/2), open and unmerged
+**Hosted CI:** Initial push and pull-request workflows for `67a81db` passed; the live check rollup covers later handoff-only updates
 **Review:** Pending Renier
 **Merge:** Prohibited during implementation handoff

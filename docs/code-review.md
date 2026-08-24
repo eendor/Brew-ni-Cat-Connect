@@ -91,4 +91,4 @@ The production public identities return HTTP 200 with zero `categories` and `ite
 **Findings:** Pending real teammate QA and code review.\
 **Recommendations:** Review the checklist and cases in `docs/evidence/phase-2-implementation.md` and `docs/test-cases.md`; separately verify business facts, public access behavior, mobile/keyboard/media experience, typing, environment separation, and scope.\
 **Changes made:** Not applicable until review findings exist.\
-**Status:** Developer self-inspection and local automation complete. Awaiting branch push, open Pull Request, and Renier's independent review. Do not merge or mark Done before independent review.
+**Status:** Developer self-inspection, local automation, branch push, open [Pull Request #2](https://github.com/eendor/Brew-ni-Cat-Connect/pull/2), and the initial hosted workflows are complete. Renier's independent review remains pending. Do not merge or mark Done before that review.

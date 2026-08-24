@@ -5,7 +5,7 @@
 **Original date:** 2026-08-18
 **Last updated:** 2026-08-24
 **Phase:** Living strategy through Phase 2
-**Document status:** Phase 1 evidence is complete and merged. Phase 2 developer automation passed; hosted CI and independent QA are pending.
+**Document status:** Phase 1 evidence is complete and merged. Phase 2 developer automation and the initial hosted workflows passed; Pull Request #2 is open, and independent QA/review is pending.
 
 ## 1. Current Test Status
 
@@ -330,4 +330,4 @@ After an approved policy/view change outside this branch, repeat the representat
 
 ### Evidence and status
 
-`docs/evidence/phase-2-implementation.md` is the handoff record. Observed local command summaries, counts, exit statuses, screenshot paths, and commits are recorded there; the PR and hosted workflow result remain pending until created/observed. Automated success moves the card to Testing / Review, not Done; Renier's independent results stay unchecked until performed.
+`docs/evidence/phase-2-implementation.md` is the handoff record. Observed local command summaries, counts, exit statuses, screenshot paths, commits, open [Pull Request #2](https://github.com/eendor/Brew-ni-Cat-Connect/pull/2), and initial hosted workflow results are recorded there; the live Pull Request check rollup is authoritative for later handoff-only commits. Automated success moves the card to Testing / Review, not Done; Renier's independent results stay unchecked until performed.

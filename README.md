@@ -94,7 +94,7 @@ npm run build
 python scripts/validate_phase0_docs.py
 ```
 
-The final local Phase 2 run passed formatting, dependency audit, lint, type checking, 20 of 20 unit/component tests, the production build, 13 of 13 Playwright tests, and the documentation validator. Literal results are recorded in [`docs/evidence/phase-2-implementation.md`](docs/evidence/phase-2-implementation.md). Hosted CI and Renier's independent QA remain separate review gates.
+The final local Phase 2 run passed formatting, dependency audit, lint, type checking, 20 of 20 unit/component tests, the production build, 13 of 13 Playwright tests, and the documentation validator. Literal results are recorded in [`docs/evidence/phase-2-implementation.md`](docs/evidence/phase-2-implementation.md). The initial push and pull-request workflows for `67a81db` both passed; live status is recorded on [Pull Request #2](https://github.com/eendor/Brew-ni-Cat-Connect/pull/2). Renier's independent QA remains pending.
 
 ## End-to-End Tests
 
