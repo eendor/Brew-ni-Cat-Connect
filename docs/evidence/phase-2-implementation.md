@@ -136,7 +136,7 @@ The final follow-up commands produced these observed results:
 | `npm run test:e2e` | Production build passed; Playwright 13 of 13 passed | 0 |
 | `python scripts/validate_phase0_docs.py` | 22 Markdown files; 81 FR IDs; 40 NFR IDs; `ERRORS=0`; `PHASE0_DOC_VALIDATION=PASS` | 0 |
 
-The follow-up commit SHA and hosted push/pull-request workflow results are also pending. Pull Request #2 remains open and unmerged.
+Follow-up implementation/evidence commit `4eaeca0` records the verified changes. Hosted push/pull-request workflow results remain pending until that branch update is pushed. Pull Request #2 remains open and unmerged.
 
 ## 7. Developer Inspection Evidence
 
@@ -225,7 +225,7 @@ Record reviewer name, date, browser/device, actual results, findings, related bu
 
 ## 9. Pull Request State
 
-**Commits:** `0533bde` line endings; `f3949c3` read-only menu foundation; `4d66f95` public showcase and approved assets; `e03293e` Phase 2 tests; `67a81db` documentation and evidence; follow-up commit pending
+**Commits:** `0533bde` line endings; `f3949c3` read-only menu foundation; `4d66f95` public showcase and approved assets; `e03293e` Phase 2 tests; `67a81db` documentation and evidence; `4eaeca0` live-menu verification/fix/evidence
 **Pull Request:** [#2 — Phase 2: Build Brew ni Cat public showcase website](https://github.com/eendor/Brew-ni-Cat-Connect/pull/2), open and unmerged
 **Hosted CI:** Initial push and pull-request workflows for `67a81db` passed; follow-up commit checks pending
 **Review:** Pending Renier
