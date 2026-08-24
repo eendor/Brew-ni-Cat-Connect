@@ -3,7 +3,7 @@
 - **Version:** 0.1 Draft
 - **Date:** 2026-08-18; Phase 2 addendum 2026-08-24
 - **Phase:** Living specification through Phase 2
-- **Document status:** Version 0.1 remains a draft. Phase 1 is Tested and merged; the implemented Phase 2 showcase is in Testing / Review. Public live catalog rendering and final local follow-up gates are verified; hosted CI and independent review remain pending, and manually RLS-disabled access remains a production security blocker. Later capabilities remain Planned or Deferred as marked.
+- **Document status:** Version 0.1 remains a draft. Phase 1 is Tested and merged; the implemented Phase 2 showcase is in Testing / Review. Public live catalog rendering, final local follow-up gates, and both hosted workflows for evidence head `975561b` are verified; independent review remains pending, and manually RLS-disabled access remains a production security blocker. Later capabilities remain Planned or Deferred as marked.
 
 ## 1. Purpose
 

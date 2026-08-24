@@ -224,7 +224,7 @@ No production release should proceed until evidence confirms:
 - Backup and restore responsibilities are documented and a restore exercise is recorded.
 - Privacy notice, retention schedule, request handling, incident contacts, and vendor reviews are approved by the accountable business role.
 
-Evidence must include the exact command or procedure, date, commit/deployment identifier, environment, literal result or attached record, and reviewer. Phase 1 has successful merged evidence. Phase 2 now has successful public-key catalog reads, live responsive rendering, and a passing final local quality-gate rerun plus earlier developer secret, bundle/configuration, and accessibility checks. Follow-up hosted CI and independent review remain pending. Authentication/customer authorization features are not implemented, and no production write-policy test was attempted.
+Evidence must include the exact command or procedure, date, commit/deployment identifier, environment, literal result or attached record, and reviewer. Phase 1 has successful merged evidence. Phase 2 now has successful public-key catalog reads, live responsive rendering, a passing final local quality-gate rerun, refreshed secret/bundle scans, and both hosted workflows passed for evidence head `975561b`. Independent review remains pending. Authentication/customer authorization features are not implemented, and no production write-policy test was attempted.
 
 ## 14. Open Decisions and Owner Inputs
 

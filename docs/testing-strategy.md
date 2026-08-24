@@ -5,7 +5,7 @@
 **Original date:** 2026-08-18
 **Last updated:** 2026-08-24
 **Phase:** Living strategy through Phase 2
-**Document status:** Phase 1 evidence is complete and merged. Phase 2 live public Menu verification and the final local quality-gate rerun passed. Pull Request #2 is open/unmerged, follow-up hosted CI is pending, the RLS-disabled production security blocker remains open, and independent QA/review is pending.
+**Document status:** Phase 1 evidence is complete and merged. Phase 2 live public Menu verification, the final local quality-gate rerun, and both hosted workflows for evidence head `975561b` passed. Pull Request #2 is open/unmerged, the RLS-disabled production security blocker remains open, and independent QA/review is pending.
 
 ## 1. Current Test Status
 
@@ -332,4 +332,4 @@ This functional pass is not authorization acceptance. HEAD-only/no-body probes f
 
 ### Evidence and status
 
-`docs/evidence/phase-2-implementation.md` is the handoff record. It distinguishes initial and follow-up observations and records command summaries, counts, exit statuses, screenshot paths, commits, open [Pull Request #2](https://github.com/eendor/Brew-ni-Cat-Connect/pull/2), and hosted workflow results. The final local follow-up commands passed and implementation/evidence commit `4eaeca0` exists; the live Pull Request check rollup remains pending/authoritative until push. Automated success moves the card to Testing / Review, not Done; the security blocker remains open and Renier's independent results stay unchecked until performed.
+`docs/evidence/phase-2-implementation.md` is the handoff record. It distinguishes initial and follow-up observations and records command summaries, counts, exit statuses, screenshot paths, commits, open [Pull Request #2](https://github.com/eendor/Brew-ni-Cat-Connect/pull/2), and hosted workflow results. The final local follow-up commands passed, implementation/evidence commit `4eaeca0` exists, and both hosted workflows for evidence head `975561b` passed. The live Pull Request check rollup remains authoritative for the metadata-only evidence update. Automated success moves the card to Testing / Review, not Done; the security blocker remains open and Renier's independent results stay unchecked until performed.

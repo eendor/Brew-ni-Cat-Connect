@@ -93,4 +93,4 @@ This functional pass exposes a more serious current blocker: public access depen
 **Findings:** Pending real teammate QA and code review.\
 **Recommendations:** Review the checklist and cases in `docs/evidence/phase-2-implementation.md` and `docs/test-cases.md`; separately verify business facts, public access behavior, mobile/keyboard/media experience, typing, environment separation, and scope.\
 **Changes made:** Not applicable until review findings exist.\
-**Status:** Developer self-inspection, local automation, branch push, open [Pull Request #2](https://github.com/eendor/Brew-ni-Cat-Connect/pull/2), and the initial hosted workflows are complete. Renier's independent review remains pending. Do not merge or mark Done before that review.
+**Status:** Developer self-inspection, local automation, branch push, open [Pull Request #2](https://github.com/eendor/Brew-ni-Cat-Connect/pull/2), and the initial/follow-up hosted workflows are complete. Renier's independent review remains pending. Do not merge or mark Done before that review.

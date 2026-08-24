@@ -112,4 +112,5 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Git branch:** `feat/showcase-website`\
 **Git commit:** `4eaeca0` — `fix: verify live Supabase menu and refresh evidence`\
 **Pull request:** [#2 — Phase 2: Build Brew ni Cat public showcase website](https://github.com/eendor/Brew-ni-Cat-Connect/pull/2), open and unmerged.\
-**Next action:** Push the follow-up commits and confirm hosted checks, then Renier independently verifies the live menu, security truthfulness, responsive behavior, and code review. Do not merge Pull Request #2 or begin Phase 3 during this follow-up.
+**Hosted CI:** Both push and pull-request workflows for follow-up evidence head `975561b` passed. The live Pull Request rollup remains authoritative for the metadata-only evidence update.\
+**Next action:** Renier independently verifies the live menu, security truthfulness, responsive behavior, and code review. Do not merge Pull Request #2 or begin Phase 3 during this follow-up.

@@ -386,7 +386,7 @@ Before each later phase begins:
 7. Review database migrations/RLS/integration contracts where applicable.
 8. Update development log and evidence without marking unexecuted work as tested.
 
-The Phase 1 foundation is **Tested and merged**. Phase 2 showcase/catalog code is in **Testing / Review**; live public rows are **Implemented**, verified at five widths, and covered by passing final local follow-up gates. Hosted CI and independent review remain pending. The current manually RLS-disabled exposure is a production security blocker. Every mutation, customer-data, backend, or additional-channel entry remains **Planned** or **Deferred** until implementation and evidence exist.
+The Phase 1 foundation is **Tested and merged**. Phase 2 showcase/catalog code is in **Testing / Review**; live public rows are **Implemented**, verified at five widths, and covered by passing final local follow-up gates plus both hosted workflows for evidence head `975561b`. Independent review remains pending. The current manually RLS-disabled exposure is a production security blocker. Every mutation, customer-data, backend, or additional-channel entry remains **Planned** or **Deferred** until implementation and evidence exist.
 
 ## 16. Requirements traceability
 

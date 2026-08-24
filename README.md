@@ -96,7 +96,7 @@ npm run build
 python scripts/validate_phase0_docs.py
 ```
 
-The final local Phase 2 follow-up passed formatting, dependency audit, lint, type checking, 21 of 21 unit/component tests in 6 files, the production build with 7 of 7 static pages, 13 of 13 Playwright tests, and the documentation validator. Literal results and the unmocked five-width live review are recorded in [`docs/evidence/phase-2-implementation.md`](docs/evidence/phase-2-implementation.md). Follow-up implementation/evidence commit `4eaeca0` is ready for hosted CI. [Pull Request #2](https://github.com/eendor/Brew-ni-Cat-Connect/pull/2) remains open/unmerged, and Renier's independent QA remains pending.
+The final local Phase 2 follow-up passed formatting, dependency audit, lint, type checking, 21 of 21 unit/component tests in 6 files, the production build with 7 of 7 static pages, 13 of 13 Playwright tests, and the documentation validator. Literal results and the unmocked five-width live review are recorded in [`docs/evidence/phase-2-implementation.md`](docs/evidence/phase-2-implementation.md). Both hosted workflows for follow-up evidence head `975561b` passed. [Pull Request #2](https://github.com/eendor/Brew-ni-Cat-Connect/pull/2) remains open/unmerged, and Renier's independent QA remains pending.
 
 ## End-to-End Tests
 
