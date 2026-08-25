@@ -10,8 +10,8 @@ This document serves as the evidence index for Phase 2 implementation. It links 
 
 ## 1. Merged Pull Requests & Code Changes
 * **Phase 1 Merge Commit:** `11c546d` (*Merge Phase 1 project foundation*)
-* **Phase 2 Feature Branch:** `feat/phase-2-business-content` (In Progress)
-* **Phase 2 PR Link:** `[Insert PR Link Once Opened]`
+* **Phase 2 Feature Branch:** `feat/phase-2-documentation-clean`
+* **Phase 2 PR Link:** `https://github.com/eendor/Brew-ni-Cat-Connect/pull/3`
 
 ---
 
@@ -28,7 +28,7 @@ This document serves as the evidence index for Phase 2 implementation. It links 
 ---
 
 ## 3. Visual & Content Consistency Audits
-* **Branding & Assets Audit:** Approved logo and images verified in `/public/images/` ([Homepage Screenshot](phase-2/screenshots/homepage.png)).
+* **Branding & Assets Audit:** Approved logo and images verified in `/public/images/`.
 * **Menu vs. Database Audit:** Confirmed active items match Supabase database schema.
 * **Provisional Copy Review:** Owner sign-off status tracked in `docs/business-content-register.md`.
 
