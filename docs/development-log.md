@@ -114,3 +114,19 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Pull request:** [#2 — Phase 2: Build Brew ni Cat public showcase website](https://github.com/eendor/Brew-ni-Cat-Connect/pull/2), open and unmerged.\
 **Hosted CI:** Both push and pull-request workflows for follow-up evidence head `975561b` passed. The live Pull Request rollup remains authoritative for the metadata-only evidence update.\
 **Next action:** Renier independently verifies the live menu, security truthfulness, responsive behavior, and code review. Do not merge Pull Request #2 or begin Phase 3 during this follow-up.
+
+## 2026-08-25 — Business Content Verification & Evidence Cleanup
+
+**Date:** 2026-08-25
+**Phase:** Phase 2 — Production Business Content
+**Task:** Finalize business content facts, cleanup deprecated evidence, and update verification tracking.
+**Summary:** Updated `docs/business-content-register.md` with verified store details (address, contact info, social channels, custom operating hours, cash/GCash payment rules, and external rider delivery model). Cleaned up `docs/evidence/phase-2-verification.md` by removing deprecated Phase 1 image references and deleting the redundant `homepage.png` asset.
+**Changes:**
+- updated `docs/business-content-register.md` to confirm verified business details, payment methods, delivery model, and Supabase single source of truth;
+- cleaned `docs/evidence/phase-2-verification.md` by stripping out Phase 1 screenshot references and updating branch/PR links;
+- removed deprecated `docs/evidence/homepage.png` file from repository root evidence folder; and
+- appended development log entry to document Phase 2 documentation refinement.
+**Files/modules affected:** `docs/business-content-register.md`, `docs/evidence/phase-2-verification.md`, `docs/evidence/homepage.png`, `docs/development-log.md`.
+**Testing performed:** Executed `python scripts/validate_phase0_docs.py` to confirm zero formatting errors and verified `PHASE0_DOC_VALIDATION=PASS`.
+**Git branch:** `feat/phase-2-documentation-clean`
+**Next action:** Stage changes, commit, and push to update Pull Request #3 for QA review by Renier.
