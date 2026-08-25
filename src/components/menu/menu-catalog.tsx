@@ -19,6 +19,14 @@ type ViewState =
   | Readonly<{ status: "ready"; catalog: MenuCatalogModel }>
   | Readonly<{ status: "error" }>;
 
+function isCatTreatsCategory(name: string) {
+  return name.trim().toLowerCase() === "cat treats";
+}
+
+function getCategoryDisplayName(name: string) {
+  return isCatTreatsCategory(name) ? `${name} (For Cats)` : name;
+}
+
 export function MenuCatalog({ loadMenu = fetchPublicMenu }: MenuCatalogProps) {
   const [viewState, setViewState] = useState<ViewState>({ status: "loading" });
   const [requestVersion, setRequestVersion] = useState(0);
@@ -78,7 +86,7 @@ export function MenuCatalog({ loadMenu = fetchPublicMenu }: MenuCatalogProps) {
                 href={`#menu-category-${index + 1}`}
                 className="inline-flex min-h-11 items-center whitespace-nowrap rounded-full border border-[var(--border-soft)] bg-[var(--surface-card)] px-4 py-2 text-sm font-bold text-[var(--text-strong)] transition-colors hover:border-[var(--accent-solid)] hover:bg-[var(--accent-soft)]"
               >
-                {category.name}
+                {getCategoryDisplayName(category.name)}
               </a>
             </li>
           ))}
@@ -100,8 +108,13 @@ export function MenuCatalog({ loadMenu = fetchPublicMenu }: MenuCatalogProps) {
                   id={`menu-category-heading-${index + 1}`}
                   className="font-display mt-2 text-3xl font-semibold text-[var(--text-strong)] sm:text-4xl"
                 >
-                  {category.name}
+                  {getCategoryDisplayName(category.name)}
                 </h2>
+                {isCatTreatsCategory(category.name) ? (
+                  <p className="mt-2 text-sm font-medium text-[var(--text-subtle)]">
+                    These treats are for cats, not food for people.
+                  </p>
+                ) : null}
               </div>
               <p className="hidden text-sm font-semibold text-[var(--text-subtle)] sm:block">
                 {category.items.length}{" "}
