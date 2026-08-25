@@ -63,6 +63,27 @@ const populatedCatalog: MenuCatalogModel = {
         },
       ],
     },
+    {
+      id: "cat-treats",
+      name: "Cat Treats",
+      items: [
+        {
+          id: "salmon-bites",
+          name: "Salmon Bites",
+          availability: "available",
+          flavors: [],
+          variants: [
+            {
+              id: "salmon-bites-pack",
+              name: "Pack",
+              basePrice: 35,
+              flavorPrices: [],
+              description: null,
+            },
+          ],
+        },
+      ],
+    },
   ],
 };
 
@@ -95,6 +116,20 @@ describe("MenuCatalog", () => {
     ).toHaveAttribute("href", "#menu-category-1");
     expect(
       screen.getByRole("heading", { level: 2, name: "Combos & Packages" }),
+    ).toBeInTheDocument();
+    expect(
+      within(categoryNavigation).getByRole("link", {
+        name: "Cat Treats (For Cats)",
+      }),
+    ).toHaveAttribute("href", "#menu-category-3");
+    expect(
+      screen.getByRole("heading", {
+        level: 2,
+        name: "Cat Treats (For Cats)",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("These treats are for cats, not food for people."),
     ).toBeInTheDocument();
 
     const matchaCard = screen
