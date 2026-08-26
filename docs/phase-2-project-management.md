@@ -101,7 +101,7 @@ Current responsibilities:
 
 Current status:
 Presentation contribution pending / To Do.
-Reason: hindi pa siya formally nagsisimula ngayon.
+Reason: The presentation contribution has not formally started yet.
 
 ### Van — Project Manager
 
