@@ -1,10 +1,10 @@
 # Phase 2 Project Management and Readiness Report
 
-*Project:* Brew ni Cat Connect  
-*Phase:* Phase 2 — Public Showcase Website  
-*Project Manager:* Van  
-*Status:* Testing / Review  
-*Last Updated:* 2026-08-25
+*Project:* Brew ni Cat Connect
+*Phase:* Phase 2 — Public Showcase Website
+*Project Manager:* Van
+*Status:* In Progress / Pre-QA Team Integration
+*Last Updated:* 2026-08-26
 
 ## 1. Phase 2 Objective
 
@@ -100,7 +100,8 @@ Current responsibilities:
 - Customer/presentation review
 
 Current status:
-Presentation preparation in progress.
+Presentation contribution pending / To Do.
+Reason: hindi pa siya formally nagsisimula ngayon.
 
 ### Van — Project Manager
 
