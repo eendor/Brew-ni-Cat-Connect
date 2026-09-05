@@ -238,15 +238,16 @@ Reviewed by Rizjie against the live Phase 2 pages.
 - Status:
 
 **Observation 1**
-- Observation:Available items do not show an "Available" badge, while unavailable or unconfirmed items already show status messages.
+- Observation: Available items do not show an "Available" badge, while unavailable or unconfirmed items already show status messages.
+- Page: Menu
 - Why it may be confusing: Some customers may prefer an explicit confirmation that an item is currently available.
-- Suggested improvement: Add an availability marker or badge optional.
-- Status: suggsetion not a bug
+- Suggested improvement: Optionally add an "Available" badge for available items.
+- Status: Suggestion — not a bug
 
 **Observation 2**
-- Observation: Cat Treats section is positioned in the middle/early part of the menu instead of the end.
+- Observation: Cat Treats section was positioned in the middle/early part of the menu instead of the end.
 - Page: Menu
-- Why it may be confusing: Since Cat Treats is food for cats, not humans, its current placement could momentarily confuse customers browsing for their own order.
+- Why it may be confusing: Since Cat Treats is food for cats, not humans, its placement could momentarily confuse customers browsing for their own order.
 - Suggested improvement: Move Cat Treats to the last section of the menu, separate from human food/drinks.
 - Status: ✅ Resolved — Cat Treats now placed at the end of the menu.
 
@@ -258,14 +259,14 @@ Reviewed by Rizjie against the live Phase 2 pages.
 - Status: Open — tracked under Future Suggestions.
 
 **Observation 4**
-- Observation: Gallery layout has visible empty spaces on the sides, as if images are missing.
+- Observation: Gallery layout had visible empty spaces on the sides, as if images were missing.
 - Page: Gallery
-- Why it may be confusing: Looks unfinished or broken to a visiting customer, even if unintentional.
+- Why it may be confusing: Looked unfinished or broken to a visiting customer, even if unintentional.
 - Suggested improvement: Fill gaps with additional approved photos or adjust the grid/layout so there are no empty slots.
 - Status: ✅ Resolved — layout gaps fixed.
 
 **Observation 5**
-- Observation: Map pin does not point to the actual/accurate location of Brew ni Cat.
+- Observation: Map pin did not point to the actual/accurate location of Brew ni Cat.
 - Page: Contact / Location
 - Why it may be confusing: Customers using the map for directions could go to the wrong place.
 - Suggested improvement: Correct the map coordinates to match the actual shop location (Segundo St, Poblacion, Kabacan, Cotabato, beside Pulido Eatery).
@@ -317,4 +318,3 @@ Reviewed by Rizjie against the live Phase 2 pages.
 Current status:
 
 Phase 2 presentation materials are being prepared before independent QA. Live-site review is complete. Of the 8 logged observations, 4 have been resolved (Cat Treats placement, gallery layout gaps, map location, menu card alignment). Remaining open items — rider/pickup visibility on the Menu page, and mobile navigation visibility — are refinements that do not affect Phase 2 scope and do not block the presentation. Product photos and swipeable menu cards are noted as future suggestions. The reservation feature requires confirmation with Popot before scoping.
-
