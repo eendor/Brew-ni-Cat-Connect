@@ -235,54 +235,88 @@ Reviewed by Rizjie against the live Phase 2 pages.
 - Page:
 - Why it may be confusing:
 - Suggested improvement:
+- Status:
 
-Do not directly edit website code.
+**Observation 1**
+- Observation: No availability status indicator on menu items yet.
+- Page: Menu
+- Why it may be confusing: Customers can't tell if an item is currently sold out or available, since there's no visual indicator either way.
+- Suggested improvement: Add an availability marker or badge.
+- Status: Open
 
-If you find an issue, report it to Rodnee first.
+**Observation 2**
+- Observation: Cat Treats section is positioned in the middle/early part of the menu instead of the end.
+- Page: Menu
+- Why it may be confusing: Since Cat Treats is food for cats, not humans, its current placement could momentarily confuse customers browsing for their own order.
+- Suggested improvement: Move Cat Treats to the last section of the menu, separate from human food/drinks.
+- Status: ✅ Resolved — Cat Treats now placed at the end of the menu.
 
-### Observation 1
+**Observation 3**
+- Observation: Menu items don't have product photos.
+- Page: Menu
+- Why it may be confusing: Not confusing, but a missed opportunity — customers often decide based on visuals.
+- Suggested improvement: Add product photos per item (nice-to-have, not urgent).
+- Status: Open — tracked under Future Suggestions.
 
-- **Observation:** Menu items do not show availability status (e.g., sold-out or currently unavailable items are not marked).
-- **Page:** Menu
-- **Why it may be confusing:** A customer could see an item listed and assume it's available to order (once ordering launches), when it may actually be out of stock.
-- **Suggested improvement:** Add a visible "unavailable" or "sold out" tag/state for items not currently offered, sourced from the same Supabase data.
+**Observation 4**
+- Observation: Gallery layout has visible empty spaces on the sides, as if images are missing.
+- Page: Gallery
+- Why it may be confusing: Looks unfinished or broken to a visiting customer, even if unintentional.
+- Suggested improvement: Fill gaps with additional approved photos or adjust the grid/layout so there are no empty slots.
+- Status: ✅ Resolved — layout gaps fixed.
 
-### Observation 2
+**Observation 5**
+- Observation: Map pin does not point to the actual/accurate location of Brew ni Cat.
+- Page: Contact / Location
+- Why it may be confusing: Customers using the map for directions could go to the wrong place.
+- Suggested improvement: Correct the map coordinates to match the actual shop location (Segundo St, Poblacion, Kabacan, Cotabato, beside Pulido Eatery).
+- Status: ✅ Resolved — map location corrected.
 
-- **Observation:** There's no mention of takeout or external rider pickup directly on the Menu page — it's only found on the Contact/Location page.
-- **Page:** Menu (missing) / Contact & Location (currently has it)
-- **Why it may be confusing:** A customer browsing the menu with intent to order via a rider (Grab, Lalamove, etc.) has to leave the menu and go find this info elsewhere, which adds friction.
-- **Suggested improvement:** Add a small note or banner on the Menu page (e.g., "Available for pickup or via your own rider — see Contact for details") linking to the Contact page, so the info is visible where the buying intent actually happens.
+**Observation 6**
+- Observation: External rider/pickup information is only in Contact, not visible on the Menu page.
+- Page: Menu / Contact
+- Why it may be confusing: A customer browsing the menu with intent to arrange a rider has to navigate away to find that this shop doesn't have its own delivery fleet.
+- Suggested improvement: Add a small visible note on the Menu page pointing to the external-rider info in Contact — framed as informational only, since Phase 2 has no ordering flow yet.
+- Status: Open
 
-### Observation 3
+**Observation 7**
+- Observation: On mobile, Menu/Contact/About links are hidden behind a navigation dropdown instead of shown directly.
+- Page: Responsive / Mobile — General UX
+- Why it may be confusing: Requires an extra tap to discover navigation options exist; not broken, just an extra step.
+- Suggested improvement: Consider whether a persistent bottom nav or always-visible tab bar suits the mobile experience better than a hidden hamburger menu — optional, since collapsed nav is a standard mobile pattern.
+- Status: Open
 
-- **Observation:** On mobile, the navigation (Menu, Contact, About, etc.) is hidden behind a dropdown/hamburger menu and requires an extra tap to access, rather than being visible directly.
-- **Page:** General / Mobile navigation (site-wide)
-- **Why it may be confusing:** Not confusing exactly, but adds an extra step for mobile users, who are likely the majority of visitors.
-- **Suggested improvement:** Consider a persistent bottom nav bar or always-visible top links for key pages (Menu, Contact) on mobile, instead of requiring the hamburger tap. This is a UX preference, not a bug — worth floating to Rodnee as a "nice to have," not a blocker.
+**Observation 8**
+- Observation: Menu cards were uneven/misaligned (di pantay).
+- Page: Menu
+- Why it may be confusing: Inconsistent card sizing looks unpolished and can distract from menu content.
+- Suggested improvement: Align menu card dimensions and spacing consistently.
+- Status: ✅ Resolved — menu cards now aligned.
 
-### Other pages reviewed — no issues found
+### Future Suggestions (not blockers for Phase 2)
 
-- **Home:** No issues found.
-- **Gallery:** No issues found.
-- **About:** No issues found; information shown is accurate.
-- **Responsive/Mobile (layout):** No issues found aside from the navigation point in Observation 3.
+- Add product photos per menu item.
+- Explore swipeable menu cards for browsing.
+
+### Needs Confirmation
+
+- Reservation feature / way to reserve — needs confirmation with Popot before deciding whether this belongs in Phase 2 scope or a later phase.
 
 ## 8. Presenter Readiness Checklist
 
 - [x] Reviewed the actual Phase 2 website
-- [/] Verified the pitch matches implemented features
+- [ ] Verified the pitch matches implemented features
 - [x] Verified future features are not presented as completed
-- [/] Prepared the 2–3 minute pitch
-- [/] Prepared the demo flow
-- [/] Prepared panel questions and answers
+- [ ] Prepared the 2–3 minute pitch
+- [ ] Prepared the demo flow
+- [ ] Prepared panel questions and answers
 - [x] Recorded customer/demo observations
-- [/] Verified business claims against current project documentation
+- [ ] Verified business claims against current project documentation
 
 ## 9. Presenter Recommendation
 
 Current status:
 
-Phase 2 presentation materials are being prepared before independent QA. Live-site review is complete; three refinement observations were logged for Rodnee (availability status, rider/pickup visibility on the Menu page, and mobile navigation visibility). None of these affect Phase 2 scope or block the presentation.
+Phase 2 presentation materials are being prepared before independent QA. Live-site review is complete. Of the 8 logged observations, 4 have been resolved (Cat Treats placement, gallery layout gaps, map location, menu card alignment). Remaining open items — availability status, rider/pickup visibility on the Menu page, and mobile navigation visibility — are refinements that do not affect Phase 2 scope and do not block the presentation. Product photos and swipeable menu cards are noted as future suggestions. The reservation feature requires confirmation with Popot before scoping.
 
 Do not claim Phase 2 is fully completed until QA and merge gates are finished.
