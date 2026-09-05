@@ -143,6 +143,30 @@ describe("mapMenuCatalog", () => {
       expect.arrayContaining([expect.objectContaining({ id: "orphan" })]),
     );
   });
+
+  it("TC-P2-022 — orders categories alphabetically but always places Cat Treats last", () => {
+    const categoryRows: readonly CategoryRow[] = [
+      { id: "cat-treats", name: "Cat Treats" },
+      { id: "take-out", name: "Take-out Box" },
+      { id: "buldak", name: "Buldak & Sedaap" },
+    ];
+    const items: readonly ItemRow[] = categoryRows.map((category) => ({
+      id: `${category.id}-item`,
+      category_id: category.id,
+      name: `${category.name} item`,
+      flavors: null,
+      variants_json: [],
+      is_available: true,
+    }));
+
+    const catalog = mapMenuCatalog(categoryRows, items);
+
+    expect(catalog.categories.map((category) => category.name)).toEqual([
+      "Buldak & Sedaap",
+      "Take-out Box",
+      "Cat Treats",
+    ]);
+  });
 });
 
 describe("menu price helpers", () => {

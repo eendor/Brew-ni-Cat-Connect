@@ -130,3 +130,21 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Testing performed:** Executed `python scripts/validate_phase0_docs.py` to confirm zero formatting errors and verified `PHASE0_DOC_VALIDATION=PASS`.
 **Git branch:** `feat/phase-2-documentation-clean`
 **Next action:** Stage changes, commit, and push to update Pull Request #3 for QA review by Renier.
+
+## 2026-09-05 — Presenter Review Findings Resolved
+
+**Date:** 2026-09-05
+**Phase:** Phase 2 — Public Showcase Website
+**Task:** Resolve the customer-facing findings raised by Rizjie during the Phase 2 presenter review and keep future-phase requests out of Phase 2 scope.
+**Summary:** Rizjie ran the Phase 2 site locally and reviewed it as a customer. He reported that the Contact map opened an unrelated business, the Gallery grid left large empty areas, Cat Treats appeared near the start of the Menu categories, and Menu cards were uneven on the web layout. All four findings are resolved. Requests for swipeable menu cards, per-product photography, and a reservation flow were recorded as Phase 3 scope and were not implemented.
+**Changes:**
+- replaced the free-text Google Maps query in `src/config/site.ts` with the shop coordinates `7.1134444,124.826155` and recorded the `4R7G+9FC` Plus Code, because the previous text query resolved to a different coffee business;
+- added dense grid flow to the Gallery and removed the hardcoded index-based row spans that left unfilled cells beside wide images;
+- ordered Menu categories alphabetically while always placing Cat Treats last, and exported a single `isCatTreatsCategory` helper so the catalog mapper and the catalog component share one rule;
+- allowed Menu item cards to stretch within each row so short categories no longer render a ragged column; and
+- added `TC-P2-022` regression coverage for the Cat Treats ordering rule.
+**Deferred to Phase 3:** swipeable menu cards, per-product images, and customer reservation handling. Reservation behaviour requires owner confirmation before any design work begins.
+**Files/modules affected:** `src/config/site.ts`, `src/app/gallery/page.tsx`, `src/components/menu/menu-catalog.tsx`, `src/lib/menu/map-menu-catalog.ts`, `tests/unit/menu-mapping.test.ts`, `docs/development-log.md`.
+**Testing performed:** `npm run typecheck`, `npm run lint`, and `npm run format:check` all completed with no findings. Vitest passed 6 files and 22/22 tests, including the new ordering regression. The documentation validator reported `ERRORS=0` and `PHASE0_DOC_VALIDATION=PASS`.
+**Git branch:** `feat/showcase-website`
+**Next action:** Renier performs independent Phase 2 QA against the corrected build. Pull Request #2 remains open until the QA gate completes.

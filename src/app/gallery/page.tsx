@@ -37,13 +37,13 @@ export default function GalleryPage() {
         aria-label="Brew ni Cat photo gallery"
       >
         <Container>
-          <div className="grid grid-cols-2 items-start gap-3 sm:gap-4 lg:grid-cols-3">
-            {galleryImages.map((image, index) => (
+          <div className="grid grid-flow-row-dense grid-cols-2 items-start gap-3 sm:gap-4 lg:grid-cols-3">
+            {galleryImages.map((image) => (
               <figure
                 key={image.src}
                 className={`group relative overflow-hidden rounded-[1.25rem] bg-[var(--surface-warm)] shadow-[var(--shadow-subtle)] sm:rounded-[1.5rem] ${
-                  image.landscape ? "col-span-2 lg:col-span-2" : ""
-                } ${index === 0 || index === 10 ? "lg:row-span-2" : ""}`}
+                  image.landscape ? "col-span-2" : ""
+                }`}
               >
                 <Image
                   src={image.src}

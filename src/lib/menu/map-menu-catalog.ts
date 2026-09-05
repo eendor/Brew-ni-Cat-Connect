@@ -12,6 +12,24 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+export function isCatTreatsCategory(name: string): boolean {
+  return name.trim().toLowerCase() === "cat treats";
+}
+
+function compareCategoryOrder(
+  left: Readonly<{ name: string }>,
+  right: Readonly<{ name: string }>,
+): number {
+  const leftIsCatTreats = isCatTreatsCategory(left.name);
+  const rightIsCatTreats = isCatTreatsCategory(right.name);
+
+  if (leftIsCatTreats !== rightIsCatTreats) {
+    return leftIsCatTreats ? 1 : -1;
+  }
+
+  return left.name.localeCompare(right.name);
+}
+
 function cleanText(value: unknown): string | null {
   if (typeof value !== "string") {
     return null;
@@ -142,7 +160,7 @@ export function mapMenuCatalog(
     .filter(
       (category): category is NonNullable<typeof category> => category !== null,
     )
-    .sort((left, right) => left.name.localeCompare(right.name));
+    .sort(compareCategoryOrder);
 
   return { categories };
 }

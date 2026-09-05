@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { fetchPublicMenu } from "@/lib/menu/fetch-public-menu";
+import { isCatTreatsCategory } from "@/lib/menu/map-menu-catalog";
 import type { MenuCatalog as MenuCatalogModel } from "@/types/menu";
 
 import { MenuItemCard } from "./menu-item-card";
@@ -18,10 +19,6 @@ type ViewState =
   | Readonly<{ status: "loading" }>
   | Readonly<{ status: "ready"; catalog: MenuCatalogModel }>
   | Readonly<{ status: "error" }>;
-
-function isCatTreatsCategory(name: string) {
-  return name.trim().toLowerCase() === "cat treats";
-}
 
 function getCategoryDisplayName(name: string) {
   return isCatTreatsCategory(name) ? `${name} (For Cats)` : name;
@@ -121,7 +118,7 @@ export function MenuCatalog({ loadMenu = fetchPublicMenu }: MenuCatalogProps) {
                 {category.items.length === 1 ? "item" : "items"}
               </p>
             </div>
-            <div className="mt-6 grid items-start gap-5 md:grid-cols-2">
+            <div className="mt-6 grid gap-5 md:grid-cols-2">
               {category.items.map((item) => (
                 <MenuItemCard key={item.id} item={item} />
               ))}

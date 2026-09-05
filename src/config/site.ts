@@ -10,8 +10,9 @@ export const siteConfig = {
     locality: "Kabacan, Cotabato 9407",
     country: "Philippines",
     landmark: "Beside Pulido Eatery",
+    plusCode: "4R7G+9FC",
     mapUrl:
-      "https://www.google.com/maps/search/?api=1&query=Brew+ni+Cat+Coffee+Shop%2C+Segundo+St%2C+Poblacion%2C+Kabacan%2C+Cotabato+9407%2C+Philippines",
+      "https://www.google.com/maps/search/?api=1&query=7.1134444%2C124.826155",
   },
   contact: {
     email: "popotpulido06@gmail.com",
