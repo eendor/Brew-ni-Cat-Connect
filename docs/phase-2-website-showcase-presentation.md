@@ -238,11 +238,10 @@ Reviewed by Rizjie against the live Phase 2 pages.
 - Status:
 
 **Observation 1**
-- Observation: No availability status indicator on menu items yet.
-- Page: Menu
-- Why it may be confusing: Customers can't tell if an item is currently sold out or available, since there's no visual indicator either way.
-- Suggested improvement: Add an availability marker or badge.
-- Status: Open
+- Observation:Available items do not show an "Available" badge, while unavailable or unconfirmed items already show status messages.
+- Why it may be confusing: Some customers may prefer an explicit confirmation that an item is currently available.
+- Suggested improvement: Add an availability marker or badge optional.
+- Status: suggsetion not a bug
 
 **Observation 2**
 - Observation: Cat Treats section is positioned in the middle/early part of the menu instead of the end.
@@ -317,6 +316,5 @@ Reviewed by Rizjie against the live Phase 2 pages.
 
 Current status:
 
-Phase 2 presentation materials are being prepared before independent QA. Live-site review is complete. Of the 8 logged observations, 4 have been resolved (Cat Treats placement, gallery layout gaps, map location, menu card alignment). Remaining open items — availability status, rider/pickup visibility on the Menu page, and mobile navigation visibility — are refinements that do not affect Phase 2 scope and do not block the presentation. Product photos and swipeable menu cards are noted as future suggestions. The reservation feature requires confirmation with Popot before scoping.
+Phase 2 presentation materials are being prepared before independent QA. Live-site review is complete. Of the 8 logged observations, 4 have been resolved (Cat Treats placement, gallery layout gaps, map location, menu card alignment). Remaining open items — rider/pickup visibility on the Menu page, and mobile navigation visibility — are refinements that do not affect Phase 2 scope and do not block the presentation. Product photos and swipeable menu cards are noted as future suggestions. The reservation feature requires confirmation with Popot before scoping.
 
-Do not claim Phase 2 is fully completed until QA and merge gates are finished.
