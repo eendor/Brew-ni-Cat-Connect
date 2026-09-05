@@ -37,27 +37,19 @@ export default function GalleryPage() {
         aria-label="Brew ni Cat photo gallery"
       >
         <Container>
-          <div className="grid grid-flow-row-dense grid-cols-2 items-start gap-3 sm:gap-4 lg:grid-cols-3">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
             {galleryImages.map((image) => (
               <figure
                 key={image.src}
-                className={`group relative overflow-hidden rounded-[1.25rem] bg-[var(--surface-warm)] shadow-[var(--shadow-subtle)] sm:rounded-[1.5rem] ${
-                  image.landscape ? "col-span-2" : ""
-                }`}
+                className="group relative overflow-hidden rounded-[1.25rem] bg-[var(--surface-warm)] shadow-[var(--shadow-subtle)] sm:rounded-[1.5rem]"
               >
                 <Image
                   src={image.src}
-                  width={image.landscape ? 1024 : 768}
-                  height={image.landscape ? 768 : 1024}
+                  width={768}
+                  height={1024}
                   alt={image.alt}
-                  sizes={
-                    image.landscape
-                      ? "(max-width: 639px) 94vw, (max-width: 1023px) 94vw, 62vw"
-                      : "(max-width: 639px) 46vw, (max-width: 1023px) 46vw, 31vw"
-                  }
-                  className={`${
-                    image.landscape ? "aspect-[8/5]" : "aspect-[3/4]"
-                  } h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.015]`}
+                  sizes="(max-width: 639px) 46vw, (max-width: 1023px) 46vw, 31vw"
+                  className="aspect-[3/4] h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.015]"
                 />
               </figure>
             ))}

@@ -135,13 +135,13 @@ This manual state is a temporary functional-verification condition, not a revisi
 
 ## ADR-010 — Phase 2 Approved Local Media Curation
 
-**Decision:** Use the official local logo and a configuration-owned initial set of 19 approved shop/customer photographs, rendered with Next.js Image and generic factual alternative text; do not publish all 139 files on first render.\
+**Decision:** Use the official local logo and a configuration-owned initial set of 18 approved shop/customer photographs, rendered with Next.js Image and generic factual alternative text; do not publish all 139 files on first render.\
 **Date:** 2026-08-24\
 **Status:** Accepted and implemented pending independent visual review\
 **Context:** The real showcase needs authentic Brew ni Cat visuals and the client approved the local assets. Publishing every image would create avoidable transfer/layout cost and duplication, and many images include customers who must not be identified or profiled.\
 **Options considered:** Generic stock images; all local images at once; a heavy gallery dependency; a small project-owned curated configuration with framework image optimization.\
-**Chosen approach:** Anchor the design with `brew-ni-cat-logo.png`, expose 19 varied cat/food/community/shop images in Gallery, use eight featured images on Home, lazy-load non-priority images, and provide generic scene-based alt text. Menu posters inform visual direction only and are not a price source.\
+**Chosen approach:** Anchor the design with `brew-ni-cat-logo.png`, expose 18 varied cat/food/community/shop images in Gallery at one uniform portrait aspect, use eight featured images on Home, lazy-load non-priority images, and provide generic scene-based alt text. Menu posters inform visual direction only and are not a price source.\
 **Reason:** The approach is authentic, mobile-conscious, accessible, dependency-light, and proportionate to Phase 2.\
-**Consequences:** Renier must inspect variety, obvious duplicates, alt text, responsive loading, and customer-photo handling. Future additions require the same approval/privacy/performance review; face/name inference is prohibited.
+**Consequences:** Renier must inspect variety, obvious duplicates, alt text, responsive loading, and customer-photo handling. Future additions require the same approval/privacy/performance review; face/name inference is prohibited. The Gallery count must stay divisible by both rendered column counts, two and three, so the grid ends on a flush row; the original nineteenth image was a landscape frame that left an unfilled cell and was removed on 2026-09-05.
 
 ---

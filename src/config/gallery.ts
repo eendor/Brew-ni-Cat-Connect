@@ -78,11 +78,6 @@ export const galleryImages: readonly GalleryImage[] = [
     alt: "Fluffy white cat in a blue shirt resting by the café window",
   },
   {
-    src: "/images/shop/photo_135.jpg",
-    alt: "Community group gathered inside Brew ni Cat Coffee Shop",
-    landscape: true,
-  },
-  {
     src: "/images/shop/photo_145.jpg",
     alt: "Two people wearing Brew ni Cat aprons at the service counter",
   },

@@ -148,3 +148,20 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Testing performed:** `npm run typecheck`, `npm run lint`, and `npm run format:check` all completed with no findings. Vitest passed 6 files and 22/22 tests, including the new ordering regression. The documentation validator reported `ERRORS=0` and `PHASE0_DOC_VALIDATION=PASS`.
 **Git branch:** `feat/showcase-website`
 **Next action:** Renier performs independent Phase 2 QA against the corrected build. Pull Request #2 remains open until the QA gate completes.
+
+## 2026-09-05 — Gallery Grid Flush Layout
+
+**Date:** 2026-09-05
+**Phase:** Phase 2 — Public Showcase Website
+**Task:** Remove the empty trailing area Rizjie reported on the right side of the Gallery grid and make the layout end on a flush row at every rendered breakpoint.
+**Summary:** The Gallery mixed one landscape frame that spanned two columns with seventeen portrait frames, producing twenty grid cells. Twenty cells do not divide evenly into the three-column desktop layout, so the final row rendered with one unfilled cell. Dense grid flow moved the void but could not remove it, and a multi-column masonry variant left the columns ending up to 236 pixels apart, so both were rejected. Nineteen items cannot form a flush grid at two or three columns because nineteen is prime. The Gallery now renders eighteen approved portrait images at one uniform aspect, which divides evenly by both two and three.
+**Changes:**
+- replaced the mixed-span Gallery grid with a uniform `grid-cols-2 lg:grid-cols-3` layout at a single `3/4` aspect and removed the per-image span and aspect branching;
+- removed `photo_135.jpg`, the only landscape frame, because its two-cell span was the source of the unfilled cell and a portrait crop would have cut the group it shows;
+- updated ADR-010 and the README to record eighteen curated images and the requirement that the count stay divisible by both rendered column counts; and
+- measured the rendered result rather than inferring it.
+**Measured result:** At 1440 CSS pixels the Gallery renders 18 figures in 3 columns with column bottoms at 3444, 3444, and 3444 pixels, giving 0 pixels of raggedness. At 375 CSS pixels it renders 18 figures in 2 columns with column bottoms at 2666 and 2666 pixels, again 0 pixels of raggedness. The previous masonry attempt measured 236 pixels of raggedness at desktop width and 113 pixels at mobile width.
+**Files/modules affected:** `src/app/gallery/page.tsx`, `src/config/gallery.ts`, `docs/decisions.md`, `README.md`, `docs/development-log.md`.
+**Testing performed:** `npm run format:check`, `npm run lint`, `npm run typecheck`, and `npm run build` all completed with no findings. Vitest passed 6 files and 22/22 tests. Playwright passed 13/13 tests, including `TC-P2-024` Gallery curation coverage. The documentation validator reported `ERRORS=0` and `PHASE0_DOC_VALIDATION=PASS`.
+**Git branch:** `feat/showcase-website`
+**Next action:** Renier confirms Gallery variety, alt text, and flush layout at 320, 375, 768, 1024, and 1440 pixels during independent Phase 2 QA.

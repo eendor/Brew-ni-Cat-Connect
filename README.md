@@ -26,7 +26,7 @@ The current increment replaces the Phase 1 placeholders with customer-facing rou
 - Home, including the official logo, featured customer-favorite groups, gallery and visit previews;
 - a read-only Menu that retrieves the current catalog through Supabase public configuration at browser runtime;
 - About, using restrained facts confirmed for the business;
-- Gallery, using a curated set of 19 approved local shop/customer photographs; and
+- Gallery, using a curated set of 18 approved local shop/customer photographs; and
 - Contact, location, payment, takeout, variable-hours, social, and independent-rider information.
 
 No cart, checkout, account, order write, payment processing, rider booking, or database administration is included. Old menu-poster artwork is a visual reference only and is not the source of current names or prices.
