@@ -57,3 +57,111 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Git commits:** `9c3fdfeae4ee12acea9819fca12b21ebfc0757c2` — `chore: initialize Next.js project foundation`; `90c43cca6b047c6bb11a285660ec5ce2a27d8626` — `test: add application foundation tests`; `193d69c8f17f6d5c91556789bb3fa98f2563e9fc` — `ci: add project validation workflow`; `fb3e4b82ed7be085d722f6974c4874f9b54a42d4` — `docs: record Phase 1 implementation evidence`; the CI-result update is the commit containing this entry.\
 **Pull request:** [#1 — Phase 1: Initialize Brew ni Cat Connect web foundation](https://github.com/eendor/Brew-ni-Cat-Connect/pull/1), open and not merged.\
 **Next action:** Renier performs Phase 1 manual QA and Pull Request review; findings are resolved before merge.
+
+## 2026-08-24 — Phase 2 public showcase implementation (before live-menu follow-up)
+
+**Date:** 2026-08-24\
+**Phase:** Phase 2 — Public Showcase Website\
+**Task:** Replace the foundation placeholders with Brew ni Cat's real public presence and add a typed read-only current-menu integration without beginning ordering or mutating production.\
+**Summary:** The `feat/showcase-website` branch implements Home, Menu, About, Gallery, and Contact experiences, real approved branding/content/media, a browser-runtime Supabase catalog adapter, customer-safe dynamic states, Phase 2 tests, and cross-platform line-ending rules. At this **BEFORE** observation, the anonymous Supabase policy returned zero catalog rows, so live public record display/verification was blocked; the code did not bypass the policy. Local developer validation and the initial hosted push/pull-request workflows for `67a81db` passed. The branch was pushed and Pull Request #2 opened; Renier QA/review remained pending.\
+**Changes:**
+
+- replaced Phase 1 customer-facing placeholders with business-focused routes and page metadata;
+- configured the official logo and a curated 19-image approved Gallery, with featured Home-preview images and generic privacy-respecting alt text (the Home preview now uses six images after the 2026-09-06 layout correction);
+- added confirmed address/landmark/contact/payment/takeout/social/variable-hours and informational independent-rider content;
+- resolved P1-UX-001 with one Menu link plus a distinct Visit us/Contact action;
+- resolved the repository-policy portion of P1-ENV-001 with `.gitattributes`, binary exclusions, and Prettier LF;
+- inspected the existing POS/catalog boundary and discovered `categories`, `items`, pipe-delimited flavors, JSON variants/prices/descriptions, and availability;
+- installed Supabase JavaScript 2.112.3 and created typed public client/fetch/map/format layers using public configuration and `SELECT` only;
+- implemented Menu loading, empty, error/retry, availability, category, product, size/variant, flavor-price, and combo-description presentation with no cart/checkout controls;
+- added Phase 2 unit/component and Playwright cases while preserving Phase 1 regression behavior; and
+- updated requirements, architecture, schema, emerging-tech, dependency, security/privacy, testing, review, decision, evidence, and README documentation.
+
+**Files/modules affected:** `src/app`; shared layout/UI; `src/components/menu`; `src/config`; `src/lib/menu`; `src/lib/supabase`; `src/types`; `public/images`; tests; project/CI/format configuration; README and living documentation.\
+**Testing performed:** `npm run format:check`, `npm run audit`, `npm run lint`, `npm run typecheck`, `npm run test`, `npm run build`, `npm run test:e2e`, and `python scripts/validate_phase0_docs.py` all exited 0. Vitest passed 20/20 in 6 files; Playwright passed 13/13; the build generated 7/7 static pages; the validator checked 22 Markdown files with 0 errors; npm reported 0 vulnerabilities. Twenty route/viewport checks had zero overflow failures, keyboard/reduced-motion/focus checks matched expectations, and the privileged-value source/bundle scan had zero matches. Controlled discovery observed HTTP 200/zero rows with both public credentials and confirmed six categories/sixteen items through a local privileged read-only comparison.\
+**Issues encountered:** The production anonymous role does not currently expose catalog rows. The discovered schema also has no public menu view/RPC, display-order field, or live add-on table; POS add-ons are hardcoded. Old menu posters contain non-authoritative prices.\
+**Resolution at that observation:** Kept production unchanged and RLS intact; made the runtime public-key-only with honest empty/error states; documented that an owner-approved minimum-field public view/policy and public-role verification were required. Used deterministic alphabetical order and omitted non-live add-ons. Posters remained visual reference only.\
+**Documentation updated:** README; SRS; project overview; functional requirements; execution paths; emerging technologies; system architecture; database design; software/APIs; security/privacy; development standards; testing strategy/cases; code review; decisions; Phase 2 evidence; and this log.\
+**Git branch:** `feat/showcase-website`\
+**Git commits:** `0533bde` — `fix: standardize repository line endings`; `f3949c3` — `feat: add read-only Supabase menu foundation`; `4d66f95` — `feat: build Brew ni Cat public showcase website`; `e03293e` — `test: add Phase 2 showcase and menu coverage`; `67a81db` — `docs: record Phase 2 implementation evidence`; final PR/CI metadata follows in the commit containing this updated record.\
+**Pull request:** [#2 — Phase 2: Build Brew ni Cat public showcase website](https://github.com/eendor/Brew-ni-Cat-Connect/pull/2), open and unmerged.\
+**Next action:** The handoff-only commit receives the required hosted checks, then Renier independently tests/reviews Pull Request #2. Do not merge, mark Done, or begin Phase 3 before that review.
+
+---
+
+## 2026-08-24 — Phase 2 live Supabase menu follow-up
+
+**Date:** 2026-08-24\
+**Phase:** Phase 2 — Public Showcase Website\
+**Task:** Reverify the real catalog through the website's publishable Supabase identity after the owner manually disabled RLS, refresh live Menu evidence, and record the resulting security limitation without changing business data.\
+**Summary:** Public GET requests using `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` returned 6 categories and 16 items, with 0 unavailable items and 0 unmatched relationships. The real `/menu` page displayed all six categories and sixteen items at 320, 375, 768, 1024, and 1440 CSS pixels with zero document overflow and zero console errors. Phase 2 remains in Testing / Review; Pull Request #2 remains open/unmerged and Renier QA remains pending.\
+**Changes:**
+
+- preserved the previous unavailable-state Menu captures as `menu-before-public-access-desktop-1440.webp` and `menu-before-public-access-mobile-375.webp`;
+- regenerated primary `menu-desktop-1440.webp` and `menu-mobile-375.webp` evidence from the live public runtime with no route mocking;
+- recorded the five-width live inspection in `docs/evidence/phase-2/live-menu-review.json`;
+- corrected customer-facing handling of a zero base-price sentinel when flavor prices exist, so Takoyaki now displays `From ₱40` rather than `From ₱0`;
+- retained loading, empty, retrieval-error/retry, and successful menu-state coverage and added regression coverage for the zero-base/flavor-price case;
+- verified the Matcha, Takoyaki, and Fries favorite-card links continue to lead to `/menu`; and
+- updated living documentation to distinguish the historical blocker from the live result and the current RLS-disabled risk.
+
+**Database/access result:** The owner/developer manually disabled RLS on the relevant catalog tables before this work. The application and automated follow-up made no RLS, policy, schema, menu, product, price, category, variant, availability, inventory, sales, expense, customer, order, or POS data mutation. Public catalog reads now depend on table-level grants and are not least privilege.\
+**Exposure assessment:** HEAD-only/no-body public probes found `inventory` (11), `recipe_mappings` (20), `expenses` (76), `orders` (1,942), `order_items` (4,276), and `app_release` (19) publicly reachable. `customers`, `sales`, and `payments` returned HTTP 404, an ambiguous result rather than proof of denial. No unrelated record body was retrieved and no write was tested. This exposure is a production security blocker; restore RLS and add/test explicit catalog-only anonymous `SELECT` policies before production.\
+**Testing performed:** Live public data access and five-width browser inspection passed as recorded above. The final follow-up gates all exited 0: `npm run format:check` reported `All matched files use Prettier code style!`; `npm run audit` reported `found 0 vulnerabilities`; lint completed with no warnings; typecheck generated route types and completed; Vitest passed 6 files and 21/21 tests; the production build compiled and generated 7/7 static pages; Playwright passed 13/13 tests; and the documentation validator checked 22 Markdown files, 81 FR IDs, and 40 NFR IDs with `ERRORS=0` and `PHASE0_DOC_VALIDATION=PASS`.\
+**Files/modules affected:** Menu presentation; focused unit coverage; live capture tooling/evidence; README and living Phase 2 documentation.\
+**Git branch:** `feat/showcase-website`\
+**Git commit:** `4eaeca0` — `fix: verify live Supabase menu and refresh evidence`\
+**Pull request:** [#2 — Phase 2: Build Brew ni Cat public showcase website](https://github.com/eendor/Brew-ni-Cat-Connect/pull/2), open and unmerged.\
+**Hosted CI:** Both push and pull-request workflows for follow-up evidence head `975561b` passed. The live Pull Request rollup remains authoritative for the metadata-only evidence update.\
+**Next action:** Renier independently verifies the live menu, security truthfulness, responsive behavior, and code review. Do not merge Pull Request #2 or begin Phase 3 during this follow-up.
+
+## 2026-08-25 — Business Content Verification & Evidence Cleanup
+
+**Date:** 2026-08-25
+**Phase:** Phase 2 — Production Business Content
+**Task:** Finalize business content facts, cleanup deprecated evidence, and update verification tracking.
+**Summary:** Updated `docs/business-content-register.md` with verified store details (address, contact info, social channels, custom operating hours, cash/GCash payment rules, and external rider delivery model). Cleaned up `docs/evidence/phase-2-verification.md` by removing deprecated Phase 1 image references and deleting the redundant `homepage.png` asset.
+**Changes:**
+- updated `docs/business-content-register.md` to confirm verified business details, payment methods, delivery model, and Supabase single source of truth;
+- cleaned `docs/evidence/phase-2-verification.md` by stripping out Phase 1 screenshot references and updating branch/PR links;
+- removed deprecated `docs/evidence/homepage.png` file from repository root evidence folder; and
+- appended development log entry to document Phase 2 documentation refinement.
+**Files/modules affected:** `docs/business-content-register.md`, `docs/evidence/phase-2-verification.md`, `docs/evidence/homepage.png`, `docs/development-log.md`.
+**Testing performed:** Executed `python scripts/validate_phase0_docs.py` to confirm zero formatting errors and verified `PHASE0_DOC_VALIDATION=PASS`.
+**Git branch:** `feat/phase-2-documentation-clean`
+**Next action:** Stage changes, commit, and push to update Pull Request #3 for QA review by Renier.
+
+## 2026-09-05 — Presenter Review Findings Resolved
+
+**Date:** 2026-09-05
+**Phase:** Phase 2 — Public Showcase Website
+**Task:** Resolve the customer-facing findings raised by Rizjie during the Phase 2 presenter review and keep future-phase requests out of Phase 2 scope.
+**Summary:** Rizjie ran the Phase 2 site locally and reviewed it as a customer. He reported that the Contact map opened an unrelated business, the Gallery grid left large empty areas, Cat Treats appeared near the start of the Menu categories, and Menu cards were uneven on the web layout. All four findings are resolved. Requests for swipeable menu cards, per-product photography, and a reservation flow were recorded as Phase 3 scope and were not implemented.
+**Changes:**
+- replaced the free-text Google Maps query in `src/config/site.ts` with the shop coordinates `7.1134444,124.826155` and recorded the `4R7G+9FC` Plus Code, because the previous text query resolved to a different coffee business;
+- added dense grid flow to the Gallery and removed the hardcoded index-based row spans that left unfilled cells beside wide images;
+- ordered Menu categories alphabetically while always placing Cat Treats last, and exported a single `isCatTreatsCategory` helper so the catalog mapper and the catalog component share one rule;
+- allowed Menu item cards to stretch within each row so short categories no longer render a ragged column; and
+- added `TC-P2-022` regression coverage for the Cat Treats ordering rule.
+**Deferred to Phase 3:** swipeable menu cards, per-product images, and customer reservation handling. Reservation behaviour requires owner confirmation before any design work begins.
+**Files/modules affected:** `src/config/site.ts`, `src/app/gallery/page.tsx`, `src/components/menu/menu-catalog.tsx`, `src/lib/menu/map-menu-catalog.ts`, `tests/unit/menu-mapping.test.ts`, `docs/development-log.md`.
+**Testing performed:** `npm run typecheck`, `npm run lint`, and `npm run format:check` all completed with no findings. Vitest passed 6 files and 22/22 tests, including the new ordering regression. The documentation validator reported `ERRORS=0` and `PHASE0_DOC_VALIDATION=PASS`.
+**Git branch:** `feat/showcase-website`
+**Next action:** Renier performs independent Phase 2 QA against the corrected build. Pull Request #2 remains open until the QA gate completes.
+
+## 2026-09-05 — Gallery Grid Flush Layout
+
+**Date:** 2026-09-05
+**Phase:** Phase 2 — Public Showcase Website
+**Task:** Remove the empty trailing area Rizjie reported on the right side of the Gallery grid and make the layout end on a flush row at every rendered breakpoint.
+**Summary:** The Gallery mixed one landscape frame that spanned two columns with seventeen portrait frames, producing twenty grid cells. Twenty cells do not divide evenly into the three-column desktop layout, so the final row rendered with one unfilled cell. Dense grid flow moved the void but could not remove it, and a multi-column masonry variant left the columns ending up to 236 pixels apart, so both were rejected. Nineteen items cannot form a flush grid at two or three columns because nineteen is prime. The Gallery now renders eighteen approved portrait images at one uniform aspect, which divides evenly by both two and three.
+**Changes:**
+- replaced the mixed-span Gallery grid with a uniform `grid-cols-2 lg:grid-cols-3` layout at a single `3/4` aspect and removed the per-image span and aspect branching;
+- removed `photo_135.jpg`, the only landscape frame, because its two-cell span was the source of the unfilled cell and a portrait crop would have cut the group it shows;
+- updated ADR-010 and the README to record eighteen curated images and the requirement that the count stay divisible by both rendered column counts; and
+- measured the rendered result rather than inferring it.
+**Measured result:** At 1440 CSS pixels the Gallery renders 18 figures in 3 columns with column bottoms at 3444, 3444, and 3444 pixels, giving 0 pixels of raggedness. At 375 CSS pixels it renders 18 figures in 2 columns with column bottoms at 2666 and 2666 pixels, again 0 pixels of raggedness. The previous masonry attempt measured 236 pixels of raggedness at desktop width and 113 pixels at mobile width.
+**Files/modules affected:** `src/app/gallery/page.tsx`, `src/config/gallery.ts`, `docs/decisions.md`, `README.md`, `docs/development-log.md`.
+**Testing performed:** `npm run format:check`, `npm run lint`, `npm run typecheck`, and `npm run build` all completed with no findings. Vitest passed 6 files and 22/22 tests. Playwright passed 13/13 tests, including `TC-P2-024` Gallery curation coverage. The documentation validator reported `ERRORS=0` and `PHASE0_DOC_VALIDATION=PASS`.
+**Git branch:** `feat/showcase-website`
+**Next action:** Renier confirms Gallery variety, alt text, and flush layout at 320, 375, 768, 1024, and 1440 pixels during independent Phase 2 QA.

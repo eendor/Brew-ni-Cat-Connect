@@ -2,13 +2,13 @@
 
 **Project:** Brew ni Cat Connect
 **Version:** 0.1 Draft
-**Date:** 2026-08-23
-**Phase:** Phase 1 — Project Foundation
-**Document status:** Living baseline; Phase 1 controls are current only where explicitly marked, and later-feature controls remain planned.
+**Date:** 2026-08-24
+**Phase:** Living baseline through Phase 2
+**Document status:** Phase 1 controls are verified historical evidence. Phase 2 public catalog/media implementation is in Testing / Review and awaits independent review. Live public catalog rendering is verified, but the manually RLS-disabled database state is a production security blocker; later-feature controls remain Planned.
 
 ## 1. Current State and Purpose
 
-Brew ni Cat Connect now has a locally verified customer-facing **application shell** with public placeholder routes. Phase 1 has no production deployment, backend, database, authentication, order processing, loyalty, payment, analytics, Messenger, Android, or POS integration. Application code collects no customer personal data, sets no application cookies, and calls no external business service. No production customer data should be introduced during Phase 1.
+Brew ni Cat Connect now has a customer-facing Phase 2 showcase and a browser-runtime, read-only Supabase catalog client. It has no authentication, order processing, customer records, loyalty, online payment, analytics, Messenger, Android, or POS synchronization. Application code collects no customer personal data and configures the public Supabase client without session persistence. Approved photographs may contain customers, but the site does not identify them or infer attributes.
 
 This document establishes an engineering baseline for protecting customer and business information across the future website, shared backend, Android client, Messenger channel, and existing POS integration. It is not a legal opinion or a completed compliance assessment. The business must designate an accountable privacy role and obtain qualified advice when a legal interpretation or formal compliance determination is required.
 
@@ -135,9 +135,13 @@ Threat modeling will be revisited for every material architecture change. Initia
 - Centralize order-state transition rules and test invalid transitions.
 - Record actor, time, operation, entity reference, and outcome for security-relevant privileged changes without logging sensitive payloads.
 
-### Supabase Row Level Security (planned for Phase 4)
+### Supabase Row Level Security and the Phase 2 public catalog
 
-RLS is a planned mandatory control for exposed Supabase tables, not an implemented control in Phase 1. No Supabase table or Data API is connected in the current application.
+The initial Phase 2 public probes returned HTTP 200 with zero `categories` and `items` rows while a controlled privileged read-only comparison confirmed catalog rows existed. That **BEFORE** observation is retained as historical failure-state evidence.
+
+For the live-menu follow-up on 2026-08-24, the project owner/developer manually disabled RLS on the relevant catalog tables. Using the same browser publishable configuration as the application, read-only GET requests then returned 6 categories and 16 items, with 0 unavailable items and 0 unmatched item/category relationships. The application and this follow-up made no RLS, policy, schema, menu, price, inventory, sales, expense, customer, order, or other business-data change.
+
+The current public catalog therefore depends on table-level public grants while RLS is disabled. A successful public read proves availability, not least-privilege authorization. Explicit projections constrain this application request, but they do not prevent another holder of the public key from requesting other granted fields or tables. This state is not an acceptable production authorization boundary.
 
 1. Enable RLS before a table containing non-public or user-owned data is reachable through the Data API.
 2. Create explicit policies for `SELECT`, `INSERT`, `UPDATE`, and `DELETE`; do not rely on a broad all-operations policy.
@@ -165,11 +169,11 @@ RLS is a planned mandatory control for exposed Supabase tables, not an implement
 ## 9. Secrets and Environment Separation
 
 - Real API keys, service-role keys, passwords, tokens, webhook secrets, private certificates, and production connection strings must never enter Git, examples, screenshots, logs, test fixtures, or client bundles.
-- **Current in Phase 1:** `.env.example` contains only documented variable names with empty values; commit names and non-secret descriptions/placeholders only in later updates.
+- **Current through Phase 2:** `.env.example` contains documented names with empty values only. Real `.env.local` remains ignored and untracked. The browser code references only `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`; server-only names are not runtime dependencies. The refreshed follow-up scan found zero real local values in tracked files and zero actual privileged values or privileged variable names in application/browser bundles.
 - Maintain separate local, preview/test, and production credentials and databases.
 - Use deployment-platform secret storage and restrict access by role.
 - Rotate a credential immediately when exposure is suspected and document the incident without reproducing the secret.
-- Treat variables prefixed for public client exposure as public. Only publish values explicitly designed to be public, such as a Supabase anonymous key used together with correctly tested RLS.
+- Treat variables prefixed for public client exposure as public. A Supabase publishable key is not authorization by itself; expose it only with a tested least-privilege anonymous policy and explicit field projections.
 - Add automated secret detection to CI before production work; review results rather than bypassing findings.
 
 ## 10. Transport, Storage, Backups, and Logging
@@ -220,13 +224,13 @@ No production release should proceed until evidence confirms:
 - Backup and restore responsibilities are documented and a restore exercise is recorded.
 - Privacy notice, retention schedule, request handling, incident contacts, and vendor reviews are approved by the accountable business role.
 
-Evidence must include the exact command or procedure, date, commit/deployment identifier, environment, literal result or attached record, and reviewer. Phase 1 has a successful local dependency audit and public-shell validation, but no authentication, authorization, RLS, backend, integration, or production-environment security test applies yet.
+Evidence must include the exact command or procedure, date, commit/deployment identifier, environment, literal result or attached record, and reviewer. Phase 1 has successful merged evidence. Phase 2 now has successful public-key catalog reads, live responsive rendering, a passing final local quality-gate rerun, refreshed secret/bundle scans, and both hosted workflows passed for evidence head `975561b`. Independent review remains pending. Authentication/customer authorization features are not implemented, and no production write-policy test was attempted.
 
 ## 14. Open Decisions and Owner Inputs
 
 - TODO: Confirm with Brew ni Cat owner. Identify the customer profile fields that are necessary.
-- TODO: Confirm with Brew ni Cat owner. Decide whether delivery is approved and, if so, the minimum location/contact data required.
-- TODO: Confirm with Brew ni Cat owner. Identify approved payment methods and the responsible payment provider.
+- The customer-arranged external-rider information is confirmed for public display and collects no location. **TODO: Confirm with Brew ni Cat owner.** Decide whether any future integrated delivery feature is approved and, if so, the minimum location/contact data required.
+- Cash and GCash are confirmed for public display. **TODO: Confirm with Brew ni Cat owner.** Define any future online payment proof/provider, settlement, failure, and refund workflow.
 - TODO: Confirm with Brew ni Cat owner. Set retention needs for accounts, orders, loyalty, inquiries, and security logs.
 - TODO: Confirm with Brew ni Cat owner. Designate the business's accountable privacy/security contacts and escalation route.
 - TODO: Confirm with Brew ni Cat owner. Review formal privacy notices, lawful bases, vendor terms, and applicable compliance obligations before production processing.
@@ -235,3 +239,52 @@ Evidence must include the exact command or procedure, date, commit/deployment id
 ## 15. Change Control
 
 Material changes to personal-data collection, authentication, roles, database exposure, third-party processors, AI use, payment, Messenger, Android, or POS integration require an architecture/security review and an entry in `docs/decisions.md`. Tests and this document must change with the implementation.
+
+## 16. Phase 2 Security and Privacy Addendum
+
+### 16.1 Public catalog controls
+
+- `@supabase/supabase-js` 2.112.3 is instantiated only after both public configuration values are present.
+- Auth token refresh, URL session detection, and session persistence are disabled because Phase 2 has no account feature.
+- Queries select only `id`, names/category relation, public flavors/variants/prices, and availability; timestamps and unrelated/internal records are not requested.
+- Raw provider errors and database details are not rendered. Customers receive a generic retry/contact state.
+- Builds and CI need no production credential or network access.
+- Application source contains no `INSERT`, `UPDATE`, `DELETE`, RPC, menu mutation, inventory/sales/customer/order operation, or privileged fallback. The follow-up performed catalog GET requests and HEAD-only/no-body accessibility probes; it did not retrieve unrelated table contents or mutate business data.
+
+The earlier local privileged discovery credential was used only for the retained **BEFORE** read-only comparison. The live follow-up and evidence screenshots use the browser publishable configuration instead. No credential value or diagnostic payload is retained, and application runtime never depends on a privileged credential.
+
+### 16.2 RLS/access decision
+
+The owner/developer manually disabled RLS on the relevant catalog tables to unblock public catalog verification. This allowed the publishable runtime to display the real menu, but it is not a least-privilege security resolution. Current access depends on table grants, and the follow-up did not test writes against production.
+
+Before production deployment, restore RLS and add reviewed, explicit anonymous `SELECT` policies limited to the intended public catalog rows and fields. A non-production or otherwise approved policy test must demonstrate that approved catalog reads succeed, catalog writes fail, unrelated business/customer relations remain unreadable, and client bundles contain no privileged value. This remains an open Phase 2 security limitation and production blocker.
+
+### 16.2.1 Public table exposure assessment
+
+HEAD-only/no-body probes using the publishable identity checked accessibility without dumping sensitive records:
+
+| Relation | Public result | Assessment |
+| --- | --- | --- |
+| `inventory` | Reachable; response count 11 | Unrelated business table publicly readable; production security blocker |
+| `recipe_mappings` | Reachable; response count 20 | Unrelated internal mapping table publicly readable; production security blocker |
+| `expenses` | Reachable; response count 76 | Sensitive business table publicly readable; production security blocker |
+| `orders` | Reachable; response count 1,942 | Sensitive order table publicly readable; production security blocker |
+| `order_items` | Reachable; response count 4,276 | Sensitive order-detail table publicly readable; production security blocker |
+| `app_release` | Reachable; response count 19 | Unrelated table publicly reachable; requires least-privilege review |
+| `customers` | HTTP 404 | Ambiguous: absent, unexposed, or hidden; not proof of denial |
+| `sales` | HTTP 404 | Ambiguous: absent, unexposed, or hidden; not proof of denial |
+| `payments` | HTTP 404 | Ambiguous: absent, unexposed, or hidden; not proof of denial |
+
+No unrelated row body was retrieved. No public write was attempted, so this evidence must not be represented as proof that writes are denied.
+
+### 16.3 Approved customer photographs
+
+The client approved the local shop/customer imagery for website use. Phase 2 limits publication to 19 curated images, avoids names and sensitive/personal inferences in alternative text, and does not add face recognition, biometric processing, customer tagging, third-party image upload, or unnecessary metadata display. Approval to display an image does not authorize unrelated reuse.
+
+### 16.4 Public delivery and contact information
+
+The contact page publishes only the confirmed business address, phone, email, payments, takeout fee, social links, and informational rider links. It collects no address/contact form data. Rider links are external; the copy states that customers book and pay riders independently and that Brew ni Cat does not control availability, fee, or ETA. External links use appropriate browser separation.
+
+### 16.5 Pre-PR checks
+
+Before commit/PR, inspect staged and unstaged diffs, verify `.env.local` is untracked/ignored, search tracked text for credential-like values without printing any value, inspect browser-facing source for privileged-variable references, and run formatter/lint/type/test/build/browser/document validators. Record literal results only after execution.

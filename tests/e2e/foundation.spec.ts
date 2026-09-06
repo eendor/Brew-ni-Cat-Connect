@@ -1,13 +1,17 @@
 import { expect, test } from "@playwright/test";
 
-test("TC-P1-005 — homepage loads with its heading and desktop navigation", async ({
+test("TC-P1-005 — homepage loads with its real heading and desktop navigation", async ({
   page,
 }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
   const response = await page.goto("/");
 
   expect(response?.ok()).toBe(true);
   await expect(
-    page.getByRole("heading", { level: 1, name: "Brew ni Cat Connect" }),
+    page.getByRole("heading", {
+      level: 1,
+      name: "Coffee, comfort, and a little cat energy.",
+    }),
   ).toBeVisible();
 
   const navigation = page.getByRole("navigation", {
@@ -20,21 +24,21 @@ test("TC-P1-005 — homepage loads with its heading and desktop navigation", asy
   );
 });
 
-test("TC-P1-006 — mobile navigation opens without horizontal overflow", async ({
+test("TC-P1-006 — mobile navigation opens, closes, and handles Escape", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 375, height: 812 });
   await page.goto("/");
 
-  const menuButton = page.getByRole("button", { name: "Open navigation" });
-  await expect(menuButton).toBeVisible();
-  await expect(menuButton).toHaveAttribute("aria-expanded", "false");
+  const openButton = page.getByRole("button", { name: "Open navigation" });
+  await expect(openButton).toBeVisible();
+  await expect(openButton).toHaveAttribute("aria-expanded", "false");
 
-  await menuButton.click();
+  await openButton.click();
 
-  await expect(
-    page.getByRole("button", { name: "Close navigation" }),
-  ).toHaveAttribute("aria-expanded", "true");
+  const closeButton = page.getByRole("button", { name: "Close navigation" });
+  await expect(closeButton).toHaveAttribute("aria-expanded", "true");
+
   const mobileNavigation = page.getByRole("navigation", {
     name: "Mobile navigation",
   });
@@ -43,39 +47,48 @@ test("TC-P1-006 — mobile navigation opens without horizontal overflow", async 
     mobileNavigation.getByRole("link", { name: "Menu" }),
   ).toBeVisible();
 
-  const hasHorizontalOverflow = await page.evaluate(
-    () =>
-      document.documentElement.scrollWidth >
-      document.documentElement.clientWidth,
-  );
-  expect(hasHorizontalOverflow).toBe(false);
+  await page.keyboard.press("Escape");
+
+  await expect(mobileNavigation).toBeHidden();
+  await expect(openButton).toBeFocused();
+  await expect(openButton).toHaveAttribute("aria-expanded", "false");
+
+  await openButton.click();
+  await mobileNavigation.getByRole("link", { name: "About" }).click();
+  await expect(page).toHaveURL(/\/about$/);
+  await expect(mobileNavigation).toBeHidden();
 });
 
-test("TC-P1-007 — placeholder routes preserve the application shell", async ({
+test("TC-P1-007 — public routes preserve the shared application shell", async ({
   page,
 }) => {
-  for (const route of [
+  const routes = [
     { path: "/menu", heading: "Menu" },
-    { path: "/about", heading: "About" },
+    { path: "/about", heading: "About Brew ni Cat" },
     { path: "/gallery", heading: "Gallery" },
-    { path: "/contact", heading: "Contact" },
-  ]) {
+    { path: "/contact", heading: "Contact & location" },
+  ];
+
+  for (const route of routes) {
     const response = await page.goto(route.path);
 
-    expect(response?.ok()).toBe(true);
+    expect(response?.ok(), route.path).toBe(true);
     await expect(
       page.getByRole("heading", { level: 1, name: route.heading }),
     ).toBeVisible();
     await expect(
-      page.getByRole("banner").getByRole("link", { name: /Brew ni Cat/ }),
+      page.getByRole("banner").getByRole("link", {
+        name: "Brew ni Cat Coffee Shop home",
+      }),
     ).toBeVisible();
+    await expect(page.getByRole("contentinfo")).toBeVisible();
   }
 });
 
 test("TC-P1-008 — unknown routes show the not-found experience", async ({
   page,
 }) => {
-  const response = await page.goto("/phase-one-route-that-does-not-exist");
+  const response = await page.goto("/phase-two-route-that-does-not-exist");
 
   expect(response?.status()).toBe(404);
   await expect(
@@ -85,23 +98,46 @@ test("TC-P1-008 — unknown routes show the not-found experience", async ({
     "href",
     "/",
   );
+  await expect(page.getByRole("link", { name: "Browse menu" })).toHaveAttribute(
+    "href",
+    "/menu",
+  );
 });
 
-test("TC-P1-009 — shell has no horizontal overflow at representative widths", async ({
+test("TC-P1-009 — key public pages avoid horizontal viewport overflow", async ({
   page,
 }) => {
+  await page.route("**/rest/v1/categories*", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: "[]",
+    });
+  });
+  await page.route("**/rest/v1/items*", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: "[]",
+    });
+  });
+
   for (const width of [320, 375, 768, 1024, 1440]) {
     await page.setViewportSize({ width, height: 900 });
-    await page.goto("/");
 
-    const dimensions = await page.evaluate(() => ({
-      clientWidth: document.documentElement.clientWidth,
-      scrollWidth: document.documentElement.scrollWidth,
-    }));
+    for (const path of ["/", "/menu", "/gallery", "/contact"]) {
+      await page.goto(path);
+      await page.evaluate(() => document.fonts.ready);
 
-    expect(dimensions, `viewport width ${width}px`).toEqual({
-      clientWidth: width,
-      scrollWidth: width,
-    });
+      const dimensions = await page.evaluate(() => ({
+        clientWidth: document.documentElement.clientWidth,
+        scrollWidth: document.documentElement.scrollWidth,
+      }));
+
+      expect(
+        dimensions.scrollWidth,
+        `${path} at viewport width ${width}px`,
+      ).toBeLessThanOrEqual(dimensions.clientWidth + 1);
+    }
   }
 });

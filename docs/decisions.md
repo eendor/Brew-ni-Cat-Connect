@@ -102,3 +102,46 @@ Statuses used here are `Proposed`, `Accepted`, `Superseded`, and `Deferred`. Acc
 **Chosen approach:** Keep unit/component tests in the DOM-focused Vitest suite, run the five Phase 1 browser smoke tests locally against the production build, and omit Playwright browser installation from the initial CI workflow while retaining it as a required local release check. Pin Node.js 24 and npm 12.0.2 in CI so its install-script policy matches the recorded local toolchain.\
 **Reason:** The split provides quick component feedback and genuine browser evidence without making the first CI gate disproportionately heavy. It also keeps the choice reversible when browser CI provides greater value in a later phase.\
 **Consequences:** Contributors must install the Playwright Chromium binary before the local E2E command. CI does not yet independently prove browser behavior, so the recorded local Playwright result and later manual QA remain required. Reassess browser execution in CI when ordering, authentication, or other critical end-to-end paths are introduced.
+
+## ADR-008 — Phase 2 Read-only Supabase Catalog Boundary
+
+**Decision:** Introduce a narrow browser-runtime Supabase catalog client in Phase 2, using only public publishable configuration and explicit read-only projections, while retaining authentication, customer/order data, writes, realtime, and broader backend activation for later phases.\
+**Date:** 2026-08-24\
+**Status:** Accepted; live public rendering verified under a manually RLS-disabled database state, with production security hardening still open\
+**Context:** The original roadmap placed Supabase activation in Phase 4, but the revised client-approved Phase 2 requires the public website to display current menu data. Existing menu posters contain older prices and cannot be authoritative. The existing POS already uses the production Supabase catalog, so duplicating/transcribing data would undermine omnichannel consistency.\
+**Options considered:** Keep a static/poster-derived Phase 2 menu; copy current data into source fixtures; fetch through a new privileged server endpoint; use the existing public Data API with a publishable key and typed application adapter.\
+**Chosen approach:** Install and lock `@supabase/supabase-js` 2.112.3; create one public client from `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`; disable auth session features; query explicit fields from discovered `categories` and `items`; map nullable/JSON rows into immutable catalog types; retrieve after browser render so builds need no service; and render loading, empty, error/retry, availability, category, item, variant/flavor, and price states.\
+**Reason:** This uses the real current source without creating a second catalog, keeps database records out of source, creates a reusable typed boundary, and preserves stable CI/build behavior.\
+**Initial consequences:** The first public probes returned HTTP 200 with zero rows while privileged read-only discovery confirmed six categories and sixteen items. The application retained a truthful unavailable state, did not use a privileged key, did not mutate business data, and did not present fake/poster prices. The adapter sorts categories/items alphabetically because no display-order field was discovered. Add-ons remain absent because the POS values are hardcoded rather than live catalog records. This narrow exception does not activate customer auth/order/backend scope early.
+
+**2026-08-24 live-menu follow-up amendment:** The owner/developer manually disabled RLS on the relevant catalog tables outside the application to unblock verification. The publishable browser identity then returned 6 categories and 16 items, with 0 unavailable and 0 unmatched rows, and the real Menu rendered at all required widths. The application continues to use public configuration and read-only projections and made no RLS or business-data change.
+
+This manual state is a temporary functional-verification condition, not a revision of the least-privilege target. Public access now depends on table grants, and HEAD-only/no-body probes found unrelated `inventory`, `recipe_mappings`, `expenses`, `orders`, `order_items`, and `app_release` relations publicly reachable. Restoring RLS and adding explicit intended-catalog-only anonymous `SELECT` policies remains a production security blocker. Public writes were not tested.
+
+---
+
+## ADR-009 — Cross-platform Text and Binary Line-ending Policy
+
+**Decision:** Normalize repository text to LF with `.gitattributes`, retain CRLF for Windows command scripts, mark common raster image extensions binary, and configure Prettier `endOfLine` to `lf`.\
+**Date:** 2026-08-24\
+**Status:** Accepted, implemented, and formatter-verified\
+**Context:** Phase 1 independent Windows QA recorded P1-ENV-001: Prettier warnings appeared when `core.autocrlf=true` caused working-tree LF/CRLF differences. Phase 2 also adds many approved binary images that text normalization must never alter.\
+**Options considered:** Leave line endings to each contributor's Git setting; rely only on Prettier; normalize all files without binary rules; define repository-level text, command-script, and binary behavior.\
+**Chosen approach:** Use `* text=auto eol=lf`; set `*.bat` and `*.cmd` to CRLF; mark PNG, JPG/JPEG, WebP, GIF, and ICO files binary; and set Prettier LF.\
+**Reason:** Repository-level rules are consistent across Windows and CI, reduce line-ending-only diffs, preserve executable Windows scripts, and protect image bytes.\
+**Consequences:** Contributors may see a one-time normalization when switching/renormalizing tracked text. Binary files are unaffected. `npm run format:check` and diff review are required before commit; a mass content rewrite is not implied.
+
+---
+
+## ADR-010 — Phase 2 Approved Local Media Curation
+
+**Decision:** Use the official local logo and a configuration-owned initial set of 18 approved shop/customer photographs, rendered with Next.js Image and generic factual alternative text; do not publish all 139 files on first render.\
+**Date:** 2026-08-24\
+**Status:** Accepted and implemented pending independent visual review\
+**Context:** The real showcase needs authentic Brew ni Cat visuals and the client approved the local assets. Publishing every image would create avoidable transfer/layout cost and duplication, and many images include customers who must not be identified or profiled.\
+**Options considered:** Generic stock images; all local images at once; a heavy gallery dependency; a small project-owned curated configuration with framework image optimization.\
+**Chosen approach:** Anchor the design with `brew-ni-cat-logo.png`, expose 18 varied cat/food/community/shop images in Gallery at one uniform portrait aspect, use six featured images on Home, lazy-load non-priority images, and provide generic scene-based alt text. The Home preview keeps its first and sixth images spanning two columns from the small breakpoint, filling two four-column rows as `2 + 1 + 1` and `1 + 1 + 2`, while retaining two columns on mobile. Menu posters inform visual direction only and are not a price source.\
+**Reason:** The approach is authentic, mobile-conscious, accessible, dependency-light, and proportionate to Phase 2.\
+**Consequences:** Renier must inspect variety, obvious duplicates, alt text, responsive loading, and customer-photo handling. Future additions require the same approval/privacy/performance review; face/name inference is prohibited. The Gallery count must stay divisible by both rendered column counts, two and three, so the grid ends on a flush row; the original nineteenth image was a landscape frame that left an unfilled cell and was removed on 2026-09-05.
+
+---

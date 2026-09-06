@@ -1,0 +1,69 @@
+{
+  "checkedAt": "2026-08-24T06:03:48.169460Z",
+  "databaseState": "RLS manually disabled by project owner/developer before this follow-up",
+  "credential": "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY (value omitted)",
+  "catalogRead": {
+    "method": "GET with explicit public field projections",
+    "categories": {
+      "httpStatus": 200,
+      "rows": 6
+    },
+    "items": {
+      "httpStatus": 200,
+      "rows": 16
+    },
+    "unavailableItems": 0,
+    "unmatchedCategoryRelationships": 0,
+    "categoryCounts": {
+      "Buldak & Sedaap": 4,
+      "Cat Treats": 1,
+      "Cat-Tastic Bites": 3,
+      "Cat-Tastic Drinks": 4,
+      "Combos & Packages": 3,
+      "Take-out Box": 1
+    },
+    "representativeRecordsWithoutInternalIds": [
+      "Buldak Carbo: Plain/Milk/Egg variants at ₱119/₱129/₱135",
+      "Fries (Cat Claws): Small/Medium/Large/Jumbo at ₱30/₱50/₱70/₱150 with four flavors",
+      "Takoyaki (Pawsome Balls): 4/8/12/16-piece flavor-price matrices from ₱40 through ₱240",
+      "Matcha (The Lucky Green Neko): 12/16/22oz at ₱49/₱59/₱79 with four flavors",
+      "Cat Association: five combo variants from ₱340 through ₱590 with descriptions",
+      "Take-out Box: Regular at ₱10"
+    ]
+  },
+  "unrelatedTableExposure": {
+    "method": "HEAD with count=exact; no row bodies retrieved",
+    "reachable": [
+      {
+        "table": "inventory",
+        "visibleCount": 11
+      },
+      {
+        "table": "recipe_mappings",
+        "visibleCount": 20
+      },
+      {
+        "table": "expenses",
+        "visibleCount": 76
+      },
+      {
+        "table": "orders",
+        "visibleCount": 1942
+      },
+      {
+        "table": "order_items",
+        "visibleCount": 4276
+      },
+      {
+        "table": "app_release",
+        "visibleCount": 19
+      }
+    ],
+    "ambiguous404": ["customers", "sales", "payments"],
+    "scope": "Known POS source-discovered tables; not an exhaustive schema audit"
+  },
+  "writePermissionsTested": false,
+  "rowBodiesRetrievedFromUnrelatedTables": 0,
+  "businessDataMutations": 0,
+  "securityConclusion": "Public SELECT exposure of unrelated POS tables is a production security blocker. Restore RLS and add explicit least-privilege catalog SELECT policies before production."
+}

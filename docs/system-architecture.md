@@ -1,9 +1,9 @@
 # Brew ni Cat Connect — System Architecture
 
 **Version:** 0.1 Draft\
-**Date:** 2026-08-23\
+**Date:** 2026-08-24\
 **Document status:** Living architecture baseline\
-**Implementation status:** The Phase 1 public web foundation is implemented and locally verified. Backend, customer-data, Supabase, Messenger, Android, and POS components remain planned or deferred as marked.
+**Implementation status:** Phase 1 is Tested and merged. Phase 2 implements the public showcase and typed browser-runtime Supabase catalog reads; the publishable runtime now renders 6 categories/16 items. RLS is manually disabled and unrelated business tables are publicly reachable, so production security hardening remains blocked. Customer data, writes, authentication, realtime, Messenger, Android, and POS integration remain Planned or Deferred.
 
 ## 1. Architecture objective
 
@@ -47,7 +47,7 @@ flowchart TB
     Adapter <--> POS
 ```
 
-**Current reality:** Phase 1 implements only the public web foundation: a Next.js App Router shell, reusable React layout components, project-owned Tailwind tokens, typed configuration, placeholder public routes, framework loading/error/not-found states, automated tests, and validation CI. It has no backend, database, authentication, ordering service, customer data, Supabase, Messenger, Android, or POS connection. Those components remain later-phase work.
+**Current reality:** Phase 2 retains the Phase 1 Next.js foundation and replaces placeholders with real Home, Menu, About, Gallery, and Contact routes. It adds approved local media, factual business configuration, and a typed read-only Supabase catalog adapter. The app has no authentication, customer/order data, write operation, ordering service, realtime, Messenger, Android, or POS synchronization. Current publishable catalog reads return and render 6 categories/16 items; loading, empty, and error states remain implemented/tested fallbacks.
 
 ### 2.1 Phase 1 as-built boundary
 
@@ -123,15 +123,16 @@ Arrows show logical data flow, not a final deployment topology. Direct client-to
 
 | Component | Responsibility | Status in Version 0.1 |
 |---|---|---|
-| Next.js App Router web application | Public business content, responsive customer UI, route boundaries, later authenticated ordering screens | **Implemented and locally verified for the Phase 1 shell** using Next.js 16.3.2 |
-| React component layer | Accessible, reusable presentation and interaction components | **Implemented for Phase 1:** root shell, header, mobile navigation, footer, container, and placeholder-page components |
-| TypeScript types/configuration | Compile-time types for UI, configuration, later domain results, and integration boundaries | **Implemented for the Phase 1 UI/configuration surface**; domain and integration contracts remain later work |
+| Next.js App Router web application | Public business content, responsive customer UI, route boundaries, later authenticated ordering screens | **Implemented through the Phase 2 showcase** using Next.js 16.3.2; developer automation passed and independent review is pending |
+| React component layer | Accessible, reusable presentation and interaction components | **Implemented through Phase 2:** shared shell, public sections, gallery, menu catalog/cards/states, and factual routes |
+| TypeScript types/configuration | Compile-time types for UI, configuration, catalog mapping, and later integration boundaries | **Implemented for the public UI and menu catalog boundary**; ordering/customer contracts remain later work |
 | Tailwind CSS presentation layer | Project-owned warm design tokens, responsive layout, focus styles, and reduced-motion baseline | **Implemented for Phase 1** using Tailwind CSS 4.3.3 |
 | Automated verification boundary | Component behavior, route smoke checks, representative-width overflow checks, type/lint/build gates | **Implemented for Phase 1:** Vitest/Testing Library, Playwright, and GitHub Actions configuration |
 | Backend-for-frontend/application service layer | Authenticate/authorize, validate requests, calculate authoritative outcomes, coordinate transactions, expose channel-neutral use cases | Proposed; interfaces evolve with requirements |
-| Supabase Auth | Customer identity and session lifecycle | Selected for Phase 4; sign-in methods and provider configuration remain undecided |
+| Public Supabase catalog client | Read current approved categories/items through public configuration | **Implemented in Phase 2; live 6-category/16-item response verified** |
+| Supabase Auth | Customer identity and session lifecycle | Selected for a later phase; sign-in methods and provider configuration remain undecided |
 | PostgreSQL | Canonical customer-facing data, constraints, order snapshots/history, loyalty ledger | Planned for Phase 4; schema not yet approved |
-| Row Level Security | Defense-in-depth for customer-scoped database access | Required with Supabase data access; not implemented |
+| Row Level Security | Enforce least-privilege database access | **Current blocker:** owner manually disabled RLS; public table grants expose catalog and unrelated business relations. Restore/test intended-catalog-only policies before production |
 | Realtime | Authorized order-status refresh notifications | Planned after canonical states exist |
 | Messenger webhook | Verify Meta requests, normalize messages, invoke shared services, return policy-compliant responses | Deferred to Phase 7 |
 | Conversational assistant | Grounded interpretation/discovery; never transaction authority | Candidate within Phase 7 subject to evaluation |
@@ -186,13 +187,13 @@ All channels should ultimately invoke the same channel-neutral use cases:
 
 Version 0.1 distinguishes business stewardship, system of record, and integration authority. Final legal/controller roles and retention policies require confirmation.
 
-| Data domain | Planned system of record | Authority/stewardship | Notes |
+| Data domain | Current / planned system of record | Authority/stewardship | Notes |
 |---|---|---|---|
-| Public business identity, location, hours, contact, policies, promotions | Shared backend/CMS approach to be selected | `TODO: Confirm with Brew ni Cat owner.` | Do not publish invented values |
+| Public business identity, location, variable-hours notice, and contact/social facts | Phase 2 typed site configuration sourced from the confirmed client brief; future maintenance UI/CMS remains undecided | Brew ni Cat | Publish only confirmed values; promotions and future maintenance workflow remain owner decisions |
 | Customer authentication credential material | Supabase Auth when activated in Phase 4 | Authentication provider processes credentials under configured terms; business role requires privacy review | Application must never store plaintext passwords |
 | Customer profile | Shared PostgreSQL backend | Customer supplies data; Brew ni Cat intended business steward, subject to confirmation | Collect only fields required by approved features |
-| Product/category/options | Source of truth undecided pending POS assessment | Brew ni Cat | Avoid bidirectional edits until authority is explicit |
-| Published price and availability | Source of truth undecided pending POS assessment | Brew ni Cat | Server revalidates at checkout; clients are caches/views only |
+| Product/category/public variants and flavors | Existing Supabase `categories` and `items` catalog, read-only in Phase 2 | Brew ni Cat | Publishable reads currently succeed; POS-hardcoded add-ons are not treated as live catalog data; avoid bidirectional edits |
+| Published price and availability | Existing Supabase `items.variants_json` and `items.is_available`, read-only in Phase 2 | Brew ni Cat | Live browse values render; RLS-disabled exposure is not least privilege, and a later checkout server must still revalidate authoritative current values |
 | Online order request and immutable item/price snapshot | Shared backend initially proposed | Brew ni Cat | POS receives through a controlled interface; final ownership depends on integration design |
 | Acceptance and fulfilment status | Authority undecided pending shop/POS workflow analysis | Authorized shop process | Customer-visible backend state must reconcile rather than guess |
 | Order status history/audit metadata | Shared backend plus required POS audit | Brew ni Cat | Append/history-oriented; retention to be defined |
@@ -319,7 +320,7 @@ Database schema changes use reviewed, version-controlled migrations with a forwa
 
 ## 13. Repository boundaries
 
-The Phase 1 as-built structure is intentionally proportional to implemented scope:
+The Phase 2 as-built structure extends the Phase 1 foundation only where the showcase and catalog boundary require it:
 
 ```text
 src/
@@ -335,7 +336,7 @@ tests/
 docs/                   # version-controlled specification and evidence
 ```
 
-`features/`, domain, server, database, and integration directories are deliberately absent because Phase 1 has no implemented feature domain or backend. They will be created only when a justified requirement needs them.
+`src/lib/menu`, `src/lib/supabase`, `src/types`, and menu/public UI components now exist for the justified Phase 2 read boundary. Server ordering, customer-domain, mutation, authentication, and broad integration directories remain absent until an approved capability needs them.
 
 Rules:
 
@@ -385,7 +386,7 @@ Before each later phase begins:
 7. Review database migrations/RLS/integration contracts where applicable.
 8. Update development log and evidence without marking unexecuted work as tested.
 
-The Phase 1 web-foundation entries in this document are now **as-built** and locally verified. Every backend or additional channel entry remains **Planned** or **Deferred** until its implementation and evidence exist.
+The Phase 1 foundation is **Tested and merged**. Phase 2 showcase/catalog code is in **Testing / Review**; live public rows are **Implemented**, verified at five widths, and covered by passing final local follow-up gates plus both hosted workflows for evidence head `975561b`. Independent review remains pending. The current manually RLS-disabled exposure is a production security blocker. Every mutation, customer-data, backend, or additional-channel entry remains **Planned** or **Deferred** until implementation and evidence exist.
 
 ## 16. Requirements traceability
 
@@ -399,3 +400,49 @@ The Phase 1 web-foundation entries in this document are now **as-built** and loc
 | Android channel adapter | FR-065–FR-070 | NFR-019, NFR-025, NFR-028, NFR-036 |
 | POS adapter, mapping, and reconciliation | FR-071–FR-081 | NFR-006, NFR-008, NFR-021–NFR-022, NFR-038 |
 | Cross-cutting transport, operations, and delivery | Applicable FRs above | NFR-011–NFR-012, NFR-017, NFR-020, NFR-037–NFR-040 |
+
+## 17. Phase 2 As-built Catalog and Media Boundary
+
+```mermaid
+flowchart LR
+    Visitor[Customer browser]
+    Next[Next.js public routes]
+    UI[Typed menu and showcase components]
+    Mapper[Catalog fetch + defensive mapper]
+    PublicClient[Supabase public client]
+    RLS{{Existing Data API / RLS boundary}}
+    Catalog[(categories + items)]
+    Assets[(Approved local logo + 19 curated photos)]
+
+    Visitor --> Next
+    Next --> UI
+    UI --> Mapper
+    Mapper --> PublicClient
+    PublicClient -->|SELECT explicit catalog fields| RLS
+    RLS --> Catalog
+    UI --> Assets
+```
+
+### 17.1 Runtime and build behavior
+
+The Menu component begins retrieval after browser render. `getPublicSupabaseClient()` validates only the public URL and publishable-key variables, disables authentication persistence/refresh, and issues explicit `SELECT` projections for `categories` and `items`. `fetchPublicMenu()` centralizes the two reads; `mapMenuCatalog()` converts nullable/untrusted row shapes into immutable application types and rejects malformed names/prices/options.
+
+Compilation, CI, and static route generation do not contact Supabase. Missing public variables throw a customer-safe configuration error consumed by the menu error state. API errors produce retry; a successful zero-row response produces the empty state. Neither path leaks raw error details.
+
+### 17.2 Data ownership and source of truth
+
+- Supabase is authoritative for current category, item, price, variant/flavor, optional combo-description, and availability fields.
+- The old poster images are non-authoritative visual references and never feed structured price data.
+- The existing POS was inspected as a schema reference only; Brew ni Cat Connect does not expose or modify POS tables.
+- The application uses alphabetical category/item order because no database display-order field was discovered.
+- POS-hardcoded add-ons are not represented as live public facts.
+
+### 17.3 Access blocker and required change boundary
+
+Initial public credential probes returned HTTP 200 and zero rows; a controlled privileged read-only comparison found six categories and sixteen items. That is retained as **BEFORE** evidence. After the owner/developer manually disabled RLS, the website publishable identity returned the current 6-category/16-item catalog. The application/follow-up made no database, RLS, or business-data change.
+
+The required production follow-up is to restore RLS and add a separately reviewed public view or explicit minimum-field/row `SELECT` policies. Verification must run as the anonymous/public role and prove that approved catalog fields are readable while internal/customer/business records and all writes remain denied. Current HEAD-only/no-body probes found unrelated business relations publicly reachable, and writes were not tested. The browser must never receive privileged credentials.
+
+### 17.4 Media and privacy boundary
+
+The official logo and 19 selected approved shop/customer images ship from `public/images`. Next.js Image supplies responsive sizing and optimization. Alternative text is generic and factual; it does not name customers or infer personal/sensitive attributes. The application does not add customer-recognition, analytics, upload, or external media-processing services.

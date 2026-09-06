@@ -1,9 +1,9 @@
 # Brew ni Cat Connect — Functional Requirements
 
 - **Version:** 0.1 Draft
-- **Date:** 2026-08-18
-- **Phase:** Phase 0 — Planning and Specification
-- **Status note:** Every active requirement below is **Planned**. Conditional capabilities are explicitly marked **Deferred**. No requirement is currently Implemented or Tested.
+- **Date:** 2026-08-18; Phase 2 status update 2026-08-24
+- **Phase:** Living requirements through Phase 2
+- **Status note:** Phase 1 is Tested and merged. Phase 2 requirements are Implemented or In development only where marked; developer automation passed and independent QA remains pending. Later and conditional capabilities remain Planned or Deferred.
 
 ## 1. Requirement conventions
 
@@ -17,27 +17,27 @@
 
 | ID | Requirement | Acceptance / verification | Priority | Target phase | Status |
 | --- | --- | --- | --- | --- | --- |
-| FR-001 | The system shall provide a public, mobile-first home page that identifies Brew ni Cat Connect as the official customer-facing site and presents owner-approved branding. | At supported viewport sizes, the page renders a recognizable header, primary content, and footer without horizontal scrolling; only approved assets/text or labeled mock fixtures appear. | Must | 2 | Planned |
-| FR-002 | The system shall present owner-approved About content without inventing business history, owner details, or claims. | Content can be traced to approved configuration; unavailable copy displays an internal development TODO rather than fabricated production copy. **TODO: Confirm with Brew ni Cat owner.** | Must | 2 | Planned |
-| FR-003 | The system shall display configured location, opening hours, contact information, and social links. | Each configured field renders accurately and each link uses its configured destination; missing fields are not replaced with invented values. **TODO: Confirm with Brew ni Cat owner.** | Must | 2 | Planned |
-| FR-004 | The system shall provide consistent navigation to Home, Menu, About, Gallery, and Contact content, plus ordering/account entry points when those modules are enabled. | Every visible navigation control reaches the named destination using keyboard, pointer, and touch; disabled modules are not presented as operational. | Must | 2 | Planned |
-| FR-005 | The system shall present an owner-approved gallery with meaningful alternative text or an explicit decorative-image treatment. | Every rendered image has approved attribution/usage and passes an automated missing-alt check; no unapproved asset is published. **TODO: Confirm with Brew ni Cat owner.** | Should | 2 | Planned |
-| FR-006 | The system shall display featured products and best sellers only from an authoritative, publishable menu source. | Product name, image, price, availability, and feature/best-seller flag match the source record; an empty state appears if no items are designated. The best-seller rule is **TODO: Confirm with Brew ni Cat owner.** | Should | 2–4 | Planned |
+| FR-001 | The system shall provide a public, mobile-first home page that identifies Brew ni Cat Connect as the official customer-facing site and presents owner-approved branding. | At supported viewport sizes, the page renders the official logo, recognizable header, primary customer content, and footer without horizontal scrolling; only approved assets/text appear. | Must | 2 | Implemented |
+| FR-002 | The system shall present owner-approved About content without inventing business history, owner details, or claims. | Published copy is traceable to the confirmed opening date, location, offerings, and digitalization context; unavailable owner-story details are omitted rather than fabricated. | Must | 2 | Implemented |
+| FR-003 | The system shall display configured location, variable-hours notice, contact information, payment/takeout facts, and social links. | Each confirmed field renders accurately and each link uses its configured destination; the site tells customers to check Facebook/contact the shop rather than promising a fixed schedule. | Must | 2 | Implemented |
+| FR-004 | The system shall provide consistent navigation to Home, Menu, About, Gallery, and Contact content, plus ordering/account entry points only when those modules are enabled. | Every visible navigation control reaches the named destination using keyboard, pointer, and touch; one Menu destination is shown and disabled modules are not presented as operational. | Must | 2 | Implemented |
+| FR-005 | The system shall present an owner-approved gallery with meaningful alternative text or an explicit decorative-image treatment. | Every rendered image comes from the approved local set, avoids identifying customers, and has meaningful generic alternative text or an appropriate empty alternative. | Should | 2 | Implemented |
+| FR-006 | The system shall present approved customer-favorite groups and shall obtain any displayed current product name or price from the authoritative menu source. | Matcha, Takoyaki, and Fries may be labelled as customer favorites without unsupported analytics; all three cards link to the live Menu, any specific catalog record/price matches Supabase, and a truthful state appears if public rows are unavailable. | Should | 2–4 | Implemented |
 | FR-007 | The system shall display promotions only when an approved promotion is active and its conditions are available to the customer. | Before start and after end, the promotion is absent or explicitly inactive; while active, configured terms and validity period render. Promotion rules are **TODO: Confirm with Brew ni Cat owner.** | Should | 2–4 | Planned |
-| FR-008 | The system shall provide clear loading, empty, and recoverable error states for public dynamic content. | Simulated success, empty response, timeout, and server error each yield a distinct non-blocking UI state with retry where retry is meaningful. | Must | 2 | Planned |
-| FR-009 | The system shall expose page titles, headings, and share/search metadata derived from approved business content. | Each public route has one descriptive page title and primary heading; metadata contains no development-only or invented production content. | Should | 2 | Planned |
+| FR-008 | The system shall provide clear loading, empty, and recoverable error states for public dynamic content. | Simulated success, empty response, configuration/retrieval failure, and retry each yield a distinct non-blocking, accessible UI state. | Must | 2 | Implemented |
+| FR-009 | The system shall expose page titles, headings, and share/search metadata derived from approved business content. | Each public route has one descriptive page title and primary heading; metadata accurately identifies the Kabacan business and does not claim online ordering is live. | Should | 2 | Implemented |
 
 ## 3. Menu
 
 | ID | Requirement | Acceptance / verification | Priority | Target phase | Status |
 | --- | --- | --- | --- | --- | --- |
-| FR-010 | The system shall list published menu categories in an explicitly configured order. | Only active/published categories appear, in source order, with a documented empty state. | Must | 3–4 | Planned |
-| FR-011 | The system shall list published products under their assigned categories using authoritative names and prices. | API/UI results match seeded authoritative records; unpublished records are absent and price formatting is consistent. Actual menu and prices are **TODO: Confirm with Brew ni Cat owner.** | Must | 3–4 | Planned |
+| FR-010 | The system shall list publicly readable menu categories in authoritative order when supplied, with a documented deterministic fallback when the source has no display order. | Only categories returned by the approved public source appear; Phase 2 sorts valid names alphabetically because no display-order field was discovered, and shows a documented empty state when no public rows are readable. | Must | 2–4 | Implemented |
+| FR-011 | The system shall list public products under their assigned categories using authoritative Supabase names and current prices. | Typed API/UI results match representative live publishable-runtime records; no poster-derived price appears, zero base-price sentinels do not render as prices, price formatting is consistent, and zero public rows still produce a truthful empty state. | Must | 2–4 | Implemented |
 | FR-012 | The system shall show a product detail view containing the approved description, image, base price, availability, and configurable choices. | Opening a product displays exactly the published fields; missing optional content has a defined omission/fallback rather than invented copy. | Must | 3 | Planned |
 | FR-013 | The system shall enforce required option groups, allowed choice counts, and mutually exclusive choices when configuring a product. | Invalid configurations cannot be added to the cart; valid minimum/maximum combinations can be added and retain selected choices. Option rules are **TODO: Confirm with Brew ni Cat owner.** | Must | 3–4 | Planned |
 | FR-014 | The system shall calculate the displayed configured-item price from the authoritative base price, option adjustments, add-ons, and quantity. | Unit and line totals match the server-side calculation for zero, one, and multiple adjustments; client-supplied prices are not trusted. | Must | 3–4 | Planned |
-| FR-015 | The system shall distinguish available, temporarily unavailable, and unpublished products. | Available products can be selected; unavailable products remain viewable only if configured and cannot be ordered; unpublished products are not returned to customers. | Must | 3–4 | Planned |
-| FR-016 | The system shall allow customers to filter or navigate the menu by category and restore a complete menu view. | Selecting each category returns only its published products; clearing the selection returns all published products without a page reload when supported. | Should | 3 | Planned |
+| FR-015 | The system shall distinguish available, temporarily unavailable, and unknown-availability products without enabling purchase in Phase 2. | The public browse UI presents each returned availability state with text rather than color alone; Phase 3 ordering controls remain absent. | Must | 2–4 | Implemented |
+| FR-016 | The system shall allow customers to navigate the public menu by category while retaining access to the complete returned catalog. | Selecting a category navigation link reaches its labelled section without hiding other returned categories or requiring a page reload. | Should | 2–3 | Implemented |
 
 ## 4. Ordering
 
@@ -148,16 +148,24 @@
 
 | Decision | Affected requirements | Status |
 | --- | --- | --- |
-| Approved business content and assets | FR-001–FR-009, FR-059 | **TODO: Confirm with Brew ni Cat owner.** |
-| Authoritative menu, pricing, option, best-seller, promotion, and availability rules | FR-006–FR-016, FR-081 | **TODO: Confirm with Brew ni Cat owner.** |
+| Approved business content and assets | FR-001–FR-009, FR-059 | Phase 2 facts, official logo, and shop-photo use confirmed; extended About story remains **TODO: Confirm with Brew ni Cat owner.** |
+| Authoritative menu, pricing, option, best-seller, promotion, and availability rules | FR-006–FR-016, FR-081 | Supabase is authoritative for current catalog fields; the publishable runtime currently returns 6 categories/16 items. Favorites groups are approved without exact rankings; promotions and ordering option rules remain **TODO: Confirm with Brew ni Cat owner.** |
 | Pickup fields, guest policy, order states, rejection/cancellation instructions | FR-018–FR-028, FR-045, FR-049 | **TODO: Confirm with Brew ni Cat owner.** |
-| Payment and delivery scope | FR-029–FR-030 | Deferred; **TODO: Confirm with Brew ni Cat owner.** |
+| Payment and delivery scope | FR-029–FR-030 | Cash/GCash, ₱10 takeout box, and customer-arranged external-rider information are confirmed for display only. Online payment, ordering fulfillment, fee calculation, and rider booking remain Deferred. |
 | Customer profile and retention policy | FR-031, FR-035, FR-038, FR-042–FR-043 | **TODO: Confirm with Brew ni Cat owner.** |
 | Loyalty rules and authority | FR-050–FR-057 | **TODO: Confirm with Brew ni Cat owner.** |
 | Messenger handoff, transactional scope, and recommendation purpose | FR-061–FR-064 | **TODO: Confirm with Brew ni Cat owner.** |
 | Notifications | FR-070 | Deferred; **TODO: Confirm with Brew ni Cat owner.** |
-| Existing POS contract/source of truth | FR-071–FR-081 | Pending technical inspection and owner approval. |
+| Existing POS contract/source of truth | FR-071–FR-081 | Phase 2 inspected catalog source structures only; full synchronization contract, mutation authority, and Phase 6 approval remain pending. |
 
 ## 13. Traceability rule
 
 Detailed test cases will use IDs such as `TC-###` and include a `Requirement IDs` field. No row's status may be changed to Tested solely because a related screen exists; its acceptance behavior, negative cases, authorization boundaries, and recorded command/result must be verified.
+
+## 14. Phase 2 Implementation Status Note
+
+The Phase 2 public routes and typed catalog client exist. The final formatter, audit, lint, type-check, 21/21 unit/component, build, 13/13 browser, and documentation-validator gates passed on 2026-08-24; live publishable Menu rendering also passed at five widths. **Implemented** does not mean independently Tested: Renier's QA and peer review remain pending.
+
+FR-006, FR-010, FR-011, and FR-015 are **Implemented** because the publishable runtime now returns and renders the current 6-category/16-item catalog while retaining deterministic loading/empty/error coverage and omitting poster-derived or privileged data. This functional status does not close the security requirement: RLS is manually disabled, unrelated business tables are publicly reachable, and RLS restoration plus explicit catalog-only policies remain a production blocker.
+
+FR-012–FR-014 remain Planned for Phase 3 because browse cards are not a purchase configuration/detail workflow, and no cart or price calculation is implemented. FR-007 remains Planned until an approved promotion exists.
