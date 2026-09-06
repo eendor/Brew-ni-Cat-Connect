@@ -67,7 +67,7 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Changes:**
 
 - replaced Phase 1 customer-facing placeholders with business-focused routes and page metadata;
-- configured the official logo and a curated 19-image approved Gallery, with eight Home-preview images and generic privacy-respecting alt text;
+- configured the official logo and a curated 19-image approved Gallery, with featured Home-preview images and generic privacy-respecting alt text (the Home preview now uses six images after the 2026-09-06 layout correction);
 - added confirmed address/landmark/contact/payment/takeout/social/variable-hours and informational independent-rider content;
 - resolved P1-UX-001 with one Menu link plus a distinct Visit us/Contact action;
 - resolved the repository-policy portion of P1-ENV-001 with `.gitattributes`, binary exclusions, and Prettier LF;

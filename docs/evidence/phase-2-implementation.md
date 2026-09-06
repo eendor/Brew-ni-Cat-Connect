@@ -37,7 +37,7 @@ The five menu posters under `public/images/menu/` were reviewed only as visual/b
 
 `photo_004.jpg`, `photo_006.jpg`, `photo_007.jpg`, `photo_009.jpg`, `photo_011.jpg`, `photo_030.jpg`, `photo_041.jpg`, `photo_045.jpg`, `photo_060.jpg`, `photo_063.jpg`, `photo_064.jpg`, `photo_074.jpg`, `photo_092.jpg`, `photo_119.jpg`, `photo_124.jpg`, `photo_126.jpg`, `photo_135.jpg`, `photo_145.jpg`, and `photo_146.jpg`.
 
-Eight of these are marked for the Home preview; the Gallery initially renders all 19 through Next.js Image with responsive sizes and native lazy loading outside the eager/featured set.
+Six of the current 18 approved Gallery images are marked for the Home preview after the developer layout correction on 2026-09-06. The Gallery initially rendered all 19 through Next.js Image with responsive sizes and native lazy loading outside the eager/featured set; its collection was reduced to 18 on 2026-09-05. This configuration update does not record independent QA results.
 
 ## 3. Supabase Discovery and Access Evidence — Before Public Access
 

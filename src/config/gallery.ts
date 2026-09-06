@@ -71,7 +71,6 @@ export const galleryImages: readonly GalleryImage[] = [
   {
     src: "/images/shop/photo_124.jpg",
     alt: "Brew ni Cat seating area with a cat resting near the window",
-    featured: true,
   },
   {
     src: "/images/shop/photo_126.jpg",
@@ -84,7 +83,6 @@ export const galleryImages: readonly GalleryImage[] = [
   {
     src: "/images/shop/photo_146.jpg",
     alt: "Group gathered with cats inside Brew ni Cat Coffee Shop",
-    featured: true,
   },
 ];
 
