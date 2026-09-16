@@ -7,6 +7,7 @@ import {
   findCatalogItem,
   findCatalogVariant,
   fromCentavos,
+  isSafeLineQuantity,
   isValidCartQuantity,
   normalizeFlavor,
   normalizePrice,
@@ -319,5 +320,21 @@ describe("cart quantity validation", () => {
     expect(isValidCartQuantity("2")).toBe(false);
     expect(isValidCartQuantity(null)).toBe(false);
     expect(isValidCartQuantity(undefined)).toBe(false);
+  });
+
+  it("TC-P3-017 — guards centavo multiplication so totals stay precisely representable", () => {
+    expect(isSafeLineQuantity(80, 1)).toBe(true);
+    expect(isSafeLineQuantity(80, 2)).toBe(true);
+    expect(isSafeLineQuantity(80, 1_000_000_000_000)).toBe(true);
+    expect(isSafeLineQuantity(0, Number.MAX_SAFE_INTEGER)).toBe(true);
+    expect(isSafeLineQuantity(80, Number.MAX_SAFE_INTEGER)).toBe(false);
+    expect(isSafeLineQuantity(80, 2_000_000_000_000)).toBe(false);
+    expect(isSafeLineQuantity(80, 0)).toBe(false);
+    expect(isSafeLineQuantity(80, -1)).toBe(false);
+    expect(isSafeLineQuantity(80, 1.5)).toBe(false);
+    expect(isSafeLineQuantity(80, Number.NaN)).toBe(false);
+    expect(isSafeLineQuantity(-1, 1)).toBe(false);
+    expect(isSafeLineQuantity(Number.NaN, 1)).toBe(false);
+    expect(isSafeLineQuantity(Number.POSITIVE_INFINITY, 1)).toBe(false);
   });
 });

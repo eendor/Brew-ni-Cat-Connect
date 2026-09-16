@@ -4,6 +4,7 @@ import {
   calculateLineTotal,
   findCatalogItem,
   findCatalogVariant,
+  isSafeLineQuantity,
   isValidCartQuantity,
   normalizeFlavor,
   resolveVariantUnitPrice,
@@ -79,7 +80,7 @@ function toCartItem(entry: ResolvedCartLineInput): CartItem | null {
     itemName.length === 0 ||
     variantName.length === 0 ||
     !isFiniteNonNegative(entry.unitPrice) ||
-    !isValidCartQuantity(entry.quantity)
+    !isSafeLineQuantity(entry.unitPrice, entry.quantity)
   ) {
     return null;
   }
@@ -108,8 +109,9 @@ function toCartItem(entry: ResolvedCartLineInput): CartItem | null {
  * The current catalog stays the source of truth: when the line already
  * exists, the merged line keeps the merged quantity but takes the newly
  * resolved item/variant names and unit price, then recalculates the line
- * total from that current price. Invalid entries or unsafe-integer overflow
- * leave the state reference unchanged. Not exported: UI code must use
+ * total from that current price. Invalid entries, unsafe-integer quantity
+ * overflow, or money totals beyond safe-integer precision leave the state
+ * reference unchanged. Not exported: UI code must use
  * {@link addCatalogSelection}.
  */
 function appendResolvedLine(
@@ -134,7 +136,10 @@ function appendResolvedLine(
   }
 
   const quantity = existing.quantity + candidate.quantity;
-  if (!Number.isSafeInteger(quantity)) {
+  if (
+    !Number.isSafeInteger(quantity) ||
+    !isSafeLineQuantity(candidate.unitPrice, quantity)
+  ) {
     return state;
   }
 
@@ -168,9 +173,10 @@ export function removeCartLine(state: CartState, key: string): CartState {
 }
 
 /**
- * Replace one line quantity. Non-positive, non-safe-integer, or unknown-key
- * updates are ignored so quantity can never become invalid. Use
- * {@link removeCartLine} for explicit removal.
+ * Replace one line quantity. Non-positive, non-safe-integer, money-unsafe,
+ * or unknown-key updates are ignored so quantity and line totals can never
+ * become invalid or imprecise. Use {@link removeCartLine} for explicit
+ * removal.
  */
 export function updateCartLineQuantity(
   state: CartState,
@@ -188,6 +194,10 @@ export function updateCartLineQuantity(
 
   const existing = state.lines[index];
   if (!existing || existing.quantity === quantity) {
+    return state;
+  }
+
+  if (!isSafeLineQuantity(existing.unitPrice, quantity)) {
     return state;
   }
 
@@ -251,7 +261,8 @@ const FAILURE_MESSAGES: Record<AddCartItemFailureReason, string> = {
     "That product availability is not confirmed right now.",
   "missing-price":
     "That selection does not have a current price. Choose a flavor or contact the shop.",
-  "invalid-quantity": "Quantity must be a whole number of at least 1.",
+  "invalid-quantity":
+    "Quantity must be a whole number of at least 1 and small enough to total safely.",
 };
 
 export function getAddItemFailureMessage(
@@ -325,6 +336,32 @@ export function addCatalogSelection(
     const reason: AddCartItemFailureReason =
       resolved.reason === "unknown-flavor" ? "unknown-flavor" : "missing-price";
     return { ok: false, state, reason, message: FAILURE_MESSAGES[reason] };
+  }
+
+  if (!isSafeLineQuantity(resolved.unitPrice, selection.quantity)) {
+    return {
+      ok: false,
+      state,
+      reason: "invalid-quantity",
+      message: FAILURE_MESSAGES["invalid-quantity"],
+    };
+  }
+
+  const selectionKey = buildSelectionKey(selection);
+  const existing = state.lines.find((line) => line.key === selectionKey);
+  if (existing) {
+    const mergedQuantity = existing.quantity + selection.quantity;
+    if (
+      !Number.isSafeInteger(mergedQuantity) ||
+      !isSafeLineQuantity(resolved.unitPrice, mergedQuantity)
+    ) {
+      return {
+        ok: false,
+        state,
+        reason: "invalid-quantity",
+        message: FAILURE_MESSAGES["invalid-quantity"],
+      };
+    }
   }
 
   const next = appendResolvedLine(state, {

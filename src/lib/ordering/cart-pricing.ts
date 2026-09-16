@@ -66,6 +66,43 @@ export function isValidCartQuantity(value: unknown): value is number {
   );
 }
 
+/**
+ * Technical money-safety guard. A quantity can be a positive safe integer on
+ * its own yet still overflow centavo arithmetic once multiplied by a price,
+ * so the cart boundary checks the product before accepting it. This is only
+ * a numeric-precision guard, not a Brew ni Cat business limit: the
+ * owner-confirmed quantity limit is still TODO: Confirm with Brew ni Cat
+ * owner. Zero-priced explicit flavor selections stay valid because their
+ * centavo total is always zero.
+ */
+export function isSafeLineQuantity(
+  unitPrice: unknown,
+  quantity: unknown,
+): boolean {
+  if (!isValidCartQuantity(quantity)) {
+    return false;
+  }
+
+  if (
+    typeof unitPrice !== "number" ||
+    !Number.isFinite(unitPrice) ||
+    unitPrice < 0
+  ) {
+    return false;
+  }
+
+  const priceCentavos = toCentavos(unitPrice);
+  if (!Number.isSafeInteger(priceCentavos) || priceCentavos < 0) {
+    return false;
+  }
+
+  if (priceCentavos === 0) {
+    return true;
+  }
+
+  return quantity <= Math.floor(Number.MAX_SAFE_INTEGER / priceCentavos);
+}
+
 function isFiniteNonNegativePrice(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value) && value >= 0;
 }

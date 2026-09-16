@@ -680,4 +680,78 @@ describe("cart fulfillment and reducer boundary", () => {
     expect(cartReducer(initial, hostileAdd)).toBe(initial);
     expect(initial.lines[0]).toMatchObject({ unitPrice: 80, quantity: 1 });
   });
+
+  it("TC-P3-039 — rejects money-unsafe adds and merges without changing the cart", () => {
+    const initial = createInitialCartState();
+
+    const unsafeSingle = addCatalogSelection(initial, catalog, {
+      itemId: "matcha",
+      variantId: "matcha-16",
+      flavor: null,
+      quantity: Number.MAX_SAFE_INTEGER,
+    });
+    if (unsafeSingle.ok) {
+      throw new Error("MAX_SAFE_INTEGER at ₱80 should be money-unsafe");
+    }
+    expect(unsafeSingle.reason).toBe("invalid-quantity");
+    expect(unsafeSingle.state).toBe(initial);
+
+    const largeSafe = addCatalogSelection(initial, catalog, {
+      itemId: "matcha",
+      variantId: "matcha-16",
+      flavor: null,
+      quantity: 1_000_000_000_000,
+    });
+    if (!largeSafe.ok) {
+      throw new Error(`large safe quantity should succeed`);
+    }
+    expect(largeSafe.state.lines[0]).toMatchObject({
+      unitPrice: 80,
+      quantity: 1_000_000_000_000,
+      lineTotal: 80_000_000_000_000,
+    });
+
+    const maxSafeQuantity = Math.floor(Number.MAX_SAFE_INTEGER / (80 * 100));
+    const filled = addCatalogSelection(initial, catalog, {
+      itemId: "matcha",
+      variantId: "matcha-16",
+      flavor: null,
+      quantity: maxSafeQuantity,
+    });
+    if (!filled.ok) {
+      throw new Error(`max money-safe quantity should succeed`);
+    }
+
+    const overflowMerge = addCatalogSelection(filled.state, catalog, {
+      itemId: "matcha",
+      variantId: "matcha-16",
+      flavor: null,
+      quantity: 1,
+    });
+    if (overflowMerge.ok) {
+      throw new Error("merging past money safety should fail");
+    }
+    expect(overflowMerge.reason).toBe("invalid-quantity");
+    expect(overflowMerge.state).toBe(filled.state);
+    expect(filled.state.lines[0]?.quantity).toBe(maxSafeQuantity);
+  });
+
+  it("TC-P3-044 — rejects money-unsafe quantity updates and keeps normal updates", () => {
+    const state = addMatcha(createInitialCartState(), { quantity: 1 });
+    const key = state.lines[0]?.key ?? "";
+
+    const normal = updateCartLineQuantity(state, key, 2);
+    expect(normal.lines[0]).toMatchObject({ quantity: 2, lineTotal: 160 });
+
+    expect(updateCartLineQuantity(normal, key, Number.MAX_SAFE_INTEGER)).toBe(
+      normal,
+    );
+    expect(normal.lines[0]).toMatchObject({ quantity: 2, lineTotal: 160 });
+
+    const largeSafe = updateCartLineQuantity(normal, key, 1_000_000_000_000);
+    expect(largeSafe.lines[0]).toMatchObject({
+      quantity: 1_000_000_000_000,
+      lineTotal: 80_000_000_000_000,
+    });
+  });
 });
