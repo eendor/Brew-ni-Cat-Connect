@@ -7,6 +7,7 @@ import {
   findCatalogItem,
   findCatalogVariant,
   fromCentavos,
+  isSafeCartSubtotal,
   isSafeLineQuantity,
   isValidCartQuantity,
   normalizeFlavor,
@@ -336,5 +337,50 @@ describe("cart quantity validation", () => {
     expect(isSafeLineQuantity(-1, 1)).toBe(false);
     expect(isSafeLineQuantity(Number.NaN, 1)).toBe(false);
     expect(isSafeLineQuantity(Number.POSITIVE_INFINITY, 1)).toBe(false);
+  });
+
+  it("TC-P3-018 — guards the combined cart subtotal across individually safe lines", () => {
+    expect(isSafeCartSubtotal([])).toBe(true);
+    expect(
+      isSafeCartSubtotal([
+        { unitPrice: 80, quantity: 2 },
+        { unitPrice: 40, quantity: 1 },
+      ]),
+    ).toBe(true);
+    expect(
+      isSafeCartSubtotal([{ unitPrice: 0, quantity: Number.MAX_SAFE_INTEGER }]),
+    ).toBe(true);
+    expect(
+      isSafeCartSubtotal([
+        { unitPrice: 80, quantity: 600_000_000_000 },
+        { unitPrice: 80, quantity: 600_000_000_000 },
+      ]),
+    ).toBe(false);
+    expect(
+      isSafeCartSubtotal([
+        { unitPrice: 80, quantity: Number.MAX_SAFE_INTEGER },
+      ]),
+    ).toBe(false);
+  });
+
+  it("TC-P3-019 — keeps normal subtotals exact and rejects unsafe arbitrary input", () => {
+    expect(
+      calculateSubtotal([
+        { unitPrice: 80, quantity: 2 },
+        { unitPrice: 0, quantity: 5 },
+      ]),
+    ).toBe(160);
+    expect(
+      calculateSubtotal([
+        { unitPrice: 80, quantity: 600_000_000_000 },
+        { unitPrice: 0, quantity: 7 },
+      ]),
+    ).toBe(48_000_000_000_000);
+    expect(() =>
+      calculateSubtotal([
+        { unitPrice: 80, quantity: 600_000_000_000 },
+        { unitPrice: 80, quantity: 600_000_000_000 },
+      ]),
+    ).toThrow(RangeError);
   });
 });

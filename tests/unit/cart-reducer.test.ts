@@ -754,4 +754,61 @@ describe("cart fulfillment and reducer boundary", () => {
       lineTotal: 80_000_000_000_000,
     });
   });
+
+  it("TC-P3-045 — rejects a second safe line when the combined subtotal would overflow", () => {
+    const first = addCatalogSelection(createInitialCartState(), catalog, {
+      itemId: "matcha",
+      variantId: "matcha-16",
+      flavor: null,
+      quantity: 600_000_000_000,
+    });
+    if (!first.ok) {
+      throw new Error(`first large line should succeed`);
+    }
+
+    const second = addCatalogSelection(first.state, catalog, {
+      itemId: "matcha",
+      variantId: "matcha-16",
+      flavor: "Original",
+      quantity: 600_000_000_000,
+    });
+    if (second.ok) {
+      throw new Error("combined-unsafe second line should fail");
+    }
+
+    expect(second.reason).toBe("invalid-quantity");
+    expect(second.state).toBe(first.state);
+    expect(first.state.lines).toHaveLength(1);
+    expect(first.state.lines[0]).toMatchObject({
+      unitPrice: 80,
+      quantity: 600_000_000_000,
+    });
+  });
+
+  it("TC-P3-046 — rejects a quantity update that would make the cart subtotal unsafe", () => {
+    const first = addCatalogSelection(createInitialCartState(), catalog, {
+      itemId: "matcha",
+      variantId: "matcha-16",
+      flavor: null,
+      quantity: 600_000_000_000,
+    });
+    if (!first.ok) {
+      throw new Error(`first large line should succeed`);
+    }
+    const second = addCatalogSelection(first.state, catalog, {
+      itemId: "matcha",
+      variantId: "matcha-16",
+      flavor: "Strawberry",
+      quantity: 1,
+    });
+    if (!second.ok) {
+      throw new Error(`small second line should succeed`);
+    }
+
+    const key = second.state.lines[1]?.key ?? "";
+    expect(updateCartLineQuantity(second.state, key, 600_000_000_000)).toBe(
+      second.state,
+    );
+    expect(second.state.lines[1]).toMatchObject({ quantity: 1 });
+  });
 });

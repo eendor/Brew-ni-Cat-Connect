@@ -224,10 +224,58 @@ export function calculateLineTotal(
   return fromCentavos(toCentavos(unitPrice) * quantity);
 }
 
-/** Subtotal in pesos for already-resolved cart lines. */
-export function calculateSubtotal(
-  lines: readonly Readonly<{ unitPrice: number; quantity: number }>[],
-): number {
+export type CartSubtotalLine = Readonly<{
+  unitPrice: number;
+  quantity: number;
+}>;
+
+/**
+ * Technical cart-wide money-safety guard. Each line can be individually safe
+ * while their combined centavo total still overflows safe-integer precision,
+ * so the cart boundary checks the whole subtotal before accepting a change.
+ * This is only a numeric-precision guard, not a Brew ni Cat business limit.
+ * Zero-priced lines stay valid because they add nothing to the total.
+ */
+export function isSafeCartSubtotal(
+  lines: readonly CartSubtotalLine[],
+): boolean {
+  let totalCentavos = 0;
+
+  for (const line of lines) {
+    if (!isSafeLineQuantity(line.unitPrice, line.quantity)) {
+      return false;
+    }
+
+    const lineCentavos = toCentavos(line.unitPrice) * line.quantity;
+    if (!Number.isSafeInteger(lineCentavos)) {
+      return false;
+    }
+
+    if (lineCentavos > Number.MAX_SAFE_INTEGER - totalCentavos) {
+      return false;
+    }
+
+    totalCentavos += lineCentavos;
+  }
+
+  return Number.isSafeInteger(totalCentavos);
+}
+
+/**
+ * Subtotal in pesos for already-resolved cart lines.
+ *
+ * Uses exact integer-centavo arithmetic. Throws a `RangeError` for arbitrary
+ * input whose centavo total cannot be represented safely; validated
+ * `CartState` paths check `isSafeCartSubtotal` first and must never reach
+ * that failure.
+ */
+export function calculateSubtotal(lines: readonly CartSubtotalLine[]): number {
+  if (!isSafeCartSubtotal(lines)) {
+    throw new RangeError(
+      "Cart subtotal exceeds safe integer precision in centavos.",
+    );
+  }
+
   let totalCentavos = 0;
   for (const line of lines) {
     totalCentavos += toCentavos(line.unitPrice) * line.quantity;

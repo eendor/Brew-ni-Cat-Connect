@@ -4,6 +4,7 @@ import {
   calculateLineTotal,
   findCatalogItem,
   findCatalogVariant,
+  isSafeCartSubtotal,
   isSafeLineQuantity,
   isValidCartQuantity,
   normalizeFlavor,
@@ -174,9 +175,9 @@ export function removeCartLine(state: CartState, key: string): CartState {
 
 /**
  * Replace one line quantity. Non-positive, non-safe-integer, money-unsafe,
- * or unknown-key updates are ignored so quantity and line totals can never
- * become invalid or imprecise. Use {@link removeCartLine} for explicit
- * removal.
+ * cart-subtotal-unsafe, or unknown-key updates are ignored so quantity and
+ * line/cart totals can never become invalid or imprecise. Use
+ * {@link removeCartLine} for explicit removal.
  */
 export function updateCartLineQuantity(
   state: CartState,
@@ -207,11 +208,16 @@ export function updateCartLineQuantity(
     lineTotal: calculateLineTotal(existing.unitPrice, quantity),
   };
 
+  const nextLines = state.lines.map((line, lineIndex) =>
+    lineIndex === index ? updated : line,
+  );
+  if (!isSafeCartSubtotal(nextLines)) {
+    return state;
+  }
+
   return {
     ...state,
-    lines: state.lines.map((line, lineIndex) =>
-      lineIndex === index ? updated : line,
-    ),
+    lines: nextLines,
   };
 }
 
@@ -277,7 +283,9 @@ export function getAddItemFailureMessage(
  * rejected without mutating the cart. Names and unit price are resolved
  * deterministically from the supplied catalog, never from caller-provided
  * totals. Extra runtime properties such as a caller-supplied `unitPrice`
- * are ignored.
+ * are ignored. The prospective cart subtotal must also remain exactly
+ * representable in integer centavos; otherwise the add fails with
+ * `invalid-quantity` and leaves state unchanged.
  */
 export function addCatalogSelection(
   state: CartState,
@@ -373,6 +381,15 @@ export function addCatalogSelection(
     unitPrice: resolved.unitPrice,
     quantity: selection.quantity,
   });
+
+  if (!isSafeCartSubtotal(next.lines)) {
+    return {
+      ok: false,
+      state,
+      reason: "invalid-quantity",
+      message: FAILURE_MESSAGES["invalid-quantity"],
+    };
+  }
 
   return {
     ok: true,
