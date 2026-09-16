@@ -1,0 +1,40 @@
+Brew ni Cat Connect Phase 2 Tool Transaction Verification
+Date: 2026-08-24
+
+Changed branch/field: feat/showcase-website / desktop header CTA destination and label (duplicate /menu View menu CTA replaced by distinct /contact Visit us CTA)
+Original source: Git object main:src/components/layout/site-header.tsx
+Original SHA256: 03324b1c258a671e92abf835c991566cb8e6b96c0b1783c38818b08c1a309701
+Modified SHA256: 1c391507e605b30c0b14c4d6637ce61cb6c0724338ac2215998bbfd3397500ca
+
+Four artifacts:
+1. D:\Documents\BrewniCat\docs\evidence\phase-2\transaction\MODIFIED_FILE
+2. D:\Documents\BrewniCat\docs\evidence\phase-2\transaction\DIFF_FILE
+3. D:\Documents\BrewniCat\docs\evidence\phase-2\transaction\VERIFICATION.txt
+4. D:\Documents\BrewniCat\docs\evidence\phase-2\transaction\ROLLBACK.sh
+
+BASELINE
+Command: python -c "from pathlib import Path; import sys; text=Path(sys.argv[1]).read_text(encoding='utf-8'); duplicate='href=\"/menu\"' in text and 'View menu' in text; distinct='href=\"/contact\"' in text and 'Visit us' in text; print('PASS: desktop CTA uses distinct /contact destination with Visit us label' if distinct and not duplicate else 'FAIL: desktop CTA duplicates the Menu destination'); sys.exit(0 if distinct and not duplicate else 1)" "HEADER_ORIGINAL"
+Input: Temporary HEADER_ORIGINAL containing the exact bytes from main:src/components/layout/site-header.tsx (SHA256 03324b1c258a671e92abf835c991566cb8e6b96c0b1783c38818b08c1a309701)
+Literal output: FAIL: desktop CTA duplicates the Menu destination
+Exit status: 1 (expected baseline result)
+
+MODIFIED
+Command: python -c "from pathlib import Path; import sys; text=Path(sys.argv[1]).read_text(encoding='utf-8'); duplicate='href=\"/menu\"' in text and 'View menu' in text; distinct='href=\"/contact\"' in text and 'Visit us' in text; print('PASS: desktop CTA uses distinct /contact destination with Visit us label' if distinct and not duplicate else 'FAIL: desktop CTA duplicates the Menu destination'); sys.exit(0 if distinct and not duplicate else 1)" "docs/evidence/phase-2/transaction/MODIFIED_FILE"
+Input: MODIFIED_FILE copied from feat/showcase-website:src/components/layout/site-header.tsx (SHA256 1c391507e605b30c0b14c4d6637ce61cb6c0724338ac2215998bbfd3397500ca)
+Literal output: PASS: desktop CTA uses distinct /contact destination with Visit us label
+Exit status: 0
+
+ROLLBACK
+Command: & 'C:\Tools\Git\bin\bash.exe' 'docs/evidence/phase-2/transaction/ROLLBACK.sh' 'ROLLBACK_TEST_COPY'
+Input: A separate ROLLBACK_TEST_COPY initialized from MODIFIED_FILE; MODIFIED_FILE itself was not rolled back.
+Literal output:
+ROLLBACK: restored main header fixture
+SHA256: 03324b1c258a671e92abf835c991566cb8e6b96c0b1783c38818b08c1a309701
+Exit status: 0
+
+RESTORED BEHAVIOR
+Command: python -c "from pathlib import Path; import sys; text=Path(sys.argv[1]).read_text(encoding='utf-8'); duplicate='href=\"/menu\"' in text and 'View menu' in text; distinct='href=\"/contact\"' in text and 'Visit us' in text; print('PASS: desktop CTA uses distinct /contact destination with Visit us label' if distinct and not duplicate else 'FAIL: desktop CTA duplicates the Menu destination'); sys.exit(0 if distinct and not duplicate else 1)" "ROLLBACK_TEST_COPY"
+Input: The separate copy after ROLLBACK.sh restored main:src/components/layout/site-header.tsx.
+Literal output: FAIL: desktop CTA duplicates the Menu destination
+Exit status: 1 (expected restored baseline behavior)
+Restored status: SHA256 matches the original; baseline behavior is restored on the test copy. MODIFIED_FILE remains changed and passes the modified test.

@@ -16,14 +16,17 @@ export default function NotFound() {
           Page not found
         </h1>
         <p className="mx-auto mt-4 max-w-lg leading-7 text-[var(--text-muted)]">
-          The page you requested does not exist or may have moved.
+          This page wandered off. Head home or browse Brew ni Cat’s current menu
+          instead.
         </p>
-        <Link
-          href="/"
-          className="mt-8 inline-flex min-h-11 items-center justify-center rounded-full bg-[var(--accent-solid)] px-5 py-2 text-sm font-bold text-white transition-colors hover:bg-[var(--accent-solid-hover)]"
-        >
-          Return home
-        </Link>
+        <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+          <Link href="/" className="button-primary">
+            Return home
+          </Link>
+          <Link href="/menu" className="button-secondary">
+            Browse menu
+          </Link>
+        </div>
       </div>
     </Container>
   );

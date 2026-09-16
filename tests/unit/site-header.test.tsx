@@ -4,13 +4,12 @@ import userEvent from "@testing-library/user-event";
 import { SiteHeader } from "@/components/layout/site-header";
 
 describe("SiteHeader", () => {
-  it("TC-P1-001 — renders the brand and primary desktop navigation", () => {
+  it("TC-P1-001 / TC-P2-004 — renders one desktop Menu action and a distinct visit CTA", () => {
     render(<SiteHeader />);
 
-    expect(screen.getByRole("link", { name: /Brew ni Cat/ })).toHaveAttribute(
-      "href",
-      "/",
-    );
+    expect(
+      screen.getByRole("link", { name: "Brew ni Cat Coffee Shop home" }),
+    ).toHaveAttribute("href", "/");
 
     const navigation = screen.getByRole("navigation", {
       name: "Desktop navigation",
@@ -21,9 +20,21 @@ describe("SiteHeader", () => {
         within(navigation).getByRole("link", { name: linkName }),
       ).toBeInTheDocument();
     }
+
+    const desktopMenuLinks = within(navigation)
+      .getAllByRole("link")
+      .filter((link) => link.getAttribute("href") === "/menu");
+    expect(desktopMenuLinks).toHaveLength(1);
+    expect(
+      screen.queryByRole("link", { name: "View menu" }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Visit us" })).toHaveAttribute(
+      "href",
+      "/contact",
+    );
   });
 
-  it("TC-P1-003 — opens the mobile navigation and closes it after a link is selected", async () => {
+  it("TC-P1-003 / TC-P2-005 — opens mobile navigation and closes it after a link is selected", async () => {
     const user = userEvent.setup();
     render(<SiteHeader />);
 
@@ -44,11 +55,13 @@ describe("SiteHeader", () => {
     const navigation = screen.getByRole("navigation", {
       name: "Mobile navigation",
     });
-    const menuLink = within(navigation).getByRole("link", { name: "Menu" });
-    expect(menuLink).toHaveAttribute("href", "/menu");
-    menuLink.addEventListener("click", (event) => event.preventDefault());
+    const menuLinks = within(navigation)
+      .getAllByRole("link")
+      .filter((link) => link.getAttribute("href") === "/menu");
+    expect(menuLinks).toHaveLength(1);
+    menuLinks[0]?.addEventListener("click", (event) => event.preventDefault());
 
-    await user.click(menuLink);
+    await user.click(menuLinks[0]!);
 
     expect(
       screen.queryByRole("navigation", { name: "Mobile navigation" }),
@@ -58,7 +71,7 @@ describe("SiteHeader", () => {
     ).toHaveAttribute("aria-expanded", "false");
   });
 
-  it("TC-P1-004 — closes the mobile navigation with Escape and returns focus to the trigger", async () => {
+  it("TC-P1-004 / TC-P2-006 — closes mobile navigation with Escape and restores trigger focus", async () => {
     const user = userEvent.setup();
     render(<SiteHeader />);
 

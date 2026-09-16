@@ -1,0 +1,24 @@
+diff --git a/src/components/menu/menu-item-card.tsx b/src/components/menu/menu-item-card.tsx
+index b2af626..b3280ba 100644
+--- a/src/components/menu/menu-item-card.tsx
++++ b/src/components/menu/menu-item-card.tsx
+@@ -9,4 +9,9 @@ function getItemPrices(item: MenuItem): readonly (number | null)[] {
+-  return item.variants.flatMap((variant) => [
+-    variant.basePrice,
+-    ...variant.flavorPrices.map((entry) => entry.price),
+-  ]);
++  return item.variants.flatMap((variant) => {
++    const flavorPrices = variant.flavorPrices.map((entry) => entry.price);
++    const basePrice =
++      variant.basePrice === 0 && flavorPrices.length > 0
++        ? []
++        : [variant.basePrice];
++
++    return [...basePrice, ...flavorPrices];
++  });
+@@ -81 +86,4 @@ export function MenuItemCard({ item }: MenuItemCardProps) {
+-                  {variant.basePrice !== null ? (
++                  {variant.basePrice !== null &&
++                  !(
++                    variant.basePrice === 0 && variant.flavorPrices.length > 0
++                  ) ? (

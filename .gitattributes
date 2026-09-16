@@ -1,0 +1,13 @@
+* text=auto eol=lf
+
+# Keep platform-specific command scripts usable on Windows.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Treat image assets as binary so line-ending normalization never touches them.
+*.gif binary
+*.ico binary
+*.jpeg binary
+*.jpg binary
+*.png binary
+*.webp binary

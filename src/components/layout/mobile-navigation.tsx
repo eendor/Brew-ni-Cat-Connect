@@ -92,9 +92,12 @@ export function MobileNavigation({ items }: MobileNavigationProps) {
             </li>
           ))}
         </ul>
-        <p className="mx-auto mt-4 w-full max-w-[72rem] border-t border-[var(--border-soft)] px-4 pt-4 text-sm text-[var(--text-muted)]">
-          Online ordering is not yet active.
-        </p>
+        <div className="mx-auto mt-4 flex w-full max-w-[72rem] flex-col gap-1 border-t border-[var(--border-soft)] px-4 pt-4 text-sm text-[var(--text-muted)]">
+          <span className="font-bold text-[var(--text-strong)]">
+            Segundo St, Poblacion, Kabacan
+          </span>
+          <span>Operating hours may vary. Contact us before visiting.</span>
+        </div>
       </nav>
     </div>
   );

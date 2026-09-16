@@ -9,18 +9,31 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: siteConfig.productName,
-    template: `%s | ${siteConfig.name}`,
+    default: "Brew ni Cat Coffee Shop | Kabacan, Cotabato",
+    template: `%s | ${siteConfig.shortName}`,
   },
   description: siteConfig.description,
+  applicationName: siteConfig.productName,
+  keywords: ["Brew ni Cat", "coffee shop", "Kabacan", "Cotabato", "café menu"],
+  icons: {
+    icon: "/images/branding/brew-ni-cat-logo.png",
+    apple: "/images/branding/brew-ni-cat-logo.png",
+  },
+  openGraph: {
+    type: "website",
+    locale: "en_PH",
+    title: "Brew ni Cat Coffee Shop",
+    description: siteConfig.description,
+    siteName: siteConfig.name,
+  },
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#fbf6ed" },
-    { media: "(prefers-color-scheme: dark)", color: "#271b16" },
+    { media: "(prefers-color-scheme: light)", color: "#f8f0df" },
+    { media: "(prefers-color-scheme: dark)", color: "#173f38" },
   ],
 };
 
