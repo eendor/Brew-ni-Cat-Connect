@@ -13,11 +13,13 @@ import type { CartItemSelection } from "@/types/ordering";
 
 export const CENTAVOS_PER_PESO = 100;
 
-/** Interim client-side sanity bound pending owner-confirmed limits. */
+/**
+ * Technical lower bound for a cart quantity. This is not a Brew ni Cat
+ * business rule: the owner-confirmed quantity limit is still
+ * TODO: Confirm with Brew ni Cat owner. Validation accepts any positive safe
+ * integer so no unconfirmed maximum is presented as shop policy.
+ */
 export const CART_MIN_QUANTITY = 1;
-
-/** Interim client-side sanity bound pending owner-confirmed limits. */
-export const CART_MAX_QUANTITY = 99;
 
 export type ResolvePriceFailureReason = "unknown-flavor" | "missing-price";
 
@@ -59,9 +61,8 @@ export function normalizePrice(price: number): number {
 export function isValidCartQuantity(value: unknown): value is number {
   return (
     typeof value === "number" &&
-    Number.isInteger(value) &&
-    value >= CART_MIN_QUANTITY &&
-    value <= CART_MAX_QUANTITY
+    Number.isSafeInteger(value) &&
+    value >= CART_MIN_QUANTITY
   );
 }
 

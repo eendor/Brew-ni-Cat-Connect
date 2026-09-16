@@ -2,7 +2,6 @@ import {
   buildCartItemKey,
   buildSelectionKey,
   calculateLineTotal,
-  CART_MAX_QUANTITY,
   findCatalogItem,
   findCatalogVariant,
   isValidCartQuantity,
@@ -31,8 +30,10 @@ import type {
  * `remove`, `update-quantity`, `set-fulfillment`, and `clear` remain available
  * for future UI because none of them carries a price.
  *
- * All transitions are pure and immutable and keep quantity within
- * `[1, CART_MAX_QUANTITY]`. This module never reads Supabase data directly
+ * All transitions are pure and immutable and keep quantity a positive safe
+ * integer. The owner-confirmed quantity limit is still
+ * TODO: Confirm with Brew ni Cat owner, so no maximum is enforced as shop
+ * policy here. This module never reads Supabase data directly
  * and never performs network or storage effects; the catalog is supplied by
  * the caller.
  */
@@ -49,10 +50,6 @@ export function createInitialCartState(): CartState {
 
 function isFiniteNonNegative(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value) && value >= 0;
-}
-
-function clampMergedQuantity(existing: number, incoming: number): number {
-  return Math.min(existing + incoming, CART_MAX_QUANTITY);
 }
 
 /**
@@ -107,9 +104,13 @@ function toCartItem(entry: ResolvedCartLineInput): CartItem | null {
 
 /**
  * Merge one internally resolved line. Identical configurations merge by
- * adding quantities (capped at `CART_MAX_QUANTITY`); different variants or
- * flavors remain separate lines. Invalid entries leave the state reference
- * unchanged. Not exported: UI code must use {@link addCatalogSelection}.
+ * adding quantities; different variants or flavors remain separate lines.
+ * The current catalog stays the source of truth: when the line already
+ * exists, the merged line keeps the merged quantity but takes the newly
+ * resolved item/variant names and unit price, then recalculates the line
+ * total from that current price. Invalid entries or unsafe-integer overflow
+ * leave the state reference unchanged. Not exported: UI code must use
+ * {@link addCatalogSelection}.
  */
 function appendResolvedLine(
   state: CartState,
@@ -132,11 +133,21 @@ function appendResolvedLine(
     return state;
   }
 
-  const quantity = clampMergedQuantity(existing.quantity, candidate.quantity);
+  const quantity = existing.quantity + candidate.quantity;
+  if (!Number.isSafeInteger(quantity)) {
+    return state;
+  }
+
   const merged: CartItem = {
-    ...existing,
+    key: candidate.key,
+    itemId: candidate.itemId,
+    itemName: candidate.itemName,
+    variantId: candidate.variantId,
+    variantName: candidate.variantName,
+    flavor: candidate.flavor,
+    unitPrice: candidate.unitPrice,
     quantity,
-    lineTotal: calculateLineTotal(existing.unitPrice, quantity),
+    lineTotal: calculateLineTotal(candidate.unitPrice, quantity),
   };
 
   return {
@@ -157,7 +168,7 @@ export function removeCartLine(state: CartState, key: string): CartState {
 }
 
 /**
- * Replace one line quantity. Non-integer, out-of-range, or unknown-key
+ * Replace one line quantity. Non-positive, non-safe-integer, or unknown-key
  * updates are ignored so quantity can never become invalid. Use
  * {@link removeCartLine} for explicit removal.
  */
@@ -240,7 +251,7 @@ const FAILURE_MESSAGES: Record<AddCartItemFailureReason, string> = {
     "That product availability is not confirmed right now.",
   "missing-price":
     "That selection does not have a current price. Choose a flavor or contact the shop.",
-  "invalid-quantity": "Quantity must be a whole number from 1 to 99.",
+  "invalid-quantity": "Quantity must be a whole number of at least 1.",
 };
 
 export function getAddItemFailureMessage(

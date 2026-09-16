@@ -3,7 +3,6 @@ import {
   buildSelectionKey,
   calculateLineTotal,
   calculateSubtotal,
-  CART_MAX_QUANTITY,
   CART_MIN_QUANTITY,
   findCatalogItem,
   findCatalogVariant,
@@ -304,17 +303,19 @@ describe("cart money arithmetic", () => {
 });
 
 describe("cart quantity validation", () => {
-  it("TC-P3-016 — accepts only whole quantities within the interim bounds", () => {
+  it("TC-P3-016 — accepts any positive safe integer without an owner-unconfirmed maximum", () => {
     expect(CART_MIN_QUANTITY).toBe(1);
-    expect(CART_MAX_QUANTITY).toBe(99);
     expect(isValidCartQuantity(1)).toBe(true);
-    expect(isValidCartQuantity(99)).toBe(true);
+    expect(isValidCartQuantity(2)).toBe(true);
+    expect(isValidCartQuantity(100)).toBe(true);
+    expect(isValidCartQuantity(1000)).toBe(true);
+    expect(isValidCartQuantity(Number.MAX_SAFE_INTEGER)).toBe(true);
     expect(isValidCartQuantity(0)).toBe(false);
     expect(isValidCartQuantity(-1)).toBe(false);
-    expect(isValidCartQuantity(100)).toBe(false);
     expect(isValidCartQuantity(1.5)).toBe(false);
     expect(isValidCartQuantity(Number.NaN)).toBe(false);
     expect(isValidCartQuantity(Number.POSITIVE_INFINITY)).toBe(false);
+    expect(isValidCartQuantity(Number.MAX_SAFE_INTEGER + 1)).toBe(false);
     expect(isValidCartQuantity("2")).toBe(false);
     expect(isValidCartQuantity(null)).toBe(false);
     expect(isValidCartQuantity(undefined)).toBe(false);

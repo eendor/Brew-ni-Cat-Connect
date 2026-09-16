@@ -215,12 +215,13 @@ describe("cart catalog add", () => {
     });
   });
 
-  it("TC-P3-024 — caps merged quantity at the interim maximum", () => {
+  it("TC-P3-024 — sums merged quantities without an owner-unconfirmed cap", () => {
     let state = createInitialCartState();
     state = addMatcha(state, { quantity: 98 });
     state = addMatcha(state, { quantity: 5 });
 
-    expect(state.lines[0]).toMatchObject({ quantity: 99, lineTotal: 7920 });
+    expect(state.lines).toHaveLength(1);
+    expect(state.lines[0]).toMatchObject({ quantity: 103, lineTotal: 8240 });
   });
 
   it("TC-P3-025 — rejects unavailable and unknown-availability products", () => {
@@ -409,16 +410,21 @@ describe("cart line management", () => {
     expect(updateCartLineQuantity(updated, key, 0)).toBe(updated);
     expect(updateCartLineQuantity(updated, key, -2)).toBe(updated);
     expect(updateCartLineQuantity(updated, key, 2.5)).toBe(updated);
-    expect(updateCartLineQuantity(updated, key, 100)).toBe(updated);
     expect(updateCartLineQuantity(updated, key, Number.NaN)).toBe(updated);
+    expect(updateCartLineQuantity(updated, key, Number.POSITIVE_INFINITY)).toBe(
+      updated,
+    );
     expect(updateCartLineQuantity(updated, "missing", 2)).toBe(updated);
     expect(updateCartLineQuantity(updated, key, 4)).toBe(updated);
+
+    const large = updateCartLineQuantity(updated, key, 100);
+    expect(large.lines[0]).toMatchObject({ quantity: 100, lineTotal: 8000 });
   });
 
   it("TC-P3-031 — rejects invalid quantities through the public add boundary", () => {
     const initial = createInitialCartState();
 
-    for (const quantity of [0, -1, 100, 1.5, Number.NaN]) {
+    for (const quantity of [0, -1, 1.5, Number.NaN, Number.POSITIVE_INFINITY]) {
       const result = addCatalogSelection(initial, catalog, {
         itemId: "matcha",
         variantId: "matcha-16",
@@ -433,6 +439,17 @@ describe("cart line management", () => {
       expect(result.reason).toBe("invalid-quantity");
       expect(result.state).toBe(initial);
     }
+
+    const large = addCatalogSelection(initial, catalog, {
+      itemId: "matcha",
+      variantId: "matcha-16",
+      flavor: null,
+      quantity: 100,
+    });
+    if (!large.ok) {
+      throw new Error(`quantity 100 should have succeeded`);
+    }
+    expect(large.state.lines[0]).toMatchObject({ quantity: 100 });
 
     expect(initial.lines).toEqual([]);
   });
@@ -527,6 +544,68 @@ describe("cart line management", () => {
     expect(before.state.lines[0]?.unitPrice).toBe(80);
     expect(after.state.lines[0]?.unitPrice).toBe(250);
     expect(after.state.lines[0]?.lineTotal).toBe(250);
+  });
+
+  it("TC-P3-038 — refreshes an existing line to the current catalog price on re-add", () => {
+    const repricedCatalog: MenuCatalog = {
+      categories: [
+        {
+          id: "drinks",
+          name: "Drinks",
+          items: [
+            {
+              id: "matcha",
+              name: "Matcha Renamed",
+              availability: "available",
+              flavors: [],
+              variants: [
+                {
+                  id: "matcha-16",
+                  name: "16 oz Renamed",
+                  basePrice: 250,
+                  flavorPrices: [],
+                  description: null,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+    const selection: CartItemSelection = {
+      itemId: "matcha",
+      variantId: "matcha-16",
+      flavor: null,
+      quantity: 1,
+    };
+
+    const first = addCatalogSelection(
+      createInitialCartState(),
+      catalog,
+      selection,
+    );
+    if (!first.ok) {
+      throw new Error(`expected first add to succeed`);
+    }
+    expect(first.state.lines[0]).toMatchObject({
+      unitPrice: 80,
+      quantity: 1,
+      lineTotal: 80,
+    });
+
+    const second = addCatalogSelection(first.state, repricedCatalog, selection);
+    if (!second.ok) {
+      throw new Error(`expected repriced add to succeed`);
+    }
+
+    expect(second.state.lines).toHaveLength(1);
+    expect(second.state.lines[0]).toMatchObject({
+      itemName: "Matcha Renamed",
+      variantName: "16 oz Renamed",
+      unitPrice: 250,
+      quantity: 2,
+      lineTotal: 500,
+    });
   });
 
   it("TC-P3-032 — clears all lines while retaining fulfillment", () => {
