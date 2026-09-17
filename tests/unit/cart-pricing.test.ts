@@ -204,7 +204,11 @@ describe("cart unit-price resolution", () => {
   });
 
   it("TC-P3-010 — resolves a flavor price when the base is null", () => {
-    const item = makeItem({ id: "special", name: "Special" });
+    const item = makeItem({
+      id: "special",
+      name: "Special",
+      flavors: ["Ube"],
+    });
     const variant = makeVariant({
       id: "special-regular",
       name: "Regular",
@@ -274,6 +278,29 @@ describe("cart unit-price resolution", () => {
     expect(resolveVariantUnitPrice(item, variant, "Free Taste")).toEqual({
       ok: true,
       unitPrice: 0,
+    });
+  });
+
+  it("TC-P3-047 — rejects a variant flavor price when the flavor is not allowed by the item", () => {
+    const item = makeItem({
+      id: "matcha",
+      name: "Matcha",
+      flavors: ["Original", "Strawberry"],
+    });
+    const variant = makeVariant({
+      id: "matcha-16",
+      name: "16 oz",
+      basePrice: 80,
+      flavorPrices: [{ flavor: "Ube", price: 100 }],
+    });
+
+    expect(item.flavors.includes("Ube")).toBe(false);
+    expect(variant.flavorPrices.some((entry) => entry.flavor === "Ube")).toBe(
+      true,
+    );
+    expect(resolveVariantUnitPrice(item, variant, "Ube")).toEqual({
+      ok: false,
+      reason: "unknown-flavor",
     });
   });
 });

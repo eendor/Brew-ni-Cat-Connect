@@ -174,11 +174,13 @@ export function findCatalogVariant(
 /**
  * Resolve one purchasable unit price from already-located menu records.
  *
- * - A selected flavor with an explicit flavor price always wins, including
- *   when the variant base is the zero placeholder.
- * - A selected flavor known to the item but without an explicit override
- *   falls back to a positive base price.
- * - A selected flavor known to neither the item nor the variant is unknown.
+ * - A selected flavor must be a member of the item's allowed flavors.
+ * - An allowed flavor with an explicit variant flavor price always wins,
+ *   including when the variant base is the zero placeholder.
+ * - An allowed flavor without an explicit override falls back to a positive
+ *   base price.
+ * - An unallowed flavor is rejected with unknown-flavor even if present in
+ *   variant flavor prices.
  * - No flavor with a zero base plus flavor prices requires a flavor choice.
  */
 export function resolveVariantUnitPrice(
@@ -189,20 +191,21 @@ export function resolveVariantUnitPrice(
   const selectedFlavor = normalizeFlavor(flavor);
 
   if (selectedFlavor !== null) {
+    if (!item.flavors.includes(selectedFlavor)) {
+      return { ok: false, reason: "unknown-flavor" };
+    }
+
     const override = findFlavorPrice(variant, selectedFlavor);
+
     if (override !== null) {
       return { ok: true, unitPrice: normalizePrice(override) };
     }
 
-    if (item.flavors.includes(selectedFlavor)) {
-      if (hasPurchasableBasePrice(variant) && variant.basePrice !== null) {
-        return { ok: true, unitPrice: normalizePrice(variant.basePrice) };
-      }
-
-      return { ok: false, reason: "missing-price" };
+    if (hasPurchasableBasePrice(variant) && variant.basePrice !== null) {
+      return { ok: true, unitPrice: normalizePrice(variant.basePrice) };
     }
 
-    return { ok: false, reason: "unknown-flavor" };
+    return { ok: false, reason: "missing-price" };
   }
 
   if (variant.basePrice === 0 && variant.flavorPrices.length > 0) {
