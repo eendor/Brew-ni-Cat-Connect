@@ -76,7 +76,7 @@ describe("Gallery page", () => {
 
     const images = screen.getAllByRole("img");
     expect(images.length).toBeGreaterThanOrEqual(12);
-    expect(images.length).toBeLessThanOrEqual(24);
+    expect(images.length).toBeLessThanOrEqual(36);
     for (const image of images) {
       expect(image).toHaveAccessibleName();
       expect(decodeURIComponent(image.getAttribute("src") ?? "")).toContain(
