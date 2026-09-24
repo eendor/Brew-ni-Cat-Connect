@@ -288,7 +288,7 @@ export default function HomePage() {
         aria-labelledby="visit-heading"
       >
         <Container>
-          <Reveal className="rounded-[1.75rem] border border-[var(--border-soft)] bg-[var(--surface-card)] p-6 shadow-[var(--shadow-subtle)] sm:p-9">
+          <Reveal className="depth-card rounded-[1.75rem] p-6 sm:p-9">
             <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-start">
               <div>
                 <p className="eyebrow">Visit Brew ni Cat</p>
@@ -323,7 +323,7 @@ export default function HomePage() {
               </div>
 
               <aside
-                className="rounded-[1.25rem] border border-[var(--notice-border)] bg-[var(--notice-surface)] p-5 sm:p-6"
+                className="glass-panel rounded-[1.25rem] border-[var(--notice-border)] bg-[var(--notice-surface)] p-5 sm:p-6"
                 aria-label="Before you visit"
               >
                 <p className="text-xs font-bold tracking-[0.12em] text-[var(--notice-text)] uppercase">

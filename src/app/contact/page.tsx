@@ -53,7 +53,7 @@ export default function ContactPage() {
         aria-labelledby="location-heading"
       >
         <Container className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-stretch">
-          <Reveal className="rounded-[2rem] border border-[var(--border-soft)] bg-[var(--surface-card)] p-7 shadow-[var(--shadow-subtle)] sm:p-10">
+          <Reveal className="depth-card rounded-[2rem] p-7 sm:p-10">
             <p className="eyebrow">Where to find us</p>
             <h2
               id="location-heading"
@@ -82,7 +82,7 @@ export default function ContactPage() {
 
           <Reveal delayMs={100}>
             <aside
-              className="rounded-[1.75rem] border border-[var(--notice-border)] bg-[var(--notice-surface)] p-7 shadow-[var(--shadow-subtle)] sm:p-9"
+              className="glass-panel rounded-[1.75rem] border-[var(--notice-border)] bg-[var(--notice-surface)] p-7 sm:p-9"
               aria-labelledby="hours-heading"
             >
               <p className="text-xs font-bold tracking-[0.12em] text-[var(--notice-text)] uppercase">

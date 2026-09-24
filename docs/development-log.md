@@ -297,3 +297,13 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Testing performed:** `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm run test`.\
 **Git branch:** `feat/gallery-ui-polish`\
 **Pull request:** [#10](https://github.com/eendor/Brew-ni-Cat-Connect/pull/10)
+
+## 2026-09-24 — Apple-like depth with restored display type
+
+**Date:** 2026-09-24\
+**Phase:** Phase 2 — Public Showcase Website\
+**Task:** Lead Developer asked for depth / HDR / Apple-like UI across the site and to revert the Inter / Plus Jakarta Sans font change.\
+**Summary:** Restored Georgia display type and an Apple system sans stack (`-apple-system` / SF). Added layered shadows, glass panels, richer card gradients, ambient canvas light, HDR-leaning media contrast on the cinematic hero, and stronger frosted header treatment without bringing back the deep-green hours billboard.\
+**Files/modules affected:** `src/app/layout.tsx`; `src/app/globals.css`; `src/components/layout/site-header.tsx`; `src/app/page.tsx`; `src/app/contact/page.tsx`; `docs/development-log.md`.\
+**Git branch:** `feat/gallery-ui-polish`\
+**Pull request:** [#10](https://github.com/eendor/Brew-ni-Cat-Connect/pull/10)

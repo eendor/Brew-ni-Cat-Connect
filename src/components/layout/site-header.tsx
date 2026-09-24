@@ -8,7 +8,7 @@ import { MobileNavigation } from "./mobile-navigation";
 
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-50 border-b border-[var(--border-soft)]/70 bg-[var(--surface-canvas-translucent)] backdrop-blur-xl transition-[background-color,border-color,box-shadow] duration-500 ease-[var(--ease-cinematic)] supports-[backdrop-filter]:bg-[rgb(248_240_223_/_72%)]">
+    <header className="sticky top-0 z-50 border-b border-white/40 bg-[var(--surface-canvas-translucent)] shadow-[var(--shadow-subtle)] backdrop-blur-2xl backdrop-saturate-150 transition-[background-color,border-color,box-shadow] duration-500 ease-[var(--ease-cinematic)] supports-[backdrop-filter]:bg-[rgb(255_253_248_/_62%)]">
       <Container className="flex min-h-18 items-center justify-between gap-4 py-2.5 lg:min-h-20">
         <Link
           href="/"
@@ -51,7 +51,7 @@ export function SiteHeader() {
         <div className="hidden lg:block">
           <Link
             href="/contact"
-            className="nav-link inline-flex min-h-11 items-center justify-center rounded-full bg-[var(--deep-green)] px-5 py-2 text-sm font-bold text-white shadow-sm hover:bg-[var(--deep-green-hover)]"
+            className="nav-link inline-flex min-h-11 items-center justify-center rounded-full bg-[var(--deep-green)] px-5 py-2 text-sm font-bold text-white shadow-[var(--shadow-button)] hover:bg-[var(--deep-green-hover)]"
           >
             Visit us
           </Link>
