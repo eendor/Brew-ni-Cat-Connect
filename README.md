@@ -26,8 +26,8 @@ The current increment replaces the Phase 1 placeholders with customer-facing rou
 - Home, including the official logo, featured customer-favorite groups, gallery and visit previews;
 - a read-only Menu that retrieves the current catalog through Supabase public configuration at browser runtime;
 - About, using restrained facts confirmed for the business;
-- Gallery, using a curated set of 18 approved local shop/customer photographs; and
-- Contact, location, payment, takeout, variable-hours, social, and independent-rider information.
+- Gallery, using a curated set of 30 approved local shop/customer photographs (newest Facebook favorites first); and
+- Contact, location, payment, takeout, Sunday-closed notice with variable hours on other days, social, and independent-rider information.
 
 No cart, checkout, account, order write, payment processing, rider booking, or database administration is included. Old menu-poster artwork is a visual reference only and is not the source of current names or prices.
 
@@ -132,7 +132,7 @@ The following remain outside Phase 2:
 - database migrations, production-data mutations, or administrative functions; and
 - a permanent weekly-hours promise or owner biography that has not been approved.
 
-Operating hours are variable. Customers are directed to the official Facebook page or the shop contact details for the current schedule.
+The shop is closed every Sunday. Hours on other days are variable; customers are directed to the official Facebook page or the shop contact details for the current schedule.
 
 ## Contributing
 

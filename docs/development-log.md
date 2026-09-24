@@ -165,3 +165,26 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Testing performed:** `npm run format:check`, `npm run lint`, `npm run typecheck`, and `npm run build` all completed with no findings. Vitest passed 6 files and 22/22 tests. Playwright passed 13/13 tests, including `TC-P2-024` Gallery curation coverage. The documentation validator reported `ERRORS=0` and `PHASE0_DOC_VALIDATION=PASS`.
 **Git branch:** `feat/showcase-website`
 **Next action:** Renier confirms Gallery variety, alt text, and flush layout at 320, 375, 768, 1024, and 1440 pixels during independent Phase 2 QA.
+
+## 2026-09-24 — Gallery refresh, cinematic showcase polish, Sunday closure
+
+**Date:** 2026-09-24\
+**Phase:** Phase 2 — Public Showcase Website\
+**Task:** Add newly approved Facebook shop photographs, make Home/Gallery feel more cinematic so the beige canvas feels less dull, and record the owner-confirmed Sunday closure without inventing fixed weekday hours.\
+**Summary:** Pull Request #10 on `feat/gallery-ui-polish` continues Phase 2 showcase work on the assistant development computer only (no Cursor cloud agent). Twelve new Facebook photographs were already merged via Pull Request #9 as `photo_148`–`photo_159`. This branch caps the Home featured mosaic at six images, surfaces newest photos first on Gallery, refreshes the Home hero collage, then turns Home/Gallery into a fuller filmic presentation (full-bleed hero, dark film-strip preview, immersive gallery canvas, soft grain/Ken Burns with reduced-motion respect). The owner confirmed the shop is closed every Sunday; site copy, `siteConfig.operations`, the business content register, and FR-003 now state that clearly while still directing customers to Facebook/contact for other days.\
+**Changes:**
+
+- curated Gallery order with newest Facebook photos first and exactly six `featured` Home preview images;
+- cinematic Home hero, about-band drama, dark horizontal film-strip gallery preview, and immersive Gallery page treatment in `globals.css`, `page.tsx`, and `gallery/page.tsx`;
+- recorded Sunday closure in `src/config/site.ts`, Home/Contact/About/mobile-nav copy, tests, business content register, README, FR-003, and this log;
+- captured cinematic review screenshots under `docs/evidence/phase-2/screenshots/cinematic-2026-09-24/`; and
+- fixed Prettier formatting that had failed the hosted `format:check` gate.
+
+**Files/modules affected:** `src/config/gallery.ts`; `src/config/site.ts`; `src/app/page.tsx`; `src/app/gallery/page.tsx`; `src/app/globals.css`; `src/components/layout/site-header.tsx`; `src/components/layout/mobile-navigation.tsx`; Contact/About pages; unit/e2e hour assertions; README; `docs/business-content-register.md`; `docs/functional-requirements.md`; `docs/test-cases.md`; `docs/development-log.md`; cinematic evidence screenshots.\
+**Testing performed:** On the assistant Linux computer with Node.js 24, `npm run format:check`, `npm run lint`, `npm run typecheck`, and `npm run test` (9 files / 69 tests) returned exit 0 after the Prettier fix. `npm run build` and `python scripts/validate_phase0_docs.py` are recorded in the commit that lands this documentation update. Playwright was not re-run in this documentation pass.\
+**Issues encountered:** Hosted CI failed earlier because Prettier was not run before push; wording “agent machine” confused the Lead Developer (means the assistant’s computer, not DESKTOP-EH4I3QC).\
+**Resolution:** Ran `prettier --write` on the affected files, pushed `fix: Fix Prettier formatting for CI`, and aligned future work to CONTRIBUTING (docs + development log + business register with every behavior change).\
+**Documentation updated:** Business content register; README; FR-003; test-cases TC-P2-016 note; development log; cinematic screenshot evidence.\
+**Git branch:** `feat/gallery-ui-polish`\
+**Pull request:** [#10 — Polish gallery layout after new Facebook photos](https://github.com/eendor/Brew-ni-Cat-Connect/pull/10), open and awaiting hosted checks + Lead Developer review.\
+**Next action:** Confirm hosted Validate application passes on the documentation head, leave the PR open for teammate review per CONTRIBUTING, and continue cinematic polish only if Rodnee asks after review.
