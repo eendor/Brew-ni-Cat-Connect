@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ExternalLink } from "@/components/ui/external-link";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { Container } from "@/components/ui/container";
+import { Reveal } from "@/components/ui/reveal";
 import { homeGalleryImages } from "@/config/gallery";
 import { siteConfig } from "@/config/site";
 
@@ -116,26 +117,28 @@ export default function HomePage() {
         aria-label="Visit facts"
       >
         <Container>
-          <dl className="grid overflow-hidden rounded-[1.5rem] border border-[var(--border-soft)] bg-[var(--surface-card)] shadow-[var(--shadow-card)] sm:grid-cols-3">
-            <div className="p-5 sm:border-r sm:border-[var(--border-soft)] sm:p-6">
-              <dt className="eyebrow">Find us</dt>
-              <dd className="mt-2 font-bold text-[var(--text-strong)]">
-                Segundo St, Poblacion, Kabacan
-              </dd>
-            </div>
-            <div className="border-t border-[var(--border-soft)] p-5 sm:border-t-0 sm:border-r sm:p-6">
-              <dt className="eyebrow">Landmark</dt>
-              <dd className="mt-2 font-bold text-[var(--text-strong)]">
-                {siteConfig.address.landmark}
-              </dd>
-            </div>
-            <div className="border-t border-[var(--border-soft)] p-5 sm:border-t-0 sm:p-6">
-              <dt className="eyebrow">Payment</dt>
-              <dd className="mt-2 font-bold text-[var(--text-strong)]">
-                Cash and GCash
-              </dd>
-            </div>
-          </dl>
+          <Reveal>
+            <dl className="grid overflow-hidden rounded-[1.5rem] border border-[var(--border-soft)] bg-[var(--surface-card)] shadow-[var(--shadow-card)] sm:grid-cols-3">
+              <div className="p-5 sm:border-r sm:border-[var(--border-soft)] sm:p-6">
+                <dt className="eyebrow">Find us</dt>
+                <dd className="mt-2 font-bold text-[var(--text-strong)]">
+                  Segundo St, Poblacion, Kabacan
+                </dd>
+              </div>
+              <div className="border-t border-[var(--border-soft)] p-5 sm:border-t-0 sm:border-r sm:p-6">
+                <dt className="eyebrow">Landmark</dt>
+                <dd className="mt-2 font-bold text-[var(--text-strong)]">
+                  {siteConfig.address.landmark}
+                </dd>
+              </div>
+              <div className="border-t border-[var(--border-soft)] p-5 sm:border-t-0 sm:p-6">
+                <dt className="eyebrow">Payment</dt>
+                <dd className="mt-2 font-bold text-[var(--text-strong)]">
+                  Cash and GCash
+                </dd>
+              </div>
+            </dl>
+          </Reveal>
         </Container>
       </section>
 
@@ -144,38 +147,39 @@ export default function HomePage() {
         aria-labelledby="favorites-heading"
       >
         <Container>
-          <SectionHeading
-            id="favorites-heading"
-            eyebrow="Popular at Brew ni Cat"
-            title="Familiar favorites worth a closer look."
-            description="Matcha, Takoyaki, and Fries are customer-favorite groups. Open the current menu for today’s available options and prices."
-          />
+          <Reveal>
+            <SectionHeading
+              id="favorites-heading"
+              eyebrow="Popular at Brew ni Cat"
+              title="Familiar favorites worth a closer look."
+              description="Matcha, Takoyaki, and Fries are customer-favorite groups. Open the current menu for today’s available options and prices."
+            />
+          </Reveal>
           <div className="mt-10 grid gap-5 md:grid-cols-3">
-            {favorites.map((favorite) => (
-              <article
-                key={favorite.name}
-                className="group relative overflow-hidden rounded-[1.75rem] border border-[var(--border-soft)] bg-[var(--surface-card)] p-6 shadow-[var(--shadow-subtle)]"
-              >
-                <span
-                  className="font-display absolute -right-3 -bottom-9 text-[8rem] font-bold leading-none text-[var(--accent-soft)] opacity-50 transition-transform group-hover:-rotate-3"
-                  aria-hidden="true"
-                >
-                  {favorite.mark}
-                </span>
-                <p className="eyebrow relative">Customer favorite</p>
-                <h3 className="font-display relative mt-3 text-3xl font-semibold text-[var(--text-strong)]">
-                  {favorite.name}
-                </h3>
-                <p className="relative mt-3 min-h-14 leading-7 text-[var(--text-muted)]">
-                  {favorite.note}
-                </p>
-                <Link
-                  href="/menu"
-                  className="relative mt-6 inline-flex min-h-11 items-center rounded-full font-extrabold text-[var(--deep-green)] underline decoration-[var(--warm-gold)] decoration-2 underline-offset-4"
-                >
-                  Browse the menu
-                </Link>
-              </article>
+            {favorites.map((favorite, index) => (
+              <Reveal key={favorite.name} delayMs={index * 90}>
+                <article className="group surface-lift relative h-full overflow-hidden rounded-[1.75rem] border border-[var(--border-soft)] bg-[var(--surface-card)] p-6 shadow-[var(--shadow-subtle)]">
+                  <span
+                    className="font-display absolute -right-3 -bottom-9 text-[8rem] font-bold leading-none text-[var(--accent-soft)] opacity-50 transition-transform group-hover:-rotate-3"
+                    aria-hidden="true"
+                  >
+                    {favorite.mark}
+                  </span>
+                  <p className="eyebrow relative">Customer favorite</p>
+                  <h3 className="font-display relative mt-3 text-3xl font-semibold text-[var(--text-strong)]">
+                    {favorite.name}
+                  </h3>
+                  <p className="relative mt-3 min-h-14 leading-7 text-[var(--text-muted)]">
+                    {favorite.note}
+                  </p>
+                  <Link
+                    href="/menu"
+                    className="relative mt-6 inline-flex min-h-11 items-center rounded-full font-extrabold text-[var(--deep-green)] underline decoration-[var(--warm-gold)] decoration-2 underline-offset-4"
+                  >
+                    Browse the menu
+                  </Link>
+                </article>
+              </Reveal>
             ))}
           </div>
         </Container>
@@ -186,7 +190,7 @@ export default function HomePage() {
         aria-labelledby="about-preview-heading"
       >
         <Container className="grid gap-10 lg:grid-cols-[1fr_1.05fr] lg:items-center lg:gap-16">
-          <div className="relative mx-auto w-full max-w-[34rem] pb-8 pl-8">
+          <Reveal className="relative mx-auto w-full max-w-[34rem] pb-8 pl-8">
             <div className="about-drama">
               <Image
                 src="/images/shop/photo_124.jpg"
@@ -205,8 +209,8 @@ export default function HomePage() {
                 {siteConfig.openingDate}
               </p>
             </div>
-          </div>
-          <div>
+          </Reveal>
+          <Reveal delayMs={120}>
             <p className="text-xs font-extrabold tracking-[0.16em] text-[#f6cf80] uppercase">
               Meet Brew ni Cat
             </p>
@@ -228,7 +232,7 @@ export default function HomePage() {
             >
               Read about the shop
             </Link>
-          </div>
+          </Reveal>
         </Container>
       </section>
 
@@ -237,7 +241,7 @@ export default function HomePage() {
         aria-labelledby="gallery-preview-heading"
       >
         <Container>
-          <div className="flex flex-col gap-6 border-b border-white/10 pb-8 sm:flex-row sm:items-end sm:justify-between">
+          <Reveal className="flex flex-col gap-6 border-b border-white/10 pb-8 sm:flex-row sm:items-end sm:justify-between">
             <div className="max-w-2xl">
               <p className="eyebrow-light">Scene · Inside Brew ni Cat</p>
               <h2
@@ -254,18 +258,37 @@ export default function HomePage() {
             <Link href="/gallery" className="button-ghost shrink-0 self-start">
               View the gallery
             </Link>
-          </div>
+          </Reveal>
         </Container>
-        <div className="mt-10 pl-4 sm:pl-6 lg:pl-[max(1.5rem,calc((100vw-72rem)/2+1.5rem))]">
-          <div className="film-strip pr-4 sm:pr-6">
+        <div className="film-reel mt-10" aria-label="Featured café photos">
+          <div className="film-reel__track">
+            {[...homeGalleryImages, ...homeGalleryImages].map(
+              (image, index) => (
+                <figure
+                  key={`${image.src}-${index}`}
+                  className="film-reel__frame"
+                  aria-hidden={index >= homeGalleryImages.length}
+                >
+                  <Image
+                    src={image.src}
+                    width={image.landscape ? 1024 : 768}
+                    height={image.landscape ? 768 : 1024}
+                    alt={index >= homeGalleryImages.length ? "" : image.alt}
+                    sizes="(max-width: 639px) 70vw, (max-width: 1023px) 40vw, 21rem"
+                  />
+                </figure>
+              ),
+            )}
+          </div>
+          <div className="film-reel__static">
             {homeGalleryImages.map((image) => (
-              <figure key={image.src} className="film-strip__frame">
+              <figure key={`static-${image.src}`} className="film-reel__frame">
                 <Image
                   src={image.src}
                   width={image.landscape ? 1024 : 768}
                   height={image.landscape ? 768 : 1024}
                   alt={image.alt}
-                  sizes="(max-width: 639px) 72vw, (max-width: 1023px) 42vw, 22rem"
+                  sizes="(max-width: 639px) 46vw, 31vw"
                 />
               </figure>
             ))}
@@ -278,7 +301,7 @@ export default function HomePage() {
         aria-labelledby="visit-heading"
       >
         <Container className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-stretch">
-          <div className="rounded-[2rem] bg-[var(--surface-card)] p-7 shadow-[var(--shadow-subtle)] sm:p-10">
+          <Reveal className="rounded-[2rem] bg-[var(--surface-card)] p-7 shadow-[var(--shadow-subtle)] sm:p-10">
             <p className="eyebrow">Visit Brew ni Cat</p>
             <h2
               id="visit-heading"
@@ -308,43 +331,45 @@ export default function HomePage() {
                 Contact and visit details
               </Link>
             </div>
-          </div>
-          <aside
-            className="rounded-[2rem] bg-[var(--deep-green)] p-7 text-white shadow-[var(--shadow-card)] sm:p-10"
-            aria-label="Before you visit"
-          >
-            <p className="text-xs font-extrabold tracking-[0.16em] text-[#f6cf80] uppercase">
-              Before you visit
-            </p>
-            <h2 className="font-display mt-3 text-3xl font-semibold">
-              Closed every Sunday.
-            </h2>
-            <p className="mt-4 leading-7 text-[#e4e6d9]">
-              {siteConfig.operations.hoursNotice}
-            </p>
-            <dl className="mt-7 grid gap-4 border-t border-white/15 pt-6 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-              <div>
-                <dt className="text-xs font-extrabold tracking-wide text-[#f6cf80] uppercase">
-                  Payment
-                </dt>
-                <dd className="mt-1 font-bold">Cash · GCash</dd>
-              </div>
-              <div>
-                <dt className="text-xs font-extrabold tracking-wide text-[#f6cf80] uppercase">
-                  Takeout
-                </dt>
-                <dd className="mt-1 font-bold">
-                  {siteConfig.operations.takeoutFee}
-                </dd>
-              </div>
-            </dl>
-            <ExternalLink
-              href={siteConfig.social.facebook}
-              className="mt-7 inline-flex min-h-11 items-center rounded-full font-extrabold text-white underline decoration-[#f6cf80] decoration-2 underline-offset-4"
+          </Reveal>
+          <Reveal delayMs={100}>
+            <aside
+              className="rounded-[2rem] bg-[var(--deep-green)] p-7 text-white shadow-[var(--shadow-card)] sm:p-10"
+              aria-label="Before you visit"
             >
-              Check Brew ni Cat on Facebook
-            </ExternalLink>
-          </aside>
+              <p className="text-xs font-extrabold tracking-[0.16em] text-[#f6cf80] uppercase">
+                Before you visit
+              </p>
+              <h2 className="font-display mt-3 text-3xl font-semibold">
+                Closed every Sunday.
+              </h2>
+              <p className="mt-4 leading-7 text-[#e4e6d9]">
+                {siteConfig.operations.hoursNotice}
+              </p>
+              <dl className="mt-7 grid gap-4 border-t border-white/15 pt-6 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+                <div>
+                  <dt className="text-xs font-extrabold tracking-wide text-[#f6cf80] uppercase">
+                    Payment
+                  </dt>
+                  <dd className="mt-1 font-bold">Cash · GCash</dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-extrabold tracking-wide text-[#f6cf80] uppercase">
+                    Takeout
+                  </dt>
+                  <dd className="mt-1 font-bold">
+                    {siteConfig.operations.takeoutFee}
+                  </dd>
+                </div>
+              </dl>
+              <ExternalLink
+                href={siteConfig.social.facebook}
+                className="mt-7 inline-flex min-h-11 items-center rounded-full font-extrabold text-white underline decoration-[#f6cf80] decoration-2 underline-offset-4"
+              >
+                Check Brew ni Cat on Facebook
+              </ExternalLink>
+            </aside>
+          </Reveal>
         </Container>
       </section>
     </>

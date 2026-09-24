@@ -6,6 +6,7 @@ type SectionHeadingProps = Readonly<{
   title: string;
   description?: ReactNode;
   align?: "left" | "center";
+  className?: string;
 }>;
 
 export function SectionHeading({
@@ -14,12 +15,11 @@ export function SectionHeading({
   title,
   description,
   align = "left",
+  className = "",
 }: SectionHeadingProps) {
   return (
     <div
-      className={
-        align === "center" ? "mx-auto max-w-2xl text-center" : "max-w-2xl"
-      }
+      className={`${align === "center" ? "mx-auto max-w-2xl text-center" : "max-w-2xl"}${className ? ` ${className}` : ""}`}
     >
       <p className="eyebrow">{eyebrow}</p>
       <h2

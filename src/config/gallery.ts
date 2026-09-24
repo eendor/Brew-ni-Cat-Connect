@@ -134,7 +134,7 @@ export const galleryImages: readonly GalleryImage[] = [
   },
 ];
 
-/** Home preview keeps six featured photos so the 4-column mosaic stays flush. */
+/** Home preview reel uses six featured cat/food/space photos (duplicated for the marquee). */
 export const homeGalleryImages = galleryImages
   .filter((image) => image.featured)
   .slice(0, 6);

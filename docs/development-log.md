@@ -198,3 +198,22 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Testing performed:** `npm run format:check`, `npm run lint`, and `npm run test` (69/69) exited 0.\
 **Git branch:** `feat/gallery-ui-polish`\
 **Pull request:** [#10](https://github.com/eendor/Brew-ni-Cat-Connect/pull/10)
+
+## 2026-09-24 — Site-wide cinematic motion and gallery layout fix
+
+**Date:** 2026-09-24\
+**Phase:** Phase 2 — Public Showcase Website\
+**Task:** Address Lead Developer feedback: site-wide cinematic motion, Home film-strip scrollbar/animation/alignment, Gallery empty trailing cell and uneven horizontal rhythm.\
+**Summary:** Replaced the Home overflow film-strip with a seamless CSS marquee reel (duplicated featured frames, hover pause, reduced-motion static flush grid, no scrollbar). Gallery now renders all 30 approved images in the grid (still divisible by 2 and 3) while keeping the cinematic lead intro. Added reusable intersection `Reveal` motion plus CSS fade-up / surface-lift / nav transitions across Home, Menu, About, Gallery, Contact, PageIntro, and the sticky header.\
+**Changes:**
+
+- Home gallery preview: `film-reel` infinite marquee under a padded Container heading; overflow hidden; prefers-reduced-motion static grid;
+- Gallery page: include every `galleryImages` tile (30), tighten grid gaps, stagger fade-up on tiles;
+- globals + `Reveal` client component for section reveals; PageIntro/header/menu/about/contact motion polish;
+- kept cat/shop/food hero media from the prior pass.
+
+**Files/modules affected:** `src/app/globals.css`; `src/app/page.tsx`; `src/app/gallery/page.tsx`; `src/app/about/page.tsx`; `src/app/contact/page.tsx`; `src/components/ui/reveal.tsx`; `src/components/ui/page-intro.tsx`; `src/components/ui/section-heading.tsx`; `src/components/layout/site-header.tsx`; `src/components/menu/menu-catalog.tsx`; `src/components/menu/menu-item-card.tsx`; `src/config/gallery.ts`; `docs/development-log.md`.\
+**Testing performed:** `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm run test` (run after this entry).\
+**Git branch:** `feat/gallery-ui-polish`\
+**Pull request:** [#10](https://github.com/eendor/Brew-ni-Cat-Connect/pull/10)\
+**Next action:** Push and await hosted Validate application + Lead Developer review.

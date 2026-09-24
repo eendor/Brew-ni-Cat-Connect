@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { Container } from "@/components/ui/container";
+import { Reveal } from "@/components/ui/reveal";
 import { galleryImages } from "@/config/gallery";
 
 export const metadata: Metadata = {
@@ -12,7 +13,6 @@ export const metadata: Metadata = {
 };
 
 const leadImage = galleryImages[0]!;
-const gridImages = galleryImages.slice(1);
 
 export default function GalleryPage() {
   return (
@@ -105,7 +105,7 @@ export default function GalleryPage() {
         aria-label="Brew ni Cat photo gallery"
       >
         <Container>
-          <div className="mb-8 flex items-end justify-between gap-4 border-b border-white/10 pb-5">
+          <Reveal className="mb-8 flex items-end justify-between gap-4 border-b border-white/10 pb-5">
             <div>
               <p className="eyebrow-light">Reel</p>
               <p className="mt-1 font-display text-2xl font-semibold text-white sm:text-3xl">
@@ -113,12 +113,15 @@ export default function GalleryPage() {
               </p>
             </div>
             <p className="hidden text-sm text-[#d8d7c8] sm:block">
-              {gridImages.length + 1} approved photos
+              {galleryImages.length} approved photos
             </p>
-          </div>
-          <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3">
-            {gridImages.map((image) => (
-              <figure key={image.src} className="gallery-tile group">
+          </Reveal>
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 lg:gap-5">
+            {galleryImages.map((image) => (
+              <figure
+                key={image.src}
+                className="gallery-tile gallery-tile--stagger group"
+              >
                 <Image
                   src={image.src}
                   width={768}

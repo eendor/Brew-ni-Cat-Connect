@@ -23,7 +23,7 @@ export function MenuItemCard({ item }: MenuItemCardProps) {
 
   return (
     <article
-      className={`rounded-[1.5rem] border bg-[var(--surface-card)] p-5 shadow-[var(--shadow-subtle)] sm:p-6 ${
+      className={`surface-lift rounded-[1.5rem] border bg-[var(--surface-card)] p-5 shadow-[var(--shadow-subtle)] sm:p-6 ${
         unavailable
           ? "border-[var(--border-strong)] opacity-75"
           : "border-[var(--border-soft)]"
