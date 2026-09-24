@@ -171,7 +171,7 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Date:** 2026-09-24\
 **Phase:** Phase 2 — Public Showcase Website\
 **Task:** Add newly approved Facebook shop photographs, make Home/Gallery feel more cinematic so the beige canvas feels less dull, and record the owner-confirmed Sunday closure without inventing fixed weekday hours.\
-**Summary:** Pull Request #10 on `feat/gallery-ui-polish` continues Phase 2 showcase work on the assistant development computer only (no Cursor cloud agent). Twelve new Facebook photographs were already merged via Pull Request #9 as `photo_148`–`photo_159`. This branch caps the Home featured mosaic at six images, surfaces newest photos first on Gallery, refreshes the Home hero collage, then turns Home/Gallery into a fuller filmic presentation (full-bleed hero, dark film-strip preview, immersive gallery canvas, soft grain/Ken Burns with reduced-motion respect). The owner confirmed the shop is closed every Sunday; site copy, `siteConfig.operations`, the business content register, and FR-003 now state that clearly while still directing customers to Facebook/contact for other days.\
+**Summary:** Pull Request #10 on `feat/gallery-ui-polish` continues Phase 2 showcase work. Twelve new Facebook photographs were already merged via Pull Request #9 as `photo_148`–`photo_159`. This branch caps the Home featured mosaic at six images, surfaces newest photos first on Gallery, refreshes the Home hero collage, then turns Home/Gallery into a fuller filmic presentation (full-bleed hero, dark film-strip preview, immersive gallery canvas, soft grain/Ken Burns with reduced-motion respect). The owner confirmed the shop is closed every Sunday; site copy, `siteConfig.operations`, the business content register, and FR-003 now state that clearly while still directing customers to Facebook/contact for other days.\
 **Changes:**
 
 - curated Gallery order with newest Facebook photos first and exactly six `featured` Home preview images;
@@ -181,8 +181,8 @@ This log records completed work and observed evidence. Planned work is explicitl
 - fixed Prettier formatting that had failed the hosted `format:check` gate.
 
 **Files/modules affected:** `src/config/gallery.ts`; `src/config/site.ts`; `src/app/page.tsx`; `src/app/gallery/page.tsx`; `src/app/globals.css`; `src/components/layout/site-header.tsx`; `src/components/layout/mobile-navigation.tsx`; Contact/About pages; unit/e2e hour assertions; README; `docs/business-content-register.md`; `docs/functional-requirements.md`; `docs/test-cases.md`; `docs/development-log.md`; cinematic evidence screenshots.\
-**Testing performed:** On the assistant Linux computer with Node.js 24, `npm run format:check`, `npm run lint`, `npm run typecheck`, and `npm run test` (9 files / 69 tests) returned exit 0 after the Prettier fix. `npm run build` and `python scripts/validate_phase0_docs.py` are recorded in the commit that lands this documentation update. Playwright was not re-run in this documentation pass.\
-**Issues encountered:** Hosted CI failed earlier because Prettier was not run before push; wording “agent machine” confused the Lead Developer (means the assistant’s computer, not DESKTOP-EH4I3QC).\
+**Testing performed:** `npm run format:check`, `npm run lint`, `npm run typecheck`, and `npm run test` (9 files / 69 tests) returned exit 0 after the Prettier fix. `npm run build` and `python scripts/validate_phase0_docs.py` are recorded in the commit that lands this documentation update. Playwright was not re-run in this documentation pass.\
+**Issues encountered:** Hosted CI failed earlier because Prettier was not run before push.\
 **Resolution:** Ran `prettier --write` on the affected files, pushed `fix: Fix Prettier formatting for CI`, and aligned future work to CONTRIBUTING (docs + development log + business register with every behavior change).\
 **Documentation updated:** Business content register; README; FR-003; test-cases TC-P2-016 note; development log; cinematic screenshot evidence.\
 **Git branch:** `feat/gallery-ui-polish`\
@@ -204,11 +204,11 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Date:** 2026-09-24\
 **Phase:** Phase 2 — Public Showcase Website\
 **Task:** Address Lead Developer feedback: site-wide cinematic motion, Home film-strip scrollbar/animation/alignment, Gallery empty trailing cell and uneven horizontal rhythm.\
-**Summary:** Replaced the Home overflow film-strip with a seamless CSS marquee reel (duplicated featured frames, hover pause, reduced-motion static flush grid, no scrollbar). Gallery now renders all 30 approved images in the grid (still divisible by 2 and 3) while keeping the cinematic lead intro. Added reusable intersection `Reveal` motion plus CSS fade-up / surface-lift / nav transitions across Home, Menu, About, Gallery, Contact, PageIntro, and the sticky header.\
+**Summary:** Replaced the Home overflow film-strip with a seamless CSS marquee reel (duplicated featured frames, hover pause, reduced-motion static flush grid, no scrollbar). Gallery now renders every configured gallery image in the grid (count divisible by 2 and 3) while keeping the cinematic lead intro. Added reusable intersection `Reveal` motion plus CSS fade-up / surface-lift / nav transitions across Home, Menu, About, Gallery, Contact, PageIntro, and the sticky header.\
 **Changes:**
 
 - Home gallery preview: `film-reel` infinite marquee under a padded Container heading; overflow hidden; prefers-reduced-motion static grid;
-- Gallery page: include every `galleryImages` tile (30), tighten grid gaps, stagger fade-up on tiles;
+- Gallery page: include every `galleryImages` tile, tighten grid gaps, stagger fade-up on tiles;
 - globals + `Reveal` client component for section reveals; PageIntro/header/menu/about/contact motion polish;
 - kept cat/shop/food hero media from the prior pass.
 
@@ -234,3 +234,14 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Git branch:** `feat/gallery-ui-polish`\
 **Pull request:** [#10](https://github.com/eendor/Brew-ni-Cat-Connect/pull/10)\
 **Next action:** Confirm the Home console is clean on Lead Developer localhost review.
+
+## 2026-09-24 — Clean Gallery badge and development-log environment phrasing
+
+**Date:** 2026-09-24\
+**Phase:** Phase 2 — Public Showcase Website\
+**Task:** Remove the Gallery photo-count badge and scrub environment-machine phrasing from the development log per Lead Developer feedback.\
+**Summary:** Gallery reel no longer shows a photo count or “approved photos” label. Development-log testing notes no longer name the build machine. Menu item photography from Facebook shop photos remains in progress separately.\
+**Files/modules affected:** `src/app/gallery/page.tsx`; `docs/development-log.md`.\
+**Git branch:** `feat/gallery-ui-polish`\
+**Pull request:** [#10](https://github.com/eendor/Brew-ni-Cat-Connect/pull/10)
+

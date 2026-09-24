@@ -9,7 +9,7 @@ import { galleryImages } from "@/config/gallery";
 export const metadata: Metadata = {
   title: "Gallery",
   description:
-    "Explore approved photos of Brew ni Cat Coffee Shop, its food, café cats, space, and community in Kabacan.",
+    "Explore photos of Brew ni Cat Coffee Shop, its food, café cats, space, and community in Kabacan.",
 };
 
 const leadImage = galleryImages[0]!;
@@ -105,15 +105,10 @@ export default function GalleryPage() {
         aria-label="Brew ni Cat photo gallery"
       >
         <Container>
-          <Reveal className="mb-8 flex items-end justify-between gap-4 border-b border-white/10 pb-5">
-            <div>
-              <p className="eyebrow-light">Reel</p>
-              <p className="mt-1 font-display text-2xl font-semibold text-white sm:text-3xl">
-                Every frame from the café
-              </p>
-            </div>
-            <p className="hidden text-sm text-[#d8d7c8] sm:block">
-              {galleryImages.length} approved photos
+          <Reveal className="mb-8 border-b border-white/10 pb-5">
+            <p className="eyebrow-light">Reel</p>
+            <p className="mt-1 font-display text-2xl font-semibold text-white sm:text-3xl">
+              Every frame from the café
             </p>
           </Reveal>
           <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 lg:gap-5">
