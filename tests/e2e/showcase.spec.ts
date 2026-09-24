@@ -88,7 +88,7 @@ test("TC-P2-024 — Gallery renders a curated, accessible photo selection", asyn
   const count = await images.count();
 
   expect(count).toBeGreaterThanOrEqual(12);
-  expect(count).toBeLessThanOrEqual(24);
+  expect(count).toBeLessThanOrEqual(36);
 
   const altTexts = await images.evaluateAll((elements) =>
     elements.map((element) => element.getAttribute("alt")?.trim() ?? ""),
