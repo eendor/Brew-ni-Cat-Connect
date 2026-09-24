@@ -217,3 +217,20 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Git branch:** `feat/gallery-ui-polish`\
 **Pull request:** [#10](https://github.com/eendor/Brew-ni-Cat-Connect/pull/10)\
 **Next action:** Push and await hosted Validate application + Lead Developer review.
+
+## 2026-09-24 — Fix Reveal hydration mismatch
+
+**Date:** 2026-09-24\
+**Phase:** Phase 2 — Public Showcase Website\
+**Task:** Clear the Next.js hydration warning on Home caused by `Reveal` className differing between server and client.\
+**Summary:** `Reveal` initialized `visible` from `!canObserveIntersection()`, which is true during SSR (no `window`) and false in the browser, so the server HTML included `reveal--visible` while the client first paint did not. Initial state is now always `false`; reduced-motion and missing IntersectionObserver set visible in `useEffect` after mount. CSS under `prefers-reduced-motion` still forces opacity immediately.\
+**Changes:**
+
+- `src/components/ui/reveal.tsx` — hydration-safe initial state;
+- this development-log note.
+
+**Files/modules affected:** `src/components/ui/reveal.tsx`; `docs/development-log.md`.\
+**Testing performed:** `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm run test`.\
+**Git branch:** `feat/gallery-ui-polish`\
+**Pull request:** [#10](https://github.com/eendor/Brew-ni-Cat-Connect/pull/10)\
+**Next action:** Confirm the Home console is clean on Lead Developer localhost review.

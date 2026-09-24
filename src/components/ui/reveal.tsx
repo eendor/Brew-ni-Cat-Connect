@@ -34,8 +34,10 @@ function canObserveIntersection(): boolean {
 }
 
 /**
- * Intersection-based fade-up. Disabled under prefers-reduced-motion
- * (content renders fully visible immediately via CSS + initial state).
+ * Intersection-based fade-up. Initial `visible` is always false so SSR HTML
+ * matches the first client render. Under prefers-reduced-motion, globals.css
+ * forces opacity without needing a class flip. Missing IntersectionObserver
+ * falls back via requestAnimationFrame after mount.
  */
 export function Reveal({
   children,
@@ -44,14 +46,19 @@ export function Reveal({
   as: Tag = "div",
 }: RevealProps) {
   const ref = useRef<HTMLElement | null>(null);
-  const [visible, setVisible] = useState(
-    () => prefersReducedMotion() || !canObserveIntersection(),
-  );
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     const node = ref.current;
-    if (!node || prefersReducedMotion() || !canObserveIntersection()) {
+    if (!node || prefersReducedMotion()) {
       return;
+    }
+
+    if (!canObserveIntersection()) {
+      const frame = requestAnimationFrame(() => {
+        setVisible(true);
+      });
+      return () => cancelAnimationFrame(frame);
     }
 
     const observer = new IntersectionObserver(
