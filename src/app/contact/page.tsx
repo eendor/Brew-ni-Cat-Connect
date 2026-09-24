@@ -82,24 +82,24 @@ export default function ContactPage() {
 
           <Reveal delayMs={100}>
             <aside
-              className="rounded-[2rem] bg-[var(--deep-green)] p-7 text-white shadow-[var(--shadow-card)] sm:p-10"
+              className="rounded-[1.75rem] border border-[var(--notice-border)] bg-[var(--notice-surface)] p-7 shadow-[var(--shadow-subtle)] sm:p-9"
               aria-labelledby="hours-heading"
             >
-              <p className="text-xs font-extrabold tracking-[0.16em] text-[#f6cf80] uppercase">
-                Today’s schedule
+              <p className="text-xs font-bold tracking-[0.12em] text-[var(--notice-text)] uppercase">
+                Hours
               </p>
               <h2
                 id="hours-heading"
-                className="font-display mt-3 text-4xl font-semibold"
+                className="font-display mt-2 text-2xl font-semibold text-[var(--text-strong)] sm:text-3xl"
               >
                 Closed every Sunday.
               </h2>
-              <p className="mt-5 text-lg leading-8 text-[#e4e6d9]">
+              <p className="mt-4 text-base leading-7 text-[var(--notice-text)]">
                 {siteConfig.operations.hoursNotice}
               </p>
               <ExternalLink
                 href={siteConfig.social.facebook}
-                className="mt-8 inline-flex min-h-12 items-center justify-center rounded-full bg-white px-6 py-3 font-extrabold text-[var(--deep-green)] transition-colors hover:bg-[var(--surface-warm)]"
+                className="button-secondary mt-7"
               >
                 Check Facebook
               </ExternalLink>

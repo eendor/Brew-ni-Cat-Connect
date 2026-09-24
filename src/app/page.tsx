@@ -287,75 +287,80 @@ export default function HomePage() {
         className="border-t border-[var(--border-soft)] bg-[var(--surface-warm)] py-16 sm:py-20"
         aria-labelledby="visit-heading"
       >
-        <Container className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-stretch">
-          <Reveal className="rounded-[2rem] bg-[var(--surface-card)] p-7 shadow-[var(--shadow-subtle)] sm:p-10">
-            <p className="eyebrow">Visit Brew ni Cat</p>
-            <h2
-              id="visit-heading"
-              className="font-display mt-3 text-4xl font-semibold tracking-tight text-[var(--text-strong)] sm:text-5xl"
-            >
-              Find your next cozy stop in Kabacan.
-            </h2>
-            <address className="mt-6 text-lg leading-8 text-[var(--text-muted)] not-italic">
-              <strong className="text-[var(--text-strong)]">
-                {siteConfig.name}
-              </strong>
-              <br />
-              {siteConfig.address.street}
-              <br />
-              {siteConfig.address.locality}, {siteConfig.address.country}
-              <br />
-              {siteConfig.address.landmark}
-            </address>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <ExternalLink
-                href={siteConfig.address.mapUrl}
-                className="button-primary"
+        <Container>
+          <Reveal className="rounded-[1.75rem] border border-[var(--border-soft)] bg-[var(--surface-card)] p-6 shadow-[var(--shadow-subtle)] sm:p-9">
+            <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-start">
+              <div>
+                <p className="eyebrow">Visit Brew ni Cat</p>
+                <h2
+                  id="visit-heading"
+                  className="font-display mt-2 text-3xl font-semibold text-[var(--text-strong)] sm:text-4xl"
+                >
+                  Find us in Kabacan
+                </h2>
+                <address className="mt-5 text-base leading-7 text-[var(--text-muted)] not-italic sm:text-lg sm:leading-8">
+                  <strong className="text-[var(--text-strong)]">
+                    {siteConfig.name}
+                  </strong>
+                  <br />
+                  {siteConfig.address.street}
+                  <br />
+                  {siteConfig.address.locality}, {siteConfig.address.country}
+                  <br />
+                  {siteConfig.address.landmark}
+                </address>
+                <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+                  <ExternalLink
+                    href={siteConfig.address.mapUrl}
+                    className="button-primary"
+                  >
+                    Open in Maps
+                  </ExternalLink>
+                  <Link href="/contact" className="button-secondary">
+                    Contact and visit details
+                  </Link>
+                </div>
+              </div>
+
+              <aside
+                className="rounded-[1.25rem] border border-[var(--notice-border)] bg-[var(--notice-surface)] p-5 sm:p-6"
+                aria-label="Before you visit"
               >
-                Open in Maps
-              </ExternalLink>
-              <Link href="/contact" className="button-secondary">
-                Contact and visit details
-              </Link>
+                <p className="text-xs font-bold tracking-[0.12em] text-[var(--notice-text)] uppercase">
+                  Hours
+                </p>
+                <p className="mt-2 text-lg font-semibold text-[var(--text-strong)]">
+                  Closed every Sunday.
+                </p>
+                <p className="mt-2 text-sm leading-6 text-[var(--notice-text)]">
+                  {siteConfig.operations.hoursNotice}
+                </p>
+                <dl className="mt-5 grid gap-3 border-t border-[var(--notice-border)] pt-4 text-sm sm:grid-cols-2">
+                  <div>
+                    <dt className="text-xs font-bold tracking-wide text-[var(--text-subtle)] uppercase">
+                      Payment
+                    </dt>
+                    <dd className="mt-1 font-semibold text-[var(--text-strong)]">
+                      Cash · GCash
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-bold tracking-wide text-[var(--text-subtle)] uppercase">
+                      Takeout
+                    </dt>
+                    <dd className="mt-1 font-semibold text-[var(--text-strong)]">
+                      {siteConfig.operations.takeoutFee}
+                    </dd>
+                  </div>
+                </dl>
+                <ExternalLink
+                  href={siteConfig.social.facebook}
+                  className="mt-5 inline-flex min-h-10 items-center text-sm font-bold text-[var(--deep-green)] underline decoration-[var(--border-strong)] underline-offset-4"
+                >
+                  Check Facebook for today’s hours
+                </ExternalLink>
+              </aside>
             </div>
-          </Reveal>
-          <Reveal delayMs={100}>
-            <aside
-              className="rounded-[2rem] bg-[var(--deep-green)] p-7 text-white shadow-[var(--shadow-card)] sm:p-10"
-              aria-label="Before you visit"
-            >
-              <p className="text-xs font-extrabold tracking-[0.16em] text-[#f6cf80] uppercase">
-                Before you visit
-              </p>
-              <h2 className="font-display mt-3 text-3xl font-semibold">
-                Closed every Sunday.
-              </h2>
-              <p className="mt-4 leading-7 text-[#e4e6d9]">
-                {siteConfig.operations.hoursNotice}
-              </p>
-              <dl className="mt-7 grid gap-4 border-t border-white/15 pt-6 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-                <div>
-                  <dt className="text-xs font-extrabold tracking-wide text-[#f6cf80] uppercase">
-                    Payment
-                  </dt>
-                  <dd className="mt-1 font-bold">Cash · GCash</dd>
-                </div>
-                <div>
-                  <dt className="text-xs font-extrabold tracking-wide text-[#f6cf80] uppercase">
-                    Takeout
-                  </dt>
-                  <dd className="mt-1 font-bold">
-                    {siteConfig.operations.takeoutFee}
-                  </dd>
-                </div>
-              </dl>
-              <ExternalLink
-                href={siteConfig.social.facebook}
-                className="mt-7 inline-flex min-h-11 items-center rounded-full font-extrabold text-white underline decoration-[#f6cf80] decoration-2 underline-offset-4"
-              >
-                Check Brew ni Cat on Facebook
-              </ExternalLink>
-            </aside>
           </Reveal>
         </Container>
       </section>

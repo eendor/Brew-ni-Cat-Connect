@@ -255,3 +255,13 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Git branch:** `feat/gallery-ui-polish`\
 **Pull request:** [#10](https://github.com/eendor/Brew-ni-Cat-Connect/pull/10)
 
+## 2026-09-24 — Softer visit cards and cleaner fonts
+
+**Date:** 2026-09-24\
+**Phase:** Phase 2 — Public Showcase Website\
+**Task:** Lead Developer rejected the loud deep-green visit/hours billboards and found the Georgia display type harsh.\
+**Summary:** Wired Inter + Plus Jakarta Sans through `next/font`. Replaced Home and Contact deep-green hours slabs with a calmer notice-surface panel inside a single light visit card. Kept Sunday-closed facts and Facebook pointer unchanged.\
+**Files/modules affected:** `src/app/layout.tsx`; `src/app/globals.css`; `src/app/page.tsx`; `src/app/contact/page.tsx`; `docs/development-log.md`.\
+**Git branch:** `feat/gallery-ui-polish`\
+**Pull request:** [#10](https://github.com/eendor/Brew-ni-Cat-Connect/pull/10)
+
