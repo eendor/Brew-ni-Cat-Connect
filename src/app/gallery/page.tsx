@@ -20,14 +20,14 @@ export default function GalleryPage() {
         description={
           <p>
             A curated look at Brew ni Cat’s café cats, food, welcoming spaces,
-            and community moments.
+            and community moments — newest Facebook favorites first.
           </p>
         }
         aside={
           <div className="max-w-xs rounded-2xl bg-[var(--deep-green)] p-5 text-sm leading-6 text-white shadow-[var(--shadow-subtle)]">
-            <strong className="block text-[#f6cf80]">A small first look</strong>
-            This gallery presents a selected set of approved shop photos for a
-            faster, more focused visit.
+            <strong className="block text-[#f6cf80]">Fresh from the shop</strong>
+            Recent photos from Brew ni Cat’s Facebook page sit at the top, with
+            earlier favorites kept below for a fuller visit.
           </div>
         }
       />
@@ -49,8 +49,11 @@ export default function GalleryPage() {
                   height={1024}
                   alt={image.alt}
                   sizes="(max-width: 639px) 46vw, (max-width: 1023px) 46vw, 31vw"
-                  className="aspect-[3/4] h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.015]"
+                  className="aspect-[3/4] h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
                 />
+                <figcaption className="pointer-events-none absolute inset-x-0 bottom-0 translate-y-2 bg-gradient-to-t from-black/70 via-black/35 to-transparent px-3 pt-10 pb-3 text-xs leading-5 font-semibold text-white opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100 sm:px-4 sm:text-sm">
+                  {image.alt}
+                </figcaption>
               </figure>
             ))}
           </div>

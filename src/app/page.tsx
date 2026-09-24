@@ -81,10 +81,10 @@ export default function HomePage() {
             </div>
             <div className="col-span-2 row-span-3 mt-7 overflow-hidden rounded-[1.5rem] border-4 border-[var(--surface-card)] bg-[var(--surface-warm)] shadow-[var(--shadow-card)]">
               <Image
-                src="/images/shop/photo_004.jpg"
+                src="/images/shop/photo_148.jpg"
                 width={768}
                 height={1024}
-                alt="Cats resting on a café table beneath blue evening lights at Brew ni Cat"
+                alt="Gray cat beside a salted caramel matcha inside Brew ni Cat"
                 priority
                 sizes="(max-width: 1023px) 38vw, 19vw"
                 className="h-full w-full object-cover"
@@ -92,10 +92,10 @@ export default function HomePage() {
             </div>
             <div className="col-span-2 row-span-2 overflow-hidden rounded-[1.5rem] border-4 border-[var(--surface-card)] bg-[var(--surface-warm)] shadow-[var(--shadow-card)]">
               <Image
-                src="/images/shop/photo_011.jpg"
+                src="/images/shop/photo_153.jpg"
                 width={768}
                 height={1024}
-                alt="Spicy noodles served with a fried egg and seaweed at Brew ni Cat"
+                alt="Customers holding cats around a table inside Brew ni Cat"
                 sizes="(max-width: 1023px) 38vw, 19vw"
                 className="h-full w-full object-cover"
               />
