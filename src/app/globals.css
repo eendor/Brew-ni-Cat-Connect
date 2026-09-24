@@ -101,10 +101,10 @@ button:focus-visible,
 }
 
 .eyebrow-light {
-  color: #f6cf80;
+  color: rgb(232 230 214 / 88%);
   font-size: 0.75rem;
-  font-weight: 800;
-  letter-spacing: 0.16em;
+  font-weight: 700;
+  letter-spacing: 0.14em;
   line-height: 1.4;
   text-transform: uppercase;
 }
@@ -254,12 +254,12 @@ button:focus-visible,
   z-index: 1;
   background:
     linear-gradient(
-      105deg,
-      rgb(15 26 23 / 88%) 0%,
-      rgb(33 82 72 / 62%) 42%,
-      rgb(45 33 27 / 48%) 100%
+      115deg,
+      rgb(15 26 23 / 72%) 0%,
+      rgb(22 40 36 / 42%) 46%,
+      rgb(45 33 27 / 28%) 100%
     ),
-    linear-gradient(to top, rgb(15 26 23 / 82%) 0%, transparent 48%);
+    linear-gradient(to top, rgb(15 26 23 / 78%) 0%, transparent 52%);
 }
 
 .film-grain {
@@ -267,7 +267,7 @@ button:focus-visible,
   inset: 0;
   z-index: 2;
   pointer-events: none;
-  opacity: 0.055;
+  opacity: 0.035;
   mix-blend-mode: overlay;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 220 220' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   background-size: 180px 180px;

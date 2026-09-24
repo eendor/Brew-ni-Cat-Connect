@@ -245,3 +245,13 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Git branch:** `feat/gallery-ui-polish`\
 **Pull request:** [#10](https://github.com/eendor/Brew-ni-Cat-Connect/pull/10)
 
+## 2026-09-24 — Simplify Home hero brand stack
+
+**Date:** 2026-09-24\
+**Phase:** Phase 2 — Public Showcase Website\
+**Task:** Lead Developer found the Home hero brand stack cluttered (logo twice, heavy gold type on a muddy overlay).\
+**Summary:** Removed the hero logo so the header mark stands alone. Combined location/est. into one soft cream eyebrow, lightened the cinematic overlay and grain so the cat/drink photo reads more clearly, and updated the home unit test accordingly.\
+**Files/modules affected:** `src/app/page.tsx`; `src/app/globals.css`; `tests/unit/home-page.test.tsx`; `docs/development-log.md`.\
+**Git branch:** `feat/gallery-ui-polish`\
+**Pull request:** [#10](https://github.com/eendor/Brew-ni-Cat-Connect/pull/10)
+

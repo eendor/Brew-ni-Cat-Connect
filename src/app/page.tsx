@@ -47,25 +47,12 @@ export default function HomePage() {
         <Container className="relative z-10 flex min-h-[85vh] flex-col justify-end gap-10 py-14 lg:min-h-[92vh] lg:justify-center lg:py-24">
           <div className="grid gap-10 lg:grid-cols-[minmax(0,1.15fr)_minmax(16rem,0.55fr)] lg:items-end">
             <div className="max-w-3xl fade-up-reveal">
-              <div className="flex items-center gap-4">
-                <Image
-                  src="/images/branding/brew-ni-cat-logo.png"
-                  width={112}
-                  height={112}
-                  alt="Brew ni Cat Coffee Shop logo"
-                  priority
-                  className="size-20 object-contain drop-shadow-lg sm:size-24"
-                />
-                <div>
-                  <p className="eyebrow-light">Kabacan, Cotabato</p>
-                  <p className="mt-1 text-sm font-bold text-[#e4e6d9]">
-                    Local coffee shop · Est. June 2026
-                  </p>
-                </div>
-              </div>
+              <p className="eyebrow-light">
+                Kabacan, Cotabato · Est. June 2026
+              </p>
               <h1
                 id="home-heading"
-                className="font-display mt-8 max-w-4xl text-5xl leading-[0.95] font-semibold tracking-[-0.045em] text-balance text-white sm:text-6xl lg:text-7xl xl:text-8xl"
+                className="font-display mt-5 max-w-4xl text-5xl leading-[0.95] font-semibold tracking-[-0.045em] text-balance text-white sm:text-6xl lg:text-7xl xl:text-8xl"
               >
                 Coffee, comfort, and a little cat energy.
               </h1>
