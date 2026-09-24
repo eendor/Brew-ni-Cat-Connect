@@ -307,3 +307,32 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Files/modules affected:** `src/app/layout.tsx`; `src/app/globals.css`; `src/components/layout/site-header.tsx`; `src/app/page.tsx`; `src/app/contact/page.tsx`; `docs/development-log.md`.\
 **Git branch:** `feat/gallery-ui-polish`\
 **Pull request:** [#10](https://github.com/eendor/Brew-ni-Cat-Connect/pull/10)
+
+
+## 2026-09-24 — Menu item photos: foods-only remapping
+
+**Date:** 2026-09-24\
+**Phase:** Phase 2 — Public Showcase Website\
+**Task:** Remap Menu card images to food/drink-only product stills (no people, no cats, no flyer art) per Lead Developer feedback.\
+**Summary:** Kept the two confirmed shop product stills (noodles `photo_011.jpg`, Cat-Feine iced coffees `photo_012.jpg`). Replaced all other mappings that showed customers, café cats, or menu flyer graphics with royalty-free Unsplash/Pexels product photos under `public/images/menu/items/`. Omitted Cat Treats from the map rather than using a cat portrait.\
+**Final mapping (item → src):**
+
+| Item | Photo | Notes |
+| --- | --- | --- |
+| Buldak Carbo / Cheese | `/images/shop/photo_011.jpg` | Local FOOD_ONLY noodle plate |
+| Sedaap Original / Spicy Chicken | `/images/shop/photo_011.jpg` | Same honest plate |
+| Cat-Feine | `/images/shop/photo_012.jpg` | Local DRINK_ONLY iced coffees |
+| Fries | `/images/menu/items/fries.jpg` | Stock fries basket |
+| Nachos | `/images/menu/items/nachos.jpg` | Stock loaded nachos |
+| Takoyaki | `/images/menu/items/takoyaki.jpg` | Stock takoyaki close-up |
+| Matcha | `/images/menu/items/matcha.jpg` | Stock matcha latte |
+| Oreo | `/images/menu/items/oreo-drink.jpg` | Stock cookies-and-cream drink |
+| Soda | `/images/menu/items/soda.jpg` | Stock colorful fruit sodas |
+| Cat Association / Couple of Cats / Single-Paw-rtner | `/images/menu/items/combo-spread.jpg` | Stock cafe combo spread |
+| Take-out Box | `/images/menu/items/takeout-box.jpg` | Stock open takeout with noodles |
+| Cat Treats | *(omitted)* | No treat-pack photo without a cat |
+
+**Files/modules affected:** `src/config/menu-item-images.ts`; `public/images/menu/items/*`; `tests/unit/menu-item-images.test.ts`; `docs/development-log.md`.\
+**Testing performed:** `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm run test`.\
+**Git branch:** `feat/gallery-ui-polish`\
+**Pull request:** [#10](https://github.com/eendor/Brew-ni-Cat-Connect/pull/10)

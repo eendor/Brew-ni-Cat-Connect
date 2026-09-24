@@ -5,13 +5,13 @@ import { getMenuItemImage } from "@/config/menu-item-images";
 describe("getMenuItemImage", () => {
   it("resolves live Supabase-style names with parenthetical nicknames", () => {
     expect(getMenuItemImage("Matcha (The Lucky Green Neko)")?.src).toBe(
-      "/images/shop/photo_148.jpg",
+      "/images/menu/items/matcha.jpg",
     );
     expect(getMenuItemImage("Fries (Cat Claws)")?.src).toBe(
-      "/images/shop/photo_041.jpg",
+      "/images/menu/items/fries.jpg",
     );
     expect(getMenuItemImage("Oreo (The Tuxedo Cat)")?.src).toBe(
-      "/images/shop/photo_152.jpg",
+      "/images/menu/items/oreo-drink.jpg",
     );
   });
 
@@ -21,8 +21,15 @@ describe("getMenuItemImage", () => {
       "/images/shop/photo_011.jpg",
     );
     expect(getMenuItemImage("Takoyaki")?.src).toBe(
-      "/images/shop/photo_155.jpg",
+      "/images/menu/items/takoyaki.jpg",
     );
+    expect(getMenuItemImage("Cat-Feine")?.src).toBe(
+      "/images/shop/photo_012.jpg",
+    );
+  });
+
+  it("omits Cat Treats so cards stay optional without a cat photo", () => {
+    expect(getMenuItemImage("Cat Treats")).toBeNull();
   });
 
   it("returns null when no mapping exists so cards stay optional", () => {
