@@ -188,3 +188,13 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Git branch:** `feat/gallery-ui-polish`\
 **Pull request:** [#10 — Polish gallery layout after new Facebook photos](https://github.com/eendor/Brew-ni-Cat-Connect/pull/10), open and awaiting hosted checks + Lead Developer review.\
 **Next action:** Confirm hosted Validate application passes on the documentation head, leave the PR open for teammate review per CONTRIBUTING, and continue cinematic polish only if Rodnee asks after review.
+
+## 2026-09-24 — Hero media without customer crowd
+
+**Date:** 2026-09-24\
+**Phase:** Phase 2 — Public Showcase Website\
+**Task:** Replace the cinematic Home hero background that featured a customer group.\
+**Summary:** Lead Developer rejected full-bleed people as the Home background. The hero now uses `photo_148` (cat beside matcha). Decorative hero stills use `photo_152` and `photo_004`. Home featured film-strip images are limited to cat/food/space shots (`148`, `152`, `004`, `006`, `011`, `126`).\
+**Testing performed:** `npm run format:check`, `npm run lint`, and `npm run test` (69/69) exited 0.\
+**Git branch:** `feat/gallery-ui-polish`\
+**Pull request:** [#10](https://github.com/eendor/Brew-ni-Cat-Connect/pull/10)

@@ -31,7 +31,7 @@ export default function HomePage() {
       <section className="cinematic-hero" aria-labelledby="home-heading">
         <div className="cinematic-hero__media" aria-hidden="true">
           <Image
-            src="/images/shop/photo_030.jpg"
+            src="/images/shop/photo_148.jpg"
             alt=""
             fill
             priority
@@ -88,7 +88,7 @@ export default function HomePage() {
             >
               <div className="overflow-hidden rounded-2xl border border-white/20 shadow-[var(--shadow-cinema)]">
                 <Image
-                  src="/images/shop/photo_148.jpg"
+                  src="/images/shop/photo_152.jpg"
                   width={384}
                   height={512}
                   alt=""
@@ -98,7 +98,7 @@ export default function HomePage() {
               </div>
               <div className="mt-8 overflow-hidden rounded-2xl border border-white/20 shadow-[var(--shadow-cinema)]">
                 <Image
-                  src="/images/shop/photo_153.jpg"
+                  src="/images/shop/photo_004.jpg"
                   width={384}
                   height={512}
                   alt=""

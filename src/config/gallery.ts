@@ -14,12 +14,10 @@ export const galleryImages: readonly GalleryImage[] = [
   {
     src: "/images/shop/photo_153.jpg",
     alt: "Customers holding cats around a table inside Brew ni Cat",
-    featured: true,
   },
   {
     src: "/images/shop/photo_157.jpg",
     alt: "Customer with a drink and two cats at a Brew ni Cat table",
-    featured: true,
   },
   {
     src: "/images/shop/photo_158.jpg",
@@ -28,6 +26,7 @@ export const galleryImages: readonly GalleryImage[] = [
   {
     src: "/images/shop/photo_152.jpg",
     alt: "White cat beside a caramel Oreo drink by the café window",
+    featured: true,
   },
   {
     src: "/images/shop/photo_149.jpg",
@@ -65,6 +64,7 @@ export const galleryImages: readonly GalleryImage[] = [
   {
     src: "/images/shop/photo_006.jpg",
     alt: "Fluffy white cat resting beside greenery inside Brew ni Cat",
+    featured: true,
   },
   {
     src: "/images/shop/photo_007.jpg",
@@ -82,7 +82,6 @@ export const galleryImages: readonly GalleryImage[] = [
   {
     src: "/images/shop/photo_030.jpg",
     alt: "Customers gathered around drinks and snacks inside Brew ni Cat",
-    featured: true,
   },
   {
     src: "/images/shop/photo_041.jpg",
@@ -123,6 +122,7 @@ export const galleryImages: readonly GalleryImage[] = [
   {
     src: "/images/shop/photo_126.jpg",
     alt: "Fluffy white cat in a blue shirt resting by the café window",
+    featured: true,
   },
   {
     src: "/images/shop/photo_145.jpg",
