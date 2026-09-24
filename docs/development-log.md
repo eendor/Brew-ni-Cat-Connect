@@ -336,3 +336,13 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Testing performed:** `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm run test`.\
 **Git branch:** `feat/gallery-ui-polish`\
 **Pull request:** [#10](https://github.com/eendor/Brew-ni-Cat-Connect/pull/10)
+
+## 2026-09-24 — Drop internet stock from menu cards
+
+**Date:** 2026-09-24\
+**Phase:** Phase 2 — Public Showcase Website\
+**Task:** Lead Developer asked to drop the internet stock photos used on Menu cards.\
+**Summary:** Removed `/images/menu/items/` stock files. Menu photos now use only real Brew ni Cat shop stills that are food/drink product frames (`photo_011` noodles, `photo_012` Cat-Feine). All other items omit a photo until a matching shop still exists.\
+**Files/modules affected:** `src/config/menu-item-images.ts`; `tests/unit/menu-item-images.test.ts`; `public/images/menu/items/` (removed); `docs/development-log.md`.\
+**Git branch:** `feat/gallery-ui-polish`\
+**Pull request:** [#10](https://github.com/eendor/Brew-ni-Cat-Connect/pull/10)
