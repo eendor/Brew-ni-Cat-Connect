@@ -28,83 +28,95 @@ const favorites = [
 export default function HomePage() {
   return (
     <>
-      <section className="page-hero" aria-labelledby="home-heading">
-        <Container className="grid gap-12 py-12 sm:py-16 lg:grid-cols-[minmax(0,1fr)_minmax(24rem,0.9fr)] lg:items-center lg:gap-16 lg:py-20">
-          <div className="max-w-3xl">
-            <div className="flex items-center gap-4">
-              <Image
-                src="/images/branding/brew-ni-cat-logo.png"
-                width={112}
-                height={112}
-                alt="Brew ni Cat Coffee Shop logo"
-                priority
-                className="size-24 object-contain sm:size-28"
-              />
-              <div>
-                <p className="eyebrow">Kabacan, Cotabato</p>
-                <p className="mt-1 text-sm font-bold text-[var(--deep-green)]">
-                  Local coffee shop · Est. June 2026
-                </p>
+      <section className="cinematic-hero" aria-labelledby="home-heading">
+        <div className="cinematic-hero__media" aria-hidden="true">
+          <Image
+            src="/images/shop/photo_030.jpg"
+            alt=""
+            fill
+            priority
+            sizes="100vw"
+            className="ken-burns object-cover"
+          />
+        </div>
+        <div className="cinematic-hero__overlay" aria-hidden="true" />
+        <div className="film-grain" aria-hidden="true" />
+        <div className="vignette" aria-hidden="true" />
+
+        <Container className="relative z-10 flex min-h-[85vh] flex-col justify-end gap-10 py-14 lg:min-h-[92vh] lg:justify-center lg:py-24">
+          <div className="grid gap-10 lg:grid-cols-[minmax(0,1.15fr)_minmax(16rem,0.55fr)] lg:items-end">
+            <div className="max-w-3xl fade-up-reveal">
+              <div className="flex items-center gap-4">
+                <Image
+                  src="/images/branding/brew-ni-cat-logo.png"
+                  width={112}
+                  height={112}
+                  alt="Brew ni Cat Coffee Shop logo"
+                  priority
+                  className="size-20 object-contain drop-shadow-lg sm:size-24"
+                />
+                <div>
+                  <p className="eyebrow-light">Kabacan, Cotabato</p>
+                  <p className="mt-1 text-sm font-bold text-[#e4e6d9]">
+                    Local coffee shop · Est. June 2026
+                  </p>
+                </div>
+              </div>
+              <h1
+                id="home-heading"
+                className="font-display mt-8 max-w-4xl text-5xl leading-[0.95] font-semibold tracking-[-0.045em] text-balance text-white sm:text-6xl lg:text-7xl xl:text-8xl"
+              >
+                Coffee, comfort, and a little cat energy.
+              </h1>
+              <p className="mt-6 max-w-xl text-lg leading-8 text-pretty text-[#d8d7c8] sm:text-xl">
+                Settle in at Brew ni Cat for drinks, snacks, noodles, combos, and
+                cozy community moments in the heart of Kabacan.
+              </p>
+              <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center fade-up-reveal-delay">
+                <Link href="/menu" className="button-primary">
+                  Browse current menu
+                </Link>
+                <Link href="/contact" className="button-ghost">
+                  Plan your visit
+                </Link>
               </div>
             </div>
-            <h1
-              id="home-heading"
-              className="font-display mt-7 max-w-3xl text-5xl leading-[0.98] font-semibold tracking-[-0.045em] text-balance text-[var(--text-strong)] sm:text-6xl lg:text-7xl"
-            >
-              Coffee, comfort, and a little cat energy.
-            </h1>
-            <p className="mt-6 max-w-2xl text-lg leading-8 text-pretty text-[var(--text-muted)] sm:text-xl">
-              Settle in at Brew ni Cat for drinks, snacks, noodles, combos, and
-              cozy community moments in the heart of Kabacan.
-            </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
-              <Link href="/menu" className="button-primary">
-                Browse current menu
-              </Link>
-              <Link href="/contact" className="button-secondary">
-                Plan your visit
-              </Link>
-            </div>
-          </div>
 
-          <div className="relative mx-auto grid w-full max-w-[34rem] grid-cols-5 grid-rows-5 gap-3 lg:mx-0">
-            <div className="col-span-3 row-span-5 overflow-hidden rounded-[2rem] border-4 border-[var(--surface-card)] bg-[var(--surface-warm)] shadow-[var(--shadow-card)]">
-              <Image
-                src="/images/shop/photo_030.jpg"
-                width={768}
-                height={1024}
-                alt="Customers gathered around drinks and snacks inside Brew ni Cat"
-                priority
-                sizes="(max-width: 1023px) 58vw, 29vw"
-                className="h-full w-full object-cover"
-              />
-            </div>
-            <div className="col-span-2 row-span-3 mt-7 overflow-hidden rounded-[1.5rem] border-4 border-[var(--surface-card)] bg-[var(--surface-warm)] shadow-[var(--shadow-card)]">
-              <Image
-                src="/images/shop/photo_148.jpg"
-                width={768}
-                height={1024}
-                alt="Gray cat beside a salted caramel matcha inside Brew ni Cat"
-                priority
-                sizes="(max-width: 1023px) 38vw, 19vw"
-                className="h-full w-full object-cover"
-              />
-            </div>
-            <div className="col-span-2 row-span-2 overflow-hidden rounded-[1.5rem] border-4 border-[var(--surface-card)] bg-[var(--surface-warm)] shadow-[var(--shadow-card)]">
-              <Image
-                src="/images/shop/photo_153.jpg"
-                width={768}
-                height={1024}
-                alt="Customers holding cats around a table inside Brew ni Cat"
-                sizes="(max-width: 1023px) 38vw, 19vw"
-                className="h-full w-full object-cover"
-              />
+            <div
+              className="relative mx-auto hidden w-full max-w-[18rem] gap-3 sm:grid sm:grid-cols-2 lg:mx-0 fade-up-reveal-delay-2"
+              aria-hidden="true"
+            >
+              <div className="overflow-hidden rounded-2xl border border-white/20 shadow-[var(--shadow-cinema)]">
+                <Image
+                  src="/images/shop/photo_148.jpg"
+                  width={384}
+                  height={512}
+                  alt=""
+                  sizes="140px"
+                  className="aspect-[3/4] h-full w-full object-cover"
+                />
+              </div>
+              <div className="mt-8 overflow-hidden rounded-2xl border border-white/20 shadow-[var(--shadow-cinema)]">
+                <Image
+                  src="/images/shop/photo_153.jpg"
+                  width={384}
+                  height={512}
+                  alt=""
+                  sizes="140px"
+                  className="aspect-[3/4] h-full w-full object-cover"
+                />
+              </div>
             </div>
           </div>
         </Container>
+      </section>
 
-        <Container className="pb-10 sm:pb-12">
-          <dl className="grid overflow-hidden rounded-[1.5rem] border border-[var(--border-soft)] bg-[var(--surface-card)] shadow-[var(--shadow-subtle)] sm:grid-cols-3">
+      <section
+        className="relative z-10 -mt-6 pb-10 sm:-mt-8 sm:pb-12"
+        aria-label="Visit facts"
+      >
+        <Container>
+          <dl className="grid overflow-hidden rounded-[1.5rem] border border-[var(--border-soft)] bg-[var(--surface-card)] shadow-[var(--shadow-card)] sm:grid-cols-3">
             <div className="p-5 sm:border-r sm:border-[var(--border-soft)] sm:p-6">
               <dt className="eyebrow">Find us</dt>
               <dd className="mt-2 font-bold text-[var(--text-strong)]">
@@ -173,16 +185,18 @@ export default function HomePage() {
         className="bg-[var(--deep-green)] py-16 text-white sm:py-20 lg:py-24"
         aria-labelledby="about-preview-heading"
       >
-        <Container className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:gap-16">
-          <div className="relative mx-auto w-full max-w-[30rem] pb-8 pl-8">
-            <Image
-              src="/images/shop/photo_124.jpg"
-              width={768}
-              height={1024}
-              alt="Brew ni Cat seating area with a cat resting near the window"
-              sizes="(max-width: 1023px) 85vw, 38vw"
-              className="aspect-[4/5] w-full rounded-[2rem] object-cover shadow-2xl"
-            />
+        <Container className="grid gap-10 lg:grid-cols-[1fr_1.05fr] lg:items-center lg:gap-16">
+          <div className="relative mx-auto w-full max-w-[34rem] pb-8 pl-8">
+            <div className="about-drama">
+              <Image
+                src="/images/shop/photo_124.jpg"
+                width={900}
+                height={1125}
+                alt="Brew ni Cat seating area with a cat resting near the window"
+                sizes="(max-width: 1023px) 90vw, 42vw"
+                className="ken-burns-slow aspect-[4/5] w-full object-cover"
+              />
+            </div>
             <div className="absolute bottom-0 left-0 max-w-56 rounded-2xl bg-[var(--warm-gold)] p-5 text-[var(--text-strong)] shadow-xl">
               <p className="text-xs font-extrabold tracking-[0.13em] uppercase">
                 Opened
@@ -219,44 +233,44 @@ export default function HomePage() {
       </section>
 
       <section
-        className="py-16 sm:py-20 lg:py-24"
+        className="cinema-canvas py-16 text-white sm:py-20 lg:py-24"
         aria-labelledby="gallery-preview-heading"
       >
         <Container>
-          <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
-            <SectionHeading
-              id="gallery-preview-heading"
-              eyebrow="Inside Brew ni Cat"
-              title="Coffee, cats, and community."
-              description="A glimpse of the food, familiar faces, cozy corners, and cats that shape the Brew ni Cat atmosphere."
-            />
-            <Link
-              href="/gallery"
-              className="button-secondary shrink-0 self-start sm:self-auto"
-            >
+          <div className="flex flex-col gap-6 border-b border-white/10 pb-8 sm:flex-row sm:items-end sm:justify-between">
+            <div className="max-w-2xl">
+              <p className="eyebrow-light">Scene · Inside Brew ni Cat</p>
+              <h2
+                id="gallery-preview-heading"
+                className="font-display mt-3 text-4xl font-semibold tracking-[-0.03em] text-balance sm:text-5xl"
+              >
+                Coffee, cats, and community.
+              </h2>
+              <p className="mt-4 max-w-xl text-base leading-7 text-[#d8d7c8] sm:text-lg">
+                A glimpse of the food, familiar faces, cozy corners, and cats
+                that shape the Brew ni Cat atmosphere.
+              </p>
+            </div>
+            <Link href="/gallery" className="button-ghost shrink-0 self-start">
               View the gallery
             </Link>
           </div>
-          <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
-            {homeGalleryImages.map((image, index) => (
-              <figure
-                key={image.src}
-                className={`overflow-hidden rounded-[1.25rem] bg-[var(--surface-warm)] ${
-                  index === 0 || index === 5 ? "sm:col-span-2" : ""
-                }`}
-              >
+        </Container>
+        <div className="mt-10 pl-4 sm:pl-6 lg:pl-[max(1.5rem,calc((100vw-72rem)/2+1.5rem))]">
+          <div className="film-strip pr-4 sm:pr-6">
+            {homeGalleryImages.map((image) => (
+              <figure key={image.src} className="film-strip__frame">
                 <Image
                   src={image.src}
                   width={image.landscape ? 1024 : 768}
                   height={image.landscape ? 768 : 1024}
                   alt={image.alt}
-                  sizes="(max-width: 639px) 46vw, (max-width: 1023px) 23vw, 260px"
-                  className="aspect-[4/5] h-full w-full object-cover transition-transform duration-300 hover:scale-[1.02]"
+                  sizes="(max-width: 639px) 72vw, (max-width: 1023px) 42vw, 22rem"
                 />
               </figure>
             ))}
           </div>
-        </Container>
+        </div>
       </section>
 
       <section
