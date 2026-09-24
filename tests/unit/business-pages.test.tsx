@@ -44,7 +44,7 @@ describe("Contact and location page", () => {
     ).toHaveAttribute("href", "mailto:popotpulido06@gmail.com");
     expect(screen.getByText("Cash · GCash")).toBeInTheDocument();
     expect(screen.getByText("₱10 takeout box")).toBeInTheDocument();
-    expect(screen.getByText(/Operating hours may vary/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Closed every Sunday/i).length).toBeGreaterThan(0);
   });
 
   it("TC-P2-017 — explains the independent rider workflow without promising fees or ETA", () => {

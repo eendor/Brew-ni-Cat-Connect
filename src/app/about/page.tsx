@@ -136,8 +136,8 @@ export default function AboutPage() {
               Visit Brew ni Cat in Poblacion, Kabacan.
             </h2>
             <p className="mt-3 leading-7 text-[#e4e6d9]">
-              Operating hours can vary, so check Facebook or contact the shop
-              before making the trip.
+              The shop is closed every Sunday. Hours on other days can vary, so
+              check Facebook or contact the shop before making the trip.
             </p>
           </div>
           <Link

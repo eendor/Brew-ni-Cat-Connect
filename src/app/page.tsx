@@ -317,7 +317,7 @@ export default function HomePage() {
               Before you visit
             </p>
             <h2 className="font-display mt-3 text-3xl font-semibold">
-              Today’s hours can change.
+              Closed every Sunday.
             </h2>
             <p className="mt-4 leading-7 text-[#e4e6d9]">
               {siteConfig.operations.hoursNotice}

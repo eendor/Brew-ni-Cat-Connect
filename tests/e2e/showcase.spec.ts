@@ -118,7 +118,7 @@ test("TC-P2-025 — Contact page publishes confirmed visit and rider information
   await expect(
     main.getByText("₱10 takeout box", { exact: true }),
   ).toBeVisible();
-  await expect(main.getByText(/Operating hours may vary/i)).toBeVisible();
+  await expect(main.getByText(/Closed every Sunday/i).first()).toBeVisible();
   await expect(
     main.getByRole("link", { name: "Facebook page" }),
   ).toHaveAttribute("href", /facebook\.com/);

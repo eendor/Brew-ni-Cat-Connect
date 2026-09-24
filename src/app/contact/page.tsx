@@ -34,7 +34,7 @@ export default function ContactPage() {
         description={
           <p>
             Find Brew ni Cat in Poblacion, Kabacan, get in touch, and check the
-            latest shop schedule before visiting.
+            hours before visiting — the shop is closed every Sunday.
           </p>
         }
         aside={
@@ -90,7 +90,7 @@ export default function ContactPage() {
               id="hours-heading"
               className="font-display mt-3 text-4xl font-semibold"
             >
-              Hours may vary.
+              Closed every Sunday.
             </h2>
             <p className="mt-5 text-lg leading-8 text-[#e4e6d9]">
               {siteConfig.operations.hoursNotice}
