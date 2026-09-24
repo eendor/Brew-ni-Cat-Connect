@@ -356,3 +356,13 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Files/modules affected:** `src/components/menu/menu-catalog.tsx`; `docs/development-log.md`.\
 **Git branch:** `feat/gallery-ui-polish`\
 **Pull request:** [#10](https://github.com/eendor/Brew-ni-Cat-Connect/pull/10)
+
+## 2026-09-24 — Merged PR #10 gallery UI polish
+
+**Date:** 2026-09-24\
+**Phase:** Phase 2 — Public Showcase Website\
+**Task:** Lead Developer approved the gallery / cinematic UI polish branch and asked to merge after local review.\
+**Summary:** Merged `feat/gallery-ui-polish` into `main` via [PR #10](https://github.com/eendor/Brew-ni-Cat-Connect/pull/10). Delivered cinematic Home/Gallery presentation, site-wide depth and Apple-like surfaces with Georgia + system sans typography, Sunday-closed visit copy, Reveal hydration fix, gallery layout flush, optional Menu item photos only for confirmed shop food/drink stills (noodles + Cat-Feine), and menu card height alignment so imageless cards do not stretch. Internet stock photos were tried then removed per Lead Developer direction.\
+**Files/modules affected:** Home, Gallery, Menu, Contact, shared layout/header/globals, gallery config, menu image map, development log and related Phase 2 docs already updated on the branch.\
+**Git branch:** `main` (merged from `feat/gallery-ui-polish`)\
+**Pull request:** [#10](https://github.com/eendor/Brew-ni-Cat-Connect/pull/10) — merged
