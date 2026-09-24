@@ -265,3 +265,35 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Git branch:** `feat/gallery-ui-polish`\
 **Pull request:** [#10](https://github.com/eendor/Brew-ni-Cat-Connect/pull/10)
 
+
+## 2026-09-24 — Menu item photos from shop Facebook stills
+
+**Date:** 2026-09-24\
+**Phase:** Phase 2 — Public Showcase Website\
+**Task:** Add per-menu-item photos on Menu cards by matching Facebook/shop stills to live catalog names.\
+**Summary:** Introduced a local name-based image map (`src/config/menu-item-images.ts`) so Supabase stays the source of truth for names and prices while cards can show product photos. `MenuItemCard` renders an optional cinematic `next/image` header when a mapping exists. No Supabase image column was added.\
+**Photo mapping (item → src + reason):**
+
+| Item | Photo | Reason |
+| --- | --- | --- |
+| Buldak Carbo | `photo_011.jpg` | Close-up spicy noodle plate with egg/seaweed (shared honest plate for Buldak/Sedaap) |
+| Buldak Cheese | `photo_011.jpg` | Same product-forward noodle plate; no distinct cheese-only still found |
+| Sedaap Original | `photo_011.jpg` | Closest wavy noodle plate from the shop dump |
+| Sedaap Spicy Chicken | `photo_011.jpg` | Same spicy noodle plate |
+| Cat Treats | `photo_006.jpg` | Café cat portrait — treats are for cats, not people |
+| Fries (Cat Claws) | `photo_041.jpg` | Large wire basket of fries is the table centerpiece |
+| Nachos (Kitty Litter Crisps) | `menu/bites.jpg` | No clear nachos product still; category bites art is the honest fallback |
+| Takoyaki (Pawsome Balls) | `photo_155.jpg` | Takoyaki in wooden trays visible on the patio table |
+| Cat-Feine (Classic Coffee) | `photo_012.jpg` | Product-forward trio of iced coffee drinks with cat stickers |
+| Matcha (The Lucky Green Neko) | `photo_148.jpg` | Salted caramel matcha beside a gray cat |
+| Oreo (The Tuxedo Cat) | `photo_152.jpg` | Caramel Oreo drink beside a white café cat |
+| Soda (Fizzy Felines) | `photo_042.jpg` | Row of colorful clear-cup sodas |
+| Cat Association | `photo_030.jpg` | Shared group table with sodas, fries, and takoyaki |
+| Couple of Cats | `photo_074.jpg` | Shared fries, takoyaki, and sodas for a small group |
+| Single-Paw-rtner Combos | `photo_157.jpg` | Single drink + fries set with a café cat |
+| Take-out Box | `photo_078.jpg` | White take-out clamshells with drinks on the patio |
+
+**Files/modules affected:** `src/config/menu-item-images.ts`; `src/components/menu/menu-item-card.tsx`; `tests/unit/menu-item-images.test.ts`; `docs/development-log.md`.\
+**Testing performed:** `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm run test`.\
+**Git branch:** `feat/gallery-ui-polish`\
+**Pull request:** [#10](https://github.com/eendor/Brew-ni-Cat-Connect/pull/10)
