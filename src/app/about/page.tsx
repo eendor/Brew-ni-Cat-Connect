@@ -4,6 +4,7 @@ import Link from "next/link";
 
 import { Container } from "@/components/ui/container";
 import { PageIntro } from "@/components/ui/page-intro";
+import { Reveal } from "@/components/ui/reveal";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { siteConfig } from "@/config/site";
 
@@ -48,7 +49,7 @@ export default function AboutPage() {
         aria-labelledby="story-heading"
       >
         <Container className="grid gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:gap-16">
-          <div className="grid grid-cols-5 grid-rows-5 gap-3">
+          <Reveal className="grid grid-cols-5 grid-rows-5 gap-3">
             <Image
               src="/images/shop/photo_145.jpg"
               width={768}
@@ -74,9 +75,9 @@ export default function AboutPage() {
               sizes="(max-width: 1023px) 36vw, 18vw"
               className="col-span-2 row-span-2 h-full w-full rounded-[1.5rem] object-cover shadow-[var(--shadow-subtle)]"
             />
-          </div>
+          </Reveal>
 
-          <div>
+          <Reveal delayMs={100}>
             <SectionHeading
               id="story-heading"
               eyebrow="A place to pause"
@@ -98,7 +99,7 @@ export default function AboutPage() {
             <Link href="/gallery" className="button-secondary mt-8">
               See life at the shop
             </Link>
-          </div>
+          </Reveal>
         </Container>
       </section>
 
@@ -107,45 +108,46 @@ export default function AboutPage() {
         aria-label="Brew ni Cat facts"
       >
         <Container>
-          <dl className="grid gap-4 md:grid-cols-3">
-            {shopDetails.map((detail) => (
-              <div
-                key={detail.label}
-                className="rounded-[1.5rem] bg-[var(--surface-card)] p-6 shadow-[var(--shadow-subtle)]"
-              >
-                <dt className="eyebrow">{detail.label}</dt>
-                <dd className="font-display mt-3 text-2xl font-semibold text-[var(--text-strong)]">
-                  {detail.value}
-                </dd>
-              </div>
+          <div className="grid gap-4 md:grid-cols-3">
+            {shopDetails.map((detail, index) => (
+              <Reveal key={detail.label} delayMs={index * 80}>
+                <div className="surface-lift h-full rounded-[1.5rem] bg-[var(--surface-card)] p-6 shadow-[var(--shadow-subtle)]">
+                  <p className="eyebrow">{detail.label}</p>
+                  <p className="font-display mt-3 text-2xl font-semibold text-[var(--text-strong)]">
+                    {detail.value}
+                  </p>
+                </div>
+              </Reveal>
             ))}
-          </dl>
+          </div>
         </Container>
       </section>
 
       <section className="py-16 sm:py-20" aria-labelledby="about-visit-heading">
-        <Container className="rounded-[2rem] bg-[var(--deep-green)] p-7 text-white sm:p-10 lg:flex lg:items-center lg:justify-between lg:gap-10">
-          <div className="max-w-2xl">
-            <p className="text-xs font-extrabold tracking-[0.16em] text-[#f6cf80] uppercase">
-              Come say hello
-            </p>
-            <h2
-              id="about-visit-heading"
-              className="font-display mt-3 text-3xl font-semibold sm:text-4xl"
+        <Container>
+          <Reveal className="rounded-[2rem] bg-[var(--deep-green)] p-7 text-white sm:p-10 lg:flex lg:items-center lg:justify-between lg:gap-10">
+            <div className="max-w-2xl">
+              <p className="text-xs font-extrabold tracking-[0.16em] text-[#f6cf80] uppercase">
+                Come say hello
+              </p>
+              <h2
+                id="about-visit-heading"
+                className="font-display mt-3 text-3xl font-semibold sm:text-4xl"
+              >
+                Visit Brew ni Cat in Poblacion, Kabacan.
+              </h2>
+              <p className="mt-3 leading-7 text-[#e4e6d9]">
+                The shop is closed every Sunday. Hours on other days can vary,
+                so check Facebook or contact the shop before making the trip.
+              </p>
+            </div>
+            <Link
+              href="/contact"
+              className="mt-7 inline-flex min-h-12 shrink-0 items-center justify-center rounded-full bg-white px-6 py-3 font-extrabold text-[var(--deep-green)] transition-colors hover:bg-[var(--surface-warm)] lg:mt-0"
             >
-              Visit Brew ni Cat in Poblacion, Kabacan.
-            </h2>
-            <p className="mt-3 leading-7 text-[#e4e6d9]">
-              Operating hours can vary, so check Facebook or contact the shop
-              before making the trip.
-            </p>
-          </div>
-          <Link
-            href="/contact"
-            className="mt-7 inline-flex min-h-12 shrink-0 items-center justify-center rounded-full bg-white px-6 py-3 font-extrabold text-[var(--deep-green)] hover:bg-[var(--surface-warm)] lg:mt-0"
-          >
-            Get visit details
-          </Link>
+              Get visit details
+            </Link>
+          </Reveal>
         </Container>
       </section>
     </>

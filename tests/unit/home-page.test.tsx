@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react";
 import HomePage from "@/app/page";
 
 describe("Home page", () => {
-  it("TC-P1-002 / TC-P2-001 — renders the real brand, official logo, and customer CTAs", () => {
+  it("TC-P1-002 / TC-P2-001 — renders the real brand headline and customer CTAs", () => {
     render(<HomePage />);
 
     expect(
@@ -13,8 +13,11 @@ describe("Home page", () => {
       }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("img", { name: "Brew ni Cat Coffee Shop logo" }),
-    ).toHaveAttribute("src", expect.stringContaining("brew-ni-cat-logo.png"));
+      screen.getByText("Kabacan, Cotabato · Est. June 2026"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("img", { name: "Brew ni Cat Coffee Shop logo" }),
+    ).not.toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: "Browse current menu" }),
     ).toHaveAttribute("href", "/menu");
@@ -42,7 +45,9 @@ describe("Home page", () => {
 
     expect(screen.getByText("Beside Pulido Eatery")).toBeInTheDocument();
     expect(screen.getByText("Cash and GCash")).toBeInTheDocument();
-    expect(screen.getByText(/Operating hours may vary/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Closed every Sunday/i).length).toBeGreaterThan(
+      0,
+    );
   });
 
   it("TC-P2-003 — removes Phase 1 developer-facing placeholder messaging", () => {

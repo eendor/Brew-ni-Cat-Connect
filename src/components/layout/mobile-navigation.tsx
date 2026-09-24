@@ -96,7 +96,7 @@ export function MobileNavigation({ items }: MobileNavigationProps) {
           <span className="font-bold text-[var(--text-strong)]">
             Segundo St, Poblacion, Kabacan
           </span>
-          <span>Operating hours may vary. Contact us before visiting.</span>
+          <span>Closed every Sunday. Contact us before visiting.</span>
         </div>
       </nav>
     </div>

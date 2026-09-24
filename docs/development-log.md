@@ -165,3 +165,204 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Testing performed:** `npm run format:check`, `npm run lint`, `npm run typecheck`, and `npm run build` all completed with no findings. Vitest passed 6 files and 22/22 tests. Playwright passed 13/13 tests, including `TC-P2-024` Gallery curation coverage. The documentation validator reported `ERRORS=0` and `PHASE0_DOC_VALIDATION=PASS`.
 **Git branch:** `feat/showcase-website`
 **Next action:** Renier confirms Gallery variety, alt text, and flush layout at 320, 375, 768, 1024, and 1440 pixels during independent Phase 2 QA.
+
+## 2026-09-24 — Gallery refresh, cinematic showcase polish, Sunday closure
+
+**Date:** 2026-09-24\
+**Phase:** Phase 2 — Public Showcase Website\
+**Task:** Add newly approved Facebook shop photographs, make Home/Gallery feel more cinematic so the beige canvas feels less dull, and record the owner-confirmed Sunday closure without inventing fixed weekday hours.\
+**Summary:** Pull Request #10 on `feat/gallery-ui-polish` continues Phase 2 showcase work. Twelve new Facebook photographs were already merged via Pull Request #9 as `photo_148`–`photo_159`. This branch caps the Home featured mosaic at six images, surfaces newest photos first on Gallery, refreshes the Home hero collage, then turns Home/Gallery into a fuller filmic presentation (full-bleed hero, dark film-strip preview, immersive gallery canvas, soft grain/Ken Burns with reduced-motion respect). The owner confirmed the shop is closed every Sunday; site copy, `siteConfig.operations`, the business content register, and FR-003 now state that clearly while still directing customers to Facebook/contact for other days.\
+**Changes:**
+
+- curated Gallery order with newest Facebook photos first and exactly six `featured` Home preview images;
+- cinematic Home hero, about-band drama, dark horizontal film-strip gallery preview, and immersive Gallery page treatment in `globals.css`, `page.tsx`, and `gallery/page.tsx`;
+- recorded Sunday closure in `src/config/site.ts`, Home/Contact/About/mobile-nav copy, tests, business content register, README, FR-003, and this log;
+- captured cinematic review screenshots under `docs/evidence/phase-2/screenshots/cinematic-2026-09-24/`; and
+- fixed Prettier formatting that had failed the hosted `format:check` gate.
+
+**Files/modules affected:** `src/config/gallery.ts`; `src/config/site.ts`; `src/app/page.tsx`; `src/app/gallery/page.tsx`; `src/app/globals.css`; `src/components/layout/site-header.tsx`; `src/components/layout/mobile-navigation.tsx`; Contact/About pages; unit/e2e hour assertions; README; `docs/business-content-register.md`; `docs/functional-requirements.md`; `docs/test-cases.md`; `docs/development-log.md`; cinematic evidence screenshots.\
+**Testing performed:** `npm run format:check`, `npm run lint`, `npm run typecheck`, and `npm run test` (9 files / 69 tests) returned exit 0 after the Prettier fix. `npm run build` and `python scripts/validate_phase0_docs.py` are recorded in the commit that lands this documentation update. Playwright was not re-run in this documentation pass.\
+**Issues encountered:** Hosted CI failed earlier because Prettier was not run before push.\
+**Resolution:** Ran `prettier --write` on the affected files, pushed `fix: Fix Prettier formatting for CI`, and aligned future work to CONTRIBUTING (docs + development log + business register with every behavior change).\
+**Documentation updated:** Business content register; README; FR-003; test-cases TC-P2-016 note; development log; cinematic screenshot evidence.\
+**Git branch:** `feat/gallery-ui-polish`\
+**Pull request:** [#10 — Polish gallery layout after new Facebook photos](https://github.com/eendor/Brew-ni-Cat-Connect/pull/10), open and awaiting hosted checks + Lead Developer review.\
+**Next action:** Confirm hosted Validate application passes on the documentation head, leave the PR open for teammate review per CONTRIBUTING, and continue cinematic polish only if Rodnee asks after review.
+
+## 2026-09-24 — Hero media without customer crowd
+
+**Date:** 2026-09-24\
+**Phase:** Phase 2 — Public Showcase Website\
+**Task:** Replace the cinematic Home hero background that featured a customer group.\
+**Summary:** Lead Developer rejected full-bleed people as the Home background. The hero now uses `photo_148` (cat beside matcha). Decorative hero stills use `photo_152` and `photo_004`. Home featured film-strip images are limited to cat/food/space shots (`148`, `152`, `004`, `006`, `011`, `126`).\
+**Testing performed:** `npm run format:check`, `npm run lint`, and `npm run test` (69/69) exited 0.\
+**Git branch:** `feat/gallery-ui-polish`\
+**Pull request:** [#10](https://github.com/eendor/Brew-ni-Cat-Connect/pull/10)
+
+## 2026-09-24 — Site-wide cinematic motion and gallery layout fix
+
+**Date:** 2026-09-24\
+**Phase:** Phase 2 — Public Showcase Website\
+**Task:** Address Lead Developer feedback: site-wide cinematic motion, Home film-strip scrollbar/animation/alignment, Gallery empty trailing cell and uneven horizontal rhythm.\
+**Summary:** Replaced the Home overflow film-strip with a seamless CSS marquee reel (duplicated featured frames, hover pause, reduced-motion static flush grid, no scrollbar). Gallery now renders every configured gallery image in the grid (count divisible by 2 and 3) while keeping the cinematic lead intro. Added reusable intersection `Reveal` motion plus CSS fade-up / surface-lift / nav transitions across Home, Menu, About, Gallery, Contact, PageIntro, and the sticky header.\
+**Changes:**
+
+- Home gallery preview: `film-reel` infinite marquee under a padded Container heading; overflow hidden; prefers-reduced-motion static grid;
+- Gallery page: include every `galleryImages` tile, tighten grid gaps, stagger fade-up on tiles;
+- globals + `Reveal` client component for section reveals; PageIntro/header/menu/about/contact motion polish;
+- kept cat/shop/food hero media from the prior pass.
+
+**Files/modules affected:** `src/app/globals.css`; `src/app/page.tsx`; `src/app/gallery/page.tsx`; `src/app/about/page.tsx`; `src/app/contact/page.tsx`; `src/components/ui/reveal.tsx`; `src/components/ui/page-intro.tsx`; `src/components/ui/section-heading.tsx`; `src/components/layout/site-header.tsx`; `src/components/menu/menu-catalog.tsx`; `src/components/menu/menu-item-card.tsx`; `src/config/gallery.ts`; `docs/development-log.md`.\
+**Testing performed:** `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm run test` (run after this entry).\
+**Git branch:** `feat/gallery-ui-polish`\
+**Pull request:** [#10](https://github.com/eendor/Brew-ni-Cat-Connect/pull/10)\
+**Next action:** Push and await hosted Validate application + Lead Developer review.
+
+## 2026-09-24 — Fix Reveal hydration mismatch
+
+**Date:** 2026-09-24\
+**Phase:** Phase 2 — Public Showcase Website\
+**Task:** Clear the Next.js hydration warning on Home caused by `Reveal` className differing between server and client.\
+**Summary:** `Reveal` initialized `visible` from `!canObserveIntersection()`, which is true during SSR (no `window`) and false in the browser, so the server HTML included `reveal--visible` while the client first paint did not. Initial state is now always `false`; reduced-motion and missing IntersectionObserver set visible in `useEffect` after mount. CSS under `prefers-reduced-motion` still forces opacity immediately.\
+**Changes:**
+
+- `src/components/ui/reveal.tsx` — hydration-safe initial state;
+- this development-log note.
+
+**Files/modules affected:** `src/components/ui/reveal.tsx`; `docs/development-log.md`.\
+**Testing performed:** `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm run test`.\
+**Git branch:** `feat/gallery-ui-polish`\
+**Pull request:** [#10](https://github.com/eendor/Brew-ni-Cat-Connect/pull/10)\
+**Next action:** Confirm the Home console is clean on Lead Developer localhost review.
+
+## 2026-09-24 — Clean Gallery badge and development-log environment phrasing
+
+**Date:** 2026-09-24\
+**Phase:** Phase 2 — Public Showcase Website\
+**Task:** Remove the Gallery photo-count badge and scrub environment-machine phrasing from the development log per Lead Developer feedback.\
+**Summary:** Gallery reel no longer shows a photo count or “approved photos” label. Development-log testing notes no longer name the build machine. Menu item photography from Facebook shop photos remains in progress separately.\
+**Files/modules affected:** `src/app/gallery/page.tsx`; `docs/development-log.md`.\
+**Git branch:** `feat/gallery-ui-polish`\
+**Pull request:** [#10](https://github.com/eendor/Brew-ni-Cat-Connect/pull/10)
+
+## 2026-09-24 — Simplify Home hero brand stack
+
+**Date:** 2026-09-24\
+**Phase:** Phase 2 — Public Showcase Website\
+**Task:** Lead Developer found the Home hero brand stack cluttered (logo twice, heavy gold type on a muddy overlay).\
+**Summary:** Removed the hero logo so the header mark stands alone. Combined location/est. into one soft cream eyebrow, lightened the cinematic overlay and grain so the cat/drink photo reads more clearly, and updated the home unit test accordingly.\
+**Files/modules affected:** `src/app/page.tsx`; `src/app/globals.css`; `tests/unit/home-page.test.tsx`; `docs/development-log.md`.\
+**Git branch:** `feat/gallery-ui-polish`\
+**Pull request:** [#10](https://github.com/eendor/Brew-ni-Cat-Connect/pull/10)
+
+## 2026-09-24 — Softer visit cards and cleaner fonts
+
+**Date:** 2026-09-24\
+**Phase:** Phase 2 — Public Showcase Website\
+**Task:** Lead Developer rejected the loud deep-green visit/hours billboards and found the Georgia display type harsh.\
+**Summary:** Wired Inter + Plus Jakarta Sans through `next/font`. Replaced Home and Contact deep-green hours slabs with a calmer notice-surface panel inside a single light visit card. Kept Sunday-closed facts and Facebook pointer unchanged.\
+**Files/modules affected:** `src/app/layout.tsx`; `src/app/globals.css`; `src/app/page.tsx`; `src/app/contact/page.tsx`; `docs/development-log.md`.\
+**Git branch:** `feat/gallery-ui-polish`\
+**Pull request:** [#10](https://github.com/eendor/Brew-ni-Cat-Connect/pull/10)
+
+
+## 2026-09-24 — Menu item photos from shop Facebook stills
+
+**Date:** 2026-09-24\
+**Phase:** Phase 2 — Public Showcase Website\
+**Task:** Add per-menu-item photos on Menu cards by matching Facebook/shop stills to live catalog names.\
+**Summary:** Introduced a local name-based image map (`src/config/menu-item-images.ts`) so Supabase stays the source of truth for names and prices while cards can show product photos. `MenuItemCard` renders an optional cinematic `next/image` header when a mapping exists. No Supabase image column was added.\
+**Photo mapping (item → src + reason):**
+
+| Item | Photo | Reason |
+| --- | --- | --- |
+| Buldak Carbo | `photo_011.jpg` | Close-up spicy noodle plate with egg/seaweed (shared honest plate for Buldak/Sedaap) |
+| Buldak Cheese | `photo_011.jpg` | Same product-forward noodle plate; no distinct cheese-only still found |
+| Sedaap Original | `photo_011.jpg` | Closest wavy noodle plate from the shop dump |
+| Sedaap Spicy Chicken | `photo_011.jpg` | Same spicy noodle plate |
+| Cat Treats | `photo_006.jpg` | Café cat portrait — treats are for cats, not people |
+| Fries (Cat Claws) | `photo_041.jpg` | Large wire basket of fries is the table centerpiece |
+| Nachos (Kitty Litter Crisps) | `menu/bites.jpg` | No clear nachos product still; category bites art is the honest fallback |
+| Takoyaki (Pawsome Balls) | `photo_155.jpg` | Takoyaki in wooden trays visible on the patio table |
+| Cat-Feine (Classic Coffee) | `photo_012.jpg` | Product-forward trio of iced coffee drinks with cat stickers |
+| Matcha (The Lucky Green Neko) | `photo_148.jpg` | Salted caramel matcha beside a gray cat |
+| Oreo (The Tuxedo Cat) | `photo_152.jpg` | Caramel Oreo drink beside a white café cat |
+| Soda (Fizzy Felines) | `photo_042.jpg` | Row of colorful clear-cup sodas |
+| Cat Association | `photo_030.jpg` | Shared group table with sodas, fries, and takoyaki |
+| Couple of Cats | `photo_074.jpg` | Shared fries, takoyaki, and sodas for a small group |
+| Single-Paw-rtner Combos | `photo_157.jpg` | Single drink + fries set with a café cat |
+| Take-out Box | `photo_078.jpg` | White take-out clamshells with drinks on the patio |
+
+**Files/modules affected:** `src/config/menu-item-images.ts`; `src/components/menu/menu-item-card.tsx`; `tests/unit/menu-item-images.test.ts`; `docs/development-log.md`.\
+**Testing performed:** `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm run test`.\
+**Git branch:** `feat/gallery-ui-polish`\
+**Pull request:** [#10](https://github.com/eendor/Brew-ni-Cat-Connect/pull/10)
+
+## 2026-09-24 — Apple-like depth with restored display type
+
+**Date:** 2026-09-24\
+**Phase:** Phase 2 — Public Showcase Website\
+**Task:** Lead Developer asked for depth / HDR / Apple-like UI across the site and to revert the Inter / Plus Jakarta Sans font change.\
+**Summary:** Restored Georgia display type and an Apple system sans stack (`-apple-system` / SF). Added layered shadows, glass panels, richer card gradients, ambient canvas light, HDR-leaning media contrast on the cinematic hero, and stronger frosted header treatment without bringing back the deep-green hours billboard.\
+**Files/modules affected:** `src/app/layout.tsx`; `src/app/globals.css`; `src/components/layout/site-header.tsx`; `src/app/page.tsx`; `src/app/contact/page.tsx`; `docs/development-log.md`.\
+**Git branch:** `feat/gallery-ui-polish`\
+**Pull request:** [#10](https://github.com/eendor/Brew-ni-Cat-Connect/pull/10)
+
+
+## 2026-09-24 — Menu item photos: foods-only remapping
+
+**Date:** 2026-09-24\
+**Phase:** Phase 2 — Public Showcase Website\
+**Task:** Remap Menu card images to food/drink-only product stills (no people, no cats, no flyer art) per Lead Developer feedback.\
+**Summary:** Kept the two confirmed shop product stills (noodles `photo_011.jpg`, Cat-Feine iced coffees `photo_012.jpg`). Replaced all other mappings that showed customers, café cats, or menu flyer graphics with royalty-free Unsplash/Pexels product photos under `public/images/menu/items/`. Omitted Cat Treats from the map rather than using a cat portrait.\
+**Final mapping (item → src):**
+
+| Item | Photo | Notes |
+| --- | --- | --- |
+| Buldak Carbo / Cheese | `/images/shop/photo_011.jpg` | Local FOOD_ONLY noodle plate |
+| Sedaap Original / Spicy Chicken | `/images/shop/photo_011.jpg` | Same honest plate |
+| Cat-Feine | `/images/shop/photo_012.jpg` | Local DRINK_ONLY iced coffees |
+| Fries | `/images/menu/items/fries.jpg` | Stock fries basket |
+| Nachos | `/images/menu/items/nachos.jpg` | Stock loaded nachos |
+| Takoyaki | `/images/menu/items/takoyaki.jpg` | Stock takoyaki close-up |
+| Matcha | `/images/menu/items/matcha.jpg` | Stock matcha latte |
+| Oreo | `/images/menu/items/oreo-drink.jpg` | Stock cookies-and-cream drink |
+| Soda | `/images/menu/items/soda.jpg` | Stock colorful fruit sodas |
+| Cat Association / Couple of Cats / Single-Paw-rtner | `/images/menu/items/combo-spread.jpg` | Stock cafe combo spread |
+| Take-out Box | `/images/menu/items/takeout-box.jpg` | Stock open takeout with noodles |
+| Cat Treats | *(omitted)* | No treat-pack photo without a cat |
+
+**Files/modules affected:** `src/config/menu-item-images.ts`; `public/images/menu/items/*`; `tests/unit/menu-item-images.test.ts`; `docs/development-log.md`.\
+**Testing performed:** `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm run test`.\
+**Git branch:** `feat/gallery-ui-polish`\
+**Pull request:** [#10](https://github.com/eendor/Brew-ni-Cat-Connect/pull/10)
+
+## 2026-09-24 — Drop internet stock from menu cards
+
+**Date:** 2026-09-24\
+**Phase:** Phase 2 — Public Showcase Website\
+**Task:** Lead Developer asked to drop the internet stock photos used on Menu cards.\
+**Summary:** Removed `/images/menu/items/` stock files. Menu photos now use only real Brew ni Cat shop stills that are food/drink product frames (`photo_011` noodles, `photo_012` Cat-Feine). All other items omit a photo until a matching shop still exists.\
+**Files/modules affected:** `src/config/menu-item-images.ts`; `tests/unit/menu-item-images.test.ts`; `public/images/menu/items/` (removed); `docs/development-log.md`.\
+**Git branch:** `feat/gallery-ui-polish`\
+**Pull request:** [#10](https://github.com/eendor/Brew-ni-Cat-Connect/pull/10)
+
+## 2026-09-24 — Menu cards hug content height
+
+**Date:** 2026-09-24\
+**Phase:** Phase 2 — Public Showcase Website\
+**Task:** Lead Developer flagged empty space below Menu cards that have no product photo.\
+**Summary:** Menu category grids now use `items-start` so cards hug their content instead of stretching to match taller photo cards in the same row.\
+**Files/modules affected:** `src/components/menu/menu-catalog.tsx`; `docs/development-log.md`.\
+**Git branch:** `feat/gallery-ui-polish`\
+**Pull request:** [#10](https://github.com/eendor/Brew-ni-Cat-Connect/pull/10)
+
+## 2026-09-24 — Merged PR #10 gallery UI polish
+
+**Date:** 2026-09-24\
+**Phase:** Phase 2 — Public Showcase Website\
+**Task:** Lead Developer approved the gallery / cinematic UI polish branch and asked to merge after local review.\
+**Summary:** Merged `feat/gallery-ui-polish` into `main` via [PR #10](https://github.com/eendor/Brew-ni-Cat-Connect/pull/10). Delivered cinematic Home/Gallery presentation, site-wide depth and Apple-like surfaces with Georgia + system sans typography, Sunday-closed visit copy, Reveal hydration fix, gallery layout flush, optional Menu item photos only for confirmed shop food/drink stills (noodles + Cat-Feine), and menu card height alignment so imageless cards do not stretch. Internet stock photos were tried then removed per Lead Developer direction.\
+**Files/modules affected:** Home, Gallery, Menu, Contact, shared layout/header/globals, gallery config, menu image map, development log and related Phase 2 docs already updated on the branch.\
+**Git branch:** `main` (merged from `feat/gallery-ui-polish`)\
+**Pull request:** [#10](https://github.com/eendor/Brew-ni-Cat-Connect/pull/10) — merged

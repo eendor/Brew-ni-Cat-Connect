@@ -21,8 +21,9 @@ export const siteConfig = {
     phoneHref: "tel:+639766304785",
   },
   operations: {
+    closedDays: "Sunday",
     hoursNotice:
-      "Operating hours may vary. Check our Facebook page or contact us for today’s schedule.",
+      "Closed every Sunday. Hours on other days may vary — check our Facebook page or contact us for today’s schedule.",
     payments: ["Cash", "GCash"],
     takeoutFee: "₱10 takeout box",
   },

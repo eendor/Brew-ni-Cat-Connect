@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Container } from "@/components/ui/container";
 import { ExternalLink } from "@/components/ui/external-link";
 import { PageIntro } from "@/components/ui/page-intro";
+import { Reveal } from "@/components/ui/reveal";
 import { siteConfig } from "@/config/site";
 
 export const metadata: Metadata = {
@@ -34,7 +35,7 @@ export default function ContactPage() {
         description={
           <p>
             Find Brew ni Cat in Poblacion, Kabacan, get in touch, and check the
-            latest shop schedule before visiting.
+            hours before visiting — the shop is closed every Sunday.
           </p>
         }
         aside={
@@ -52,7 +53,7 @@ export default function ContactPage() {
         aria-labelledby="location-heading"
       >
         <Container className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-stretch">
-          <div className="rounded-[2rem] border border-[var(--border-soft)] bg-[var(--surface-card)] p-7 shadow-[var(--shadow-subtle)] sm:p-10">
+          <Reveal className="depth-card rounded-[2rem] p-7 sm:p-10">
             <p className="eyebrow">Where to find us</p>
             <h2
               id="location-heading"
@@ -77,31 +78,33 @@ export default function ContactPage() {
             >
               Get directions
             </ExternalLink>
-          </div>
+          </Reveal>
 
-          <aside
-            className="rounded-[2rem] bg-[var(--deep-green)] p-7 text-white shadow-[var(--shadow-card)] sm:p-10"
-            aria-labelledby="hours-heading"
-          >
-            <p className="text-xs font-extrabold tracking-[0.16em] text-[#f6cf80] uppercase">
-              Today’s schedule
-            </p>
-            <h2
-              id="hours-heading"
-              className="font-display mt-3 text-4xl font-semibold"
+          <Reveal delayMs={100}>
+            <aside
+              className="glass-panel rounded-[1.75rem] border-[var(--notice-border)] bg-[var(--notice-surface)] p-7 sm:p-9"
+              aria-labelledby="hours-heading"
             >
-              Hours may vary.
-            </h2>
-            <p className="mt-5 text-lg leading-8 text-[#e4e6d9]">
-              {siteConfig.operations.hoursNotice}
-            </p>
-            <ExternalLink
-              href={siteConfig.social.facebook}
-              className="mt-8 inline-flex min-h-12 items-center justify-center rounded-full bg-white px-6 py-3 font-extrabold text-[var(--deep-green)] transition-colors hover:bg-[var(--surface-warm)]"
-            >
-              Check Facebook
-            </ExternalLink>
-          </aside>
+              <p className="text-xs font-bold tracking-[0.12em] text-[var(--notice-text)] uppercase">
+                Hours
+              </p>
+              <h2
+                id="hours-heading"
+                className="font-display mt-2 text-2xl font-semibold text-[var(--text-strong)] sm:text-3xl"
+              >
+                Closed every Sunday.
+              </h2>
+              <p className="mt-4 text-base leading-7 text-[var(--notice-text)]">
+                {siteConfig.operations.hoursNotice}
+              </p>
+              <ExternalLink
+                href={siteConfig.social.facebook}
+                className="button-secondary mt-7"
+              >
+                Check Facebook
+              </ExternalLink>
+            </aside>
+          </Reveal>
         </Container>
       </section>
 
@@ -110,7 +113,7 @@ export default function ContactPage() {
         aria-labelledby="contact-heading"
       >
         <Container>
-          <div className="max-w-2xl">
+          <Reveal className="max-w-2xl">
             <p className="eyebrow">Get in touch</p>
             <h2
               id="contact-heading"
@@ -118,23 +121,27 @@ export default function ContactPage() {
             >
               Contact Brew ni Cat directly.
             </h2>
-          </div>
+          </Reveal>
           <div className="mt-8 grid gap-4 md:grid-cols-2">
-            {contactCards.map((contact) => (
-              <a
-                key={contact.label}
-                href={contact.href}
-                className="rounded-[1.5rem] border border-[var(--border-soft)] bg-[var(--surface-card)] p-6 shadow-[var(--shadow-subtle)] transition-transform hover:-translate-y-0.5"
-              >
-                <span className="eyebrow">{contact.label}</span>
-                <span className="mt-3 block break-words text-lg font-extrabold text-[var(--deep-green)] sm:text-xl">
-                  {contact.value}
-                </span>
-              </a>
+            {contactCards.map((contact, index) => (
+              <Reveal key={contact.label} delayMs={index * 90}>
+                <a
+                  href={contact.href}
+                  className="surface-lift block h-full rounded-[1.5rem] border border-[var(--border-soft)] bg-[var(--surface-card)] p-6 shadow-[var(--shadow-subtle)]"
+                >
+                  <span className="eyebrow">{contact.label}</span>
+                  <span className="mt-3 block break-words text-lg font-extrabold text-[var(--deep-green)] sm:text-xl">
+                    {contact.value}
+                  </span>
+                </a>
+              </Reveal>
             ))}
           </div>
 
-          <div className="mt-8 rounded-[1.5rem] border border-[var(--border-soft)] bg-[var(--surface-card)] p-6 sm:p-8">
+          <Reveal
+            delayMs={120}
+            className="mt-8 rounded-[1.5rem] border border-[var(--border-soft)] bg-[var(--surface-card)] p-6 sm:p-8"
+          >
             <h3 className="font-display text-2xl font-semibold text-[var(--text-strong)]">
               Follow Brew ni Cat
             </h3>
@@ -158,7 +165,7 @@ export default function ContactPage() {
                 TikTok
               </ExternalLink>
             </div>
-          </div>
+          </Reveal>
         </Container>
       </section>
 
@@ -168,7 +175,7 @@ export default function ContactPage() {
       >
         <Container>
           <div className="grid gap-6 lg:grid-cols-3">
-            <div className="rounded-[1.75rem] border border-[var(--border-soft)] bg-[var(--surface-card)] p-7 shadow-[var(--shadow-subtle)]">
+            <Reveal className="rounded-[1.75rem] border border-[var(--border-soft)] bg-[var(--surface-card)] p-7 shadow-[var(--shadow-subtle)]">
               <p className="eyebrow">At the shop</p>
               <h2
                 id="visit-details-heading"
@@ -194,9 +201,12 @@ export default function ContactPage() {
                   </dd>
                 </div>
               </dl>
-            </div>
+            </Reveal>
 
-            <div className="rounded-[1.75rem] border border-[var(--border-soft)] bg-[var(--surface-card)] p-7 shadow-[var(--shadow-subtle)] lg:col-span-2">
+            <Reveal
+              delayMs={100}
+              className="rounded-[1.75rem] border border-[var(--border-soft)] bg-[var(--surface-card)] p-7 shadow-[var(--shadow-subtle)] lg:col-span-2"
+            >
               <p className="eyebrow">External rider pickup</p>
               <h2 className="font-display mt-3 text-3xl font-semibold text-[var(--text-strong)]">
                 Arrange your preferred rider separately.
@@ -240,7 +250,7 @@ export default function ContactPage() {
                   </ExternalLink>
                 ))}
               </div>
-            </div>
+            </Reveal>
           </div>
           <p className="mt-8 text-center text-sm text-[var(--text-muted)]">
             Looking for the current menu?{" "}

@@ -19,12 +19,12 @@ export function PageIntro({
   return (
     <section className="page-hero" aria-labelledby="page-heading">
       <Container className="py-12 sm:py-16 lg:py-20">
-        <nav aria-label="Breadcrumb">
+        <nav aria-label="Breadcrumb" className="fade-up-reveal">
           <ol className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
             <li>
               <Link
                 href="/"
-                className="rounded-sm font-bold underline decoration-[var(--border-strong)] underline-offset-4 hover:text-[var(--text-strong)]"
+                className="rounded-sm font-bold underline decoration-[var(--border-strong)] underline-offset-4 transition-colors hover:text-[var(--text-strong)]"
               >
                 Home
               </Link>
@@ -34,7 +34,7 @@ export function PageIntro({
           </ol>
         </nav>
         <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
-          <div className="max-w-3xl">
+          <div className="max-w-3xl fade-up-reveal-delay">
             <p className="eyebrow">{eyebrow}</p>
             <h1
               id="page-heading"
@@ -46,7 +46,7 @@ export function PageIntro({
               {description}
             </div>
           </div>
-          {aside ? <div>{aside}</div> : null}
+          {aside ? <div className="fade-up-reveal-delay-2">{aside}</div> : null}
         </div>
       </Container>
     </section>
