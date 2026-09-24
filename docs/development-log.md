@@ -346,3 +346,13 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Files/modules affected:** `src/config/menu-item-images.ts`; `tests/unit/menu-item-images.test.ts`; `public/images/menu/items/` (removed); `docs/development-log.md`.\
 **Git branch:** `feat/gallery-ui-polish`\
 **Pull request:** [#10](https://github.com/eendor/Brew-ni-Cat-Connect/pull/10)
+
+## 2026-09-24 — Menu cards hug content height
+
+**Date:** 2026-09-24\
+**Phase:** Phase 2 — Public Showcase Website\
+**Task:** Lead Developer flagged empty space below Menu cards that have no product photo.\
+**Summary:** Menu category grids now use `items-start` so cards hug their content instead of stretching to match taller photo cards in the same row.\
+**Files/modules affected:** `src/components/menu/menu-catalog.tsx`; `docs/development-log.md`.\
+**Git branch:** `feat/gallery-ui-polish`\
+**Pull request:** [#10](https://github.com/eendor/Brew-ni-Cat-Connect/pull/10)
