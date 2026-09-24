@@ -91,7 +91,9 @@ export default function GalleryPage() {
           </div>
 
           <div className="mt-10 max-w-md rounded-2xl border border-white/10 bg-white/5 p-5 text-sm leading-6 text-[#e4e6d9] backdrop-blur-sm">
-            <strong className="block text-[#f6cf80]">Fresh from the shop</strong>
+            <strong className="block text-[#f6cf80]">
+              Fresh from the shop
+            </strong>
             Recent photos from Brew ni Cat’s Facebook page sit at the top, with
             earlier favorites kept below for a fuller visit.
           </div>

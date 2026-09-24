@@ -42,7 +42,9 @@ describe("Home page", () => {
 
     expect(screen.getByText("Beside Pulido Eatery")).toBeInTheDocument();
     expect(screen.getByText("Cash and GCash")).toBeInTheDocument();
-    expect(screen.getAllByText(/Closed every Sunday/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Closed every Sunday/i).length).toBeGreaterThan(
+      0,
+    );
   });
 
   it("TC-P2-003 — removes Phase 1 developer-facing placeholder messaging", () => {

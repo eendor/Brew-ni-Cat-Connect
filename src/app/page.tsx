@@ -69,8 +69,8 @@ export default function HomePage() {
                 Coffee, comfort, and a little cat energy.
               </h1>
               <p className="mt-6 max-w-xl text-lg leading-8 text-pretty text-[#d8d7c8] sm:text-xl">
-                Settle in at Brew ni Cat for drinks, snacks, noodles, combos, and
-                cozy community moments in the heart of Kabacan.
+                Settle in at Brew ni Cat for drinks, snacks, noodles, combos,
+                and cozy community moments in the heart of Kabacan.
               </p>
               <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center fade-up-reveal-delay">
                 <Link href="/menu" className="button-primary">
