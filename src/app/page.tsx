@@ -11,18 +11,27 @@ import { siteConfig } from "@/config/site";
 const favorites = [
   {
     name: "Matcha",
-    note: "Explore today’s Matcha sizes and options in the current menu.",
-    mark: "M",
+    nickname: "The Lucky Green Neko",
+    price: "From ₱49",
+    note: "Creamy iced matcha handcrafted with rich green tea, fresh milk, and sweet caramel accents.",
+    image: "/images/shop/photo_148.jpg",
+    alt: "Iced salted caramel matcha served at Brew ni Cat",
   },
   {
     name: "Takoyaki",
-    note: "See the available Takoyaki counts, flavors, and prices.",
-    mark: "T",
+    nickname: "Pawsome Balls",
+    price: "From ₱40",
+    note: "Golden Japanese-style savory takoyaki balls drizzled with sweet-savory sauce, Japanese mayo, and bonito flakes.",
+    image: "/images/menu/bites.jpg",
+    alt: "Freshly prepared savory takoyaki balls with sauce",
   },
   {
     name: "Fries",
-    note: "Browse the current Fries sizes and savory flavor choices.",
-    mark: "F",
+    nickname: "Cat Claws",
+    price: "From ₱30",
+    note: "Crispy shoestring fries seasoned in cheese, sour cream, barbecue, or spicy flavoring.",
+    image: "/images/menu/combo.jpg",
+    alt: "Golden crispy seasoned fries served in a basket",
   },
 ] as const;
 
@@ -41,8 +50,6 @@ export default function HomePage() {
           />
         </div>
         <div className="cinematic-hero__overlay" aria-hidden="true" />
-        <div className="film-grain" aria-hidden="true" />
-        <div className="vignette" aria-hidden="true" />
 
         <Container className="relative z-10 flex min-h-[85vh] flex-col justify-end gap-10 py-14 lg:min-h-[92vh] lg:justify-center lg:py-24">
           <div className="grid gap-10 lg:grid-cols-[minmax(0,1.15fr)_minmax(16rem,0.55fr)] lg:items-end">
@@ -52,7 +59,7 @@ export default function HomePage() {
               </p>
               <h1
                 id="home-heading"
-                className="font-display mt-5 max-w-4xl text-5xl leading-[0.95] font-semibold tracking-[-0.045em] text-balance text-white sm:text-6xl lg:text-7xl xl:text-8xl"
+                className="font-display mt-5 max-w-4xl text-5xl leading-[0.95] font-semibold tracking-[-0.025em] text-balance text-white sm:text-6xl lg:text-7xl xl:text-8xl"
               >
                 Coffee, comfort, and a little cat energy.
               </h1>
@@ -105,17 +112,29 @@ export default function HomePage() {
       >
         <Container>
           <Reveal>
-            <dl className="grid overflow-hidden rounded-[1.5rem] border border-[var(--border-soft)] bg-[var(--surface-card)] shadow-[var(--shadow-card)] sm:grid-cols-3">
+            <dl className="grid overflow-hidden rounded-[1.5rem] border border-[var(--border-soft)] bg-[var(--surface-card)] shadow-[var(--shadow-card)] sm:grid-cols-2 lg:grid-cols-4">
               <div className="p-5 sm:border-r sm:border-[var(--border-soft)] sm:p-6">
                 <dt className="eyebrow">Find us</dt>
                 <dd className="mt-2 font-bold text-[var(--text-strong)]">
                   Segundo St, Poblacion, Kabacan
                 </dd>
               </div>
-              <div className="border-t border-[var(--border-soft)] p-5 sm:border-t-0 sm:border-r sm:p-6">
+              <div className="border-t border-[var(--border-soft)] p-5 sm:border-t-0 lg:border-r lg:border-[var(--border-soft)] sm:p-6">
                 <dt className="eyebrow">Landmark</dt>
                 <dd className="mt-2 font-bold text-[var(--text-strong)]">
                   {siteConfig.address.landmark}
+                </dd>
+              </div>
+              <div className="border-t border-[var(--border-soft)] p-5 sm:border-r sm:border-[var(--border-soft)] lg:border-t-0 sm:p-6">
+                <dt className="eyebrow">Hours</dt>
+                <dd className="mt-2 font-bold text-[var(--text-strong)]">
+                  <span>Mon–Sat</span>
+                  <span className="ml-1 text-sm font-semibold text-[var(--accent-strong)]">
+                    · Closed every Sunday
+                  </span>
+                  <span className="block text-xs font-normal text-[var(--text-muted)]">
+                    Hours vary · check Facebook
+                  </span>
                 </dd>
               </div>
               <div className="border-t border-[var(--border-soft)] p-5 sm:border-t-0 sm:p-6">
@@ -142,29 +161,41 @@ export default function HomePage() {
               description="Matcha, Takoyaki, and Fries are customer-favorite groups. Open the current menu for today’s available options and prices."
             />
           </Reveal>
-          <div className="mt-10 grid gap-5 md:grid-cols-3">
+          <div className="mt-10 grid gap-6 md:grid-cols-3">
             {favorites.map((favorite, index) => (
               <Reveal key={favorite.name} delayMs={index * 90}>
-                <article className="group surface-lift relative h-full overflow-hidden rounded-[1.75rem] border border-[var(--border-soft)] bg-[var(--surface-card)] p-6 shadow-[var(--shadow-subtle)]">
-                  <span
-                    className="font-display absolute -right-3 -bottom-9 text-[8rem] font-bold leading-none text-[var(--accent-soft)] opacity-50 transition-transform group-hover:-rotate-3"
-                    aria-hidden="true"
-                  >
-                    {favorite.mark}
-                  </span>
-                  <p className="eyebrow relative">Customer favorite</p>
-                  <h3 className="font-display relative mt-3 text-3xl font-semibold text-[var(--text-strong)]">
-                    {favorite.name}
-                  </h3>
-                  <p className="relative mt-3 min-h-14 leading-7 text-[var(--text-muted)]">
-                    {favorite.note}
-                  </p>
-                  <Link
-                    href="/menu"
-                    className="relative mt-6 inline-flex min-h-11 items-center rounded-full font-extrabold text-[var(--deep-green)] underline decoration-[var(--warm-gold)] decoration-2 underline-offset-4"
-                  >
-                    Browse the menu
-                  </Link>
+                <article className="group surface-lift flex h-full flex-col overflow-hidden rounded-[1.75rem] border border-[var(--border-soft)] bg-[var(--surface-card)] shadow-[var(--shadow-subtle)]">
+                  <div className="relative aspect-[16/10] w-full overflow-hidden bg-[var(--surface-warm)]">
+                    <Image
+                      src={favorite.image}
+                      alt={favorite.alt}
+                      fill
+                      sizes="(max-width: 767px) 100vw, 33vw"
+                      className="object-cover transition-transform duration-500 ease-[var(--ease-cinematic)] group-hover:scale-105"
+                    />
+                    <div className="absolute top-3 right-3 rounded-full border border-black/10 bg-[var(--surface-card)]/95 px-3 py-1 text-xs font-extrabold text-[var(--deep-green)] backdrop-blur-sm shadow-sm">
+                      {favorite.price}
+                    </div>
+                  </div>
+                  <div className="flex flex-1 flex-col p-6">
+                    <span className="text-xs font-semibold text-[var(--warm-gold)]">
+                      {favorite.nickname}
+                    </span>
+                    <h3 className="font-display mt-1 text-2xl font-semibold text-[var(--text-strong)]">
+                      {favorite.name}
+                    </h3>
+                    <p className="mt-3 flex-1 text-sm leading-6 text-[var(--text-muted)]">
+                      {favorite.note}
+                    </p>
+                    <div className="mt-6 pt-4 border-t border-[var(--border-soft)]/60">
+                      <Link
+                        href="/menu"
+                        className="inline-flex min-h-11 items-center font-extrabold text-[var(--deep-green)] underline decoration-[var(--warm-gold)] decoration-2 underline-offset-4 hover:text-[var(--deep-green-hover)]"
+                      >
+                        Browse the menu
+                      </Link>
+                    </div>
+                  </div>
                 </article>
               </Reveal>
             ))}
@@ -198,12 +229,9 @@ export default function HomePage() {
             </div>
           </Reveal>
           <Reveal delayMs={120}>
-            <p className="text-xs font-extrabold tracking-[0.16em] text-[#f6cf80] uppercase">
-              Meet Brew ni Cat
-            </p>
             <h2
               id="about-preview-heading"
-              className="font-display mt-3 text-4xl font-semibold tracking-[-0.03em] text-balance sm:text-5xl"
+              className="font-display text-4xl font-semibold tracking-[-0.025em] text-balance sm:text-5xl"
             >
               A local café with a playful cat-inspired spirit.
             </h2>
@@ -213,27 +241,57 @@ export default function HomePage() {
               spaces and cat-themed personality make every visit distinctly Brew
               ni Cat.
             </p>
-            <Link
-              href="/about"
-              className="mt-8 inline-flex min-h-12 items-center rounded-full bg-white px-6 py-3 font-extrabold text-[var(--deep-green)] transition-colors hover:bg-[var(--surface-warm)]"
-            >
-              Read about the shop
-            </Link>
+
+            <div className="mt-8 rounded-2xl border border-white/20 bg-white/10 p-5 backdrop-blur-sm">
+              <h3 className="text-xs font-extrabold tracking-wider text-[#f6cf80] uppercase">
+                Visiting the Cats
+              </h3>
+              <ul className="mt-3 grid gap-3 text-xs leading-5 text-[#e4e6d9] sm:grid-cols-3">
+                <li className="flex flex-col gap-1">
+                  <strong className="text-white font-semibold">
+                    No entrance fee
+                  </strong>
+                  <span>Cats roam freely; enjoy with any food or drink.</span>
+                </li>
+                <li className="flex flex-col gap-1">
+                  <strong className="text-white font-semibold">
+                    Gentle paws welcome
+                  </strong>
+                  <span>Approach resting cats calmly, and pet with care.</span>
+                </li>
+                <li className="flex flex-col gap-1">
+                  <strong className="text-white font-semibold">
+                    Clean cuddles
+                  </strong>
+                  <span>
+                    Please use our sanitizing stations before and after petting.
+                  </span>
+                </li>
+              </ul>
+            </div>
+
+            <div className="mt-8">
+              <Link
+                href="/about"
+                className="inline-flex min-h-12 items-center rounded-full bg-white px-6 py-3 font-extrabold text-[var(--deep-green)] transition-colors hover:bg-[var(--surface-warm)]"
+              >
+                Read about the shop
+              </Link>
+            </div>
           </Reveal>
         </Container>
       </section>
 
       <section
-        className="cinema-canvas py-16 text-white sm:py-20 lg:py-24"
+        className="bg-[#122822] py-16 text-white sm:py-20 lg:py-24"
         aria-labelledby="gallery-preview-heading"
       >
         <Container>
           <Reveal className="flex flex-col gap-6 border-b border-white/10 pb-8 sm:flex-row sm:items-end sm:justify-between">
             <div className="max-w-2xl">
-              <p className="eyebrow-light">Scene · Inside Brew ni Cat</p>
               <h2
                 id="gallery-preview-heading"
-                className="font-display mt-3 text-4xl font-semibold tracking-[-0.03em] text-balance sm:text-5xl"
+                className="font-display text-4xl font-semibold tracking-[-0.025em] text-balance sm:text-5xl"
               >
                 Coffee, cats, and community.
               </h2>
@@ -247,7 +305,12 @@ export default function HomePage() {
             </Link>
           </Reveal>
         </Container>
-        <div className="film-reel mt-10" aria-label="Featured café photos">
+        <div
+          className="film-reel mt-10"
+          role="region"
+          aria-label="Featured café photos gallery"
+          tabIndex={0}
+        >
           <div className="film-reel__track">
             {[...homeGalleryImages, ...homeGalleryImages].map(
               (image, index) => (
@@ -291,10 +354,9 @@ export default function HomePage() {
           <Reveal className="depth-card rounded-[1.75rem] p-6 sm:p-9">
             <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-start">
               <div>
-                <p className="eyebrow">Visit Brew ni Cat</p>
                 <h2
                   id="visit-heading"
-                  className="font-display mt-2 text-3xl font-semibold text-[var(--text-strong)] sm:text-4xl"
+                  className="font-display text-3xl font-semibold text-[var(--text-strong)] sm:text-4xl"
                 >
                   Find us in Kabacan
                 </h2>
@@ -327,7 +389,7 @@ export default function HomePage() {
                 aria-label="Before you visit"
               >
                 <p className="text-xs font-bold tracking-[0.12em] text-[var(--notice-text)] uppercase">
-                  Hours
+                  Hours &amp; Schedule
                 </p>
                 <p className="mt-2 text-lg font-semibold text-[var(--text-strong)]">
                   Closed every Sunday.
@@ -353,6 +415,15 @@ export default function HomePage() {
                     </dd>
                   </div>
                 </dl>
+                <div className="mt-4 rounded-xl border border-[var(--notice-border)] bg-white/70 p-3.5 text-xs leading-5 text-[var(--notice-text)]">
+                  <strong className="block font-bold text-[var(--text-strong)]">
+                    Local delivery in Kabacan:
+                  </strong>
+                  <span>
+                    Orders can be picked up for takeout or arranged with
+                    independent local riders (such as Papa&apos;s Delivery).
+                  </span>
+                </div>
                 <ExternalLink
                   href={siteConfig.social.facebook}
                   className="mt-5 inline-flex min-h-10 items-center text-sm font-bold text-[var(--deep-green)] underline decoration-[var(--border-strong)] underline-offset-4"
