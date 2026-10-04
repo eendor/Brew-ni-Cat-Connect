@@ -366,3 +366,21 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Files/modules affected:** Home, Gallery, Menu, Contact, shared layout/header/globals, gallery config, menu image map, development log and related Phase 2 docs already updated on the branch.\
 **Git branch:** `main` (merged from `feat/gallery-ui-polish`)\
 **Pull request:** [#10](https://github.com/eendor/Brew-ni-Cat-Connect/pull/10) — merged
+
+## 2026-10-05 — Polish Home visit logistics, favorites, and cat lounge guidance
+
+**Date:** 2026-10-05\
+**Phase:** Phase 2 — Public Showcase Website\
+**Task:** Implement UX/UI polish on Home based on Impeccable critique findings: surface operating hours in the top visit facts strip, replace abstract letter watermarks on customer favorites with authentic food photography and starting prices, add cat lounge house rules / etiquette, and highlight independent delivery rider logistics.\
+**Summary:** Updated Home page to resolve priority critique issues. Expanded the top visit facts card to four items (`sm:grid-cols-2 lg:grid-cols-4`) to make Sunday closure and variable weekday hours immediately visible on arrival. Upgraded the Popular at Brew ni Cat section with authentic shop food/drink photography (`photo_148.jpg`, `bites.jpg`, `combo.jpg`), starting price pills (`From ₱49`, `From ₱40`, `From ₱30`), and sensory descriptions, eliminating sterile single-letter watermarks. Added a friendly "Visiting the Cats" etiquette block (no entrance fee, gentle paws, clean cuddles) and documented independent local delivery rider options in the Visit section. Adjusted hero heading tracking to `-0.025em` and softened background tones in alignment with the craft floor.\
+**Changes:**
+- `src/app/page.tsx`: 4-item visit facts grid with hours/schedule, favorite cards with food photos/prices/nicknames, cat lounge etiquette, delivery notice, tracking/contrast polish;
+- `package.json` & `package-lock.json`: upgrade Next.js and eslint-config-next to 16.3.8, configure audit for production high+ and dev critical checks;
+- `eslint.config.mjs` & `.prettierignore`: ignore editor skill and agent metadata directories;
+- this development-log entry.
+**Files/modules affected:** `src/app/page.tsx`, `package.json`, `package-lock.json`, `eslint.config.mjs`, `.prettierignore`, `docs/development-log.md`.\
+**Testing performed:** `npm run audit`, `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm run test` (10 files / 73 tests passed), `npm run build` (7/7 static pages), and `python3 scripts/validate_phase0_docs.py` (ERRORS=0 / PASS).\
+**Git branch:** `feat/homepage-ui-polish`\
+**Pull request:** [#11 — feat(home): polish visit logistics, customer favorites, and cat lounge etiquette](https://github.com/eendor/Brew-ni-Cat-Connect/pull/11)\
+**Next action:** Approve/merge Pull Request and record on Trello.
+
