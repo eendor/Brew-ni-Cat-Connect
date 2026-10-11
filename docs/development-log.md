@@ -384,3 +384,19 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Pull request:** [#11 — feat(home): polish visit logistics, customer favorites, and cat lounge etiquette](https://github.com/eendor/Brew-ni-Cat-Connect/pull/11)\
 **Next action:** Approve/merge Pull Request and record on Trello.
 
+
+## 2026-10-11 — Update vulnerable sharp and source-map-js
+
+**Date:** 2026-10-11\
+**Phase:** Phase 3 — Menu and Ordering Flow (maintenance)\
+**Task:** `npm run audit` reported high-severity findings in `sharp` and `source-map-js`.\
+**Summary:** Ran `npm audit fix`, which moved `sharp` to 0.35.5 (librsvg CVE-2026-96889) and `source-map-js` to 1.2.2 (event-loop denial of service). The production audit now reports 0 vulnerabilities. A dev-only `braces` finding remains through `eslint-config-next` > `@next/eslint-plugin-next` > `fast-glob` > `micromatch`; the only offered fix downgrades `eslint-config-next` to 14.x, which is a breaking change for Next 16, so it was left alone.\
+**Changes:**
+- `package-lock.json`: transitive dependency bumps only, no `package.json` change;
+- this development-log entry.
+**Files/modules affected:** `package-lock.json`, `docs/development-log.md`.\
+**Testing performed:** `npm run lint`, `npm run typecheck`, `npm test` (10 files / 73 tests passed), `npm run build` (7/7 static pages), `npm audit --omit=dev` (0 vulnerabilities). Playwright E2E was not run.\
+**Known limitations:** Dev-only `braces` high-severity finding remains open until the Next.js ESLint plugin updates its dependency.\
+**Git branch:** `fix/audit-deps`\
+**Pull request:** [#12](https://github.com/eendor/Brew-ni-Cat-Connect/pull/12)\
+**Next action:** Independent teammate review of PR #12; no self-approval.
