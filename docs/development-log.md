@@ -400,3 +400,14 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Git branch:** `fix/audit-deps`\
 **Pull request:** [#12](https://github.com/eendor/Brew-ni-Cat-Connect/pull/12)\
 **Next action:** Independent teammate review of PR #12; no self-approval.
+
+## 2026-10-11 — Confirm shop opening hours
+
+**Date:** 2026-10-11\
+**Phase:** Phase 3 — Menu and Ordering Flow (content update)\
+**Task:** Lead Developer relayed that the shop opens every day at 11 AM until 10 PM and is still closed on Sunday.\
+**Summary:** Replaced the "hours vary" wording with the confirmed hours (11 AM to 10 PM, Monday to Saturday, closed every Sunday) in the site config, Home, About and mobile navigation. Updated FR-003, the business content register, SRS, project overview, PRODUCT.md and README to match. Customers are still pointed to Facebook or the shop contact for schedule changes.\
+**Files/modules affected:** `src/config/site.ts`, `src/app/page.tsx`, `src/app/about/page.tsx`, `src/components/layout/mobile-navigation.tsx`, `tests/unit/business-pages.test.tsx`, `docs/functional-requirements.md`, `docs/business-content-register.md`, `docs/srs.md`, `docs/project-overview.md`, `PRODUCT.md`, `README.md`, `docs/development-log.md`.\
+**Testing performed:** see the commands recorded in the pull request.\
+**Git branch:** `feat/update-shop-hours`\
+**Next action:** Independent teammate review.

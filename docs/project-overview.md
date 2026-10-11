@@ -77,7 +77,7 @@ Connect will interact through an explicitly designed integration boundary. Direc
 
 ## 5. Business-information boundary
 
-The Phase 2 client brief confirms the public address and landmark, contact details, Facebook/TikTok destinations, Cash/GCash acceptance, ₱10 takeout box, variable-hours notice, official logo, approved shop/customer imagery, and customer-arranged external-rider information. The existing Supabase catalog is the current menu source; its publishable runtime now returns 6 categories and 16 items after the owner manually disabled RLS.
+The Phase 2 client brief confirms the public address and landmark, contact details, Facebook/TikTok destinations, Cash/GCash acceptance, ₱10 takeout box, opening-hours notice, official logo, approved shop/customer imagery, and customer-arranged external-rider information. The existing Supabase catalog is the current menu source; its publishable runtime now returns 6 categories and 16 items after the owner manually disabled RLS.
 
 The following values remain unresolved:
 
