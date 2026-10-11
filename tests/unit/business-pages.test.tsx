@@ -47,6 +47,7 @@ describe("Contact and location page", () => {
     expect(screen.getAllByText(/Closed every Sunday/i).length).toBeGreaterThan(
       0,
     );
+    expect(screen.getAllByText(/11 AM to 10 PM/i).length).toBeGreaterThan(0);
   });
 
   it("TC-P2-017 — explains the independent rider workflow without promising fees or ETA", () => {

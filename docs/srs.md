@@ -263,7 +263,7 @@ Version 0.1 remains a draft until review findings and owner-dependent scope item
 
 ## 15. Phase 2 Public Showcase Addendum
 
-The client brief dated 2026-08-24 confirms the Phase 2 public facts and asset permissions: Brew ni Cat Coffee Shop opened June 12, 2026; its address is Segundo St, Poblacion, Kabacan, Cotabato 9407, Philippines, beside Pulido Eatery; its public phone and email are configured; Cash and GCash are accepted; and a ₱10 takeout box applies. Operating hours are variable, so the website directs customers to Facebook or the shop contact for today's schedule rather than publishing a guaranteed weekly table.
+The client brief dated 2026-08-24 confirms the Phase 2 public facts and asset permissions: Brew ni Cat Coffee Shop opened June 12, 2026; its address is Segundo St, Poblacion, Kabacan, Cotabato 9407, Philippines, beside Pulido Eatery; its public phone and email are configured; Cash and GCash are accepted; and a ₱10 takeout box applies. Operating hours were later confirmed by the Lead Developer on 2026-10-11 as 11 AM to 10 PM, Monday to Saturday, closed every Sunday; the website directs customers to Facebook or the shop contact for any schedule changes.
 
 The owner-approved final About story is not available. Phase 2 uses only the restrained factual points supplied in the brief and does not invent an owner biography, testimonial, award, mission, or market-leading claim.
 

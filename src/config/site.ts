@@ -23,7 +23,7 @@ export const siteConfig = {
   operations: {
     closedDays: "Sunday",
     hoursNotice:
-      "Closed every Sunday. Hours on other days may vary — check our Facebook page or contact us for today’s schedule.",
+      "Open 11 AM to 10 PM, Monday to Saturday. Closed every Sunday. Check our Facebook page or contact us for any schedule changes.",
     payments: ["Cash", "GCash"],
     takeoutFee: "₱10 takeout box",
   },

@@ -133,7 +133,7 @@ export default function HomePage() {
                     · Closed every Sunday
                   </span>
                   <span className="block text-xs font-normal text-[var(--text-muted)]">
-                    Hours vary · check Facebook
+                    11 AM – 10 PM · check Facebook for changes
                   </span>
                 </dd>
               </div>
