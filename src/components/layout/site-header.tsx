@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { siteConfig } from "@/config/site";
 
+import { CartTriggerButton } from "../cart/cart-trigger-button";
 import { Container } from "../ui/container";
 import { MobileNavigation } from "./mobile-navigation";
 
@@ -48,7 +49,8 @@ export function SiteHeader() {
           </ul>
         </nav>
 
-        <div className="hidden lg:block">
+        <div className="hidden lg:flex lg:items-center lg:gap-3">
+          <CartTriggerButton />
           <Link
             href="/contact"
             className="nav-link inline-flex min-h-11 items-center justify-center rounded-full bg-[var(--deep-green)] px-5 py-2 text-sm font-bold text-white shadow-[var(--shadow-button)] hover:bg-[var(--deep-green-hover)]"
@@ -57,7 +59,10 @@ export function SiteHeader() {
           </Link>
         </div>
 
-        <MobileNavigation items={siteConfig.navigation} />
+        <div className="flex items-center gap-2 lg:hidden">
+          <CartTriggerButton />
+          <MobileNavigation items={siteConfig.navigation} />
+        </div>
       </Container>
     </header>
   );
