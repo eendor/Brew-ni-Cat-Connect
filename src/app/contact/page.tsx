@@ -130,7 +130,7 @@ export default function ContactPage() {
                   className="surface-lift block h-full rounded-[1.5rem] border border-[var(--border-soft)] bg-[var(--surface-card)] p-6 shadow-[var(--shadow-subtle)]"
                 >
                   <span className="eyebrow">{contact.label}</span>
-                  <span className="mt-3 block break-words text-lg font-extrabold text-[var(--deep-green)] sm:text-xl">
+                  <span className="mt-3 block wrap-anywhere text-lg font-extrabold text-[var(--deep-green)] sm:text-xl">
                     {contact.value}
                   </span>
                 </a>
