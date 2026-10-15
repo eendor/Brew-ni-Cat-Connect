@@ -496,3 +496,13 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Testing performed:** Production-build browser measurements and screenshots at 1280px, 375px and 320px (row height differences, page heights, card opacity after tab jump, dialog layout, 320px overflow 0, order button 48px). Other commands are recorded in the pull request.\
 **Git branch:** `fix/menu-layout-polish`\
 **Next action:** Lead developer approval recorded in the pull request.
+
+## 2026-10-16 — Draft RLS restore for public catalog only
+
+**Date:** 2026-10-16\
+**Phase:** Phase 2 security follow-up (production blocker)\
+**Task:** Re-check publishable-key table exposure and prepare a reviewed SQL draft to restore RLS without breaking the live Menu.\
+**Summary:** Count-only probes still showed public reachability for `inventory`, `recipe_mappings`, `expenses`, `orders`, and `order_items` while `categories` (6) and `items` (16) remained readable. Draft SQL and a verification script were added under `docs/evidence/phase-2/rls-restore-draft/`. Nothing was applied to Supabase.\
+**Files/modules affected:** `docs/evidence/phase-2/rls-restore-draft/*`, `docs/development-log.md`.\
+**Next action:** Lead Developer review of the SQL, confirm POS/staff clients do not rely on the website publishable key for business tables, then apply in Supabase and re-run the verification script.
+
