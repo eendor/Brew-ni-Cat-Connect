@@ -5,9 +5,6 @@ import { useEffect, useState } from "react";
 import { fetchPublicMenu } from "@/lib/menu/fetch-public-menu";
 import { isCatTreatsCategory } from "@/lib/menu/map-menu-catalog";
 import type { MenuCatalog as MenuCatalogModel } from "@/types/menu";
-
-import { Reveal } from "@/components/ui/reveal";
-
 import { MenuItemCard } from "./menu-item-card";
 import { MenuState } from "./menu-state";
 
@@ -103,10 +100,15 @@ export function MenuCatalog({ loadMenu = fetchPublicMenu }: MenuCatalogProps) {
           data-testid="menu-skeleton"
         >
           {[0, 1, 2, 3].map((key) => (
-            <div key={key} className="skeleton-card">
-              <div className="skeleton skeleton--media" />
-              <div className="grid gap-3 p-5 sm:p-6">
-                <div className="skeleton h-6 w-2/3" />
+            <div key={key} className="skeleton-card p-5 sm:p-6">
+              <div className="flex items-center gap-4">
+                <div className="skeleton size-20 shrink-0 rounded-2xl sm:size-24" />
+                <div className="grid flex-1 gap-2">
+                  <div className="skeleton h-6 w-2/3" />
+                  <div className="skeleton h-4 w-1/3" />
+                </div>
+              </div>
+              <div className="mt-6 grid gap-3">
                 <div className="skeleton h-4 w-full" />
                 <div className="skeleton h-4 w-4/5" />
               </div>
@@ -160,44 +162,46 @@ export function MenuCatalog({ loadMenu = fetchPublicMenu }: MenuCatalogProps) {
 
       <div className="grid gap-16 pt-12 sm:pt-16">
         {populatedCategories.map((category, index) => (
-          <Reveal key={category.id}>
-            <section
-              id={`menu-category-${index + 1}`}
-              data-menu-category={index}
-              className="scroll-mt-40"
-              aria-labelledby={`menu-category-heading-${index + 1}`}
-            >
-              <div className="flex items-end justify-between gap-5 border-b border-[var(--border-strong)] pb-4">
-                <div>
-                  <p className="eyebrow">Current category</p>
-                  <h2
-                    id={`menu-category-heading-${index + 1}`}
-                    className="font-display mt-2 text-3xl font-semibold text-[var(--text-strong)] sm:text-4xl"
-                  >
-                    {getCategoryDisplayName(category.name)}
-                  </h2>
-                  {isCatTreatsCategory(category.name) ? (
-                    <p className="mt-2 text-sm font-medium text-[var(--text-subtle)]">
-                      These treats are for cats, not food for people.
-                    </p>
-                  ) : null}
-                </div>
-                <p className="hidden text-sm font-semibold text-[var(--text-subtle)] sm:block">
-                  {category.items.length}{" "}
-                  {category.items.length === 1 ? "item" : "items"}
-                </p>
+          <section
+            key={category.id}
+            id={`menu-category-${index + 1}`}
+            data-menu-category={index}
+            className="scroll-mt-40"
+            aria-labelledby={`menu-category-heading-${index + 1}`}
+          >
+            <div className="flex items-end justify-between gap-5 border-b border-[var(--border-strong)] pb-4">
+              <div>
+                <h2
+                  id={`menu-category-heading-${index + 1}`}
+                  className="font-display text-3xl font-semibold text-[var(--text-strong)] sm:text-4xl"
+                >
+                  {getCategoryDisplayName(category.name)}
+                </h2>
+                {isCatTreatsCategory(category.name) ? (
+                  <p className="mt-2 text-sm font-medium text-[var(--text-subtle)]">
+                    These treats are for cats, not food for people.
+                  </p>
+                ) : null}
               </div>
-              <div className="menu-grid mt-6 grid items-start gap-5 md:grid-cols-2">
-                {category.items.map((item) => (
-                  <MenuItemCard
-                    key={item.id}
-                    item={item}
-                    catalog={viewState.catalog}
-                  />
-                ))}
-              </div>
-            </section>
-          </Reveal>
+              <p className="hidden text-sm font-semibold text-[var(--text-subtle)] sm:block">
+                {category.items.length}{" "}
+                {category.items.length === 1 ? "item" : "items"}
+              </p>
+            </div>
+            <div className="menu-grid mt-6 grid gap-5 md:grid-cols-2">
+              {category.items.map((item, itemIndex) => (
+                <MenuItemCard
+                  key={item.id}
+                  item={item}
+                  catalog={viewState.catalog}
+                  wide={
+                    category.items.length % 2 === 1 &&
+                    itemIndex === category.items.length - 1
+                  }
+                />
+              ))}
+            </div>
+          </section>
         ))}
       </div>
     </div>

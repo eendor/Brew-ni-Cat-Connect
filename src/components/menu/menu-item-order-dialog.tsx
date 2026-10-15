@@ -187,11 +187,18 @@ export function MenuItemOrderDialog({
         <div className="mt-6 space-y-6">
           {/* Variant Selection Fieldset */}
           {item.variants.length > 0 ? (
-            <fieldset className="border-0 p-0 m-0">
+            <fieldset className="mx-0 min-w-0 border-0 p-0">
               <legend className="block text-xs font-bold uppercase tracking-wider text-[var(--text-subtle)] mb-2">
                 Choose Size / Option
               </legend>
-              <div className="grid gap-2 sm:grid-cols-2" role="group">
+              <div
+                className={`grid gap-2 ${
+                  item.variants.length === 3
+                    ? "sm:grid-cols-3"
+                    : "sm:grid-cols-2"
+                }`}
+                role="group"
+              >
                 {item.variants.map((variant) => {
                   const isSelected = variant.id === selectedVariantId;
                   return (
@@ -235,7 +242,7 @@ export function MenuItemOrderDialog({
 
           {/* Flavor Selection Fieldset */}
           {item.flavors.length > 0 ? (
-            <fieldset className="border-0 p-0 m-0">
+            <fieldset className="mx-0 min-w-0 border-0 p-0">
               <div className="flex items-center justify-between mb-2">
                 <legend className="block text-xs font-bold uppercase tracking-wider text-[var(--text-subtle)]">
                   Choose Flavor

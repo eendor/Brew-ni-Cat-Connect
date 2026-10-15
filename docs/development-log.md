@@ -479,3 +479,20 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Testing performed:** Browser check on a production build: cards 1 and 3 lift to `-4px` on hover starting within 30ms, no lift under reduced motion; downloaded photo width covers the card at 375px@2x (750 for 333), 800px (640 for 360), 1280px (640 for 532) and 1440px@2x (1200 for 532). Other commands are recorded in the pull request.\
 **Git branch:** `fix/menu-card-hover-and-images`\
 **Next action:** Lead developer approval recorded in the pull request.
+
+## 2026-10-15 — Menu layout, order dialog and header polish
+
+**Date:** 2026-10-15\
+**Phase:** Phase 3 — Menu and Ordering Flow (UI polish)\
+**Task:** Lead developer review of the Menu after PR #16/#17: blank gaps between cards, photo and text-only cards looking like two designs, single cards filling half a row, sections blank after a tab jump, a cramped order dialog, a warm glow through the header, the wrong Home Matcha photo, and a very long mobile Home.\
+**Summary:**
+- Menu cards share one structure. A photo, when the item has one, is a 96px thumbnail beside the name instead of a 16:10 banner, so photo and text-only cards match. Cards stretch to the row height with the order button pinned to the bottom, and an odd last card in a category spans the full row (its sizes use two columns when there is more than one). Largest in-row height difference on desktop went from 437px to 0; Menu page height from 7781px to 6234px on desktop and 11420px to 10433px on mobile.
+- Menu categories no longer wait for a scroll fade-in. Visible cards were at opacity 0 for 0.5–0.9s after a tab jump; they are now fully visible immediately. The menu-specific stagger CSS and the PR #17 hover workaround were removed with it. The repeated "Current category" eyebrow was dropped because it labelled every section as current.
+- Order dialog: three sizes sit on one row, and the option groups get their spacing back (`m-0` on the fieldsets was overriding `space-y-6`).
+- Header becomes 90% opaque once the page scrolls and uses the design-system saturation (1.35), so the warm notice and terracotta buttons scrolling beneath can't tint the blur.
+- Home: Matcha favorite uses the real Lucky Green Neko photo used on the Menu; on phones the favorites are compact side-by-side cards (favorites section 1854px to 1109px at 375px).
+- Mobile card footer: full-width 48px order button on one line; the "Ready to enjoy?" hint shows from `sm` up. Flavor price lists use a 1px neutral rule instead of a 2px accent border.
+**Files/modules affected:** `src/components/menu/menu-item-card.tsx`, `src/components/menu/menu-catalog.tsx`, `src/components/menu/menu-item-order-dialog.tsx`, `src/components/layout/site-header.tsx`, `src/app/page.tsx`, `src/app/globals.css`, `docs/development-log.md`.\
+**Testing performed:** Production-build browser measurements and screenshots at 1280px, 375px and 320px (row height differences, page heights, card opacity after tab jump, dialog layout, 320px overflow 0, order button 48px). Other commands are recorded in the pull request.\
+**Git branch:** `fix/menu-layout-polish`\
+**Next action:** Lead developer approval recorded in the pull request.

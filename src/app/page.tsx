@@ -14,8 +14,8 @@ const favorites = [
     nickname: "The Lucky Green Neko",
     price: "From ₱49",
     note: "Creamy iced matcha handcrafted with rich green tea, fresh milk, and sweet caramel accents.",
-    image: "/images/shop/photo_148.jpg",
-    alt: "Iced salted caramel matcha served at Brew ni Cat",
+    image: "/images/menu/items/lucky-green-neko-matcha.jpg",
+    alt: "The Lucky Green Neko iced dirty matcha with an espresso layer",
   },
   {
     name: "Takoyaki",
@@ -161,33 +161,36 @@ export default function HomePage() {
               description="Matcha, Takoyaki, and Fries are customer-favorite groups. Open the current menu for today’s available options and prices."
             />
           </Reveal>
-          <div className="mt-10 grid gap-6 md:grid-cols-3">
+          <div className="mt-10 grid gap-4 md:grid-cols-3 md:gap-6">
             {favorites.map((favorite, index) => (
               <Reveal key={favorite.name} delayMs={index * 90}>
-                <article className="group surface-lift flex h-full flex-col overflow-hidden rounded-[1.75rem] border border-[var(--border-soft)] bg-[var(--surface-card)] shadow-[var(--shadow-subtle)]">
-                  <div className="relative aspect-[16/10] w-full overflow-hidden bg-[var(--surface-warm)]">
+                <article className="group surface-lift flex h-full overflow-hidden rounded-[1.75rem] border border-[var(--border-soft)] bg-[var(--surface-card)] shadow-[var(--shadow-subtle)] md:flex-col">
+                  <div className="relative w-28 shrink-0 overflow-hidden bg-[var(--surface-warm)] sm:w-40 md:aspect-[16/10] md:w-full">
                     <Image
                       src={favorite.image}
                       alt={favorite.alt}
                       fill
-                      sizes="(max-width: 767px) 100vw, 33vw"
+                      sizes="(max-width: 639px) 112px, (max-width: 767px) 160px, 33vw"
                       className="object-cover transition-transform duration-500 ease-[var(--ease-cinematic)] group-hover:scale-105"
                     />
-                    <div className="absolute top-3 right-3 rounded-full border border-black/10 bg-[var(--surface-card)]/95 px-3 py-1 text-xs font-extrabold text-[var(--deep-green)] backdrop-blur-sm shadow-sm">
+                    <div className="absolute top-3 right-3 hidden rounded-full border border-black/10 bg-[var(--surface-card)]/95 px-3 py-1 text-xs font-extrabold text-[var(--deep-green)] backdrop-blur-sm shadow-sm md:block">
                       {favorite.price}
                     </div>
                   </div>
-                  <div className="flex flex-1 flex-col p-6">
+                  <div className="flex min-w-0 flex-1 flex-col p-4 sm:p-5 md:p-6">
                     <span className="text-xs font-semibold text-[var(--warm-gold)]">
                       {favorite.nickname}
                     </span>
-                    <h3 className="font-display mt-1 text-2xl font-semibold text-[var(--text-strong)]">
+                    <h3 className="font-display mt-1 text-xl font-semibold text-[var(--text-strong)] md:text-2xl">
                       {favorite.name}
                     </h3>
-                    <p className="mt-3 flex-1 text-sm leading-6 text-[var(--text-muted)]">
+                    <p className="mt-0.5 text-sm font-extrabold text-[var(--deep-green)] md:hidden">
+                      {favorite.price}
+                    </p>
+                    <p className="mt-2 line-clamp-3 flex-1 text-sm leading-6 text-[var(--text-muted)] md:mt-3 md:line-clamp-none">
                       {favorite.note}
                     </p>
-                    <div className="mt-6 pt-4 border-t border-[var(--border-soft)]/60">
+                    <div className="mt-2 md:mt-6 md:border-t md:border-[var(--border-soft)]/60 md:pt-4">
                       <Link
                         href="/menu"
                         className="inline-flex min-h-11 items-center font-extrabold text-[var(--deep-green)] underline decoration-[var(--warm-gold)] decoration-2 underline-offset-4 hover:text-[var(--deep-green-hover)]"
