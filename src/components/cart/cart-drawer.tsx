@@ -120,7 +120,8 @@ export function CartDrawer() {
                   Your cart is empty
                 </h3>
                 <p className="mt-2 text-sm text-[var(--text-muted)] max-w-xs leading-relaxed">
-                  Explore our drinks, snacks, and cat treats to begin your Brew ni Cat order.
+                  Explore our drinks, snacks, and cat treats to begin your Brew
+                  ni Cat order.
                 </p>
                 <Link
                   href="/menu"
@@ -180,7 +181,9 @@ export function CartDrawer() {
                 <strong className="block font-bold text-[var(--text-strong)]">
                   Fulfillment & Payment Notice
                 </strong>
-                Available for pickup at Segundo St or external rider arrangement. Payment is settled via Cash or GCash directly with the shop.
+                Available for pickup at Segundo St or external rider
+                arrangement. Payment is settled via Cash or GCash directly with
+                the shop.
               </div>
 
               <div className="grid gap-2">

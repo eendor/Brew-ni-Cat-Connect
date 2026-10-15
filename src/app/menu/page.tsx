@@ -25,8 +25,9 @@ export default function MenuPage() {
         aside={
           <div className="max-w-sm rounded-2xl border border-[var(--notice-border)] bg-[var(--notice-surface)] p-5 text-sm leading-6 text-[var(--notice-text)]">
             <strong className="block">Online Order Drafts</strong>
-            Select items to build your order cart for pickup or
-            customer-arranged rider delivery. Finalize details at checkout.
+            Select items to build an order summary for pickup or external rider
+            delivery. Review your items and copy the order summary at checkout
+            to message or call the shop.
           </div>
         }
       />

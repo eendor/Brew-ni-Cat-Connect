@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 import { CheckoutView } from "@/components/checkout/checkout-view";
 import { CartProvider } from "@/context/cart-context";
+import type { MenuCatalog } from "@/types/menu";
 import type { CartState } from "@/types/ordering";
 
 const testCartState: CartState = {
@@ -37,10 +38,11 @@ const testCartState: CartState = {
 function renderCheckout(
   initialState?: CartState,
   storageKey = "test_checkout_storage",
+  loadMenu?: () => Promise<MenuCatalog>,
 ) {
   return render(
     <CartProvider initialState={initialState} storageKey={storageKey}>
-      <CheckoutView />
+      <CheckoutView loadMenu={loadMenu} />
     </CartProvider>,
   );
 }
@@ -109,10 +111,10 @@ describe("Checkout Flow & Step Transitions", () => {
       screen.getByText("How External Rider Pickup Works:"),
     ).toBeInTheDocument();
     expect(
-      screen.getByText("Submit your order draft through this checkout."),
+      screen.getByText("Prepare your order summary through this page."),
     ).toBeInTheDocument();
     expect(
-      screen.getByText("Contact and book your external rider yourself."),
+      screen.getByText(/Contact and book your external rider yourself/i),
     ).toBeInTheDocument();
     expect(
       screen.getByText(
@@ -153,9 +155,15 @@ describe("Checkout Flow & Step Transitions", () => {
     await user.click(submitBtn);
 
     expect(
-      screen.getByText(
-        "Please enter a valid Philippine mobile number (e.g., 0912 345 6789).",
-      ),
+      screen.getByText(/Please enter a valid Philippine mobile number/i),
+    ).toBeInTheDocument();
+
+    // Verify rejection of alphabetic characters (e.g. abcdefghij)
+    await user.clear(phoneInput);
+    await user.type(phoneInput, "abcdefghij");
+    await user.click(submitBtn);
+    expect(
+      screen.getByText(/Please enter a valid Philippine mobile number/i),
     ).toBeInTheDocument();
   });
 
@@ -165,7 +173,7 @@ describe("Checkout Flow & Step Transitions", () => {
 
     const nameInput = screen.getByLabelText(/Full Name/i);
     const phoneInput = screen.getByLabelText(/Contact Phone Number/i);
-    const notesInput = screen.getByLabelText(/Special Instructions or Notes/i);
+    const notesInput = screen.getByLabelText(/Special Instructions/i);
 
     await user.type(nameInput, "Maria Clara");
     await user.type(phoneInput, "09181234567");
@@ -220,7 +228,7 @@ describe("Checkout Flow & Step Transitions", () => {
     );
   });
 
-  it("TC-P3-CHK-007 & TC-P3-CHK-008 — confirms order draft without Supabase write, clears cart, and displays confirmation screen", async () => {
+  it("TC-P3-CHK-007 & TC-P3-CHK-008 — transitions to Step 3 (Send to Shop) without claiming backend order persistence", async () => {
     const user = userEvent.setup();
     renderCheckout(testCartState);
 
@@ -234,42 +242,104 @@ describe("Checkout Flow & Step Transitions", () => {
       screen.getByRole("button", { name: /Continue to Order Review/i }),
     );
 
-    // In Review step, confirm the draft
-    const confirmBtn = screen.getByRole("button", {
-      name: /Confirm Order Draft/i,
+    // In Review step, proceed to Send to Shop
+    const proceedBtn = screen.getByRole("button", {
+      name: /Proceed to Send to Shop/i,
     });
-    await user.click(confirmBtn);
+    await user.click(proceedBtn);
 
-    // Step 3: Order Received
+    // Step 3: Order Summary for the Shop
     expect(
-      screen.getByRole("heading", { level: 1, name: "Order Received" }),
+      screen.getByRole("heading", { level: 1, name: "Order Summary for Shop" }),
     ).toBeInTheDocument();
-    expect(screen.getByText("Order Draft Received")).toBeInTheDocument();
+    expect(screen.getByText("Order Summary Ready")).toBeInTheDocument();
     expect(
       screen.getByRole("heading", {
         level: 2,
-        name: "Thank You, Pedro Penduko!",
+        name: "Order Summary for the Shop",
       }),
     ).toBeInTheDocument();
 
-    // Check order reference code
-    const referenceElements = screen.getAllByText(/BNC-/);
-    expect(referenceElements.length).toBeGreaterThan(0);
-    expect(referenceElements[0]?.textContent).toMatch(/BNC-\d{4}-[A-Z0-9]+/);
-
-    // Check next steps guidance
-    expect(screen.getByText("What happens next?")).toBeInTheDocument();
-    expect(screen.getByText(/Visit Brew ni Cat at/i)).toBeInTheDocument();
+    // Notice that no backend order was placed
     expect(
-      screen.getByRole("button", { name: "Copy order reference code" }),
+      screen.getByText(/The website does not transmit orders to the shop yet/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/No order has been sent to Brew ni Cat/i),
+    ).toBeInTheDocument();
+
+    // Formatted summary and copy button
+    expect(
+      screen.getByRole("button", { name: /Copy order summary/i }),
+    ).toBeInTheDocument();
+
+    // Direct shop contact action links
+    expect(
+      screen.getByRole("link", { name: "Message on Facebook" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /Call or Text/i }),
     ).toBeInTheDocument();
 
     // CTAs
     expect(
-      screen.getByRole("link", { name: "Order More Items" }),
+      screen.getByRole("link", { name: "Start Another Order" }),
     ).toHaveAttribute("href", "/menu");
     expect(
       screen.getByRole("link", { name: "Return to Home" }),
     ).toHaveAttribute("href", "/");
+  });
+
+  it("TC-P3-CHK-009 — revalidates cart prices against menu catalog on mount to prevent tampering", async () => {
+    const mockCatalog: MenuCatalog = {
+      categories: [
+        {
+          id: "drinks",
+          name: "Drinks",
+          items: [
+            {
+              id: "iced-caramel",
+              name: "Iced Caramel Latte",
+              availability: "available",
+              flavors: ["Caramel"],
+              variants: [
+                {
+                  id: "latte-16",
+                  name: "16 oz",
+                  basePrice: 95,
+                  flavorPrices: [],
+                  description: null,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    // Tampered cart state with unitPrice: 1
+    const tamperedCartState: CartState = {
+      lines: [
+        {
+          key: "iced-caramel::latte-16::Caramel",
+          itemId: "iced-caramel",
+          itemName: "Iced Caramel Latte",
+          variantId: "latte-16",
+          variantName: "16 oz",
+          flavor: "Caramel",
+          unitPrice: 1, // Tampered from 95
+          quantity: 1,
+          lineTotal: 1,
+        },
+      ],
+      fulfillment: "pickup",
+    };
+
+    renderCheckout(tamperedCartState, "tampered_cart_test", () =>
+      Promise.resolve(mockCatalog),
+    );
+
+    // The subtotal should revalidate to ₱95, not ₱1
+    expect(await screen.findByText("₱95")).toBeInTheDocument();
   });
 });

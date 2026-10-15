@@ -1,6 +1,13 @@
 "use client";
 
-import { useEffect, useId, useMemo, useRef, useState } from "react";
+import {
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { createPortal } from "react-dom";
 
 import { useCart } from "@/context/cart-context";
@@ -11,6 +18,8 @@ import {
   resolveVariantUnitPrice,
 } from "@/lib/ordering/cart-pricing";
 import type { MenuCatalog, MenuItem } from "@/types/menu";
+
+const emptySubscribe = () => () => {};
 
 type MenuItemOrderDialogProps = Readonly<{
   item: MenuItem;
@@ -26,7 +35,11 @@ export function MenuItemOrderDialog({
   const { addItem, openDrawer } = useCart();
   const titleId = useId();
   const closeButtonRef = useRef<HTMLButtonElement>(null);
-  const [mounted, setMounted] = useState(false);
+  const mounted = useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false,
+  );
 
   const [selectedVariantId, setSelectedVariantId] = useState<string>(
     () => item.variants[0]?.id ?? "",
@@ -34,10 +47,6 @@ export function MenuItemOrderDialog({
   const [selectedFlavor, setSelectedFlavor] = useState<string | null>(null);
   const [quantity, setQuantity] = useState<number>(1);
   const [feedbackError, setFeedbackError] = useState<string | null>(null);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const dialogRef = useFocusTrap<HTMLDivElement>(mounted, {
     onClose,
@@ -102,7 +111,9 @@ export function MenuItemOrderDialog({
         setFeedbackError("Please choose a flavor to complete this selection.");
         return;
       }
-      setFeedbackError("This selection is not currently available for purchase.");
+      setFeedbackError(
+        "This selection is not currently available for purchase.",
+      );
       return;
     }
 
@@ -377,6 +388,10 @@ export function MenuItemOrderDialog({
       </div>
     </div>
   );
+
+  if (!mounted || typeof document === "undefined") {
+    return null;
+  }
 
   return createPortal(dialogElement, document.body);
 }

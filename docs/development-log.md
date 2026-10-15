@@ -411,3 +411,16 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Testing performed:** see the commands recorded in the pull request.\
 **Git branch:** `feat/update-shop-hours`\
 **Next action:** Independent teammate review.
+
+## 2026-10-15 — Phase 3 Cart & Checkout implementation and review resolution
+
+**Date:** 2026-10-15\
+**Phase:** Phase 3 — Menu and Ordering Flow\
+**Task:** Implement Phase 3 Cart & Checkout (FR-019, FR-021, FR-022, FR-025) and resolve code review feedback from project lead on PR #14.\
+**Summary:** Implemented cart state management, slide-out drawer, dedicated cart page, and step-by-step checkout flow. Addressed peer review feedback: rendered dialogs via React portal (`createPortal(..., document.body)`) to prevent card CSS transform clipping; implemented circular focus trap and focus restoration hook (`useFocusTrap`); added accessible `<fieldset>`/`<legend>`/`aria-pressed` attributes; revalidated cart prices against authoritative menu catalog on checkout to defend against `localStorage` tampering; replaced simulated backend order IDs with a truthful "Send to Shop" draft summary flow providing direct copy button and Messenger/phone contact links; enforced strict Philippine mobile phone format (`^(09\d{9}|\+639\d{9})$`); and aligned checkout copy with confirmed shop takeout packaging fee and operating hours.\
+**Files/modules affected:** `src/app/cart/page.tsx`, `src/app/checkout/page.tsx`, `src/app/menu/page.tsx`, `src/components/cart/cart-drawer.tsx`, `src/components/cart/cart-line-item.tsx`, `src/components/cart/cart-page-view.tsx`, `src/components/cart/cart-trigger-button.tsx`, `src/components/checkout/checkout-view.tsx`, `src/components/menu/menu-item-order-dialog.tsx`, `src/context/cart-context.tsx`, `src/lib/accessibility/focus-trap.ts`, `tests/unit/cart-components.test.tsx`, `tests/unit/cart-context.test.tsx`, `tests/unit/checkout.test.tsx`, `tests/unit/menu-order-dialog.test.tsx`, `docs/development-log.md`.\
+**Testing performed:** `npm run lint`, `npm run typecheck`, `npm run test` (14 files / 107 tests passed), `npm run format:check`, `npm run build` (9/9 static pages), `python scripts/validate_phase0_docs.py` (PASS).\
+**Git branch:** `feat/p3-cart-checkout`\
+**Pull request:** [#14](https://github.com/eendor/Brew-ni-Cat-Connect/pull/14)\
+**Next action:** Push commit to update PR #14 and clear GitHub Actions CI checks.
+

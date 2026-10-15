@@ -33,9 +33,7 @@ export type PreparedOrderSummary = Readonly<{
   itemCount: number;
 }>;
 
-export function formatOrderSummaryText(
-  summary: PreparedOrderSummary,
-): string {
+export function formatOrderSummaryText(summary: PreparedOrderSummary): string {
   const fulfillmentText =
     summary.fulfillment === "pickup"
       ? `Pickup at Shop (${siteConfig.address.street}, ${siteConfig.address.locality})`
@@ -68,7 +66,9 @@ type CheckoutViewProps = Readonly<{
   loadMenu?: () => Promise<MenuCatalog>;
 }>;
 
-export function CheckoutView({ loadMenu = fetchPublicMenu }: CheckoutViewProps) {
+export function CheckoutView({
+  loadMenu = fetchPublicMenu,
+}: CheckoutViewProps) {
   const {
     lines,
     fulfillment,
@@ -222,7 +222,8 @@ export function CheckoutView({ loadMenu = fetchPublicMenu }: CheckoutViewProps) 
                 Your cart is empty
               </h2>
               <p className="mt-2 text-sm text-[var(--text-muted)]">
-                Browse our delicious coffee, cold drinks, snacks, and treats to start your order.
+                Browse our delicious coffee, cold drinks, snacks, and treats to
+                start your order.
               </p>
               <Link href="/menu" className="button-primary mt-6">
                 Browse Menu
@@ -248,15 +249,18 @@ export function CheckoutView({ loadMenu = fetchPublicMenu }: CheckoutViewProps) 
         description={
           step === "details" ? (
             <p>
-              Confirm your contact details and fulfillment option. Payment is settled directly with the shop upon collection.
+              Confirm your contact details and fulfillment option. Payment is
+              settled directly with the shop upon collection.
             </p>
           ) : step === "review" ? (
             <p>
-              Double check your order items, contact details, and fulfillment arrangement before preparing your order summary.
+              Double check your order items, contact details, and fulfillment
+              arrangement before preparing your order summary.
             </p>
           ) : (
             <p>
-              Your order summary is ready. Send it directly to Brew ni Cat via Facebook Messenger or phone to place your order.
+              Your order summary is ready. Send it directly to Brew ni Cat via
+              Facebook Messenger or phone to place your order.
             </p>
           )
         }
@@ -398,12 +402,17 @@ export function CheckoutView({ loadMenu = fetchPublicMenu }: CheckoutViewProps) 
                           name="checkout-fulfillment"
                           value="pickup"
                           checked={fulfillment === "pickup"}
-                          onChange={() => setFulfillment("pickup" as FulfillmentType)}
+                          onChange={() =>
+                            setFulfillment("pickup" as FulfillmentType)
+                          }
                           className="size-4 accent-[var(--accent-solid)] mt-1"
                         />
                       </div>
                       <p className="mt-4 text-xs text-[var(--text-muted)] leading-relaxed">
-                        Pick up directly at {siteConfig.address.street}, {siteConfig.address.locality} ({siteConfig.address.landmark}). {siteConfig.operations.hoursNotice}
+                        Pick up directly at {siteConfig.address.street},{" "}
+                        {siteConfig.address.locality} (
+                        {siteConfig.address.landmark}).{" "}
+                        {siteConfig.operations.hoursNotice}
                       </p>
                     </label>
 
@@ -428,12 +437,16 @@ export function CheckoutView({ loadMenu = fetchPublicMenu }: CheckoutViewProps) 
                           name="checkout-fulfillment"
                           value="external-rider"
                           checked={fulfillment === "external-rider"}
-                          onChange={() => setFulfillment("external-rider" as FulfillmentType)}
+                          onChange={() =>
+                            setFulfillment("external-rider" as FulfillmentType)
+                          }
                           className="size-4 accent-[var(--accent-solid)] mt-1"
                         />
                       </div>
                       <p className="mt-4 text-xs text-[var(--text-muted)] leading-relaxed">
-                        Arrange and pay your own preferred rider (e.g., Papa&apos;s Delivery). Your rider collects the order at the shop.
+                        Arrange and pay your own preferred rider (e.g.,
+                        Papa&apos;s Delivery). Your rider collects the order at
+                        the shop.
                       </p>
                     </label>
                   </div>
@@ -445,12 +458,24 @@ export function CheckoutView({ loadMenu = fetchPublicMenu }: CheckoutViewProps) 
                       </strong>
                       <ol className="list-decimal pl-4 space-y-1 mb-3">
                         <li>Prepare your order summary through this page.</li>
-                        <li>Contact Brew ni Cat via Facebook Messenger or phone to place the order.</li>
-                        <li>Contact and book your external rider yourself (Papa&apos;s Delivery, local rider, etc.).</li>
-                        <li>Your rider collects the prepared order at the shop counter ({siteConfig.address.street}, {siteConfig.address.landmark}).</li>
+                        <li>
+                          Contact Brew ni Cat via Facebook Messenger or phone to
+                          place the order.
+                        </li>
+                        <li>
+                          Contact and book your external rider yourself
+                          (Papa&apos;s Delivery, local rider, etc.).
+                        </li>
+                        <li>
+                          Your rider collects the prepared order at the shop
+                          counter ({siteConfig.address.street},{" "}
+                          {siteConfig.address.landmark}).
+                        </li>
                       </ol>
                       <p className="border-t border-[var(--notice-border)] pt-2 text-[var(--notice-text)]">
-                        Rider availability, delivery fees, arrival time, and rider payment are separate from Brew ni Cat. The shop does not calculate, book, or charge rider fees.
+                        Rider availability, delivery fees, arrival time, and
+                        rider payment are separate from Brew ni Cat. The shop
+                        does not calculate, book, or charge rider fees.
                       </p>
                       <div className="mt-3 flex flex-wrap gap-2">
                         {siteConfig.externalRiders.map((riderUrl, index) => (
@@ -473,7 +498,8 @@ export function CheckoutView({ loadMenu = fetchPublicMenu }: CheckoutViewProps) 
                     2. Customer Contact Information
                   </h2>
                   <p className="mt-1 text-sm text-[var(--text-muted)]">
-                    This information will be included in your order summary for the shop.
+                    This information will be included in your order summary for
+                    the shop.
                   </p>
 
                   <div className="mt-6 grid gap-5 sm:grid-cols-2">
@@ -490,13 +516,18 @@ export function CheckoutView({ loadMenu = fetchPublicMenu }: CheckoutViewProps) 
                         required
                         value={customer.name}
                         onChange={(e) => {
-                          setCustomer((prev) => ({ ...prev, name: e.target.value }));
+                          setCustomer((prev) => ({
+                            ...prev,
+                            name: e.target.value,
+                          }));
                           if (errors.name) {
                             setErrors((prev) => ({ ...prev, name: "" }));
                           }
                         }}
                         aria-invalid={!!errors.name}
-                        aria-describedby={errors.name ? "name-error" : undefined}
+                        aria-describedby={
+                          errors.name ? "name-error" : undefined
+                        }
                         placeholder="e.g. Maria Santos"
                         className="mt-2 block w-full rounded-xl border border-[var(--border-strong)] bg-white px-4 py-3 text-sm text-[var(--text-strong)] placeholder-[var(--text-subtle)] focus:border-[var(--accent-solid)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-solid)]"
                       />
@@ -516,7 +547,8 @@ export function CheckoutView({ loadMenu = fetchPublicMenu }: CheckoutViewProps) 
                         htmlFor={phoneInputId}
                         className="block text-sm font-bold text-[var(--text-strong)]"
                       >
-                        Contact Phone Number <span className="text-red-600">*</span>
+                        Contact Phone Number{" "}
+                        <span className="text-red-600">*</span>
                       </label>
                       <input
                         id={phoneInputId}
@@ -524,13 +556,18 @@ export function CheckoutView({ loadMenu = fetchPublicMenu }: CheckoutViewProps) 
                         required
                         value={customer.phone}
                         onChange={(e) => {
-                          setCustomer((prev) => ({ ...prev, phone: e.target.value }));
+                          setCustomer((prev) => ({
+                            ...prev,
+                            phone: e.target.value,
+                          }));
                           if (errors.phone) {
                             setErrors((prev) => ({ ...prev, phone: "" }));
                           }
                         }}
                         aria-invalid={!!errors.phone}
-                        aria-describedby={errors.phone ? "phone-error" : undefined}
+                        aria-describedby={
+                          errors.phone ? "phone-error" : undefined
+                        }
                         placeholder="e.g. 0912 345 6789"
                         className="mt-2 block w-full rounded-xl border border-[var(--border-strong)] bg-white px-4 py-3 text-sm text-[var(--text-strong)] placeholder-[var(--text-subtle)] focus:border-[var(--accent-solid)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-solid)]"
                       />
@@ -599,7 +636,10 @@ export function CheckoutView({ loadMenu = fetchPublicMenu }: CheckoutViewProps) 
                         rows={3}
                         value={customer.notes}
                         onChange={(e) =>
-                          setCustomer((prev) => ({ ...prev, notes: e.target.value }))
+                          setCustomer((prev) => ({
+                            ...prev,
+                            notes: e.target.value,
+                          }))
                         }
                         placeholder="e.g. Less ice for iced latte, preferred pickup time today, pack pastries separately..."
                         className="mt-2 block w-full rounded-xl border border-[var(--border-strong)] bg-white px-4 py-3 text-sm text-[var(--text-strong)] placeholder-[var(--text-subtle)] focus:border-[var(--accent-solid)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-solid)]"
@@ -627,7 +667,9 @@ export function CheckoutView({ loadMenu = fetchPublicMenu }: CheckoutViewProps) 
                     <div className="flex justify-between text-[var(--text-muted)]">
                       <span>Fulfillment</span>
                       <span className="font-bold text-[var(--text-strong)] capitalize">
-                        {fulfillment === "pickup" ? "Pickup at shop" : "External rider"}
+                        {fulfillment === "pickup"
+                          ? "Pickup at shop"
+                          : "External rider"}
                       </span>
                     </div>
 
@@ -657,7 +699,9 @@ export function CheckoutView({ loadMenu = fetchPublicMenu }: CheckoutViewProps) 
                     <strong className="block font-bold text-[var(--text-strong)]">
                       Shop Hours & Takeout Note
                     </strong>
-                    {siteConfig.operations.hoursNotice} Takeout packaging incurs a confirmed {siteConfig.operations.takeoutFee}. Payment is settled via Cash or GCash directly with the shop.
+                    {siteConfig.operations.hoursNotice} Takeout packaging incurs
+                    a confirmed {siteConfig.operations.takeoutFee}. Payment is
+                    settled via Cash or GCash directly with the shop.
                   </div>
 
                   <button
@@ -694,7 +738,8 @@ export function CheckoutView({ loadMenu = fetchPublicMenu }: CheckoutViewProps) 
                         Review Items
                       </h2>
                       <p className="text-sm text-[var(--text-muted)] mt-1">
-                        {itemCount} {itemCount === 1 ? "item" : "items"} in order summary
+                        {itemCount} {itemCount === 1 ? "item" : "items"} in
+                        order summary
                       </p>
                     </div>
                     <Link
@@ -707,11 +752,7 @@ export function CheckoutView({ loadMenu = fetchPublicMenu }: CheckoutViewProps) 
 
                   <ul className="space-y-4" aria-label="Review items list">
                     {lines.map((line) => (
-                      <CartLineItem
-                        key={line.key}
-                        item={line}
-                        readOnly
-                      />
+                      <CartLineItem key={line.key} item={line} readOnly />
                     ))}
                   </ul>
                 </div>
@@ -810,7 +851,9 @@ export function CheckoutView({ loadMenu = fetchPublicMenu }: CheckoutViewProps) 
                     <div className="flex justify-between text-[var(--text-muted)]">
                       <span>Fulfillment</span>
                       <span className="font-bold text-[var(--text-strong)]">
-                        {fulfillment === "pickup" ? "Pickup at shop" : "External rider"}
+                        {fulfillment === "pickup"
+                          ? "Pickup at shop"
+                          : "External rider"}
                       </span>
                     </div>
 
@@ -840,7 +883,10 @@ export function CheckoutView({ loadMenu = fetchPublicMenu }: CheckoutViewProps) 
                     <strong className="block font-bold">
                       Order Preparation Notice
                     </strong>
-                    Proceeding generates your complete order summary. Online order transmission will be added in a future phase; you will send this summary directly to the shop via Facebook Messenger or phone to place your order.
+                    Proceeding generates your complete order summary. Online
+                    order transmission will be added in a future phase; you will
+                    send this summary directly to the shop via Facebook
+                    Messenger or phone to place your order.
                   </div>
 
                   <button
@@ -895,9 +941,13 @@ export function CheckoutView({ loadMenu = fetchPublicMenu }: CheckoutViewProps) 
                 {/* Plain truthful explanation: no fake order placed */}
                 <div className="mt-4 rounded-2xl border border-[var(--notice-border)] bg-[var(--notice-surface)] p-4 text-sm text-[var(--notice-text)] leading-relaxed text-left">
                   <strong className="block font-bold text-base mb-1">
-                    Notice: The website does not transmit orders to the shop yet.
+                    Notice: The website does not transmit orders to the shop
+                    yet.
                   </strong>
-                  Online order transmission is coming in a future update. No order has been sent to Brew ni Cat. Please copy your order summary below and message or call the shop to place your order.
+                  Online order transmission is coming in a future update. No
+                  order has been sent to Brew ni Cat. Please copy your order
+                  summary below and message or call the shop to place your
+                  order.
                 </div>
 
                 {/* Formatted Order Text Box with Copy Button */}
@@ -921,7 +971,14 @@ export function CheckoutView({ loadMenu = fetchPublicMenu }: CheckoutViewProps) 
                         strokeLinejoin="round"
                         aria-hidden="true"
                       >
-                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                        <rect
+                          x="9"
+                          y="9"
+                          width="13"
+                          height="13"
+                          rx="2"
+                          ry="2"
+                        />
                         <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
                       </svg>
                       {isCopied ? "Copied to clipboard!" : "Copy order summary"}
@@ -939,7 +996,8 @@ export function CheckoutView({ loadMenu = fetchPublicMenu }: CheckoutViewProps) 
                     Next step: Contact Brew ni Cat to arrange your order
                   </h3>
                   <p className="text-xs text-[var(--text-muted)] leading-relaxed">
-                    Paste your copied order summary into Facebook Messenger or read it over the phone:
+                    Paste your copied order summary into Facebook Messenger or
+                    read it over the phone:
                   </p>
                   <div className="flex flex-col sm:flex-row gap-3">
                     <ExternalLink
@@ -966,25 +1024,44 @@ export function CheckoutView({ loadMenu = fetchPublicMenu }: CheckoutViewProps) 
                   {preparedSummary.fulfillment === "pickup" ? (
                     <ol className="list-decimal pl-5 space-y-2 text-[var(--text-muted)]">
                       <li>
-                        Send your order summary to Brew ni Cat via Facebook or phone ({siteConfig.contact.phone}).
+                        Send your order summary to Brew ni Cat via Facebook or
+                        phone ({siteConfig.contact.phone}).
                       </li>
                       <li>
-                        Head to Brew ni Cat at <strong className="text-[var(--text-strong)]">{siteConfig.address.street}, {siteConfig.address.locality}</strong> ({siteConfig.address.landmark}).
+                        Head to Brew ni Cat at{" "}
+                        <strong className="text-[var(--text-strong)]">
+                          {siteConfig.address.street},{" "}
+                          {siteConfig.address.locality}
+                        </strong>{" "}
+                        ({siteConfig.address.landmark}).
                       </li>
                       <li>
-                        Pay <strong className="text-[var(--text-strong)]">{formatPrice(preparedSummary.subtotal)}</strong> (plus confirmed {siteConfig.operations.takeoutFee} for takeout packaging) via {preparedSummary.customer.paymentPreference} at the counter.
+                        Pay{" "}
+                        <strong className="text-[var(--text-strong)]">
+                          {formatPrice(preparedSummary.subtotal)}
+                        </strong>{" "}
+                        (plus confirmed {siteConfig.operations.takeoutFee} for
+                        takeout packaging) via{" "}
+                        {preparedSummary.customer.paymentPreference} at the
+                        counter.
                       </li>
                     </ol>
                   ) : (
                     <ol className="list-decimal pl-5 space-y-2 text-[var(--text-muted)]">
                       <li>
-                        Send your order summary to Brew ni Cat so the shop can prepare it.
+                        Send your order summary to Brew ni Cat so the shop can
+                        prepare it.
                       </li>
                       <li>
-                        Book your preferred external rider (e.g. Papa&apos;s Delivery). Provide the rider with your order details and the shop address: {siteConfig.address.street}, {siteConfig.address.locality} ({siteConfig.address.landmark}).
+                        Book your preferred external rider (e.g. Papa&apos;s
+                        Delivery). Provide the rider with your order details and
+                        the shop address: {siteConfig.address.street},{" "}
+                        {siteConfig.address.locality} (
+                        {siteConfig.address.landmark}).
                       </li>
                       <li>
-                        Your rider collects your prepared order at the counter. Settle the rider&apos;s delivery fee directly with them.
+                        Your rider collects your prepared order at the counter.
+                        Settle the rider&apos;s delivery fee directly with them.
                       </li>
                     </ol>
                   )}
