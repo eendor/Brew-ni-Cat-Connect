@@ -779,7 +779,10 @@ button:focus-visible,
     padding 500ms var(--ease-spring);
 }
 
+/* Near-opaque once content scrolls under it, so warm notices and terracotta
+   buttons can't bleed through the blur as a colored glow */
 html[data-scrolled] .site-header {
+  background-color: rgb(255 253 248 / 90%);
   box-shadow: 0 10px 30px -18px rgb(23 63 56 / 35%);
   border-bottom-color: rgb(23 63 56 / 10%);
 }
@@ -847,46 +850,13 @@ html[data-scrolled] .site-header__bar {
   }
 }
 
-/* Staggered card rise inside revealed menu categories */
-.reveal .menu-grid > * {
-  opacity: 0;
-  transform: translateY(18px);
-  transition:
-    opacity 700ms var(--ease-spring),
-    transform 700ms var(--ease-spring);
-}
-
-.reveal--visible .menu-grid > * {
-  opacity: 1;
-  transform: none;
-}
-
-.reveal--visible .menu-grid > :nth-child(2) {
-  transition-delay: 70ms;
-}
-.reveal--visible .menu-grid > :nth-child(3) {
-  transition-delay: 140ms;
-}
-.reveal--visible .menu-grid > :nth-child(4) {
-  transition-delay: 210ms;
-}
-.reveal--visible .menu-grid > :nth-child(n + 5) {
-  transition-delay: 260ms;
-}
-
-/* Must follow the reveal rules above, which otherwise cancel the lift and delay it */
-.reveal--visible .menu-grid > .surface-lift:hover {
-  transform: translateY(-4px);
-  transition-delay: 0ms;
-}
-
 /* Gentle card lift with a slow photo zoom */
 .menu-card__image {
   transition: transform 900ms var(--ease-spring);
 }
 
 .menu-card:hover .menu-card__image {
-  transform: scale(1.035);
+  transform: scale(1.06);
 }
 
 /* Sticky category bar follows the tightened header height */
@@ -1007,11 +977,6 @@ textarea:focus-visible {
   animation: skeleton-shimmer 1.6s ease-in-out infinite;
 }
 
-.skeleton--media {
-  aspect-ratio: 16 / 10;
-  border-radius: 0;
-}
-
 @keyframes skeleton-shimmer {
   from {
     background-position: 100% 0;
@@ -1036,7 +1001,6 @@ textarea:focus-visible {
   .cinematic-hero__media,
   .cinematic-hero > .relative,
   .page-hero > *,
-  .reveal .menu-grid > *,
   .menu-card:hover .menu-card__image {
     opacity: 1 !important;
     transform: none !important;
