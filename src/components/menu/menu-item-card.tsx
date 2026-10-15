@@ -35,7 +35,7 @@ export function MenuItemCard({ item, catalog }: MenuItemCardProps) {
 
   return (
     <article
-      className={`surface-lift overflow-hidden rounded-[1.5rem] border bg-[var(--surface-card)] shadow-[var(--shadow-subtle)] ${
+      className={`menu-card surface-lift overflow-hidden rounded-[1.5rem] border bg-[var(--surface-card)] shadow-[var(--shadow-subtle)] ${
         unavailable
           ? "border-[var(--border-strong)] opacity-75"
           : "border-[var(--border-soft)]"
@@ -48,7 +48,7 @@ export function MenuItemCard({ item, catalog }: MenuItemCardProps) {
             alt={image.alt}
             fill
             sizes="(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 33vw"
-            className="object-cover"
+            className="menu-card__image object-cover"
           />
         </div>
       ) : null}

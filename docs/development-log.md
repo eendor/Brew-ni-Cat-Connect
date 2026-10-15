@@ -439,3 +439,28 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Pull request:** [#14](https://github.com/eendor/Brew-ni-Cat-Connect/pull/14)\
 **Next action:** Push commit to update PR #14 and await lead developer merge.
 
+## 2026-10-15 — Menu product photos and refined scroll and page motion
+
+**Date:** 2026-10-15\
+**Phase:** Phase 3 — Menu and Ordering Flow (presentation polish)\
+**Task:** Lead Developer approved real product photos from the shop for the Menu and asked for complete, restrained scroll and page motion across the site; the four noodle cards were all showing one duplicated photo.\
+**Requirement IDs:** FR-005, FR-008, FR-011, FR-016, NFR-005, NFR-029, NFR-032, NFR-034.\
+**Summary:** Six real product photos (max 1600px, quality 80, EXIF/GPS stripped) now live in `public/images/menu/items/`, one per item. `photo_011` is removed from every Menu card, Sedaap and all other unphotographed items stay imageless, and no menu-board graphics are used (Home favorites now use the real Takoyaki and Fries photos). Image lookup is exact (base name or nickname) so no two cards can share a photo. Motion is CSS-first with one rAF-throttled scroll hook, no new dependencies, and is disabled under `prefers-reduced-motion`.\
+**Changes:**
+
+- Menu photos: Takoyaki, Buldak Carbo, Buldak Cheese, Fries, Cat-Feine, Matcha (The Lucky Green Neko, cropped to the dirty matcha);
+- soft fade/rise route transition (`src/app/template.tsx`);
+- frosted header tightens on scroll, centered nav underline, sticky category bar tracks the header height;
+- Home hero media scales/parallaxes while copy fades on scroll; interior page heroes fade/rise with a subtle ambient drift;
+- staggered card rise in Menu categories, gentle card lift with slow photo zoom, scroll-spy active category tab that stays visible in the tab bar;
+- footer reveal, button press feedback, smooth form focus transitions;
+- cart drawer slide-in, order dialog scale-in, mobile menu drop-in, backdrop fades;
+- Menu loading skeleton cards; and
+- contribution rules updated: lead-developer self-approval allowed, teammate pull requests still reviewed.
+
+**Files/modules affected:** `public/images/menu/items/*`, `src/config/menu-item-images.ts`, `src/app/globals.css`, `src/app/layout.tsx`, `src/app/page.tsx`, `src/app/template.tsx`, `src/components/motion/scroll-motion.tsx`, `src/components/layout/site-header.tsx`, `src/components/layout/site-footer.tsx`, `src/components/layout/mobile-navigation.tsx`, `src/components/menu/menu-catalog.tsx`, `src/components/menu/menu-item-card.tsx`, `src/components/menu/menu-item-order-dialog.tsx`, `src/components/cart/cart-drawer.tsx`, `tests/unit/menu-item-images.test.ts`, `tests/unit/menu-catalog.test.tsx`, `docs/test-cases.md`, `docs/code-review.md`, `docs/evidence/phase-3/menu-photos-motion/`, `CONTRIBUTING.md`, `docs/development-standards.md`, `docs/development-log.md`.\
+**Testing performed:** `npm run lint` (pass), `npm run typecheck` (pass), `npm run format:check` (pass), `npm test` (14 files / 109 tests passed), `npm run build` (9/9 static pages), `npx playwright test` (13/13 passed), `python scripts/validate_phase0_docs.py` (PASS). Desktop 1440px and mobile 320px screenshots reviewed with zero horizontal overflow; record in `docs/evidence/phase-3/menu-photos-motion/verification.md`.\
+**Issues encountered:** GSAP and Lenis were evaluated and not added; native smooth anchor scrolling is already subtle and keeps sticky bars and focus traps simple. Drawer/dialog exit animations are not implemented because they unmount immediately.\
+**Git branch:** `feat/menu-photos-motion`\
+**Pull request:** [#16](https://github.com/eendor/Brew-ni-Cat-Connect/pull/16)\
+**Next action:** Lead Developer approval recorded on the pull request, then merge.

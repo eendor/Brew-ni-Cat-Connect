@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { vi } from "vitest";
 
@@ -99,6 +99,47 @@ describe("MenuCatalog", () => {
       "Brewing up the latest choices",
     );
     expect(pendingLoader).toHaveBeenCalledTimes(1);
+  });
+
+  it("TC-P3-051 — shows decorative skeleton cards while the menu loads", () => {
+    render(
+      <MenuCatalog
+        loadMenu={() => new Promise<MenuCatalogModel>(() => undefined)}
+      />,
+    );
+
+    const skeleton = screen.getByTestId("menu-skeleton");
+    expect(skeleton).toHaveAttribute("aria-hidden", "true");
+    expect(skeleton.children).toHaveLength(4);
+  });
+
+  it("TC-P3-052 — marks the category tab whose section is in view", async () => {
+    let notify: IntersectionObserverCallback = () => undefined;
+    class FakeObserver {
+      constructor(callback: IntersectionObserverCallback) {
+        notify = callback;
+      }
+      observe() {}
+      disconnect() {}
+    }
+    vi.stubGlobal("IntersectionObserver", FakeObserver);
+
+    render(<MenuCatalog loadMenu={() => Promise.resolve(populatedCatalog)} />);
+    const tabs = within(
+      await screen.findByRole("navigation", { name: "Menu categories" }),
+    ).getAllByRole("link");
+    expect(tabs[0]).toHaveAttribute("aria-current", "true");
+
+    const sections = document.querySelectorAll("[data-menu-category]");
+    const last = sections[sections.length - 1]!;
+    act(() => {
+      notify(
+        [{ isIntersecting: true, target: last } as IntersectionObserverEntry],
+        {} as IntersectionObserver,
+      );
+    });
+    expect(tabs[tabs.length - 1]).toHaveAttribute("aria-current", "true");
+    vi.unstubAllGlobals();
   });
 
   it("TC-P2-012 — renders categories, products, sizes, flavors, prices, combo details, and availability", async () => {

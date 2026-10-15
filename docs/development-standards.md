@@ -233,7 +233,7 @@ Accessibility defects in account, cart, checkout, and order-tracking critical pa
 - Do not rewrite shared history or force-push a shared branch without explicit team coordination.
 - Inspect staged files and diff before every commit. Do not commit secrets, local environment files, generated build output, dependency folders, or unrelated changes.
 - Pull requests for meaningful modules must include summary, requirement IDs, changes, test commands/results, screenshots for UI changes, accessibility/security considerations, known limitations, and a checklist.
-- Leave pull requests intended as peer-review evidence open until an actual teammate reviews them. Do not represent self-checks as peer review.
+- Self-approval is allowed for the lead developer's own pull requests and must be recorded in the pull request. Teammate pull requests still need a review before merge. Do not represent self-checks as teammate peer review.
 
 ## 14. Code Review Checklist
 

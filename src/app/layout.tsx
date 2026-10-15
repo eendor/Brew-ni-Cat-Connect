@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { CartDrawer } from "@/components/cart/cart-drawer";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
+import { ScrollMotion } from "@/components/motion/scroll-motion";
 import { siteConfig } from "@/config/site";
 import { CartProvider } from "@/context/cart-context";
 
@@ -59,6 +60,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
             <SiteFooter />
           </div>
           <CartDrawer />
+          <ScrollMotion />
         </CartProvider>
       </body>
     </html>

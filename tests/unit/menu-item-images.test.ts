@@ -1,48 +1,61 @@
 import { describe, expect, it } from "vitest";
 
-import { getMenuItemImage } from "@/config/menu-item-images";
+import {
+  getMenuItemImage,
+  menuItemImageSources,
+} from "@/config/menu-item-images";
 
 describe("getMenuItemImage", () => {
-  it("maps noodle items to the shop food plate still", () => {
+  it("TC-P3-048 — maps each approved item to its own product photo", () => {
+    expect(getMenuItemImage("Takoyaki")?.src).toBe(
+      "/images/menu/items/takoyaki-pawsome-balls.jpg",
+    );
+    expect(getMenuItemImage("Takoyaki (Pawsome Balls)")?.src).toBe(
+      "/images/menu/items/takoyaki-pawsome-balls.jpg",
+    );
     expect(getMenuItemImage("Buldak Carbo")?.src).toBe(
-      "/images/shop/photo_011.jpg",
+      "/images/menu/items/buldak-carbo.jpg",
     );
     expect(getMenuItemImage("Buldak Cheese")?.src).toBe(
-      "/images/shop/photo_011.jpg",
+      "/images/menu/items/buldak-cheese.jpg",
     );
-    expect(getMenuItemImage("Sedaap Original")?.src).toBe(
-      "/images/shop/photo_011.jpg",
-    );
-    expect(getMenuItemImage("Sedaap Spicy Chicken")?.src).toBe(
-      "/images/shop/photo_011.jpg",
-    );
-  });
-
-  it("maps Cat-Feine to the shop iced-coffee still", () => {
-    expect(getMenuItemImage("Cat-Feine")?.src).toBe(
-      "/images/shop/photo_012.jpg",
+    expect(getMenuItemImage("Fries (Cat Claws)")?.src).toBe(
+      "/images/menu/items/fries-cat-claws.jpg",
     );
     expect(getMenuItemImage("Cat-Feine (Classic Coffee)")?.src).toBe(
-      "/images/shop/photo_012.jpg",
+      "/images/menu/items/cat-feine-iced-latte.jpg",
+    );
+    expect(getMenuItemImage("Matcha (The Lucky Green Neko)")?.src).toBe(
+      "/images/menu/items/lucky-green-neko-matcha.jpg",
     );
   });
 
-  it("omits items without a shop food-only still (no stock photos)", () => {
-    expect(getMenuItemImage("Matcha (The Lucky Green Neko)")).toBeNull();
-    expect(getMenuItemImage("Fries (Cat Claws)")).toBeNull();
-    expect(getMenuItemImage("Oreo (The Tuxedo Cat)")).toBeNull();
-    expect(getMenuItemImage("Takoyaki")).toBeNull();
-    expect(getMenuItemImage("Nachos")).toBeNull();
-    expect(getMenuItemImage("Soda")).toBeNull();
-    expect(getMenuItemImage("Cat Association")).toBeNull();
-    expect(getMenuItemImage("Couple of Cats")).toBeNull();
-    expect(getMenuItemImage("Single-Paw-rtner Combos")).toBeNull();
-    expect(getMenuItemImage("Take-out Box")).toBeNull();
-    expect(getMenuItemImage("Cat Treats")).toBeNull();
+  it("TC-P3-049 — never reuses one photo for two items", () => {
+    expect(new Set(menuItemImageSources).size).toBe(
+      menuItemImageSources.length,
+    );
+    expect(getMenuItemImage("Buldak Carbo")?.src).not.toBe(
+      getMenuItemImage("Buldak Cheese")?.src,
+    );
   });
 
-  it("returns null when no mapping exists so cards stay optional", () => {
-    expect(getMenuItemImage("Seasonal Drink")).toBeNull();
-    expect(getMenuItemImage("")).toBeNull();
+  it("TC-P3-050 — keeps Sedaap and unphotographed items imageless", () => {
+    for (const name of [
+      "Sedaap Original",
+      "Sedaap Spicy Chicken",
+      "Oreo (The Tuxedo Cat)",
+      "Nachos",
+      "Soda",
+      "Cat Association",
+      "Couple of Cats",
+      "Single-Paw-rtner Combos",
+      "Take-out Box",
+      "Cat Treats",
+      "Matcha Latte Float",
+      "Seasonal Drink",
+      "",
+    ]) {
+      expect(getMenuItemImage(name)).toBeNull();
+    }
   });
 });

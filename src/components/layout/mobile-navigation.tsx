@@ -75,7 +75,7 @@ export function MobileNavigation({ items }: MobileNavigationProps) {
 
       <nav
         id="mobile-navigation"
-        className="absolute inset-x-0 top-full border-t border-[var(--border-soft)] bg-[var(--surface-canvas)] px-5 py-5 shadow-[var(--shadow-card)]"
+        className="motion-drop-in absolute inset-x-0 top-full border-t border-[var(--border-soft)] bg-[var(--surface-canvas)] px-5 py-5 shadow-[var(--shadow-card)]"
         aria-label="Mobile navigation"
         hidden={!isOpen}
       >

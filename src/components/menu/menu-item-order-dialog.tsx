@@ -146,12 +146,12 @@ export function MenuItemOrderDialog({
     >
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-xs transition-opacity"
+        className="fixed inset-0 bg-black/50 backdrop-blur-xs motion-fade-in"
         aria-hidden="true"
         onClick={onClose}
       />
 
-      <div className="relative w-full max-w-lg rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-6 sm:p-8 shadow-2xl transition-all max-h-[90vh] overflow-y-auto">
+      <div className="motion-pop-in relative w-full max-w-lg rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-6 sm:p-8 shadow-2xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-start justify-between gap-4 border-b border-[var(--border-soft)] pb-4">
           <div>
             <span className="eyebrow block">Configure item</span>
