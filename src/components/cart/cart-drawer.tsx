@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef } from "react";
 
 import { useCart } from "@/context/cart-context";
+import { useFocusTrap } from "@/lib/accessibility/focus-trap";
 import { formatPrice } from "@/lib/menu/format-price";
 
 import { CartLineItem } from "./cart-line-item";
@@ -21,37 +22,22 @@ export function CartDrawer() {
     clearCart,
   } = useCart();
 
-  const drawerRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
-  // Close on Escape key press
-  useEffect(() => {
-    if (!isDrawerOpen) {
-      return;
-    }
+  const drawerContainerRef = useFocusTrap<HTMLDivElement>(isDrawerOpen, {
+    onClose: closeDrawer,
+    initialFocusRef: closeButtonRef,
+  });
 
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        closeDrawer();
-      }
-    }
-
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [isDrawerOpen, closeDrawer]);
-
-  // Focus close button on open & lock background scroll
+  // Lock background scroll when open
   useEffect(() => {
     if (isDrawerOpen) {
-      closeButtonRef.current?.focus();
+      const original = document.body.style.overflow;
       document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
+      return () => {
+        document.body.style.overflow = original;
+      };
     }
-
-    return () => {
-      document.body.style.overflow = "";
-    };
   }, [isDrawerOpen]);
 
   if (!isDrawerOpen) {
@@ -60,6 +46,7 @@ export function CartDrawer() {
 
   return (
     <div
+      ref={drawerContainerRef}
       className="fixed inset-0 z-50 overflow-hidden"
       role="dialog"
       aria-modal="true"
@@ -73,10 +60,7 @@ export function CartDrawer() {
       />
 
       <div className="fixed inset-y-0 right-0 flex max-w-full pl-10">
-        <div
-          ref={drawerRef}
-          className="relative flex w-screen max-w-md flex-col bg-[var(--surface-canvas)] shadow-2xl border-l border-[var(--border-soft)]"
-        >
+        <div className="relative flex w-screen max-w-md flex-col bg-[var(--surface-canvas)] shadow-2xl border-l border-[var(--border-soft)]">
           {/* Header */}
           <div className="flex items-center justify-between border-b border-[var(--border-soft)] px-5 py-4 bg-[var(--surface-card)]">
             <div className="flex items-center gap-2.5">
@@ -136,8 +120,7 @@ export function CartDrawer() {
                   Your cart is empty
                 </h3>
                 <p className="mt-2 text-sm text-[var(--text-muted)] max-w-xs leading-relaxed">
-                  Explore our drinks, snacks, and cat treats to begin your Brew
-                  ni Cat order.
+                  Explore our drinks, snacks, and cat treats to begin your Brew ni Cat order.
                 </p>
                 <Link
                   href="/menu"
@@ -197,9 +180,7 @@ export function CartDrawer() {
                 <strong className="block font-bold text-[var(--text-strong)]">
                   Fulfillment & Payment Notice
                 </strong>
-                Available for pickup at Segundo St or external rider
-                arrangement. Payment is settled via Cash or GCash directly with
-                the shop.
+                Available for pickup at Segundo St or external rider arrangement. Payment is settled via Cash or GCash directly with the shop.
               </div>
 
               <div className="grid gap-2">

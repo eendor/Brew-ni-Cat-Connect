@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 import { useCart } from "@/context/cart-context";
+import { useFocusTrap } from "@/lib/accessibility/focus-trap";
 import { formatPrice } from "@/lib/menu/format-price";
 import {
   calculateLineTotal,
@@ -24,6 +26,7 @@ export function MenuItemOrderDialog({
   const { addItem, openDrawer } = useCart();
   const titleId = useId();
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const [mounted, setMounted] = useState(false);
 
   const [selectedVariantId, setSelectedVariantId] = useState<string>(
     () => item.variants[0]?.id ?? "",
@@ -32,23 +35,23 @@ export function MenuItemOrderDialog({
   const [quantity, setQuantity] = useState<number>(1);
   const [feedbackError, setFeedbackError] = useState<string | null>(null);
 
-  // Manage body scroll and Escape key
   useEffect(() => {
-    closeButtonRef.current?.focus();
+    setMounted(true);
+  }, []);
+
+  const dialogRef = useFocusTrap<HTMLDivElement>(mounted, {
+    onClose,
+    initialFocusRef: closeButtonRef,
+  });
+
+  // Body scroll lock
+  useEffect(() => {
+    const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        onClose();
-      }
-    }
-
-    document.addEventListener("keydown", handleKeyDown);
     return () => {
-      document.body.style.overflow = "";
-      document.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = originalOverflow;
     };
-  }, [onClose]);
+  }, []);
 
   const selectedVariant = useMemo(() => {
     return (
@@ -99,9 +102,7 @@ export function MenuItemOrderDialog({
         setFeedbackError("Please choose a flavor to complete this selection.");
         return;
       }
-      setFeedbackError(
-        "This selection is not currently available for purchase.",
-      );
+      setFeedbackError("This selection is not currently available for purchase.");
       return;
     }
 
@@ -120,8 +121,13 @@ export function MenuItemOrderDialog({
     }
   }
 
-  return (
+  if (!mounted) {
+    return null;
+  }
+
+  const dialogElement = (
     <div
+      ref={dialogRef}
       className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
       role="dialog"
       aria-modal="true"
@@ -168,31 +174,33 @@ export function MenuItemOrderDialog({
         </div>
 
         <div className="mt-6 space-y-6">
-          {/* Variant Selection */}
+          {/* Variant Selection Fieldset */}
           {item.variants.length > 0 ? (
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-[var(--text-subtle)] mb-2">
+            <fieldset className="border-0 p-0 m-0">
+              <legend className="block text-xs font-bold uppercase tracking-wider text-[var(--text-subtle)] mb-2">
                 Choose Size / Option
-              </label>
-              <div className="grid gap-2 sm:grid-cols-2">
+              </legend>
+              <div className="grid gap-2 sm:grid-cols-2" role="group">
                 {item.variants.map((variant) => {
                   const isSelected = variant.id === selectedVariantId;
                   return (
                     <button
                       key={variant.id}
                       type="button"
+                      aria-pressed={isSelected}
                       onClick={() => {
                         setSelectedVariantId(variant.id);
                         setFeedbackError(null);
                       }}
                       className={`flex flex-col items-start rounded-xl border p-3 text-left transition-all ${
                         isSelected
-                          ? "border-[var(--accent-solid)] bg-[var(--surface-warm)] ring-2 ring-[var(--accent-solid)]"
+                          ? "border-[var(--accent-solid)] bg-[var(--surface-warm)] ring-2 ring-[var(--accent-solid)] font-extrabold"
                           : "border-[var(--border-soft)] bg-[var(--surface-card)] hover:bg-[var(--surface-warm)]"
                       }`}
                     >
                       <span className="font-bold text-sm text-[var(--text-strong)]">
                         {variant.name}
+                        {isSelected ? " (Selected)" : ""}
                       </span>
                       {variant.basePrice !== null &&
                       !(
@@ -211,16 +219,16 @@ export function MenuItemOrderDialog({
                   );
                 })}
               </div>
-            </div>
+            </fieldset>
           ) : null}
 
-          {/* Flavor Selection */}
+          {/* Flavor Selection Fieldset */}
           {item.flavors.length > 0 ? (
-            <div>
+            <fieldset className="border-0 p-0 m-0">
               <div className="flex items-center justify-between mb-2">
-                <label className="block text-xs font-bold uppercase tracking-wider text-[var(--text-subtle)]">
+                <legend className="block text-xs font-bold uppercase tracking-wider text-[var(--text-subtle)]">
                   Choose Flavor
-                </label>
+                </legend>
                 {selectedVariant?.basePrice === 0 &&
                 selectedVariant.flavorPrices.length > 0 ? (
                   <span className="text-xs font-bold text-[var(--accent-solid)]">
@@ -233,10 +241,11 @@ export function MenuItemOrderDialog({
                 )}
               </div>
 
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2" role="group">
                 {selectedVariant?.basePrice !== 0 ? (
                   <button
                     type="button"
+                    aria-pressed={selectedFlavor === null}
                     onClick={() => {
                       setSelectedFlavor(null);
                       setFeedbackError(null);
@@ -262,6 +271,7 @@ export function MenuItemOrderDialog({
                     <button
                       key={flavor}
                       type="button"
+                      aria-pressed={isSelected}
                       onClick={() => {
                         setSelectedFlavor(flavor);
                         setFeedbackError(null);
@@ -282,7 +292,7 @@ export function MenuItemOrderDialog({
                   );
                 })}
               </div>
-            </div>
+            </fieldset>
           ) : null}
 
           {/* Quantity Controls */}
@@ -367,4 +377,6 @@ export function MenuItemOrderDialog({
       </div>
     </div>
   );
+
+  return createPortal(dialogElement, document.body);
 }

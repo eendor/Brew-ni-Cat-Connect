@@ -226,6 +226,59 @@ export function createCartStore(
   };
 }
 
+export type CartRevalidationResult = Readonly<{
+  state: CartState;
+  repricedCount: number;
+  removedCount: number;
+  warnings: readonly string[];
+}>;
+
+export function revalidateCartWithCatalog(
+  currentState: CartState,
+  catalog: MenuCatalog,
+): CartRevalidationResult {
+  let nextState: CartState = {
+    lines: [],
+    fulfillment: currentState.fulfillment,
+  };
+
+  let repricedCount = 0;
+  let removedCount = 0;
+  const warnings: string[] = [];
+
+  for (const line of currentState.lines) {
+    const result = addCatalogSelection(nextState, catalog, {
+      itemId: line.itemId,
+      variantId: line.variantId,
+      flavor: line.flavor,
+      quantity: line.quantity,
+    });
+
+    if (result.ok) {
+      const addedLine = result.state.lines.find((l) => l.key === line.key);
+      if (addedLine && addedLine.unitPrice !== line.unitPrice) {
+        repricedCount++;
+        warnings.push(
+          `Price for ${line.itemName} (${line.variantName}) was updated to the current menu price.`,
+        );
+      }
+      nextState = result.state;
+    } else {
+      removedCount++;
+      warnings.push(
+        `${line.itemName} (${line.variantName}) is no longer available and was removed from your cart.`,
+      );
+    }
+  }
+
+  return {
+    state: nextState,
+    repricedCount,
+    removedCount,
+    warnings,
+  };
+}
+
 export type CartContextValue = Readonly<{
   state: CartState;
   lines: readonly CartItem[];
@@ -244,6 +297,7 @@ export type CartContextValue = Readonly<{
     catalog: MenuCatalog,
     selection: CartItemSelection,
   ) => AddCatalogSelectionResult;
+  revalidateWithCatalog: (catalog: MenuCatalog) => CartRevalidationResult;
   updateQuantity: (key: string, quantity: number) => void;
   removeItem: (key: string) => void;
   setFulfillment: (fulfillment: FulfillmentType) => void;
@@ -331,6 +385,16 @@ export function CartProvider({
   const isEmpty = useMemo(() => isCartEmpty(state), [state]);
   const draft = useMemo(() => buildOrderDraft(state), [state]);
 
+  const revalidateWithCatalog = useCallback(
+    (catalog: MenuCatalog): CartRevalidationResult => {
+      const current = store.getSnapshot();
+      const outcome = revalidateCartWithCatalog(current, catalog);
+      store.setDirectState(outcome.state);
+      return outcome;
+    },
+    [store],
+  );
+
   const contextValue = useMemo<CartContextValue>(
     () => ({
       state,
@@ -347,6 +411,7 @@ export function CartProvider({
       closeDrawer,
       toggleDrawer,
       addItem,
+      revalidateWithCatalog,
       updateQuantity,
       removeItem,
       setFulfillment,
@@ -366,6 +431,7 @@ export function CartProvider({
       closeDrawer,
       toggleDrawer,
       addItem,
+      revalidateWithCatalog,
       updateQuantity,
       removeItem,
       setFulfillment,
@@ -397,6 +463,12 @@ const fallbackCartValue: CartContextValue = {
     state: createInitialCartState(),
     reason: "item-unavailable",
     message: "Cart provider not available",
+  }),
+  revalidateWithCatalog: () => ({
+    state: createInitialCartState(),
+    repricedCount: 0,
+    removedCount: 0,
+    warnings: [],
   }),
   updateQuantity: () => {},
   removeItem: () => {},
