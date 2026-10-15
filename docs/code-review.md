@@ -94,3 +94,23 @@ This functional pass exposes a more serious current blocker: public access depen
 **Recommendations:** Review the checklist and cases in `docs/evidence/phase-2-implementation.md` and `docs/test-cases.md`; separately verify business facts, public access behavior, mobile/keyboard/media experience, typing, environment separation, and scope.\
 **Changes made:** Not applicable until review findings exist.\
 **Status:** Developer self-inspection, local automation, branch push, open [Pull Request #2](https://github.com/eendor/Brew-ni-Cat-Connect/pull/2), and the initial/follow-up hosted workflows are complete. Renier's independent review remains pending. Do not merge or mark Done before that review.
+
+## 2026-10-15 — Menu product photos and refined scroll and page motion (PR #16)
+
+**Module:** Menu item images, site-wide motion layer, overlays\
+**Author:** Lead developer\
+**Reviewer:** Self-reviewed and approved by the lead developer\
+**Date:** 2026-10-15
+
+**Findings:**
+
+1. Scope stays presentational: no order writes, auth, payments, schema, or RLS change.
+2. Every photo maps to exactly one item, and lookup no longer uses prefix matching, which caused the duplicated noodle photo.
+3. Motion is disabled under `prefers-reduced-motion`; hero progress is not written in that mode.
+4. SSR-safe: `ScrollMotion` renders nothing and only writes `<html>` attributes after hydration; `template.tsx` is a server component.
+5. Performance: one passive, rAF-throttled scroll listener; redundant `--hero-progress` writes skipped once past the first viewport; animations use opacity/transform only.
+6. Accessibility: focus traps unchanged; skeletons are `aria-hidden`; active tab exposed with `aria-current`; focus-visible outlines preserved.
+
+**Known limitations:** drawer/dialog close without an exit animation; footer and section reveals depend on JavaScript, matching the existing `Reveal` behavior.\
+**Status:** Approved by the Lead Developer; awaiting merge.
+

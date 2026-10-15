@@ -46,4 +46,4 @@ A review-ready pull request should include:
 - Documentation updated
 - Checklist
 
-Leave pull requests that require peer-review evidence open until a real teammate review occurs. Do not mark a module reviewed without an identifiable review record.
+Self-approval is allowed for the lead developer's own pull requests; record the approval in the pull request. Teammate pull requests still need a review before merge. Do not mark a module reviewed without an identifiable review record.

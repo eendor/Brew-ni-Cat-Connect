@@ -146,3 +146,17 @@ The final Phase 2 follow-up validation ran on 2026-08-24. Vitest passed 21 of 21
 | QA-P2-004 | Renier independent accessibility/responsive/code review | Not Run | Pending open Pull Request review |
 
 The old posters are not an expected-result oracle. Current Supabase public records are authoritative. No production mutation test is permitted in Phase 2. Public-read success under manually disabled RLS does not complete the least-privilege security requirement.
+
+## 10. Phase 3 Menu Photos and Motion Cases
+
+Earlier Phase 3 identifiers `TC-P3-001`–`TC-P3-047` exist in the unit tests and are not yet tabulated here. Run on 2026-10-15 for branch `feat/menu-photos-motion`: Vitest 109/109 passed in 14 files; Playwright 13/13 passed.
+
+| ID | Requirement ID(s) | Module | Scenario | Preconditions | Input / action | Expected result | Actual result | Status | Evidence |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| TC-P3-048 | FR-011, NFR-005 | Menu images | Approved items map to their own photos | Static config | Look up Takoyaki, Buldak Carbo/Cheese, Fries, Cat-Feine, Matcha by name and nickname | Each returns its dedicated `/images/menu/items/` photo | Matched in the 109/109 Vitest run | Passed | `tests/unit/menu-item-images.test.ts` |
+| TC-P3-049 | FR-011 | Menu images | No duplicated photo | Static config | Compare all mapped sources | Every source is unique; Buldak Carbo and Cheese differ | Matched in the 109/109 Vitest run | Passed | `tests/unit/menu-item-images.test.ts` |
+| TC-P3-050 | FR-011 | Menu images | Unphotographed items stay imageless | Static config | Look up Sedaap, Nachos, Oreo, combos, Cat Treats, unknown names | All return no photo | Matched in the 109/109 Vitest run | Passed | `tests/unit/menu-item-images.test.ts` |
+| TC-P3-051 | FR-008 | Menu UI | Loading skeleton | Pending loader | Render MenuCatalog | Four `aria-hidden` skeleton cards render beside the polite status | Matched in the 109/109 Vitest run | Passed | `tests/unit/menu-catalog.test.tsx` |
+| TC-P3-052 | FR-016 | Menu UI | Scroll-spy active category tab | Stubbed IntersectionObserver | Report the last section as intersecting | Its tab gets `aria-current="true"` | Matched in the 109/109 Vitest run | Passed | `tests/unit/menu-catalog.test.tsx` |
+| MAN-P3-001 | NFR-032, NFR-034 | All public pages, cart, checkout | Motion and responsive review | Dev server, Chromium | Capture 1440px and 320px views at top and scrolled | Motion renders without overflow, overlap or clipped content | Reviewed; zero horizontal overflow | Passed | `docs/evidence/phase-3/menu-photos-motion/` |
+
