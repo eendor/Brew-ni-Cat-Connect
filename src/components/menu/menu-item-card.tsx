@@ -1,11 +1,17 @@
+"use client";
+
 import Image from "next/image";
+import { useState } from "react";
 
 import { getMenuItemImage } from "@/config/menu-item-images";
 import { formatPrice, getLowestItemPrice } from "@/lib/menu/format-price";
-import type { MenuItem } from "@/types/menu";
+import type { MenuCatalog, MenuItem } from "@/types/menu";
+
+import { MenuItemOrderDialog } from "./menu-item-order-dialog";
 
 type MenuItemCardProps = Readonly<{
   item: MenuItem;
+  catalog?: MenuCatalog;
 }>;
 
 function getItemPrices(item: MenuItem): readonly (number | null)[] {
@@ -20,10 +26,12 @@ function getItemPrices(item: MenuItem): readonly (number | null)[] {
   });
 }
 
-export function MenuItemCard({ item }: MenuItemCardProps) {
+export function MenuItemCard({ item, catalog }: MenuItemCardProps) {
+  const [isOrderOpen, setIsOrderOpen] = useState(false);
   const lowestPrice = getLowestItemPrice(getItemPrices(item));
   const unavailable = item.availability === "unavailable";
   const image = getMenuItemImage(item.name);
+  const isAvailable = item.availability === "available";
 
   return (
     <article
@@ -143,7 +151,32 @@ export function MenuItemCard({ item }: MenuItemCardProps) {
             Contact the shop for current price details.
           </p>
         )}
+
+        {/* Phase 3 Ordering Trigger */}
+        {isAvailable && item.variants.length > 0 ? (
+          <div className="mt-6 border-t border-[var(--border-soft)] pt-4 flex items-center justify-between">
+            <span className="text-xs text-[var(--text-subtle)] font-medium">
+              Ready to enjoy?
+            </span>
+            <button
+              type="button"
+              onClick={() => setIsOrderOpen(true)}
+              className="button-primary min-h-10 px-4 py-2 text-xs font-bold"
+              aria-label={`Order ${item.name}`}
+            >
+              Order / Add to Cart +
+            </button>
+          </div>
+        ) : null}
       </div>
+
+      {isOrderOpen ? (
+        <MenuItemOrderDialog
+          item={item}
+          catalog={catalog}
+          onClose={() => setIsOrderOpen(false)}
+        />
+      ) : null}
     </article>
   );
 }

@@ -122,7 +122,11 @@ export function MenuCatalog({ loadMenu = fetchPublicMenu }: MenuCatalogProps) {
               </div>
               <div className="mt-6 grid items-start gap-5 md:grid-cols-2">
                 {category.items.map((item) => (
-                  <MenuItemCard key={item.id} item={item} />
+                  <MenuItemCard
+                    key={item.id}
+                    item={item}
+                    catalog={viewState.catalog}
+                  />
                 ))}
               </div>
             </section>

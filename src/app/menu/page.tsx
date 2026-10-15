@@ -24,9 +24,10 @@ export default function MenuPage() {
         }
         aside={
           <div className="max-w-sm rounded-2xl border border-[var(--notice-border)] bg-[var(--notice-surface)] p-5 text-sm leading-6 text-[var(--notice-text)]">
-            <strong className="block">Browse-only menu</strong>
-            Contact Brew ni Cat to arrange an order. Website ordering is not
-            offered on this page.
+            <strong className="block">Online Order Drafts</strong>
+            Select items to build an order summary for pickup or external rider
+            delivery. Review your items and copy the order summary at checkout
+            to message or call the shop.
           </div>
         }
       />
