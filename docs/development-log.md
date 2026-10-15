@@ -412,6 +412,21 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Git branch:** `feat/update-shop-hours`\
 **Next action:** Independent teammate review.
 
+## 2026-10-14 — Restore a passing Playwright baseline
+
+**Date:** 2026-10-14\
+**Phase:** Phase 3 — Menu and Ordering Flow (maintenance)\
+**Task:** While reviewing PR #14, two Playwright tests failed on `main` as well as on the PR branch.\
+**Summary:** TC-P1-009 found horizontal overflow at 320px on `/contact`: the email address cannot break at word boundaries, so its card grew to 303px and pushed the page wider than the viewport. The contact value now uses `wrap-anywhere`. TC-P2-021 still looked for a homepage image named "Brew ni Cat Coffee Shop logo", which was removed in the PR #10 hero redesign; the logo now sits in the header as decoration inside the "Brew ni Cat Coffee Shop home" link. The test now checks that link and the hero heading instead.\
+**Changes:**
+- `src/app/contact/page.tsx`: `break-words` → `wrap-anywhere` on contact values;
+- `tests/e2e/showcase.spec.ts`: TC-P2-021 checks the header home link and hero heading;
+- this development-log entry.
+**Files/modules affected:** `src/app/contact/page.tsx`, `tests/e2e/showcase.spec.ts`, `docs/development-log.md`.\
+**Testing performed:** `npm run test:e2e` (13/13 passed); other commands are recorded in the pull request.\
+**Git branch:** `fix/e2e-baseline`\
+**Next action:** Independent teammate review; no self-approval.
+
 ## 2026-10-15 — Phase 3 Cart & Checkout implementation and review resolution
 
 **Date:** 2026-10-15\

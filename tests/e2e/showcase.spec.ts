@@ -6,7 +6,15 @@ test("TC-P2-021 — homepage presents the official Brew ni Cat showcase", async 
   await page.goto("/");
 
   await expect(
-    page.getByRole("img", { name: "Brew ni Cat Coffee Shop logo" }),
+    page
+      .getByRole("banner")
+      .getByRole("link", { name: "Brew ni Cat Coffee Shop home" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", {
+      level: 1,
+      name: "Coffee, comfort, and a little cat energy.",
+    }),
   ).toBeVisible();
   await expect(
     page.getByRole("link", { name: "Browse current menu" }),
