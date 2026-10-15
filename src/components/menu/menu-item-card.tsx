@@ -47,7 +47,7 @@ export function MenuItemCard({ item, catalog }: MenuItemCardProps) {
             src={image.src}
             alt={image.alt}
             fill
-            sizes="(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 33vw"
+            sizes="(max-width: 767px) 100vw, (max-width: 1199px) 50vw, 576px"
             className="menu-card__image object-cover"
           />
         </div>

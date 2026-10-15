@@ -464,3 +464,18 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Git branch:** `feat/menu-photos-motion`\
 **Pull request:** [#16](https://github.com/eendor/Brew-ni-Cat-Connect/pull/16)\
 **Next action:** Lead Developer approval recorded on the pull request, then merge.
+
+## 2026-10-15 — Restore menu card hover lift and right-size menu photos
+
+**Date:** 2026-10-15\
+**Phase:** Phase 3 — Menu and Ordering Flow (follow-up to PR #16)\
+**Task:** Post-merge review of PR #16 found that menu cards no longer lifted on hover, and that the card photo `sizes` hint did not match the two-column menu grid.\
+**Summary:** The staggered reveal rule `.reveal--visible .menu-grid > *` sets `transform: none` with the same specificity as `.surface-lift:hover` and comes later, so the hover lift never applied; its stagger delays also stayed on the cards. A rule after the reveal rules restores the lift with no delay. Reduced motion still disables it through the existing `!important` override. The menu card `sizes` now follows the grid (one column below 768px, two columns up to the 72rem container) instead of a three-column guess, so 640–767px screens and high-density laptops download photos at least as wide as the card. A report of alt text showing on the drinks cards under `npm run dev` could not be reproduced on a fresh dev server or a production build in Chromium or Firefox (all six photos return 200 and render).\
+**Changes:**
+- `src/app/globals.css`: `.reveal--visible .menu-grid > .surface-lift:hover` restores `translateY(-4px)` with `transition-delay: 0ms`;
+- `src/components/menu/menu-item-card.tsx`: `sizes="(max-width: 767px) 100vw, (max-width: 1199px) 50vw, 576px"`;
+- this development-log entry.
+**Files/modules affected:** `src/app/globals.css`, `src/components/menu/menu-item-card.tsx`, `docs/development-log.md`.\
+**Testing performed:** Browser check on a production build: cards 1 and 3 lift to `-4px` on hover starting within 30ms, no lift under reduced motion; downloaded photo width covers the card at 375px@2x (750 for 333), 800px (640 for 360), 1280px (640 for 532) and 1440px@2x (1200 for 532). Other commands are recorded in the pull request.\
+**Git branch:** `fix/menu-card-hover-and-images`\
+**Next action:** Lead developer approval recorded in the pull request.

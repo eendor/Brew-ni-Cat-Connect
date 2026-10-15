@@ -874,6 +874,12 @@ html[data-scrolled] .site-header__bar {
   transition-delay: 260ms;
 }
 
+/* Must follow the reveal rules above, which otherwise cancel the lift and delay it */
+.reveal--visible .menu-grid > .surface-lift:hover {
+  transform: translateY(-4px);
+  transition-delay: 0ms;
+}
+
 /* Gentle card lift with a slow photo zoom */
 .menu-card__image {
   transition: transform 900ms var(--ease-spring);
