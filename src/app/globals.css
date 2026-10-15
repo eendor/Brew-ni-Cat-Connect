@@ -268,7 +268,7 @@ button:focus-visible,
   translate: 0;
 }
 
-/* ——— Apple-like depth / glass ——— */
+/* ——— Depth / glass ——— */
 
 .glass-panel {
   border: 1px solid var(--glass-stroke);
