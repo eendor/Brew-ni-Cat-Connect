@@ -125,7 +125,14 @@ test("TC-P1-009 — key public pages avoid horizontal viewport overflow", async 
   for (const width of [320, 375, 768, 1024, 1440]) {
     await page.setViewportSize({ width, height: 900 });
 
-    for (const path of ["/", "/menu", "/gallery", "/contact"]) {
+    for (const path of [
+      "/",
+      "/menu",
+      "/gallery",
+      "/contact",
+      "/cart",
+      "/checkout",
+    ]) {
       await page.goto(path);
       await page.evaluate(() => document.fonts.ready);
 

@@ -128,6 +128,9 @@ describe("CartDrawer Component", () => {
     });
     await user.click(increaseBtn);
 
+    // Focus must stay on the increase button instead of jumping back to close drawer button
+    expect(document.activeElement).toBe(increaseBtn);
+
     // Subtotal should now be 90*3 + 110 = 380
     expect(screen.getByText("₱380")).toBeInTheDocument();
 

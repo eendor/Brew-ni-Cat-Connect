@@ -190,4 +190,21 @@ describe("MenuItemOrderDialog & MenuItemCard ordering integration", () => {
     expect(screen.getByText("3 items")).toBeInTheDocument();
     expect(screen.getAllByText("₱255").length).toBeGreaterThan(0);
   });
+
+  it("keeps focus on selected option after click instead of resetting focus to close button", async () => {
+    const user = userEvent.setup();
+    renderMenuItem(sampleDrinkItem);
+
+    await user.click(
+      screen.getByRole("button", { name: "Order Iced Matcha Latte" }),
+    );
+
+    const dialog = screen.getByRole("dialog");
+    const variant22Btn = within(dialog).getByRole("button", { name: /22 oz/i });
+
+    await user.click(variant22Btn);
+
+    // Focus must stay on the clicked option, not jump back to the close button
+    expect(document.activeElement).toBe(variant22Btn);
+  });
 });

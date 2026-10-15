@@ -24,6 +24,14 @@ export function useFocusTrap<T extends HTMLElement = HTMLDivElement>(
   const containerRef = useRef<T | null>(null);
   const triggerRef = useRef<HTMLElement | null>(null);
 
+  const onCloseRef = useRef(options?.onClose);
+  const initialFocusRefRef = useRef(options?.initialFocusRef);
+
+  useEffect(() => {
+    onCloseRef.current = options?.onClose;
+    initialFocusRefRef.current = options?.initialFocusRef;
+  });
+
   useEffect(() => {
     if (!isActive) {
       return;
@@ -35,13 +43,13 @@ export function useFocusTrap<T extends HTMLElement = HTMLDivElement>(
     const container = containerRef.current;
     if (container) {
       const focusables = getFocusableElements(container);
-      const target = options?.initialFocusRef?.current ?? focusables[0];
+      const target = initialFocusRefRef.current?.current ?? focusables[0];
       target?.focus();
     }
 
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
-        options?.onClose?.();
+        onCloseRef.current?.();
         return;
       }
 
@@ -73,7 +81,7 @@ export function useFocusTrap<T extends HTMLElement = HTMLDivElement>(
       document.removeEventListener("keydown", handleKeyDown);
       triggerRef.current?.focus();
     };
-  }, [isActive, options]);
+  }, [isActive]);
 
   return containerRef;
 }

@@ -304,7 +304,9 @@ export function CheckoutView({
                 >
                   1
                 </span>
-                <span>Details & Fulfillment</span>
+                <span className="sr-only sm:not-sr-only">
+                  Details & Fulfillment
+                </span>
               </li>
 
               <li className="text-[var(--border-strong)]" aria-hidden="true">
@@ -331,7 +333,7 @@ export function CheckoutView({
                 >
                   2
                 </span>
-                <span>Review Order</span>
+                <span className="sr-only sm:not-sr-only">Review Order</span>
               </li>
 
               <li className="text-[var(--border-strong)]" aria-hidden="true">
@@ -354,7 +356,7 @@ export function CheckoutView({
                 >
                   3
                 </span>
-                <span>Send to Shop</span>
+                <span className="sr-only sm:not-sr-only">Send to Shop</span>
               </li>
             </ol>
           </nav>
