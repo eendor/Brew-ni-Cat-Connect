@@ -22,16 +22,16 @@ const favorites = [
     nickname: "Pawsome Balls",
     price: "From ₱40",
     note: "Golden Japanese-style savory takoyaki balls drizzled with sweet-savory sauce, Japanese mayo, and bonito flakes.",
-    image: "/images/menu/bites.jpg",
-    alt: "Freshly prepared savory takoyaki balls with sauce",
+    image: "/images/menu/items/takoyaki-pawsome-balls.jpg",
+    alt: "Takoyaki balls topped with sauce, mayo and bonito flakes",
   },
   {
     name: "Fries",
     nickname: "Cat Claws",
     price: "From ₱30",
     note: "Crispy shoestring fries seasoned in cheese, sour cream, barbecue, or spicy flavoring.",
-    image: "/images/menu/combo.jpg",
-    alt: "Golden crispy seasoned fries served in a basket",
+    image: "/images/menu/items/fries-cat-claws.jpg",
+    alt: "Fries served in a wire cone at Brew ni Cat",
   },
 ] as const;
 

@@ -4,60 +4,92 @@ export type MenuItemImage = Readonly<{
 }>;
 
 /**
- * Local static photos for Menu cards. Keys are normalized base names
- * (lowercase, parenthetical nicknames stripped). Supabase remains the
- * source of truth for item names and prices — this map never invents a
- * remote image column.
+ * Local static photos for Menu cards. Supabase remains the source of truth
+ * for item names and prices — this map never invents a remote image column.
  *
- * Policy: only real Brew ni Cat shop stills where food/drink fills the
- * frame (no people, no cats, no flyer art, no internet stock). Items
- * without a matching still omit a photo until one is captured.
+ * Policy: only real Brew ni Cat product photos where the item itself fills
+ * the frame (no menu-board graphics, no people, no stock photos). Every
+ * photo belongs to exactly one item so no two Menu cards share an image.
+ * Items without a matching photo stay imageless until one is captured.
+ *
+ * Lookup is exact: an item matches by its base name (e.g. "Takoyaki") or
+ * its parenthetical nickname (e.g. "Pawsome Balls"), never by prefix.
  */
-const menuItemImagesByName: Readonly<Record<string, MenuItemImage>> = {
-  "buldak carbo": {
-    src: "/images/shop/photo_011.jpg",
-    alt: "Spicy curly noodles with fried egg and seaweed in a wire basket",
+const menuItemImages = [
+  {
+    names: ["takoyaki", "pawsome balls"],
+    image: {
+      src: "/images/menu/items/takoyaki-pawsome-balls.jpg",
+      alt: "Takoyaki balls topped with sauce, mayo and bonito flakes",
+    },
   },
-  "buldak cheese": {
-    src: "/images/shop/photo_011.jpg",
-    alt: "Cheese-style spicy noodles with fried egg and seaweed",
+  {
+    names: ["buldak carbo"],
+    image: {
+      src: "/images/menu/items/buldak-carbo.jpg",
+      alt: "Buldak Carbo spicy noodles with a fried egg",
+    },
   },
-  "sedaap original": {
-    src: "/images/shop/photo_011.jpg",
-    alt: "Wavy noodles with fried egg and seaweed sheets",
+  {
+    names: ["buldak cheese"],
+    image: {
+      src: "/images/menu/items/buldak-cheese.jpg",
+      alt: "Buldak Cheese spicy noodles with a fried egg",
+    },
   },
-  "sedaap spicy chicken": {
-    src: "/images/shop/photo_011.jpg",
-    alt: "Spicy noodle plate with fried egg and seaweed",
+  {
+    names: ["fries", "cat claws"],
+    image: {
+      src: "/images/menu/items/fries-cat-claws.jpg",
+      alt: "Fries served in a wire cone in front of the Brew ni Cat logo wall",
+    },
   },
-  "cat-feine": {
-    src: "/images/shop/photo_012.jpg",
-    alt: "Three iced coffee drinks in clear cups",
+  {
+    names: ["cat-feine"],
+    image: {
+      src: "/images/menu/items/cat-feine-iced-latte.jpg",
+      alt: "Cat-Feine iced latte in a clear cup",
+    },
   },
-};
+  {
+    names: ["matcha", "the lucky green neko", "lucky green neko"],
+    image: {
+      src: "/images/menu/items/lucky-green-neko-matcha.jpg",
+      alt: "The Lucky Green Neko iced dirty matcha with an espresso layer",
+    },
+  },
+] as const satisfies ReadonlyArray<{
+  names: ReadonlyArray<string>;
+  image: MenuItemImage;
+}>;
 
-function normalizeMenuItemName(name: string): string {
-  return name
-    .trim()
-    .toLowerCase()
-    .replace(/\s*\([^)]*\)\s*/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+const menuItemImagesByName: ReadonlyMap<string, MenuItemImage> = new Map(
+  menuItemImages.flatMap(({ names, image }) =>
+    names.map((name) => [name, image] as const),
+  ),
+);
+
+/** All distinct photo paths used on Menu cards (exported for tests). */
+export const menuItemImageSources: ReadonlyArray<string> = menuItemImages.map(
+  ({ image }) => image.src,
+);
+
+function normalize(value: string): string {
+  return value.trim().toLowerCase().replace(/\s+/g, " ");
 }
 
 export function getMenuItemImage(itemName: string): MenuItemImage | null {
-  const normalized = normalizeMenuItemName(itemName);
-  if (!normalized) {
-    return null;
-  }
+  const base = normalize(itemName.replace(/\([^)]*\)/g, " "));
+  const nicknames = [...itemName.matchAll(/\(([^)]*)\)/g)].map((match) =>
+    normalize(match[1] ?? ""),
+  );
 
-  const exact = menuItemImagesByName[normalized];
-  if (exact) {
-    return exact;
-  }
-
-  for (const [key, image] of Object.entries(menuItemImagesByName)) {
-    if (normalized.startsWith(key) || key.startsWith(normalized)) {
+  for (const candidate of [base, ...nicknames]) {
+    if (!candidate) {
+      continue;
+    }
+    const image = menuItemImagesByName.get(candidate);
+    if (image) {
       return image;
     }
   }

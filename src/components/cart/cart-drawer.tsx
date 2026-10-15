@@ -54,13 +54,13 @@ export function CartDrawer() {
     >
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/40 backdrop-blur-xs transition-opacity"
+        className="fixed inset-0 bg-black/40 backdrop-blur-xs motion-fade-in"
         aria-hidden="true"
         onClick={closeDrawer}
       />
 
       <div className="fixed inset-y-0 right-0 flex max-w-full pl-10">
-        <div className="relative flex w-screen max-w-md flex-col bg-[var(--surface-canvas)] shadow-2xl border-l border-[var(--border-soft)]">
+        <div className="motion-slide-in-right relative flex w-screen max-w-md flex-col bg-[var(--surface-canvas)] shadow-2xl border-l border-[var(--border-soft)]">
           {/* Header */}
           <div className="flex items-center justify-between border-b border-[var(--border-soft)] px-5 py-4 bg-[var(--surface-card)]">
             <div className="flex items-center gap-2.5">

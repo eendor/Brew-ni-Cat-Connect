@@ -9,8 +9,8 @@ import { MobileNavigation } from "./mobile-navigation";
 
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-50 border-b border-white/40 bg-[var(--surface-canvas-translucent)] shadow-[var(--shadow-subtle)] backdrop-blur-2xl backdrop-saturate-150 transition-[background-color,border-color,box-shadow] duration-500 ease-[var(--ease-cinematic)] supports-[backdrop-filter]:bg-[rgb(255_253_248_/_62%)]">
-      <Container className="flex min-h-18 items-center justify-between gap-4 py-2.5 lg:min-h-20">
+    <header className="site-header sticky top-0 z-50 border-b border-white/40 bg-[var(--surface-canvas-translucent)] shadow-[var(--shadow-subtle)] backdrop-blur-2xl backdrop-saturate-150 transition-[background-color,border-color,box-shadow] duration-500 ease-[var(--ease-cinematic)] supports-[backdrop-filter]:bg-[rgb(255_253_248_/_62%)]">
+      <Container className="site-header__bar flex min-h-18 items-center justify-between gap-4 py-2.5 lg:min-h-20">
         <Link
           href="/"
           className="group inline-flex items-center gap-2.5 rounded-lg"
