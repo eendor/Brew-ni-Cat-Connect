@@ -1,12 +1,13 @@
 // src/lib/ordering/validation.ts
 
 /**
- * Regex for Philippine mobile numbers.
- * Validates formats such as:
- * - 0912 345 6789 or 09123456789
- * - +63 912 345 6789 or +639123456789
+ * Validates Philippine mobile numbers.
+ * Cleans spaces, hyphens, and parentheses first, then accepts 09XXXXXXXXX or +639XXXXXXXXX.
  */
-const PH_MOBILE_REGEX = /^(?:\+63\s?|0)9\d{2}[- ]?\d{3}[- ]?\d{4}$/;
+export function validatePhoneNumber(phone: string): boolean {
+  const cleanPhone = phone.replace(/[\s\-()]/g, "");
+  return /^(09\d{9}|\+639\d{9})$/.test(cleanPhone);
+}
 
 export interface CheckoutDetails {
   name: string;
@@ -22,27 +23,21 @@ export interface ValidationResult {
 }
 
 /**
- * Validates a Philippine mobile phone number.
- */
-export function validatePhoneNumber(phone: string): boolean {
-  const cleaned = phone.trim();
-  return PH_MOBILE_REGEX.test(cleaned);
-}
-
-/**
  * Validates checkout form details (Name and Phone Number).
+ * Matches live form error messages.
  */
 export function validateDetails(details: CheckoutDetails): ValidationResult {
   const errors: { name?: string; phone?: string } = {};
 
   if (!details.name || details.name.trim().length === 0) {
-    errors.name = "Name is required.";
+    errors.name = "Please enter your full name.";
   }
 
   if (!details.phone || details.phone.trim().length === 0) {
-    errors.phone = "Phone number is required.";
+    errors.phone = "Please enter your contact phone number.";
   } else if (!validatePhoneNumber(details.phone)) {
-    errors.phone = "Please enter a valid Philippine mobile number (e.g., 0912 345 6789 or +63 912 345 6789).";
+    errors.phone =
+      "Please enter a valid Philippine mobile number (e.g. 0912 345 6789 or +63 912 345 6789).";
   }
 
   return {

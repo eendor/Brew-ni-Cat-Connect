@@ -1,5 +1,6 @@
 "use client";
 
+import { validateDetails } from "@/lib/ordering/validation";
 import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
 
