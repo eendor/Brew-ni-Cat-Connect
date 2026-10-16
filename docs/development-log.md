@@ -584,10 +584,12 @@ This log records completed work and observed evidence. Planned work is explicitl
 - `tests/unit/checkout-validation.test.ts`: created unit tests covering Philippine phone number formats, non-numeric strings, boundary lengths, and required form fields;
 - `docs/code-review.md`: added review record for PR #14;
 - `docs/test-cases.md`: appended Phase 3 checkout validation and order summary copy test cases;
-- `docs/functional-requirements.md`: marked FR-021, FR-025, and cart/checkout requirements as completed;
+- `src/components/checkout/checkout-view.tsx`: replaced the inline validation with the shared helper, keeping the existing field messages;
 - this development-log entry.
-**Files/modules affected:** `src/lib/ordering/validation.ts`, `tests/unit/checkout-validation.test.ts`, `docs/code-review.md`, `docs/test-cases.md`, `docs/functional-requirements.md`, `docs/development-log.md`.\
+**Files/modules affected:** `src/lib/ordering/validation.ts`, `src/components/checkout/checkout-view.tsx`, `tests/unit/checkout-validation.test.ts`, `docs/code-review.md`, `docs/test-cases.md`, `docs/development-log.md`.\
+**Note:** `docs/functional-requirements.md` was not part of the merged change. FR-021 and FR-025 cover server-side revalidation and order references, which this client-side refactor does not implement, so they stay Planned. The phone and name checks belong to FR-022 (pickup checkout fields with field-specific errors), and the copy-summary case to FR-020; the test-case mapping was corrected in the follow-up docs sync.\
 **Testing performed:** Executed `npm run test` (all unit test suites passing), `npm run lint`, `npm run typecheck`, and `npm run build` with zero errors.\
 **Git branch:** `feat/p3-checkout-docs`\
-**Pull request:** Open PR from `feat/p3-checkout-docs` to `main` for review by Renier or Van.\
-**Next action:** Submit PR for review and merge into main.
+**Pull request:** [#20](https://github.com/eendor/Brew-ni-Cat-Connect/pull/20) — reviewed by the lead developer (two rounds of requested changes, then approved) and merged 2026-10-16 as `902fb6b`\
+**Post-merge check (2026-10-17, `main` at `902fb6b`):** `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm test` (15 files / 115 tests passed), `npm run build`, `npm run test:e2e` (13/13 passed), `python3 scripts/validate_phase0_docs.py` (PASS).\
+**Next action:** Server-side order creation and revalidation (FR-021, FR-024, FR-025) remain open for Phase 3.
