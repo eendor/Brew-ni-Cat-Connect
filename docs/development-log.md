@@ -572,3 +572,22 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Git branch:** `fix/menu-layout-polish`\
 **Pull request:** [#18](https://github.com/eendor/Brew-ni-Cat-Connect/pull/18) — merged 2026-10-15 as `a887c12`\
 **Next action:** Re-check remaining Menu polish items (stretched short cards, dialog selected state, sticky bar width) in a follow-up.
+
+## 2026-10-16 — Checkout validation refactor and Phase 3 documentation update
+
+**Date:** 2026-10-16\
+**Phase:** Phase 3 — Menu and Ordering Flow\
+**Task:** Refactor checkout validation out of the component into pure ordering utilities, add unit tests, and update Phase 3 documentation following PR #14 merge.\
+**Summary:** Extracted `validateDetails` and Philippine mobile regex matching formats (`0912 345 6789`, `+63 912 345 6789`, invalid strings, short/long lengths) from the checkout component into `src/lib/ordering/validation.ts` as pure exportable functions. Added unit test coverage at `tests/unit/checkout-validation.test.ts` to verify valid/invalid inputs, missing fields, and edge cases. Audited UI text against `src/config/site.ts` to ensure wording consistency. Recorded Phase 3 documentation updates across test cases, functional requirement statuses, PR #14 code review entries, and this log.\
+**Changes:**
+- `src/lib/ordering/validation.ts`: created pure helper functions `validatePhoneNumber` and `validateDetails` with `CheckoutDetails` and `ValidationResult` interfaces;
+- `tests/unit/checkout-validation.test.ts`: created unit tests covering Philippine phone number formats, non-numeric strings, boundary lengths, and required form fields;
+- `docs/code-review.md`: added review record for PR #14;
+- `docs/test-cases.md`: appended Phase 3 checkout validation and order summary copy test cases;
+- `docs/functional-requirements.md`: marked FR-021, FR-025, and cart/checkout requirements as completed;
+- this development-log entry.
+**Files/modules affected:** `src/lib/ordering/validation.ts`, `tests/unit/checkout-validation.test.ts`, `docs/code-review.md`, `docs/test-cases.md`, `docs/functional-requirements.md`, `docs/development-log.md`.\
+**Testing performed:** Executed `npm run test` (all unit test suites passing), `npm run lint`, `npm run typecheck`, and `npm run build` with zero errors.\
+**Git branch:** `feat/p3-checkout-docs`\
+**Pull request:** Open PR from `feat/p3-checkout-docs` to `main` for review by Renier or Van.\
+**Next action:** Submit PR for review and merge into main.

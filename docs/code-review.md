@@ -154,3 +154,19 @@ This functional pass exposes a more serious current blocker: public access depen
 
 **Findings:** Presentation only; no data, ordering, or pricing logic changed. Removes the PR #17 hover workaround along with the menu stagger. Header glow fix checked by computed opacity because headless Chromium does not show it.\
 **Status:** Self-reviewed by the lead developer; merged as `a887c12`.
+
+## 2026-10-16 — Phase 3 checkout validation refactor and test coverage
+
+**Module:** `src/lib/ordering/validation.ts`, `tests/unit/checkout-validation.test.ts`\
+**Author:** Shan Besto\
+**Reviewer:** Renier Apal / Van\
+**Date:** 2026-10-16
+
+**Findings:**
+1. Extracted `validateDetails` and Philippine mobile regex from UI components into pure exportable helper functions in `src/lib/ordering/validation.ts`.
+2. Phone validation correctly handles formats (`0912 345 6789`, `09123456789`, `+63 912 345 6789`, `+639123456789`) and rejects invalid inputs (non-numeric strings, short/long lengths, invalid prefixes).
+3. Added dedicated unit test coverage in `tests/unit/checkout-validation.test.ts` covering valid inputs, missing required fields, and invalid phone formats.
+4. UI labels and validation messages align with `src/config/site.ts` without introducing new store policies or hours.
+5. Quality checks (`npm run test`, `npm run lint`, `npm run typecheck`, `npm run build`) passed with zero errors.
+
+**Status:** Submitted for independent peer review.

@@ -1,5 +1,6 @@
 "use client";
 
+import { validateDetails as validateDetailsHelper } from "@/lib/ordering/validation";
 import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
 
@@ -138,23 +139,9 @@ export function CheckoutView({
   }
 
   function validateDetails(): boolean {
-    const nextErrors: Record<string, string> = {};
-
-    if (!customer.name.trim()) {
-      nextErrors.name = "Please enter your full name.";
-    }
-
-    const cleanPhone = customer.phone.replace(/[\s\-()]/g, "");
-    const phMobileRegex = /^(09\d{9}|\+639\d{9})$/;
-    if (!cleanPhone) {
-      nextErrors.phone = "Please enter your contact phone number.";
-    } else if (!phMobileRegex.test(cleanPhone)) {
-      nextErrors.phone =
-        "Please enter a valid Philippine mobile number (e.g. 0912 345 6789 or +63 912 345 6789).";
-    }
-
-    setErrors(nextErrors);
-    return Object.keys(nextErrors).length === 0;
+    const result = validateDetailsHelper(customer);
+    setErrors(result.errors);
+    return result.isValid;
   }
 
   function handleProceedToReview(e: React.FormEvent) {
