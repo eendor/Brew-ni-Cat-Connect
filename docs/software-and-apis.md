@@ -19,7 +19,7 @@ Supabase JavaScript is installed solely for Phase 2 public read-only catalog ret
 | Node.js                | Web build and runtime                                          | `>=24.0.0 <25`; local `24.19.0` | MIT          | Supported engine range is declared in `package.json`; `.nvmrc` selects major 24             |
 | npm                    | Reproducible package installation                              | Local `12.0.2`                  | Artistic-2.0 | Uses the committed `package-lock.json`; npm is the only package manager for the web project |
 | Python                 | Dependency-free specification document validation             | `>=3.10`; local `3.14.7`        | PSF License  | GitHub Actions selects Python 3.14 for the repository validator                            |
-| Next.js                | App Router, rendering, routing, metadata, and production build | `16.3.2`                        | MIT          | Installed; React strict mode enabled and powered-by header disabled                         |
+| Next.js                | App Router, rendering, routing, metadata, and production build | `16.3.8`                        | MIT          | Upgraded from 16.3.2 in PR #11; strict mode on, powered-by header off                        |
 | React                  | Component UI runtime                                           | `19.2.8`                        | MIT          | Installed with the Next.js-compatible pinned version                                        |
 | React DOM              | Browser/server React rendering                                 | `19.2.8`                        | MIT          | Installed with React at the same pinned version                                             |
 | TypeScript             | Static type checking                                           | `5.9.3`                         | Apache-2.0   | Installed; strict configuration and explicit no-emit check enabled                          |
@@ -39,8 +39,8 @@ Supabase JavaScript is installed solely for Phase 2 public read-only catalog ret
 | Playwright Test            | Chromium end-to-end and responsive smoke tests  | `1.62.1`          | Apache-2.0 | Generated reports and results remain untracked                   |
 | Vite                       | Vitest transformation and configuration runtime | `8.2.2`           | MIT        | Direct dev dependency supporting the test configuration          |
 | `@vitejs/plugin-react`     | React transformation for Vitest/Vite            | `6.1.0`           | MIT        | Test tooling only; Next.js remains the application framework     |
-| ESLint                     | Static analysis runner                          | `9.39.5`          | MIT        | Pinned to the major compatible with Next.js 16.3.2 configuration |
-| `eslint-config-next`       | Next.js, React, and TypeScript lint rules       | `16.3.2`          | MIT        | Matches the installed Next.js version                            |
+| ESLint                     | Static analysis runner                          | `9.39.5`          | MIT        | Pinned to the major compatible with Next.js 16.3.8 configuration |
+| `eslint-config-next`       | Next.js, React, and TypeScript lint rules       | `16.3.8`          | MIT        | Matches the installed Next.js version                            |
 | Prettier                   | Deterministic formatting                        | `3.9.6`           | MIT        | Used by `format` and `format:check` scripts                      |
 | Node.js type definitions   | Node tool/config typing                         | `24.13.3`         | MIT        | Installed as `@types/node`                                       |
 | React type definitions     | React component typing                          | `19.2.18`         | MIT        | Installed as `@types/react`                                      |
@@ -125,10 +125,19 @@ The manifest pins npm 12.0.2 through its `packageManager` field. Its `allowScrip
 | --- | --- | --- | --- | --- |
 | Supabase JavaScript | Construct the browser public client and issue typed Data API reads | 2.112.3 | MIT | Exact version locked; session persistence/refresh disabled because Phase 2 has no auth |
 | Supabase Data API | Read approved `categories` and `items` catalog fields | Managed existing service | Provider service terms apply | Application uses explicit `SELECT` only; live public GET succeeds, but RLS is manually disabled and table grants expose unrelated relations |
-| Next.js Image | Optimize the official logo and curated approved gallery images | Included in Next.js 16.3.2 | MIT | No separate gallery/media dependency added |
+| Next.js Image | Optimize the official logo and curated approved gallery images | Included in Next.js 16.3.8 | MIT | No separate gallery/media dependency added |
 
 Queries select explicit fields rather than `*`. The runtime does not query customer, order, inventory, sales, expense, or administrative structures. `src/lib/menu` maps database rows into application-level types so components do not depend directly on unstructured records.
 
 The app intentionally performs retrieval in the browser after render. This keeps `npm run build` and GitHub Actions independent of production network availability and credentials. Missing configuration or denied/empty data produces a controlled customer state.
 
 The five local menu posters are assets, not an API or data source. Current names/prices come from the live Supabase publishable response. That functional data path does not make the current RLS-disabled access least privilege.
+
+## Phase 3 additions (PRs #7, #12, #14, #16)
+
+No new runtime dependencies were added in Phase 3 so far.
+
+- **Ordering core (PR #7):** `src/lib/ordering/` (pricing, reducer, selectors) and `src/types/ordering.ts`. Prices come only from the current menu catalog, in integer centavos.
+- **Cart and checkout (PR #14):** `src/context/cart-context.tsx` keeps the cart in `localStorage`; cart drawer, cart page, and checkout under `src/components/cart/` and `src/components/checkout/`; dialogs render through a React portal with `src/lib/accessibility/focus-trap.ts`. Checkout produces a "Send to Shop" order summary to copy into Messenger or read over the phone; there is no order write yet.
+- **Motion (PR #16):** CSS transitions in `src/app/globals.css`, one passive scroll hook in `src/components/motion/scroll-motion.tsx`, and a route fade in `src/app/template.tsx`. GSAP and Lenis were evaluated and not added. All motion turns off under `prefers-reduced-motion`.
+- **Dependency security (PR #12):** `sharp` 0.35.5 and `source-map-js` 1.2.2 through `npm audit fix`; production audit reports 0 vulnerabilities.

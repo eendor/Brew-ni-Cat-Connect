@@ -25,6 +25,7 @@ This document tracks all business facts, copy, and media assets for Brew ni Cat 
 | **Operating Hours** | **Open 11 AM to 10 PM, Monday to Saturday. Closed every Sunday.** Customers should check Facebook or contact the shop for any schedule changes. | **Confirmed** | Approved | Owner confirmed Sunday closure on 2026-09-24 and opening hours of 11 AM to 10 PM on 2026-10-11 (both relayed by Lead Developer). |
 | **Payment Methods** | **Accepted:** Cash, GCash<br>*(Note: Maya / Maya QR removed)* | **Confirmed** | Approved | Cash on pickup and GCash accepted only. |
 | **Delivery Model** | * Customer books an external rider.<br>* Rider picks up order at Brew ni Cat.<br>* Customer pays rider separately.<br>* No in-house delivery fleet available. | **Confirmed** | Approved | Customer-managed external fulfillment model. |
+| **Menu Product Photos** | Six product photos supplied by the shop (Takoyaki, Buldak Carbo, Buldak Cheese, Fries, Cat-Feine, Matcha) in `public/images/menu/items/`; one photo per item, EXIF/GPS removed. Menu-board images are not used on cards. | **Confirmed** | Approved | Shop-provided photos, approved for the Menu on 2026-10-15 (PR #16). Items without a matching photo stay imageless. |
 | **Menu Items & Pricing** | Product catalog in Supabase DB | **Confirmed** | Approved | Supabase DB holds official pricing. Posters are secondary visuals. |
 
 ---

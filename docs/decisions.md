@@ -145,3 +145,34 @@ This manual state is a temporary functional-verification condition, not a revisi
 **Consequences:** Renier must inspect variety, obvious duplicates, alt text, responsive loading, and customer-photo handling. Future additions require the same approval/privacy/performance review; face/name inference is prohibited. The Gallery count must stay divisible by both rendered column counts, two and three, so the grid ends on a flush row; the original nineteenth image was a landscape frame that left an unfilled cell and was removed on 2026-09-05.
 
 ---
+
+## ADR-011 — Catalog-derived Cart Pricing
+
+**Decision:** Cart lines carry only item, variant, flavor, and quantity; names and prices are always resolved from the current menu catalog in integer centavos.\
+**Date:** 2026-09-18\
+**Status:** Accepted and implemented (PR #7)\
+**Context:** Several Phase 3 features build on one cart, and a client-supplied price must never become authoritative.\
+**Chosen approach:** Pure reducer and selectors in `src/lib/ordering/`, with safe-integer guards on line totals and the subtotal.\
+**Consequences:** Checkout re-resolves prices before showing the summary (PR #14). Server-side revalidation is still required once orders are written (FR-021).
+
+---
+
+## ADR-012 — Send-to-Shop Checkout Before Order Writes
+
+**Decision:** Until server order creation exists, checkout produces an order summary the customer copies to Messenger or reads over the phone, instead of a simulated order reference.\
+**Date:** 2026-10-15\
+**Status:** Accepted and implemented (PR #14)\
+**Context:** A fake order ID would claim an order exists when the shop never received it.\
+**Consequences:** FR-024 and FR-025 stay planned; the cart persists in `localStorage` and is revalidated against the catalog at checkout.
+
+---
+
+## ADR-013 — CSS-first Motion Without a Motion Library
+
+**Decision:** Site motion uses CSS transitions, one passive rAF-throttled scroll hook (`ScrollMotion`), and a route fade in `template.tsx`; GSAP and Lenis are not added.\
+**Date:** 2026-10-15\
+**Status:** Accepted and implemented (PR #16; refined in PRs #17 and #18)\
+**Context:** Restrained reveals and transitions were wanted without new dependencies or side effects on sticky bars and focus traps.\
+**Consequences:** Everything is disabled under `prefers-reduced-motion`. Drawer and dialog close without an exit animation. Menu categories no longer fade in on scroll since PR #18.
+
+---

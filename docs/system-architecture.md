@@ -126,7 +126,9 @@ Arrows show logical data flow, not a final deployment topology. Direct client-to
 | Next.js App Router web application | Public business content, responsive customer UI, route boundaries, later authenticated ordering screens | **Implemented through the Phase 2 showcase** using Next.js 16.3.2; developer automation passed and independent review is pending |
 | React component layer | Accessible, reusable presentation and interaction components | **Implemented through Phase 2:** shared shell, public sections, gallery, menu catalog/cards/states, and factual routes |
 | TypeScript types/configuration | Compile-time types for UI, configuration, catalog mapping, and later integration boundaries | **Implemented for the public UI and menu catalog boundary**; ordering/customer contracts remain later work |
-| Tailwind CSS presentation layer | Project-owned warm design tokens, responsive layout, focus styles, and reduced-motion baseline | **Implemented for Phase 1** using Tailwind CSS 4.3.3 |
+| Tailwind CSS presentation layer | Project-owned warm design tokens, responsive layout, focus styles, and reduced-motion baseline | **Implemented** using Tailwind CSS 4.3.3; scroll and page motion added in PR #16 |
+| Client cart and checkout (Phase 3) | Catalog-priced cart domain, persisted cart context, cart drawer/page, and checkout producing a send-to-shop order summary | **Implemented client-side** in PRs #7 and #14; server-side order creation and revalidation (FR-021, FR-024, FR-025) remain planned |
+| Motion layer | `ScrollMotion` scroll hook, `template.tsx` route fade, header/card/overlay transitions | **Implemented** in PR #16, refined in PRs #17 and #18; off under reduced motion |
 | Automated verification boundary | Component behavior, route smoke checks, representative-width overflow checks, type/lint/build gates | **Implemented for Phase 1:** Vitest/Testing Library, Playwright, and GitHub Actions configuration |
 | Backend-for-frontend/application service layer | Authenticate/authorize, validate requests, calculate authoritative outcomes, coordinate transactions, expose channel-neutral use cases | Proposed; interfaces evolve with requirements |
 | Public Supabase catalog client | Read current approved categories/items through public configuration | **Implemented in Phase 2; live 6-category/16-item response verified** |
@@ -176,7 +178,7 @@ All channels should ultimately invoke the same channel-neutral use cases:
 |---|---:|---:|---:|---:|
 | Read published business/catalog data | Yes | Future | Future | Only as integration requires |
 | Manage customer identity/profile | Later | Future | Account linking only if approved | No direct customer session |
-| Build/validate cart | Later | Future | Future guided draft | No |
+| Build/validate cart | Phase 3 client-side cart (PRs #7, #14) | Future | Future guided draft | No |
 | Submit an order idempotently | Later | Future | Future confirmed flow | Receives mapped online order |
 | Read authorized order state | Later | Future | Future after secure linking | Supplies/receives approved state updates |
 | Loyalty/favorites | Later | Future | Only if justified | Only approved integration data |

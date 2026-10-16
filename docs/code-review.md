@@ -95,6 +95,30 @@ This functional pass exposes a more serious current blocker: public access depen
 **Changes made:** Not applicable until review findings exist.\
 **Status:** Developer self-inspection, local automation, branch push, open [Pull Request #2](https://github.com/eendor/Brew-ni-Cat-Connect/pull/2), and the initial/follow-up hosted workflows are complete. Renier's independent review remains pending. Do not merge or mark Done before that review.
 
+## 2026-09-18 — Phase 3 ordering core (PR #7)
+
+**Module:** `src/lib/ordering/`, `src/types/ordering.ts`\
+**Date:** 2026-09-18
+
+**Findings:** Public add-to-cart accepts only item, variant, flavor, and quantity; prices are resolved from the catalog in integer centavos with overflow guards. Covered by `TC-P3-001`–`TC-P3-047`.\
+**Status:** Merged as `5e53fc6`.
+
+## 2026-10-14 — Playwright baseline fix (PR #15)
+
+**Module:** Contact page, showcase E2E\
+**Date:** 2026-10-14
+
+**Findings:** Contact values wrap anywhere so 320px has no overflow (TC-P1-009); TC-P2-021 checks the header home link after the hero redesign. No security impact.\
+**Status:** Merged as `8be9e6a`.
+
+## 2026-10-15 — Phase 3 cart drawer, cart page, and checkout (PR #14)
+
+**Module:** Cart context, cart drawer/page, checkout, order dialog\
+**Date:** 2026-10-15
+
+**Findings:** Review feedback resolved before merge: dialogs moved into a portal so card transforms do not clip them, focus trap with focus restore, `fieldset`/`legend`/`aria-pressed` on options, cart prices revalidated against the catalog at checkout to resist `localStorage` tampering, simulated order IDs replaced with an honest send-to-shop summary, Philippine mobile number validation, and no 320px overflow on the step indicator.\
+**Status:** Merged as `e36b5a3`.
+
 ## 2026-10-15 — Menu product photos and refined scroll and page motion (PR #16)
 
 **Module:** Menu item images, site-wide motion layer, overlays\
@@ -112,5 +136,21 @@ This functional pass exposes a more serious current blocker: public access depen
 6. Accessibility: focus traps unchanged; skeletons are `aria-hidden`; active tab exposed with `aria-current`; focus-visible outlines preserved.
 
 **Known limitations:** drawer/dialog close without an exit animation; footer and section reveals depend on JavaScript, matching the existing `Reveal` behavior.\
-**Status:** Approved by the Lead Developer; awaiting merge.
+**Status:** Approved and merged on 2026-10-15 as `cb28583`.
 
+
+## 2026-10-15 — Menu card hover and photo sizes (PR #17)
+
+**Module:** `globals.css`, menu item card\
+**Date:** 2026-10-15
+
+**Findings:** Hover lift restored after the reveal rule overrode it; `sizes` matches the one/two-column grid. CSS and image hints only.\
+**Status:** Self-reviewed by the lead developer; merged as `8f62c6c`.
+
+## 2026-10-15 — Menu layout, order dialog, and header polish (PR #18)
+
+**Module:** Menu catalog and cards, order dialog, site header, Home favorites\
+**Date:** 2026-10-15
+
+**Findings:** Presentation only; no data, ordering, or pricing logic changed. Removes the PR #17 hover workaround along with the menu stagger. Header glow fix checked by computed opacity because headless Chromium does not show it.\
+**Status:** Self-reviewed by the lead developer; merged as `a887c12`.

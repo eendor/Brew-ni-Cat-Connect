@@ -55,7 +55,7 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Documentation updated:** Phase 1 updates cover the README, test cases and verification evidence, code-review handoff, system architecture, decisions, emerging-technologies status, security/privacy state, development standards, software/API inventory, testing strategy, and this log; Phase 0 history and deferred-integration boundaries remain intact.\
 **Git branch:** `feat/project-foundation`\
 **Git commits:** `9c3fdfeae4ee12acea9819fca12b21ebfc0757c2` — `chore: initialize Next.js project foundation`; `90c43cca6b047c6bb11a285660ec5ce2a27d8626` — `test: add application foundation tests`; `193d69c8f17f6d5c91556789bb3fa98f2563e9fc` — `ci: add project validation workflow`; `fb3e4b82ed7be085d722f6974c4874f9b54a42d4` — `docs: record Phase 1 implementation evidence`; the CI-result update is the commit containing this entry.\
-**Pull request:** [#1 — Phase 1: Initialize Brew ni Cat Connect web foundation](https://github.com/eendor/Brew-ni-Cat-Connect/pull/1), open and not merged.\
+**Pull request:** [#1 — Phase 1: Initialize Brew ni Cat Connect web foundation](https://github.com/eendor/Brew-ni-Cat-Connect/pull/1), merged 2026-08-23 as `11c546d`.\
 **Next action:** Renier performs Phase 1 manual QA and Pull Request review; findings are resolved before merge.
 
 ## 2026-08-24 — Phase 2 public showcase implementation (before live-menu follow-up)
@@ -84,7 +84,7 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Documentation updated:** README; SRS; project overview; functional requirements; execution paths; emerging technologies; system architecture; database design; software/APIs; security/privacy; development standards; testing strategy/cases; code review; decisions; Phase 2 evidence; and this log.\
 **Git branch:** `feat/showcase-website`\
 **Git commits:** `0533bde` — `fix: standardize repository line endings`; `f3949c3` — `feat: add read-only Supabase menu foundation`; `4d66f95` — `feat: build Brew ni Cat public showcase website`; `e03293e` — `test: add Phase 2 showcase and menu coverage`; `67a81db` — `docs: record Phase 2 implementation evidence`; final PR/CI metadata follows in the commit containing this updated record.\
-**Pull request:** [#2 — Phase 2: Build Brew ni Cat public showcase website](https://github.com/eendor/Brew-ni-Cat-Connect/pull/2), open and unmerged.\
+**Pull request:** [#2 — Phase 2: Build Brew ni Cat public showcase website](https://github.com/eendor/Brew-ni-Cat-Connect/pull/2), merged 2026-09-16 as `ae002f1`.\
 **Next action:** The handoff-only commit receives the required hosted checks, then Renier independently tests/reviews Pull Request #2. Do not merge, mark Done, or begin Phase 3 before that review.
 
 ---
@@ -111,7 +111,7 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Files/modules affected:** Menu presentation; focused unit coverage; live capture tooling/evidence; README and living Phase 2 documentation.\
 **Git branch:** `feat/showcase-website`\
 **Git commit:** `4eaeca0` — `fix: verify live Supabase menu and refresh evidence`\
-**Pull request:** [#2 — Phase 2: Build Brew ni Cat public showcase website](https://github.com/eendor/Brew-ni-Cat-Connect/pull/2), open and unmerged.\
+**Pull request:** [#2 — Phase 2: Build Brew ni Cat public showcase website](https://github.com/eendor/Brew-ni-Cat-Connect/pull/2), merged 2026-09-16 as `ae002f1`.\
 **Hosted CI:** Both push and pull-request workflows for follow-up evidence head `975561b` passed. The live Pull Request rollup remains authoritative for the metadata-only evidence update.\
 **Next action:** Renier independently verifies the live menu, security truthfulness, responsive behavior, and code review. Do not merge Pull Request #2 or begin Phase 3 during this follow-up.
 
@@ -130,6 +130,30 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Testing performed:** Executed `python scripts/validate_phase0_docs.py` to confirm zero formatting errors and verified `PHASE0_DOC_VALIDATION=PASS`.
 **Git branch:** `feat/phase-2-documentation-clean`
 **Next action:** Stage changes, commit, and push to update Pull Request #3 for QA review by Renier.
+
+## 2026-08-26 — Phase 2 project management readiness
+
+**Date:** 2026-08-26\
+**Phase:** Phase 2 — Public Showcase Website\
+**Task:** Record Phase 2 project management status ahead of QA.\
+**Summary:** Added the Phase 2 project management record: current status, team responsibilities, project risks, the QA readiness gate, Phase 2 merge readiness criteria, and confirmation that Phase 3 stays gated until Phase 2 closes. No application code changed.\
+**Files/modules affected:** `docs/phase-2-project-management.md`.\
+**Testing performed:** Documentation only; no application tests required.\
+**Git branch:** `feat/phase-2-pm-readiness`\
+**Pull request:** [#4](https://github.com/eendor/Brew-ni-Cat-Connect/pull/4) — merged 2026-08-26 as `27540ed`\
+**Next action:** Use the QA readiness gate for the independent Phase 2 QA.
+
+## 2026-09-05 — Phase 2 website showcase presentation guide
+
+**Date:** 2026-09-05\
+**Phase:** Phase 2 — Public Showcase Website\
+**Task:** Prepare presenter documentation for the Phase 2 showcase.\
+**Summary:** Added the presentation guide: objective, 2–3 minute pitch, demo flow, likely panel questions, presenter and customer review observations, resolved feedback, future suggestions, and a readiness checklist. No application code changed.\
+**Files/modules affected:** `docs/phase-2-website-showcase-presentation.md`.\
+**Testing performed:** Documentation only; no application tests required.\
+**Git branch:** `feat/phase-2-demo-guide`\
+**Pull request:** [#5](https://github.com/eendor/Brew-ni-Cat-Connect/pull/5) — merged 2026-09-05 as `ee849d1`\
+**Next action:** Independent Phase 2 QA.
 
 ## 2026-09-05 — Presenter Review Findings Resolved
 
@@ -166,6 +190,54 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Git branch:** `feat/showcase-website`
 **Next action:** Renier confirms Gallery variety, alt text, and flush layout at 320, 375, 768, 1024, and 1440 pixels during independent Phase 2 QA.
 
+## 2026-09-16 — Phase 2 independent QA results
+
+**Date:** 2026-09-16\
+**Phase:** Phase 2 — Public Showcase Website\
+**Task:** Run independent Phase 2 QA and record the plan, results, and evidence.\
+**Summary:** Added the Phase 2 QA plan and report with 33 evidence screenshots. Results: manual QA 36/36, responsive 5/5, accessibility 7/7, Supabase/menu verification 6/6, code review and security checklist completed. The first local E2E run gave 8 passed / 5 failed because `npm run dev` was still running; the controlled rerun with the dev server stopped passed 13/13 with no code changes. `.env.local` confirmed untracked and no service-role credential in client code. Recommendation: pass for Phase 2 merge with the Supabase RLS hardening follow-up before production.\
+**Files/modules affected:** `docs/phase-2-qa-plan.md`, `docs/phase-2-qa-report.md`, `docs/evidence/phase-2/renier-qa/` (33 screenshots).\
+**Testing performed:** Lint, typecheck, unit tests, build, and docs validator passed; controlled Playwright rerun 13/13 passed.\
+**Git branch:** `feat/phase-2-qa-plan`\
+**Pull request:** [#6](https://github.com/eendor/Brew-ni-Cat-Connect/pull/6) — merged 2026-09-16 as `5007a30`\
+**Next action:** Merge PR #2 now that the QA gate has passed.
+
+## 2026-09-16 — Phase 2 public showcase merged
+
+**Date:** 2026-09-16\
+**Phase:** Phase 2 — Public Showcase Website\
+**Task:** Merge the Phase 2 showcase after the independent QA gate passed.\
+**Summary:** Merged the public showcase website (Home, Menu with read-only Supabase catalog, Gallery, About, Contact, 404) into `main`. Implementation details are in the 2026-08-24 and 2026-09-05 entries above.\
+**Files/modules affected:** See the Phase 2 entries above.\
+**Testing performed:** From the PR: `npm run typecheck` passed, `npm run test` 6 files / 21 tests passed, `npm run build` 7/7 static pages, `npm run test:e2e` 13/13 passed, GitHub Actions push and pull-request jobs passed.\
+**Git branch:** `feat/showcase-website`\
+**Pull request:** [#2](https://github.com/eendor/Brew-ni-Cat-Connect/pull/2) — merged 2026-09-16 as `ae002f1`\
+**Next action:** Start Phase 3 with the shared ordering core.
+
+## 2026-09-18 — Phase 3 ordering core and cart domain
+
+**Date:** 2026-09-18\
+**Phase:** Phase 3 — Menu and Ordering Flow\
+**Task:** Build the shared ordering and cart foundation the Phase 3 features build on.\
+**Summary:** Added ordering/cart TypeScript types, catalog-derived price resolution, deterministic cart line identity, merging of identical configurations with separate lines for different variants or flavors, quantity validation, an immutable cart reducer, pickup / external rider fulfillment, line-total and subtotal helpers through integer centavos, reusable selectors, and a basic `OrderDraft` contract. The public add-to-cart path only accepts `itemId`, `variantId`, `flavor`, and `quantity`; names and prices are always resolved from the current menu catalog, so caller-supplied prices cannot enter. No cart UI, checkout, Supabase writes, auth, or payments. Test cases `TC-P3-001`–`TC-P3-047`.\
+**Files/modules affected:** `src/types/ordering.ts`, `src/lib/ordering/cart-pricing.ts`, `src/lib/ordering/cart-reducer.ts`, `src/lib/ordering/cart-selectors.ts`, `tests/unit/cart-pricing.test.ts`, `tests/unit/cart-reducer.test.ts`, `tests/unit/cart-selectors.test.ts`.\
+**Testing performed:** From the PR: format PASS, `npm audit` 0 vulnerabilities, lint PASS, typecheck PASS, unit tests 69/69 passed, build PASS, Playwright 13/13 passed, docs validator PASS.\
+**Git branch:** `feat/p3-ordering-core`\
+**Pull request:** [#7](https://github.com/eendor/Brew-ni-Cat-Connect/pull/7) — merged 2026-09-18 as `5e53fc6`\
+**Next action:** Teammates build cart, checkout, and customization on this foundation.
+
+## 2026-09-24 — Add 12 new Facebook photos to the gallery
+
+**Date:** 2026-09-24\
+**Phase:** Phase 2 — Public Showcase Website\
+**Task:** Add recent photos from the shop's Facebook posts (Aug 24 – Sep 22, 2026) to the curated gallery.\
+**Summary:** Added `photo_148.jpg`–`photo_159.jpg` (cats, customers, food, and the space) to `src/config/gallery.ts` with alt text in the existing style; four are featured on Home. Posters, menu boards, and announcements were left out. The gallery count assertions moved from a 24 cap to a 12–36 range.\
+**Files/modules affected:** `public/images/shop/photo_148.jpg`–`photo_159.jpg`, `src/config/gallery.ts`, `tests/unit/business-pages.test.tsx`, `tests/e2e/showcase.spec.ts`.\
+**Testing performed:** From the PR: `npm run typecheck` pass, `npm run lint` pass, `npm run test` 69/69 passed, Prettier check on edited files pass.\
+**Git branch:** `feat/add-facebook-gallery-photos`\
+**Pull request:** [#9](https://github.com/eendor/Brew-ni-Cat-Connect/pull/9) — merged 2026-09-24 as `70b12a9`\
+**Next action:** Gallery layout polish in PR #10.
+
 ## 2026-09-24 — Gallery refresh, cinematic showcase polish, Sunday closure
 
 **Date:** 2026-09-24\
@@ -186,7 +258,7 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Resolution:** Ran `prettier --write` on the affected files, pushed `fix: Fix Prettier formatting for CI`, and aligned future work to CONTRIBUTING (docs + development log + business register with every behavior change).\
 **Documentation updated:** Business content register; README; FR-003; test-cases TC-P2-016 note; development log; cinematic screenshot evidence.\
 **Git branch:** `feat/gallery-ui-polish`\
-**Pull request:** [#10 — Polish gallery layout after new Facebook photos](https://github.com/eendor/Brew-ni-Cat-Connect/pull/10), open and awaiting hosted checks + Lead Developer review.\
+**Pull request:** [#10 — Polish gallery layout after new Facebook photos](https://github.com/eendor/Brew-ni-Cat-Connect/pull/10), merged 2026-09-24 as `f0fa38e`.\
 **Next action:** Confirm hosted Validate application passes on the documentation head, leave the PR open for teammate review per CONTRIBUTING, and continue cinematic polish only if Rodnee asks after review.
 
 ## 2026-09-24 — Hero media without customer crowd
@@ -298,11 +370,11 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Git branch:** `feat/gallery-ui-polish`\
 **Pull request:** [#10](https://github.com/eendor/Brew-ni-Cat-Connect/pull/10)
 
-## 2026-09-24 — Apple-like depth with restored display type
+## 2026-09-24 — Layered depth with restored display type
 
 **Date:** 2026-09-24\
 **Phase:** Phase 2 — Public Showcase Website\
-**Task:** Lead Developer asked for depth / HDR / Apple-like UI across the site and to revert the Inter / Plus Jakarta Sans font change.\
+**Task:** Lead Developer asked for depth / HDR-style layered UI across the site and to revert the Inter / Plus Jakarta Sans font change.\
 **Summary:** Restored Georgia display type and an Apple system sans stack (`-apple-system` / SF). Added layered shadows, glass panels, richer card gradients, ambient canvas light, HDR-leaning media contrast on the cinematic hero, and stronger frosted header treatment without bringing back the deep-green hours billboard.\
 **Files/modules affected:** `src/app/layout.tsx`; `src/app/globals.css`; `src/components/layout/site-header.tsx`; `src/app/page.tsx`; `src/app/contact/page.tsx`; `docs/development-log.md`.\
 **Git branch:** `feat/gallery-ui-polish`\
@@ -362,10 +434,10 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Date:** 2026-09-24\
 **Phase:** Phase 2 — Public Showcase Website\
 **Task:** Lead Developer approved the gallery / cinematic UI polish branch and asked to merge after local review.\
-**Summary:** Merged `feat/gallery-ui-polish` into `main` via [PR #10](https://github.com/eendor/Brew-ni-Cat-Connect/pull/10). Delivered cinematic Home/Gallery presentation, site-wide depth and Apple-like surfaces with Georgia + system sans typography, Sunday-closed visit copy, Reveal hydration fix, gallery layout flush, optional Menu item photos only for confirmed shop food/drink stills (noodles + Cat-Feine), and menu card height alignment so imageless cards do not stretch. Internet stock photos were tried then removed per Lead Developer direction.\
+**Summary:** Merged `feat/gallery-ui-polish` into `main` via [PR #10](https://github.com/eendor/Brew-ni-Cat-Connect/pull/10). Delivered cinematic Home/Gallery presentation, site-wide depth and layered surfaces with Georgia + system sans typography, Sunday-closed visit copy, Reveal hydration fix, gallery layout flush, optional Menu item photos only for confirmed shop food/drink stills (noodles + Cat-Feine), and menu card height alignment so imageless cards do not stretch. Internet stock photos were tried then removed per Lead Developer direction.\
 **Files/modules affected:** Home, Gallery, Menu, Contact, shared layout/header/globals, gallery config, menu image map, development log and related Phase 2 docs already updated on the branch.\
 **Git branch:** `main` (merged from `feat/gallery-ui-polish`)\
-**Pull request:** [#10](https://github.com/eendor/Brew-ni-Cat-Connect/pull/10) — merged
+**Pull request:** [#10](https://github.com/eendor/Brew-ni-Cat-Connect/pull/10) — merged 2026-09-24 as `f0fa38e`
 
 ## 2026-10-05 — Polish Home visit logistics, favorites, and cat lounge guidance
 
@@ -381,8 +453,8 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Files/modules affected:** `src/app/page.tsx`, `package.json`, `package-lock.json`, `eslint.config.mjs`, `.prettierignore`, `docs/development-log.md`.\
 **Testing performed:** `npm run audit`, `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm run test` (10 files / 73 tests passed), `npm run build` (7/7 static pages), and `python3 scripts/validate_phase0_docs.py` (ERRORS=0 / PASS).\
 **Git branch:** `feat/homepage-ui-polish`\
-**Pull request:** [#11 — feat(home): polish visit logistics, customer favorites, and cat lounge etiquette](https://github.com/eendor/Brew-ni-Cat-Connect/pull/11)\
-**Next action:** Approve/merge Pull Request and record on Trello.
+**Pull request:** [#11 — feat(home): polish visit logistics, customer favorites, and cat lounge etiquette](https://github.com/eendor/Brew-ni-Cat-Connect/pull/11), merged 2026-10-05 as `937d6f5`.\
+**Next action:** None; merged and recorded on Trello.
 
 
 ## 2026-10-11 — Update vulnerable sharp and source-map-js
@@ -398,8 +470,8 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Testing performed:** `npm run lint`, `npm run typecheck`, `npm test` (10 files / 73 tests passed), `npm run build` (7/7 static pages), `npm audit --omit=dev` (0 vulnerabilities). Playwright E2E was not run.\
 **Known limitations:** Dev-only `braces` high-severity finding remains open until the Next.js ESLint plugin updates its dependency.\
 **Git branch:** `fix/audit-deps`\
-**Pull request:** [#12](https://github.com/eendor/Brew-ni-Cat-Connect/pull/12)\
-**Next action:** Independent teammate review of PR #12; no self-approval.
+**Pull request:** [#12](https://github.com/eendor/Brew-ni-Cat-Connect/pull/12) — merged 2026-10-11 as `2b570b6`\
+**Next action:** None; merged.
 
 ## 2026-10-11 — Confirm shop opening hours
 
@@ -408,9 +480,10 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Task:** Lead Developer relayed that the shop opens every day at 11 AM until 10 PM and is still closed on Sunday.\
 **Summary:** Replaced the "hours vary" wording with the confirmed hours (11 AM to 10 PM, Monday to Saturday, closed every Sunday) in the site config, Home, About and mobile navigation. Updated FR-003, the business content register, SRS, project overview, PRODUCT.md and README to match. Customers are still pointed to Facebook or the shop contact for schedule changes.\
 **Files/modules affected:** `src/config/site.ts`, `src/app/page.tsx`, `src/app/about/page.tsx`, `src/components/layout/mobile-navigation.tsx`, `tests/unit/business-pages.test.tsx`, `docs/functional-requirements.md`, `docs/business-content-register.md`, `docs/srs.md`, `docs/project-overview.md`, `PRODUCT.md`, `README.md`, `docs/development-log.md`.\
-**Testing performed:** see the commands recorded in the pull request.\
+**Testing performed:** `npm run lint`, `npm run typecheck`, `npm test` (73/73 passed), `npm run build`, `python3 scripts/validate_phase0_docs.py` (PASS). Playwright E2E was not run.\
 **Git branch:** `feat/update-shop-hours`\
-**Next action:** Independent teammate review.
+**Pull request:** [#13](https://github.com/eendor/Brew-ni-Cat-Connect/pull/13) — merged 2026-10-11 as `82e336e`\
+**Next action:** None; merged.
 
 ## 2026-10-14 — Restore a passing Playwright baseline
 
@@ -423,9 +496,10 @@ This log records completed work and observed evidence. Planned work is explicitl
 - `tests/e2e/showcase.spec.ts`: TC-P2-021 checks the header home link and hero heading;
 - this development-log entry.
 **Files/modules affected:** `src/app/contact/page.tsx`, `tests/e2e/showcase.spec.ts`, `docs/development-log.md`.\
-**Testing performed:** `npm run test:e2e` (13/13 passed); other commands are recorded in the pull request.\
+**Testing performed:** `npm run test:e2e` (13/13 passed); `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm test` (10 files / 73 tests passed), `python3 scripts/validate_phase0_docs.py` (PASS).\
 **Git branch:** `fix/e2e-baseline`\
-**Next action:** Independent teammate review; no self-approval.
+**Pull request:** [#15](https://github.com/eendor/Brew-ni-Cat-Connect/pull/15) — merged 2026-10-14 as `8be9e6a`\
+**Next action:** None; merged.
 
 ## 2026-10-15 — Phase 3 Cart & Checkout implementation and review resolution
 
@@ -436,8 +510,8 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Files/modules affected:** `src/app/cart/page.tsx`, `src/app/checkout/page.tsx`, `src/app/menu/page.tsx`, `src/components/cart/cart-drawer.tsx`, `src/components/cart/cart-line-item.tsx`, `src/components/cart/cart-page-view.tsx`, `src/components/cart/cart-trigger-button.tsx`, `src/components/checkout/checkout-view.tsx`, `src/components/menu/menu-item-order-dialog.tsx`, `src/context/cart-context.tsx`, `src/lib/accessibility/focus-trap.ts`, `tests/e2e/foundation.spec.ts`, `tests/unit/cart-components.test.tsx`, `tests/unit/cart-context.test.tsx`, `tests/unit/checkout.test.tsx`, `tests/unit/menu-order-dialog.test.tsx`, `docs/development-log.md`.\
 **Testing performed:** `npm run lint`, `npm run typecheck`, `npm run test` (14 files / 108 tests passed), `npm run format:check`, `npm run test:e2e` (13/13 passed), `npm run build` (9/9 static pages), `python scripts/validate_phase0_docs.py` (PASS).\
 **Git branch:** `feat/p3-cart-checkout`\
-**Pull request:** [#14](https://github.com/eendor/Brew-ni-Cat-Connect/pull/14)\
-**Next action:** Push commit to update PR #14 and await lead developer merge.
+**Pull request:** [#14](https://github.com/eendor/Brew-ni-Cat-Connect/pull/14) — merged 2026-10-15 as `e36b5a3`\
+**Next action:** None; merged. Supabase RLS hardening remains open before release.
 
 ## 2026-10-15 — Menu product photos and refined scroll and page motion
 
@@ -462,8 +536,8 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Testing performed:** `npm run lint` (pass), `npm run typecheck` (pass), `npm run format:check` (pass), `npm test` (14 files / 109 tests passed), `npm run build` (9/9 static pages), `npx playwright test` (13/13 passed), `python scripts/validate_phase0_docs.py` (PASS). Desktop 1440px and mobile 320px screenshots reviewed with zero horizontal overflow; record in `docs/evidence/phase-3/menu-photos-motion/verification.md`.\
 **Issues encountered:** GSAP and Lenis were evaluated and not added; native smooth anchor scrolling is already subtle and keeps sticky bars and focus traps simple. Drawer/dialog exit animations are not implemented because they unmount immediately.\
 **Git branch:** `feat/menu-photos-motion`\
-**Pull request:** [#16](https://github.com/eendor/Brew-ni-Cat-Connect/pull/16)\
-**Next action:** Lead Developer approval recorded on the pull request, then merge.
+**Pull request:** [#16](https://github.com/eendor/Brew-ni-Cat-Connect/pull/16) — merged 2026-10-15 as `cb28583`\
+**Next action:** None; merged.
 
 ## 2026-10-15 — Restore menu card hover lift and right-size menu photos
 
@@ -476,9 +550,10 @@ This log records completed work and observed evidence. Planned work is explicitl
 - `src/components/menu/menu-item-card.tsx`: `sizes="(max-width: 767px) 100vw, (max-width: 1199px) 50vw, 576px"`;
 - this development-log entry.
 **Files/modules affected:** `src/app/globals.css`, `src/components/menu/menu-item-card.tsx`, `docs/development-log.md`.\
-**Testing performed:** Browser check on a production build: cards 1 and 3 lift to `-4px` on hover starting within 30ms, no lift under reduced motion; downloaded photo width covers the card at 375px@2x (750 for 333), 800px (640 for 360), 1280px (640 for 532) and 1440px@2x (1200 for 532). Other commands are recorded in the pull request.\
+**Testing performed:** Browser check on a production build: cards 1 and 3 lift to `-4px` on hover starting within 30ms, no lift under reduced motion; downloaded photo width covers the card at 375px@2x (750 for 333), 800px (640 for 360), 1280px (640 for 532) and 1440px@2x (1200 for 532). `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm test` (14 files / 109 tests passed), `npm run test:e2e` (13/13 passed), `python3 scripts/validate_phase0_docs.py` (PASS).\
 **Git branch:** `fix/menu-card-hover-and-images`\
-**Next action:** Lead developer approval recorded in the pull request.
+**Pull request:** [#17](https://github.com/eendor/Brew-ni-Cat-Connect/pull/17) — merged 2026-10-15 as `8f62c6c`\
+**Next action:** None; merged. PR #18 later replaced this hover rule.
 
 ## 2026-10-15 — Menu layout, order dialog and header polish
 
@@ -493,6 +568,7 @@ This log records completed work and observed evidence. Planned work is explicitl
 - Home: Matcha favorite uses the real Lucky Green Neko photo used on the Menu; on phones the favorites are compact side-by-side cards (favorites section 1854px to 1109px at 375px).
 - Mobile card footer: full-width 48px order button on one line; the "Ready to enjoy?" hint shows from `sm` up. Flavor price lists use a 1px neutral rule instead of a 2px accent border.
 **Files/modules affected:** `src/components/menu/menu-item-card.tsx`, `src/components/menu/menu-catalog.tsx`, `src/components/menu/menu-item-order-dialog.tsx`, `src/components/layout/site-header.tsx`, `src/app/page.tsx`, `src/app/globals.css`, `docs/development-log.md`.\
-**Testing performed:** Production-build browser measurements and screenshots at 1280px, 375px and 320px (row height differences, page heights, card opacity after tab jump, dialog layout, 320px overflow 0, order button 48px). Other commands are recorded in the pull request.\
+**Testing performed:** Production-build browser measurements and screenshots at 1280px, 375px and 320px (row height differences, page heights, card opacity after tab jump, dialog layout, 320px overflow 0, order button 48px). `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm test` (14 files / 109 tests passed), `npm run test:e2e` (13/13 passed), `python3 scripts/validate_phase0_docs.py` (PASS).\
 **Git branch:** `fix/menu-layout-polish`\
-**Next action:** Lead developer approval recorded in the pull request.
+**Pull request:** [#18](https://github.com/eendor/Brew-ni-Cat-Connect/pull/18) — merged 2026-10-15 as `a887c12`\
+**Next action:** Re-check remaining Menu polish items (stretched short cards, dialog selected state, sticky bar width) in a follow-up.
