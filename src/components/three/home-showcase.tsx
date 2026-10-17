@@ -125,12 +125,6 @@ export function HomeShowcase() {
             </div>
           ) : null}
         </div>
-        {three ? (
-          <p className="showcase__hint" aria-hidden="true">
-            <span />
-            Scroll
-          </p>
-        ) : null}
       </div>
 
       {!three ? (

@@ -97,12 +97,6 @@ export function MenuHero() {
               </a>
             </div>
           </div>
-          {three ? (
-            <p className="showcase__hint" aria-hidden="true">
-              <span />
-              Scroll
-            </p>
-          ) : null}
         </div>
       </section>
       {mounted

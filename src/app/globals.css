@@ -1109,45 +1109,6 @@ textarea:focus-visible {
   color: var(--text-strong);
 }
 
-.showcase__hint {
-  position: absolute;
-  top: 50%;
-  right: 1.5rem;
-  z-index: 2;
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-  color: var(--text-muted);
-  font-size: var(--type-label);
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
-  writing-mode: vertical-rl;
-}
-
-.showcase__hint span {
-  width: 1px;
-  height: 48px;
-  background: linear-gradient(var(--glow), transparent);
-  animation: drip 2.2s var(--ease-cinematic) infinite;
-}
-
-@keyframes drip {
-  from {
-    transform: scaleY(0);
-    transform-origin: top;
-  }
-
-  60% {
-    transform: scaleY(1);
-    transform-origin: top;
-  }
-
-  to {
-    transform: scaleY(0);
-    transform-origin: bottom;
-  }
-}
-
 /* Below the desktop nav breakpoint the two-column HUD squeezed the CTAs into
    three-line pills on tablets, so stack it into one column there. */
 @media (max-width: 1023px) {
@@ -1190,10 +1151,6 @@ textarea:focus-visible {
 
   .showcase__ticks li {
     flex: 1;
-  }
-
-  .showcase__hint {
-    display: none;
   }
 
   .showcase--3d .showcase__intro .flex {
@@ -1497,8 +1454,7 @@ textarea:focus-visible {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .showcase__product-copy,
-  .showcase__hint span {
+  .showcase__product-copy {
     animation: none !important;
   }
 
