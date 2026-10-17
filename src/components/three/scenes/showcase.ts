@@ -500,7 +500,12 @@ export async function initShowcase(
     const bu = travel(p, 4);
     buldak.visible = p > 3.02;
     buldak.position.set(0, -5.5 * (1 - bu.enter) - 0.3, 0);
-    buldak.rotation.set(0, -Math.PI * (1 - bu.enter) + state.time * 0.25, 0);
+    buldak.rotation.set(0, Math.sin(state.time * 0.4) * 0.25, 0);
+    (buldak.userData.spin as THREE.Object3D | undefined)?.rotation.set(
+      0,
+      -Math.PI * (1 - bu.enter) + state.time * 0.25,
+      0,
+    );
     buldak.scale.setScalar(s0 * 1.05);
 
     const presence = items.map((_, i) => Math.max(0, 1 - Math.abs(p - i)));

@@ -811,10 +811,16 @@ export function makeBuldak(mobile: boolean) {
     seaweed.setMatrixAt(i, m4);
   }
   inner.add(seaweed);
-  inner.rotation.x = 0.55;
   inner.scale.setScalar(1.15);
+  // Tilt the bowl toward the camera once, then spin the contents around the
+  // bowl's own axis. Spinning the tilted group instead turned the opening
+  // away every half turn and showed an empty black underside.
+  const tilt = new THREE.Group();
+  tilt.rotation.x = 0.55;
+  tilt.add(inner);
   const wrap = new THREE.Group();
-  wrap.add(inner);
+  wrap.add(tilt);
+  wrap.userData.spin = inner;
   return wrap;
 }
 
