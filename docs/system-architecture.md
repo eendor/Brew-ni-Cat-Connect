@@ -448,3 +448,52 @@ The required production follow-up is to restore RLS and add a separately reviewe
 ### 17.4 Media and privacy boundary
 
 The official logo and 19 selected approved shop/customer images ship from `public/images`. Next.js Image supplies responsive sizing and optimization. Alternative text is generic and factual; it does not name customers or infer personal/sensitive attributes. The application does not add customer-recognition, analytics, upload, or external media-processing services.
+
+## 18. WebGL Experience Layer (branch `feat/threejs-experience`)
+
+```mermaid
+flowchart LR
+    Page[Server-rendered page: full static content]
+    Gate{WebGL 2 and motion allowed?}
+    Dyn[next/dynamic, ssr: false]
+    Scenes[Scene modules: plain three.js]
+    Ticker[Single gsap.ticker loop + ScrollTrigger]
+    Cart[useCart addItem]
+    Toss[requestCartToss event]
+
+    Page --> Gate
+    Gate -- no --> Page
+    Gate -- yes --> Dyn --> Scenes
+    Scenes --> Ticker
+    Cart --> Toss --> Scenes
+```
+
+### 18.1 Modules
+
+| Path | Role |
+| --- | --- |
+| `src/components/three/engine/` | Renderer setup (ACES, sRGB, shadows), cached HDRI environment, procedural PBR texture generators, post-processing chain (render → bokeh → bloom → output → grain), shared frame loop, device quality and reduced-motion checks, frame budget |
+| `src/components/three/scenes/` | One module per scene: home showcase, menu tiles, cart basket and toss, gallery ring, visit sign and street model, ambient page backdrops, and the shared product models |
+| `src/components/three/canvas/` | Client components that own a `<canvas>`, start and dispose a scene through `useScene`, and connect ScrollTrigger |
+| `src/components/three/*.tsx` | Page-level wrappers with the static fallback: `HomeShowcase`, `MenuHero`, `CartFxLayer`, `GalleryRing`, `VisitStage`, `AmbientBackdrop` |
+
+### 18.2 3D per route
+
+| Route | 3D | Static fallback |
+| --- | --- | --- |
+| `/` | Pinned scroll showcase: PET cup with real refraction, condensation and ice (Matcha, Cat-Feine), takoyaki, fries and Buldak Carbo, with floating ice, tea leaves, coffee beans and bonito flakes; visit sign and street model in "Find us in Kabacan" on a transparent full-bleed canvas (no card behind it) | Five-item photo grid, sign card |
+| `/menu` | Full-viewport hero: glowing "THE MENU" over turning cups, rim light and floating ice, beans and leaves that dolly and fade into the catalog on scroll; a fixed glow field that follows the active category; indexed category headings; plain menu cards with the shop photo across the top; Add to Order throws the item into a 3D basket on the cart button (420 ms) before the drawer opens | Plain hero heading and the same plain menu cards |
+| `/gallery` | Ambient backdrop; curved, draggable ring of all gallery photos with prev/next buttons and a live caption | Full photo grid (always present) |
+| `/contact` | Ambient backdrop; flip-able OPEN/CLOSED sign and street model (Pulido Eatery on the left, the small Brew ni Cat unit on its right) | Sign card |
+| `/about`, `/cart`, `/checkout` | Subtle ambient backdrop behind the page heading | Plain heading background |
+| All routes | 3D basket in the header cart button | Outline bag icon |
+
+### 18.3 Rules
+
+- Each feature uses its own WebGL canvas. The menu tile canvas sits at `z-index: 25`, under the sticky category bar (30) and header (50), and is portalled to `<body>` so the route enter animation cannot become its containing block. The cart canvas sits at 60, above the header, and never takes pointer events. The order dialog and cart drawer sit at 70, above the cart canvas, so the basket never draws over an open overlay.
+- Layout is full-bleed: section backgrounds and 3D stages span the viewport; text and grids sit in `Container` (`--shell-max` 90rem of content plus `--shell-pad` fluid gutters). Cart and checkout split into form/items and summary columns from 900 px.
+- The menu glow field sits at `z-index: -1` and the film-grain and vignette overlay at 26 (both portalled to `<body>`, pointer-events off). The cart undo toast sits at 80, above the drawer.
+- On the home page the showcase stage starts under the translucent header (negative top margin equal to the header height) so the heading, actions and item controls fit in the first screen; a bottom scrim keeps that copy at AA contrast over the glows.
+- Scenes pause when off screen or when the tab is hidden, and release their WebGL context on unmount.
+- Textures for photos load through the Next image optimiser (`/_next/image`), so no extra image copies ship.
+- Playwright runs functional journeys with reduced motion (static render) and a separate `chromium-3d` project with software WebGL for the 3D checks.

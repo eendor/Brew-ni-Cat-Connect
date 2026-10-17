@@ -1,6 +1,9 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { AmbientBackdrop } from "@/components/three/ambient-backdrop";
+import type { AmbientMood } from "@/components/three/scenes/ambient";
+
 import { Container } from "./container";
 
 type PageIntroProps = Readonly<{
@@ -8,6 +11,8 @@ type PageIntroProps = Readonly<{
   title: string;
   description: ReactNode;
   aside?: ReactNode;
+  /** Colour and ingredients of the decorative 3D backdrop. */
+  mood?: AmbientMood;
 }>;
 
 export function PageIntro({
@@ -15,9 +20,11 @@ export function PageIntro({
   title,
   description,
   aside,
+  mood = "menu",
 }: PageIntroProps) {
   return (
     <section className="page-hero" aria-labelledby="page-heading">
+      <AmbientBackdrop mood={mood} />
       <Container className="py-12 sm:py-16 lg:py-20">
         <nav aria-label="Breadcrumb" className="fade-up-reveal">
           <ol className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
@@ -38,7 +45,7 @@ export function PageIntro({
             <p className="eyebrow">{eyebrow}</p>
             <h1
               id="page-heading"
-              className="font-display mt-3 text-5xl leading-[1.02] font-semibold tracking-[-0.04em] text-balance text-[var(--text-strong)] sm:text-6xl"
+              className="font-display mt-3 text-5xl leading-[1.02] text-balance text-[var(--text-strong)] sm:text-6xl"
             >
               {title}
             </h1>

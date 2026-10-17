@@ -33,6 +33,7 @@ export default function AboutPage() {
   return (
     <>
       <PageIntro
+        mood="about"
         eyebrow="Our local café"
         title="About Brew ni Cat"
         description={
@@ -65,7 +66,7 @@ export default function AboutPage() {
               height={1024}
               alt="Siamese cat in front of the café’s leafy interior wall"
               sizes="(max-width: 1023px) 36vw, 18vw"
-              className="col-span-2 row-span-3 mt-6 h-full w-full rounded-[1.5rem] object-cover shadow-[var(--shadow-subtle)]"
+              className="col-span-2 row-span-3 mt-6 h-full w-full rounded-3xl object-cover shadow-[var(--shadow-subtle)]"
             />
             <Image
               src="/images/shop/photo_063.jpg"
@@ -73,7 +74,7 @@ export default function AboutPage() {
               height={1024}
               alt="Customer holding a green drink beside Brew ni Cat’s wall logo"
               sizes="(max-width: 1023px) 36vw, 18vw"
-              className="col-span-2 row-span-2 h-full w-full rounded-[1.5rem] object-cover shadow-[var(--shadow-subtle)]"
+              className="col-span-2 row-span-2 h-full w-full rounded-3xl object-cover shadow-[var(--shadow-subtle)]"
             />
           </Reveal>
 
@@ -111,9 +112,9 @@ export default function AboutPage() {
           <div className="grid gap-4 md:grid-cols-3">
             {shopDetails.map((detail, index) => (
               <Reveal key={detail.label} delayMs={index * 80}>
-                <div className="surface-lift h-full rounded-[1.5rem] bg-[var(--surface-card)] p-6 shadow-[var(--shadow-subtle)]">
+                <div className="surface-lift h-full rounded-3xl bg-[var(--surface-card)] p-6 shadow-[var(--shadow-subtle)]">
                   <p className="eyebrow">{detail.label}</p>
-                  <p className="font-display mt-3 text-2xl font-semibold text-[var(--text-strong)]">
+                  <p className="font-display mt-3 text-2xl text-[var(--text-strong)]">
                     {detail.value}
                   </p>
                 </div>
@@ -125,18 +126,18 @@ export default function AboutPage() {
 
       <section className="py-16 sm:py-20" aria-labelledby="about-visit-heading">
         <Container>
-          <Reveal className="rounded-[2rem] bg-[var(--deep-green)] p-7 text-white sm:p-10 lg:flex lg:items-center lg:justify-between lg:gap-10">
+          <Reveal className="rounded-[2rem] border border-[var(--border-soft)] bg-[var(--surface-raised)] p-7 text-[var(--text-strong)] sm:p-10 lg:flex lg:items-center lg:justify-between lg:gap-10">
             <div className="max-w-2xl">
-              <p className="text-xs font-extrabold tracking-[0.16em] text-[#f6cf80] uppercase">
+              <p className="text-xs font-extrabold tracking-[0.16em] text-[var(--accent-strong)] uppercase">
                 Come say hello
               </p>
               <h2
                 id="about-visit-heading"
-                className="font-display mt-3 text-3xl font-semibold sm:text-4xl"
+                className="font-display mt-3 text-3xl sm:text-4xl"
               >
                 Visit Brew ni Cat in Poblacion, Kabacan.
               </h2>
-              <p className="mt-3 leading-7 text-[#e4e6d9]">
+              <p className="mt-3 leading-7 text-[var(--text-muted)]">
                 The shop is open 11 AM to 10 PM and closed every Sunday. Check
                 Facebook or contact the shop for schedule changes before making
                 the trip.
@@ -144,7 +145,7 @@ export default function AboutPage() {
             </div>
             <Link
               href="/contact"
-              className="mt-7 inline-flex min-h-12 shrink-0 items-center justify-center rounded-full bg-white px-6 py-3 font-extrabold text-[var(--deep-green)] transition-colors hover:bg-[var(--surface-warm)] lg:mt-0"
+              className="button-primary mt-7 shrink-0 lg:mt-0"
             >
               Get visit details
             </Link>

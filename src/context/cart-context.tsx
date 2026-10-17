@@ -301,7 +301,12 @@ export type CartContextValue = Readonly<{
   updateQuantity: (key: string, quantity: number) => void;
   removeItem: (key: string) => void;
   setFulfillment: (fulfillment: FulfillmentType) => void;
-  clearCart: () => void;
+  /** Empties the cart; offers an undo unless `undoable` is false. */
+  clearCart: (options?: Readonly<{ undoable?: boolean }>) => void;
+  /** Last removal that can still be undone (shown as a toast for ~5 s). */
+  undo: Readonly<{ id: number; message: string }> | null;
+  undoLast: () => void;
+  dismissUndo: () => void;
 }>;
 
 const CartContext = createContext<CartContextValue | null>(null);
@@ -359,9 +364,24 @@ export function CartProvider({
     [store],
   );
 
+  const [undoEntry, setUndoEntry] = useState<{
+    id: number;
+    message: string;
+    snapshot: CartState;
+  } | null>(null);
+
   const removeItem = useCallback(
     (key: string) => {
+      const before = store.getSnapshot();
+      const line = before.lines.find((entry) => entry.key === key);
       store.dispatch({ type: "remove", key });
+      if (line && store.getSnapshot() !== before) {
+        setUndoEntry({
+          id: Date.now(),
+          message: `Removed ${line.itemName}`,
+          snapshot: before,
+        });
+      }
     },
     [store],
   );
@@ -373,9 +393,34 @@ export function CartProvider({
     [store],
   );
 
-  const clearCart = useCallback(() => {
-    store.dispatch({ type: "clear" });
-  }, [store]);
+  const clearCart = useCallback(
+    (options?: Readonly<{ undoable?: boolean }>) => {
+      const before = store.getSnapshot();
+      store.dispatch({ type: "clear" });
+      if (options?.undoable !== false && before.lines.length > 0) {
+        setUndoEntry({
+          id: Date.now(),
+          message: "Cart cleared",
+          snapshot: before,
+        });
+      } else {
+        setUndoEntry(null);
+      }
+    },
+    [store],
+  );
+
+  const undoLast = useCallback(() => {
+    if (!undoEntry) return;
+    // the snapshot was a valid, already-priced cart state
+    store.setDirectState(undoEntry.snapshot);
+    setUndoEntry(null);
+  }, [store, undoEntry]);
+  const dismissUndo = useCallback(() => setUndoEntry(null), []);
+  const undo = useMemo(
+    () => (undoEntry ? { id: undoEntry.id, message: undoEntry.message } : null),
+    [undoEntry],
+  );
 
   const lines = useMemo(() => getCartLines(state), [state]);
   const fulfillment = state.fulfillment;
@@ -416,6 +461,9 @@ export function CartProvider({
       removeItem,
       setFulfillment,
       clearCart,
+      undo,
+      undoLast,
+      dismissUndo,
     }),
     [
       state,
@@ -436,6 +484,9 @@ export function CartProvider({
       removeItem,
       setFulfillment,
       clearCart,
+      undo,
+      undoLast,
+      dismissUndo,
     ],
   );
 
@@ -474,6 +525,9 @@ const fallbackCartValue: CartContextValue = {
   removeItem: () => {},
   setFulfillment: () => {},
   clearCart: () => {},
+  undo: null,
+  undoLast: () => {},
+  dismissUndo: () => {},
 };
 
 export function useCart(): CartContextValue {

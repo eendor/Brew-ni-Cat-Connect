@@ -96,10 +96,10 @@ test("TC-P2-027 — Menu exposes truthful loading and empty states", async ({
 
   await page.goto("/menu");
 
-  await expect(page.getByRole("status")).toContainText(
+  await expect(page.locator("main").getByRole("status")).toContainText(
     "Brewing up the latest choices",
   );
-  await expect(page.getByRole("status")).toContainText(
+  await expect(page.locator("main").getByRole("status")).toContainText(
     "The public menu is not available right now.",
   );
   await expect(

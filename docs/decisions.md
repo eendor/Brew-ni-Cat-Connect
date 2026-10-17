@@ -176,3 +176,21 @@ This manual state is a temporary functional-verification condition, not a revisi
 **Consequences:** Everything is disabled under `prefers-reduced-motion`. Drawer and dialog close without an exit animation. Menu categories no longer fade in on scroll since PR #18.
 
 ---
+
+## ADR-014 — WebGL Experience Layer Over the Static Site
+
+**Decision:** Add a three.js (plain, not React Three Fiber) and GSAP ScrollTrigger layer under `src/components/three/`, loaded with `next/dynamic` and `ssr: false`, on top of pages that still render completely without it. This partly supersedes ADR-013: GSAP is now a dependency, but only the 3D layer uses it; CSS motion elsewhere is unchanged.\
+**Date:** 2026-10-17\
+**Status:** Proposed on branch `feat/threejs-experience` (no pull request yet)\
+**Context:** The owner asked for a full 3D site in a dark "Night Shift Glow" look that reads as real product photography, not cartoon art, without losing the live menu, real cart, checkout or accessibility of `main`.\
+**Consequences:**
+- Every 3D scene is decorative (`aria-hidden`). Headings, prices, hours, photos with alt text, forms and buttons stay real HTML, and each 3D control has a keyboard-operable HTML button.
+- The 3D layer mounts only after hydration, when WebGL 2 is available and `prefers-reduced-motion` is not set. Otherwise the server-rendered static version stays (static showcase grid, photo thumbnails, sign fallback, no ring).
+- Rendering is physically based: `MeshPhysicalMaterial` with transmission, IOR 1.45 and clearcoat; a bundled CC0 studio HDRI for light and reflections; ACES filmic tone mapping with sRGB output; soft shadow maps and contact shadows; subtle depth of field, bloom and film grain.
+- Food and drink models are procedural with generated PBR maps (albedo, normal, roughness) because no CC0 photoscans of takoyaki, shoestring fries or buldak exist.
+- Phones get a lower pixel-ratio cap, fewer particles and no depth of field. A frame-time budget drops depth of field and bloom and lowers the pixel ratio when frames run slow.
+- The project design system was updated to the dark direction rather than overridden. On 2026-10-17 the design and product context was rewritten for Night Shift Glow: a #0B0A0D studio canvas with #15131A blocks, #F4F1EA / #B9B3C2 text, one glow colour per featured item, matcha #7CFF6B as the only filled action colour, Big Shoulders with Archivo, a documented type ramp and radius scale, realistic PBR rules with no cartoon styling, static reduced-motion fallbacks, and an AA-on-black rule for any accent used as text. The site was then audited against the new system and aligned to it in the same branch (type and radius tokens in `globals.css`, a coral error colour, larger touch targets, a scrim behind the showcase copy and overlay layering).
+- Adding an item still goes through `useCart().addItem`; the 3D toss only delays opening the drawer by 0.42 s when the cart layer is running.
+- Pages are full-bleed (2026-10-17): backgrounds and 3D stages span the viewport and content uses a 90rem cap with fluid gutters, replacing the earlier 72rem column.
+
+---

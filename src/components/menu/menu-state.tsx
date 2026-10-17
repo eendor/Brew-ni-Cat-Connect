@@ -50,7 +50,7 @@ export function MenuState({ state, onRetry }: MenuStateProps) {
         </span>
       )}
       <p className="eyebrow mt-5">{stateContent.eyebrow}</p>
-      <h2 className="font-display mt-3 text-3xl font-semibold text-[var(--text-strong)]">
+      <h2 className="font-display mt-3 text-3xl text-[var(--text-strong)]">
         {stateContent.title}
       </h2>
       <p className="mt-4 leading-7 text-[var(--text-muted)]">

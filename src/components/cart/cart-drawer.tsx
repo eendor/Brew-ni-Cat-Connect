@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 
+import { siteConfig } from "@/config/site";
 import { useCart } from "@/context/cart-context";
 import { useFocusTrap } from "@/lib/accessibility/focus-trap";
 import { formatPrice } from "@/lib/menu/format-price";
@@ -47,7 +48,7 @@ export function CartDrawer() {
   return (
     <div
       ref={drawerContainerRef}
-      className="fixed inset-0 z-50 overflow-hidden"
+      className="fixed inset-0 z-[70] overflow-hidden"
       role="dialog"
       aria-modal="true"
       aria-labelledby="cart-drawer-title"
@@ -66,7 +67,7 @@ export function CartDrawer() {
             <div className="flex items-center gap-2.5">
               <h2
                 id="cart-drawer-title"
-                className="font-display text-xl font-bold text-[var(--text-strong)]"
+                className="font-display text-xl text-[var(--text-strong)]"
               >
                 Your Order
               </h2>
@@ -78,7 +79,7 @@ export function CartDrawer() {
             <button
               ref={closeButtonRef}
               type="button"
-              className="inline-flex size-9 items-center justify-center rounded-full text-[var(--text-muted)] hover:bg-[var(--surface-warm)] hover:text-[var(--text-strong)] transition-colors"
+              className="inline-flex size-11 items-center justify-center rounded-full text-[var(--text-muted)] hover:bg-[var(--surface-warm)] hover:text-[var(--text-strong)] transition-colors"
               aria-label="Close cart drawer"
               onClick={closeDrawer}
             >
@@ -116,7 +117,7 @@ export function CartDrawer() {
                     <path d="M16 10a4 4 0 0 1-8 0" />
                   </svg>
                 </div>
-                <h3 className="font-display text-lg font-semibold text-[var(--text-strong)]">
+                <h3 className="font-display text-lg text-[var(--text-strong)]">
                   Your cart is empty
                 </h3>
                 <p className="mt-2 text-sm text-[var(--text-muted)] max-w-xs leading-relaxed">
@@ -139,8 +140,8 @@ export function CartDrawer() {
                   </span>
                   <button
                     type="button"
-                    className="text-xs font-bold text-[var(--text-muted)] hover:text-red-700 transition-colors"
-                    onClick={clearCart}
+                    className="-mr-2 inline-flex min-h-11 items-center rounded-full px-2 text-sm font-bold text-[var(--text-muted)] hover:text-[var(--danger)] transition-colors"
+                    onClick={() => clearCart()}
                   >
                     Clear all
                   </button>
@@ -183,7 +184,8 @@ export function CartDrawer() {
                 </strong>
                 Available for pickup at Segundo St or external rider
                 arrangement. Payment is settled via Cash or GCash directly with
-                the shop.
+                the shop. The {siteConfig.operations.takeoutFee} is not included
+                in the subtotal; the shop confirms it when you order.
               </div>
 
               <div className="grid gap-2">

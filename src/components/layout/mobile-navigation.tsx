@@ -1,9 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 import type { NavigationItem } from "@/config/site";
+
+import { NavLink } from "./nav-link";
 
 type MobileNavigationProps = Readonly<{
   items: readonly NavigationItem[];
@@ -28,7 +30,14 @@ export function MobileNavigation({ items }: MobileNavigationProps) {
     }
 
     document.addEventListener("keydown", handleEscape);
-    return () => document.removeEventListener("keydown", handleEscape);
+    // lock page scroll behind the open menu (scrollbar-gutter keeps width)
+    const root = document.documentElement;
+    const previous = root.style.overflow;
+    root.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", handleEscape);
+      root.style.overflow = previous;
+    };
   }, [isOpen]);
 
   function closeNavigation() {
@@ -40,7 +49,7 @@ export function MobileNavigation({ items }: MobileNavigationProps) {
       <button
         ref={triggerRef}
         type="button"
-        className="inline-flex size-11 items-center justify-center rounded-full border border-[var(--border-strong)] bg-[var(--surface-card)] text-[var(--text-strong)] shadow-sm transition-colors hover:bg-[var(--surface-warm)]"
+        className="inline-flex size-12 items-center justify-center rounded-full border border-[var(--border-strong)] bg-[var(--surface-card)] text-[var(--text-strong)] shadow-sm transition-colors hover:bg-[var(--surface-warm)]"
         aria-label={isOpen ? "Close navigation" : "Open navigation"}
         aria-expanded={isOpen}
         aria-controls="mobile-navigation"
@@ -73,26 +82,40 @@ export function MobileNavigation({ items }: MobileNavigationProps) {
         )}
       </button>
 
+      {isOpen
+        ? createPortal(
+            // portalled: the header's backdrop-filter would otherwise be the
+            // containing block of this fixed scrim
+            <div
+              className="mobile-nav-scrim fixed inset-0 z-40 bg-[var(--ink-scrim)] backdrop-blur-sm lg:hidden"
+              aria-hidden="true"
+              data-testid="mobile-nav-scrim"
+              onClick={closeNavigation}
+            />,
+            document.body,
+          )
+        : null}
+
       <nav
         id="mobile-navigation"
         className="motion-drop-in absolute inset-x-0 top-full border-t border-[var(--border-soft)] bg-[var(--surface-canvas)] px-5 py-5 shadow-[var(--shadow-card)]"
         aria-label="Mobile navigation"
         hidden={!isOpen}
       >
-        <ul className="mx-auto grid w-full max-w-[72rem] gap-1">
+        <ul className="mx-auto grid w-full max-w-[var(--shell-width)] gap-1">
           {items.map((item) => (
             <li key={item.href}>
-              <Link
+              <NavLink
                 href={item.href}
-                className="flex min-h-12 items-center rounded-xl px-4 py-3 text-base font-bold text-[var(--text-strong)] transition-colors hover:bg-[var(--accent-soft)]"
+                className="flex min-h-12 items-center rounded-xl px-4 py-3 text-base font-bold text-[var(--text-strong)] transition-colors hover:bg-[var(--accent-soft)] aria-[current=page]:bg-[var(--accent-soft)] aria-[current=page]:text-[var(--accent-solid)]"
                 onClick={closeNavigation}
               >
                 {item.label}
-              </Link>
+              </NavLink>
             </li>
           ))}
         </ul>
-        <div className="mx-auto mt-4 flex w-full max-w-[72rem] flex-col gap-1 border-t border-[var(--border-soft)] px-4 pt-4 text-sm text-[var(--text-muted)]">
+        <div className="mx-auto mt-4 flex w-full max-w-[var(--shell-width)] flex-col gap-1 border-t border-[var(--border-soft)] px-4 pt-4 text-sm text-[var(--text-muted)]">
           <span className="font-bold text-[var(--text-strong)]">
             Segundo St, Poblacion, Kabacan
           </span>

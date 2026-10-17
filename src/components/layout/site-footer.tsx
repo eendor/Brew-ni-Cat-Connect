@@ -8,7 +8,7 @@ import { Container } from "../ui/container";
 import { Reveal } from "../ui/reveal";
 
 const footerLinkClass =
-  "rounded-sm text-sm leading-6 text-[var(--footer-muted)] transition-colors hover:text-white";
+  "inline-flex min-h-11 items-center rounded-sm text-sm leading-6 text-[var(--footer-muted)] transition-colors hover:text-[var(--text-strong)]";
 
 export function SiteFooter() {
   return (
@@ -18,7 +18,7 @@ export function SiteFooter() {
           <div>
             <Link
               href="/"
-              className="inline-flex items-center gap-3 rounded-md text-white"
+              className="inline-flex items-center gap-3 rounded-lg text-[var(--text-strong)]"
             >
               <Image
                 src="/images/branding/brew-ni-cat-logo.png"
@@ -27,7 +27,7 @@ export function SiteFooter() {
                 alt=""
                 className="size-16 object-contain"
               />
-              <span className="font-display text-2xl font-semibold">
+              <span className="font-display text-2xl">
                 {siteConfig.shortName}
               </span>
             </Link>
@@ -39,7 +39,7 @@ export function SiteFooter() {
 
           <nav aria-label="Footer navigation">
             <h2 className="footer-heading">Explore</h2>
-            <ul className="mt-4 grid gap-2.5">
+            <ul className="mt-2 grid">
               {siteConfig.navigation.map((item) => (
                 <li key={item.href}>
                   <Link href={item.href} className={footerLinkClass}>
@@ -54,13 +54,13 @@ export function SiteFooter() {
             <h2 id="contact-footer-heading" className="footer-heading">
               Find us
             </h2>
-            <address className="mt-4 grid gap-2.5 text-sm leading-6 text-[var(--footer-muted)] not-italic">
+            <address className="mt-4 grid gap-1 text-sm leading-6 text-[var(--footer-muted)] not-italic">
               <p>
                 {siteConfig.address.street}
                 <br />
                 {siteConfig.address.locality}, {siteConfig.address.country}
                 <br />
-                <span className="text-white">
+                <span className="text-[var(--text-strong)]">
                   {siteConfig.address.landmark}
                 </span>
               </p>
@@ -83,7 +83,7 @@ export function SiteFooter() {
             <h2 id="social-footer-heading" className="footer-heading">
               Follow along
             </h2>
-            <ul className="mt-4 grid gap-2.5">
+            <ul className="mt-2 grid">
               <li>
                 <ExternalLink
                   href={siteConfig.social.facebook}
@@ -101,7 +101,7 @@ export function SiteFooter() {
                 </ExternalLink>
               </li>
             </ul>
-            <p className="mt-5 text-xs leading-5 text-[var(--footer-muted)]">
+            <p className="mt-3 text-sm leading-6 text-[var(--footer-muted)]">
               {siteConfig.operations.hoursNotice}
             </p>
           </section>

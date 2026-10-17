@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it } from "vitest";
 
@@ -206,5 +206,52 @@ describe("MenuItemOrderDialog & MenuItemCard ordering integration", () => {
 
     // Focus must stay on the clicked option, not jump back to the close button
     expect(document.activeElement).toBe(variant22Btn);
+  });
+
+  it("TC-P4-011 — Add to Order uses the latest size, flavor and quantity on rapid clicks", async () => {
+    const user = userEvent.setup();
+    renderMenuItem(sampleDrinkItem);
+    await user.click(
+      screen.getByRole("button", { name: "Order Iced Matcha Latte" }),
+    );
+    const dialog = screen.getByRole("dialog");
+    const size22 = within(dialog).getByRole("button", { name: /22 oz/i });
+    const more = within(dialog).getByRole("button", {
+      name: "Increase quantity",
+    });
+    const add = within(dialog).getByRole("button", { name: "Add to Order" });
+
+    // All clicks land in one batch, before React re-renders the dialog, so
+    // the Add handler from the first render would still see 16 oz × 1.
+    // A second Add click in the same burst must not add the line twice.
+    act(() => {
+      size22.click();
+      more.click();
+      add.click();
+      add.click();
+    });
+
+    const drawer = screen.getByRole("dialog", { name: /Your Order/ });
+    expect(within(drawer).getByText("2 items")).toBeInTheDocument();
+    expect(within(drawer).getAllByText(/22 oz/).length).toBeGreaterThan(0);
+    expect(within(drawer).queryByText(/16 oz/)).not.toBeInTheDocument();
+    expect(within(drawer).getAllByText("₱220").length).toBeGreaterThan(0);
+  });
+
+  it("TC-P4-012 — a flavor picked just before Add is the one added", async () => {
+    const user = userEvent.setup();
+    renderMenuItem(sampleSnackItem);
+    await user.click(screen.getByRole("button", { name: "Order Takoyaki" }));
+    const dialog = screen.getByRole("dialog");
+    const octopus = within(dialog).getByRole("button", { name: /Octopus/i });
+    const add = within(dialog).getByRole("button", { name: "Add to Order" });
+
+    act(() => {
+      octopus.click();
+      add.click();
+    });
+
+    expect(screen.getByText(/Flavor: Octopus/)).toBeInTheDocument();
+    expect(screen.getAllByText("₱60").length).toBeGreaterThan(0);
   });
 });
