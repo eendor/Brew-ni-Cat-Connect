@@ -114,14 +114,33 @@ describe("MenuCatalog", () => {
   });
 
   it("TC-P3-052 — marks the category tab whose section is in view", async () => {
-    let notify: IntersectionObserverCallback = () => undefined;
+    // Other components (Reveal) create observers too, so keep each callback
+    // with the elements it watches and notify only the one watching the target.
+    const observers: {
+      callback: IntersectionObserverCallback;
+      targets: Element[];
+    }[] = [];
     class FakeObserver {
+      private entry: {
+        callback: IntersectionObserverCallback;
+        targets: Element[];
+      };
       constructor(callback: IntersectionObserverCallback) {
-        notify = callback;
+        this.entry = { callback, targets: [] };
+        observers.push(this.entry);
       }
-      observe() {}
+      observe(target: Element) {
+        this.entry.targets.push(target);
+      }
+      unobserve() {}
       disconnect() {}
     }
+    const notify: IntersectionObserverCallback = (entries, observer) => {
+      const target = entries[0]!.target;
+      observers
+        .filter((o) => o.targets.includes(target))
+        .forEach((o) => o.callback(entries, observer));
+    };
     vi.stubGlobal("IntersectionObserver", FakeObserver);
 
     render(<MenuCatalog loadMenu={() => Promise.resolve(populatedCatalog)} />);
