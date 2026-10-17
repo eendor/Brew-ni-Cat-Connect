@@ -172,3 +172,18 @@ This functional pass exposes a more serious current blocker: public access depen
 6. Review rounds: the first round flagged a Prettier CI failure and helpers that the checkout form did not use yet; the second flagged a lint failure from an unused import and a leftover local validation function in `checkout-view.tsx`. The third commit wired the shared helper in, removed the inline regex and messages, and CI went green on `5cd2b91`.
 
 **Status:** Approved by the lead developer and merged as `902fb6b` (PR #20). Post-merge gates on `main` passed: Vitest 115/115 in 15 files, Playwright 13/13, build, lint, typecheck, format, docs validator.
+
+## 2026-10-17 — Direct-to-main documentation commits (process exception)
+
+**Module:** Project documentation only\
+**Date:** 2026-10-17
+
+`CONTRIBUTING.md` asks for a focused branch and pull request for each documentation set. Two docs-only commits went straight to `main` without one:
+
+| Commit | Date | Change | How it happened |
+| --- | --- | --- | --- |
+| `8ae282a` | 2026-10-16 | Synced the development log, test cases, architecture, decisions, and content docs with PRs #1–#18 (9 files) | Pushed directly by request to skip a PR for the docs sync |
+| `ad5f0a5` | 2026-10-17 | Synced docs with PR #20 (5 files) | Pushed without prior approval |
+
+**Findings:** Neither commit touches application code, tests, configuration, or data. Both were reviewed after the fact against the merged PRs they describe. CI failed once on `ad5f0a5` because of the flaky TC-P3-052 test, unrelated to the docs; a re-run passed and the test fix is in PR #21.\
+**Status:** Accepted as documented exceptions by the lead developer. Docs syncs go through a `docs/` branch and pull request from now on.

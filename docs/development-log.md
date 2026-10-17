@@ -593,3 +593,9 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Pull request:** [#20](https://github.com/eendor/Brew-ni-Cat-Connect/pull/20) — reviewed by the lead developer (two rounds of requested changes, then approved) and merged 2026-10-16 as `902fb6b`\
 **Post-merge check (2026-10-17, `main` at `902fb6b`):** `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm test` (15 files / 115 tests passed), `npm run build`, `npm run test:e2e` (13/13 passed), `python3 scripts/validate_phase0_docs.py` (PASS).\
 **Next action:** Server-side order creation and revalidation (FR-021, FR-024, FR-025) remain open for Phase 3.
+## 2026-10-17 — Record direct-to-main docs commits
+
+**Summary:** Two docs-only commits (`8ae282a`, `ad5f0a5`) reached `main` without a pull request. They are now listed as reviewed process exceptions in `docs/code-review.md`, and future docs syncs go through a pull request.\
+**Files/modules affected:** `docs/code-review.md`, `docs/development-log.md`.\
+**Git branch:** `docs/direct-push-exceptions`\
+**Next action:** Merge after review.
