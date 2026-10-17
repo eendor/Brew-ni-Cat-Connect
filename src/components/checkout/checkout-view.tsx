@@ -138,17 +138,18 @@ export function CheckoutView({
     }, 50);
   }
 
-  function validateDetails(): boolean {
-    const result = validateDetailsHelper(customer);
-    setErrors(result.errors);
-    return result.isValid;
-  }
-
   function handleProceedToReview(e: React.FormEvent) {
     e.preventDefault();
-    if (validateDetails()) {
+    const result = validateDetailsHelper(customer);
+    setErrors(result.errors);
+    if (result.isValid) {
       goToStep("review");
+      return;
     }
+    // On phones the submit button sits far below the fields; take the
+    // visitor to the first field that needs fixing.
+    const firstInvalid = result.errors.name ? nameInputId : phoneInputId;
+    setTimeout(() => document.getElementById(firstInvalid)?.focus(), 0);
   }
 
   function handleProceedToSend() {
@@ -206,7 +207,7 @@ export function CheckoutView({
                   <line x1="3" y1="6" x2="21" y2="6" />
                 </svg>
               </div>
-              <h2 className="font-display text-2xl font-bold text-[var(--text-strong)]">
+              <h2 className="font-display text-2xl text-[var(--text-strong)]">
                 Your cart is empty
               </h2>
               <p className="mt-2 text-sm text-[var(--text-muted)]">
@@ -363,7 +364,7 @@ export function CheckoutView({
                   <h2
                     ref={step1HeadingRef}
                     tabIndex={-1}
-                    className="font-display text-xl font-bold text-[var(--text-strong)] outline-none"
+                    className="font-display text-xl text-[var(--text-strong)] outline-none"
                   >
                     1. Select Fulfillment Mode
                   </h2>
@@ -485,7 +486,7 @@ export function CheckoutView({
 
                 {/* Customer Contact Details */}
                 <div className="rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-6 sm:p-8 shadow-[var(--shadow-subtle)]">
-                  <h2 className="font-display text-xl font-bold text-[var(--text-strong)]">
+                  <h2 className="font-display text-xl text-[var(--text-strong)]">
                     2. Customer Contact Information
                   </h2>
                   <p className="mt-1 text-sm text-[var(--text-muted)]">
@@ -499,7 +500,13 @@ export function CheckoutView({
                         htmlFor={nameInputId}
                         className="block text-sm font-bold text-[var(--text-strong)]"
                       >
-                        Full Name <span className="text-red-600">*</span>
+                        Full Name{" "}
+                        <span
+                          className="text-[var(--danger)]"
+                          aria-hidden="true"
+                        >
+                          *
+                        </span>
                       </label>
                       <input
                         id={nameInputId}
@@ -520,13 +527,13 @@ export function CheckoutView({
                           errors.name ? "name-error" : undefined
                         }
                         placeholder="e.g. Maria Santos"
-                        className="mt-2 block w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface-input)] px-4 py-3 text-sm text-[var(--text-strong)] placeholder-[var(--text-subtle)] focus:border-[var(--accent-solid)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-solid)]"
+                        className="mt-2 block w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface-input)] min-h-12 px-4 py-3 text-base text-[var(--text-strong)] placeholder-[var(--text-subtle)] aria-[invalid=true]:border-[var(--danger)] focus:border-[var(--accent-solid)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-solid)]"
                       />
                       {errors.name ? (
                         <p
                           id="name-error"
                           role="alert"
-                          className="mt-1.5 text-xs font-bold text-red-600"
+                          className="mt-1.5 text-sm font-bold text-[var(--danger)]"
                         >
                           {errors.name}
                         </p>
@@ -539,7 +546,12 @@ export function CheckoutView({
                         className="block text-sm font-bold text-[var(--text-strong)]"
                       >
                         Contact Phone Number{" "}
-                        <span className="text-red-600">*</span>
+                        <span
+                          className="text-[var(--danger)]"
+                          aria-hidden="true"
+                        >
+                          *
+                        </span>
                       </label>
                       <input
                         id={phoneInputId}
@@ -560,13 +572,13 @@ export function CheckoutView({
                           errors.phone ? "phone-error" : undefined
                         }
                         placeholder="e.g. 0912 345 6789"
-                        className="mt-2 block w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface-input)] px-4 py-3 text-sm text-[var(--text-strong)] placeholder-[var(--text-subtle)] focus:border-[var(--accent-solid)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-solid)]"
+                        className="mt-2 block w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface-input)] min-h-12 px-4 py-3 text-base text-[var(--text-strong)] placeholder-[var(--text-subtle)] aria-[invalid=true]:border-[var(--danger)] focus:border-[var(--accent-solid)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-solid)]"
                       />
                       {errors.phone ? (
                         <p
                           id="phone-error"
                           role="alert"
-                          className="mt-1.5 text-xs font-bold text-red-600"
+                          className="mt-1.5 text-sm font-bold text-[var(--danger)]"
                         >
                           {errors.phone}
                         </p>
@@ -578,8 +590,8 @@ export function CheckoutView({
                         <legend className="block text-sm font-bold text-[var(--text-strong)]">
                           Payment Preference at Shop
                         </legend>
-                        <div className="mt-2 flex gap-4">
-                          <label className="flex items-center gap-2 cursor-pointer text-sm font-semibold text-[var(--text-strong)]">
+                        <div className="mt-1 flex flex-wrap gap-x-6">
+                          <label className="flex min-h-11 items-center gap-2 cursor-pointer text-sm font-semibold text-[var(--text-strong)]">
                             <input
                               type="radio"
                               name="payment-preference"
@@ -595,7 +607,7 @@ export function CheckoutView({
                             />
                             Cash at counter
                           </label>
-                          <label className="flex items-center gap-2 cursor-pointer text-sm font-semibold text-[var(--text-strong)]">
+                          <label className="flex min-h-11 items-center gap-2 cursor-pointer text-sm font-semibold text-[var(--text-strong)]">
                             <input
                               type="radio"
                               name="payment-preference"
@@ -633,7 +645,7 @@ export function CheckoutView({
                           }))
                         }
                         placeholder="e.g. Less ice for iced latte, preferred pickup time today, pack pastries separately..."
-                        className="mt-2 block w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface-input)] px-4 py-3 text-sm text-[var(--text-strong)] placeholder-[var(--text-subtle)] focus:border-[var(--accent-solid)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-solid)]"
+                        className="mt-2 block w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface-input)] min-h-12 px-4 py-3 text-base text-[var(--text-strong)] placeholder-[var(--text-subtle)] aria-[invalid=true]:border-[var(--danger)] focus:border-[var(--accent-solid)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-solid)]"
                       />
                     </div>
                   </div>
@@ -643,7 +655,7 @@ export function CheckoutView({
               {/* Order Summary Sidebar */}
               <div className="lg:col-span-5 xl:col-span-4">
                 <div className="sticky top-28 rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-6 sm:p-8 shadow-[var(--shadow-card)] space-y-6">
-                  <h3 className="font-display text-xl font-bold text-[var(--text-strong)] pb-4 border-b border-[var(--border-soft)]">
+                  <h3 className="font-display text-xl text-[var(--text-strong)] pb-4 border-b border-[var(--border-soft)]">
                     Order Summary
                   </h3>
 
@@ -724,7 +736,7 @@ export function CheckoutView({
                       <h2
                         ref={step2HeadingRef}
                         tabIndex={-1}
-                        className="font-display text-2xl font-bold text-[var(--text-strong)] outline-none"
+                        className="font-display text-2xl text-[var(--text-strong)] outline-none"
                       >
                         Review Items
                       </h2>
@@ -751,7 +763,7 @@ export function CheckoutView({
                 {/* Customer and Fulfillment Details Review */}
                 <div className="rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-6 sm:p-8 shadow-[var(--shadow-subtle)]">
                   <div className="flex items-center justify-between pb-4 border-b border-[var(--border-soft)] mb-6">
-                    <h2 className="font-display text-2xl font-bold text-[var(--text-strong)]">
+                    <h2 className="font-display text-2xl text-[var(--text-strong)]">
                       Fulfillment & Customer Details
                     </h2>
                     <button
@@ -827,7 +839,7 @@ export function CheckoutView({
               {/* Review Sidebar */}
               <div className="lg:col-span-5 xl:col-span-4">
                 <div className="sticky top-28 rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-6 sm:p-8 shadow-[var(--shadow-card)] space-y-6">
-                  <h3 className="font-display text-xl font-bold text-[var(--text-strong)] pb-4 border-b border-[var(--border-soft)]">
+                  <h3 className="font-display text-xl text-[var(--text-strong)] pb-4 border-b border-[var(--border-soft)]">
                     Final Review
                   </h3>
 
@@ -924,7 +936,7 @@ export function CheckoutView({
                 <h2
                   ref={step3HeadingRef}
                   tabIndex={-1}
-                  className="font-display mt-2 text-3xl font-bold text-[var(--text-strong)] sm:text-4xl outline-none"
+                  className="font-display mt-2 text-3xl text-[var(--text-strong)] sm:text-4xl outline-none"
                 >
                   Order Summary for the Shop
                 </h2>
@@ -950,7 +962,7 @@ export function CheckoutView({
                     <button
                       type="button"
                       onClick={() => copySummaryToClipboard(preparedSummary)}
-                      className="rounded-lg border border-[var(--border-strong)] bg-white px-3 py-1.5 text-xs font-bold text-[var(--text-strong)] hover:bg-[var(--surface-card)] transition-colors inline-flex items-center gap-1.5"
+                      className="inline-flex min-h-11 rounded-lg border border-[var(--border-strong)] bg-[var(--surface-card)] px-3 py-2 text-sm font-bold text-[var(--text-strong)] hover:border-[var(--accent-solid)] transition-colors inline-flex items-center gap-1.5"
                     >
                       <svg
                         className="size-3.5"
