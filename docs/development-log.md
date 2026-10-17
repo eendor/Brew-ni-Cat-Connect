@@ -620,3 +620,15 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Git branch:** `feat/threejs-experience`\
 **Pull request:** none — branch pushed for review, no pull request opened\
 **Next action:** Owner review of the branch on a real phone and desktop GPU; open a pull request only when asked.
+
+## 2026-10-17 — Align the 3D site to the updated dark design system
+
+**Date:** 2026-10-17\
+**Phase:** Phase 3 — Menu and Ordering Flow (presentation layer)\
+**Task:** Bring the `feat/threejs-experience` branch in line with the design system after it was updated to the "Night Shift Glow" direction, then do a hands-on UI sweep of every page and state.\
+**Summary:** The project design system now describes the dark direction directly (palette, Big Shoulders and Archivo type roles, radius and spacing scales, motion timings, PBR rendering rules, reduced-motion behaviour and AA contrast), so ADR-014 records an update rather than an override. The site was aligned to it: font sizes and corner radii now come from one token ramp, the two near-identical muted greys are merged, a dedicated error colour (#FF8577) replaces the light-theme reds that failed AA on black, and dead CSS from the old spruce theme is removed. A manual sweep at 1440, 1280, 768, 390 and 360 px found and fixed: the home showcase controls sitting below the fold, the 3D basket drawing over the order dialog and cart drawer, cramped two-column showcase controls on tablets, copy over the product on phones (now with a bottom scrim), the Buldak Carbo bowl showing its empty underside while turning, truncated item names in the cart drawer, a visible duplicate "(Selected)" label, an invisible white-on-white copy button, 14 px checkout inputs that zoom on iOS, checkout errors that stayed off-screen on phones (the first invalid field now gets focus), touch targets under 44 px (footer links, steppers, close and remove buttons, clear-cart links, payment options, the mobile menu button), no current-page marker in the navigation, a lowercase landmark on the contact page, and a tall empty gallery stage on phones.\
+**Files/modules affected:** `src/app/globals.css`, `src/app/page.tsx`, `about`, `contact`, `gallery`, `not-found` and `error` pages, layout (`site-header`, `mobile-navigation`, `site-footer`, new `nav-link.tsx`), menu, cart and checkout components, `src/components/three/scenes/models.ts` and `showcase.ts`, `docs/decisions.md` (ADR-014), `docs/test-cases.md` (MAN-P4-002, MAN-P4-003), this entry. No new dependencies.\
+**Testing performed:** `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm test` (16 files / 120 tests passed), `npm run build`, Playwright against the production build (18/18 passed), `python3 scripts/validate_phase0_docs.py` (PASS); manual sweep MAN-P4-002 with before and after captures kept outside the repository. No new automated tests were added for this pass.\
+**Git branch:** `feat/threejs-experience`\
+**Pull request:** none yet — waiting for the owner's manual click-through (MAN-P4-003)\
+**Next action:** Owner click-through in a real browser; open the pull request after that.

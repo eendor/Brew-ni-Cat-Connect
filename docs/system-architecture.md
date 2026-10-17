@@ -490,7 +490,8 @@ flowchart LR
 
 ### 18.3 Rules
 
-- Each feature uses its own WebGL canvas. The menu tile canvas sits at `z-index: 25`, under the sticky category bar (30) and header (50), and is portalled to `<body>` so the route enter animation cannot become its containing block. The cart canvas sits at 60, above the header, and never takes pointer events.
+- Each feature uses its own WebGL canvas. The menu tile canvas sits at `z-index: 25`, under the sticky category bar (30) and header (50), and is portalled to `<body>` so the route enter animation cannot become its containing block. The cart canvas sits at 60, above the header, and never takes pointer events. The order dialog and cart drawer sit at 70, above the cart canvas, so the basket never draws over an open overlay.
+- On the home page the showcase stage starts under the translucent header (negative top margin equal to the header height) so the heading, actions and item controls fit in the first screen; a bottom scrim keeps that copy at AA contrast over the glows.
 - Scenes pause when off screen or when the tab is hidden, and release their WebGL context on unmount.
 - Textures for photos load through the Next image optimiser (`/_next/image`), so no extra image copies ship.
 - Playwright runs functional journeys with reduced motion (static render) and a separate `chromium-3d` project with software WebGL for the 3D checks.
