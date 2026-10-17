@@ -190,6 +190,7 @@ This manual state is a temporary functional-verification condition, not a revisi
 - Food and drink models are procedural with generated PBR maps (albedo, normal, roughness) because no CC0 photoscans of takoyaki, shoestring fries or buldak exist.
 - Phones get a lower pixel-ratio cap, fewer particles and no depth of field. A frame-time budget drops depth of field and bloom and lowers the pixel ratio when frames run slow.
 - The project design system was updated to the dark direction rather than overridden. On 2026-10-17 the design and product context was rewritten for Night Shift Glow: a #0B0A0D studio canvas with #15131A blocks, #F4F1EA / #B9B3C2 text, one glow colour per featured item, matcha #7CFF6B as the only filled action colour, Big Shoulders with Archivo, a documented type ramp and radius scale, realistic PBR rules with no cartoon styling, static reduced-motion fallbacks, and an AA-on-black rule for any accent used as text. The site was then audited against the new system and aligned to it in the same branch (type and radius tokens in `globals.css`, a coral error colour, larger touch targets, a scrim behind the showcase copy and overlay layering).
-- Adding an item still goes through `useCart().addItem`; the 3D toss only delays opening the drawer by 0.9 s when the cart layer is running.
+- Adding an item still goes through `useCart().addItem`; the 3D toss only delays opening the drawer by 0.42 s when the cart layer is running.
+- Pages are full-bleed (2026-10-17): backgrounds and 3D stages span the viewport and content uses a 90rem cap with fluid gutters, replacing the earlier 72rem column.
 
 ---

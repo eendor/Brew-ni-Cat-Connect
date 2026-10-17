@@ -632,3 +632,38 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Git branch:** `feat/threejs-experience`\
 **Pull request:** none yet — waiting for the owner's manual click-through (MAN-P4-003)\
 **Next action:** Owner click-through in a real browser; open the pull request after that.
+
+## 2026-10-17 — Full-bleed layout, cinematic menu, borderless visit sign and click-through fixes
+
+**Date:** 2026-10-17\
+**Phase:** Phase 3 — Menu and Ordering Flow (presentation layer)\
+**Task:** Make every page full-bleed instead of a narrow centred column, remove the black box around the OPEN/CLOSED sign and street model, give the menu a cinematic 3D opening and category moments, and fix the issues found in a hands-on click-through.\
+**Summary:**
+- **Full-bleed layout:** the shared `Container` now uses `--shell-max: 90rem` of content plus fluid gutters (`--shell-pad: clamp(1rem, 4vw, 4rem)`), so section backgrounds and 3D scenes run edge to edge and text is no longer held in a 72rem column (at 1920 px the side gutters drop from 384 px to about 240 px, and at 1024 px from 32 px to 40 px fluid). The menu category bar spans the viewport. The menu grid goes to three columns at 1280 px. Cart and checkout put the items/form and the order summary side by side from 900 px.
+- **Visit sign:** the stage now sits outside the bordered card on a transparent, full-bleed canvas. The sign texture has no dark margin (alpha-tested face). A wide-screen camera layout removes the empty band under the sign and shop.
+- **Cinematic menu:** a full-viewport hero with a glowing "THE MENU" title over a three.js scene (turning cups with two-tone rim light, floating ice, beans and leaves, a soft floor shadow). The scene dollies and fades into the catalog as you scroll. Each category gets an indexed heading whose glow colour shifts with it (drinks green/amber, bites orange/yellow, Buldak pink/cyan), and a fixed glow field follows the active category. Cards fly in with a depth stagger, and a rim sheen follows the pointer. 3D photo prints get pointer and scroll parallax. Film grain and a vignette apply on large hover screens only. Reduced motion keeps the static page; phones get one cup and fewer particles.
+- **Click-through fixes:**
+  - mobile menu scrim with blur that closes on tap, plus a scroll lock
+  - fixed-width gallery caption with the prev/next buttons pinned
+  - the order dialog's Add button reads the latest size, flavour and quantity from a ref, so rapid clicks can't add stale choices
+  - the toss is shortened to 420 ms, so the drawer opens about 0.42 s after Add (was about 1 s)
+  - drawer lines stack the stepper under the name in narrow containers
+  - the ₱10 takeout box is shown as a separate line marked "not included in the subtotal" in the drawer, cart, checkout and copied summary (the SRS confirms the price but defers the fee rule, so nothing is added to totals)
+  - checkout steps scroll to the step section and focus its heading
+  - the cart is kept until the summary is copied or "Start a new order" is pressed, and the prepared summary survives a refresh
+  - navigation no longer starts part-way down the page (`data-scroll-behavior="smooth"`), and the header keeps one height
+  - a 5-second Undo toast after Remove and Clear all
+  - wider header spacing between 1024 and 1280 px
+  - `scroll-margin-top` on the visit section
+  - designed letter placeholders for items without photos (no stock images)
+  - a "Page not found" title on the 404 page
+  - non-breaking arrows on the checkout buttons
+  - 4× MSAA in the post-processing target and smoother ice geometry
+  - `scrollbar-gutter: stable`
+
+**Files/modules affected:** `src/components/ui/container.tsx`, `src/app/globals.css`, `src/app/layout.tsx`, `src/app/page.tsx`, `src/app/menu/page.tsx`, `src/app/not-found.tsx`, new `src/components/three/menu-hero.tsx`, `canvas/menu-hero-canvas.tsx`, `scenes/menu-hero.ts`, `src/components/menu/category-glow.ts`, `menu-catalog.tsx`, `menu-item-card.tsx`, `menu-item-order-dialog.tsx`, `scenes/visit.ts`, `scenes/menu-cards.ts`, `scenes/showcase.ts`, `scenes/models.ts`, `engine/post.ts`, `cart-toss.ts`, `cart-fx.ts`, layout header and mobile navigation, cart drawer, line item, cart page, new `cart-undo-toast.tsx`, `src/context/cart-context.tsx`, `src/components/checkout/checkout-view.tsx`, new `src/lib/ordering/summary-storage.ts`, `src/config/site.ts`, `tests/unit/menu-order-dialog.test.tsx`, `tests/unit/checkout.test.tsx`, `docs/system-architecture.md` (§18), `docs/test-cases.md`, `docs/decisions.md` (ADR-014), this entry. No new dependencies.\
+**Testing performed:** `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm test` (16 files / 122 tests passed, including the new TC-P4-011 and TC-P4-012 race cases, which fail on the previous dialog code), `npm run build`, `npm run test:e2e` against the production build (18/18 passed; TC-P2-027 now looks for the loading status inside `main` because the undo toast adds a second live region, and TC-P4-002 waits for the menu hero instead of an ambient backdrop on `/menu`), `python3 scripts/validate_phase0_docs.py` (PASS). Before and after captures at 1024, 1280, 1440 and 1920 px (layout) and at 1440 and 390 px (menu, sign, every menu tab, mobile navigation, gallery ring, drawer and undo, cart, checkout steps, sign flip, about) were reviewed; they are kept outside the repository.\
+**Git branch:** `feat/threejs-experience`\
+**Pull request:** none — branch pushed for review\
+**Next action:** Owner click-through on a desktop GPU and a real phone (MAN-P4-003).
+
