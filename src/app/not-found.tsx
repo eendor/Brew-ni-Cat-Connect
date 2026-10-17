@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { StateScene } from "@/components/three/state-scene";
 import { Container } from "@/components/ui/container";
 
 export const metadata: Metadata = {
@@ -10,30 +11,33 @@ export const metadata: Metadata = {
 
 export default function NotFound() {
   return (
-    <Container className="py-16 sm:py-24">
-      <div className="mx-auto max-w-2xl rounded-[2rem] border border-[var(--border-soft)] bg-[var(--surface-card)] p-7 text-center shadow-[var(--shadow-card)] sm:p-10">
-        <p
-          className="font-display text-6xl text-[var(--accent-solid)]"
-          aria-hidden="true"
+    <section className="not-found" aria-labelledby="not-found-heading">
+      <StateScene
+        kind="lost"
+        tone="canvas"
+        className="not-found__stage"
+        fallback={<p className="not-found__code">404</p>}
+      />
+      <Container className="relative -mt-10 pb-16 text-center sm:-mt-14 sm:pb-24">
+        <h1
+          id="not-found-heading"
+          data-split=""
+          className="font-display text-4xl text-[var(--text-strong)] sm:text-5xl"
         >
-          404
-        </p>
-        <h1 className="font-display mt-4 text-4xl text-[var(--text-strong)]">
           Page not found
         </h1>
-        <p className="mx-auto mt-4 max-w-lg leading-7 text-[var(--text-muted)]">
-          This page wandered off. Head home or browse Brew ni Cat’s current menu
-          instead.
+        <p
+          className="mx-auto mt-4 max-w-lg leading-7 text-[var(--text-muted)]"
+          data-rise=""
+        >
+          This page wandered off. Head back home and pick up from there.
         </p>
-        <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-          <Link href="/" className="button-primary">
+        <div className="mt-8 flex justify-center" data-rise="">
+          <Link href="/" className="button-primary" data-magnetic="">
             Return home
           </Link>
-          <Link href="/menu" className="button-secondary">
-            Browse menu
-          </Link>
         </div>
-      </div>
-    </Container>
+      </Container>
+    </section>
   );
 }
