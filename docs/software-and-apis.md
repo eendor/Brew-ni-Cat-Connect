@@ -25,7 +25,7 @@ Supabase JavaScript is installed solely for Phase 2 public read-only catalog ret
 | TypeScript             | Static type checking                                           | `5.9.3`                         | Apache-2.0   | Installed; strict configuration and explicit no-emit check enabled                          |
 | Tailwind CSS           | Responsive styling and project design tokens                   | `4.3.3`                         | MIT          | Installed through the Tailwind PostCSS integration                                          |
 | three.js               | WebGL rendering for the 3D layer                               | `0.186.1`                       | MIT          | Added in PR #23; loaded only in client components via `next/dynamic`     |
-| GSAP (with ScrollTrigger) | Shared frame ticker, tweens and scroll-linked progress for 3D scenes | `3.15.0`                  | GSAP Standard "No Charge" License | Free for this use; see https://gsap.com/standard-license                         |
+| GSAP (with ScrollTrigger and SplitText) | Shared frame ticker and scroll progress for 3D scenes; site motion layer (entrances, split-line headings, overlay exits, page transitions) | `3.15.0` | GSAP Standard "No Charge" License | Free for this use, including the SplitText plugin; see https://gsap.com/standard-license |
 | `@tailwindcss/postcss` | Tailwind CSS PostCSS adapter                                   | `4.3.3`                         | MIT          | Installed for CSS compilation                                                               |
 
 ## 3. Quality and test dependencies
@@ -145,6 +145,7 @@ The ordering work in Phase 3 added no runtime dependencies. The 3D layer in PR #
 - **Motion (PR #16):** CSS transitions in `src/app/globals.css`, one passive scroll hook in `src/components/motion/scroll-motion.tsx`, and a route fade in `src/app/template.tsx`. GSAP and Lenis were evaluated and not added. All motion turns off under `prefers-reduced-motion`.
 - **Dependency security (PR #12):** `sharp` 0.35.5 and `source-map-js` 1.2.2 through `npm audit fix`; production audit reports 0 vulnerabilities.
 - **3D experience (PR #23):** `src/components/three/` (engine, scenes, canvases and page wrappers with static fallbacks) on three.js and GSAP ScrollTrigger, loaded client-side with `next/dynamic`. Reduced motion and devices without WebGL 2 get the static page.
+- **Motion layer (PR #23):** `src/components/motion/` drives entrances, scroll reveals, overlay exits and page transitions with GSAP (ScrollTrigger and SplitText), replacing the CSS-only approach of PR #16 (ADR-015). Nothing animates under `prefers-reduced-motion`.
 
 ## 6. Third-party assets in the 3D layer
 
@@ -153,5 +154,5 @@ The ordering work in Phase 3 added no runtime dependencies. The 3D layer in PR #
 | Studio Small 09 HDRI (1K) | `public/three/hdri/studio_small_09_1k.hdr` | Poly Haven, by Sergej Majboroda | CC0 1.0 | Image-based lighting and reflections; downloaded from polyhaven.com and bundled locally (no runtime CDN) |
 | Big Shoulders (display) and Archivo (body) | Served by `next/font/google` | Google Fonts | SIL Open Font License 1.1 | Self-hosted at build time by Next.js; Google Fonts now ships "Big Shoulders Display" as the "Big Shoulders" family |
 | Cat sticker on the 3D cup | `public/three/cat-sticker.png` | Cut from the shop's own Matcha product photo | Shop-owned, same terms as the other approved shop photos | Not a stock image |
-| Food, drink, sign, street and basket models | Generated in code (`src/components/three/scenes/models.ts` and scene files) | Project code | Project licence | Procedural geometry with generated albedo, normal and roughness maps (`engine/textures.ts`); no third-party models |
+| Food, drink, sign and street models | Generated in code (`src/components/three/scenes/models.ts` and scene files) | Project code | Project licence | Procedural geometry with generated albedo, normal and roughness maps (`engine/textures.ts`); no third-party models |
 
