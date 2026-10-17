@@ -1643,28 +1643,565 @@ textarea:focus-visible {
   }
 }
 
-/* menu items without a shop photo get one consistent designed tile */
-.menu-card__placeholder {
+/* ------------------------------------------------------------------
+ * Menu cards: each card is a small product studio lit by its item glow.
+ * A dark sweep with a glow pool, the real shop photo as a print standing on
+ * the floor with a contact shadow and reflection, then the name and price.
+ * ------------------------------------------------------------------ */
+.menu-grid {
   display: grid;
-  place-items: center;
-  border: 1px solid var(--border-soft);
-  background:
-    radial-gradient(
-      circle at 30% 25%,
-      color-mix(in srgb, var(--c) 28%, transparent),
-      transparent 65%
-    ),
-    linear-gradient(160deg, var(--surface-raised), var(--surface-input));
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 6%);
+  gap: 1.25rem;
+  grid-template-columns: minmax(0, 1fr);
 }
 
-.menu-card__placeholder span {
-  color: color-mix(in srgb, var(--c) 70%, var(--text-strong));
+@media (min-width: 768px) {
+  .menu-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .menu-grid > .menu-card {
+    grid-column: span var(--span-md, 1);
+  }
+}
+
+@media (min-width: 1280px) {
+  .menu-grid {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+  }
+
+  .menu-grid > .menu-card {
+    grid-column: span var(--span-xl, 4);
+  }
+}
+
+.menu-card {
+  display: flex;
+  overflow: hidden;
+  border: 1px solid
+    color-mix(in srgb, var(--card-glow, var(--glow)) 16%, var(--border-soft));
+  border-radius: 1.5rem;
+  background: linear-gradient(
+    180deg,
+    var(--surface-raised) 0%,
+    var(--surface-card) 60%
+  );
+  box-shadow:
+    var(--shadow-subtle),
+    0 34px 80px -64px var(--card-glow, var(--glow));
+  container: card / inline-size;
+}
+
+/* rim light along the top edge */
+.menu-card::before {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  right: 12%;
+  left: 12%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--card-glow) 80%, white) 50%,
+    transparent
+  );
+  content: "";
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.menu-card__inner {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+}
+
+.menu-card__stage {
+  position: relative;
+  overflow: hidden;
+  border-bottom: 1px solid var(--border-soft);
+  aspect-ratio: 4 / 3;
+  background:
+    radial-gradient(
+      120% 75% at 50% 0%,
+      color-mix(in srgb, var(--card-glow) 11%, transparent),
+      transparent 62%
+    ),
+    linear-gradient(180deg, #131118 0%, #0b0a0d 70%, #0e0d11 100%);
+  isolation: isolate;
+}
+
+/* the lit set inside the stage; on sideways cards it stays a fixed height
+   in the middle so a long price list does not push the product down */
+.menu-card__set {
+  position: absolute;
+  inset: 0;
+  container: stage / size;
+}
+
+.menu-card--featured .menu-card__stage {
+  aspect-ratio: 16 / 11;
+}
+
+/* the studio floor: a faint lit band that falls away to black */
+.menu-card__floor {
+  position: absolute;
+  z-index: 0;
+  top: 72%;
+  right: 0;
+  bottom: -60rem;
+  left: 0;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--card-glow) 7%, #17151b) 0,
+    #0b0a0d 12rem
+  );
+  box-shadow: 0 -1px 0 rgb(255 255 255 / 5%);
+}
+
+/* the item glow pooling on the floor behind and under the product */
+.menu-card__pool {
+  position: absolute;
+  z-index: 1;
+  bottom: 12%;
+  left: 50%;
+  width: min(90cqw, 120cqh);
+  height: 34%;
+  background: radial-gradient(
+    ellipse at center,
+    color-mix(in srgb, var(--card-glow) 46%, transparent) 0%,
+    color-mix(in srgb, var(--card-glow) 12%, transparent) 45%,
+    transparent 70%
+  );
+  filter: blur(6px);
+  opacity: 0.7;
+  transform: translateX(-50%);
+  transition:
+    opacity 600ms var(--ease-cinematic),
+    transform 900ms var(--ease-cinematic);
+}
+
+.menu-card__product {
+  --p: min(60cqh, 64cqw);
+
+  position: absolute;
+  z-index: 2;
+  top: calc(72% - var(--p));
+  left: 50%;
+  width: var(--p);
+  height: var(--p);
+  transform: translateX(-50%);
+}
+
+/* contact shadow where the print meets the floor */
+.menu-card__product::after {
+  position: absolute;
+  z-index: -1;
+  bottom: -7%;
+  left: 7%;
+  width: 86%;
+  height: 14%;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at center,
+    rgb(0 0 0 / 85%),
+    transparent 70%
+  );
+  content: "";
+  filter: blur(4px);
+}
+
+.menu-card__print {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 1rem;
+  background: var(--surface-warm);
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 8%),
+    0 28px 40px -22px rgb(0 0 0 / 90%),
+    0 18px 60px -26px var(--card-glow);
+}
+
+.menu-card__reflection {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 1rem;
+  filter: blur(1.5px) saturate(1.2);
+  mask-image: linear-gradient(to top, rgb(0 0 0 / 55%) 0%, transparent 34%);
+  opacity: 0.5;
+  pointer-events: none;
+  transform: scaleY(-1);
+}
+
+/* imageless items: the first letter as a lit sign on a studio plinth */
+.menu-card__placeholder {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+}
+
+.menu-card__glyph {
+  position: absolute;
+  bottom: 23%;
+  left: 50%;
+  color: color-mix(in srgb, var(--card-glow) 14%, transparent);
   font-family: var(--font-display);
-  font-size: var(--type-price-hero);
+  font-size: min(54cqh, 40cqw);
   font-weight: 900;
+  line-height: 0.78;
+  text-shadow:
+    0 0 14px color-mix(in srgb, var(--card-glow) 70%, transparent),
+    0 0 46px color-mix(in srgb, var(--card-glow) 45%, transparent);
+  transform: translateX(-50%);
+  transition: text-shadow 600ms var(--ease-cinematic);
+  -webkit-text-stroke: 2px color-mix(in srgb, var(--card-glow) 75%, white);
+}
+
+.menu-card__plinth {
+  position: absolute;
+  bottom: 14%;
+  left: 50%;
+  width: min(48cqw, 64cqh);
+  height: 11%;
+  border-radius: 0 0 50% 50% / 0 0 38% 38%;
+  background: linear-gradient(
+    90deg,
+    #0d0c10 0%,
+    #24212b 38%,
+    #2c2834 50%,
+    #16141a 80%,
+    #0d0c10 100%
+  );
+  box-shadow: 0 26px 30px -14px rgb(0 0 0 / 85%);
+  transform: translateX(-50%);
+}
+
+.menu-card__plinth::before {
+  position: absolute;
+  top: -42%;
+  left: 0;
+  width: 100%;
+  height: 84%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at 50% 35%, #3b3644 0%, #201d26 70%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 14%),
+    0 0 26px -8px var(--card-glow);
+  content: "";
+}
+
+/* a slow light sweep across the stage on hover */
+.menu-card__sweep {
+  position: absolute;
+  z-index: 3;
+  inset: -10% -40%;
+  background: linear-gradient(
+    105deg,
+    transparent 38%,
+    rgb(255 255 255 / 7%) 47%,
+    color-mix(in srgb, var(--card-glow) 16%, transparent) 52%,
+    transparent 62%
+  );
+  mix-blend-mode: screen;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-55%);
+}
+
+.menu-card__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding: 1.25rem;
+  container: body / inline-size;
+}
+
+@media (min-width: 640px) {
+  .menu-card__body {
+    padding: 1.5rem;
+  }
+}
+
+.menu-card__head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.menu-card__title {
+  min-width: 0;
+  color: var(--text-strong);
+}
+
+.menu-card__nickname {
+  display: block;
+  margin-bottom: 0.4rem;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.menu-card__name {
+  display: block;
+  font-family: var(--font-display);
+  font-size: clamp(1.875rem, 11cqi, 2.75rem);
+  font-weight: 900;
+  line-height: 0.92;
+  text-transform: uppercase;
+  text-wrap: balance;
+}
+
+.menu-card--featured .menu-card__name {
+  font-size: clamp(2.25rem, 12cqi, 3.5rem);
+}
+
+.menu-card__price {
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.menu-card__price-from {
+  display: block;
+  margin-bottom: 0.25rem;
+  color: var(--text-subtle);
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.menu-card__price-value {
+  display: block;
+  color: var(--card-glow);
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 10cqi, 3rem);
+  font-variant-numeric: tabular-nums;
+  font-weight: 900;
+  line-height: 0.9;
+  text-shadow: 0 0 26px color-mix(in srgb, var(--card-glow) 35%, transparent);
+}
+
+.menu-card__status {
+  display: inline-flex;
+  align-self: flex-start;
+  margin-top: 0.875rem;
+  border: 1px solid var(--notice-border);
+  border-radius: 999px;
+  background: var(--notice-surface);
+  padding: 0.3rem 0.75rem;
+  color: var(--notice-text);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.menu-card__group {
+  margin-top: 1.25rem;
+}
+
+.menu-card__label {
+  color: var(--text-subtle);
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.menu-card__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.menu-card__chip {
+  display: inline-flex;
+  min-height: 2rem;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid var(--border-soft);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 3%);
+  padding: 0.3rem 0.8rem;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.menu-card__chip::before {
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: 50%;
+  background: var(--card-glow);
+  box-shadow: 0 0 8px var(--card-glow);
+  content: "";
+}
+
+.menu-card__sizes {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(6rem, 1fr));
+}
+
+.menu-card__size {
+  display: grid;
+  gap: 0.2rem;
+  border: 1px solid var(--border-soft);
+  border-radius: 0.75rem;
+  background: linear-gradient(180deg, rgb(255 255 255 / 4%), transparent);
+  padding: 0.6rem 0.8rem 0.55rem;
+}
+
+.menu-card__size-name {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.menu-card__size-price {
+  color: var(--text-strong);
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
   line-height: 1;
-  text-shadow: 0 0 24px color-mix(in srgb, var(--c) 45%, transparent);
+}
+
+.menu-card__rows {
+  display: grid;
+  gap: 0.875rem;
+  border-top: 1px solid var(--border-soft);
+  padding-top: 1rem;
+  font-size: 0.875rem;
+}
+
+@container body (min-width: 34rem) {
+  .menu-card__rows {
+    column-gap: 2.5rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.menu-card__row-price {
+  flex-shrink: 0;
+  color: var(--text-strong);
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+}
+
+.menu-card__flavor-prices {
+  display: grid;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
+  border-left: 2px solid color-mix(in srgb, var(--card-glow) 45%, transparent);
+  padding-left: 0.75rem;
+  color: var(--text-muted);
+}
+
+.menu-card__flavor-prices li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.menu-card__footer {
+  margin-top: auto;
+  padding-top: 1.5rem;
+}
+
+.menu-card__order {
+  width: 100%;
+  min-height: 3rem;
+  white-space: nowrap;
+}
+
+/* wide slots turn the card sideways: stage on the left, details on the right */
+@container card (min-width: 40rem) {
+  .menu-card__inner {
+    flex-direction: row;
+  }
+
+  .menu-card__stage,
+  .menu-card--featured .menu-card__stage {
+    width: 50%;
+    min-height: 21rem;
+    flex-shrink: 0;
+    border-right: 1px solid var(--border-soft);
+    border-bottom: 0;
+    aspect-ratio: auto;
+  }
+
+  .menu-card__body {
+    justify-content: center;
+    padding: 1.75rem 2rem;
+  }
+
+  .menu-card__set {
+    top: 50%;
+    bottom: auto;
+    height: min(100%, 26rem);
+    transform: translateY(-50%);
+  }
+
+  .menu-card__product {
+    --p: min(60cqh, 70cqw);
+  }
+
+  .menu-card__footer {
+    margin-top: 0;
+    padding-top: 1.75rem;
+  }
+}
+
+.menu-card--unavailable {
+  opacity: 0.75;
+}
+
+.menu-card--unavailable .menu-card__stage {
+  filter: grayscale(0.8);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .menu-card:hover .menu-card__pool {
+    opacity: 1;
+    transform: translateX(-50%) scale(1.12);
+  }
+
+  .menu-card:hover .menu-card__sweep {
+    opacity: 1;
+    transform: translateX(55%);
+    transition:
+      transform 1300ms var(--ease-cinematic),
+      opacity 300ms ease-out;
+  }
+
+  .menu-card:hover .menu-card__glyph {
+    text-shadow:
+      0 0 18px color-mix(in srgb, var(--card-glow) 85%, transparent),
+      0 0 64px color-mix(in srgb, var(--card-glow) 60%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu-card__sweep {
+    display: none;
+  }
+
+  .menu-card__pool,
+  .menu-card__glyph {
+    transition: none;
+  }
 }
 
 /* category heading moment */
@@ -1765,7 +2302,7 @@ textarea:focus-visible {
   border-radius: inherit;
   background: radial-gradient(
     22rem circle at var(--mx, 50%) var(--my, 0%),
-    color-mix(in srgb, var(--ga, var(--glow)) 14%, transparent),
+    color-mix(in srgb, var(--card-glow, var(--glow)) 14%, transparent),
     transparent 65%
   );
   content: "";
@@ -1779,10 +2316,14 @@ textarea:focus-visible {
 }
 
 .menu-card:hover {
-  border-color: color-mix(in srgb, var(--ga, var(--glow)) 45%, transparent);
+  border-color: color-mix(
+    in srgb,
+    var(--card-glow, var(--glow)) 45%,
+    transparent
+  );
   box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--ga, var(--glow)) 22%, transparent),
-    0 30px 80px -44px var(--ga, var(--glow));
+    0 0 0 1px color-mix(in srgb, var(--card-glow, var(--glow)) 22%, transparent),
+    0 30px 80px -44px var(--card-glow, var(--glow));
 }
 
 .menu-cine .menu-grid > .menu-card {

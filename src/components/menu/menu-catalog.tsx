@@ -8,11 +8,13 @@ import {
   type PointerEvent,
 } from "react";
 
+import { getMenuItemImage } from "@/config/menu-item-images";
 import { fetchPublicMenu } from "@/lib/menu/fetch-public-menu";
 import { isCatTreatsCategory } from "@/lib/menu/map-menu-catalog";
 import type { MenuCatalog as MenuCatalogModel } from "@/types/menu";
 import { glowForCategory, publishMenuGlow } from "./category-glow";
 import { MenuItemCard } from "./menu-item-card";
+import { layoutCategory } from "./menu-layout";
 import { MenuState } from "./menu-state";
 
 type MenuLoader = (signal?: AbortSignal) => Promise<MenuCatalogModel>;
@@ -38,14 +40,35 @@ function prefersMotion() {
   );
 }
 
-/** Rim-light sheen follows the pointer across a card (fine pointers only). */
+let tiltedCard: HTMLElement | null = null;
+
+function resetTilt() {
+  if (tiltedCard && !tiltedCard.querySelector("[data-three-ready]")) {
+    tiltedCard.style.transform = "";
+  }
+  tiltedCard = null;
+}
+
+/**
+ * Rim-light sheen follows the pointer across a card (fine pointers only).
+ * Cards whose photo is a live 3D tile are tilted by that scene; every other
+ * card (imageless items, or no WebGL) gets the same gentle tilt here.
+ */
 function trackSheen(event: PointerEvent<HTMLElement>) {
   if (event.pointerType !== "mouse") return;
   const card = (event.target as HTMLElement).closest<HTMLElement>(".menu-card");
+  if (card !== tiltedCard) resetTilt();
   if (!card) return;
   const r = card.getBoundingClientRect();
-  card.style.setProperty("--mx", `${Math.round(event.clientX - r.left)}px`);
-  card.style.setProperty("--my", `${Math.round(event.clientY - r.top)}px`);
+  const x = event.clientX - r.left;
+  const y = event.clientY - r.top;
+  card.style.setProperty("--mx", `${Math.round(x)}px`);
+  card.style.setProperty("--my", `${Math.round(y)}px`);
+  if (!prefersMotion() || card.querySelector("[data-three-ready]")) return;
+  tiltedCard = card;
+  const rx = (-(y / r.height - 0.5) * 7).toFixed(2);
+  const ry = ((x / r.width - 0.5) * 9).toFixed(2);
+  card.style.transform = `perspective(1100px) rotateX(${rx}deg) rotateY(${ry}deg) translateZ(0)`;
 }
 
 export function MenuCatalog({ loadMenu = fetchPublicMenu }: MenuCatalogProps) {
@@ -214,7 +237,7 @@ export function MenuCatalog({ loadMenu = fetchPublicMenu }: MenuCatalogProps) {
   }
 
   return (
-    <div ref={rootRef} onPointerMove={trackSheen}>
+    <div ref={rootRef} onPointerMove={trackSheen} onPointerLeave={resetTilt}>
       <nav
         className="menu-tabs sticky top-[4.5rem] z-30 menu-tabs--bleed overflow-x-auto border-y border-[var(--border-soft)] bg-[var(--surface-canvas-translucent)] py-3 backdrop-blur-md lg:top-[5rem]"
         aria-label="Menu categories"
@@ -237,6 +260,11 @@ export function MenuCatalog({ loadMenu = fetchPublicMenu }: MenuCatalogProps) {
       <div className="grid gap-16 pt-12 sm:pt-16">
         {populatedCategories.map((category, index) => {
           const glow = glowForCategory(category.name);
+          const layout = layoutCategory(
+            category.items.map((item) => ({
+              hasImage: getMenuItemImage(item.name) !== null,
+            })),
+          );
           return (
             <section
               key={category.id}
@@ -274,16 +302,15 @@ export function MenuCatalog({ loadMenu = fetchPublicMenu }: MenuCatalogProps) {
                 </div>
                 <span className="menu-cat-head__rule" aria-hidden="true" />
               </div>
-              <div className="menu-grid mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+              <div className="menu-grid mt-6">
                 {category.items.map((item, itemIndex) => (
                   <MenuItemCard
                     key={item.id}
                     item={item}
                     catalog={viewState.catalog}
-                    wide={
-                      category.items.length % 2 === 1 &&
-                      itemIndex === category.items.length - 1
-                    }
+                    categoryGlow={glow}
+                    featured={itemIndex === layout.featured}
+                    span={layout.spans[itemIndex]}
                   />
                 ))}
               </div>

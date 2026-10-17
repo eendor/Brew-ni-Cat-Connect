@@ -270,8 +270,10 @@ export async function initMenuCards(
     for (const tile of tiles.values()) {
       const r = tile.el.getBoundingClientRect();
       const on = r.width > 0 && r.bottom > clipTop - 40 && r.top < vh + 80;
-      tile.group.visible = on;
-      if (!on) continue;
+      if (!on) {
+        tile.group.visible = false;
+        continue;
+      }
       any = true;
       if (!tile.s.seen && r.top < vh * 0.92) {
         tile.s.seen = true;
@@ -314,6 +316,9 @@ export async function initMenuCards(
       }
       const f = tile.s.fly;
       const inv = 1 - f;
+      // a tile waits off stage until its entrance starts, instead of showing
+      // its dark back deep in the scene
+      tile.group.visible = f > 0.001;
       tmp.set(
         r.left + r.width / 2 - vw / 2,
         vh / 2 - (r.top + r.height / 2),

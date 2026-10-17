@@ -667,3 +667,19 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Pull request:** none — branch pushed for review\
 **Next action:** Owner click-through on a desktop GPU and a real phone (MAN-P4-003).
 
+## 2026-10-17 — Category-lit menu cards and no scroll hint
+
+**Date:** 2026-10-17\
+**Phase:** Phase 3 — Menu and Ordering Flow (presentation layer)\
+**Task:** Remove the vertical "Scroll" hint from the 3D heroes and redesign the menu cards, which all looked like the same generic box.\
+**Summary:**
+- **Scroll hint:** the vertical "Scroll" label and line are gone from the menu hero and the home showcase, along with their CSS and the drip animation.
+- **Menu cards:** each card is now a small product studio lit by its item's glow (or its category's glow when the item has none): a dark stage with a glow pool on the floor, the real shop photo standing as a print with a contact shadow and a soft floor reflection, a rim light on the top edge, the name in large Big Shoulders with the nickname as a small label above it, and a large "From" price in the glow colour. Short sizes show as price chips, flavours as chips with a glow dot, and long options keep a readable list. Items without a shop photo get their first letter as a lit sign on a studio plinth instead of an empty box. The footer holds only the Order button.
+- **Layout:** each category leads with its first photo item, which takes two thirds of the row on wide screens; short last rows stretch to fill the width (`menu-layout.ts`). Wide cards switch to a side-by-side stage and details through a container query.
+- **Motion:** a light sweep crosses the stage on hover, and cards without a live 3D tile now get the same gentle pointer tilt as photo cards; nothing tilts on touch or with reduced motion. 3D tiles no longer show their dark back deep in the scene before their entrance starts.
+
+**Files/modules affected:** `src/components/menu/menu-item-card.tsx`, `menu-catalog.tsx`, new `menu-layout.ts`, `src/components/three/showcase-data.ts` (`matchGlowForItem`), `scenes/menu-cards.ts`, `menu-hero.tsx`, `home-showcase.tsx`, `src/app/globals.css`, new `tests/unit/menu-layout.test.ts`, `docs/test-cases.md` (TC-P4-013 to TC-P4-015, MAN-P4-005), this entry. No new dependencies.\
+**Testing performed:** `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm test` (17 files / 125 tests passed), `npm run build`, Playwright against the production build (18/18 passed), `python3 scripts/validate_phase0_docs.py` (PASS); manual review MAN-P4-005 at 1440, 1920, 768 and 390 px with before and after captures kept outside the repository.\
+**Git branch:** `feat/threejs-experience`\
+**Pull request:** none — branch pushed for review\
+**Next action:** Owner click-through on a desktop GPU and a real phone (MAN-P4-003).
