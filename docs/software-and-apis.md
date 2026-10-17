@@ -24,7 +24,7 @@ Supabase JavaScript is installed solely for Phase 2 public read-only catalog ret
 | React DOM              | Browser/server React rendering                                 | `19.2.8`                        | MIT          | Installed with React at the same pinned version                                             |
 | TypeScript             | Static type checking                                           | `5.9.3`                         | Apache-2.0   | Installed; strict configuration and explicit no-emit check enabled                          |
 | Tailwind CSS           | Responsive styling and project design tokens                   | `4.3.3`                         | MIT          | Installed through the Tailwind PostCSS integration                                          |
-| three.js               | WebGL rendering for the 3D layer                               | `0.186.1`                       | MIT          | Added on `feat/threejs-experience`; loaded only in client components via `next/dynamic`     |
+| three.js               | WebGL rendering for the 3D layer                               | `0.186.1`                       | MIT          | Added in PR #23; loaded only in client components via `next/dynamic`     |
 | GSAP (with ScrollTrigger) | Shared frame ticker, tweens and scroll-linked progress for 3D scenes | `3.15.0`                  | GSAP Standard "No Charge" License | Free for this use; see https://gsap.com/standard-license                         |
 | `@tailwindcss/postcss` | Tailwind CSS PostCSS adapter                                   | `4.3.3`                         | MIT          | Installed for CSS compilation                                                               |
 
@@ -138,12 +138,13 @@ The five local menu posters are assets, not an API or data source. Current names
 
 ## Phase 3 additions (PRs #7, #12, #14, #16)
 
-No new runtime dependencies were added in Phase 3 so far.
+The ordering work in Phase 3 added no runtime dependencies. The 3D layer in PR #23 adds `three` and `gsap`.
 
 - **Ordering core (PR #7):** `src/lib/ordering/` (pricing, reducer, selectors) and `src/types/ordering.ts`. Prices come only from the current menu catalog, in integer centavos.
 - **Cart and checkout (PR #14):** `src/context/cart-context.tsx` keeps the cart in `localStorage`; cart drawer, cart page, and checkout under `src/components/cart/` and `src/components/checkout/`; dialogs render through a React portal with `src/lib/accessibility/focus-trap.ts`. Checkout produces a "Send to Shop" order summary to copy into Messenger or read over the phone; there is no order write yet.
 - **Motion (PR #16):** CSS transitions in `src/app/globals.css`, one passive scroll hook in `src/components/motion/scroll-motion.tsx`, and a route fade in `src/app/template.tsx`. GSAP and Lenis were evaluated and not added. All motion turns off under `prefers-reduced-motion`.
 - **Dependency security (PR #12):** `sharp` 0.35.5 and `source-map-js` 1.2.2 through `npm audit fix`; production audit reports 0 vulnerabilities.
+- **3D experience (PR #23):** `src/components/three/` (engine, scenes, canvases and page wrappers with static fallbacks) on three.js and GSAP ScrollTrigger, loaded client-side with `next/dynamic`. Reduced motion and devices without WebGL 2 get the static page.
 
 ## 6. Third-party assets in the 3D layer
 

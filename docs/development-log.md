@@ -618,7 +618,7 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Testing performed:** `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm test` (16 files / 120 tests passed), `npm run build`, `npm run test:e2e` (18/18 passed: 13 functional cases under reduced motion, 5 WebGL cases), `python3 scripts/validate_phase0_docs.py` (PASS). Production screenshots at 1440×900 and 390×844 for every route and scroll-through videos of home and menu were reviewed for blank canvases, overlap and console errors.\
 **Note:** Food and drink models are procedural with generated PBR maps because no CC0 photoscans of these dishes exist. Captures used software WebGL, so they understate frame rate and show some tile lag behind fast scrolling.\
 **Git branch:** `feat/threejs-experience`\
-**Pull request:** none — branch pushed for review, no pull request opened\
+**Pull request:** [#23](https://github.com/eendor/Brew-ni-Cat-Connect/pull/23) — open for review\
 **Next action:** Owner review of the branch on a real phone and desktop GPU; open a pull request only when asked.
 
 ## 2026-10-17 — Align the 3D site to the updated dark design system
@@ -630,7 +630,7 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Files/modules affected:** `src/app/globals.css`, `src/app/page.tsx`, `about`, `contact`, `gallery`, `not-found` and `error` pages, layout (`site-header`, `mobile-navigation`, `site-footer`, new `nav-link.tsx`), menu, cart and checkout components, `src/components/three/scenes/models.ts` and `showcase.ts`, `docs/decisions.md` (ADR-014), `docs/test-cases.md` (MAN-P4-002, MAN-P4-003), this entry. No new dependencies.\
 **Testing performed:** `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm test` (16 files / 120 tests passed), `npm run build`, Playwright against the production build (18/18 passed), `python3 scripts/validate_phase0_docs.py` (PASS); manual sweep MAN-P4-002 with before and after captures kept outside the repository. No new automated tests were added for this pass.\
 **Git branch:** `feat/threejs-experience`\
-**Pull request:** none yet — waiting for the owner's manual click-through (MAN-P4-003)\
+**Pull request:** [#23](https://github.com/eendor/Brew-ni-Cat-Connect/pull/23) — open for review\
 **Next action:** Owner click-through in a real browser; open the pull request after that.
 
 ## 2026-10-17 — Full-bleed layout, cinematic menu, borderless visit sign and click-through fixes
@@ -664,7 +664,7 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Files/modules affected:** `src/components/ui/container.tsx`, `src/app/globals.css`, `src/app/layout.tsx`, `src/app/page.tsx`, `src/app/menu/page.tsx`, `src/app/not-found.tsx`, new `src/components/three/menu-hero.tsx`, `canvas/menu-hero-canvas.tsx`, `scenes/menu-hero.ts`, `src/components/menu/category-glow.ts`, `menu-catalog.tsx`, `menu-item-card.tsx`, `menu-item-order-dialog.tsx`, `scenes/visit.ts`, `scenes/menu-cards.ts`, `scenes/showcase.ts`, `scenes/models.ts`, `engine/post.ts`, `cart-toss.ts`, `cart-fx.ts`, layout header and mobile navigation, cart drawer, line item, cart page, new `cart-undo-toast.tsx`, `src/context/cart-context.tsx`, `src/components/checkout/checkout-view.tsx`, new `src/lib/ordering/summary-storage.ts`, `src/config/site.ts`, `tests/unit/menu-order-dialog.test.tsx`, `tests/unit/checkout.test.tsx`, `docs/system-architecture.md` (§18), `docs/test-cases.md`, `docs/decisions.md` (ADR-014), this entry. No new dependencies.\
 **Testing performed:** `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm test` (16 files / 122 tests passed, including the new TC-P4-011 and TC-P4-012 race cases, which fail on the previous dialog code), `npm run build`, `npm run test:e2e` against the production build (18/18 passed; TC-P2-027 now looks for the loading status inside `main` because the undo toast adds a second live region, and TC-P4-002 waits for the menu hero instead of an ambient backdrop on `/menu`), `python3 scripts/validate_phase0_docs.py` (PASS). Before and after captures at 1024, 1280, 1440 and 1920 px (layout) and at 1440 and 390 px (menu, sign, every menu tab, mobile navigation, gallery ring, drawer and undo, cart, checkout steps, sign flip, about) were reviewed; they are kept outside the repository.\
 **Git branch:** `feat/threejs-experience`\
-**Pull request:** none — branch pushed for review\
+**Pull request:** [#23](https://github.com/eendor/Brew-ni-Cat-Connect/pull/23) — open for review\
 **Next action:** Owner click-through on a desktop GPU and a real phone (MAN-P4-003).
 
 ## 2026-10-17 — Category-lit menu cards and no scroll hint
@@ -681,7 +681,7 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Files/modules affected:** `src/components/menu/menu-item-card.tsx`, `menu-catalog.tsx`, new `menu-layout.ts`, `src/components/three/showcase-data.ts` (`matchGlowForItem`), `scenes/menu-cards.ts`, `menu-hero.tsx`, `home-showcase.tsx`, `src/app/globals.css`, new `tests/unit/menu-layout.test.ts`, `docs/test-cases.md` (TC-P4-013 to TC-P4-015, MAN-P4-005), this entry. No new dependencies.\
 **Testing performed:** `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm test` (17 files / 125 tests passed), `npm run build`, Playwright against the production build (18/18 passed), `python3 scripts/validate_phase0_docs.py` (PASS); manual review MAN-P4-005 at 1440, 1920, 768 and 390 px with before and after captures kept outside the repository.\
 **Git branch:** `feat/threejs-experience`\
-**Pull request:** none — branch pushed for review\
+**Pull request:** [#23](https://github.com/eendor/Brew-ni-Cat-Connect/pull/23) — open for review\
 **Next action:** Owner click-through on a desktop GPU and a real phone (MAN-P4-003).
 
 ## 2026-10-17 — Plain menu cards and crisp category headings
@@ -699,5 +699,5 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Files/modules affected:** `src/components/menu/menu-item-card.tsx`, `menu-catalog.tsx`, removed `menu-layout.ts`, `src/components/three/layers.tsx`, removed `canvas/menu-tiles-canvas.tsx` and `scenes/menu-cards.ts`, `src/app/menu/page.tsx`, `src/app/globals.css`, removed `tests/unit/menu-layout.test.ts`, `tests/unit/three-layer.test.tsx` (TC-P4-009), `tests/e2e/three.spec.ts` (TC-P4-003), `docs/test-cases.md` (TC-P4-013 to TC-P4-015 retired with their tests, MAN-P4-005), `docs/system-architecture.md`, this entry. No new dependencies.\
 **Testing performed:** `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm test` (16 files / 122 tests passed), `npm run build`, Playwright against the production build (18/18 passed), `python3 scripts/validate_phase0_docs.py` (PASS); manual review MAN-P4-005 at 1440, 1024, 768 and 390 px with captures kept outside the repository.\
 **Git branch:** `feat/threejs-experience`\
-**Pull request:** none — branch pushed for review\
+**Pull request:** [#23](https://github.com/eendor/Brew-ni-Cat-Connect/pull/23) — open for review\
 **Next action:** Owner click-through on a desktop GPU and a real phone (MAN-P4-003).
