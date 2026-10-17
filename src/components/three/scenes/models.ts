@@ -103,7 +103,7 @@ function layerColor(
 }
 
 export function iceGeometry(seed: number, size = 0.42) {
-  const geometry = new RoundedBoxGeometry(size, size, size, 4, size * 0.2);
+  const geometry = new RoundedBoxGeometry(size, size, size, 6, size * 0.2);
   return displace(geometry, size * 0.18, seed, 3);
 }
 

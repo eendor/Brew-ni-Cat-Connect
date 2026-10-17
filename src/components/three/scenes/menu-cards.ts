@@ -25,6 +25,10 @@ type Tile = {
   photo: THREE.Mesh;
   body: THREE.Mesh;
   halo: THREE.Mesh;
+  sheen: THREE.Mesh;
+  texture: THREE.Texture;
+  /** cover-fit repeat for the photo before the parallax zoom */
+  cover: THREE.Vector2;
   s: {
     fly: number;
     spin: number;
@@ -64,6 +68,32 @@ function haloTexture() {
   return new THREE.CanvasTexture(canvas);
 }
 
+/** Diagonal specular streak used as the rim-light sheen on hover. */
+function sheenTexture() {
+  const canvas = document.createElement("canvas");
+  canvas.width = 256;
+  canvas.height = 32;
+  const g = canvas.getContext("2d");
+  if (g) {
+    const gradient = g.createLinearGradient(0, 0, 256, 0);
+    gradient.addColorStop(0, "rgba(255,255,255,0)");
+    gradient.addColorStop(0.42, "rgba(255,255,255,0)");
+    gradient.addColorStop(0.5, "rgba(255,255,255,1)");
+    gradient.addColorStop(0.58, "rgba(255,255,255,0)");
+    gradient.addColorStop(1, "rgba(255,255,255,0)");
+    g.fillStyle = gradient;
+    g.fillRect(0, 0, 256, 32);
+  }
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.wrapS = THREE.ClampToEdgeWrapping;
+  texture.center.set(0.5, 0.5);
+  texture.rotation = -0.5;
+  return texture;
+}
+
+/** Photo zoom inside the print, leaving room for the scroll parallax. */
+const ZOOM = 0.84;
+
 export async function initMenuCards(
   canvas: HTMLCanvasElement,
   quality: Quality,
@@ -97,6 +127,7 @@ export async function initMenuCards(
 
   const mask = roundedMask();
   const halo = haloTexture();
+  const streak = sheenTexture();
   const bodyGeometry = new RoundedBoxGeometry(1, 1, 1, 4, 0.12);
   const plane = new THREE.PlaneGeometry(1, 1);
   const bodyMaterial = new THREE.MeshPhysicalMaterial({
@@ -115,6 +146,14 @@ export async function initMenuCards(
     const glow = el.dataset.glow ?? "#FFB547";
     const group = new THREE.Group();
     const texture = await photoTexture(src, 8);
+    // object-fit: cover for the square print, then zoomed for parallax
+    const image = texture.image as { width: number; height: number };
+    const aspect = image.width / Math.max(1, image.height);
+    const cover = new THREE.Vector2(
+      aspect > 1 ? 1 / aspect : 1,
+      aspect > 1 ? 1 : aspect,
+    );
+    texture.wrapS = texture.wrapT = THREE.ClampToEdgeWrapping;
     const photo = new THREE.Mesh(
       plane,
       new THREE.MeshPhysicalMaterial({
@@ -139,7 +178,19 @@ export async function initMenuCards(
         depthWrite: false,
       }),
     );
-    group.add(glowMesh, body, photo);
+    const sheen = new THREE.Mesh(
+      plane,
+      new THREE.MeshBasicMaterial({
+        map: streak.clone(),
+        alphaMap: mask,
+        color: glow,
+        transparent: true,
+        opacity: 0,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      }),
+    );
+    group.add(glowMesh, body, photo, sheen);
     scene.add(group);
     const tile: Tile = {
       el,
@@ -148,6 +199,9 @@ export async function initMenuCards(
       photo,
       body,
       halo: glowMesh,
+      sheen,
+      texture,
+      cover,
       s: { fly: 0, spin: 0, hover: 0, tx: 0, ty: 0, seen: false },
     };
     tiles.set(el, tile);
@@ -159,6 +213,8 @@ export async function initMenuCards(
     (tile.photo.material as THREE.MeshPhysicalMaterial).map?.dispose();
     (tile.photo.material as THREE.Material).dispose();
     (tile.halo.material as THREE.Material).dispose();
+    (tile.sheen.material as THREE.MeshBasicMaterial).map?.dispose();
+    (tile.sheen.material as THREE.Material).dispose();
     delete tile.el.dataset.threeReady;
     if (tile.card) tile.card.style.transform = "";
     tiles.delete(tile.el);
@@ -219,11 +275,12 @@ export async function initMenuCards(
       any = true;
       if (!tile.s.seen && r.top < vh * 0.92) {
         tile.s.seen = true;
+        const column = r.left + r.width / 2 > vw / 2 ? 1 : 0;
         gsap.to(tile.s, {
           fly: 1,
-          duration: 1.3,
+          duration: 1.4,
           ease: "expo.out",
-          delay: (entryQueue++ % 6) * 0.08,
+          delay: (entryQueue++ % 6) * 0.08 + column * 0.12,
         });
         gsap.delayedCall(0.6, () => (entryQueue = Math.max(0, entryQueue - 1)));
       }
@@ -265,7 +322,7 @@ export async function initMenuCards(
       tile.group.position.set(
         tmp.x,
         tmp.y - inv * 60,
-        -inv * 900 + tile.s.hover * 30,
+        -inv * 1300 + tile.s.hover * 30,
       );
       tile.group.rotation.set(
         -inv * 0.9 + tile.s.ty * 0.35,
@@ -284,6 +341,25 @@ export async function initMenuCards(
         1,
         f * 1.6,
       );
+      // the photo drifts inside its print as the card crosses the screen
+      const drift = Math.max(
+        -1,
+        Math.min(1, (r.top + r.height / 2) / vh - 0.5),
+      );
+      const rx = tile.cover.x * ZOOM;
+      const ry = tile.cover.y * ZOOM;
+      tile.texture.repeat.set(rx, ry);
+      tile.texture.offset.set(
+        (1 - rx) / 2 + tile.s.tx * (1 - rx) * 0.35,
+        (1 - ry) / 2 + drift * (1 - ry) * 0.8,
+      );
+      // rim-light sheen: a glow-tinted streak that slides with the pointer
+      tile.sheen.scale.set(r.width, r.height, 1);
+      tile.sheen.position.z = depth / 2 + 1.2;
+      const sheenMaterial = tile.sheen.material as THREE.MeshBasicMaterial;
+      sheenMaterial.map?.offset.set(-tile.s.tx * 0.45, 0);
+      (tile.sheen.material as THREE.MeshBasicMaterial).opacity =
+        f * tile.s.hover * 0.32;
     }
     if (any) {
       renderer.setScissorTest(true);

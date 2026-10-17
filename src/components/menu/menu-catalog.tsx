@@ -1,10 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type PointerEvent,
+} from "react";
 
 import { fetchPublicMenu } from "@/lib/menu/fetch-public-menu";
 import { isCatTreatsCategory } from "@/lib/menu/map-menu-catalog";
 import type { MenuCatalog as MenuCatalogModel } from "@/types/menu";
+import { glowForCategory, publishMenuGlow } from "./category-glow";
 import { MenuItemCard } from "./menu-item-card";
 import { MenuState } from "./menu-state";
 
@@ -21,6 +28,24 @@ type ViewState =
 
 function getCategoryDisplayName(name: string) {
   return isCatTreatsCategory(name) ? `${name} (For Cats)` : name;
+}
+
+function prefersMotion() {
+  return (
+    typeof window !== "undefined" &&
+    typeof window.matchMedia === "function" &&
+    !window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
+}
+
+/** Rim-light sheen follows the pointer across a card (fine pointers only). */
+function trackSheen(event: PointerEvent<HTMLElement>) {
+  if (event.pointerType !== "mouse") return;
+  const card = (event.target as HTMLElement).closest<HTMLElement>(".menu-card");
+  if (!card) return;
+  const r = card.getBoundingClientRect();
+  card.style.setProperty("--mx", `${Math.round(event.clientX - r.left)}px`);
+  card.style.setProperty("--my", `${Math.round(event.clientY - r.top)}px`);
 }
 
 export function MenuCatalog({ loadMenu = fetchPublicMenu }: MenuCatalogProps) {
@@ -71,6 +96,55 @@ export function MenuCatalog({ loadMenu = fetchPublicMenu }: MenuCatalogProps) {
     );
     sections.forEach((section) => observer.observe(section));
     return () => observer.disconnect();
+  }, [viewState]);
+
+  // The category in view sets the page glow (hero rim lights, glow field).
+  useEffect(() => {
+    if (viewState.status !== "ready") return;
+    const category = viewState.catalog.categories.filter(
+      (entry) => entry.items.length > 0,
+    )[activeCategory];
+    if (category) publishMenuGlow(glowForCategory(category.name));
+  }, [viewState, activeCategory]);
+
+  // Cinematic entrances: each category heading and the cards fly in with a
+  // depth stagger the first time they enter the view. Reduced motion and
+  // browsers without IntersectionObserver keep everything static.
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (
+      viewState.status !== "ready" ||
+      typeof IntersectionObserver !== "function" ||
+      !prefersMotion()
+    ) {
+      return;
+    }
+    const root = rootRef.current;
+    root?.classList.add("menu-cine");
+    const reveal = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          (entry.target as HTMLElement).dataset.in = "true";
+          reveal.unobserve(entry.target);
+        }
+      },
+      { rootMargin: "0px 0px -12% 0px", threshold: 0.05 },
+    );
+    document
+      .querySelectorAll<HTMLElement>(".menu-grid")
+      .forEach((grid) =>
+        Array.from(grid.children).forEach((card, i) =>
+          (card as HTMLElement).style.setProperty("--i", String(i % 4)),
+        ),
+      );
+    document
+      .querySelectorAll<HTMLElement>(".menu-cat-head, .menu-grid > .menu-card")
+      .forEach((el) => reveal.observe(el));
+    return () => {
+      reveal.disconnect();
+      root?.classList.remove("menu-cine");
+    };
   }, [viewState]);
 
   // Keep the active tab visible inside the horizontally scrolling tab bar
@@ -140,12 +214,12 @@ export function MenuCatalog({ loadMenu = fetchPublicMenu }: MenuCatalogProps) {
   }
 
   return (
-    <div>
+    <div ref={rootRef} onPointerMove={trackSheen}>
       <nav
-        className="menu-tabs sticky top-[4.45rem] z-30 -mx-5 overflow-x-auto border-y border-[var(--border-soft)] bg-[var(--surface-canvas-translucent)] px-5 py-3 backdrop-blur-md sm:-mx-7 sm:px-7 lg:top-[5.1rem] lg:-mx-8 lg:px-8"
+        className="menu-tabs sticky top-[4.5rem] z-30 menu-tabs--bleed overflow-x-auto border-y border-[var(--border-soft)] bg-[var(--surface-canvas-translucent)] py-3 backdrop-blur-md lg:top-[5rem]"
         aria-label="Menu categories"
       >
-        <ul className="mx-auto flex w-max min-w-full max-w-[72rem] gap-2">
+        <ul className="flex w-max min-w-full gap-2">
           {populatedCategories.map((category, index) => (
             <li key={category.id}>
               <a
@@ -161,48 +235,61 @@ export function MenuCatalog({ loadMenu = fetchPublicMenu }: MenuCatalogProps) {
       </nav>
 
       <div className="grid gap-16 pt-12 sm:pt-16">
-        {populatedCategories.map((category, index) => (
-          <section
-            key={category.id}
-            id={`menu-category-${index + 1}`}
-            data-menu-category={index}
-            className="scroll-mt-40"
-            aria-labelledby={`menu-category-heading-${index + 1}`}
-          >
-            <div className="flex items-end justify-between gap-5 border-b border-[var(--border-strong)] pb-4">
-              <div>
-                <h2
-                  id={`menu-category-heading-${index + 1}`}
-                  className="font-display text-3xl text-[var(--text-strong)] sm:text-4xl"
-                >
-                  {getCategoryDisplayName(category.name)}
-                </h2>
-                {isCatTreatsCategory(category.name) ? (
-                  <p className="mt-2 text-sm font-medium text-[var(--text-subtle)]">
-                    These treats are for cats, not food for people.
+        {populatedCategories.map((category, index) => {
+          const glow = glowForCategory(category.name);
+          return (
+            <section
+              key={category.id}
+              id={`menu-category-${index + 1}`}
+              data-menu-category={index}
+              className="menu-category scroll-mt-40"
+              style={{ "--ga": glow.a, "--gb": glow.b } as CSSProperties}
+              aria-labelledby={`menu-category-heading-${index + 1}`}
+            >
+              <div className="menu-cat-head">
+                <p className="menu-cat-head__index" aria-hidden="true">
+                  {String(index + 1).padStart(2, "0")}
+                  <span>
+                    / {String(populatedCategories.length).padStart(2, "0")}
+                  </span>
+                </p>
+                <div className="flex items-end justify-between gap-5">
+                  <div>
+                    <h2
+                      id={`menu-category-heading-${index + 1}`}
+                      className="menu-cat-head__title"
+                    >
+                      {getCategoryDisplayName(category.name)}
+                    </h2>
+                    {isCatTreatsCategory(category.name) ? (
+                      <p className="mt-2 text-sm font-medium text-[var(--text-subtle)]">
+                        These treats are for cats, not food for people.
+                      </p>
+                    ) : null}
+                  </div>
+                  <p className="hidden shrink-0 text-sm font-semibold text-[var(--text-subtle)] sm:block">
+                    {category.items.length}{" "}
+                    {category.items.length === 1 ? "item" : "items"}
                   </p>
-                ) : null}
+                </div>
+                <span className="menu-cat-head__rule" aria-hidden="true" />
               </div>
-              <p className="hidden text-sm font-semibold text-[var(--text-subtle)] sm:block">
-                {category.items.length}{" "}
-                {category.items.length === 1 ? "item" : "items"}
-              </p>
-            </div>
-            <div className="menu-grid mt-6 grid gap-5 md:grid-cols-2">
-              {category.items.map((item, itemIndex) => (
-                <MenuItemCard
-                  key={item.id}
-                  item={item}
-                  catalog={viewState.catalog}
-                  wide={
-                    category.items.length % 2 === 1 &&
-                    itemIndex === category.items.length - 1
-                  }
-                />
-              ))}
-            </div>
-          </section>
-        ))}
+              <div className="menu-grid mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+                {category.items.map((item, itemIndex) => (
+                  <MenuItemCard
+                    key={item.id}
+                    item={item}
+                    catalog={viewState.catalog}
+                    wide={
+                      category.items.length % 2 === 1 &&
+                      itemIndex === category.items.length - 1
+                    }
+                  />
+                ))}
+              </div>
+            </section>
+          );
+        })}
       </div>
     </div>
   );

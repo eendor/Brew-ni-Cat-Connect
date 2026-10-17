@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 
 import { optimizedSrc } from "@/components/three/engine/image-src";
 import { glowForItem } from "@/components/three/showcase-data";
@@ -67,7 +67,17 @@ export function MenuItemCard({
               className="menu-card__image object-cover"
             />
           </div>
-        ) : null}
+        ) : (
+          // no shop photo for this item: a designed tile, never a stock photo
+          <div
+            className="menu-card__placeholder relative size-24 shrink-0 overflow-hidden rounded-2xl sm:size-28"
+            style={{ "--c": glowForItem(item.name) } as CSSProperties}
+            aria-hidden="true"
+            data-testid="menu-card-placeholder"
+          >
+            <span>{item.name.trim().charAt(0).toUpperCase()}</span>
+          </div>
+        )}
         <div className="min-w-0">
           <h3 className="font-display text-2xl leading-tight text-balance text-[var(--text-strong)]">
             {item.name}

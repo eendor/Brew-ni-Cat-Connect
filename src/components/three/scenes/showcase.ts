@@ -35,7 +35,7 @@ import {
 const BG = new THREE.Color("#0B0A0D");
 
 /** Large display-face title drawn once per product for the lit back wall. */
-function titleTexture(text: string, family: string) {
+export function titleTexture(text: string, family: string) {
   const canvas = document.createElement("canvas");
   canvas.width = 2048;
   canvas.height = 640;
@@ -63,7 +63,7 @@ function titleTexture(text: string, family: string) {
  * Back wall: a softly lit studio sweep with the product name as a large
  * backlit letterform. Opaque, so the clear cup refracts it.
  */
-function makeBackdrop() {
+export function makeBackdrop() {
   const material = new THREE.ShaderMaterial({
     uniforms: {
       uA: { value: null as THREE.Texture | null },
@@ -128,7 +128,7 @@ function makeBackdrop() {
   return { mesh, material };
 }
 
-type Floaters = {
+export type Floaters = {
   mesh: THREE.InstancedMesh;
   base: THREE.Vector3[];
   rot: THREE.Vector3[];
@@ -137,7 +137,7 @@ type Floaters = {
   weights: readonly number[];
 };
 
-function makeFloaters(
+export function makeFloaters(
   geometry: THREE.BufferGeometry,
   material: THREE.Material,
   count: number,
@@ -193,7 +193,7 @@ export async function initShowcase(
   hud: ShowcaseHud,
 ) {
   const renderer = makeRenderer(canvas, quality, { shadows: true });
-  renderer.transmissionResolutionScale = quality.mobile ? 0.5 : 0.8;
+  renderer.transmissionResolutionScale = quality.mobile ? 0.5 : 1;
   const env = await studioEnvironment(renderer);
   const scene = new THREE.Scene();
   scene.environment = env;

@@ -110,11 +110,12 @@ test("TC-P4-002 — every page mounts its 3D layer without console or hydration 
     "/checkout",
   ]) {
     await page.goto(path);
-    await expect(page.locator(".ambient-backdrop--ready").first()).toBeAttached(
-      {
-        timeout: 45_000,
-      },
-    );
+    // the menu opens on its own 3D hero instead of an ambient backdrop
+    const layer =
+      path === "/menu" ? ".menu-hero--ready" : ".ambient-backdrop--ready";
+    await expect(page.locator(layer).first()).toBeAttached({
+      timeout: 45_000,
+    });
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   }
   expect(errors).toEqual([]);

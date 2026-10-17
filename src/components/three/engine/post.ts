@@ -44,7 +44,13 @@ export function makePost(
   quality: Quality,
   options: { focus: number; aperture?: number; bloom?: number } = { focus: 10 },
 ) {
-  const composer = new EffectComposer(renderer);
+  // MSAA on the composer targets: without it, edges of refracting ice and
+  // cups alias once post-processing takes over from the canvas antialias
+  const target = new THREE.WebGLRenderTarget(1, 1, {
+    type: THREE.HalfFloatType,
+    samples: quality.mobile ? 0 : 4,
+  });
+  const composer = new EffectComposer(renderer, target);
   composer.addPass(new RenderPass(scene, camera));
   const bokeh = new BokehPass(scene, camera, {
     focus: options.focus,
