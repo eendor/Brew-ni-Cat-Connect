@@ -27,6 +27,7 @@ export function CartPageView() {
   return (
     <>
       <PageIntro
+        mood="cart"
         eyebrow="Your Order"
         title="Shopping Cart"
         description={

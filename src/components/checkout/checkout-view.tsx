@@ -181,6 +181,7 @@ export function CheckoutView({
     return (
       <>
         <PageIntro
+          mood="checkout"
           eyebrow="Checkout"
           title="Checkout"
           description={
@@ -225,6 +226,7 @@ export function CheckoutView({
   return (
     <>
       <PageIntro
+        mood="checkout"
         eyebrow="Order Flow"
         title={
           step === "details"
@@ -285,7 +287,7 @@ export function CheckoutView({
                 <span
                   className={`flex size-7 items-center justify-center rounded-full text-xs ${
                     step === "details"
-                      ? "bg-[var(--accent-solid)] text-white"
+                      ? "bg-[var(--accent-solid)] text-[var(--on-accent)]"
                       : "bg-[var(--surface-green)] text-[var(--deep-green)]"
                   }`}
                 >
@@ -312,7 +314,7 @@ export function CheckoutView({
                 <span
                   className={`flex size-7 items-center justify-center rounded-full text-xs ${
                     step === "review"
-                      ? "bg-[var(--accent-solid)] text-white"
+                      ? "bg-[var(--accent-solid)] text-[var(--on-accent)]"
                       : step === "send"
                         ? "bg-[var(--surface-green)] text-[var(--deep-green)]"
                         : "bg-[var(--surface-warm)] text-[var(--text-subtle)]"
@@ -337,7 +339,7 @@ export function CheckoutView({
                 <span
                   className={`flex size-7 items-center justify-center rounded-full text-xs ${
                     step === "send"
-                      ? "bg-[var(--accent-solid)] text-white"
+                      ? "bg-[var(--accent-solid)] text-[var(--on-accent)]"
                       : "bg-[var(--surface-warm)] text-[var(--text-subtle)]"
                   }`}
                 >
@@ -518,7 +520,7 @@ export function CheckoutView({
                           errors.name ? "name-error" : undefined
                         }
                         placeholder="e.g. Maria Santos"
-                        className="mt-2 block w-full rounded-xl border border-[var(--border-strong)] bg-white px-4 py-3 text-sm text-[var(--text-strong)] placeholder-[var(--text-subtle)] focus:border-[var(--accent-solid)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-solid)]"
+                        className="mt-2 block w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface-input)] px-4 py-3 text-sm text-[var(--text-strong)] placeholder-[var(--text-subtle)] focus:border-[var(--accent-solid)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-solid)]"
                       />
                       {errors.name ? (
                         <p
@@ -558,7 +560,7 @@ export function CheckoutView({
                           errors.phone ? "phone-error" : undefined
                         }
                         placeholder="e.g. 0912 345 6789"
-                        className="mt-2 block w-full rounded-xl border border-[var(--border-strong)] bg-white px-4 py-3 text-sm text-[var(--text-strong)] placeholder-[var(--text-subtle)] focus:border-[var(--accent-solid)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-solid)]"
+                        className="mt-2 block w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface-input)] px-4 py-3 text-sm text-[var(--text-strong)] placeholder-[var(--text-subtle)] focus:border-[var(--accent-solid)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-solid)]"
                       />
                       {errors.phone ? (
                         <p
@@ -631,7 +633,7 @@ export function CheckoutView({
                           }))
                         }
                         placeholder="e.g. Less ice for iced latte, preferred pickup time today, pack pastries separately..."
-                        className="mt-2 block w-full rounded-xl border border-[var(--border-strong)] bg-white px-4 py-3 text-sm text-[var(--text-strong)] placeholder-[var(--text-subtle)] focus:border-[var(--accent-solid)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-solid)]"
+                        className="mt-2 block w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface-input)] px-4 py-3 text-sm text-[var(--text-strong)] placeholder-[var(--text-subtle)] focus:border-[var(--accent-solid)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-solid)]"
                       />
                     </div>
                   </div>

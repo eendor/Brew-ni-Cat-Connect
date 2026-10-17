@@ -33,6 +33,7 @@ export default function AboutPage() {
   return (
     <>
       <PageIntro
+        mood="about"
         eyebrow="Our local café"
         title="About Brew ni Cat"
         description={
@@ -125,9 +126,9 @@ export default function AboutPage() {
 
       <section className="py-16 sm:py-20" aria-labelledby="about-visit-heading">
         <Container>
-          <Reveal className="rounded-[2rem] bg-[var(--deep-green)] p-7 text-white sm:p-10 lg:flex lg:items-center lg:justify-between lg:gap-10">
+          <Reveal className="rounded-[2rem] border border-[var(--border-soft)] bg-[var(--surface-raised)] p-7 text-[var(--text-strong)] sm:p-10 lg:flex lg:items-center lg:justify-between lg:gap-10">
             <div className="max-w-2xl">
-              <p className="text-xs font-extrabold tracking-[0.16em] text-[#f6cf80] uppercase">
+              <p className="text-xs font-extrabold tracking-[0.16em] text-[var(--accent-strong)] uppercase">
                 Come say hello
               </p>
               <h2
@@ -136,7 +137,7 @@ export default function AboutPage() {
               >
                 Visit Brew ni Cat in Poblacion, Kabacan.
               </h2>
-              <p className="mt-3 leading-7 text-[#e4e6d9]">
+              <p className="mt-3 leading-7 text-[var(--text-muted)]">
                 The shop is open 11 AM to 10 PM and closed every Sunday. Check
                 Facebook or contact the shop for schedule changes before making
                 the trip.
@@ -144,7 +145,7 @@ export default function AboutPage() {
             </div>
             <Link
               href="/contact"
-              className="mt-7 inline-flex min-h-12 shrink-0 items-center justify-center rounded-full bg-white px-6 py-3 font-extrabold text-[var(--deep-green)] transition-colors hover:bg-[var(--surface-warm)] lg:mt-0"
+              className="button-primary mt-7 shrink-0 lg:mt-0"
             >
               Get visit details
             </Link>

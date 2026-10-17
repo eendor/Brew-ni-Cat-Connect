@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { VisitStage } from "@/components/three/visit-stage";
+import { visitFacts } from "@/components/three/visit-facts";
 import { Container } from "@/components/ui/container";
 import { ExternalLink } from "@/components/ui/external-link";
 import { PageIntro } from "@/components/ui/page-intro";
@@ -30,6 +32,7 @@ export default function ContactPage() {
   return (
     <>
       <PageIntro
+        mood="contact"
         eyebrow="Plan your visit"
         title="Contact & location"
         description={
@@ -105,6 +108,34 @@ export default function ContactPage() {
               </ExternalLink>
             </aside>
           </Reveal>
+        </Container>
+      </section>
+
+      <section
+        className="border-t border-[var(--border-soft)] py-16 sm:py-20"
+        aria-labelledby="sign-heading"
+      >
+        <Container className="grid gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:items-center">
+          <div>
+            <p className="eyebrow">Look for the sign</p>
+            <h2
+              id="sign-heading"
+              className="font-display mt-3 text-4xl font-semibold text-[var(--text-strong)] sm:text-5xl"
+            >
+              Find us on Segundo St
+            </h2>
+            <p className="font-display mt-6 text-5xl text-[var(--accent-strong)] sm:text-6xl">
+              {visitFacts.hours}
+            </p>
+            <p className="mt-3 text-lg font-semibold text-[var(--text-strong)]">
+              {visitFacts.days}. Closed every {visitFacts.closedDay}.
+            </p>
+            <p className="mt-3 text-base leading-7 text-[var(--text-muted)]">
+              {siteConfig.address.street}, {siteConfig.address.locality},{" "}
+              {siteConfig.address.landmark.toLowerCase()}.
+            </p>
+          </div>
+          <VisitStage facts={visitFacts} />
         </Container>
       </section>
 

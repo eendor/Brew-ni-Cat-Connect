@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 
+import { AmbientBackdrop } from "@/components/three/ambient-backdrop";
+import { GalleryRing } from "@/components/three/gallery-ring";
 import { Container } from "@/components/ui/container";
 import { Reveal } from "@/components/ui/reveal";
 import { galleryImages } from "@/config/gallery";
@@ -18,42 +20,28 @@ export default function GalleryPage() {
   return (
     <>
       <section
-        className="relative isolate overflow-hidden bg-[var(--surface-cinema)] text-white"
+        className="relative isolate overflow-hidden border-b border-[var(--border-soft)] bg-[var(--surface-cinema)] text-[var(--text-strong)]"
         aria-labelledby="page-heading"
       >
-        <div className="absolute inset-0" aria-hidden="true">
-          <Image
-            src={leadImage.src}
-            alt=""
-            fill
-            priority
-            sizes="100vw"
-            className="ken-burns object-cover opacity-55"
-          />
-          <div
-            className="absolute inset-0"
-            style={{
-              background:
-                "linear-gradient(115deg, rgb(15 26 23 / 92%) 0%, rgb(23 52 46 / 72%) 48%, rgb(45 33 27 / 55%) 100%), linear-gradient(to top, rgb(15 26 23 / 88%) 0%, transparent 50%)",
-            }}
-          />
-          <div className="film-grain" />
-          <div className="vignette" />
-        </div>
+        <div
+          className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_50%_70%_at_85%_40%,rgb(94_225_255_/_10%),transparent_70%)]"
+          aria-hidden="true"
+        />
+        <AmbientBackdrop mood="gallery" />
 
         <Container className="relative z-10 py-14 sm:py-16 lg:py-24">
           <nav aria-label="Breadcrumb">
-            <ol className="flex items-center gap-2 text-sm text-[#d8d7c8]">
+            <ol className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
               <li>
                 <Link
                   href="/"
-                  className="rounded-sm font-bold underline decoration-white/30 underline-offset-4 hover:text-white"
+                  className="rounded-sm font-bold underline decoration-white/30 underline-offset-4 hover:text-[var(--text-strong)]"
                 >
                   Home
                 </Link>
               </li>
               <li aria-hidden="true">/</li>
-              <li aria-current="page" className="text-white">
+              <li aria-current="page" className="text-[var(--text-strong)]">
                 Gallery
               </li>
             </ol>
@@ -68,7 +56,7 @@ export default function GalleryPage() {
               >
                 Gallery
               </h1>
-              <p className="mt-5 max-w-2xl text-lg leading-8 text-pretty text-[#d8d7c8]">
+              <p className="mt-5 max-w-2xl text-lg leading-8 text-pretty text-[var(--text-muted)]">
                 A curated look at Brew ni Cat’s café cats, food, welcoming
                 spaces, and community moments — newest Facebook favorites first.
               </p>
@@ -90,8 +78,8 @@ export default function GalleryPage() {
             </figure>
           </div>
 
-          <div className="mt-10 max-w-md rounded-2xl border border-white/10 bg-white/5 p-5 text-sm leading-6 text-[#e4e6d9] backdrop-blur-sm">
-            <strong className="block text-[#f6cf80]">
+          <div className="mt-10 max-w-md rounded-2xl border border-white/10 bg-white/5 p-5 text-sm leading-6 text-[var(--text-muted)] backdrop-blur-sm">
+            <strong className="block text-[var(--accent-strong)]">
               Fresh from the shop
             </strong>
             Recent photos from Brew ni Cat’s Facebook page sit at the top, with
@@ -100,6 +88,10 @@ export default function GalleryPage() {
         </Container>
       </section>
 
+      <div className="pt-10 sm:pt-14">
+        <GalleryRing photos={galleryImages} />
+      </div>
+
       <section
         className="cinema-canvas py-12 sm:py-16 lg:py-20"
         aria-label="Brew ni Cat photo gallery"
@@ -107,7 +99,7 @@ export default function GalleryPage() {
         <Container>
           <Reveal className="mb-8 border-b border-white/10 pb-5">
             <p className="eyebrow-light">Reel</p>
-            <p className="mt-1 font-display text-2xl font-semibold text-white sm:text-3xl">
+            <p className="mt-1 font-display text-2xl font-semibold text-[var(--text-strong)] sm:text-3xl">
               Every frame from the café
             </p>
           </Reveal>
