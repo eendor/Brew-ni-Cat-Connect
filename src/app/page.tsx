@@ -1,6 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import { HomeShowcase } from "@/components/three/home-showcase";
+import { visitFacts } from "@/components/three/visit-facts";
+import { VisitStage } from "@/components/three/visit-stage";
 import { ExternalLink } from "@/components/ui/external-link";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { Container } from "@/components/ui/container";
@@ -38,73 +41,7 @@ const favorites = [
 export default function HomePage() {
   return (
     <>
-      <section className="cinematic-hero" aria-labelledby="home-heading">
-        <div className="cinematic-hero__media" aria-hidden="true">
-          <Image
-            src="/images/shop/photo_148.jpg"
-            alt=""
-            fill
-            priority
-            sizes="100vw"
-            className="ken-burns object-cover"
-          />
-        </div>
-        <div className="cinematic-hero__overlay" aria-hidden="true" />
-
-        <Container className="relative z-10 flex min-h-[85vh] flex-col justify-end gap-10 py-14 lg:min-h-[92vh] lg:justify-center lg:py-24">
-          <div className="grid gap-10 lg:grid-cols-[minmax(0,1.15fr)_minmax(16rem,0.55fr)] lg:items-end">
-            <div className="max-w-3xl fade-up-reveal">
-              <p className="eyebrow-light">
-                Kabacan, Cotabato · Est. June 2026
-              </p>
-              <h1
-                id="home-heading"
-                className="font-display mt-5 max-w-4xl text-5xl leading-[0.95] font-semibold tracking-[-0.025em] text-balance text-white sm:text-6xl lg:text-7xl xl:text-8xl"
-              >
-                Coffee, comfort, and a little cat energy.
-              </h1>
-              <p className="mt-6 max-w-xl text-lg leading-8 text-pretty text-[#d8d7c8] sm:text-xl">
-                Settle in at Brew ni Cat for drinks, snacks, noodles, combos,
-                and cozy community moments in the heart of Kabacan.
-              </p>
-              <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center fade-up-reveal-delay">
-                <Link href="/menu" className="button-primary">
-                  Browse current menu
-                </Link>
-                <Link href="/contact" className="button-ghost">
-                  Plan your visit
-                </Link>
-              </div>
-            </div>
-
-            <div
-              className="relative mx-auto hidden w-full max-w-[18rem] gap-3 sm:grid sm:grid-cols-2 lg:mx-0 fade-up-reveal-delay-2"
-              aria-hidden="true"
-            >
-              <div className="overflow-hidden rounded-2xl border border-white/20 shadow-[var(--shadow-cinema)]">
-                <Image
-                  src="/images/shop/photo_152.jpg"
-                  width={384}
-                  height={512}
-                  alt=""
-                  sizes="140px"
-                  className="aspect-[3/4] h-full w-full object-cover"
-                />
-              </div>
-              <div className="mt-8 overflow-hidden rounded-2xl border border-white/20 shadow-[var(--shadow-cinema)]">
-                <Image
-                  src="/images/shop/photo_004.jpg"
-                  width={384}
-                  height={512}
-                  alt=""
-                  sizes="140px"
-                  className="aspect-[3/4] h-full w-full object-cover"
-                />
-              </div>
-            </div>
-          </div>
-        </Container>
-      </section>
+      <HomeShowcase />
 
       <section
         className="relative z-10 -mt-6 pb-10 sm:-mt-8 sm:pb-12"
@@ -207,7 +144,7 @@ export default function HomePage() {
       </section>
 
       <section
-        className="bg-[var(--deep-green)] py-16 text-white sm:py-20 lg:py-24"
+        className="border-y border-[var(--border-soft)] bg-[var(--surface-raised)] py-16 text-[var(--text-strong)] sm:py-20 lg:py-24"
         aria-labelledby="about-preview-heading"
       >
         <Container className="grid gap-10 lg:grid-cols-[1fr_1.05fr] lg:items-center lg:gap-16">
@@ -222,7 +159,7 @@ export default function HomePage() {
                 className="ken-burns-slow aspect-[4/5] w-full object-cover"
               />
             </div>
-            <div className="absolute bottom-0 left-0 max-w-56 rounded-2xl bg-[var(--warm-gold)] p-5 text-[var(--text-strong)] shadow-xl">
+            <div className="absolute bottom-0 left-0 max-w-56 rounded-2xl bg-[var(--accent-strong)] p-5 text-[var(--on-accent)] shadow-xl">
               <p className="text-xs font-extrabold tracking-[0.13em] uppercase">
                 Opened
               </p>
@@ -238,7 +175,7 @@ export default function HomePage() {
             >
               A local café with a playful cat-inspired spirit.
             </h2>
-            <p className="mt-5 max-w-2xl text-lg leading-8 text-[#e4e6d9]">
+            <p className="mt-5 max-w-2xl text-lg leading-8 text-[var(--text-muted)]">
               Brew ni Cat Coffee Shop welcomes the Kabacan community for drinks,
               bites, noodles, combos, and time spent together. The shop’s warm
               spaces and cat-themed personality make every visit distinctly Brew
@@ -246,24 +183,24 @@ export default function HomePage() {
             </p>
 
             <div className="mt-8 rounded-2xl border border-white/20 bg-white/10 p-5 backdrop-blur-sm">
-              <h3 className="text-xs font-extrabold tracking-wider text-[#f6cf80] uppercase">
+              <h3 className="text-xs font-extrabold tracking-wider text-[var(--accent-strong)] uppercase">
                 Visiting the Cats
               </h3>
-              <ul className="mt-3 grid gap-3 text-xs leading-5 text-[#e4e6d9] sm:grid-cols-3">
+              <ul className="mt-3 grid gap-3 text-xs leading-5 text-[var(--text-muted)] sm:grid-cols-3">
                 <li className="flex flex-col gap-1">
-                  <strong className="text-white font-semibold">
+                  <strong className="font-semibold text-[var(--text-strong)]">
                     No entrance fee
                   </strong>
                   <span>Cats roam freely; enjoy with any food or drink.</span>
                 </li>
                 <li className="flex flex-col gap-1">
-                  <strong className="text-white font-semibold">
+                  <strong className="font-semibold text-[var(--text-strong)]">
                     Gentle paws welcome
                   </strong>
                   <span>Approach resting cats calmly, and pet with care.</span>
                 </li>
                 <li className="flex flex-col gap-1">
-                  <strong className="text-white font-semibold">
+                  <strong className="font-semibold text-[var(--text-strong)]">
                     Clean cuddles
                   </strong>
                   <span>
@@ -274,10 +211,7 @@ export default function HomePage() {
             </div>
 
             <div className="mt-8">
-              <Link
-                href="/about"
-                className="inline-flex min-h-12 items-center rounded-full bg-white px-6 py-3 font-extrabold text-[var(--deep-green)] transition-colors hover:bg-[var(--surface-warm)]"
-              >
+              <Link href="/about" className="button-primary">
                 Read about the shop
               </Link>
             </div>
@@ -286,7 +220,7 @@ export default function HomePage() {
       </section>
 
       <section
-        className="bg-[#122822] py-16 text-white sm:py-20 lg:py-24"
+        className="bg-[var(--surface-cinema)] py-16 text-[var(--text-strong)] sm:py-20 lg:py-24"
         aria-labelledby="gallery-preview-heading"
       >
         <Container>
@@ -298,7 +232,7 @@ export default function HomePage() {
               >
                 Coffee, cats, and community.
               </h2>
-              <p className="mt-4 max-w-xl text-base leading-7 text-[#d8d7c8] sm:text-lg">
+              <p className="mt-4 max-w-xl text-base leading-7 text-[var(--text-muted)] sm:text-lg">
                 A glimpse of the food, familiar faces, cozy corners, and cats
                 that shape the Brew ni Cat atmosphere.
               </p>
@@ -418,7 +352,7 @@ export default function HomePage() {
                     </dd>
                   </div>
                 </dl>
-                <div className="mt-4 rounded-xl border border-[var(--notice-border)] bg-white/70 p-3.5 text-xs leading-5 text-[var(--notice-text)]">
+                <div className="mt-4 rounded-xl border border-[var(--notice-border)] bg-white/5 p-3.5 text-xs leading-5 text-[var(--notice-text)]">
                   <strong className="block font-bold text-[var(--text-strong)]">
                     Local delivery in Kabacan:
                   </strong>
@@ -435,6 +369,7 @@ export default function HomePage() {
                 </ExternalLink>
               </aside>
             </div>
+            <VisitStage facts={visitFacts} className="mt-10" />
           </Reveal>
         </Container>
       </section>
