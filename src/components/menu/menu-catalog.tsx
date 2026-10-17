@@ -173,7 +173,7 @@ export function MenuCatalog({ loadMenu = fetchPublicMenu }: MenuCatalogProps) {
               <div>
                 <h2
                   id={`menu-category-heading-${index + 1}`}
-                  className="font-display text-3xl font-semibold text-[var(--text-strong)] sm:text-4xl"
+                  className="font-display text-3xl text-[var(--text-strong)] sm:text-4xl"
                 >
                   {getCategoryDisplayName(category.name)}
                 </h2>

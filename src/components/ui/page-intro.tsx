@@ -45,7 +45,7 @@ export function PageIntro({
             <p className="eyebrow">{eyebrow}</p>
             <h1
               id="page-heading"
-              className="font-display mt-3 text-5xl leading-[1.02] font-semibold tracking-[-0.04em] text-balance text-[var(--text-strong)] sm:text-6xl"
+              className="font-display mt-3 text-5xl leading-[1.02] text-balance text-[var(--text-strong)] sm:text-6xl"
             >
               {title}
             </h1>

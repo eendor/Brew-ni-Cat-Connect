@@ -52,7 +52,7 @@ export default function GalleryPage() {
               <p className="eyebrow-light">Life at the shop</p>
               <h1
                 id="page-heading"
-                className="font-display mt-3 text-5xl leading-[1.02] font-semibold tracking-[-0.04em] text-balance sm:text-6xl lg:text-7xl"
+                className="font-display mt-3 text-5xl leading-[1.02] text-balance sm:text-6xl lg:text-7xl"
               >
                 Gallery
               </h1>
@@ -62,7 +62,7 @@ export default function GalleryPage() {
               </p>
             </div>
 
-            <figure className="relative overflow-hidden rounded-[1.5rem] border border-white/15 shadow-[var(--shadow-cinema)] fade-up-reveal-delay">
+            <figure className="relative overflow-hidden rounded-3xl border border-white/15 shadow-[var(--shadow-cinema)] fade-up-reveal-delay">
               <Image
                 src={leadImage.src}
                 width={768}
@@ -72,7 +72,7 @@ export default function GalleryPage() {
                 sizes="(max-width: 1023px) 85vw, 22rem"
                 className="aspect-[4/5] w-full object-cover"
               />
-              <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent px-4 pt-12 pb-4 text-sm font-semibold text-white">
+              <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent px-4 pt-12 pb-4 text-sm font-semibold text-[var(--text-strong)]">
                 Featured still
               </figcaption>
             </figure>
@@ -99,7 +99,7 @@ export default function GalleryPage() {
         <Container>
           <Reveal className="mb-8 border-b border-white/10 pb-5">
             <p className="eyebrow-light">Reel</p>
-            <p className="mt-1 font-display text-2xl font-semibold text-[var(--text-strong)] sm:text-3xl">
+            <p className="mt-1 font-display text-2xl text-[var(--text-strong)] sm:text-3xl">
               Every frame from the café
             </p>
           </Reveal>

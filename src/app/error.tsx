@@ -16,7 +16,7 @@ export default function ErrorPage({ reset }: ErrorPageProps) {
         <p className="text-sm font-bold tracking-[0.16em] text-[var(--accent-strong)] uppercase">
           Temporary interruption
         </p>
-        <h1 className="font-display mt-3 text-4xl font-semibold tracking-tight text-[var(--text-strong)]">
+        <h1 className="font-display mt-3 text-4xl text-[var(--text-strong)]">
           Something went wrong
         </h1>
         <p className="mx-auto mt-4 max-w-lg leading-7 text-[var(--text-muted)]">

@@ -44,7 +44,7 @@ export function MenuItemCard({
 
   return (
     <article
-      className={`menu-card surface-lift flex h-full flex-col overflow-hidden rounded-[1.5rem] border bg-[var(--surface-card)] p-5 shadow-[var(--shadow-subtle)] sm:p-6 ${
+      className={`menu-card surface-lift flex h-full flex-col overflow-hidden rounded-3xl border bg-[var(--surface-card)] p-5 shadow-[var(--shadow-subtle)] sm:p-6 ${
         wide ? "md:col-span-2" : ""
       } ${
         unavailable
@@ -69,7 +69,7 @@ export function MenuItemCard({
           </div>
         ) : null}
         <div className="min-w-0">
-          <h3 className="font-display text-2xl font-semibold leading-tight text-balance text-[var(--text-strong)]">
+          <h3 className="font-display text-2xl leading-tight text-balance text-[var(--text-strong)]">
             {item.name}
           </h3>
           {lowestPrice !== null ? (

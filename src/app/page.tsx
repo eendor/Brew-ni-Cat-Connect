@@ -49,7 +49,7 @@ export default function HomePage() {
       >
         <Container>
           <Reveal>
-            <dl className="grid overflow-hidden rounded-[1.5rem] border border-[var(--border-soft)] bg-[var(--surface-card)] shadow-[var(--shadow-card)] sm:grid-cols-2 lg:grid-cols-4">
+            <dl className="grid overflow-hidden rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] shadow-[var(--shadow-card)] sm:grid-cols-2 lg:grid-cols-4">
               <div className="p-5 sm:border-r sm:border-[var(--border-soft)] sm:p-6">
                 <dt className="eyebrow">Find us</dt>
                 <dd className="mt-2 font-bold text-[var(--text-strong)]">
@@ -101,7 +101,7 @@ export default function HomePage() {
           <div className="mt-10 grid gap-4 md:grid-cols-3 md:gap-6">
             {favorites.map((favorite, index) => (
               <Reveal key={favorite.name} delayMs={index * 90}>
-                <article className="group surface-lift flex h-full overflow-hidden rounded-[1.75rem] border border-[var(--border-soft)] bg-[var(--surface-card)] shadow-[var(--shadow-subtle)] md:flex-col">
+                <article className="group surface-lift flex h-full overflow-hidden rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] shadow-[var(--shadow-subtle)] md:flex-col">
                   <div className="relative w-28 shrink-0 overflow-hidden bg-[var(--surface-warm)] sm:w-40 md:aspect-[16/10] md:w-full">
                     <Image
                       src={favorite.image}
@@ -118,7 +118,7 @@ export default function HomePage() {
                     <span className="text-xs font-semibold text-[var(--warm-gold)]">
                       {favorite.nickname}
                     </span>
-                    <h3 className="font-display mt-1 text-xl font-semibold text-[var(--text-strong)] md:text-2xl">
+                    <h3 className="font-display mt-1 text-xl text-[var(--text-strong)] md:text-2xl">
                       {favorite.name}
                     </h3>
                     <p className="mt-0.5 text-sm font-extrabold text-[var(--deep-green)] md:hidden">
@@ -163,7 +163,7 @@ export default function HomePage() {
               <p className="text-xs font-extrabold tracking-[0.13em] uppercase">
                 Opened
               </p>
-              <p className="font-display mt-1 text-2xl font-semibold">
+              <p className="font-display mt-1 text-2xl">
                 {siteConfig.openingDate}
               </p>
             </div>
@@ -171,7 +171,7 @@ export default function HomePage() {
           <Reveal delayMs={120}>
             <h2
               id="about-preview-heading"
-              className="font-display text-4xl font-semibold tracking-[-0.025em] text-balance sm:text-5xl"
+              className="font-display text-4xl text-balance sm:text-5xl"
             >
               A local café with a playful cat-inspired spirit.
             </h2>
@@ -228,7 +228,7 @@ export default function HomePage() {
             <div className="max-w-2xl">
               <h2
                 id="gallery-preview-heading"
-                className="font-display text-4xl font-semibold tracking-[-0.025em] text-balance sm:text-5xl"
+                className="font-display text-4xl text-balance sm:text-5xl"
               >
                 Coffee, cats, and community.
               </h2>
@@ -288,12 +288,12 @@ export default function HomePage() {
         aria-labelledby="visit-heading"
       >
         <Container>
-          <Reveal className="depth-card rounded-[1.75rem] p-6 sm:p-9">
+          <Reveal className="depth-card rounded-3xl p-6 sm:p-9">
             <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-start">
               <div>
                 <h2
                   id="visit-heading"
-                  className="font-display text-3xl font-semibold text-[var(--text-strong)] sm:text-4xl"
+                  className="font-display text-3xl text-[var(--text-strong)] sm:text-4xl"
                 >
                   Find us in Kabacan
                 </h2>
@@ -322,7 +322,7 @@ export default function HomePage() {
               </div>
 
               <aside
-                className="glass-panel rounded-[1.25rem] border-[var(--notice-border)] bg-[var(--notice-surface)] p-5 sm:p-6"
+                className="glass-panel rounded-2xl border-[var(--notice-border)] bg-[var(--notice-surface)] p-5 sm:p-6"
                 aria-label="Before you visit"
               >
                 <p className="text-xs font-bold tracking-[0.12em] text-[var(--notice-text)] uppercase">
@@ -363,7 +363,7 @@ export default function HomePage() {
                 </div>
                 <ExternalLink
                   href={siteConfig.social.facebook}
-                  className="mt-5 inline-flex min-h-10 items-center text-sm font-bold text-[var(--deep-green)] underline decoration-[var(--border-strong)] underline-offset-4"
+                  className="mt-5 inline-flex min-h-11 items-center text-sm font-bold text-[var(--deep-green)] underline decoration-[var(--border-strong)] underline-offset-4"
                 >
                   Check Facebook for today’s hours
                 </ExternalLink>
