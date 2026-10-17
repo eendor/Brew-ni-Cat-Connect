@@ -1,5 +1,6 @@
 "use client";
 
+import { formatOptionName } from "@/lib/menu/format-name";
 import { formatPrice } from "@/lib/menu/format-price";
 import type { CartItem } from "@/types/ordering";
 
@@ -16,8 +17,9 @@ export function CartLineItem({
   onRemove,
   readOnly = false,
 }: CartLineItemProps) {
+  const variantName = formatOptionName(item.variantName);
   const lineDescription = [
-    item.variantName,
+    variantName,
     item.flavor ? `Flavor: ${item.flavor}` : null,
   ]
     .filter(Boolean)
@@ -61,12 +63,12 @@ export function CartLineItem({
               <div
                 className="inline-flex items-center rounded-full border border-[var(--border-strong)] bg-[var(--surface-warm)] p-0.5"
                 role="group"
-                aria-label={`Quantity controls for ${item.itemName} (${item.variantName})`}
+                aria-label={`Quantity controls for ${item.itemName} (${variantName})`}
               >
                 <button
                   type="button"
                   className="inline-flex size-11 items-center justify-center rounded-full text-[var(--text-strong)] transition-colors hover:bg-[var(--surface-card)] disabled:opacity-40 disabled:cursor-not-allowed"
-                  aria-label={`Decrease quantity of ${item.itemName} (${item.variantName})`}
+                  aria-label={`Decrease quantity of ${item.itemName} (${variantName})`}
                   disabled={item.quantity <= 1}
                   onClick={() => onUpdateQuantity?.(item.quantity - 1)}
                 >
@@ -91,7 +93,7 @@ export function CartLineItem({
                 <button
                   type="button"
                   className="inline-flex size-11 items-center justify-center rounded-full text-[var(--text-strong)] transition-colors hover:bg-[var(--surface-card)]"
-                  aria-label={`Increase quantity of ${item.itemName} (${item.variantName})`}
+                  aria-label={`Increase quantity of ${item.itemName} (${variantName})`}
                   onClick={() => onUpdateQuantity?.(item.quantity + 1)}
                 >
                   <svg
@@ -112,7 +114,7 @@ export function CartLineItem({
                 <button
                   type="button"
                   className="inline-flex size-11 items-center justify-center rounded-full text-[var(--text-muted)] hover:text-[var(--danger)] hover:bg-[rgb(255_133_119_/_10%)] transition-colors"
-                  aria-label={`Remove ${item.itemName} (${item.variantName}) from cart`}
+                  aria-label={`Remove ${item.itemName} (${variantName}) from cart`}
                   onClick={onRemove}
                 >
                   <svg

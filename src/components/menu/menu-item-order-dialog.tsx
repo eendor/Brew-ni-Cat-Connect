@@ -3,6 +3,7 @@
 import {
   useEffect,
   useId,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -10,12 +11,14 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 
+import { EASE, gsap, motionAllowed } from "@/components/motion/gsap";
 import { requestCartToss } from "@/components/three/cart-toss";
 import { optimizedSrc } from "@/components/three/engine/image-src";
 import { glowForItem } from "@/components/three/showcase-data";
 import { getMenuItemImage } from "@/config/menu-item-images";
 import { useCart } from "@/context/cart-context";
 import { useFocusTrap } from "@/lib/accessibility/focus-trap";
+import { formatOptionName } from "@/lib/menu/format-name";
 import { formatPrice } from "@/lib/menu/format-price";
 import {
   calculateLineTotal,
@@ -81,10 +84,73 @@ export function MenuItemOrderDialog({
     setQuantity(next);
   }
 
+  // Every way out (close, backdrop, Escape, Add to Order) plays the exit
+  // first; the card unmounts the dialog once it has gone.
+  const closingRef = useRef(false);
+  function requestClose() {
+    if (closingRef.current) return;
+    closingRef.current = true;
+    const root = dialogRef.current;
+    if (!root || !motionAllowed()) {
+      onClose();
+      return;
+    }
+    gsap
+      .timeline({ onComplete: onClose })
+      .to(root.querySelector("[data-overlay=panel]"), {
+        autoAlpha: 0,
+        y: 28,
+        scale: 0.96,
+        duration: 0.3,
+        ease: EASE.exit,
+      })
+      .to(
+        root.querySelector("[data-overlay=backdrop]"),
+        { autoAlpha: 0, duration: 0.3, ease: "power2.in" },
+        0.05,
+      );
+  }
+
   const dialogRef = useFocusTrap<HTMLDivElement>(mounted, {
-    onClose,
+    onClose: requestClose,
     initialFocusRef: closeButtonRef,
   });
+
+  // The panel rises into place and its sections follow one by one.
+  useLayoutEffect(() => {
+    const root = dialogRef.current;
+    if (!mounted || !root || !motionAllowed()) return;
+    const panel = root.querySelector("[data-overlay=panel]");
+    const entrance = gsap
+      .timeline()
+      .fromTo(
+        root.querySelector("[data-overlay=backdrop]"),
+        { autoAlpha: 0 },
+        { autoAlpha: 1, duration: 0.35, ease: "power2.out" },
+      )
+      .fromTo(
+        panel,
+        { autoAlpha: 0, y: 48, scale: 0.94 },
+        { autoAlpha: 1, y: 0, scale: 1, duration: 0.75, ease: EASE.enter },
+        0,
+      )
+      .fromTo(
+        panel?.querySelectorAll(":scope > *") ?? [],
+        { autoAlpha: 0, y: 18 },
+        {
+          autoAlpha: 1,
+          y: 0,
+          duration: 0.55,
+          ease: EASE.enter,
+          stagger: 0.06,
+          clearProps: "opacity,visibility,transform",
+        },
+        0.12,
+      );
+    return () => {
+      entrance.kill();
+    };
+  }, [mounted, dialogRef]);
 
   // Body scroll lock
   useEffect(() => {
@@ -94,6 +160,12 @@ export function MenuItemOrderDialog({
       document.body.style.overflow = originalOverflow;
     };
   }, []);
+
+  // long option names ("Nachos + Fries + Meat") read as full-width rows;
+  // short sizes ("16oz") stay side by side
+  const longOptions = item.variants.some(
+    (variant) => formatOptionName(variant.name).length > 12,
+  );
 
   const selectedVariant = useMemo(() => {
     return (
@@ -182,7 +254,7 @@ export function MenuItemOrderDialog({
             label: item.name,
           })
         : 0;
-      onClose();
+      requestClose();
       if (delay > 0) {
         window.setTimeout(openDrawer, delay);
       } else {
@@ -207,12 +279,16 @@ export function MenuItemOrderDialog({
     >
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-xs motion-fade-in"
+        className="fixed inset-0 bg-black/50 backdrop-blur-xs"
         aria-hidden="true"
-        onClick={onClose}
+        data-overlay="backdrop"
+        onClick={requestClose}
       />
 
-      <div className="motion-pop-in relative w-full max-w-lg rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-6 sm:p-8 shadow-2xl max-h-[90vh] overflow-y-auto">
+      <div
+        className="relative w-full max-w-lg rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-6 sm:p-8 shadow-2xl max-h-[90vh] overflow-y-auto"
+        data-overlay="panel"
+      >
         <div className="flex items-start justify-between gap-4 border-b border-[var(--border-soft)] pb-4">
           <div>
             <span className="eyebrow block">Configure item</span>
@@ -229,7 +305,7 @@ export function MenuItemOrderDialog({
             type="button"
             className="inline-flex size-11 items-center justify-center rounded-full text-[var(--text-muted)] hover:bg-[var(--surface-warm)] hover:text-[var(--text-strong)] transition-colors"
             aria-label="Close dialog"
-            onClick={onClose}
+            onClick={requestClose}
           >
             <svg
               className="size-5"
@@ -254,9 +330,11 @@ export function MenuItemOrderDialog({
               </legend>
               <div
                 className={`grid gap-2 ${
-                  item.variants.length === 3
-                    ? "sm:grid-cols-3"
-                    : "sm:grid-cols-2"
+                  longOptions
+                    ? ""
+                    : item.variants.length === 3
+                      ? "sm:grid-cols-3"
+                      : "sm:grid-cols-2"
                 }`}
                 role="group"
               >
@@ -268,14 +346,18 @@ export function MenuItemOrderDialog({
                       type="button"
                       aria-pressed={isSelected}
                       onClick={() => chooseVariant(variant.id)}
-                      className={`flex flex-col items-start rounded-xl border p-3 text-left transition-all ${
+                      className={`flex min-w-0 rounded-xl border p-3 text-left transition-all ${
+                        longOptions
+                          ? "items-center justify-between gap-3"
+                          : "flex-col items-start"
+                      } ${
                         isSelected
                           ? "border-[var(--accent-solid)] bg-[var(--surface-warm)] ring-2 ring-[var(--accent-solid)] font-extrabold"
                           : "border-[var(--border-soft)] bg-[var(--surface-card)] hover:bg-[var(--surface-warm)]"
                       }`}
                     >
-                      <span className="font-bold text-sm text-[var(--text-strong)]">
-                        {variant.name}
+                      <span className="min-w-0 font-bold text-sm text-[var(--text-strong)] [overflow-wrap:anywhere]">
+                        {formatOptionName(variant.name)}
                         {isSelected ? (
                           <span className="sr-only"> (selected)</span>
                         ) : null}
@@ -285,11 +367,15 @@ export function MenuItemOrderDialog({
                         variant.basePrice === 0 &&
                         variant.flavorPrices.length > 0
                       ) ? (
-                        <span className="text-xs font-extrabold text-[var(--accent-strong)] mt-1">
+                        <span
+                          className={`shrink-0 text-xs font-extrabold text-[var(--accent-strong)] ${longOptions ? "" : "mt-1"}`}
+                        >
                           {formatPrice(variant.basePrice)}
                         </span>
                       ) : (
-                        <span className="text-xs text-[var(--text-muted)] mt-1">
+                        <span
+                          className={`shrink-0 text-xs text-[var(--text-muted)] ${longOptions ? "" : "mt-1"}`}
+                        >
                           Flavor pricing applies
                         </span>
                       )}

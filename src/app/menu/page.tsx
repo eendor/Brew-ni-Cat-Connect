@@ -20,12 +20,16 @@ export default function MenuPage() {
         aria-label="Current Brew ni Cat menu"
       >
         <Container>
-          <div className="mb-8 max-w-2xl rounded-2xl border border-[var(--notice-border)] bg-[var(--notice-surface)] p-5 text-sm leading-6 text-[var(--notice-text)]">
-            <strong className="block">Online Order Drafts</strong>
-            Select items to build an order summary for pickup or external rider
-            delivery. Review your items and copy the order summary at checkout
-            to message or call the shop.
-          </div>
+          <p
+            className="mb-8 max-w-2xl text-sm leading-6 text-[var(--text-muted)]"
+            data-rise=""
+          >
+            <strong className="text-[var(--text-strong)]">
+              How ordering works:
+            </strong>{" "}
+            add items to build an order summary for pickup or your own rider,
+            then copy it at checkout and message or call the shop.
+          </p>
           <MenuCatalog />
         </Container>
       </section>

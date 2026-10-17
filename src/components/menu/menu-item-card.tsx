@@ -1,21 +1,18 @@
 "use client";
 
 import Image from "next/image";
-import { useState, type CSSProperties } from "react";
+import { useState } from "react";
 
-import { matchGlowForItem } from "@/components/three/showcase-data";
 import { getMenuItemImage } from "@/config/menu-item-images";
+import { formatOptionName } from "@/lib/menu/format-name";
 import { formatPrice, getLowestItemPrice } from "@/lib/menu/format-price";
 import type { MenuCatalog, MenuItem, MenuVariant } from "@/types/menu";
 
-import { DEFAULT_GLOW, type GlowPair } from "./category-glow";
 import { MenuItemOrderDialog } from "./menu-item-order-dialog";
 
 type MenuItemCardProps = Readonly<{
   item: MenuItem;
   catalog?: MenuCatalog;
-  /** Colour pair of the category the card sits in (used for the price). */
-  categoryGlow?: GlowPair;
 }>;
 
 function getItemPrices(item: MenuItem): readonly (number | null)[] {
@@ -55,11 +52,7 @@ function isSimpleVariant(variant: MenuVariant) {
   );
 }
 
-export function MenuItemCard({
-  item,
-  catalog,
-  categoryGlow = DEFAULT_GLOW,
-}: MenuItemCardProps) {
+export function MenuItemCard({ item, catalog }: MenuItemCardProps) {
   const [isOrderOpen, setIsOrderOpen] = useState(false);
   const prices = getItemPrices(item).filter(
     (price): price is number => price !== null,
@@ -68,7 +61,6 @@ export function MenuItemCard({
   const singlePrice = new Set(prices).size === 1;
   const unavailable = item.availability === "unavailable";
   const image = getMenuItemImage(item.name);
-  const priceColor = matchGlowForItem(item.name) ?? categoryGlow.a;
   const { base, nickname } = splitName(item.name);
   const canOrder =
     item.availability === "available" && item.variants.length > 0;
@@ -77,8 +69,7 @@ export function MenuItemCard({
 
   return (
     <article
-      className={`menu-card ${unavailable ? "menu-card--unavailable" : ""}`}
-      style={{ "--price-color": priceColor } as CSSProperties}
+      className={`menu-card${unavailable ? " menu-card--unavailable" : ""}`}
     >
       {image ? (
         <div className="menu-card__media">
@@ -98,7 +89,18 @@ export function MenuItemCard({
             {nickname ? (
               <span className="menu-card__nickname">{nickname}</span>
             ) : null}
-            <span className="menu-card__name">{base}</span>
+            <span className="menu-card__name">
+              {base.split(" ").map((word, index) => (
+                <span key={`${word}-${index}`}>
+                  {index > 0 ? " " : null}
+                  {word.includes("-") ? (
+                    <span className="whitespace-nowrap">{word}</span>
+                  ) : (
+                    word
+                  )}
+                </span>
+              ))}
+            </span>
           </h3>
           {lowestPrice !== null ? (
             <p className="menu-card__price">
@@ -145,7 +147,9 @@ export function MenuItemCard({
               <ul className="menu-card__sizes">
                 {item.variants.map((variant) => (
                   <li key={variant.id} className="menu-card__size">
-                    <span className="menu-card__size-name">{variant.name}</span>
+                    <span className="menu-card__size-name">
+                      {formatOptionName(variant.name)}
+                    </span>
                     <span className="menu-card__size-price">
                       {formatPrice(variant.basePrice ?? 0)}
                     </span>
@@ -157,8 +161,8 @@ export function MenuItemCard({
                 {item.variants.map((variant) => (
                   <li key={variant.id} className="menu-card__row">
                     <div className="flex items-baseline justify-between gap-4">
-                      <span className="font-bold text-[var(--text-strong)]">
-                        {variant.name}
+                      <span className="min-w-0 font-bold text-[var(--text-strong)] [overflow-wrap:anywhere]">
+                        {formatOptionName(variant.name)}
                       </span>
                       {hasBasePrice(variant) ? (
                         <span className="menu-card__row-price">
@@ -206,7 +210,7 @@ export function MenuItemCard({
               className="button-primary menu-card__order"
               aria-label={`Order ${item.name}`}
             >
-              Order / Add to Cart +
+              Add to order
             </button>
           </div>
         ) : null}

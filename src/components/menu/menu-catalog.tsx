@@ -5,7 +5,7 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { fetchPublicMenu } from "@/lib/menu/fetch-public-menu";
 import { isCatTreatsCategory } from "@/lib/menu/map-menu-catalog";
 import type { MenuCatalog as MenuCatalogModel } from "@/types/menu";
-import { glowForCategory, publishMenuGlow } from "./category-glow";
+import { glowForCategory } from "./category-glow";
 import { MenuItemCard } from "./menu-item-card";
 import { MenuState } from "./menu-state";
 
@@ -20,13 +20,25 @@ type ViewState =
   | Readonly<{ status: "ready"; catalog: MenuCatalogModel }>
   | Readonly<{ status: "error" }>;
 
+/** How long the page has to stay still before a tab click lets go. */
+const CLICK_HOLD_MS = 150;
+/** Keys that scroll the page; pressing one hands control back to the spy. */
+const SCROLL_KEYS = new Set([
+  "ArrowDown",
+  "ArrowUp",
+  "PageDown",
+  "PageUp",
+  "Home",
+  "End",
+  " ",
+]);
+
 function getCategoryDisplayName(name: string) {
   return isCatTreatsCategory(name) ? `${name} (For Cats)` : name;
 }
 
-function prefersMotion() {
+function allowsMotion() {
   return (
-    typeof window !== "undefined" &&
     typeof window.matchMedia === "function" &&
     !window.matchMedia("(prefers-reduced-motion: reduce)").matches
   );
@@ -36,6 +48,8 @@ export function MenuCatalog({ loadMenu = fetchPublicMenu }: MenuCatalogProps) {
   const [viewState, setViewState] = useState<ViewState>({ status: "loading" });
   const [requestVersion, setRequestVersion] = useState(0);
   const [activeCategory, setActiveCategory] = useState(0);
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  const navRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -55,98 +69,149 @@ export function MenuCatalog({ loadMenu = fetchPublicMenu }: MenuCatalogProps) {
     return () => controller.abort();
   }, [loadMenu, requestVersion]);
 
-  // Scroll-spy: highlight the category tab whose section is in view.
+  // Scroll spy. The active category is the last section whose top has
+  // passed the reading line, a third of the way down the space under the
+  // sticky bars, or the last section once the page bottoms out. It is
+  // measured from the layout at most once a frame while the page scrolls,
+  // so the tab follows the page instead of trailing it. A tab click selects
+  // its category straight away and holds it until the scroll it started
+  // settles, so the highlight doesn't walk through the categories between;
+  // a wheel, touch or scroll key in the meantime hands control back at once.
   useEffect(() => {
-    if (
-      viewState.status !== "ready" ||
-      typeof IntersectionObserver !== "function"
-    ) {
+    const nav = navRef.current;
+    if (viewState.status !== "ready" || !nav) {
       return;
     }
     const sections = Array.from(
       document.querySelectorAll<HTMLElement>("[data-menu-category]"),
     );
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            setActiveCategory(
-              Number(entry.target.getAttribute("data-menu-category")),
-            );
-          }
-        }
-      },
-      { rootMargin: "-35% 0px -55% 0px" },
-    );
-    sections.forEach((section) => observer.observe(section));
-    return () => observer.disconnect();
+    let frame = 0;
+    let held = false;
+    let release = 0;
+
+    const measure = () => {
+      frame = 0;
+      if (held) return;
+      const barBottom = nav.getBoundingClientRect().bottom;
+      const line = barBottom + (window.innerHeight - barBottom) / 3;
+      const page = document.documentElement;
+      const atBottom =
+        page.scrollHeight - window.innerHeight > 4 &&
+        window.innerHeight + window.scrollY >= page.scrollHeight - 4;
+      let next = 0;
+      sections.forEach((section, index) => {
+        const box = section.getBoundingClientRect();
+        if (box.height > 0 && box.top <= line) next = index;
+      });
+      setActiveCategory(atBottom ? sections.length - 1 : next);
+    };
+    const settle = () => {
+      window.clearTimeout(release);
+      release = window.setTimeout(() => {
+        held = false;
+      }, CLICK_HOLD_MS);
+    };
+    const onScroll = () => {
+      if (held) settle();
+      else if (!frame) frame = window.requestAnimationFrame(measure);
+    };
+    const onClick = (event: MouseEvent) => {
+      const tab = (event.target as Element | null)?.closest<HTMLElement>(
+        "[data-menu-tab]",
+      );
+      if (!tab) return;
+      held = true;
+      setActiveCategory(Number(tab.dataset.menuTab));
+      settle();
+    };
+    const takeOver = () => {
+      held = false;
+      window.clearTimeout(release);
+    };
+    const onKey = (event: KeyboardEvent) => {
+      if (SCROLL_KEYS.has(event.key)) takeOver();
+    };
+
+    measure();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    window.addEventListener("wheel", takeOver, { passive: true });
+    window.addEventListener("touchstart", takeOver, { passive: true });
+    window.addEventListener("keydown", onKey);
+    nav.addEventListener("click", onClick);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      window.removeEventListener("wheel", takeOver);
+      window.removeEventListener("touchstart", takeOver);
+      window.removeEventListener("keydown", onKey);
+      nav.removeEventListener("click", onClick);
+      window.cancelAnimationFrame(frame);
+      window.clearTimeout(release);
+    };
   }, [viewState]);
 
-  // The category in view sets the page glow (hero rim lights, glow field).
+  // Keep the active tab inside the tab bar, scrolling the bar (never the
+  // page) only when the tab is cut off at either end.
   useEffect(() => {
-    if (viewState.status !== "ready") return;
-    const category = viewState.catalog.categories.filter(
-      (entry) => entry.items.length > 0,
-    )[activeCategory];
-    if (category) publishMenuGlow(glowForCategory(category.name));
-  }, [viewState, activeCategory]);
+    const bar = navRef.current;
+    const tab = bar?.querySelector<HTMLElement>(
+      `[data-menu-tab="${activeCategory}"]`,
+    );
+    if (!bar || !tab || typeof bar.scrollTo !== "function") {
+      return;
+    }
+    const inset = Math.min(
+      Number.parseFloat(getComputedStyle(bar).paddingLeft) || 0,
+      64,
+    );
+    const start = tab.offsetLeft - inset;
+    const end = tab.offsetLeft + tab.offsetWidth + inset - bar.clientWidth;
+    const left =
+      start < bar.scrollLeft ? start : end > bar.scrollLeft ? end : null;
+    if (left !== null) {
+      bar.scrollTo({ left, behavior: allowsMotion() ? "smooth" : "auto" });
+    }
+  }, [activeCategory, viewState]);
 
-  // Cinematic entrances: each category heading and the cards fly in with a
-  // depth stagger the first time they enter the view. Reduced motion and
-  // browsers without IntersectionObserver keep everything static.
-  const rootRef = useRef<HTMLDivElement | null>(null);
+  // Entrances: each category heading and its cards rise in the first time
+  // they reach the view, and cards that arrive together follow each other
+  // in reading order. Reduced motion and browsers without
+  // IntersectionObserver keep everything static.
   useEffect(() => {
+    const root = rootRef.current;
     if (
       viewState.status !== "ready" ||
+      !root ||
       typeof IntersectionObserver !== "function" ||
-      !prefersMotion()
+      !allowsMotion()
     ) {
       return;
     }
-    const root = rootRef.current;
-    root?.classList.add("menu-cine");
+    root.classList.add("menu-cine");
     const reveal = new IntersectionObserver(
       (entries) => {
+        let order = 0;
         for (const entry of entries) {
           if (!entry.isIntersecting) continue;
-          (entry.target as HTMLElement).dataset.in = "true";
-          reveal.unobserve(entry.target);
+          const element = entry.target as HTMLElement;
+          if (element.classList.contains("menu-card")) {
+            element.style.setProperty("--i", String(Math.min(order++, 5)));
+          }
+          element.dataset.in = "true";
+          reveal.unobserve(element);
         }
       },
       { rootMargin: "0px 0px -12% 0px", threshold: 0.05 },
     );
-    document
-      .querySelectorAll<HTMLElement>(".menu-grid")
-      .forEach((grid) =>
-        Array.from(grid.children).forEach((card, i) =>
-          (card as HTMLElement).style.setProperty("--i", String(i % 4)),
-        ),
-      );
-    document
+    root
       .querySelectorAll<HTMLElement>(".menu-cat-head, .menu-grid > .menu-card")
-      .forEach((el) => reveal.observe(el));
+      .forEach((element) => reveal.observe(element));
     return () => {
       reveal.disconnect();
-      root?.classList.remove("menu-cine");
+      root.classList.remove("menu-cine");
     };
   }, [viewState]);
-
-  // Keep the active tab visible inside the horizontally scrolling tab bar
-  // without moving the page itself.
-  useEffect(() => {
-    const bar = document.querySelector<HTMLElement>(".menu-tabs");
-    const tab = bar?.querySelector<HTMLElement>('[aria-current="true"]');
-    if (!bar || !tab || typeof bar.scrollTo !== "function") {
-      return;
-    }
-    const reduce =
-      typeof window.matchMedia === "function" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    bar.scrollTo({
-      left: tab.offsetLeft - (bar.clientWidth - tab.offsetWidth) / 2,
-      behavior: reduce ? "auto" : "smooth",
-    });
-  }, [activeCategory]);
 
   if (viewState.status === "loading") {
     return (
@@ -200,7 +265,8 @@ export function MenuCatalog({ loadMenu = fetchPublicMenu }: MenuCatalogProps) {
   return (
     <div ref={rootRef}>
       <nav
-        className="menu-tabs sticky top-[4.5rem] z-30 menu-tabs--bleed overflow-x-auto border-y border-[var(--border-soft)] bg-[var(--surface-canvas-translucent)] py-3 backdrop-blur-md lg:top-[5rem]"
+        ref={navRef}
+        className="menu-tabs menu-tabs--bleed sticky top-[4.5rem] z-30 overflow-x-auto border-y border-[var(--border-soft)] bg-[var(--surface-canvas-translucent)] py-3 backdrop-blur-md lg:top-[5rem]"
         aria-label="Menu categories"
       >
         <ul className="flex w-max min-w-full gap-2">
@@ -208,8 +274,9 @@ export function MenuCatalog({ loadMenu = fetchPublicMenu }: MenuCatalogProps) {
             <li key={category.id}>
               <a
                 href={`#menu-category-${index + 1}`}
+                data-menu-tab={index}
                 aria-current={activeCategory === index ? "true" : undefined}
-                className="menu-tab nav-link inline-flex min-h-11 items-center whitespace-nowrap rounded-full border border-[var(--border-soft)] bg-[var(--surface-card)] px-4 py-2 text-sm font-bold text-[var(--text-strong)] hover:border-[var(--accent-solid)] hover:bg-[var(--accent-soft)]"
+                className="menu-tab inline-flex min-h-11 items-center whitespace-nowrap rounded-full border border-[var(--border-soft)] bg-[var(--surface-card)] px-4 py-2 text-sm font-bold text-[var(--text-strong)] hover:border-[var(--accent-solid)] hover:bg-[var(--accent-soft)]"
               >
                 {getCategoryDisplayName(category.name)}
               </a>
@@ -264,7 +331,6 @@ export function MenuCatalog({ loadMenu = fetchPublicMenu }: MenuCatalogProps) {
                     key={item.id}
                     item={item}
                     catalog={viewState.catalog}
-                    categoryGlow={glow}
                   />
                 ))}
               </div>
