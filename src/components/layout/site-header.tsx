@@ -29,7 +29,7 @@ export function SiteHeader() {
             <span className="font-display block text-xl leading-none text-[var(--text-strong)]">
               {siteConfig.shortName}
             </span>
-            <span className="block text-xs font-bold tracking-[0.08em] text-[var(--deep-green)] uppercase">
+            <span className="block text-xs font-bold tracking-[0.08em] text-[var(--accent-solid)] uppercase">
               Coffee Shop
             </span>
           </span>

@@ -3,6 +3,8 @@ export type GalleryImage = Readonly<{
   alt: string;
   featured?: boolean;
   landscape?: boolean;
+  /** Customers or staff are in the shot. */
+  people?: boolean;
 }>;
 
 export const galleryImages: readonly GalleryImage[] = [
@@ -14,14 +16,17 @@ export const galleryImages: readonly GalleryImage[] = [
   {
     src: "/images/shop/photo_153.jpg",
     alt: "Customers holding cats around a table inside Brew ni Cat",
+    people: true,
   },
   {
     src: "/images/shop/photo_157.jpg",
     alt: "Customer with a drink and two cats at a Brew ni Cat table",
+    people: true,
   },
   {
     src: "/images/shop/photo_158.jpg",
     alt: "Customers holding cats beside drinks inside Brew ni Cat",
+    people: true,
   },
   {
     src: "/images/shop/photo_152.jpg",
@@ -43,18 +48,22 @@ export const galleryImages: readonly GalleryImage[] = [
   {
     src: "/images/shop/photo_155.jpg",
     alt: "Customers enjoying drinks on the Brew ni Cat patio",
+    people: true,
   },
   {
     src: "/images/shop/photo_154.jpg",
     alt: "Four customers with drinks and desserts at a Brew ni Cat table",
+    people: true,
   },
   {
     src: "/images/shop/photo_156.jpg",
     alt: "Group of customers with drinks and a cat inside Brew ni Cat",
+    people: true,
   },
   {
     src: "/images/shop/photo_159.jpg",
     alt: "Customers beside a cat resting on the Brew ni Cat counter",
+    people: true,
   },
   {
     src: "/images/shop/photo_004.jpg",
@@ -82,34 +91,42 @@ export const galleryImages: readonly GalleryImage[] = [
   {
     src: "/images/shop/photo_030.jpg",
     alt: "Customers gathered around drinks and snacks inside Brew ni Cat",
+    people: true,
   },
   {
     src: "/images/shop/photo_041.jpg",
     alt: "Group enjoying colorful drinks and snacks at Brew ni Cat",
+    people: true,
   },
   {
     src: "/images/shop/photo_045.jpg",
     alt: "Customers seated in Brew ni Cat’s outdoor area",
+    people: true,
   },
   {
     src: "/images/shop/photo_060.jpg",
     alt: "Customers sharing drinks beside a cat at the window counter",
+    people: true,
   },
   {
     src: "/images/shop/photo_063.jpg",
     alt: "Customer holding a green drink beside Brew ni Cat’s wall logo",
+    people: true,
   },
   {
     src: "/images/shop/photo_064.jpg",
     alt: "Customers seated outdoors under warm string lights at Brew ni Cat",
+    people: true,
   },
   {
     src: "/images/shop/photo_074.jpg",
     alt: "Customers seated with cats, drinks, and snacks inside Brew ni Cat",
+    people: true,
   },
   {
     src: "/images/shop/photo_092.jpg",
     alt: "Group gathered around a café table with two cats",
+    people: true,
   },
   {
     src: "/images/shop/photo_119.jpg",
@@ -127,12 +144,20 @@ export const galleryImages: readonly GalleryImage[] = [
   {
     src: "/images/shop/photo_145.jpg",
     alt: "Two people wearing Brew ni Cat aprons at the service counter",
+    people: true,
   },
   {
     src: "/images/shop/photo_146.jpg",
     alt: "Group gathered with cats inside Brew ni Cat Coffee Shop",
+    people: true,
   },
 ];
+
+/**
+ * The gallery's 3D ring is a hero-style showcase, so it only shows cats,
+ * drinks, food and the space. Photos with people stay in the full grid.
+ */
+export const ringImages = galleryImages.filter((image) => !image.people);
 
 /** Home preview reel uses six featured cat/food/space photos (duplicated for the marquee). */
 export const homeGalleryImages = galleryImages

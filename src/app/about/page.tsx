@@ -50,33 +50,48 @@ export default function AboutPage() {
         aria-labelledby="story-heading"
       >
         <Container className="grid gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:gap-16">
-          <Reveal className="grid grid-cols-5 grid-rows-5 gap-3">
-            <Image
-              src="/images/shop/photo_145.jpg"
-              width={768}
-              height={1024}
-              alt="Two people wearing Brew ni Cat aprons at the service counter"
-              priority
-              sizes="(max-width: 1023px) 55vw, 32vw"
-              className="col-span-3 row-span-5 h-full w-full rounded-[2rem] object-cover shadow-[var(--shadow-card)]"
-            />
-            <Image
-              src="/images/shop/photo_009.jpg"
-              width={768}
-              height={1024}
-              alt="Siamese cat in front of the café’s leafy interior wall"
-              sizes="(max-width: 1023px) 36vw, 18vw"
-              className="col-span-2 row-span-3 mt-6 h-full w-full rounded-3xl object-cover shadow-[var(--shadow-subtle)]"
-            />
-            <Image
-              src="/images/shop/photo_063.jpg"
-              width={768}
-              height={1024}
-              alt="Customer holding a green drink beside Brew ni Cat’s wall logo"
-              sizes="(max-width: 1023px) 36vw, 18vw"
-              className="col-span-2 row-span-2 h-full w-full rounded-3xl object-cover shadow-[var(--shadow-subtle)]"
-            />
-          </Reveal>
+          <div className="grid grid-cols-5 grid-rows-5 gap-3">
+            <div
+              className="col-span-3 row-span-5 overflow-hidden rounded-[2rem] shadow-[var(--shadow-card)]"
+              data-unveil=""
+            >
+              <Image
+                src="/images/shop/photo_145.jpg"
+                width={768}
+                height={1024}
+                alt="Two people wearing Brew ni Cat aprons at the service counter"
+                priority
+                sizes="(max-width: 1023px) 55vw, 32vw"
+                className="h-full w-full object-cover"
+              />
+            </div>
+            <div
+              className="col-span-2 row-span-3 mt-6 overflow-hidden rounded-3xl shadow-[var(--shadow-subtle)]"
+              data-unveil=""
+            >
+              <Image
+                src="/images/shop/photo_009.jpg"
+                width={768}
+                height={1024}
+                alt="Siamese cat in front of the café’s leafy interior wall"
+                sizes="(max-width: 1023px) 36vw, 18vw"
+                className="h-full w-full object-cover"
+              />
+            </div>
+            <div
+              className="col-span-2 row-span-2 overflow-hidden rounded-3xl shadow-[var(--shadow-subtle)]"
+              data-unveil=""
+            >
+              <Image
+                src="/images/shop/photo_063.jpg"
+                width={768}
+                height={1024}
+                alt="Customer holding a green drink beside Brew ni Cat’s wall logo"
+                sizes="(max-width: 1023px) 36vw, 18vw"
+                className="h-full w-full object-cover"
+              />
+            </div>
+          </div>
 
           <Reveal delayMs={100}>
             <SectionHeading
@@ -105,20 +120,20 @@ export default function AboutPage() {
       </section>
 
       <section
-        className="border-y border-[var(--border-soft)] bg-[var(--surface-green)] py-14 sm:py-16"
+        className="border-y border-[var(--border-soft)] bg-[var(--surface-accent)] py-14 sm:py-16"
         aria-label="Brew ni Cat facts"
       >
         <Container>
-          <div className="grid gap-4 md:grid-cols-3">
-            {shopDetails.map((detail, index) => (
-              <Reveal key={detail.label} delayMs={index * 80}>
+          <div className="grid gap-4 md:grid-cols-3" data-rise-group="">
+            {shopDetails.map((detail) => (
+              <div key={detail.label}>
                 <div className="surface-lift h-full rounded-3xl bg-[var(--surface-card)] p-6 shadow-[var(--shadow-subtle)]">
                   <p className="eyebrow">{detail.label}</p>
                   <p className="font-display mt-3 text-2xl text-[var(--text-strong)]">
                     {detail.value}
                   </p>
                 </div>
-              </Reveal>
+              </div>
             ))}
           </div>
         </Container>
@@ -132,6 +147,7 @@ export default function AboutPage() {
                 Come say hello
               </p>
               <h2
+                data-split=""
                 id="about-visit-heading"
                 className="font-display mt-3 text-3xl sm:text-4xl"
               >
@@ -146,6 +162,7 @@ export default function AboutPage() {
             <Link
               href="/contact"
               className="button-primary mt-7 shrink-0 lg:mt-0"
+              data-magnetic=""
             >
               Get visit details
             </Link>

@@ -6,6 +6,7 @@ import { Container } from "@/components/ui/container";
 import { PageIntro } from "@/components/ui/page-intro";
 import { siteConfig } from "@/config/site";
 import { useCart } from "@/context/cart-context";
+import { StateScene } from "@/components/three/state-scene";
 import { formatPrice } from "@/lib/menu/format-price";
 import type { FulfillmentType } from "@/types/ordering";
 
@@ -36,11 +37,6 @@ export function CartPageView() {
             at our shop or arrange your preferred external rider.
           </p>
         }
-        aside={
-          <Link href="/menu" className="button-secondary">
-            ← Continue browsing menu
-          </Link>
-        }
       />
 
       <section
@@ -50,22 +46,29 @@ export function CartPageView() {
         <Container>
           {isEmpty ? (
             <div className="mx-auto max-w-xl text-center rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-8 sm:p-12 shadow-[var(--shadow-subtle)]">
-              <div className="mx-auto flex size-20 items-center justify-center rounded-full bg-[var(--surface-warm)] text-[var(--accent-strong)] mb-6">
-                <svg
-                  className="size-10"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.75"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
-                  <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
-                  <line x1="3" y1="6" x2="21" y2="6" />
-                  <path d="M16 10a4 4 0 0 1-8 0" />
-                </svg>
-              </div>
+              <StateScene
+                kind="empty"
+                tone="card"
+                className="mx-auto mb-4 size-44 sm:size-52"
+                fallback={
+                  <div className="mx-auto flex size-20 items-center justify-center rounded-full bg-[var(--surface-warm)] text-[var(--accent-strong)]">
+                    <svg
+                      className="size-10"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.75"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+                      <line x1="3" y1="6" x2="21" y2="6" />
+                      <path d="M16 10a4 4 0 0 1-8 0" />
+                    </svg>
+                  </div>
+                }
+              />
               <h2 className="font-display text-2xl text-[var(--text-strong)] sm:text-3xl">
                 Your cart is empty
               </h2>
@@ -143,7 +146,7 @@ export function CartPageView() {
                             <div className="font-extrabold text-[var(--text-strong)] text-base">
                               Pickup at Shop
                             </div>
-                            <div className="text-xs text-[var(--deep-green)] font-semibold mt-1">
+                            <div className="text-xs text-[var(--accent-solid)] font-semibold mt-1">
                               Free · In-person collection
                             </div>
                           </div>

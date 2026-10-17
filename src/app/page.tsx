@@ -5,38 +5,10 @@ import { HomeShowcase } from "@/components/three/home-showcase";
 import { visitFacts } from "@/components/three/visit-facts";
 import { VisitStage } from "@/components/three/visit-stage";
 import { ExternalLink } from "@/components/ui/external-link";
-import { SectionHeading } from "@/components/ui/section-heading";
 import { Container } from "@/components/ui/container";
 import { Reveal } from "@/components/ui/reveal";
 import { homeGalleryImages } from "@/config/gallery";
 import { siteConfig } from "@/config/site";
-
-const favorites = [
-  {
-    name: "Matcha",
-    nickname: "The Lucky Green Neko",
-    price: "From ₱49",
-    note: "Creamy iced matcha handcrafted with rich green tea, fresh milk, and sweet caramel accents.",
-    image: "/images/menu/items/lucky-green-neko-matcha.jpg",
-    alt: "The Lucky Green Neko iced dirty matcha with an espresso layer",
-  },
-  {
-    name: "Takoyaki",
-    nickname: "Pawsome Balls",
-    price: "From ₱40",
-    note: "Golden Japanese-style savory takoyaki balls drizzled with sweet-savory sauce, Japanese mayo, and bonito flakes.",
-    image: "/images/menu/items/takoyaki-pawsome-balls.jpg",
-    alt: "Takoyaki balls topped with sauce, mayo and bonito flakes",
-  },
-  {
-    name: "Fries",
-    nickname: "Cat Claws",
-    price: "From ₱30",
-    note: "Crispy shoestring fries seasoned in cheese, sour cream, barbecue, or spicy flavoring.",
-    image: "/images/menu/items/fries-cat-claws.jpg",
-    alt: "Fries served in a wire cone at Brew ni Cat",
-  },
-] as const;
 
 export default function HomePage() {
   return (
@@ -86,77 +58,19 @@ export default function HomePage() {
       </section>
 
       <section
-        className="py-16 sm:py-20 lg:py-24"
-        aria-labelledby="favorites-heading"
-      >
-        <Container>
-          <Reveal>
-            <SectionHeading
-              id="favorites-heading"
-              eyebrow="Popular at Brew ni Cat"
-              title="Familiar favorites worth a closer look."
-              description="Matcha, Takoyaki, and Fries are customer-favorite groups. Open the current menu for today’s available options and prices."
-            />
-          </Reveal>
-          <div className="mt-10 grid gap-4 md:grid-cols-3 md:gap-6">
-            {favorites.map((favorite, index) => (
-              <Reveal key={favorite.name} delayMs={index * 90}>
-                <article className="group surface-lift flex h-full overflow-hidden rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] shadow-[var(--shadow-subtle)] md:flex-col">
-                  <div className="relative w-28 shrink-0 overflow-hidden bg-[var(--surface-warm)] sm:w-40 md:aspect-[16/10] md:w-full">
-                    <Image
-                      src={favorite.image}
-                      alt={favorite.alt}
-                      fill
-                      sizes="(max-width: 639px) 112px, (max-width: 767px) 160px, 33vw"
-                      className="object-cover transition-transform duration-500 ease-[var(--ease-cinematic)] group-hover:scale-105"
-                    />
-                    <div className="absolute top-3 right-3 hidden rounded-full border border-black/10 bg-[var(--surface-card)]/95 px-3 py-1 text-xs font-extrabold text-[var(--deep-green)] backdrop-blur-sm shadow-sm md:block">
-                      {favorite.price}
-                    </div>
-                  </div>
-                  <div className="flex min-w-0 flex-1 flex-col p-4 sm:p-5 md:p-6">
-                    <span className="text-xs font-semibold text-[var(--warm-gold)]">
-                      {favorite.nickname}
-                    </span>
-                    <h3 className="font-display mt-1 text-xl text-[var(--text-strong)] md:text-2xl">
-                      {favorite.name}
-                    </h3>
-                    <p className="mt-0.5 text-sm font-extrabold text-[var(--deep-green)] md:hidden">
-                      {favorite.price}
-                    </p>
-                    <p className="mt-2 line-clamp-3 flex-1 text-sm leading-6 text-[var(--text-muted)] md:mt-3 md:line-clamp-none">
-                      {favorite.note}
-                    </p>
-                    <div className="mt-2 md:mt-6 md:border-t md:border-[var(--border-soft)]/60 md:pt-4">
-                      <Link
-                        href="/menu"
-                        className="inline-flex min-h-11 items-center font-extrabold text-[var(--deep-green)] underline decoration-[var(--warm-gold)] decoration-2 underline-offset-4 hover:text-[var(--deep-green-hover)]"
-                      >
-                        Browse the menu
-                      </Link>
-                    </div>
-                  </div>
-                </article>
-              </Reveal>
-            ))}
-          </div>
-        </Container>
-      </section>
-
-      <section
         className="border-y border-[var(--border-soft)] bg-[var(--surface-raised)] py-16 text-[var(--text-strong)] sm:py-20 lg:py-24"
         aria-labelledby="about-preview-heading"
       >
         <Container className="grid gap-10 lg:grid-cols-[1fr_1.05fr] lg:items-center lg:gap-16">
           <Reveal className="relative mx-auto w-full max-w-[34rem] pb-8 pl-8">
-            <div className="about-drama">
+            <div className="about-drama" data-unveil="">
               <Image
                 src="/images/shop/photo_124.jpg"
                 width={900}
                 height={1125}
                 alt="Brew ni Cat seating area with a cat resting near the window"
                 sizes="(max-width: 1023px) 90vw, 42vw"
-                className="ken-burns-slow aspect-[4/5] w-full object-cover"
+                className="aspect-[4/5] w-full object-cover"
               />
             </div>
             <div className="absolute bottom-0 left-0 max-w-56 rounded-2xl bg-[var(--accent-strong)] p-5 text-[var(--on-accent)] shadow-xl">
@@ -170,6 +84,7 @@ export default function HomePage() {
           </Reveal>
           <Reveal delayMs={120}>
             <h2
+              data-split=""
               id="about-preview-heading"
               className="font-display text-4xl text-balance sm:text-5xl"
             >
@@ -211,7 +126,7 @@ export default function HomePage() {
             </div>
 
             <div className="mt-8">
-              <Link href="/about" className="button-primary">
+              <Link href="/about" className="button-primary" data-magnetic="">
                 Read about the shop
               </Link>
             </div>
@@ -220,13 +135,14 @@ export default function HomePage() {
       </section>
 
       <section
-        className="bg-[var(--surface-cinema)] py-16 text-[var(--text-strong)] sm:py-20 lg:py-24"
+        className="bg-[var(--surface-canvas)] py-16 text-[var(--text-strong)] sm:py-20 lg:py-24"
         aria-labelledby="gallery-preview-heading"
       >
         <Container>
           <Reveal className="flex flex-col gap-6 border-b border-white/10 pb-8 sm:flex-row sm:items-end sm:justify-between">
             <div className="max-w-2xl">
               <h2
+                data-split=""
                 id="gallery-preview-heading"
                 className="font-display text-4xl text-balance sm:text-5xl"
               >
@@ -285,92 +201,34 @@ export default function HomePage() {
 
       <section
         id="visit"
-        className="scroll-mt-20 border-t border-[var(--border-soft)] py-16 sm:py-20 lg:scroll-mt-24"
+        className="scroll-mt-20 border-t border-[var(--border-soft)] pt-16 sm:pt-20 lg:scroll-mt-24"
         aria-labelledby="visit-heading"
       >
-        <Container>
-          <Reveal className="depth-card rounded-3xl p-6 sm:p-9">
-            <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-start">
-              <div>
-                <h2
-                  id="visit-heading"
-                  className="font-display text-3xl text-[var(--text-strong)] sm:text-4xl"
-                >
-                  Find us in Kabacan
-                </h2>
-                <address className="mt-5 text-base leading-7 text-[var(--text-muted)] not-italic sm:text-lg sm:leading-8">
-                  <strong className="text-[var(--text-strong)]">
-                    {siteConfig.name}
-                  </strong>
-                  <br />
-                  {siteConfig.address.street}
-                  <br />
-                  {siteConfig.address.locality}, {siteConfig.address.country}
-                  <br />
-                  {siteConfig.address.landmark}
-                </address>
-                <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-                  <ExternalLink
-                    href={siteConfig.address.mapUrl}
-                    className="button-primary"
-                  >
-                    Open in Maps
-                  </ExternalLink>
-                  <Link href="/contact" className="button-secondary">
-                    Contact and visit details
-                  </Link>
-                </div>
-              </div>
-
-              <aside
-                className="glass-panel rounded-2xl border-[var(--notice-border)] bg-[var(--notice-surface)] p-5 sm:p-6"
-                aria-label="Before you visit"
-              >
-                <p className="text-xs font-bold tracking-[0.12em] text-[var(--notice-text)] uppercase">
-                  Hours &amp; Schedule
-                </p>
-                <p className="mt-2 text-lg font-semibold text-[var(--text-strong)]">
-                  Closed every Sunday.
-                </p>
-                <p className="mt-2 text-sm leading-6 text-[var(--notice-text)]">
-                  {siteConfig.operations.hoursNotice}
-                </p>
-                <dl className="mt-5 grid gap-3 border-t border-[var(--notice-border)] pt-4 text-sm sm:grid-cols-2">
-                  <div>
-                    <dt className="text-xs font-bold tracking-wide text-[var(--text-subtle)] uppercase">
-                      Payment
-                    </dt>
-                    <dd className="mt-1 font-semibold text-[var(--text-strong)]">
-                      Cash · GCash
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-xs font-bold tracking-wide text-[var(--text-subtle)] uppercase">
-                      Takeout
-                    </dt>
-                    <dd className="mt-1 font-semibold text-[var(--text-strong)]">
-                      {siteConfig.operations.takeoutFee}
-                    </dd>
-                  </div>
-                </dl>
-                <div className="mt-4 rounded-xl border border-[var(--notice-border)] bg-white/5 p-3.5 text-xs leading-5 text-[var(--notice-text)]">
-                  <strong className="block font-bold text-[var(--text-strong)]">
-                    Local delivery in Kabacan:
-                  </strong>
-                  <span>
-                    Orders can be picked up for takeout or arranged with
-                    independent local riders (such as Papa&apos;s Delivery).
-                  </span>
-                </div>
-                <ExternalLink
-                  href={siteConfig.social.facebook}
-                  className="mt-5 inline-flex min-h-11 items-center text-sm font-bold text-[var(--deep-green)] underline decoration-[var(--border-strong)] underline-offset-4"
-                >
-                  Check Facebook for today’s hours
-                </ExternalLink>
-              </aside>
-            </div>
-          </Reveal>
+        <Container className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h2
+              data-split=""
+              id="visit-heading"
+              className="font-display text-3xl text-[var(--text-strong)] sm:text-4xl lg:text-5xl"
+            >
+              Find us in Kabacan
+            </h2>
+            <address
+              className="mt-4 text-base leading-7 text-[var(--text-muted)] not-italic sm:text-lg"
+              data-rise=""
+            >
+              {`${siteConfig.address.street}, ${siteConfig.address.locality} · ${siteConfig.address.landmark}`}
+            </address>
+          </div>
+          <div data-rise="">
+            <ExternalLink
+              href={siteConfig.address.mapUrl}
+              className="button-primary"
+              data-magnetic=""
+            >
+              Open in Maps
+            </ExternalLink>
+          </div>
         </Container>
         <VisitStage facts={visitFacts} className="visit-stage--bleed mt-6" />
       </section>
