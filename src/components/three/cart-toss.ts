@@ -12,7 +12,7 @@ export type CartTossDetail = Readonly<{
 }>;
 
 export const CART_TOSS_EVENT = "bnc:cart-toss";
-export const CART_TOSS_MS = 900;
+export const CART_TOSS_MS = 420;
 
 type FxWindow = Window & { __bncCartFx?: boolean };
 

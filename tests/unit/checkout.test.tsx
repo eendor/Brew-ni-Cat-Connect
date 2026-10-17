@@ -283,8 +283,17 @@ describe("Checkout Flow & Step Transitions", () => {
 
     // CTAs
     expect(
-      screen.getByRole("link", { name: "Start Another Order" }),
+      screen.getByRole("link", { name: "Start a new order" }),
     ).toHaveAttribute("href", "/menu");
+
+    // The summary survives a refresh and the cart is kept until the summary
+    // is copied or a new order is started
+    expect(
+      window.localStorage.getItem("brew-ni-cat:prepared-summary"),
+    ).toContain("Iced Caramel Latte");
+    expect(
+      screen.getByText(/Takeout box: ₱10, not included in the subtotal/),
+    ).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: "Return to Home" }),
     ).toHaveAttribute("href", "/");

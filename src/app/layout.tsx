@@ -3,6 +3,7 @@ import { Archivo, Big_Shoulders } from "next/font/google";
 import type { ReactNode } from "react";
 
 import { CartDrawer } from "@/components/cart/cart-drawer";
+import { CartUndoToast } from "@/components/cart/cart-undo-toast";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { ScrollMotion } from "@/components/motion/scroll-motion";
@@ -62,7 +63,13 @@ type RootLayoutProps = Readonly<{
 
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
-    <html lang="en" className={`${display.variable} ${body.variable}`}>
+    <html
+      lang="en"
+      className={`${display.variable} ${body.variable}`}
+      // lets Next turn smooth scrolling off while it resets the scroll
+      // position on navigation (otherwise new pages start part-way down)
+      data-scroll-behavior="smooth"
+    >
       <body>
         <a className="skip-link" href="#main-content">
           Skip to main content
@@ -76,6 +83,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
             <SiteFooter />
           </div>
           <CartDrawer />
+          <CartUndoToast />
           <ScrollMotion />
           <CartFxLayer />
         </CartProvider>

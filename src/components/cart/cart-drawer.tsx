@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 
+import { siteConfig } from "@/config/site";
 import { useCart } from "@/context/cart-context";
 import { useFocusTrap } from "@/lib/accessibility/focus-trap";
 import { formatPrice } from "@/lib/menu/format-price";
@@ -140,7 +141,7 @@ export function CartDrawer() {
                   <button
                     type="button"
                     className="-mr-2 inline-flex min-h-11 items-center rounded-full px-2 text-sm font-bold text-[var(--text-muted)] hover:text-[var(--danger)] transition-colors"
-                    onClick={clearCart}
+                    onClick={() => clearCart()}
                   >
                     Clear all
                   </button>
@@ -183,7 +184,8 @@ export function CartDrawer() {
                 </strong>
                 Available for pickup at Segundo St or external rider
                 arrangement. Payment is settled via Cash or GCash directly with
-                the shop.
+                the shop. The {siteConfig.operations.takeoutFee} is not included
+                in the subtotal; the shop confirms it when you order.
               </div>
 
               <div className="grid gap-2">

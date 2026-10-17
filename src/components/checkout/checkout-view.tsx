@@ -2,13 +2,25 @@
 
 import { validateDetails as validateDetailsHelper } from "@/lib/ordering/validation";
 import Link from "next/link";
-import { useEffect, useId, useRef, useState } from "react";
+import {
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 
 import { Container } from "@/components/ui/container";
 import { ExternalLink } from "@/components/ui/external-link";
 import { PageIntro } from "@/components/ui/page-intro";
 import { siteConfig } from "@/config/site";
 import { useCart } from "@/context/cart-context";
+import {
+  clearStoredSummary,
+  getStoredSummary,
+  saveStoredSummary,
+  subscribeStoredSummary,
+} from "@/lib/ordering/summary-storage";
 import { fetchPublicMenu } from "@/lib/menu/fetch-public-menu";
 import { formatPrice } from "@/lib/menu/format-price";
 import type { MenuCatalog } from "@/types/menu";
@@ -57,7 +69,7 @@ export function formatOrderSummaryText(summary: PreparedOrderSummary): string {
     itemsText,
     `Subtotal: ${formatPrice(summary.subtotal)}`,
     `Payment preference: ${summary.customer.paymentPreference} at counter`,
-    `Packaging: ${siteConfig.operations.takeoutFee} applies to takeout.`,
+    `Takeout box: ${siteConfig.operations.takeoutBoxPrice}, not included in the subtotal (the shop confirms it).`,
   ]
     .filter(Boolean)
     .join("\n");
@@ -81,7 +93,16 @@ export function CheckoutView({
     clearCart,
   } = useCart();
 
-  const [step, setStep] = useState<CheckoutStep>("details");
+  const [formStep, setStep] = useState<CheckoutStep>("details");
+  // The generated summary survives a refresh; while one is stored the page
+  // stays on the final step until the visitor starts a new order.
+  const preparedSummary = useSyncExternalStore(
+    subscribeStoredSummary,
+    getStoredSummary<PreparedOrderSummary>,
+    () => null,
+  );
+  const step: CheckoutStep = preparedSummary ? "send" : formStep;
+  const flowRef = useRef<HTMLElement>(null);
   const [customer, setCustomer] = useState<CustomerDetails>({
     name: "",
     phone: "",
@@ -89,8 +110,6 @@ export function CheckoutView({
     paymentPreference: "Cash",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [preparedSummary, setPreparedSummary] =
-    useState<PreparedOrderSummary | null>(null);
   const [revalidationWarnings, setRevalidationWarnings] = useState<
     readonly string[]
   >([]);
@@ -126,15 +145,25 @@ export function CheckoutView({
 
   function goToStep(nextStep: CheckoutStep) {
     setStep(nextStep);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    // after the step renders, bring its form section (not the page hero)
+    // to the top under the sticky header and move focus to its heading
     setTimeout(() => {
-      if (nextStep === "details") {
-        step1HeadingRef.current?.focus();
-      } else if (nextStep === "review") {
-        step2HeadingRef.current?.focus();
-      } else if (nextStep === "send") {
-        step3HeadingRef.current?.focus();
-      }
+      const reduce = window.matchMedia?.(
+        "(prefers-reduced-motion: reduce)",
+      ).matches;
+      const flow = flowRef.current;
+      if (typeof flow?.scrollIntoView === "function")
+        flow.scrollIntoView({
+          behavior: reduce ? "auto" : "smooth",
+          block: "start",
+        });
+      const heading =
+        nextStep === "details"
+          ? step1HeadingRef.current
+          : nextStep === "review"
+            ? step2HeadingRef.current
+            : step3HeadingRef.current;
+      heading?.focus({ preventScroll: true });
     }, 50);
   }
 
@@ -165,15 +194,17 @@ export function CheckoutView({
       itemCount,
     };
 
-    setPreparedSummary(summary);
-    clearCart();
+    // the cart stays until the summary is copied or a new order is started
+    saveStoredSummary(summary);
     goToStep("send");
   }
 
   function copySummaryToClipboard(summary: PreparedOrderSummary) {
     const text = formatOrderSummaryText(summary);
-    void navigator.clipboard.writeText(text);
+    void navigator.clipboard?.writeText(text);
     setIsCopied(true);
+    // copied: the order now lives in the visitor's message to the shop
+    clearCart({ undoable: false });
     setTimeout(() => setIsCopied(false), 2500);
   }
 
@@ -256,7 +287,11 @@ export function CheckoutView({
         }
       />
 
-      <section className="py-12 sm:py-16 lg:py-20" aria-label="Checkout flow">
+      <section
+        ref={flowRef}
+        className="scroll-mt-20 py-12 sm:py-16 lg:scroll-mt-24 lg:py-20"
+        aria-label="Checkout flow"
+      >
         <Container>
           {/* Revalidation Warnings Banner */}
           {revalidationWarnings.length > 0 && step !== "send" ? (
@@ -356,9 +391,9 @@ export function CheckoutView({
             <form
               onSubmit={handleProceedToReview}
               noValidate
-              className="grid gap-10 lg:grid-cols-12 lg:items-start"
+              className="grid gap-10 min-[900px]:grid-cols-12 min-[900px]:items-start min-[900px]:gap-8 xl:gap-12"
             >
-              <div className="space-y-8 lg:col-span-7 xl:col-span-8">
+              <div className="space-y-8 min-[900px]:col-span-7 xl:col-span-8">
                 {/* Fulfillment Selection */}
                 <div className="rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-6 sm:p-8 shadow-[var(--shadow-subtle)]">
                   <h2
@@ -653,7 +688,7 @@ export function CheckoutView({
               </div>
 
               {/* Order Summary Sidebar */}
-              <div className="lg:col-span-5 xl:col-span-4">
+              <div className="min-[900px]:col-span-5 xl:col-span-4">
                 <div className="sticky top-28 rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-6 sm:p-8 shadow-[var(--shadow-card)] space-y-6">
                   <h3 className="font-display text-xl text-[var(--text-strong)] pb-4 border-b border-[var(--border-soft)]">
                     Order Summary
@@ -676,10 +711,11 @@ export function CheckoutView({
                       </span>
                     </div>
 
-                    <div className="flex justify-between text-[var(--text-muted)]">
-                      <span>Takeout packaging</span>
-                      <span className="text-xs font-semibold text-[var(--text-subtle)]">
-                        {siteConfig.operations.takeoutFee} upon collection
+                    <div className="flex justify-between gap-4 text-[var(--text-muted)]">
+                      <span>Takeout box</span>
+                      <span className="text-right text-xs font-semibold text-[var(--text-subtle)]">
+                        {siteConfig.operations.takeoutBoxPrice}, paid at the
+                        shop · not in subtotal
                       </span>
                     </div>
 
@@ -702,8 +738,9 @@ export function CheckoutView({
                     <strong className="block font-bold text-[var(--text-strong)]">
                       Shop Hours & Takeout Note
                     </strong>
-                    {siteConfig.operations.hoursNotice} Takeout packaging incurs
-                    a confirmed {siteConfig.operations.takeoutFee}. Payment is
+                    {siteConfig.operations.hoursNotice} The{" "}
+                    {siteConfig.operations.takeoutFee} is not included in the
+                    subtotal; the shop confirms it when you order. Payment is
                     settled via Cash or GCash directly with the shop.
                   </div>
 
@@ -711,14 +748,14 @@ export function CheckoutView({
                     type="submit"
                     className="button-primary w-full text-center py-3.5 text-base"
                   >
-                    Continue to Order Review →
+                    Continue to Order Review{"\u00a0"}→
                   </button>
 
                   <Link
                     href="/cart"
                     className="button-secondary w-full text-center text-sm"
                   >
-                    ← Back to Cart
+                    ←{"\u00a0"}Back to Cart
                   </Link>
                 </div>
               </div>
@@ -727,8 +764,8 @@ export function CheckoutView({
 
           {/* STEP 2: Order Review Screen Before Send */}
           {step === "review" && (
-            <div className="grid gap-10 lg:grid-cols-12 lg:items-start">
-              <div className="space-y-8 lg:col-span-7 xl:col-span-8">
+            <div className="grid gap-10 min-[900px]:grid-cols-12 min-[900px]:items-start min-[900px]:gap-8 xl:gap-12">
+              <div className="space-y-8 min-[900px]:col-span-7 xl:col-span-8">
                 {/* Itemized Order Review */}
                 <div className="rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-6 sm:p-8 shadow-[var(--shadow-subtle)]">
                   <div className="flex items-center justify-between pb-4 border-b border-[var(--border-soft)] mb-6">
@@ -837,7 +874,7 @@ export function CheckoutView({
               </div>
 
               {/* Review Sidebar */}
-              <div className="lg:col-span-5 xl:col-span-4">
+              <div className="min-[900px]:col-span-5 xl:col-span-4">
                 <div className="sticky top-28 rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-6 sm:p-8 shadow-[var(--shadow-card)] space-y-6">
                   <h3 className="font-display text-xl text-[var(--text-strong)] pb-4 border-b border-[var(--border-soft)]">
                     Final Review
@@ -860,10 +897,11 @@ export function CheckoutView({
                       </span>
                     </div>
 
-                    <div className="flex justify-between text-[var(--text-muted)]">
-                      <span>Takeout packaging</span>
-                      <span className="text-xs font-semibold text-[var(--text-subtle)]">
-                        {siteConfig.operations.takeoutFee} upon collection
+                    <div className="flex justify-between gap-4 text-[var(--text-muted)]">
+                      <span>Takeout box</span>
+                      <span className="text-right text-xs font-semibold text-[var(--text-subtle)]">
+                        {siteConfig.operations.takeoutBoxPrice}, paid at the
+                        shop · not in subtotal
                       </span>
                     </div>
 
@@ -897,7 +935,7 @@ export function CheckoutView({
                     onClick={handleProceedToSend}
                     className="button-primary w-full text-center py-3.5 text-base"
                   >
-                    Proceed to Send to Shop →
+                    Proceed to Send to Shop{"\u00a0"}→
                   </button>
 
                   <button
@@ -905,7 +943,7 @@ export function CheckoutView({
                     onClick={() => goToStep("details")}
                     className="button-secondary w-full text-center text-sm"
                   >
-                    ← Back to Edit Details
+                    ←{"\u00a0"}Back to Edit Details
                   </button>
                 </div>
               </div>
@@ -914,7 +952,7 @@ export function CheckoutView({
 
           {/* STEP 3: Order Summary for the Shop (Send to Shop) */}
           {step === "send" && preparedSummary && (
-            <div className="mx-auto max-w-2xl">
+            <div className="mx-auto max-w-4xl">
               <div className="rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-8 sm:p-12 shadow-[var(--shadow-card)] text-center">
                 <div className="mx-auto flex size-20 items-center justify-center rounded-full bg-[var(--surface-warm)] text-[var(--accent-strong)] mb-6">
                   <svg
@@ -1043,10 +1081,10 @@ export function CheckoutView({
                         <strong className="text-[var(--text-strong)]">
                           {formatPrice(preparedSummary.subtotal)}
                         </strong>{" "}
-                        (plus confirmed {siteConfig.operations.takeoutFee} for
-                        takeout packaging) via{" "}
-                        {preparedSummary.customer.paymentPreference} at the
-                        counter.
+                        via {preparedSummary.customer.paymentPreference} at the
+                        counter. The {siteConfig.operations.takeoutFee} is not
+                        included in that amount; the shop confirms it when you
+                        order.
                       </li>
                     </ol>
                   ) : (
@@ -1076,8 +1114,15 @@ export function CheckoutView({
 
                 {/* CTAs */}
                 <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
-                  <Link href="/menu" className="button-primary">
-                    Start Another Order
+                  <Link
+                    href="/menu"
+                    className="button-primary"
+                    onClick={() => {
+                      clearStoredSummary();
+                      clearCart({ undoable: false });
+                    }}
+                  >
+                    Start a new order
                   </Link>
                   <Link href="/" className="button-secondary">
                     Return to Home

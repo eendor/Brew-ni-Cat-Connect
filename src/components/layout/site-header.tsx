@@ -41,7 +41,7 @@ export function SiteHeader() {
               <li key={item.href}>
                 <NavLink
                   href={item.href}
-                  className="nav-link inline-flex min-h-11 items-center rounded-full px-4 py-2 text-xs font-bold tracking-[0.1em] text-[var(--text-muted)] uppercase hover:text-[var(--text-strong)] aria-[current=page]:text-[var(--text-strong)]"
+                  className="nav-link inline-flex min-h-11 items-center rounded-full px-3 py-2 text-xs xl:px-4 font-bold tracking-[0.1em] text-[var(--text-muted)] uppercase hover:text-[var(--text-strong)] aria-[current=page]:text-[var(--text-strong)]"
                 >
                   {item.label}
                 </NavLink>
@@ -50,7 +50,7 @@ export function SiteHeader() {
           </ul>
         </nav>
 
-        <div className="hidden lg:flex lg:items-center lg:gap-3">
+        <div className="hidden lg:flex lg:items-center lg:gap-4 xl:gap-5">
           <CartTriggerButton />
           <Link
             href="/contact"

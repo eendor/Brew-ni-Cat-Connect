@@ -80,9 +80,9 @@ export function CartPageView() {
               </div>
             </div>
           ) : (
-            <div className="grid gap-10 lg:grid-cols-12 lg:items-start">
+            <div className="grid gap-10 min-[900px]:grid-cols-12 min-[900px]:items-start min-[900px]:gap-8 xl:gap-12">
               {/* Left Column: Items and Fulfillment Selection */}
-              <div className="space-y-8 lg:col-span-7 xl:col-span-8">
+              <div className="space-y-8 min-[900px]:col-span-7 xl:col-span-8">
                 {/* Cart Lines Card */}
                 <div className="rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-6 sm:p-8 shadow-[var(--shadow-subtle)]">
                   <div className="flex items-center justify-between pb-4 border-b border-[var(--border-soft)] mb-6">
@@ -97,7 +97,7 @@ export function CartPageView() {
                     <button
                       type="button"
                       className="-mr-2 inline-flex min-h-11 items-center rounded-full px-2 text-sm font-bold text-[var(--text-muted)] hover:text-[var(--danger)] transition-colors"
-                      onClick={clearCart}
+                      onClick={() => clearCart()}
                     >
                       Clear cart
                     </button>
@@ -217,7 +217,7 @@ export function CartPageView() {
               </div>
 
               {/* Right Column: Order Summary Card */}
-              <div className="lg:col-span-5 xl:col-span-4">
+              <div className="min-[900px]:col-span-5 xl:col-span-4">
                 <div className="sticky top-28 rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-6 sm:p-8 shadow-[var(--shadow-card)] space-y-6">
                   <h3 className="font-display text-xl text-[var(--text-strong)] pb-4 border-b border-[var(--border-soft)]">
                     Order Summary
@@ -249,6 +249,14 @@ export function CartPageView() {
                       </span>
                     </div>
 
+                    <div className="flex justify-between gap-4 text-[var(--text-muted)]">
+                      <span>Takeout box</span>
+                      <span className="text-right text-xs font-semibold text-[var(--text-subtle)]">
+                        {siteConfig.operations.takeoutBoxPrice}, paid at the
+                        shop · not in subtotal
+                      </span>
+                    </div>
+
                     <div className="pt-3 border-t border-[var(--border-soft)] flex items-baseline justify-between">
                       <div>
                         <span className="block text-base font-extrabold text-[var(--text-strong)]">
@@ -277,7 +285,7 @@ export function CartPageView() {
                     href="/checkout"
                     className="button-primary w-full text-center py-3.5 text-base"
                   >
-                    Proceed to Checkout →
+                    Proceed to Checkout{"\u00a0"}→
                   </Link>
                 </div>
               </div>

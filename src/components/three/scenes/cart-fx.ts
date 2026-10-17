@@ -2,7 +2,11 @@ import gsap from "gsap";
 import * as THREE from "three";
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
 
-import { CART_TOSS_EVENT, type CartTossDetail } from "../cart-toss";
+import {
+  CART_TOSS_EVENT,
+  CART_TOSS_MS,
+  type CartTossDetail,
+} from "../cart-toss";
 import {
   disposeScene,
   loadImage,
@@ -214,7 +218,8 @@ export async function initCartFx(canvas: HTMLCanvasElement, quality: Quality) {
     const o = { t: 0 };
     gsap.to(o, {
       t: 1,
-      duration: 0.8,
+      // short but readable: the drawer opens as soon as it lands
+      duration: CART_TOSS_MS / 1000,
       ease: "power2.inOut",
       onUpdate() {
         const t = o.t;
@@ -225,7 +230,7 @@ export async function initCartFx(canvas: HTMLCanvasElement, quality: Quality) {
           it * it * a.z + 2 * it * t * b.z + t * t * c.z,
         );
         token.rotation.set(t * 5, t * 2.2, t * 3);
-        token.scale.setScalar(1.15 - 0.7 * t);
+        token.scale.setScalar(1.6 - 1.05 * t);
       },
       onComplete() {
         token.visible = false;

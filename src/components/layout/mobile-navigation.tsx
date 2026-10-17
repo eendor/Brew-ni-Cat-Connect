@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 import type { NavigationItem } from "@/config/site";
 
@@ -29,7 +30,14 @@ export function MobileNavigation({ items }: MobileNavigationProps) {
     }
 
     document.addEventListener("keydown", handleEscape);
-    return () => document.removeEventListener("keydown", handleEscape);
+    // lock page scroll behind the open menu (scrollbar-gutter keeps width)
+    const root = document.documentElement;
+    const previous = root.style.overflow;
+    root.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", handleEscape);
+      root.style.overflow = previous;
+    };
   }, [isOpen]);
 
   function closeNavigation() {
@@ -74,13 +82,27 @@ export function MobileNavigation({ items }: MobileNavigationProps) {
         )}
       </button>
 
+      {isOpen
+        ? createPortal(
+            // portalled: the header's backdrop-filter would otherwise be the
+            // containing block of this fixed scrim
+            <div
+              className="mobile-nav-scrim fixed inset-0 z-40 bg-[var(--ink-scrim)] backdrop-blur-sm lg:hidden"
+              aria-hidden="true"
+              data-testid="mobile-nav-scrim"
+              onClick={closeNavigation}
+            />,
+            document.body,
+          )
+        : null}
+
       <nav
         id="mobile-navigation"
         className="motion-drop-in absolute inset-x-0 top-full border-t border-[var(--border-soft)] bg-[var(--surface-canvas)] px-5 py-5 shadow-[var(--shadow-card)]"
         aria-label="Mobile navigation"
         hidden={!isOpen}
       >
-        <ul className="mx-auto grid w-full max-w-[72rem] gap-1">
+        <ul className="mx-auto grid w-full max-w-[var(--shell-width)] gap-1">
           {items.map((item) => (
             <li key={item.href}>
               <NavLink
@@ -93,7 +115,7 @@ export function MobileNavigation({ items }: MobileNavigationProps) {
             </li>
           ))}
         </ul>
-        <div className="mx-auto mt-4 flex w-full max-w-[72rem] flex-col gap-1 border-t border-[var(--border-soft)] px-4 pt-4 text-sm text-[var(--text-muted)]">
+        <div className="mx-auto mt-4 flex w-full max-w-[var(--shell-width)] flex-col gap-1 border-t border-[var(--border-soft)] px-4 pt-4 text-sm text-[var(--text-muted)]">
           <span className="font-bold text-[var(--text-strong)]">
             Segundo St, Poblacion, Kabacan
           </span>
