@@ -16,7 +16,7 @@ export default function ErrorPage({ reset }: ErrorPageProps) {
         <p className="text-sm font-bold tracking-[0.16em] text-[var(--accent-strong)] uppercase">
           Temporary interruption
         </p>
-        <h1 className="font-display mt-3 text-4xl font-semibold tracking-tight text-[var(--text-strong)]">
+        <h1 className="font-display mt-3 text-4xl text-[var(--text-strong)]">
           Something went wrong
         </h1>
         <p className="mx-auto mt-4 max-w-lg leading-7 text-[var(--text-muted)]">
@@ -27,7 +27,7 @@ export default function ErrorPage({ reset }: ErrorPageProps) {
           <button
             type="button"
             onClick={reset}
-            className="inline-flex min-h-11 items-center justify-center rounded-full bg-[var(--accent-solid)] px-5 py-2 text-sm font-bold text-white transition-colors hover:bg-[var(--accent-solid-hover)]"
+            className="inline-flex min-h-11 items-center justify-center rounded-full bg-[var(--accent-solid)] px-5 py-2 text-sm font-bold text-[var(--on-accent)] transition-colors hover:bg-[var(--accent-solid-hover)]"
           >
             Try again
           </button>

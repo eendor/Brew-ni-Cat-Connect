@@ -448,3 +448,57 @@ The required production follow-up is to restore RLS and add a separately reviewe
 ### 17.4 Media and privacy boundary
 
 The official logo and 19 selected approved shop/customer images ship from `public/images`. Next.js Image supplies responsive sizing and optimization. Alternative text is generic and factual; it does not name customers or infer personal/sensitive attributes. The application does not add customer-recognition, analytics, upload, or external media-processing services.
+
+## 18. WebGL Experience and Motion Layers (PR #23)
+
+```mermaid
+flowchart LR
+    Page[Server-rendered page: full static content]
+    Gate{WebGL 2 and motion allowed?}
+    Dyn[next/dynamic, ssr: false]
+    Scenes[Scene modules: plain three.js]
+    Ticker[Single gsap.ticker loop + ScrollTrigger]
+    Cart[useCart addItem]
+    Toss[requestCartToss event]
+    Motion[Motion director + route curtain + overlay presence]
+
+    Page --> Gate
+    Gate -- no --> Page
+    Gate -- yes --> Dyn --> Scenes
+    Scenes --> Ticker
+    Cart --> Toss --> Scenes
+    Page -- data-split / data-rise / data-unveil --> Motion
+```
+
+### 18.1 Modules
+
+| Path | Role |
+| --- | --- |
+| `src/components/three/engine/` | Renderer setup (ACES, sRGB, shadows) with per-canvas release, cached HDRI environment that retries after a failed download, procedural PBR texture generators, post-processing chain (render → bokeh → bloom → output → grain) with shader precompiling, shared frame loop, device quality and reduced-motion checks, frame budget, and start gates (`whenNear`, `whenIdle`) |
+| `src/components/three/scenes/` | One module per scene: home showcase, menu hero, add-to-cart toss, gallery ring, visit sign and street model, ambient page backdrops, state scenes (empty cart, order ready, not found), and the shared product models |
+| `src/components/three/canvas/` | Client components that own a `<canvas>`, start and dispose a scene through `useScene`, and connect ScrollTrigger |
+| `src/components/three/*.tsx` | Page-level wrappers with the static fallback: `HomeShowcase`, `MenuHero`, `CartFxLayer`, `GalleryRing`, `VisitStage`, `AmbientBackdrop`, `StateScene` |
+| `src/components/motion/` | `MotionDirector` (entrances and scroll reveals by data attribute, run before paint on every route), `RouteCurtain` (title-card page transitions), `usePresence` (overlay enter and exit), `ScrollMotion` (header state and hero progress) |
+
+### 18.2 3D per route
+
+| Route | 3D | Static fallback |
+| --- | --- | --- |
+| `/` | Pinned scroll showcase: PET cup with real refraction, condensation and ice (Matcha, Cat-Feine), takoyaki, fries and Buldak Carbo, with floating ice, tea leaves, coffee beans and bonito flakes; visit sign and street model in "Find us in Kabacan" on a transparent full-bleed canvas, started as the visitor nears it | Five-item photo grid, plain sign type |
+| `/menu` | Full-viewport hero: backlit "THE MENU" over turning cups with matcha-green and amber rim light and floating ice, beans and leaves that dolly and fade into the catalog on scroll; plain menu cards with the shop photo across the top; Add to Order throws the item photo into the header cart button (420 ms), which bumps, before the drawer opens | Plain hero heading and the same plain menu cards |
+| `/gallery` | Ambient backdrop; curved, draggable ring of the 13 gallery photos without people, with prev/next buttons and a live caption | Full photo grid (always present) |
+| `/contact` | Ambient backdrop; flip-able OPEN/CLOSED sign and street model (Pulido Eatery on the left, the small Brew ni Cat unit on its right) | Plain sign type |
+| `/about` | Ambient backdrop behind the page heading | Plain heading background |
+| `/cart`, `/checkout` | Ambient backdrop; an empty clear cup with drifting ice and beans for an empty cart; on checkout, the cup pouring full of matcha when the order summary is ready | Static icons |
+| Not found | The empty cup tipped over on a shadowed floor in front of a backlit "404" | Large "404" type |
+
+### 18.3 Rules
+
+- Each feature uses its own WebGL canvas. The cart canvas (only on `/menu`) sits at 60, above the header, never takes pointer events and is hidden except during a toss. The order dialog and cart drawer sit at 70, the undo toast at 80 and the route curtain at 95.
+- Layout is full-bleed: section backgrounds and 3D stages span the viewport; text and grids sit in `Container` (`--shell-max` 90rem of content plus `--shell-pad` fluid gutters). Cart and checkout split into form/items and summary columns from 900 px.
+- On the home page the showcase stage starts under the translucent header (negative top margin equal to the header height) so the heading, actions and item controls fit in the first screen; a bottom scrim keeps that copy at AA contrast over the glows.
+- Scenes pause when off screen or when the tab is hidden, release their WebGL context on unmount or when they fail part-way through starting, and compile their shaders before they show. Scenes far down a page start when they come within 800 px of the viewport; the cart toss starts when the browser is idle.
+- State scenes paint the colour of the panel they sit on, with a soft studio light behind the clear cup, so the canvas edge disappears.
+- Textures for photos load through the Next image optimiser (`/_next/image`), so no extra image copies ship.
+- The motion director only touches elements marked with data attributes; it waits for the route curtain on client-side navigations and does nothing under reduced motion. A flag set before first paint holds animated content until the director takes over, with a 3 s CSS failsafe.
+- Playwright runs functional journeys with reduced motion (static render) and a separate `chromium-3d` project with software WebGL for the 3D and motion checks; that project runs its tests one after another.

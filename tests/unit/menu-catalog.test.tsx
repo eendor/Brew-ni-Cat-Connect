@@ -1,6 +1,6 @@
 import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { vi } from "vitest";
+import { afterEach, vi } from "vitest";
 
 import { MenuCatalog } from "@/components/menu/menu-catalog";
 import type { MenuCatalog as MenuCatalogModel } from "@/types/menu";
@@ -88,6 +88,12 @@ const populatedCatalog: MenuCatalogModel = {
 };
 
 describe("MenuCatalog", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
   it("TC-P2-011 — exposes a polite loading state while current data is pending", () => {
     const pendingLoader = vi.fn(
       () => new Promise<MenuCatalogModel>(() => undefined),
@@ -113,52 +119,73 @@ describe("MenuCatalog", () => {
     expect(skeleton.children).toHaveLength(4);
   });
 
-  it("TC-P3-052 — marks the category tab whose section is in view", async () => {
-    // Other components (Reveal) create observers too, so keep each callback
-    // with the elements it watches and notify only the one watching the target.
-    const observers: {
-      callback: IntersectionObserverCallback;
-      targets: Element[];
-    }[] = [];
-    class FakeObserver {
-      private entry: {
-        callback: IntersectionObserverCallback;
-        targets: Element[];
-      };
-      constructor(callback: IntersectionObserverCallback) {
-        this.entry = { callback, targets: [] };
-        observers.push(this.entry);
-      }
-      observe(target: Element) {
-        this.entry.targets.push(target);
-      }
-      unobserve() {}
-      disconnect() {}
-    }
-    const notify: IntersectionObserverCallback = (entries, observer) => {
-      const target = entries[0]!.target;
-      observers
-        .filter((o) => o.targets.includes(target))
-        .forEach((o) => o.callback(entries, observer));
-    };
-    vi.stubGlobal("IntersectionObserver", FakeObserver);
-
+  it("TC-P3-052 — follows the section at the reading line and holds a clicked tab until the scroll settles", async () => {
+    // run each frame straight away; 0 means no frame is left pending
+    vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => {
+      callback(0);
+      return 0;
+    });
+    vi.stubGlobal("cancelAnimationFrame", () => {});
     render(<MenuCatalog loadMenu={() => Promise.resolve(populatedCatalog)} />);
-    const tabs = within(
-      await screen.findByRole("navigation", { name: "Menu categories" }),
-    ).getAllByRole("link");
+    const nav = await screen.findByRole("navigation", {
+      name: "Menu categories",
+    });
+    const tabs = within(nav).getAllByRole("link");
     expect(tabs[0]).toHaveAttribute("aria-current", "true");
 
-    const sections = document.querySelectorAll("[data-menu-category]");
-    const last = sections[sections.length - 1]!;
-    act(() => {
-      notify(
-        [{ isIntersecting: true, target: last } as IntersectionObserverEntry],
-        {} as IntersectionObserver,
+    // Lay the page out: the tab bar ends 140 px down an 800 px viewport, so
+    // the reading line sits a third of the way down the rest, at 360 px.
+    const box = (top: number, height: number) =>
+      ({
+        top,
+        bottom: top + height,
+        height,
+        left: 0,
+        right: 0,
+        width: 0,
+        x: 0,
+        y: top,
+        toJSON: () => ({}),
+      }) as DOMRect;
+    let tops = [-900, 300, 1000];
+    vi.spyOn(nav, "getBoundingClientRect").mockReturnValue(box(70, 70));
+    document
+      .querySelectorAll<HTMLElement>("[data-menu-category]")
+      .forEach((section, index) =>
+        vi
+          .spyOn(section, "getBoundingClientRect")
+          .mockImplementation(() => box(tops[index] ?? 0, 600)),
       );
+    vi.spyOn(window, "innerHeight", "get").mockReturnValue(800);
+    vi.spyOn(document.documentElement, "scrollHeight", "get").mockReturnValue(
+      5000,
+    );
+    const scroll = () =>
+      act(() => {
+        window.dispatchEvent(new Event("scroll"));
+      });
+
+    // the second section's top (300 px) has passed the line
+    scroll();
+    expect(tabs[1]).toHaveAttribute("aria-current", "true");
+
+    // a click selects its tab straight away and keeps it while the page
+    // scrolls past the other categories
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    act(() => {
+      tabs[2]!.click();
     });
-    expect(tabs[tabs.length - 1]).toHaveAttribute("aria-current", "true");
-    vi.unstubAllGlobals();
+    expect(tabs[2]).toHaveAttribute("aria-current", "true");
+    scroll();
+    expect(tabs[2]).toHaveAttribute("aria-current", "true");
+
+    // once the page has been still for a moment, scrolling measures again
+    act(() => {
+      vi.advanceTimersByTime(200);
+    });
+    tops = [100, 800, 1500];
+    scroll();
+    expect(tabs[0]).toHaveAttribute("aria-current", "true");
   });
 
   it("TC-P2-012 — renders categories, products, sizes, flavors, prices, combo details, and availability", async () => {

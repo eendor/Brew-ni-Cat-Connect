@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 
+import { VisitStage } from "@/components/three/visit-stage";
+import { visitFacts } from "@/components/three/visit-facts";
 import { Container } from "@/components/ui/container";
 import { ExternalLink } from "@/components/ui/external-link";
 import { PageIntro } from "@/components/ui/page-intro";
@@ -30,21 +31,14 @@ export default function ContactPage() {
   return (
     <>
       <PageIntro
+        mood="contact"
         eyebrow="Plan your visit"
         title="Contact & location"
         description={
           <p>
-            Find Brew ni Cat in Poblacion, Kabacan, get in touch, and check the
-            hours before visiting — the shop is closed every Sunday.
+            Find Brew ni Cat on Segundo St in Poblacion, Kabacan, and get in
+            touch before your visit.
           </p>
-        }
-        aside={
-          <ExternalLink
-            href={siteConfig.address.mapUrl}
-            className="button-primary"
-          >
-            Open location in Maps
-          </ExternalLink>
         }
       />
 
@@ -52,72 +46,77 @@ export default function ContactPage() {
         className="py-16 sm:py-20 lg:py-24"
         aria-labelledby="location-heading"
       >
-        <Container className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-stretch">
-          <Reveal className="depth-card rounded-[2rem] p-7 sm:p-10">
-            <p className="eyebrow">Where to find us</p>
+        <Container className="grid gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:items-center">
+          <div>
+            <p className="eyebrow" data-rise="">
+              Where to find us
+            </p>
             <h2
+              data-split=""
               id="location-heading"
-              className="font-display mt-3 text-4xl font-semibold text-[var(--text-strong)] sm:text-5xl"
+              className="font-display mt-3 text-4xl text-[var(--text-strong)] sm:text-5xl"
             >
-              Brew ni Cat Coffee Shop
+              Find us on Segundo St
             </h2>
-            <address className="mt-6 text-lg leading-8 text-[var(--text-muted)] not-italic">
+            <address
+              className="mt-6 text-lg leading-8 text-[var(--text-muted)] not-italic"
+              data-rise=""
+            >
+              <strong className="text-[var(--text-strong)]">
+                {siteConfig.name}
+              </strong>
+              <br />
               {siteConfig.address.street}
               <br />
               {siteConfig.address.locality}
               <br />
               {siteConfig.address.country}
               <br />
-              <strong className="mt-2 inline-block text-[var(--deep-green)]">
+              <strong className="mt-2 inline-block text-[var(--accent-solid)]">
                 {siteConfig.address.landmark}
               </strong>
             </address>
-            <ExternalLink
-              href={siteConfig.address.mapUrl}
-              className="button-secondary mt-8"
-            >
-              Get directions
-            </ExternalLink>
-          </Reveal>
-
-          <Reveal delayMs={100}>
-            <aside
-              className="glass-panel rounded-[1.75rem] border-[var(--notice-border)] bg-[var(--notice-surface)] p-7 sm:p-9"
-              aria-labelledby="hours-heading"
-            >
-              <p className="text-xs font-bold tracking-[0.12em] text-[var(--notice-text)] uppercase">
-                Hours
+            <div data-rise="">
+              <p className="mt-8 text-lg font-semibold text-[var(--text-strong)]">
+                Open {visitFacts.hours}, {visitFacts.days}. Closed every{" "}
+                {visitFacts.closedDay}.
               </p>
-              <h2
-                id="hours-heading"
-                className="font-display mt-2 text-2xl font-semibold text-[var(--text-strong)] sm:text-3xl"
-              >
-                Closed every Sunday.
-              </h2>
-              <p className="mt-4 text-base leading-7 text-[var(--notice-text)]">
-                {siteConfig.operations.hoursNotice}
+              <p className="mt-2 text-sm leading-6 text-[var(--text-muted)]">
+                Schedule changes are posted on{" "}
+                <ExternalLink
+                  href={siteConfig.social.facebook}
+                  className="font-bold text-[var(--accent-solid)] underline underline-offset-4"
+                >
+                  Facebook
+                </ExternalLink>
+                .
               </p>
+            </div>
+            <div className="mt-8" data-rise="">
               <ExternalLink
-                href={siteConfig.social.facebook}
-                className="button-secondary mt-7"
+                href={siteConfig.address.mapUrl}
+                className="button-primary"
+                data-magnetic=""
               >
-                Check Facebook
+                Get directions
               </ExternalLink>
-            </aside>
-          </Reveal>
+            </div>
+          </div>
+          <VisitStage facts={visitFacts} />
         </Container>
       </section>
 
       <section
-        className="border-y border-[var(--border-soft)] bg-[var(--surface-green)] py-16 sm:py-20"
+        className="border-y border-[var(--border-soft)] bg-[var(--surface-accent)] py-16 sm:py-20"
         aria-labelledby="contact-heading"
       >
         <Container>
           <Reveal className="max-w-2xl">
             <p className="eyebrow">Get in touch</p>
             <h2
+              data-split=""
               id="contact-heading"
-              className="font-display mt-3 text-4xl font-semibold text-[var(--text-strong)] sm:text-5xl"
+              className="font-display mt-3 text-4xl text-[var(--text-strong)] sm:text-5xl"
             >
               Contact Brew ni Cat directly.
             </h2>
@@ -127,10 +126,10 @@ export default function ContactPage() {
               <Reveal key={contact.label} delayMs={index * 90}>
                 <a
                   href={contact.href}
-                  className="surface-lift block h-full rounded-[1.5rem] border border-[var(--border-soft)] bg-[var(--surface-card)] p-6 shadow-[var(--shadow-subtle)]"
+                  className="surface-lift block h-full rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-6 shadow-[var(--shadow-subtle)]"
                 >
                   <span className="eyebrow">{contact.label}</span>
-                  <span className="mt-3 block wrap-anywhere text-lg font-extrabold text-[var(--deep-green)] sm:text-xl">
+                  <span className="mt-3 block wrap-anywhere text-lg font-extrabold text-[var(--accent-solid)] sm:text-xl">
                     {contact.value}
                   </span>
                 </a>
@@ -140,9 +139,9 @@ export default function ContactPage() {
 
           <Reveal
             delayMs={120}
-            className="mt-8 rounded-[1.5rem] border border-[var(--border-soft)] bg-[var(--surface-card)] p-6 sm:p-8"
+            className="mt-8 rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-6 sm:p-8"
           >
-            <h3 className="font-display text-2xl font-semibold text-[var(--text-strong)]">
+            <h3 className="font-display text-2xl text-[var(--text-strong)]">
               Follow Brew ni Cat
             </h3>
             <div className="mt-5 flex flex-col gap-3 sm:flex-row">
@@ -175,11 +174,12 @@ export default function ContactPage() {
       >
         <Container>
           <div className="grid gap-6 lg:grid-cols-3">
-            <Reveal className="rounded-[1.75rem] border border-[var(--border-soft)] bg-[var(--surface-card)] p-7 shadow-[var(--shadow-subtle)]">
+            <Reveal className="rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-7 shadow-[var(--shadow-subtle)]">
               <p className="eyebrow">At the shop</p>
               <h2
+                data-split=""
                 id="visit-details-heading"
-                className="font-display mt-3 text-3xl font-semibold text-[var(--text-strong)]"
+                className="font-display mt-3 text-3xl text-[var(--text-strong)]"
               >
                 Payment & takeout
               </h2>
@@ -205,10 +205,13 @@ export default function ContactPage() {
 
             <Reveal
               delayMs={100}
-              className="rounded-[1.75rem] border border-[var(--border-soft)] bg-[var(--surface-card)] p-7 shadow-[var(--shadow-subtle)] lg:col-span-2"
+              className="rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-7 shadow-[var(--shadow-subtle)] lg:col-span-2"
             >
               <p className="eyebrow">External rider pickup</p>
-              <h2 className="font-display mt-3 text-3xl font-semibold text-[var(--text-strong)]">
+              <h2
+                data-split=""
+                className="font-display mt-3 text-3xl text-[var(--text-strong)]"
+              >
                 Arrange your preferred rider separately.
               </h2>
               <ol className="mt-5 grid gap-3 text-[var(--text-muted)] sm:grid-cols-3">
@@ -252,15 +255,6 @@ export default function ContactPage() {
               </div>
             </Reveal>
           </div>
-          <p className="mt-8 text-center text-sm text-[var(--text-muted)]">
-            Looking for the current menu?{" "}
-            <Link
-              href="/menu"
-              className="font-extrabold text-[var(--deep-green)] underline underline-offset-4"
-            >
-              Browse it here.
-            </Link>
-          </p>
         </Container>
       </section>
     </>

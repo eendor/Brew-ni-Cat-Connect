@@ -26,6 +26,11 @@ export const siteConfig = {
       "Open 11 AM to 10 PM, Monday to Saturday. Closed every Sunday. Check our Facebook page or contact us for any schedule changes.",
     payments: ["Cash", "GCash"],
     takeoutFee: "₱10 takeout box",
+    /** Confirmed price; when it applies is not documented, so it is never
+     *  added to totals (fee calculation is deferred, FR-029–FR-030). */
+    takeoutBoxPrice: "₱10",
+    takeoutNote:
+      "Not included in the subtotal. The shop confirms it when you order.",
   },
   social: {
     facebook: "https://www.facebook.com/profile.php?id=100084186931413",

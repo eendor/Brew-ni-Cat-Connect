@@ -1,14 +1,36 @@
 import type { Metadata, Viewport } from "next";
+import { Archivo, Big_Shoulders } from "next/font/google";
 import type { ReactNode } from "react";
 
 import { CartDrawer } from "@/components/cart/cart-drawer";
+import { CartUndoToast } from "@/components/cart/cart-undo-toast";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
+import { MotionDirector } from "@/components/motion/motion-director";
+import { RouteCurtain } from "@/components/motion/route-curtain";
 import { ScrollMotion } from "@/components/motion/scroll-motion";
+import { CartFxLayer } from "@/components/three/layers";
 import { siteConfig } from "@/config/site";
 import { CartProvider } from "@/context/cart-context";
 
 import "./globals.css";
+
+const display = Big_Shoulders({
+  subsets: ["latin"],
+  weight: ["700", "800", "900"],
+  variable: "--font-big-shoulders",
+  display: "swap",
+  // No metric overrides ship for this family; use a condensed system stack.
+  adjustFontFallback: false,
+  fallback: ["Impact", "Arial Narrow", "sans-serif"],
+});
+
+const body = Archivo({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-archivo",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: {
@@ -34,19 +56,34 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f8f0df" },
-    { media: "(prefers-color-scheme: dark)", color: "#173f38" },
-  ],
+  themeColor: "#0b0a0d",
 };
 
 type RootLayoutProps = Readonly<{
   children: ReactNode;
 }>;
 
+/**
+ * Runs before the first paint: flags the page for the motion director so
+ * animated content waits for its entrance instead of flashing in place.
+ * Reduced motion (unless `?motion`) leaves the page static.
+ */
+const MOTION_FLAG = `try{if(new URLSearchParams(location.search).has("motion")||!matchMedia("(prefers-reduced-motion: reduce)").matches)document.documentElement.setAttribute("data-motion","on")}catch(e){}`;
+
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
-    <html lang="en">
+    <html
+      lang="en"
+      className={`${display.variable} ${body.variable}`}
+      // lets Next turn smooth scrolling off while it resets the scroll
+      // position on navigation (otherwise new pages start part-way down)
+      data-scroll-behavior="smooth"
+      // the motion flag above is set before React hydrates
+      suppressHydrationWarning
+    >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: MOTION_FLAG }} />
+      </head>
       <body>
         <a className="skip-link" href="#main-content">
           Skip to main content
@@ -60,7 +97,11 @@ export default function RootLayout({ children }: RootLayoutProps) {
             <SiteFooter />
           </div>
           <CartDrawer />
+          <CartUndoToast />
           <ScrollMotion />
+          <MotionDirector />
+          <RouteCurtain />
+          <CartFxLayer />
         </CartProvider>
       </body>
     </html>

@@ -2,14 +2,28 @@
 
 import { validateDetails as validateDetailsHelper } from "@/lib/ordering/validation";
 import Link from "next/link";
-import { useEffect, useId, useRef, useState } from "react";
+import {
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 
 import { Container } from "@/components/ui/container";
 import { ExternalLink } from "@/components/ui/external-link";
 import { PageIntro } from "@/components/ui/page-intro";
+import { StateScene } from "@/components/three/state-scene";
 import { siteConfig } from "@/config/site";
 import { useCart } from "@/context/cart-context";
+import {
+  clearStoredSummary,
+  getStoredSummary,
+  saveStoredSummary,
+  subscribeStoredSummary,
+} from "@/lib/ordering/summary-storage";
 import { fetchPublicMenu } from "@/lib/menu/fetch-public-menu";
+import { formatOptionName } from "@/lib/menu/format-name";
 import { formatPrice } from "@/lib/menu/format-price";
 import type { MenuCatalog } from "@/types/menu";
 import type { CartItem, FulfillmentType } from "@/types/ordering";
@@ -34,6 +48,49 @@ export type PreparedOrderSummary = Readonly<{
   itemCount: number;
 }>;
 
+/** Shape check for a summary read back from storage. */
+function isPreparedSummary(value: unknown): value is PreparedOrderSummary {
+  if (typeof value !== "object" || value === null) return false;
+  const summary = value as Partial<PreparedOrderSummary>;
+  const customer = summary.customer as Partial<CustomerDetails> | undefined;
+  return (
+    typeof summary.createdAt === "string" &&
+    typeof summary.subtotal === "number" &&
+    typeof summary.itemCount === "number" &&
+    (summary.fulfillment === "pickup" ||
+      summary.fulfillment === "external-rider") &&
+    typeof customer?.name === "string" &&
+    typeof customer.phone === "string" &&
+    typeof customer.notes === "string" &&
+    (customer.paymentPreference === "Cash" ||
+      customer.paymentPreference === "GCash") &&
+    Array.isArray(summary.lines) &&
+    summary.lines.every(
+      (line: Partial<CartItem> | null) =>
+        typeof line?.key === "string" &&
+        typeof line.itemName === "string" &&
+        typeof line.variantName === "string" &&
+        typeof line.quantity === "number" &&
+        typeof line.unitPrice === "number" &&
+        typeof line.lineTotal === "number",
+    )
+  );
+}
+
+const readPreparedSummary = () => getStoredSummary(isPreparedSummary);
+
+/** What the summary was made from: lines, quantities, prices, fulfillment. */
+function orderSignature(
+  lines: readonly CartItem[],
+  fulfillment: FulfillmentType,
+) {
+  return `${fulfillment}|${lines
+    .map((line) => `${line.key}x${line.quantity}@${line.unitPrice}`)
+    .join(",")}`;
+}
+
+type CopyState = "idle" | "copied" | "failed";
+
 export function formatOrderSummaryText(summary: PreparedOrderSummary): string {
   const fulfillmentText =
     summary.fulfillment === "pickup"
@@ -43,7 +100,7 @@ export function formatOrderSummaryText(summary: PreparedOrderSummary): string {
   const itemsText = summary.lines
     .map(
       (l) =>
-        `- ${l.quantity}× ${l.itemName} (${l.variantName}${l.flavor ? `, ${l.flavor}` : ""}) — ${formatPrice(l.lineTotal)}`,
+        `- ${l.quantity}× ${l.itemName} (${formatOptionName(l.variantName)}${l.flavor ? `, ${l.flavor}` : ""}) — ${formatPrice(l.lineTotal)}`,
     )
     .join("\n");
 
@@ -57,7 +114,7 @@ export function formatOrderSummaryText(summary: PreparedOrderSummary): string {
     itemsText,
     `Subtotal: ${formatPrice(summary.subtotal)}`,
     `Payment preference: ${summary.customer.paymentPreference} at counter`,
-    `Packaging: ${siteConfig.operations.takeoutFee} applies to takeout.`,
+    `Takeout box: ${siteConfig.operations.takeoutBoxPrice}, not included in the subtotal (the shop confirms it).`,
   ]
     .filter(Boolean)
     .join("\n");
@@ -81,7 +138,24 @@ export function CheckoutView({
     clearCart,
   } = useCart();
 
-  const [step, setStep] = useState<CheckoutStep>("details");
+  const [formStep, setStep] = useState<CheckoutStep>("details");
+  // The generated summary survives a refresh; while one is stored the page
+  // stays on the final step until the visitor starts a new order. It only
+  // stands for the cart it was made from: once the cart changes (other than
+  // being emptied by a successful copy), the visitor starts again.
+  const storedSummary = useSyncExternalStore(
+    subscribeStoredSummary,
+    readPreparedSummary,
+    () => null,
+  );
+  const summaryIsStale =
+    storedSummary !== null &&
+    !isEmpty &&
+    orderSignature(storedSummary.lines, storedSummary.fulfillment) !==
+      orderSignature(lines, fulfillment);
+  const preparedSummary = summaryIsStale ? null : storedSummary;
+  const step: CheckoutStep = preparedSummary ? "send" : formStep;
+  const flowRef = useRef<HTMLElement>(null);
   const [customer, setCustomer] = useState<CustomerDetails>({
     name: "",
     phone: "",
@@ -89,12 +163,12 @@ export function CheckoutView({
     paymentPreference: "Cash",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [preparedSummary, setPreparedSummary] =
-    useState<PreparedOrderSummary | null>(null);
   const [revalidationWarnings, setRevalidationWarnings] = useState<
     readonly string[]
   >([]);
-  const [isCopied, setIsCopied] = useState(false);
+  const [copyState, setCopyState] = useState<CopyState>("idle");
+  const copyTimerRef = useRef<number | undefined>(undefined);
+  const summaryTextRef = useRef<HTMLPreElement>(null);
 
   const step1HeadingRef = useRef<HTMLHeadingElement>(null);
   const step2HeadingRef = useRef<HTMLHeadingElement>(null);
@@ -103,6 +177,12 @@ export function CheckoutView({
   const nameInputId = useId();
   const phoneInputId = useId();
   const notesInputId = useId();
+
+  useEffect(() => {
+    if (summaryIsStale) clearStoredSummary();
+  }, [summaryIsStale]);
+
+  useEffect(() => () => window.clearTimeout(copyTimerRef.current), []);
 
   // Revalidate cart prices against authoritative menu on mount
   useEffect(() => {
@@ -126,29 +206,40 @@ export function CheckoutView({
 
   function goToStep(nextStep: CheckoutStep) {
     setStep(nextStep);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    // after the step renders, bring its form section (not the page hero)
+    // to the top under the sticky header and move focus to its heading
     setTimeout(() => {
-      if (nextStep === "details") {
-        step1HeadingRef.current?.focus();
-      } else if (nextStep === "review") {
-        step2HeadingRef.current?.focus();
-      } else if (nextStep === "send") {
-        step3HeadingRef.current?.focus();
-      }
+      const reduce = window.matchMedia?.(
+        "(prefers-reduced-motion: reduce)",
+      ).matches;
+      const flow = flowRef.current;
+      if (typeof flow?.scrollIntoView === "function")
+        flow.scrollIntoView({
+          behavior: reduce ? "auto" : "smooth",
+          block: "start",
+        });
+      const heading =
+        nextStep === "details"
+          ? step1HeadingRef.current
+          : nextStep === "review"
+            ? step2HeadingRef.current
+            : step3HeadingRef.current;
+      heading?.focus({ preventScroll: true });
     }, 50);
-  }
-
-  function validateDetails(): boolean {
-    const result = validateDetailsHelper(customer);
-    setErrors(result.errors);
-    return result.isValid;
   }
 
   function handleProceedToReview(e: React.FormEvent) {
     e.preventDefault();
-    if (validateDetails()) {
+    const result = validateDetailsHelper(customer);
+    setErrors(result.errors);
+    if (result.isValid) {
       goToStep("review");
+      return;
     }
+    // On phones the submit button sits far below the fields; take the
+    // visitor to the first field that needs fixing.
+    const firstInvalid = result.errors.name ? nameInputId : phoneInputId;
+    setTimeout(() => document.getElementById(firstInvalid)?.focus(), 0);
   }
 
   function handleProceedToSend() {
@@ -164,16 +255,39 @@ export function CheckoutView({
       itemCount,
     };
 
-    setPreparedSummary(summary);
-    clearCart();
+    // the cart stays until the summary is copied or a new order is started
+    saveStoredSummary(summary);
     goToStep("send");
   }
 
-  function copySummaryToClipboard(summary: PreparedOrderSummary) {
-    const text = formatOrderSummaryText(summary);
-    void navigator.clipboard.writeText(text);
-    setIsCopied(true);
-    setTimeout(() => setIsCopied(false), 2500);
+  /** Selects the summary text so it can be copied by hand. */
+  function selectSummaryText() {
+    const pre = summaryTextRef.current;
+    const selection = window.getSelection?.();
+    if (!pre || !selection) return;
+    const range = document.createRange();
+    range.selectNodeContents(pre);
+    selection.removeAllRanges();
+    selection.addRange(range);
+  }
+
+  async function copySummaryToClipboard(summary: PreparedOrderSummary) {
+    window.clearTimeout(copyTimerRef.current);
+    try {
+      if (typeof navigator.clipboard?.writeText !== "function") {
+        throw new Error("Clipboard unavailable");
+      }
+      await navigator.clipboard.writeText(formatOrderSummaryText(summary));
+    } catch {
+      // nothing was copied, so the cart stays and the text is selected
+      selectSummaryText();
+      setCopyState("failed");
+      return;
+    }
+    setCopyState("copied");
+    // copied: the order now lives in the visitor's message to the shop
+    clearCart({ undoable: false });
+    copyTimerRef.current = window.setTimeout(() => setCopyState("idle"), 2500);
   }
 
   // If cart is empty and not on send step, show empty cart notice
@@ -181,6 +295,7 @@ export function CheckoutView({
     return (
       <>
         <PageIntro
+          mood="checkout"
           eyebrow="Checkout"
           title="Checkout"
           description={
@@ -190,22 +305,29 @@ export function CheckoutView({
         <section className="py-16 sm:py-20">
           <Container>
             <div className="mx-auto max-w-lg text-center rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-8 sm:p-12 shadow-[var(--shadow-subtle)]">
-              <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-[var(--surface-warm)] text-[var(--accent-strong)] mb-4">
-                <svg
-                  className="size-8"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
-                  <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
-                  <line x1="3" y1="6" x2="21" y2="6" />
-                </svg>
-              </div>
-              <h2 className="font-display text-2xl font-bold text-[var(--text-strong)]">
+              <StateScene
+                kind="empty"
+                tone="card"
+                className="mx-auto mb-4 size-44 sm:size-52"
+                fallback={
+                  <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-[var(--surface-warm)] text-[var(--accent-strong)]">
+                    <svg
+                      className="size-8"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+                      <line x1="3" y1="6" x2="21" y2="6" />
+                    </svg>
+                  </div>
+                }
+              />
+              <h2 className="font-display text-2xl text-[var(--text-strong)]">
                 Your cart is empty
               </h2>
               <p className="mt-2 text-sm text-[var(--text-muted)]">
@@ -225,6 +347,7 @@ export function CheckoutView({
   return (
     <>
       <PageIntro
+        mood="checkout"
         eyebrow="Order Flow"
         title={
           step === "details"
@@ -253,7 +376,11 @@ export function CheckoutView({
         }
       />
 
-      <section className="py-12 sm:py-16 lg:py-20" aria-label="Checkout flow">
+      <section
+        ref={flowRef}
+        className="scroll-mt-20 py-12 sm:py-16 lg:scroll-mt-24 lg:py-20"
+        aria-label="Checkout flow"
+      >
         <Container>
           {/* Revalidation Warnings Banner */}
           {revalidationWarnings.length > 0 && step !== "send" ? (
@@ -279,14 +406,14 @@ export function CheckoutView({
                 className={`flex items-center gap-2 ${
                   step === "details"
                     ? "text-[var(--accent-strong)] font-extrabold"
-                    : "text-[var(--deep-green)] font-semibold"
+                    : "text-[var(--accent-solid)] font-semibold"
                 }`}
               >
                 <span
                   className={`flex size-7 items-center justify-center rounded-full text-xs ${
                     step === "details"
-                      ? "bg-[var(--accent-solid)] text-white"
-                      : "bg-[var(--surface-green)] text-[var(--deep-green)]"
+                      ? "bg-[var(--accent-solid)] text-[var(--on-accent)]"
+                      : "bg-[var(--surface-accent)] text-[var(--accent-solid)]"
                   }`}
                 >
                   1
@@ -305,16 +432,16 @@ export function CheckoutView({
                   step === "review"
                     ? "text-[var(--accent-strong)] font-extrabold"
                     : step === "send"
-                      ? "text-[var(--deep-green)] font-semibold"
+                      ? "text-[var(--accent-solid)] font-semibold"
                       : "text-[var(--text-subtle)] font-medium"
                 }`}
               >
                 <span
                   className={`flex size-7 items-center justify-center rounded-full text-xs ${
                     step === "review"
-                      ? "bg-[var(--accent-solid)] text-white"
+                      ? "bg-[var(--accent-solid)] text-[var(--on-accent)]"
                       : step === "send"
-                        ? "bg-[var(--surface-green)] text-[var(--deep-green)]"
+                        ? "bg-[var(--surface-accent)] text-[var(--accent-solid)]"
                         : "bg-[var(--surface-warm)] text-[var(--text-subtle)]"
                   }`}
                 >
@@ -337,7 +464,7 @@ export function CheckoutView({
                 <span
                   className={`flex size-7 items-center justify-center rounded-full text-xs ${
                     step === "send"
-                      ? "bg-[var(--accent-solid)] text-white"
+                      ? "bg-[var(--accent-solid)] text-[var(--on-accent)]"
                       : "bg-[var(--surface-warm)] text-[var(--text-subtle)]"
                   }`}
                 >
@@ -353,15 +480,15 @@ export function CheckoutView({
             <form
               onSubmit={handleProceedToReview}
               noValidate
-              className="grid gap-10 lg:grid-cols-12 lg:items-start"
+              className="grid gap-10 min-[900px]:grid-cols-12 min-[900px]:items-start min-[900px]:gap-8 xl:gap-12"
             >
-              <div className="space-y-8 lg:col-span-7 xl:col-span-8">
+              <div className="space-y-8 min-[900px]:col-span-7 xl:col-span-8">
                 {/* Fulfillment Selection */}
                 <div className="rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-6 sm:p-8 shadow-[var(--shadow-subtle)]">
                   <h2
                     ref={step1HeadingRef}
                     tabIndex={-1}
-                    className="font-display text-xl font-bold text-[var(--text-strong)] outline-none"
+                    className="font-display text-xl text-[var(--text-strong)] outline-none"
                   >
                     1. Select Fulfillment Mode
                   </h2>
@@ -382,7 +509,7 @@ export function CheckoutView({
                           <span className="font-extrabold text-[var(--text-strong)] text-base block">
                             Pickup at Shop
                           </span>
-                          <span className="text-xs text-[var(--deep-green)] font-semibold mt-1 block">
+                          <span className="text-xs text-[var(--accent-solid)] font-semibold mt-1 block">
                             In-person pickup · Free
                           </span>
                         </div>
@@ -471,7 +598,7 @@ export function CheckoutView({
                           <ExternalLink
                             key={riderUrl}
                             href={riderUrl}
-                            className="inline-flex items-center text-xs font-bold text-[var(--deep-green)] underline"
+                            className="inline-flex items-center text-xs font-bold text-[var(--accent-solid)] underline"
                           >
                             Rider Partner {index + 1}
                           </ExternalLink>
@@ -483,7 +610,7 @@ export function CheckoutView({
 
                 {/* Customer Contact Details */}
                 <div className="rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-6 sm:p-8 shadow-[var(--shadow-subtle)]">
-                  <h2 className="font-display text-xl font-bold text-[var(--text-strong)]">
+                  <h2 className="font-display text-xl text-[var(--text-strong)]">
                     2. Customer Contact Information
                   </h2>
                   <p className="mt-1 text-sm text-[var(--text-muted)]">
@@ -497,7 +624,13 @@ export function CheckoutView({
                         htmlFor={nameInputId}
                         className="block text-sm font-bold text-[var(--text-strong)]"
                       >
-                        Full Name <span className="text-red-600">*</span>
+                        Full Name{" "}
+                        <span
+                          className="text-[var(--danger)]"
+                          aria-hidden="true"
+                        >
+                          *
+                        </span>
                       </label>
                       <input
                         id={nameInputId}
@@ -518,13 +651,13 @@ export function CheckoutView({
                           errors.name ? "name-error" : undefined
                         }
                         placeholder="e.g. Maria Santos"
-                        className="mt-2 block w-full rounded-xl border border-[var(--border-strong)] bg-white px-4 py-3 text-sm text-[var(--text-strong)] placeholder-[var(--text-subtle)] focus:border-[var(--accent-solid)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-solid)]"
+                        className="mt-2 block w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface-input)] min-h-12 px-4 py-3 text-base text-[var(--text-strong)] placeholder-[var(--text-subtle)] aria-[invalid=true]:border-[var(--danger)] focus:border-[var(--accent-solid)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-solid)]"
                       />
                       {errors.name ? (
                         <p
                           id="name-error"
                           role="alert"
-                          className="mt-1.5 text-xs font-bold text-red-600"
+                          className="mt-1.5 text-sm font-bold text-[var(--danger)]"
                         >
                           {errors.name}
                         </p>
@@ -537,7 +670,12 @@ export function CheckoutView({
                         className="block text-sm font-bold text-[var(--text-strong)]"
                       >
                         Contact Phone Number{" "}
-                        <span className="text-red-600">*</span>
+                        <span
+                          className="text-[var(--danger)]"
+                          aria-hidden="true"
+                        >
+                          *
+                        </span>
                       </label>
                       <input
                         id={phoneInputId}
@@ -558,13 +696,13 @@ export function CheckoutView({
                           errors.phone ? "phone-error" : undefined
                         }
                         placeholder="e.g. 0912 345 6789"
-                        className="mt-2 block w-full rounded-xl border border-[var(--border-strong)] bg-white px-4 py-3 text-sm text-[var(--text-strong)] placeholder-[var(--text-subtle)] focus:border-[var(--accent-solid)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-solid)]"
+                        className="mt-2 block w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface-input)] min-h-12 px-4 py-3 text-base text-[var(--text-strong)] placeholder-[var(--text-subtle)] aria-[invalid=true]:border-[var(--danger)] focus:border-[var(--accent-solid)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-solid)]"
                       />
                       {errors.phone ? (
                         <p
                           id="phone-error"
                           role="alert"
-                          className="mt-1.5 text-xs font-bold text-red-600"
+                          className="mt-1.5 text-sm font-bold text-[var(--danger)]"
                         >
                           {errors.phone}
                         </p>
@@ -576,8 +714,8 @@ export function CheckoutView({
                         <legend className="block text-sm font-bold text-[var(--text-strong)]">
                           Payment Preference at Shop
                         </legend>
-                        <div className="mt-2 flex gap-4">
-                          <label className="flex items-center gap-2 cursor-pointer text-sm font-semibold text-[var(--text-strong)]">
+                        <div className="mt-1 flex flex-wrap gap-x-6">
+                          <label className="flex min-h-11 items-center gap-2 cursor-pointer text-sm font-semibold text-[var(--text-strong)]">
                             <input
                               type="radio"
                               name="payment-preference"
@@ -593,7 +731,7 @@ export function CheckoutView({
                             />
                             Cash at counter
                           </label>
-                          <label className="flex items-center gap-2 cursor-pointer text-sm font-semibold text-[var(--text-strong)]">
+                          <label className="flex min-h-11 items-center gap-2 cursor-pointer text-sm font-semibold text-[var(--text-strong)]">
                             <input
                               type="radio"
                               name="payment-preference"
@@ -631,7 +769,7 @@ export function CheckoutView({
                           }))
                         }
                         placeholder="e.g. Less ice for iced latte, preferred pickup time today, pack pastries separately..."
-                        className="mt-2 block w-full rounded-xl border border-[var(--border-strong)] bg-white px-4 py-3 text-sm text-[var(--text-strong)] placeholder-[var(--text-subtle)] focus:border-[var(--accent-solid)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-solid)]"
+                        className="mt-2 block w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface-input)] min-h-12 px-4 py-3 text-base text-[var(--text-strong)] placeholder-[var(--text-subtle)] aria-[invalid=true]:border-[var(--danger)] focus:border-[var(--accent-solid)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-solid)]"
                       />
                     </div>
                   </div>
@@ -639,9 +777,9 @@ export function CheckoutView({
               </div>
 
               {/* Order Summary Sidebar */}
-              <div className="lg:col-span-5 xl:col-span-4">
+              <div className="min-[900px]:col-span-5 xl:col-span-4">
                 <div className="sticky top-28 rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-6 sm:p-8 shadow-[var(--shadow-card)] space-y-6">
-                  <h3 className="font-display text-xl font-bold text-[var(--text-strong)] pb-4 border-b border-[var(--border-soft)]">
+                  <h3 className="font-display text-xl text-[var(--text-strong)] pb-4 border-b border-[var(--border-soft)]">
                     Order Summary
                   </h3>
 
@@ -662,10 +800,11 @@ export function CheckoutView({
                       </span>
                     </div>
 
-                    <div className="flex justify-between text-[var(--text-muted)]">
-                      <span>Takeout packaging</span>
-                      <span className="text-xs font-semibold text-[var(--text-subtle)]">
-                        {siteConfig.operations.takeoutFee} upon collection
+                    <div className="flex justify-between gap-4 text-[var(--text-muted)]">
+                      <span>Takeout box</span>
+                      <span className="text-right text-xs font-semibold text-[var(--text-subtle)]">
+                        {siteConfig.operations.takeoutBoxPrice}, paid at the
+                        shop · not in subtotal
                       </span>
                     </div>
 
@@ -688,8 +827,9 @@ export function CheckoutView({
                     <strong className="block font-bold text-[var(--text-strong)]">
                       Shop Hours & Takeout Note
                     </strong>
-                    {siteConfig.operations.hoursNotice} Takeout packaging incurs
-                    a confirmed {siteConfig.operations.takeoutFee}. Payment is
+                    {siteConfig.operations.hoursNotice} The{" "}
+                    {siteConfig.operations.takeoutFee} is not included in the
+                    subtotal; the shop confirms it when you order. Payment is
                     settled via Cash or GCash directly with the shop.
                   </div>
 
@@ -697,14 +837,14 @@ export function CheckoutView({
                     type="submit"
                     className="button-primary w-full text-center py-3.5 text-base"
                   >
-                    Continue to Order Review →
+                    Continue to Order Review{"\u00a0"}→
                   </button>
 
                   <Link
                     href="/cart"
                     className="button-secondary w-full text-center text-sm"
                   >
-                    ← Back to Cart
+                    ←{"\u00a0"}Back to Cart
                   </Link>
                 </div>
               </div>
@@ -713,8 +853,8 @@ export function CheckoutView({
 
           {/* STEP 2: Order Review Screen Before Send */}
           {step === "review" && (
-            <div className="grid gap-10 lg:grid-cols-12 lg:items-start">
-              <div className="space-y-8 lg:col-span-7 xl:col-span-8">
+            <div className="grid gap-10 min-[900px]:grid-cols-12 min-[900px]:items-start min-[900px]:gap-8 xl:gap-12">
+              <div className="space-y-8 min-[900px]:col-span-7 xl:col-span-8">
                 {/* Itemized Order Review */}
                 <div className="rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-6 sm:p-8 shadow-[var(--shadow-subtle)]">
                   <div className="flex items-center justify-between pb-4 border-b border-[var(--border-soft)] mb-6">
@@ -722,7 +862,7 @@ export function CheckoutView({
                       <h2
                         ref={step2HeadingRef}
                         tabIndex={-1}
-                        className="font-display text-2xl font-bold text-[var(--text-strong)] outline-none"
+                        className="font-display text-2xl text-[var(--text-strong)] outline-none"
                       >
                         Review Items
                       </h2>
@@ -749,7 +889,7 @@ export function CheckoutView({
                 {/* Customer and Fulfillment Details Review */}
                 <div className="rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-6 sm:p-8 shadow-[var(--shadow-subtle)]">
                   <div className="flex items-center justify-between pb-4 border-b border-[var(--border-soft)] mb-6">
-                    <h2 className="font-display text-2xl font-bold text-[var(--text-strong)]">
+                    <h2 className="font-display text-2xl text-[var(--text-strong)]">
                       Fulfillment & Customer Details
                     </h2>
                     <button
@@ -823,9 +963,9 @@ export function CheckoutView({
               </div>
 
               {/* Review Sidebar */}
-              <div className="lg:col-span-5 xl:col-span-4">
+              <div className="min-[900px]:col-span-5 xl:col-span-4">
                 <div className="sticky top-28 rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-6 sm:p-8 shadow-[var(--shadow-card)] space-y-6">
-                  <h3 className="font-display text-xl font-bold text-[var(--text-strong)] pb-4 border-b border-[var(--border-soft)]">
+                  <h3 className="font-display text-xl text-[var(--text-strong)] pb-4 border-b border-[var(--border-soft)]">
                     Final Review
                   </h3>
 
@@ -846,10 +986,11 @@ export function CheckoutView({
                       </span>
                     </div>
 
-                    <div className="flex justify-between text-[var(--text-muted)]">
-                      <span>Takeout packaging</span>
-                      <span className="text-xs font-semibold text-[var(--text-subtle)]">
-                        {siteConfig.operations.takeoutFee} upon collection
+                    <div className="flex justify-between gap-4 text-[var(--text-muted)]">
+                      <span>Takeout box</span>
+                      <span className="text-right text-xs font-semibold text-[var(--text-subtle)]">
+                        {siteConfig.operations.takeoutBoxPrice}, paid at the
+                        shop · not in subtotal
                       </span>
                     </div>
 
@@ -883,7 +1024,7 @@ export function CheckoutView({
                     onClick={handleProceedToSend}
                     className="button-primary w-full text-center py-3.5 text-base"
                   >
-                    Proceed to Send to Shop →
+                    Proceed to Send to Shop{"\u00a0"}→
                   </button>
 
                   <button
@@ -891,7 +1032,7 @@ export function CheckoutView({
                     onClick={() => goToStep("details")}
                     className="button-secondary w-full text-center text-sm"
                   >
-                    ← Back to Edit Details
+                    ←{"\u00a0"}Back to Edit Details
                   </button>
                 </div>
               </div>
@@ -900,29 +1041,36 @@ export function CheckoutView({
 
           {/* STEP 3: Order Summary for the Shop (Send to Shop) */}
           {step === "send" && preparedSummary && (
-            <div className="mx-auto max-w-2xl">
+            <div className="mx-auto max-w-4xl">
               <div className="rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-8 sm:p-12 shadow-[var(--shadow-card)] text-center">
-                <div className="mx-auto flex size-20 items-center justify-center rounded-full bg-[var(--surface-warm)] text-[var(--accent-strong)] mb-6">
-                  <svg
-                    className="size-10"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden="true"
-                  >
-                    <path d="M22 2L11 13" />
-                    <polygon points="22 2 15 22 11 13 2 9 22 2" />
-                  </svg>
-                </div>
+                <StateScene
+                  kind="ready"
+                  tone="card"
+                  className="mx-auto mb-4 size-48 sm:size-56"
+                  fallback={
+                    <div className="mx-auto flex size-20 items-center justify-center rounded-full bg-[var(--surface-warm)] text-[var(--accent-strong)]">
+                      <svg
+                        className="size-10"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden="true"
+                      >
+                        <path d="M22 2L11 13" />
+                        <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                      </svg>
+                    </div>
+                  }
+                />
 
                 <span className="eyebrow block">Order Summary Ready</span>
                 <h2
                   ref={step3HeadingRef}
                   tabIndex={-1}
-                  className="font-display mt-2 text-3xl font-bold text-[var(--text-strong)] sm:text-4xl outline-none"
+                  className="font-display mt-2 text-3xl text-[var(--text-strong)] sm:text-4xl outline-none"
                 >
                   Order Summary for the Shop
                 </h2>
@@ -941,14 +1089,16 @@ export function CheckoutView({
 
                 {/* Formatted Order Text Box with Copy Button */}
                 <div className="mt-6 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-warm)] p-5 text-left">
-                  <div className="flex items-center justify-between pb-3 border-b border-[var(--border-strong)]/40 mb-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-[var(--border-strong)]/40 mb-3">
                     <span className="text-xs font-bold uppercase tracking-wider text-[var(--text-subtle)]">
                       Formatted Order Summary
                     </span>
                     <button
                       type="button"
-                      onClick={() => copySummaryToClipboard(preparedSummary)}
-                      className="rounded-lg border border-[var(--border-strong)] bg-white px-3 py-1.5 text-xs font-bold text-[var(--text-strong)] hover:bg-[var(--surface-card)] transition-colors inline-flex items-center gap-1.5"
+                      onClick={() =>
+                        void copySummaryToClipboard(preparedSummary)
+                      }
+                      className="inline-flex min-h-11 items-center gap-1.5 whitespace-nowrap rounded-lg border border-[var(--border-strong)] bg-[var(--surface-card)] px-3 py-2 text-sm font-bold text-[var(--text-strong)] transition-colors hover:border-[var(--accent-solid)]"
                     >
                       <svg
                         className="size-3.5"
@@ -970,11 +1120,32 @@ export function CheckoutView({
                         />
                         <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
                       </svg>
-                      {isCopied ? "Copied to clipboard!" : "Copy order summary"}
+                      {copyState === "copied"
+                        ? "Copied to clipboard!"
+                        : "Copy order summary"}
                     </button>
                   </div>
 
-                  <pre className="whitespace-pre-wrap font-mono text-xs sm:text-sm text-[var(--text-strong)] leading-relaxed select-all">
+                  {/* always rendered, so screen readers hear the result */}
+                  <p
+                    role="status"
+                    className={
+                      copyState === "idle"
+                        ? "sr-only"
+                        : "mb-3 text-sm font-semibold text-[var(--text-muted)]"
+                    }
+                  >
+                    {copyState === "copied"
+                      ? "Copied. Paste it into Messenger or read it out on the phone."
+                      : copyState === "failed"
+                        ? "Couldn’t copy automatically. The summary is selected, so copy it with Ctrl+C or a long press."
+                        : null}
+                  </p>
+
+                  <pre
+                    ref={summaryTextRef}
+                    className="whitespace-pre-wrap font-mono text-xs sm:text-sm text-[var(--text-strong)] leading-relaxed select-all [overflow-wrap:anywhere]"
+                  >
                     {formatOrderSummaryText(preparedSummary)}
                   </pre>
                 </div>
@@ -1029,10 +1200,10 @@ export function CheckoutView({
                         <strong className="text-[var(--text-strong)]">
                           {formatPrice(preparedSummary.subtotal)}
                         </strong>{" "}
-                        (plus confirmed {siteConfig.operations.takeoutFee} for
-                        takeout packaging) via{" "}
-                        {preparedSummary.customer.paymentPreference} at the
-                        counter.
+                        via {preparedSummary.customer.paymentPreference} at the
+                        counter. The {siteConfig.operations.takeoutFee} is not
+                        included in that amount; the shop confirms it when you
+                        order.
                       </li>
                     </ol>
                   ) : (
@@ -1062,8 +1233,15 @@ export function CheckoutView({
 
                 {/* CTAs */}
                 <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
-                  <Link href="/menu" className="button-primary">
-                    Start Another Order
+                  <Link
+                    href="/menu"
+                    className="button-primary"
+                    onClick={() => {
+                      clearStoredSummary();
+                      clearCart({ undoable: false });
+                    }}
+                  >
+                    Start a new order
                   </Link>
                   <Link href="/" className="button-secondary">
                     Return to Home

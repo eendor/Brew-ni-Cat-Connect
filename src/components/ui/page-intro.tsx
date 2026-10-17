@@ -1,6 +1,9 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { AmbientBackdrop } from "@/components/three/ambient-backdrop";
+import type { AmbientMood } from "@/components/three/scenes/ambient";
+
 import { Container } from "./container";
 
 type PageIntroProps = Readonly<{
@@ -8,6 +11,8 @@ type PageIntroProps = Readonly<{
   title: string;
   description: ReactNode;
   aside?: ReactNode;
+  /** Colour and ingredients of the decorative 3D backdrop. */
+  mood?: AmbientMood;
 }>;
 
 export function PageIntro({
@@ -15,11 +20,13 @@ export function PageIntro({
   title,
   description,
   aside,
+  mood,
 }: PageIntroProps) {
   return (
     <section className="page-hero" aria-labelledby="page-heading">
+      {mood ? <AmbientBackdrop mood={mood} /> : null}
       <Container className="py-12 sm:py-16 lg:py-20">
-        <nav aria-label="Breadcrumb" className="fade-up-reveal">
+        <nav aria-label="Breadcrumb" data-rise="">
           <ol className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
             <li>
               <Link
@@ -34,19 +41,25 @@ export function PageIntro({
           </ol>
         </nav>
         <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
-          <div className="max-w-3xl fade-up-reveal-delay">
-            <p className="eyebrow">{eyebrow}</p>
+          <div className="max-w-3xl">
+            <p className="eyebrow" data-rise="">
+              {eyebrow}
+            </p>
             <h1
               id="page-heading"
-              className="font-display mt-3 text-5xl leading-[1.02] font-semibold tracking-[-0.04em] text-balance text-[var(--text-strong)] sm:text-6xl"
+              data-split=""
+              className="font-display mt-3 text-5xl leading-[1.02] text-balance text-[var(--text-strong)] sm:text-6xl"
             >
               {title}
             </h1>
-            <div className="mt-5 max-w-2xl text-lg leading-8 text-pretty text-[var(--text-muted)]">
+            <div
+              className="mt-5 max-w-2xl text-lg leading-8 text-pretty text-[var(--text-muted)]"
+              data-rise=""
+            >
               {description}
             </div>
           </div>
-          {aside ? <div className="fade-up-reveal-delay-2">{aside}</div> : null}
+          {aside ? <div data-rise="">{aside}</div> : null}
         </div>
       </Container>
     </section>

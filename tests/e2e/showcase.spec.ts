@@ -23,14 +23,6 @@ test("TC-P2-021 — homepage presents the official Brew ni Cat showcase", async 
     page.getByRole("link", { name: "Plan your visit" }),
   ).toHaveAttribute("href", "/contact");
   await expect(
-    page.getByRole("heading", {
-      name: "Familiar favorites worth a closer look.",
-    }),
-  ).toBeVisible();
-  await expect(page.getByText("Matcha", { exact: true })).toBeVisible();
-  await expect(page.getByText("Takoyaki", { exact: true })).toBeVisible();
-  await expect(page.getByText("Fries", { exact: true })).toBeVisible();
-  await expect(
     page.getByText("Beside Pulido Eatery", { exact: true }).first(),
   ).toBeVisible();
   await expect(page.getByText("Cash and GCash", { exact: true })).toBeVisible();

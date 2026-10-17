@@ -18,8 +18,31 @@ export default defineConfig({
   },
   projects: [
     {
+      // Functional journeys run against the static, reduced-motion render
+      // (the same DOM, without WebGL) so they stay fast and deterministic.
       name: "chromium",
-      use: { ...devices["Desktop Chrome"] },
+      testIgnore: /three\.spec\.ts/,
+      use: {
+        ...devices["Desktop Chrome"],
+        contextOptions: { reducedMotion: "reduce" },
+      },
+    },
+    {
+      // The WebGL layer itself, with motion allowed and software GL.
+      name: "chromium-3d",
+      testMatch: /three\.spec\.ts/,
+      timeout: 180_000,
+      use: {
+        ...devices["Desktop Chrome"],
+        contextOptions: { reducedMotion: "no-preference" },
+        launchOptions: {
+          args: [
+            "--use-angle=swiftshader",
+            "--enable-unsafe-swiftshader",
+            "--ignore-gpu-blocklist",
+          ],
+        },
+      },
     },
   ],
   webServer: {

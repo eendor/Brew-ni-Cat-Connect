@@ -599,3 +599,125 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Files/modules affected:** `docs/code-review.md`, `docs/development-log.md`.\
 **Git branch:** `docs/direct-push-exceptions`\
 **Next action:** Merge after review.
+
+## 2026-10-17 — Three.js experience layer across every page
+
+**Date:** 2026-10-17\
+**Phase:** Phase 3 — Menu and Ordering Flow (presentation layer)\
+**Task:** Bring the standalone three.js prototype into the real site on every route, with all `main` content and features kept, in a realistic (physically based) "Night Shift Glow" look.\
+**Summary:** Added a WebGL layer under `src/components/three/` (plain three.js plus GSAP ScrollTrigger, loaded with `next/dynamic` and `ssr: false`). Home gets a pinned scroll showcase of the Matcha and Cat-Feine cups, takoyaki, fries and Buldak Carbo. Menu photos become glossy 3D prints, and Add to Order throws the item into a 3D basket on the real cart button before the drawer opens. Gallery gets a draggable photo ring. Contact and the home visit section get a flip sign and a street model with the small Brew ni Cat unit to the right of Pulido Eatery. About, cart and checkout get quiet ambient backdrops. Rendering uses physical materials (transmission, IOR 1.45, clearcoat), a bundled CC0 studio HDRI, ACES tone mapping, soft and contact shadows, depth of field and film grain. The site theme moves to the dark palette with Big Shoulders and Archivo. The "Ready to enjoy?" line is removed from menu cards. Reduced motion and devices without WebGL 2 keep a full static page; phones get a lower pixel ratio and fewer particles; slow frames drop depth of field and bloom.\
+**Changes:**
+- `src/components/three/`: engine (renderer, HDRI, PBR texture generators, post-processing, frame loop, quality and motion checks), scenes, canvas components and page wrappers with static fallbacks;
+- `src/app/globals.css`, `src/app/layout.tsx`: dark tokens, `next/font` families, 3D layout styles, site-wide cart layer;
+- `src/app/page.tsx`, `menu`, `gallery`, `contact`, `about` pages, `PageIntro`, cart and checkout views: 3D sections and recoloured surfaces with all existing content;
+- `src/components/menu/menu-item-card.tsx`, `menu-item-order-dialog.tsx`, `cart-trigger-button.tsx`: 3D tile slot, toss after a successful `addItem`, basket anchor;
+- `public/three/`: CC0 HDRI and the cat sticker cut from the shop's Matcha photo;
+- `tests/unit/three-layer.test.tsx`, `tests/e2e/three.spec.ts`, `tests/e2e/showcase.spec.ts`, `playwright.config.ts`: new 3D cases and a separate `chromium-3d` project;
+- `docs/decisions.md` (ADR-014), `docs/system-architecture.md` (§18), `docs/software-and-apis.md` (packages and asset licences), `docs/test-cases.md` (§12), this entry.
+**Files/modules affected:** as listed above; `package.json` and `package-lock.json` add `three` 0.186.1, `gsap` 3.15.0 and `@types/three` 0.186.0.\
+**Testing performed:** `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm test` (16 files / 120 tests passed), `npm run build`, `npm run test:e2e` (18/18 passed: 13 functional cases under reduced motion, 5 WebGL cases), `python3 scripts/validate_phase0_docs.py` (PASS). Production screenshots at 1440×900 and 390×844 for every route and scroll-through videos of home and menu were reviewed for blank canvases, overlap and console errors.\
+**Note:** Food and drink models are procedural with generated PBR maps because no CC0 photoscans of these dishes exist. Captures used software WebGL, so they understate frame rate and show some tile lag behind fast scrolling.\
+**Git branch:** `feat/threejs-experience`\
+**Pull request:** [#23](https://github.com/eendor/Brew-ni-Cat-Connect/pull/23) — open for review\
+**Next action:** Owner review of the branch on a real phone and desktop GPU; open a pull request only when asked.
+
+## 2026-10-17 — Align the 3D site to the updated dark design system
+
+**Date:** 2026-10-17\
+**Phase:** Phase 3 — Menu and Ordering Flow (presentation layer)\
+**Task:** Bring the `feat/threejs-experience` branch in line with the design system after it was updated to the "Night Shift Glow" direction, then do a hands-on UI sweep of every page and state.\
+**Summary:** The project design system now describes the dark direction directly (palette, Big Shoulders and Archivo type roles, radius and spacing scales, motion timings, PBR rendering rules, reduced-motion behaviour and AA contrast), so ADR-014 records an update rather than an override. The site was aligned to it: font sizes and corner radii now come from one token ramp, the two near-identical muted greys are merged, a dedicated error colour (#FF8577) replaces the light-theme reds that failed AA on black, and dead CSS from the old spruce theme is removed. A manual sweep at 1440, 1280, 768, 390 and 360 px found and fixed: the home showcase controls sitting below the fold, the 3D basket drawing over the order dialog and cart drawer, cramped two-column showcase controls on tablets, copy over the product on phones (now with a bottom scrim), the Buldak Carbo bowl showing its empty underside while turning, truncated item names in the cart drawer, a visible duplicate "(Selected)" label, an invisible white-on-white copy button, 14 px checkout inputs that zoom on iOS, checkout errors that stayed off-screen on phones (the first invalid field now gets focus), touch targets under 44 px (footer links, steppers, close and remove buttons, clear-cart links, payment options, the mobile menu button), no current-page marker in the navigation, a lowercase landmark on the contact page, and a tall empty gallery stage on phones.\
+**Files/modules affected:** `src/app/globals.css`, `src/app/page.tsx`, `about`, `contact`, `gallery`, `not-found` and `error` pages, layout (`site-header`, `mobile-navigation`, `site-footer`, new `nav-link.tsx`), menu, cart and checkout components, `src/components/three/scenes/models.ts` and `showcase.ts`, `docs/decisions.md` (ADR-014), `docs/test-cases.md` (MAN-P4-002, MAN-P4-003), this entry. No new dependencies.\
+**Testing performed:** `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm test` (16 files / 120 tests passed), `npm run build`, Playwright against the production build (18/18 passed), `python3 scripts/validate_phase0_docs.py` (PASS); manual sweep MAN-P4-002 with before and after captures kept outside the repository. No new automated tests were added for this pass.\
+**Git branch:** `feat/threejs-experience`\
+**Pull request:** [#23](https://github.com/eendor/Brew-ni-Cat-Connect/pull/23) — open for review\
+**Next action:** Owner click-through in a real browser; open the pull request after that.
+
+## 2026-10-17 — Full-bleed layout, cinematic menu, borderless visit sign and click-through fixes
+
+**Date:** 2026-10-17\
+**Phase:** Phase 3 — Menu and Ordering Flow (presentation layer)\
+**Task:** Make every page full-bleed instead of a narrow centred column, remove the black box around the OPEN/CLOSED sign and street model, give the menu a cinematic 3D opening and category moments, and fix the issues found in a hands-on click-through.\
+**Summary:**
+- **Full-bleed layout:** the shared `Container` now uses `--shell-max: 90rem` of content plus fluid gutters (`--shell-pad: clamp(1rem, 4vw, 4rem)`), so section backgrounds and 3D scenes run edge to edge and text is no longer held in a 72rem column (at 1920 px the side gutters drop from 384 px to about 240 px, and at 1024 px from 32 px to 40 px fluid). The menu category bar spans the viewport. The menu grid goes to three columns at 1280 px. Cart and checkout put the items/form and the order summary side by side from 900 px.
+- **Visit sign:** the stage now sits outside the bordered card on a transparent, full-bleed canvas. The sign texture has no dark margin (alpha-tested face). A wide-screen camera layout removes the empty band under the sign and shop.
+- **Cinematic menu:** a full-viewport hero with a glowing "THE MENU" title over a three.js scene (turning cups with two-tone rim light, floating ice, beans and leaves, a soft floor shadow). The scene dollies and fades into the catalog as you scroll. Each category gets an indexed heading whose glow colour shifts with it (drinks green/amber, bites orange/yellow, Buldak pink/cyan), and a fixed glow field follows the active category. Cards fly in with a depth stagger, and a rim sheen follows the pointer. 3D photo prints get pointer and scroll parallax. Film grain and a vignette apply on large hover screens only. Reduced motion keeps the static page; phones get one cup and fewer particles.
+- **Click-through fixes:**
+  - mobile menu scrim with blur that closes on tap, plus a scroll lock
+  - fixed-width gallery caption with the prev/next buttons pinned
+  - the order dialog's Add button reads the latest size, flavour and quantity from a ref, so rapid clicks can't add stale choices
+  - the toss is shortened to 420 ms, so the drawer opens about 0.42 s after Add (was about 1 s)
+  - drawer lines stack the stepper under the name in narrow containers
+  - the ₱10 takeout box is shown as a separate line marked "not included in the subtotal" in the drawer, cart, checkout and copied summary (the SRS confirms the price but defers the fee rule, so nothing is added to totals)
+  - checkout steps scroll to the step section and focus its heading
+  - the cart is kept until the summary is copied or "Start a new order" is pressed, and the prepared summary survives a refresh
+  - navigation no longer starts part-way down the page (`data-scroll-behavior="smooth"`), and the header keeps one height
+  - a 5-second Undo toast after Remove and Clear all
+  - wider header spacing between 1024 and 1280 px
+  - `scroll-margin-top` on the visit section
+  - designed letter placeholders for items without photos (no stock images)
+  - a "Page not found" title on the 404 page
+  - non-breaking arrows on the checkout buttons
+  - 4× MSAA in the post-processing target and smoother ice geometry
+  - `scrollbar-gutter: stable`
+
+**Files/modules affected:** `src/components/ui/container.tsx`, `src/app/globals.css`, `src/app/layout.tsx`, `src/app/page.tsx`, `src/app/menu/page.tsx`, `src/app/not-found.tsx`, new `src/components/three/menu-hero.tsx`, `canvas/menu-hero-canvas.tsx`, `scenes/menu-hero.ts`, `src/components/menu/category-glow.ts`, `menu-catalog.tsx`, `menu-item-card.tsx`, `menu-item-order-dialog.tsx`, `scenes/visit.ts`, `scenes/menu-cards.ts`, `scenes/showcase.ts`, `scenes/models.ts`, `engine/post.ts`, `cart-toss.ts`, `cart-fx.ts`, layout header and mobile navigation, cart drawer, line item, cart page, new `cart-undo-toast.tsx`, `src/context/cart-context.tsx`, `src/components/checkout/checkout-view.tsx`, new `src/lib/ordering/summary-storage.ts`, `src/config/site.ts`, `tests/unit/menu-order-dialog.test.tsx`, `tests/unit/checkout.test.tsx`, `docs/system-architecture.md` (§18), `docs/test-cases.md`, `docs/decisions.md` (ADR-014), this entry. No new dependencies.\
+**Testing performed:** `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm test` (16 files / 122 tests passed, including the new TC-P4-011 and TC-P4-012 race cases, which fail on the previous dialog code), `npm run build`, `npm run test:e2e` against the production build (18/18 passed; TC-P2-027 now looks for the loading status inside `main` because the undo toast adds a second live region, and TC-P4-002 waits for the menu hero instead of an ambient backdrop on `/menu`), `python3 scripts/validate_phase0_docs.py` (PASS). Before and after captures at 1024, 1280, 1440 and 1920 px (layout) and at 1440 and 390 px (menu, sign, every menu tab, mobile navigation, gallery ring, drawer and undo, cart, checkout steps, sign flip, about) were reviewed; they are kept outside the repository.\
+**Git branch:** `feat/threejs-experience`\
+**Pull request:** [#23](https://github.com/eendor/Brew-ni-Cat-Connect/pull/23) — open for review\
+**Next action:** Owner click-through on a desktop GPU and a real phone (MAN-P4-003).
+
+## 2026-10-17 — Category-lit menu cards and no scroll hint
+
+**Date:** 2026-10-17\
+**Phase:** Phase 3 — Menu and Ordering Flow (presentation layer)\
+**Task:** Remove the vertical "Scroll" hint from the 3D heroes and redesign the menu cards, which all looked like the same generic box.\
+**Summary:**
+- **Scroll hint:** the vertical "Scroll" label and line are gone from the menu hero and the home showcase, along with their CSS and the drip animation.
+- **Menu cards:** each card is now a small product studio lit by its item's glow (or its category's glow when the item has none): a dark stage with a glow pool on the floor, the real shop photo standing as a print with a contact shadow and a soft floor reflection, a rim light on the top edge, the name in large Big Shoulders with the nickname as a small label above it, and a large "From" price in the glow colour. Short sizes show as price chips, flavours as chips with a glow dot, and long options keep a readable list. Items without a shop photo get their first letter as a lit sign on a studio plinth instead of an empty box. The footer holds only the Order button.
+- **Layout:** each category leads with its first photo item, which takes two thirds of the row on wide screens; short last rows stretch to fill the width (`menu-layout.ts`). Wide cards switch to a side-by-side stage and details through a container query.
+- **Motion:** a light sweep crosses the stage on hover, and cards without a live 3D tile now get the same gentle pointer tilt as photo cards; nothing tilts on touch or with reduced motion. 3D tiles no longer show their dark back deep in the scene before their entrance starts.
+
+**Files/modules affected:** `src/components/menu/menu-item-card.tsx`, `menu-catalog.tsx`, new `menu-layout.ts`, `src/components/three/showcase-data.ts` (`matchGlowForItem`), `scenes/menu-cards.ts`, `menu-hero.tsx`, `home-showcase.tsx`, `src/app/globals.css`, new `tests/unit/menu-layout.test.ts`, `docs/test-cases.md` (TC-P4-013 to TC-P4-015, MAN-P4-005), this entry. No new dependencies.\
+**Testing performed:** `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm test` (17 files / 125 tests passed), `npm run build`, Playwright against the production build (18/18 passed), `python3 scripts/validate_phase0_docs.py` (PASS); manual review MAN-P4-005 at 1440, 1920, 768 and 390 px with before and after captures kept outside the repository.\
+**Git branch:** `feat/threejs-experience`\
+**Pull request:** [#23](https://github.com/eendor/Brew-ni-Cat-Connect/pull/23) — open for review\
+**Next action:** Owner click-through on a desktop GPU and a real phone (MAN-P4-003).
+
+## 2026-10-17 — Plain menu cards and crisp category headings
+
+**Date:** 2026-10-17\
+**Phase:** Phase 3 — Menu and Ordering Flow (presentation layer)\
+**Task:** Replace the lit-stage menu cards and the wide lead card with a plain, uniform card grid, and stop the category headings from looking blurred.\
+**Summary:**
+- **Cards:** every card is a plain dark card. Photo items show the shop photo across the top at 4:3, followed by the name (Big Shoulders, nickname as a small label), the price, size chips or the options list, flavour chips, and the Order button. Imageless items start straight with the name; there is no placeholder art. The only colour accent is the price, in the item's glow (or the category's). The stage, glow pool, floor, contact shadow, reflection, light sweep, rim light, plinth and hover glow are removed.
+- **Grid:** one uniform grid per category: 1 column on phones, 2 from 768 px, 3 from 1280 px. Cards in a row share the row height. The lead-card layout (`menu-layout.ts`) and its tests are removed.
+- **Photos:** menu photos are plain images again. The 3D photo tiles (`MenuTilesLayer`, `menu-tiles-canvas.tsx`, `scenes/menu-cards.ts`) are removed; the 3D basket toss on Add to Order stays.
+- **Motion:** pointer tilt and sheen are removed. On hover-capable pointers a card lifts 3 px and its border lightens; nothing moves with reduced motion. Cards enter with a 500 ms fade and 20 px rise.
+- **Category headings:** the blur filter and text glow are removed from the heading entrance, along with the haze behind it. Headings now fade and rise 12 px over 400 ms and are otherwise always crisp.
+
+**Files/modules affected:** `src/components/menu/menu-item-card.tsx`, `menu-catalog.tsx`, removed `menu-layout.ts`, `src/components/three/layers.tsx`, removed `canvas/menu-tiles-canvas.tsx` and `scenes/menu-cards.ts`, `src/app/menu/page.tsx`, `src/app/globals.css`, removed `tests/unit/menu-layout.test.ts`, `tests/unit/three-layer.test.tsx` (TC-P4-009), `tests/e2e/three.spec.ts` (TC-P4-003), `docs/test-cases.md` (TC-P4-013 to TC-P4-015 retired with their tests, MAN-P4-005), `docs/system-architecture.md`, this entry. No new dependencies.\
+**Testing performed:** `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm test` (16 files / 122 tests passed), `npm run build`, Playwright against the production build (18/18 passed), `python3 scripts/validate_phase0_docs.py` (PASS); manual review MAN-P4-005 at 1440, 1024, 768 and 390 px with captures kept outside the repository.\
+**Git branch:** `feat/threejs-experience`\
+**Pull request:** [#23](https://github.com/eendor/Brew-ni-Cat-Connect/pull/23) — open for review\
+**Next action:** Owner click-through on a desktop GPU and a real phone (MAN-P4-003).
+
+## 2026-10-18 — PR #23 rework before merge: UX clean-up, cinematic motion and 3D states
+
+**Date:** 2026-10-18\
+**Phase:** Phase 3 — Menu and Ordering Flow (presentation layer)\
+**Task:** Review PR #23 critically and rework what was wrong, weak, over-built or inconsistent; find and fix the remaining UI/UX issues; make animations, transitions and states lively and cinematic with three.js and GSAP; then merge.\
+**Summary:**
+- **Fewer repeated actions:** the home favourites section repeated the hero's items, photos and three "Browse the menu" links, so it is gone. The menu page no longer has a "Browse the menu" button of its own, Contact drops "Browse it here" and its second Maps button, the 404 keeps one way out, and the cart page drops its extra "Continue browsing menu". Contact now has one visit section (address, hours once, directions and the sign) instead of an address card, an hours card and a sign section that repeated each other. The home visit area is a heading, the address, one Maps button and the sign. The menu's boxed notice is a one-line note, and the drawer's notice box is one line.
+- **Menu:** option names joined with "+" ("Nachos+Fries+Meat") now read "Nachos + Fries + Meat" everywhere (card, order dialog, cart, checkout and the copied summary); long options are full-width rows in the dialog instead of three columns that spilled past the dialog edge. The card button reads "Add to order". Hyphenated names no longer break at the hyphen. The active category tab now follows the page from the layout (no lag), a clicked tab is current at once, and the tab bar only scrolls when the active tab is cut off.
+- **Checkout:** the prepared summary lives in this tab only (sessionStorage, not localStorage, since it holds the name and phone), is dropped after 12 hours or when malformed, and is cleared when the cart changes. Copy clears the cart only when the copy worked; a failed copy says so and selects the text.
+- **Design system:** the glow bus, page glow field, film-grain overlay, glow floors and green glow shadows are removed; legacy token names (`--deep-green`, `--warm-gold`, `--surface-cinema`) give way to the Night Shift names, and dead CSS is deleted. The visit sign fallback is plain type with no box.
+- **Motion (ADR-015):** a GSAP motion layer gives headings a line-by-line reveal, blocks a rise and photos an unveil as they scroll in; primary calls to action lean toward the pointer; internal navigations get a title-card curtain; the drawer, order dialog, mobile menu and undo toast animate out as well as in. Nothing animates with reduced motion.
+- **3D:** the empty cart (drawer, cart page and checkout) shows the shop's clear cup with ice and beans drifting; the order-summary step pours it full of matcha; the 404 shows the cup tipped over in front of a backlit "404". The add-to-cart toss runs only on the menu, draws only while it flies and bumps the real cart button; the persistent header basket is gone. The gallery ring shows only the photos without people. Scenes compile their shaders before they show, free their renderer if they fail part-way, retry a failed HDRI, and start late when they sit off screen.
+- **Teammate files:** Van's cart drawer, cart page, line item, order dialog and checkout view were touched for the exit animations, the state scenes, readable option names and the summary storage and copy fixes; Shan's validation is unchanged.
+
+**Files/modules affected:** `src/app/` (layout, globals.css, home, menu, about, gallery, contact and 404 pages), new `src/components/motion/` (`gsap.ts`, `motion-director.tsx`, `route-curtain.tsx`, `use-presence.ts`, `curtain-state.ts`), `src/components/three/` (engine, canvases, scenes, new `state-scene.tsx`, `canvas/state-canvas.tsx` and `scenes/state.ts`), menu, cart, checkout and layout components, `src/components/ui/` (`reveal.tsx`, `container.tsx`, `page-intro.tsx`, `section-heading.tsx`), `src/config/gallery.ts`, new `src/lib/menu/format-name.ts`, `src/lib/ordering/summary-storage.ts`, unit and e2e tests (TC-P3-052, TC-P4-016 to TC-P4-022 and updates to TC-P1-008, TC-P2-002, TC-P2-016, TC-P2-021, TC-P4-004, TC-P4-005, TC-P4-009), `playwright.config.ts`, `docs/decisions.md` (ADR-013 status, ADR-014, new ADR-015), `docs/system-architecture.md` (§18), `docs/software-and-apis.md`, `docs/test-cases.md` (MAN-P4-006), this entry. No new dependencies.\
+**Testing performed:** `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm test` (17 files / 127 tests passed), `npm run build`, `npm run test:e2e -- --workers=2` (21/21 passed), `python3 scripts/validate_phase0_docs.py` (PASS), `npm run audit` (passes; five high advisories remain in dev-only lint tooling through `eslint-config-next`). Manual review MAN-P4-006: an automated text-overflow scan of every page and all 16 order dialogs at 1440, 1024, 768 and 390 px, the drawer, cart and checkout with long option names, the mobile menu, a motion pass that scrolls every page and checks nothing stays hidden, and captures of the 404, empty cart, drawer and order-ready scenes; captures are kept outside the repository.\
+**Git branch:** `feat/threejs-experience`\
+**Pull request:** [#23](https://github.com/eendor/Brew-ni-Cat-Connect/pull/23) — self-reviewed and squash-merged into `main`\
+**Next action:** Owner click-through on a real phone (MAN-P4-003).
