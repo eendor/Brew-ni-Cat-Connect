@@ -13,6 +13,7 @@ import {
 import { Container } from "@/components/ui/container";
 import { ExternalLink } from "@/components/ui/external-link";
 import { PageIntro } from "@/components/ui/page-intro";
+import { StateScene } from "@/components/three/state-scene";
 import { siteConfig } from "@/config/site";
 import { useCart } from "@/context/cart-context";
 import {
@@ -22,6 +23,7 @@ import {
   subscribeStoredSummary,
 } from "@/lib/ordering/summary-storage";
 import { fetchPublicMenu } from "@/lib/menu/fetch-public-menu";
+import { formatOptionName } from "@/lib/menu/format-name";
 import { formatPrice } from "@/lib/menu/format-price";
 import type { MenuCatalog } from "@/types/menu";
 import type { CartItem, FulfillmentType } from "@/types/ordering";
@@ -46,6 +48,49 @@ export type PreparedOrderSummary = Readonly<{
   itemCount: number;
 }>;
 
+/** Shape check for a summary read back from storage. */
+function isPreparedSummary(value: unknown): value is PreparedOrderSummary {
+  if (typeof value !== "object" || value === null) return false;
+  const summary = value as Partial<PreparedOrderSummary>;
+  const customer = summary.customer as Partial<CustomerDetails> | undefined;
+  return (
+    typeof summary.createdAt === "string" &&
+    typeof summary.subtotal === "number" &&
+    typeof summary.itemCount === "number" &&
+    (summary.fulfillment === "pickup" ||
+      summary.fulfillment === "external-rider") &&
+    typeof customer?.name === "string" &&
+    typeof customer.phone === "string" &&
+    typeof customer.notes === "string" &&
+    (customer.paymentPreference === "Cash" ||
+      customer.paymentPreference === "GCash") &&
+    Array.isArray(summary.lines) &&
+    summary.lines.every(
+      (line: Partial<CartItem> | null) =>
+        typeof line?.key === "string" &&
+        typeof line.itemName === "string" &&
+        typeof line.variantName === "string" &&
+        typeof line.quantity === "number" &&
+        typeof line.unitPrice === "number" &&
+        typeof line.lineTotal === "number",
+    )
+  );
+}
+
+const readPreparedSummary = () => getStoredSummary(isPreparedSummary);
+
+/** What the summary was made from: lines, quantities, prices, fulfillment. */
+function orderSignature(
+  lines: readonly CartItem[],
+  fulfillment: FulfillmentType,
+) {
+  return `${fulfillment}|${lines
+    .map((line) => `${line.key}x${line.quantity}@${line.unitPrice}`)
+    .join(",")}`;
+}
+
+type CopyState = "idle" | "copied" | "failed";
+
 export function formatOrderSummaryText(summary: PreparedOrderSummary): string {
   const fulfillmentText =
     summary.fulfillment === "pickup"
@@ -55,7 +100,7 @@ export function formatOrderSummaryText(summary: PreparedOrderSummary): string {
   const itemsText = summary.lines
     .map(
       (l) =>
-        `- ${l.quantity}× ${l.itemName} (${l.variantName}${l.flavor ? `, ${l.flavor}` : ""}) — ${formatPrice(l.lineTotal)}`,
+        `- ${l.quantity}× ${l.itemName} (${formatOptionName(l.variantName)}${l.flavor ? `, ${l.flavor}` : ""}) — ${formatPrice(l.lineTotal)}`,
     )
     .join("\n");
 
@@ -95,12 +140,20 @@ export function CheckoutView({
 
   const [formStep, setStep] = useState<CheckoutStep>("details");
   // The generated summary survives a refresh; while one is stored the page
-  // stays on the final step until the visitor starts a new order.
-  const preparedSummary = useSyncExternalStore(
+  // stays on the final step until the visitor starts a new order. It only
+  // stands for the cart it was made from: once the cart changes (other than
+  // being emptied by a successful copy), the visitor starts again.
+  const storedSummary = useSyncExternalStore(
     subscribeStoredSummary,
-    getStoredSummary<PreparedOrderSummary>,
+    readPreparedSummary,
     () => null,
   );
+  const summaryIsStale =
+    storedSummary !== null &&
+    !isEmpty &&
+    orderSignature(storedSummary.lines, storedSummary.fulfillment) !==
+      orderSignature(lines, fulfillment);
+  const preparedSummary = summaryIsStale ? null : storedSummary;
   const step: CheckoutStep = preparedSummary ? "send" : formStep;
   const flowRef = useRef<HTMLElement>(null);
   const [customer, setCustomer] = useState<CustomerDetails>({
@@ -113,7 +166,9 @@ export function CheckoutView({
   const [revalidationWarnings, setRevalidationWarnings] = useState<
     readonly string[]
   >([]);
-  const [isCopied, setIsCopied] = useState(false);
+  const [copyState, setCopyState] = useState<CopyState>("idle");
+  const copyTimerRef = useRef<number | undefined>(undefined);
+  const summaryTextRef = useRef<HTMLPreElement>(null);
 
   const step1HeadingRef = useRef<HTMLHeadingElement>(null);
   const step2HeadingRef = useRef<HTMLHeadingElement>(null);
@@ -122,6 +177,12 @@ export function CheckoutView({
   const nameInputId = useId();
   const phoneInputId = useId();
   const notesInputId = useId();
+
+  useEffect(() => {
+    if (summaryIsStale) clearStoredSummary();
+  }, [summaryIsStale]);
+
+  useEffect(() => () => window.clearTimeout(copyTimerRef.current), []);
 
   // Revalidate cart prices against authoritative menu on mount
   useEffect(() => {
@@ -199,13 +260,34 @@ export function CheckoutView({
     goToStep("send");
   }
 
-  function copySummaryToClipboard(summary: PreparedOrderSummary) {
-    const text = formatOrderSummaryText(summary);
-    void navigator.clipboard?.writeText(text);
-    setIsCopied(true);
+  /** Selects the summary text so it can be copied by hand. */
+  function selectSummaryText() {
+    const pre = summaryTextRef.current;
+    const selection = window.getSelection?.();
+    if (!pre || !selection) return;
+    const range = document.createRange();
+    range.selectNodeContents(pre);
+    selection.removeAllRanges();
+    selection.addRange(range);
+  }
+
+  async function copySummaryToClipboard(summary: PreparedOrderSummary) {
+    window.clearTimeout(copyTimerRef.current);
+    try {
+      if (typeof navigator.clipboard?.writeText !== "function") {
+        throw new Error("Clipboard unavailable");
+      }
+      await navigator.clipboard.writeText(formatOrderSummaryText(summary));
+    } catch {
+      // nothing was copied, so the cart stays and the text is selected
+      selectSummaryText();
+      setCopyState("failed");
+      return;
+    }
+    setCopyState("copied");
     // copied: the order now lives in the visitor's message to the shop
     clearCart({ undoable: false });
-    setTimeout(() => setIsCopied(false), 2500);
+    copyTimerRef.current = window.setTimeout(() => setCopyState("idle"), 2500);
   }
 
   // If cart is empty and not on send step, show empty cart notice
@@ -223,21 +305,28 @@ export function CheckoutView({
         <section className="py-16 sm:py-20">
           <Container>
             <div className="mx-auto max-w-lg text-center rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-8 sm:p-12 shadow-[var(--shadow-subtle)]">
-              <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-[var(--surface-warm)] text-[var(--accent-strong)] mb-4">
-                <svg
-                  className="size-8"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
-                  <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
-                  <line x1="3" y1="6" x2="21" y2="6" />
-                </svg>
-              </div>
+              <StateScene
+                kind="empty"
+                tone="card"
+                className="mx-auto mb-4 size-44 sm:size-52"
+                fallback={
+                  <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-[var(--surface-warm)] text-[var(--accent-strong)]">
+                    <svg
+                      className="size-8"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+                      <line x1="3" y1="6" x2="21" y2="6" />
+                    </svg>
+                  </div>
+                }
+              />
               <h2 className="font-display text-2xl text-[var(--text-strong)]">
                 Your cart is empty
               </h2>
@@ -317,14 +406,14 @@ export function CheckoutView({
                 className={`flex items-center gap-2 ${
                   step === "details"
                     ? "text-[var(--accent-strong)] font-extrabold"
-                    : "text-[var(--deep-green)] font-semibold"
+                    : "text-[var(--accent-solid)] font-semibold"
                 }`}
               >
                 <span
                   className={`flex size-7 items-center justify-center rounded-full text-xs ${
                     step === "details"
                       ? "bg-[var(--accent-solid)] text-[var(--on-accent)]"
-                      : "bg-[var(--surface-green)] text-[var(--deep-green)]"
+                      : "bg-[var(--surface-accent)] text-[var(--accent-solid)]"
                   }`}
                 >
                   1
@@ -343,7 +432,7 @@ export function CheckoutView({
                   step === "review"
                     ? "text-[var(--accent-strong)] font-extrabold"
                     : step === "send"
-                      ? "text-[var(--deep-green)] font-semibold"
+                      ? "text-[var(--accent-solid)] font-semibold"
                       : "text-[var(--text-subtle)] font-medium"
                 }`}
               >
@@ -352,7 +441,7 @@ export function CheckoutView({
                     step === "review"
                       ? "bg-[var(--accent-solid)] text-[var(--on-accent)]"
                       : step === "send"
-                        ? "bg-[var(--surface-green)] text-[var(--deep-green)]"
+                        ? "bg-[var(--surface-accent)] text-[var(--accent-solid)]"
                         : "bg-[var(--surface-warm)] text-[var(--text-subtle)]"
                   }`}
                 >
@@ -420,7 +509,7 @@ export function CheckoutView({
                           <span className="font-extrabold text-[var(--text-strong)] text-base block">
                             Pickup at Shop
                           </span>
-                          <span className="text-xs text-[var(--deep-green)] font-semibold mt-1 block">
+                          <span className="text-xs text-[var(--accent-solid)] font-semibold mt-1 block">
                             In-person pickup · Free
                           </span>
                         </div>
@@ -509,7 +598,7 @@ export function CheckoutView({
                           <ExternalLink
                             key={riderUrl}
                             href={riderUrl}
-                            className="inline-flex items-center text-xs font-bold text-[var(--deep-green)] underline"
+                            className="inline-flex items-center text-xs font-bold text-[var(--accent-solid)] underline"
                           >
                             Rider Partner {index + 1}
                           </ExternalLink>
@@ -954,21 +1043,28 @@ export function CheckoutView({
           {step === "send" && preparedSummary && (
             <div className="mx-auto max-w-4xl">
               <div className="rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-8 sm:p-12 shadow-[var(--shadow-card)] text-center">
-                <div className="mx-auto flex size-20 items-center justify-center rounded-full bg-[var(--surface-warm)] text-[var(--accent-strong)] mb-6">
-                  <svg
-                    className="size-10"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden="true"
-                  >
-                    <path d="M22 2L11 13" />
-                    <polygon points="22 2 15 22 11 13 2 9 22 2" />
-                  </svg>
-                </div>
+                <StateScene
+                  kind="ready"
+                  tone="card"
+                  className="mx-auto mb-4 size-48 sm:size-56"
+                  fallback={
+                    <div className="mx-auto flex size-20 items-center justify-center rounded-full bg-[var(--surface-warm)] text-[var(--accent-strong)]">
+                      <svg
+                        className="size-10"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden="true"
+                      >
+                        <path d="M22 2L11 13" />
+                        <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                      </svg>
+                    </div>
+                  }
+                />
 
                 <span className="eyebrow block">Order Summary Ready</span>
                 <h2
@@ -993,14 +1089,16 @@ export function CheckoutView({
 
                 {/* Formatted Order Text Box with Copy Button */}
                 <div className="mt-6 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-warm)] p-5 text-left">
-                  <div className="flex items-center justify-between pb-3 border-b border-[var(--border-strong)]/40 mb-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-[var(--border-strong)]/40 mb-3">
                     <span className="text-xs font-bold uppercase tracking-wider text-[var(--text-subtle)]">
                       Formatted Order Summary
                     </span>
                     <button
                       type="button"
-                      onClick={() => copySummaryToClipboard(preparedSummary)}
-                      className="inline-flex min-h-11 rounded-lg border border-[var(--border-strong)] bg-[var(--surface-card)] px-3 py-2 text-sm font-bold text-[var(--text-strong)] hover:border-[var(--accent-solid)] transition-colors inline-flex items-center gap-1.5"
+                      onClick={() =>
+                        void copySummaryToClipboard(preparedSummary)
+                      }
+                      className="inline-flex min-h-11 items-center gap-1.5 whitespace-nowrap rounded-lg border border-[var(--border-strong)] bg-[var(--surface-card)] px-3 py-2 text-sm font-bold text-[var(--text-strong)] transition-colors hover:border-[var(--accent-solid)]"
                     >
                       <svg
                         className="size-3.5"
@@ -1022,11 +1120,32 @@ export function CheckoutView({
                         />
                         <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
                       </svg>
-                      {isCopied ? "Copied to clipboard!" : "Copy order summary"}
+                      {copyState === "copied"
+                        ? "Copied to clipboard!"
+                        : "Copy order summary"}
                     </button>
                   </div>
 
-                  <pre className="whitespace-pre-wrap font-mono text-xs sm:text-sm text-[var(--text-strong)] leading-relaxed select-all">
+                  {/* always rendered, so screen readers hear the result */}
+                  <p
+                    role="status"
+                    className={
+                      copyState === "idle"
+                        ? "sr-only"
+                        : "mb-3 text-sm font-semibold text-[var(--text-muted)]"
+                    }
+                  >
+                    {copyState === "copied"
+                      ? "Copied. Paste it into Messenger or read it out on the phone."
+                      : copyState === "failed"
+                        ? "Couldn’t copy automatically. The summary is selected, so copy it with Ctrl+C or a long press."
+                        : null}
+                  </p>
+
+                  <pre
+                    ref={summaryTextRef}
+                    className="whitespace-pre-wrap font-mono text-xs sm:text-sm text-[var(--text-strong)] leading-relaxed select-all [overflow-wrap:anywhere]"
+                  >
                     {formatOrderSummaryText(preparedSummary)}
                   </pre>
                 </div>
