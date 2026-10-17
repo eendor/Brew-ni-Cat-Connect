@@ -3,6 +3,8 @@
 import Image from "next/image";
 import { useState } from "react";
 
+import { optimizedSrc } from "@/components/three/engine/image-src";
+import { glowForItem } from "@/components/three/showcase-data";
 import { getMenuItemImage } from "@/config/menu-item-images";
 import { formatPrice, getLowestItemPrice } from "@/lib/menu/format-price";
 import type { MenuCatalog, MenuItem } from "@/types/menu";
@@ -52,12 +54,16 @@ export function MenuItemCard({
     >
       <div className="flex items-center gap-4">
         {image ? (
-          <div className="relative size-20 shrink-0 overflow-hidden rounded-2xl bg-[var(--surface-warm)] shadow-[var(--shadow-subtle)] sm:size-24">
+          <div
+            className="relative size-24 shrink-0 overflow-hidden rounded-2xl bg-[var(--surface-warm)] shadow-[var(--shadow-subtle)] sm:size-28"
+            data-three-tile={optimizedSrc(image.src, 384)}
+            data-glow={glowForItem(item.name)}
+          >
             <Image
               src={image.src}
               alt={image.alt}
               fill
-              sizes="96px"
+              sizes="112px"
               className="menu-card__image object-cover"
             />
           </div>
@@ -163,14 +169,12 @@ export function MenuItemCard({
 
       {/* Phase 3 Ordering Trigger */}
       {canOrder ? (
-        <div className="flex items-center justify-between gap-3 border-t border-[var(--border-soft)] pt-4">
-          <span className="hidden text-xs font-medium text-[var(--text-subtle)] sm:inline">
-            Ready to enjoy?
-          </span>
+        <div className="flex items-center justify-end gap-3 border-t border-[var(--border-soft)] pt-4">
           <button
             type="button"
+            data-order-trigger=""
             onClick={() => setIsOrderOpen(true)}
-            className="button-primary min-h-12 w-full whitespace-nowrap px-4 py-2 text-xs font-bold sm:ml-auto sm:w-auto"
+            className="button-primary min-h-12 w-full whitespace-nowrap px-4 py-2 text-xs font-bold sm:w-auto"
             aria-label={`Order ${item.name}`}
           >
             Order / Add to Cart +

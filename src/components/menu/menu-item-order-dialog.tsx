@@ -10,6 +10,10 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 
+import { requestCartToss } from "@/components/three/cart-toss";
+import { optimizedSrc } from "@/components/three/engine/image-src";
+import { glowForItem } from "@/components/three/showcase-data";
+import { getMenuItemImage } from "@/config/menu-item-images";
 import { useCart } from "@/context/cart-context";
 import { useFocusTrap } from "@/lib/accessibility/focus-trap";
 import { formatPrice } from "@/lib/menu/format-price";
@@ -35,6 +39,7 @@ export function MenuItemOrderDialog({
   const { addItem, openDrawer } = useCart();
   const titleId = useId();
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const addButtonRef = useRef<HTMLButtonElement>(null);
   const mounted = useSyncExternalStore(
     emptySubscribe,
     () => true,
@@ -125,8 +130,27 @@ export function MenuItemOrderDialog({
     });
 
     if (result.ok) {
+      const rect = addButtonRef.current?.getBoundingClientRect();
+      const photo = getMenuItemImage(item.name)?.src;
+      const delay = rect
+        ? requestCartToss({
+            from: {
+              x: rect.left,
+              y: rect.top,
+              width: rect.width,
+              height: rect.height,
+            },
+            photo: photo ? optimizedSrc(photo, 384) : null,
+            glow: glowForItem(item.name),
+            label: item.name,
+          })
+        : 0;
       onClose();
-      openDrawer();
+      if (delay > 0) {
+        window.setTimeout(openDrawer, delay);
+      } else {
+        openDrawer();
+      }
     } else {
       setFeedbackError(result.message);
     }
@@ -270,7 +294,7 @@ export function MenuItemOrderDialog({
                     }}
                     className={`rounded-full px-3 py-1.5 text-xs font-bold transition-all ${
                       selectedFlavor === null
-                        ? "bg-[var(--accent-solid)] text-white shadow-xs"
+                        ? "bg-[var(--accent-solid)] text-[var(--on-accent)] shadow-xs"
                         : "border border-[var(--border-soft)] bg-[var(--surface-warm)] text-[var(--text-strong)] hover:bg-[var(--accent-soft)]"
                     }`}
                   >
@@ -296,7 +320,7 @@ export function MenuItemOrderDialog({
                       }}
                       className={`rounded-full px-3 py-1.5 text-xs font-bold transition-all ${
                         isSelected
-                          ? "bg-[var(--accent-solid)] text-white shadow-xs"
+                          ? "bg-[var(--accent-solid)] text-[var(--on-accent)] shadow-xs"
                           : "border border-[var(--border-soft)] bg-[var(--surface-warm)] text-[var(--text-strong)] hover:bg-[var(--accent-soft)]"
                       }`}
                     >
@@ -384,6 +408,7 @@ export function MenuItemOrderDialog({
             </div>
 
             <button
+              ref={addButtonRef}
               type="button"
               className="button-primary"
               onClick={handleAddToCart}
