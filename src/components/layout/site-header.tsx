@@ -9,7 +9,7 @@ import { MobileNavigation } from "./mobile-navigation";
 
 export function SiteHeader() {
   return (
-    <header className="site-header sticky top-0 z-50 border-b border-white/40 bg-[var(--surface-canvas-translucent)] shadow-[var(--shadow-subtle)] backdrop-blur-2xl backdrop-saturate-[1.35] transition-[background-color,border-color,box-shadow] duration-500 ease-[var(--ease-cinematic)] supports-[backdrop-filter]:bg-[rgb(255_253_248_/_62%)]">
+    <header className="site-header sticky top-0 z-50 border-b border-white/10 bg-[var(--surface-canvas-translucent)] backdrop-blur-2xl backdrop-saturate-[1.3] transition-[background-color,border-color,box-shadow] duration-500 ease-[var(--ease-cinematic)] supports-[backdrop-filter]:bg-[rgb(11_10_13_/_62%)]">
       <Container className="site-header__bar flex min-h-18 items-center justify-between gap-4 py-2.5 lg:min-h-20">
         <Link
           href="/"
@@ -22,10 +22,10 @@ export function SiteHeader() {
             height={52}
             alt=""
             priority
-            className="size-12 object-contain transition-transform group-hover:-rotate-2 lg:size-14"
+            className="size-12 rounded-full bg-white object-contain p-0.5 transition-transform group-hover:-rotate-2 lg:size-14"
           />
           <span className="leading-tight">
-            <span className="block text-base font-extrabold tracking-tight text-[var(--text-strong)]">
+            <span className="font-display block text-xl leading-none font-black text-[var(--text-strong)]">
               {siteConfig.shortName}
             </span>
             <span className="block text-[0.64rem] font-bold tracking-[0.15em] text-[var(--deep-green)] uppercase">
@@ -40,7 +40,7 @@ export function SiteHeader() {
               <li key={item.href}>
                 <Link
                   href={item.href}
-                  className="nav-link inline-flex min-h-11 items-center rounded-full px-4 py-2 text-sm font-bold text-[var(--text-muted)] hover:bg-[var(--accent-soft)] hover:text-[var(--text-strong)]"
+                  className="nav-link inline-flex min-h-11 items-center rounded-full px-4 py-2 text-xs font-bold tracking-[0.1em] text-[var(--text-muted)] uppercase hover:text-[var(--text-strong)]"
                 >
                   {item.label}
                 </Link>
@@ -53,7 +53,7 @@ export function SiteHeader() {
           <CartTriggerButton />
           <Link
             href="/contact"
-            className="nav-link inline-flex min-h-11 items-center justify-center rounded-full bg-[var(--deep-green)] px-5 py-2 text-sm font-bold text-white shadow-[var(--shadow-button)] hover:bg-[var(--deep-green-hover)]"
+            className="nav-link inline-flex min-h-11 items-center justify-center rounded-full bg-[var(--accent-solid)] px-5 py-2 text-xs font-extrabold tracking-[0.08em] text-[var(--on-accent)] uppercase shadow-[var(--shadow-button)] hover:bg-[var(--accent-solid-hover)]"
           >
             Visit us
           </Link>
