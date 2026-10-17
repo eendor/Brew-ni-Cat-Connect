@@ -13,7 +13,7 @@ export type RingPhoto = Readonly<{ src: string; alt: string }>;
 /**
  * Curved, draggable ring of the real gallery photos. The camera sits inside
  * the ring; the photo facing it is in full colour, the rest fall back into
- * the dark. A faint glossy-floor reflection grounds the ring.
+ * the dark. Frames are only drawn while something changes.
  */
 export async function initGalleryRing(
   canvas: HTMLCanvasElement,
@@ -28,7 +28,8 @@ export async function initGalleryRing(
   const N = photos.length;
   const seg = (Math.PI * 2) / N;
   const span = seg * 0.84;
-  const R = Math.max(8, (2.9 / span) * 1);
+  // radius that keeps each print about 2.9 units wide, never tighter than 8
+  const R = Math.max(8, 2.9 / span);
   const W = R * span;
   const H = W / 0.75;
   const ring = new THREE.Group();
@@ -40,10 +41,10 @@ export async function initGalleryRing(
 
   const vertexShader = /* glsl */ `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`;
   const fragmentShader = /* glsl */ `
-    uniform sampler2D uMap; uniform float uFocus, uMirror, uAspect; uniform vec2 uSize; varying vec2 vUv;
+    uniform sampler2D uMap; uniform float uFocus, uAspect; uniform vec2 uSize; varying vec2 vUv;
     float sdRound(vec2 p, vec2 b, float r){ vec2 q = abs(p) - b + r; return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r; }
     void main(){
-      vec2 uv = vec2(1.0 - vUv.x, uMirror > 0.5 ? 1.0 - vUv.y : vUv.y);
+      vec2 uv = vec2(1.0 - vUv.x, vUv.y);
       // cover-fit the photo into the 3:4 panel
       float panel = uSize.x / uSize.y;
       if (uAspect > panel) { uv.x = (uv.x - 0.5) * panel / uAspect + 0.5; }
@@ -56,17 +57,11 @@ export async function initGalleryRing(
       col = mix(vec3(l) * 0.6, col, 0.25 + 0.75 * uFocus) * mix(0.12, 1.0, uFocus * uFocus);
       // soft studio sheen across the print
       col += vec3(1.0) * 0.05 * uFocus * smoothstep(0.2, 0.9, vUv.y) * (1.0 - vUv.x);
-      float a = mask;
-      if (uMirror > 0.5) { a *= 0.18 * smoothstep(0.6, 1.0, vUv.y); }
-      gl_FragColor = vec4(col, a);
+      gl_FragColor = vec4(col, mask);
       #include <colorspace_fragment>
     }`;
 
-  const make = (
-    i: number,
-    mirror: boolean,
-    uniforms?: THREE.ShaderMaterial["uniforms"],
-  ) => {
+  const make = (i: number) => {
     const geometry = new THREE.CylinderGeometry(
       R,
       R,
@@ -81,28 +76,25 @@ export async function initGalleryRing(
       side: THREE.BackSide,
       transparent: true,
       depthWrite: false,
-      uniforms: uniforms ?? {
+      uniforms: {
         uMap: { value: blank },
         uFocus: { value: 0 },
         uAspect: { value: 0.75 },
         uSize: { value: new THREE.Vector2(W, H) },
-        uMirror: { value: 0 },
       },
       vertexShader,
       fragmentShader,
     });
-    const mesh = new THREE.Mesh(geometry, material);
-    if (mirror) mesh.position.y = -H - 0.2;
-    ring.add(mesh);
+    ring.add(new THREE.Mesh(geometry, material));
     return material;
   };
-  for (let i = 0; i < N; i++) {
-    const front = make(i, false);
-    materials.push(front);
-    const u = front.uniforms;
-    make(i, true, { ...u, uMirror: { value: 1 } });
-  }
-  // textures stream in nearest-first so the front of the ring appears fast
+  for (let i = 0; i < N; i++) materials.push(make(i));
+
+  // set when anything on screen changes; the frame skips drawing otherwise
+  let dirty = true;
+  let disposed = false;
+  // textures stream in nearest-first so the front of the ring appears fast,
+  // and stop as soon as the ring is torn down
   const order = [...photos.keys()].sort(
     (x, y) => Math.min(x, N - x) - Math.min(y, N - y),
   );
@@ -113,10 +105,16 @@ export async function initGalleryRing(
       if (!photo || !material) continue;
       try {
         const texture = await photoTexture(optimizedSrc(photo.src, 640));
+        if (disposed) {
+          texture.dispose();
+          return;
+        }
         const image = texture.image as HTMLImageElement;
         material.uniforms.uMap!.value = texture;
         material.uniforms.uAspect!.value = image.width / image.height;
+        dirty = true;
       } catch {
+        if (disposed) return;
         // leave the dark placeholder panel
       }
     }
@@ -133,9 +131,10 @@ export async function initGalleryRing(
     const narrow = camera.aspect < 0.9;
     camera.fov = narrow ? 58 : 46;
     const distance = narrow ? 6.2 : 7.4;
-    camera.position.set(0, -0.35, -R + distance);
-    camera.lookAt(0, -0.8, -R);
+    camera.position.set(0, 0, -R + distance);
+    camera.lookAt(0, 0, -R);
     camera.updateProjectionMatrix();
+    dirty = true;
   }
   resize();
   const observer = new ResizeObserver(resize);
@@ -178,6 +177,7 @@ export async function initGalleryRing(
 
   const go = (direction: number) => {
     st.target = Math.round(st.rot / seg) * seg + direction * seg;
+    dirty = true;
   };
   const goTo = (index: number) => {
     const current = Math.round(st.rot / seg);
@@ -186,8 +186,10 @@ export async function initGalleryRing(
     if (delta > N / 2) delta -= N;
     if (delta < -N / 2) delta += N;
     st.target = (current + delta) * seg;
+    dirty = true;
   };
 
+  let lastTotal = Number.NaN;
   function frame(dt: number, scrollProgress: number) {
     if (!st.dragging) st.rot = damp(st.rot, st.target, 4, dt);
     st.scrollOff = damp(
@@ -197,6 +199,10 @@ export async function initGalleryRing(
       dt,
     );
     const total = st.rot + st.scrollOff;
+    // nothing moved and no new photo arrived: keep the last frame
+    if (!dirty && !st.dragging && Math.abs(total - lastTotal) < 1e-5) return;
+    dirty = false;
+    lastTotal = total;
     ring.rotation.y = -total;
     let best = 0;
     let bestValue = -1;
@@ -223,6 +229,7 @@ export async function initGalleryRing(
     go,
     goTo,
     dispose() {
+      disposed = true;
       observer.disconnect();
       canvas.removeEventListener("pointerdown", onDown);
       canvas.removeEventListener("pointermove", onMove);

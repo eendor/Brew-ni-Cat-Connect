@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { usePathname } from "next/navigation";
 
 import { useThreeEnabled } from "./use-three-enabled";
 
@@ -8,8 +9,12 @@ const CartFxCanvas = dynamic(() => import("./canvas/cart-fx-canvas"), {
   ssr: false,
 });
 
-/** Site-wide 3D basket in the cart button plus the add-to-cart toss. */
+/**
+ * Add-to-cart toss into the header cart button. Items are only added from
+ * the menu's order dialog, so the layer only runs on the menu page.
+ */
 export function CartFxLayer() {
   const enabled = useThreeEnabled();
-  return enabled ? <CartFxCanvas /> : null;
+  const onMenu = usePathname() === "/menu";
+  return enabled && onMenu ? <CartFxCanvas /> : null;
 }

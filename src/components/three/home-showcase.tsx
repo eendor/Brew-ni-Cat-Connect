@@ -75,16 +75,21 @@ export function HomeShowcase() {
 
         <div className="showcase__hud">
           <div className="showcase__intro">
-            <p className="eyebrow-light">Kabacan, Cotabato · Est. June 2026</p>
-            <h1 id="home-heading" className="showcase__title">
+            <p className="eyebrow-light" data-rise="">
+              Kabacan, Cotabato · Est. June 2026
+            </p>
+            <h1 id="home-heading" className="showcase__title" data-split="">
               Coffee, comfort, and a little cat energy.
             </h1>
-            <p className="showcase__lede">
+            <p className="showcase__lede" data-rise="">
               Settle in at Brew ni Cat for drinks, snacks, noodles, combos, and
               cozy community moments in the heart of Kabacan.
             </p>
-            <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
-              <Link href="/menu" className="button-primary">
+            <div
+              className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center"
+              data-rise=""
+            >
+              <Link href="/menu" className="button-primary" data-magnetic="">
                 Browse current menu
               </Link>
               <Link href="/contact" className="button-ghost">
@@ -130,7 +135,7 @@ export function HomeShowcase() {
       {!three ? (
         <div className="showcase__static">
           <h2 className="sr-only">Featured drinks and bites</h2>
-          <ul className="showcase__static-grid">
+          <ul className="showcase__static-grid" data-rise-group="">
             {showcaseItems.map((item) => (
               <li
                 key={item.id}

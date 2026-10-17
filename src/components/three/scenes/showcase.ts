@@ -264,20 +264,6 @@ export async function initShowcase(
   );
   contact.rotation.x = -Math.PI / 2;
   scene.add(contact);
-  const spillTexture = contactShadowTexture();
-  const spill = new THREE.Mesh(
-    new THREE.PlaneGeometry(5, 1.8),
-    new THREE.MeshBasicMaterial({
-      alphaMap: spillTexture,
-      color: "#7CFF6B",
-      transparent: true,
-      opacity: 0.12,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-    }),
-  );
-  spill.rotation.x = -Math.PI / 2;
-  scene.add(spill);
 
   // floating ingredients; weights = presence per product
   const k = quality.mobile ? 0.5 : 1;
@@ -424,7 +410,6 @@ export async function initShowcase(
     (u.uGlow!.value as THREE.Color).copy(glow);
     rimLeft.color.copy(glow);
     rimRight.color.copy(glow);
-    (spill.material as THREE.MeshBasicMaterial).color.copy(glow);
     u.uA!.value = titles[i0] ?? null;
     u.uB!.value = titles[Math.min(last, i0 + 1)] ?? null;
     u.uMix!.value = smooth(0.15, 0.85, f);
@@ -546,12 +531,14 @@ export async function initShowcase(
     const floorY = stage.position.y - 1.95 * s0;
     floor.position.y = floorY;
     contact.position.y = floorY + 0.01;
-    spill.position.y = floorY + 0.02;
     rimLeft.target.position.set(0, stage.position.y, 0);
     rimRight.target.position.set(0, stage.position.y, 0);
 
     post.render(dt, state.time);
   }
+
+  // every product's shaders are ready before the scene is shown
+  await post.precompile();
 
   return {
     frame,

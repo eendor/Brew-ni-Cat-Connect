@@ -31,17 +31,20 @@ export default function ShowcaseCanvas({
     async (canvas, quality) => {
       const section = document.getElementById(sectionId);
       if (!section) throw new Error("showcase section missing");
-      const trigger = ScrollTrigger.create({
+      // the trigger is created once the scene exists, so a failed start
+      // leaves nothing behind
+      let trigger: ScrollTrigger | null = null;
+      const scene = await initShowcase(canvas, items, quality, {
+        onProduct,
+        onGlow,
+        progress: () => trigger?.progress ?? 0,
+      });
+      trigger = ScrollTrigger.create({
         trigger: section,
         start: "top top",
         end: "bottom bottom",
       });
-      const scene = await initShowcase(canvas, items, quality, {
-        onProduct,
-        onGlow,
-        progress: () => trigger.progress,
-      });
-      gsap.to(scene.state, {
+      const intro = gsap.to(scene.state, {
         intro: 1,
         duration: 2.2,
         ease: "expo.out",
@@ -53,7 +56,8 @@ export default function ShowcaseCanvas({
           if (visible.visible) scene.frame(dt);
         },
         dispose: () => {
-          trigger.kill();
+          intro.kill();
+          trigger?.kill();
           visible.dispose();
           scene.dispose();
         },

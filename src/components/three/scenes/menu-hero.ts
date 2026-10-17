@@ -1,6 +1,6 @@
 import * as THREE from "three";
 
-import type { GlowPair } from "@/components/menu/category-glow";
+import { DRINKS_GLOW } from "@/components/menu/category-glow";
 
 import { makePost } from "../engine/post";
 import {
@@ -35,14 +35,14 @@ import {
 /**
  * Menu hero: the featured iced drinks turning slowly on the studio set, a
  * backlit "THE MENU" letterform behind them (the clear cups refract it),
- * floating ice, beans and tea leaves, and two-tone rim lights that take the
- * glow pair of the category in view. Scrolling dollies the camera in and
- * lifts the cups apart as the page hands over to the menu grid.
+ * floating ice, beans and tea leaves, and matcha-green and amber rim
+ * lights. Scrolling dollies the camera in and lifts the cups apart as the
+ * page hands over to the menu grid.
  */
 export async function initMenuHero(
   canvas: HTMLCanvasElement,
   quality: Quality,
-  hud: { progress: () => number; glow: GlowPair },
+  hud: { progress: () => number },
 ) {
   const renderer = makeRenderer(canvas, quality, { shadows: true });
   renderer.transmissionResolutionScale = quality.mobile ? 0.5 : 1;
@@ -80,9 +80,9 @@ export async function initMenuHero(
   fill.position.set(-6, 2, 4);
   scene.add(fill);
   // two coloured strip lights behind the set: the glow is the rim, not neon
-  const rimLeft = new THREE.SpotLight(hud.glow.a, 75, 20, 0.55, 0.9, 2);
+  const rimLeft = new THREE.SpotLight(DRINKS_GLOW.a, 75, 20, 0.55, 0.9, 2);
   rimLeft.position.set(-4, 2.6, -3.2);
-  const rimRight = new THREE.SpotLight(hud.glow.b, 60, 20, 0.55, 0.9, 2);
+  const rimRight = new THREE.SpotLight(DRINKS_GLOW.b, 60, 20, 0.55, 0.9, 2);
   rimRight.position.set(4, 1.8, -3.4);
   scene.add(rimLeft, rimRight, rimLeft.target, rimRight.target);
 
@@ -127,19 +127,6 @@ export async function initMenuHero(
     scene.add(contact);
     return contact;
   });
-  const spill = new THREE.Mesh(
-    new THREE.PlaneGeometry(9, 2.4),
-    new THREE.MeshBasicMaterial({
-      alphaMap: contactShadowTexture(),
-      color: hud.glow.a,
-      transparent: true,
-      opacity: 0.12,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-    }),
-  );
-  spill.rotation.x = -Math.PI / 2;
-  scene.add(spill);
 
   const k = quality.mobile ? 0.5 : 1;
   const mats = floaterMaterials();
@@ -214,22 +201,15 @@ export async function initMenuHero(
   const observer = new ResizeObserver(resize);
   if (canvas.parentElement) observer.observe(canvas.parentElement);
 
-  const glowA = new THREE.Color(hud.glow.a);
-  const glowB = new THREE.Color(hud.glow.b);
-  const targetA = glowA.clone();
-  const targetB = glowB.clone();
-  const mid = new THREE.Color();
+  (u.uGlow!.value as THREE.Color)
+    .set(DRINKS_GLOW.a)
+    .lerp(new THREE.Color(DRINKS_GLOW.b), 0.35);
   const state = { intro: 0, p: 0, tx: 0, ty: 0, time: 0 };
   const v3 = new THREE.Vector3();
   const m4 = new THREE.Matrix4();
   const q = new THREE.Quaternion();
   const euler = new THREE.Euler();
   const scale = new THREE.Vector3();
-
-  function setGlow(pair: GlowPair) {
-    targetA.set(pair.a);
-    targetB.set(pair.b);
-  }
 
   function frame(dt: number) {
     budget.push(dt * 1000);
@@ -240,14 +220,6 @@ export async function initMenuHero(
     const { intro, p, time } = state;
     const out = smooth(0, 1, p);
 
-    const blend = 1 - Math.exp(-2.2 * dt);
-    glowA.lerp(targetA, blend);
-    glowB.lerp(targetB, blend);
-    mid.copy(glowA).lerp(glowB, 0.35);
-    (u.uGlow!.value as THREE.Color).copy(mid);
-    rimLeft.color.copy(glowA);
-    rimRight.color.copy(glowB);
-    (spill.material as THREE.MeshBasicMaterial).color.copy(glowA);
     u.uReveal!.value = intro;
     u.uGlowStr!.value = (0.3 + 0.7 * intro) * (1 - out * 0.6);
     rimLeft.intensity = 75 * (0.3 + 0.7 * intro);
@@ -317,17 +289,18 @@ export async function initMenuHero(
       (contact.material as THREE.MeshBasicMaterial).opacity =
         0.75 * (1 - clamp01(slot.cup.group.position.y / 1.5));
     });
-    spill.position.y = floorY + 0.02;
     rimLeft.target.position.set(0, stage.position.y, 0);
     rimRight.target.position.set(0, stage.position.y, 0);
 
     post.render(dt, time);
   }
 
+  // every product's shaders are ready before the scene is shown
+  await post.precompile();
+
   return {
     frame,
     state,
-    setGlow,
     dispose() {
       observer.disconnect();
       post.dispose();

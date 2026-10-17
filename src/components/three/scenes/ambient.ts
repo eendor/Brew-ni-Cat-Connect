@@ -10,26 +10,23 @@ import { FrameBudget, damp, pointer, type Quality } from "../engine/runtime";
 import { rng } from "../engine/textures";
 import {
   beanGeometry,
-  chiliGeometry,
   floaterMaterials,
   iceGeometry,
   leafGeometry,
 } from "./models";
 
-export type AmbientMood =
-  "menu" | "about" | "gallery" | "contact" | "cart" | "checkout";
+export type AmbientMood = "about" | "gallery" | "contact" | "cart" | "checkout";
 
 const moods: Record<
   AmbientMood,
-  { glow: string; mix: readonly [number, number, number, number] }
+  { glow: string; mix: readonly [number, number, number] }
 > = {
-  // [ice, leaves, beans, chili] proportions
-  menu: { glow: "#7CFF6B", mix: [0.35, 0.3, 0.25, 0.1] },
-  about: { glow: "#FFB547", mix: [0.25, 0.25, 0.5, 0] },
-  gallery: { glow: "#5EE1FF", mix: [0.5, 0.25, 0.25, 0] },
-  contact: { glow: "#FFB547", mix: [0.3, 0.2, 0.5, 0] },
-  cart: { glow: "#7CFF6B", mix: [0.45, 0.35, 0.2, 0] },
-  checkout: { glow: "#FFD93B", mix: [0.4, 0.2, 0.4, 0] },
+  // [ice, leaves, beans] proportions
+  about: { glow: "#FFB547", mix: [0.25, 0.25, 0.5] },
+  gallery: { glow: "#5EE1FF", mix: [0.5, 0.25, 0.25] },
+  contact: { glow: "#FFB547", mix: [0.3, 0.2, 0.5] },
+  cart: { glow: "#7CFF6B", mix: [0.45, 0.35, 0.2] },
+  checkout: { glow: "#FFD93B", mix: [0.4, 0.2, 0.4] },
 };
 
 /**
@@ -87,7 +84,6 @@ export async function initAmbient(
     { geometry: iceGeometry(5, 1), material: mats.ice, size: [0.55, 0.9] },
     { geometry: leafGeometry(), material: mats.leaf, size: [0.7, 1.1] },
     { geometry: beanGeometry(), material: mats.bean, size: [0.35, 0.5] },
-    { geometry: chiliGeometry(), material: mats.chili, size: [0.25, 0.35] },
   ] as const;
   const items: {
     mesh: THREE.Mesh;

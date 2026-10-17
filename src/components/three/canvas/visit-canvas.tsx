@@ -4,7 +4,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useImperativeHandle, useRef, type Ref } from "react";
 
-import { watchVisible } from "../engine/runtime";
+import { watchVisible, whenNear } from "../engine/runtime";
 import { initVisit, type VisitFacts } from "../scenes/visit";
 import { useScene } from "./use-scene";
 
@@ -53,7 +53,8 @@ export default function VisitCanvas({
         },
       };
     },
-    { onReady, onError },
+    // the sign sits low on the page: start it as the visitor gets close
+    { onReady, onError, start: (canvas, signal) => whenNear(canvas, signal) },
   );
   return (
     <canvas

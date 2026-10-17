@@ -231,6 +231,40 @@ export async function makeCup(stickerSrc: string) {
   };
   setDrink(0);
 
+  // fill level (0–1) for scenes that pour the drink: the liquid is reshaped
+  // to the cup's taper at the new height rather than squashed, so it never
+  // pokes through the wall, and the ice rides the surface
+  const liquidBase = Y0 + 0.09;
+  const liquidPosition = liquidGeometry.attributes
+    .position as THREE.BufferAttribute;
+  const restPositions = Float32Array.from(
+    liquidPosition.array as ArrayLike<number>,
+  );
+  const cubes: THREE.Mesh[] = [];
+  let fillLevel = 1;
+  const setFill = (level: number) => {
+    const f = clamp01(level);
+    if (Math.abs(f - fillLevel) < 1e-4) return;
+    fillLevel = f;
+    liquid.visible = f > 0.02;
+    for (let i = 0; i < liquidPosition.count; i++) {
+      const x = restPositions[i * 3] ?? 0;
+      const y = restPositions[i * 3 + 1] ?? 0;
+      const z = restPositions[i * 3 + 2] ?? 0;
+      const ny = liquidBase + (y - liquidBase) * f;
+      const k = (cupR(ny) - 0.04) / (cupR(y) - 0.04);
+      liquidPosition.setXYZ(i, x * k, ny, z * k);
+    }
+    liquidPosition.needsUpdate = true;
+    liquidGeometry.computeVertexNormals();
+    liquidGeometry.computeBoundingSphere();
+    const surface = liquidBase + (yFill - liquidBase) * f;
+    cubes.forEach((cube, index) => {
+      cube.visible = f > 0.3;
+      cube.position.y = surface - 0.06 - (index % 2) * 0.03;
+    });
+  };
+
   // ice in the drink: polished and wet; outside the cup the floaters refract
   const ice = iceMaps(256, 17);
   const iceInCup = new THREE.MeshPhysicalMaterial({
@@ -256,6 +290,7 @@ export async function makeCup(stickerSrc: string) {
     cube.position.set(x, yFill - 0.06, z);
     cube.rotation.set(r, r * 1.7, r * 0.6);
     group.add(cube);
+    cubes.push(cube);
   });
 
   const straw = new THREE.Mesh(
@@ -300,7 +335,7 @@ export async function makeCup(stickerSrc: string) {
   sticker.position.y = sy;
   group.add(sticker);
 
-  return { group, setDrink };
+  return { group, setDrink, setFill };
 }
 
 /* ------------------------------------------------------------------ */

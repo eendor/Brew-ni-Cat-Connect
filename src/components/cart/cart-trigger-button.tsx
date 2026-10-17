@@ -26,7 +26,7 @@ export function CartTriggerButton({ className }: CartTriggerButtonProps) {
       }
     >
       <svg
-        className="cart-trigger__icon size-5 transition-opacity"
+        className="size-5"
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"
@@ -41,7 +41,7 @@ export function CartTriggerButton({ className }: CartTriggerButtonProps) {
       </svg>
       {itemCount > 0 ? (
         <span
-          className="absolute -top-1 -right-1 z-[61] flex min-w-5 h-5 items-center justify-center rounded-full bg-[var(--accent-solid)] px-1 text-xs font-black text-[var(--on-accent)] shadow-xs"
+          className="absolute -top-1 -right-1 flex min-w-5 h-5 items-center justify-center rounded-full bg-[var(--accent-solid)] px-1 text-xs font-black text-[var(--on-accent)] shadow-xs"
           aria-hidden="true"
         >
           {itemCount}

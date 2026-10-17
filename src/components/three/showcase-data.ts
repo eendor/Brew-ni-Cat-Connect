@@ -63,9 +63,11 @@ export const showcaseItems: readonly ShowcaseItem[] = [
   },
 ];
 
-/** Glow colour for a menu item name, used by the 3D menu cards and toss. */
-/** The item's own glow, or null when the item has no glow of its own. */
-export function matchGlowForItem(name: string): string | null {
+/**
+ * Glow colour for a menu item name, used for the add-to-cart toss. Items
+ * without a colour of their own get Cat-Feine amber.
+ */
+export function glowForItem(name: string): string {
   const n = name.toLowerCase();
   if (n.includes("matcha") || n.includes("neko")) return "#7CFF6B";
   if (n.includes("cat-feine") || n.includes("coffee")) return "#FFB547";
@@ -73,9 +75,5 @@ export function matchGlowForItem(name: string): string | null {
   if (n.includes("fries")) return "#FFD93B";
   if (n.includes("cheese")) return "#5EE1FF";
   if (n.includes("buldak") || n.includes("carbo")) return "#FF3D7F";
-  return null;
-}
-
-export function glowForItem(name: string): string {
-  return matchGlowForItem(name) ?? "#FFB547";
+  return "#FFB547";
 }

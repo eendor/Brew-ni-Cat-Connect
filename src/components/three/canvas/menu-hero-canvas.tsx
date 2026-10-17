@@ -3,11 +3,6 @@
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
-import {
-  currentMenuGlow,
-  subscribeMenuGlow,
-} from "@/components/menu/category-glow";
-
 import { watchVisible } from "../engine/runtime";
 import { initMenuHero } from "../scenes/menu-hero";
 import { useScene } from "./use-scene";
@@ -31,18 +26,19 @@ export default function MenuHeroCanvas({
     async (canvas, quality) => {
       const section = document.getElementById(sectionId);
       if (!section) throw new Error("menu hero section missing");
-      const trigger = ScrollTrigger.create({
+      // the trigger is created once the scene exists, so a failed start
+      // leaves nothing behind
+      let trigger: ScrollTrigger | null = null;
+      const scene = await initMenuHero(canvas, quality, {
+        progress: () => trigger?.progress ?? 0,
+      });
+      trigger = ScrollTrigger.create({
         trigger: section,
         start: "top top",
         end: "bottom top",
         onUpdate: (self) => onProgress(self.progress),
       });
-      const scene = await initMenuHero(canvas, quality, {
-        progress: () => trigger.progress,
-        glow: currentMenuGlow(),
-      });
-      const unsubscribe = subscribeMenuGlow((pair) => scene.setGlow(pair));
-      gsap.to(scene.state, {
+      const intro = gsap.to(scene.state, {
         intro: 1,
         duration: 2.2,
         ease: "expo.out",
@@ -54,8 +50,8 @@ export default function MenuHeroCanvas({
           if (visible.visible) scene.frame(dt);
         },
         dispose: () => {
-          unsubscribe();
-          trigger.kill();
+          intro.kill();
+          trigger?.kill();
           visible.dispose();
           scene.dispose();
         },

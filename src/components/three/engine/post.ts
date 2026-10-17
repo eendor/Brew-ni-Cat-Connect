@@ -84,6 +84,19 @@ export function makePost(
       bokeh.enabled = false;
       bloom.enabled = false;
     },
+    /**
+     * Compiles every material in the scene, hidden objects included, for
+     * the composer's render target (the state the real frames render in).
+     * Where the browser compiles shaders in parallel this doesn't block the
+     * page. Scenes await it before they show, so bringing in the next
+     * product never stalls a scroll on a shader compile.
+     */
+    async precompile() {
+      renderer.setRenderTarget(composer.readBuffer);
+      const ready = renderer.compileAsync(scene, camera);
+      renderer.setRenderTarget(null);
+      await ready;
+    },
     render(dt: number, time: number) {
       grain.uniforms.uTime!.value = time;
       composer.render(dt);

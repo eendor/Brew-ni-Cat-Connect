@@ -135,6 +135,48 @@ export class FrameBudget {
   }
 }
 
+/**
+ * Resolves once the element comes within `margin` of the viewport, so a
+ * scene further down the page doesn't start while the hero is loading.
+ */
+export function whenNear(
+  element: Element,
+  signal: AbortSignal,
+  margin = "800px",
+) {
+  return new Promise<void>((resolve) => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((entry) => entry.isIntersecting)) return;
+        observer.disconnect();
+        resolve();
+      },
+      { rootMargin: margin },
+    );
+    observer.observe(element);
+    signal.addEventListener("abort", () => observer.disconnect(), {
+      once: true,
+    });
+  });
+}
+
+/** Resolves when the browser is next idle, or after `timeout` ms at most. */
+export function whenIdle(signal: AbortSignal, timeout = 3000) {
+  return new Promise<void>((resolve) => {
+    if (typeof window.requestIdleCallback === "function") {
+      const id = window.requestIdleCallback(() => resolve(), { timeout });
+      signal.addEventListener("abort", () => window.cancelIdleCallback(id), {
+        once: true,
+      });
+      return;
+    }
+    const id = window.setTimeout(resolve, 1500);
+    signal.addEventListener("abort", () => window.clearTimeout(id), {
+      once: true,
+    });
+  });
+}
+
 /** Keeps a scene asleep while its element is off screen. */
 export function watchVisible(element: Element, margin = "160px") {
   const state = { visible: false, dispose: () => {} };

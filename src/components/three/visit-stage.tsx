@@ -14,7 +14,8 @@ const VisitCanvas = dynamic(() => import("./canvas/visit-canvas"), {
 /**
  * Hanging OPEN / CLOSED sign and a small street model of Segundo St. The
  * hours stay as real text beside it; the sign is decorative, and the flip
- * button only changes which side of the sign faces you.
+ * button only changes which side of the sign faces you. Without WebGL (or
+ * with reduced motion) the sign is plain type set straight on the page.
  */
 export function VisitStage({
   facts,
@@ -29,22 +30,22 @@ export function VisitStage({
 
   return (
     <div className={`visit-stage ${className}`}>
-      <div className={`visit-stage__canvas${ready ? " is-ready" : ""}`}>
-        {three ? (
+      {three ? (
+        <div className={`visit-stage__canvas${ready ? " is-ready" : ""}`}>
           <VisitCanvas
             facts={facts}
             controlsRef={controls}
             onReady={() => setReady(true)}
             onError={() => setFailed(true)}
           />
-        ) : (
-          <div className="visit-stage__fallback" aria-hidden="true">
-            <b>OPEN</b>
-            <span>{facts.hours}</span>
-            <small>{facts.days}</small>
-          </div>
-        )}
-      </div>
+        </div>
+      ) : (
+        <div className="visit-stage__fallback" aria-hidden="true">
+          <b>OPEN</b>
+          <span>{facts.hours}</span>
+          <small>{facts.days}</small>
+        </div>
+      )}
       {three && ready ? (
         <button
           type="button"

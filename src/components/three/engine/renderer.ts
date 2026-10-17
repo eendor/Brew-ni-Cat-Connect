@@ -8,6 +8,10 @@ export { optimizedSrc } from "./image-src";
 /** CC0 studio HDRI from Poly Haven, bundled in /public (see docs). */
 export const STUDIO_HDRI = "/three/hdri/studio_small_09_1k.hdr";
 
+/** The renderer living on each canvas, so a failed start can still free it. */
+const renderers = new WeakMap<HTMLCanvasElement, THREE.WebGLRenderer>();
+const freed = new WeakSet<THREE.WebGLRenderer>();
+
 export function makeRenderer(
   canvas: HTMLCanvasElement,
   quality: Quality,
@@ -19,6 +23,7 @@ export function makeRenderer(
     alpha: options.alpha ?? false,
     powerPreference: "high-performance",
   });
+  renderers.set(canvas, renderer);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, quality.maxDpr));
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 0.95;
@@ -30,17 +35,41 @@ export function makeRenderer(
   return renderer;
 }
 
+/** Disposes a renderer and drops its context, once. */
+function freeRenderer(renderer: THREE.WebGLRenderer) {
+  if (freed.has(renderer)) return;
+  freed.add(renderer);
+  const canvas = renderer.domElement;
+  if (renderers.get(canvas) === renderer) renderers.delete(canvas);
+  renderer.dispose();
+  renderer.forceContextLoss();
+}
+
+/**
+ * Frees the renderer and WebGL context on a canvas, if one is still there.
+ * The scene hook calls it on unmount and when a scene fails part-way
+ * through starting.
+ */
+export function releaseRenderer(canvas: HTMLCanvasElement) {
+  const renderer = renderers.get(canvas);
+  if (renderer) freeRenderer(renderer);
+}
+
 let hdrData: Promise<THREE.DataTexture> | null = null;
 const envCache = new WeakMap<THREE.WebGLRenderer, Promise<THREE.Texture>>();
 
 /**
  * Prefiltered (PMREM) studio environment for one renderer. The HDR file is
  * downloaded once and shared; each WebGL context gets its own PMREM target.
+ * A failed download is forgotten so the next scene can try again.
  */
 export function studioEnvironment(renderer: THREE.WebGLRenderer) {
   let env = envCache.get(renderer);
   if (!env) {
-    hdrData ??= new HDRLoader().loadAsync(STUDIO_HDRI);
+    hdrData ??= new HDRLoader().loadAsync(STUDIO_HDRI).catch((error) => {
+      hdrData = null;
+      throw error;
+    });
     env = hdrData.then((source) => {
       source.mapping = THREE.EquirectangularReflectionMapping;
       const pmrem = new THREE.PMREMGenerator(renderer);
@@ -137,8 +166,5 @@ export function disposeScene(
       material.dispose();
     }
   });
-  if (renderer) {
-    renderer.dispose();
-    renderer.forceContextLoss();
-  }
+  if (renderer) freeRenderer(renderer);
 }
