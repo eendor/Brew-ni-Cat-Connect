@@ -176,3 +176,20 @@ This manual state is a temporary functional-verification condition, not a revisi
 **Consequences:** Everything is disabled under `prefers-reduced-motion`. Drawer and dialog close without an exit animation. Menu categories no longer fade in on scroll since PR #18.
 
 ---
+
+## ADR-014 — WebGL Experience Layer Over the Static Site
+
+**Decision:** Add a three.js (plain, not React Three Fiber) and GSAP ScrollTrigger layer under `src/components/three/`, loaded with `next/dynamic` and `ssr: false`, on top of pages that still render completely without it. This partly supersedes ADR-013: GSAP is now a dependency, but only the 3D layer uses it; CSS motion elsewhere is unchanged.\
+**Date:** 2026-10-17\
+**Status:** Proposed on branch `feat/threejs-experience` (no pull request yet)\
+**Context:** The owner asked for a full 3D site in a dark "Night Shift Glow" look that reads as real product photography, not cartoon art, without losing the live menu, real cart, checkout or accessibility of `main`.\
+**Consequences:**
+- Every 3D scene is decorative (`aria-hidden`). Headings, prices, hours, photos with alt text, forms and buttons stay real HTML, and each 3D control has a keyboard-operable HTML button.
+- The 3D layer mounts only after hydration, when WebGL 2 is available and `prefers-reduced-motion` is not set. Otherwise the server-rendered static version stays (static showcase grid, photo thumbnails, sign fallback, no ring).
+- Rendering is physically based: `MeshPhysicalMaterial` with transmission, IOR 1.45 and clearcoat; a bundled CC0 studio HDRI for light and reflections; ACES filmic tone mapping with sRGB output; soft shadow maps and contact shadows; subtle depth of field, bloom and film grain.
+- Food and drink models are procedural with generated PBR maps (albedo, normal, roughness) because no CC0 photoscans of takoyaki, shoestring fries or buldak exist.
+- Phones get a lower pixel-ratio cap, fewer particles and no depth of field. A frame-time budget drops depth of field and bloom and lowers the pixel ratio when frames run slow.
+- The Impeccable design context in the repository asks for a warm light palette without neon accents. The owner's request for the dark glow look takes priority on this branch; contrast, touch-target and motion rules from that context still apply.
+- Adding an item still goes through `useCart().addItem`; the 3D toss only delays opening the drawer by 0.9 s when the cart layer is running.
+
+---

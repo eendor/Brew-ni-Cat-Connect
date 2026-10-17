@@ -599,3 +599,24 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Files/modules affected:** `docs/code-review.md`, `docs/development-log.md`.\
 **Git branch:** `docs/direct-push-exceptions`\
 **Next action:** Merge after review.
+
+## 2026-10-17 — Three.js experience layer across every page
+
+**Date:** 2026-10-17\
+**Phase:** Phase 3 — Menu and Ordering Flow (presentation layer)\
+**Task:** Bring the standalone three.js prototype into the real site on every route, with all `main` content and features kept, in a realistic (physically based) "Night Shift Glow" look.\
+**Summary:** Added a WebGL layer under `src/components/three/` (plain three.js plus GSAP ScrollTrigger, loaded with `next/dynamic` and `ssr: false`). Home gets a pinned scroll showcase of the Matcha and Cat-Feine cups, takoyaki, fries and Buldak Carbo. Menu photos become glossy 3D prints, and Add to Order throws the item into a 3D basket on the real cart button before the drawer opens. Gallery gets a draggable photo ring. Contact and the home visit section get a flip sign and a street model with the small Brew ni Cat unit to the right of Pulido Eatery. About, cart and checkout get quiet ambient backdrops. Rendering uses physical materials (transmission, IOR 1.45, clearcoat), a bundled CC0 studio HDRI, ACES tone mapping, soft and contact shadows, depth of field and film grain. The site theme moves to the dark palette with Big Shoulders and Archivo. The "Ready to enjoy?" line is removed from menu cards. Reduced motion and devices without WebGL 2 keep a full static page; phones get a lower pixel ratio and fewer particles; slow frames drop depth of field and bloom.\
+**Changes:**
+- `src/components/three/`: engine (renderer, HDRI, PBR texture generators, post-processing, frame loop, quality and motion checks), scenes, canvas components and page wrappers with static fallbacks;
+- `src/app/globals.css`, `src/app/layout.tsx`: dark tokens, `next/font` families, 3D layout styles, site-wide cart layer;
+- `src/app/page.tsx`, `menu`, `gallery`, `contact`, `about` pages, `PageIntro`, cart and checkout views: 3D sections and recoloured surfaces with all existing content;
+- `src/components/menu/menu-item-card.tsx`, `menu-item-order-dialog.tsx`, `cart-trigger-button.tsx`: 3D tile slot, toss after a successful `addItem`, basket anchor;
+- `public/three/`: CC0 HDRI and the cat sticker cut from the shop's Matcha photo;
+- `tests/unit/three-layer.test.tsx`, `tests/e2e/three.spec.ts`, `tests/e2e/showcase.spec.ts`, `playwright.config.ts`: new 3D cases and a separate `chromium-3d` project;
+- `docs/decisions.md` (ADR-014), `docs/system-architecture.md` (§18), `docs/software-and-apis.md` (packages and asset licences), `docs/test-cases.md` (§12), this entry.
+**Files/modules affected:** as listed above; `package.json` and `package-lock.json` add `three` 0.186.1, `gsap` 3.15.0 and `@types/three` 0.186.0.\
+**Testing performed:** `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm test` (16 files / 120 tests passed), `npm run build`, `npm run test:e2e` (18/18 passed: 13 functional cases under reduced motion, 5 WebGL cases), `python3 scripts/validate_phase0_docs.py` (PASS). Production screenshots at 1440×900 and 390×844 for every route and scroll-through videos of home and menu were reviewed for blank canvases, overlap and console errors.\
+**Note:** Food and drink models are procedural with generated PBR maps because no CC0 photoscans of these dishes exist. Captures used software WebGL, so they understate frame rate and show some tile lag behind fast scrolling.\
+**Git branch:** `feat/threejs-experience`\
+**Pull request:** none — branch pushed for review, no pull request opened\
+**Next action:** Owner review of the branch on a real phone and desktop GPU; open a pull request only when asked.

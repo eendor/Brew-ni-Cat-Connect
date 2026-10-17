@@ -24,6 +24,8 @@ Supabase JavaScript is installed solely for Phase 2 public read-only catalog ret
 | React DOM              | Browser/server React rendering                                 | `19.2.8`                        | MIT          | Installed with React at the same pinned version                                             |
 | TypeScript             | Static type checking                                           | `5.9.3`                         | Apache-2.0   | Installed; strict configuration and explicit no-emit check enabled                          |
 | Tailwind CSS           | Responsive styling and project design tokens                   | `4.3.3`                         | MIT          | Installed through the Tailwind PostCSS integration                                          |
+| three.js               | WebGL rendering for the 3D layer                               | `0.186.1`                       | MIT          | Added on `feat/threejs-experience`; loaded only in client components via `next/dynamic`     |
+| GSAP (with ScrollTrigger) | Shared frame ticker, tweens and scroll-linked progress for 3D scenes | `3.15.0`                  | GSAP Standard "No Charge" License | Free for this use; see https://gsap.com/standard-license                         |
 | `@tailwindcss/postcss` | Tailwind CSS PostCSS adapter                                   | `4.3.3`                         | MIT          | Installed for CSS compilation                                                               |
 
 ## 3. Quality and test dependencies
@@ -45,6 +47,7 @@ Supabase JavaScript is installed solely for Phase 2 public read-only catalog ret
 | Node.js type definitions   | Node tool/config typing                         | `24.13.3`         | MIT        | Installed as `@types/node`                                       |
 | React type definitions     | React component typing                          | `19.2.18`         | MIT        | Installed as `@types/react`                                      |
 | React DOM type definitions | React DOM typing                                | `19.2.4`          | MIT        | Installed as `@types/react-dom`                                  |
+| three.js type definitions | three.js typing                                | `0.186.0`         | MIT        | Installed as `@types/three`                                      |
 | `actions/checkout`         | GitHub Actions repository checkout              | `v7`               | MIT        | Workflow major; latest release observed as `v7.0.1` on 2026-08-23 |
 | `actions/setup-node`       | GitHub Actions Node.js and npm cache setup       | `v7`               | MIT        | Workflow major; latest release observed as `v7.0.0` on 2026-08-23 |
 | `actions/setup-python`     | GitHub Actions Python setup for document checks | `v7`               | MIT        | Workflow major; latest release observed as `v7.0.0` on 2026-08-23 |
@@ -141,3 +144,13 @@ No new runtime dependencies were added in Phase 3 so far.
 - **Cart and checkout (PR #14):** `src/context/cart-context.tsx` keeps the cart in `localStorage`; cart drawer, cart page, and checkout under `src/components/cart/` and `src/components/checkout/`; dialogs render through a React portal with `src/lib/accessibility/focus-trap.ts`. Checkout produces a "Send to Shop" order summary to copy into Messenger or read over the phone; there is no order write yet.
 - **Motion (PR #16):** CSS transitions in `src/app/globals.css`, one passive scroll hook in `src/components/motion/scroll-motion.tsx`, and a route fade in `src/app/template.tsx`. GSAP and Lenis were evaluated and not added. All motion turns off under `prefers-reduced-motion`.
 - **Dependency security (PR #12):** `sharp` 0.35.5 and `source-map-js` 1.2.2 through `npm audit fix`; production audit reports 0 vulnerabilities.
+
+## 6. Third-party assets in the 3D layer
+
+| Asset | File | Source and author | Licence | Notes |
+| --- | --- | --- | --- | --- |
+| Studio Small 09 HDRI (1K) | `public/three/hdri/studio_small_09_1k.hdr` | Poly Haven, by Sergej Majboroda | CC0 1.0 | Image-based lighting and reflections; downloaded from polyhaven.com and bundled locally (no runtime CDN) |
+| Big Shoulders (display) and Archivo (body) | Served by `next/font/google` | Google Fonts | SIL Open Font License 1.1 | Self-hosted at build time by Next.js; Google Fonts now ships "Big Shoulders Display" as the "Big Shoulders" family |
+| Cat sticker on the 3D cup | `public/three/cat-sticker.png` | Cut from the shop's own Matcha product photo | Shop-owned, same terms as the other approved shop photos | Not a stock image |
+| Food, drink, sign, street and basket models | Generated in code (`src/components/three/scenes/models.ts` and scene files) | Project code | Project licence | Procedural geometry with generated albedo, normal and roughness maps (`engine/textures.ts`); no third-party models |
+
