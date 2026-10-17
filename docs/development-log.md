@@ -683,3 +683,21 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Git branch:** `feat/threejs-experience`\
 **Pull request:** none — branch pushed for review\
 **Next action:** Owner click-through on a desktop GPU and a real phone (MAN-P4-003).
+
+## 2026-10-17 — Plain menu cards and crisp category headings
+
+**Date:** 2026-10-17\
+**Phase:** Phase 3 — Menu and Ordering Flow (presentation layer)\
+**Task:** Replace the lit-stage menu cards and the wide lead card with a plain, uniform card grid, and stop the category headings from looking blurred.\
+**Summary:**
+- **Cards:** every card is a plain dark card. Photo items show the shop photo across the top at 4:3, followed by the name (Big Shoulders, nickname as a small label), the price, size chips or the options list, flavour chips, and the Order button. Imageless items start straight with the name; there is no placeholder art. The only colour accent is the price, in the item's glow (or the category's). The stage, glow pool, floor, contact shadow, reflection, light sweep, rim light, plinth and hover glow are removed.
+- **Grid:** one uniform grid per category: 1 column on phones, 2 from 768 px, 3 from 1280 px. Cards in a row share the row height. The lead-card layout (`menu-layout.ts`) and its tests are removed.
+- **Photos:** menu photos are plain images again. The 3D photo tiles (`MenuTilesLayer`, `menu-tiles-canvas.tsx`, `scenes/menu-cards.ts`) are removed; the 3D basket toss on Add to Order stays.
+- **Motion:** pointer tilt and sheen are removed. On hover-capable pointers a card lifts 3 px and its border lightens; nothing moves with reduced motion. Cards enter with a 500 ms fade and 20 px rise.
+- **Category headings:** the blur filter and text glow are removed from the heading entrance, along with the haze behind it. Headings now fade and rise 12 px over 400 ms and are otherwise always crisp.
+
+**Files/modules affected:** `src/components/menu/menu-item-card.tsx`, `menu-catalog.tsx`, removed `menu-layout.ts`, `src/components/three/layers.tsx`, removed `canvas/menu-tiles-canvas.tsx` and `scenes/menu-cards.ts`, `src/app/menu/page.tsx`, `src/app/globals.css`, removed `tests/unit/menu-layout.test.ts`, `tests/unit/three-layer.test.tsx` (TC-P4-009), `tests/e2e/three.spec.ts` (TC-P4-003), `docs/test-cases.md` (TC-P4-013 to TC-P4-015 retired with their tests, MAN-P4-005), `docs/system-architecture.md`, this entry. No new dependencies.\
+**Testing performed:** `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm test` (16 files / 122 tests passed), `npm run build`, Playwright against the production build (18/18 passed), `python3 scripts/validate_phase0_docs.py` (PASS); manual review MAN-P4-005 at 1440, 1024, 768 and 390 px with captures kept outside the repository.\
+**Git branch:** `feat/threejs-experience`\
+**Pull request:** none — branch pushed for review\
+**Next action:** Owner click-through on a desktop GPU and a real phone (MAN-P4-003).

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 
 import { MenuCatalog } from "@/components/menu/menu-catalog";
-import { MenuTilesLayer } from "@/components/three/layers";
 import { MenuHero } from "@/components/three/menu-hero";
 import { Container } from "@/components/ui/container";
 
@@ -30,7 +29,6 @@ export default function MenuPage() {
           <MenuCatalog />
         </Container>
       </section>
-      <MenuTilesLayer />
     </>
   );
 }

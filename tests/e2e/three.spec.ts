@@ -121,16 +121,17 @@ test("TC-P4-002 — every page mounts its 3D layer without console or hydration 
   expect(errors).toEqual([]);
 });
 
-test("TC-P4-003 — menu photo tiles go 3D and Add to Order tosses into the real cart", async ({
+test("TC-P4-003 — menu cards show plain photos and Add to Order tosses into the real cart", async ({
   page,
 }) => {
   const errors = collectErrors(page);
   await mockMenu(page);
   await page.goto("/menu");
-  await expect(page.locator("[data-three-tile][data-three-ready]")).toHaveCount(
-    1,
-    { timeout: 45_000 },
-  );
+  await expect(
+    page.getByRole("button", { name: "Order Buldak Carbo" }),
+  ).toBeVisible({ timeout: 45_000 });
+  // menu photos are plain images, not 3D tiles
+  await expect(page.locator("[data-three-tile]")).toHaveCount(0);
   await expect(page.getByText("Ready to enjoy?")).toHaveCount(0);
   // the DOM photo keeps its alt text for screen readers
   await expect(

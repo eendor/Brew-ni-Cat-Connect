@@ -775,15 +775,6 @@ html[data-scrolled] .site-header {
   }
 }
 
-/* Gentle card lift with a slow photo zoom */
-.menu-card__image {
-  transition: transform 900ms var(--ease-out-soft);
-}
-
-.menu-card:hover .menu-card__image {
-  transform: scale(1.06);
-}
-
 /* Category tabs: smooth active-state transition driven by scroll-spy */
 .menu-tab {
   transition:
@@ -915,8 +906,7 @@ textarea:focus-visible {
     animation: none !important;
   }
 
-  .page-hero > *,
-  .menu-card:hover .menu-card__image {
+  .page-hero > * {
     opacity: 1 !important;
     transform: none !important;
   }
@@ -1430,24 +1420,6 @@ textarea:focus-visible {
   height: 1.25rem;
 }
 
-/* Menu photo slots hand over to their 3D tiles once those are ready */
-.three-menu [data-three-ready] {
-  box-shadow: none;
-  background: transparent;
-}
-
-.three-menu [data-three-ready] img {
-  opacity: 0;
-}
-
-.menu-card {
-  transform-style: preserve-3d;
-  transition:
-    transform 240ms ease-out,
-    box-shadow 480ms var(--ease-cinematic),
-    border-color 480ms var(--ease-cinematic);
-}
-
 /* The 3D basket takes the place of the outline bag icon */
 .three-cart [data-cart-trigger] .cart-trigger__icon {
   opacity: 0;
@@ -1456,10 +1428,6 @@ textarea:focus-visible {
 @media (prefers-reduced-motion: reduce) {
   .showcase__product-copy {
     animation: none !important;
-  }
-
-  .menu-card {
-    transform: none !important;
   }
 }
 
@@ -1644,273 +1612,36 @@ textarea:focus-visible {
 }
 
 /* ------------------------------------------------------------------
- * Menu cards: each card is a small product studio lit by its item glow.
- * A dark sweep with a glow pool, the real shop photo as a print standing on
- * the floor with a contact shadow and reflection, then the name and price.
+ * Menu cards: plain dark cards with the shop photo on top, then the name,
+ * price, options and the Order button.
  * ------------------------------------------------------------------ */
-.menu-grid {
-  display: grid;
-  gap: 1.25rem;
-  grid-template-columns: minmax(0, 1fr);
-}
-
-@media (min-width: 768px) {
-  .menu-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .menu-grid > .menu-card {
-    grid-column: span var(--span-md, 1);
-  }
-}
-
-@media (min-width: 1280px) {
-  .menu-grid {
-    grid-template-columns: repeat(12, minmax(0, 1fr));
-  }
-
-  .menu-grid > .menu-card {
-    grid-column: span var(--span-xl, 4);
-  }
-}
-
 .menu-card {
+  position: relative;
   display: flex;
   overflow: hidden;
-  border: 1px solid
-    color-mix(in srgb, var(--card-glow, var(--glow)) 16%, var(--border-soft));
-  border-radius: 1.5rem;
-  background: linear-gradient(
-    180deg,
-    var(--surface-raised) 0%,
-    var(--surface-card) 60%
-  );
-  box-shadow:
-    var(--shadow-subtle),
-    0 34px 80px -64px var(--card-glow, var(--glow));
-  container: card / inline-size;
-}
-
-/* rim light along the top edge */
-.menu-card::before {
-  position: absolute;
-  z-index: 2;
-  top: 0;
-  right: 12%;
-  left: 12%;
-  height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    color-mix(in srgb, var(--card-glow) 80%, white) 50%,
-    transparent
-  );
-  content: "";
-  opacity: 0.55;
-  pointer-events: none;
-}
-
-.menu-card__inner {
-  display: flex;
-  width: 100%;
   flex-direction: column;
+  border: 1px solid var(--border-soft);
+  border-radius: 1rem;
+  background: var(--surface-card);
+  box-shadow: var(--shadow-subtle);
+  transition:
+    transform 240ms ease-out,
+    border-color 240ms ease-out;
 }
 
-.menu-card__stage {
+@media (hover: hover) and (pointer: fine) {
+  .menu-card:hover {
+    border-color: var(--border-strong);
+    transform: translateY(-3px);
+  }
+}
+
+.menu-card__media {
   position: relative;
   overflow: hidden;
   border-bottom: 1px solid var(--border-soft);
   aspect-ratio: 4 / 3;
-  background:
-    radial-gradient(
-      120% 75% at 50% 0%,
-      color-mix(in srgb, var(--card-glow) 11%, transparent),
-      transparent 62%
-    ),
-    linear-gradient(180deg, #131118 0%, #0b0a0d 70%, #0e0d11 100%);
-  isolation: isolate;
-}
-
-/* the lit set inside the stage; on sideways cards it stays a fixed height
-   in the middle so a long price list does not push the product down */
-.menu-card__set {
-  position: absolute;
-  inset: 0;
-  container: stage / size;
-}
-
-.menu-card--featured .menu-card__stage {
-  aspect-ratio: 16 / 11;
-}
-
-/* the studio floor: a faint lit band that falls away to black */
-.menu-card__floor {
-  position: absolute;
-  z-index: 0;
-  top: 72%;
-  right: 0;
-  bottom: -60rem;
-  left: 0;
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--card-glow) 7%, #17151b) 0,
-    #0b0a0d 12rem
-  );
-  box-shadow: 0 -1px 0 rgb(255 255 255 / 5%);
-}
-
-/* the item glow pooling on the floor behind and under the product */
-.menu-card__pool {
-  position: absolute;
-  z-index: 1;
-  bottom: 12%;
-  left: 50%;
-  width: min(90cqw, 120cqh);
-  height: 34%;
-  background: radial-gradient(
-    ellipse at center,
-    color-mix(in srgb, var(--card-glow) 46%, transparent) 0%,
-    color-mix(in srgb, var(--card-glow) 12%, transparent) 45%,
-    transparent 70%
-  );
-  filter: blur(6px);
-  opacity: 0.7;
-  transform: translateX(-50%);
-  transition:
-    opacity 600ms var(--ease-cinematic),
-    transform 900ms var(--ease-cinematic);
-}
-
-.menu-card__product {
-  --p: min(60cqh, 64cqw);
-
-  position: absolute;
-  z-index: 2;
-  top: calc(72% - var(--p));
-  left: 50%;
-  width: var(--p);
-  height: var(--p);
-  transform: translateX(-50%);
-}
-
-/* contact shadow where the print meets the floor */
-.menu-card__product::after {
-  position: absolute;
-  z-index: -1;
-  bottom: -7%;
-  left: 7%;
-  width: 86%;
-  height: 14%;
-  border-radius: 50%;
-  background: radial-gradient(
-    ellipse at center,
-    rgb(0 0 0 / 85%),
-    transparent 70%
-  );
-  content: "";
-  filter: blur(4px);
-}
-
-.menu-card__print {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  border-radius: 1rem;
   background: var(--surface-warm);
-  box-shadow:
-    0 0 0 1px rgb(255 255 255 / 8%),
-    0 28px 40px -22px rgb(0 0 0 / 90%),
-    0 18px 60px -26px var(--card-glow);
-}
-
-.menu-card__reflection {
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  border-radius: 1rem;
-  filter: blur(1.5px) saturate(1.2);
-  mask-image: linear-gradient(to top, rgb(0 0 0 / 55%) 0%, transparent 34%);
-  opacity: 0.5;
-  pointer-events: none;
-  transform: scaleY(-1);
-}
-
-/* imageless items: the first letter as a lit sign on a studio plinth */
-.menu-card__placeholder {
-  position: absolute;
-  z-index: 2;
-  inset: 0;
-}
-
-.menu-card__glyph {
-  position: absolute;
-  bottom: 23%;
-  left: 50%;
-  color: color-mix(in srgb, var(--card-glow) 14%, transparent);
-  font-family: var(--font-display);
-  font-size: min(54cqh, 40cqw);
-  font-weight: 900;
-  line-height: 0.78;
-  text-shadow:
-    0 0 14px color-mix(in srgb, var(--card-glow) 70%, transparent),
-    0 0 46px color-mix(in srgb, var(--card-glow) 45%, transparent);
-  transform: translateX(-50%);
-  transition: text-shadow 600ms var(--ease-cinematic);
-  -webkit-text-stroke: 2px color-mix(in srgb, var(--card-glow) 75%, white);
-}
-
-.menu-card__plinth {
-  position: absolute;
-  bottom: 14%;
-  left: 50%;
-  width: min(48cqw, 64cqh);
-  height: 11%;
-  border-radius: 0 0 50% 50% / 0 0 38% 38%;
-  background: linear-gradient(
-    90deg,
-    #0d0c10 0%,
-    #24212b 38%,
-    #2c2834 50%,
-    #16141a 80%,
-    #0d0c10 100%
-  );
-  box-shadow: 0 26px 30px -14px rgb(0 0 0 / 85%);
-  transform: translateX(-50%);
-}
-
-.menu-card__plinth::before {
-  position: absolute;
-  top: -42%;
-  left: 0;
-  width: 100%;
-  height: 84%;
-  border-radius: 50%;
-  background: radial-gradient(ellipse at 50% 35%, #3b3644 0%, #201d26 70%);
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 14%),
-    0 0 26px -8px var(--card-glow);
-  content: "";
-}
-
-/* a slow light sweep across the stage on hover */
-.menu-card__sweep {
-  position: absolute;
-  z-index: 3;
-  inset: -10% -40%;
-  background: linear-gradient(
-    105deg,
-    transparent 38%,
-    rgb(255 255 255 / 7%) 47%,
-    color-mix(in srgb, var(--card-glow) 16%, transparent) 52%,
-    transparent 62%
-  );
-  mix-blend-mode: screen;
-  opacity: 0;
-  pointer-events: none;
-  transform: translateX(-55%);
 }
 
 .menu-card__body {
@@ -1918,13 +1649,6 @@ textarea:focus-visible {
   flex: 1;
   flex-direction: column;
   padding: 1.25rem;
-  container: body / inline-size;
-}
-
-@media (min-width: 640px) {
-  .menu-card__body {
-    padding: 1.5rem;
-  }
 }
 
 .menu-card__head {
@@ -1941,11 +1665,11 @@ textarea:focus-visible {
 
 .menu-card__nickname {
   display: block;
-  margin-bottom: 0.4rem;
+  margin-bottom: 0.3rem;
   color: var(--text-muted);
   font-size: 0.75rem;
   font-weight: 800;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.12em;
   line-height: 1.2;
   text-transform: uppercase;
 }
@@ -1953,15 +1677,11 @@ textarea:focus-visible {
 .menu-card__name {
   display: block;
   font-family: var(--font-display);
-  font-size: clamp(1.875rem, 11cqi, 2.75rem);
+  font-size: 1.875rem;
   font-weight: 900;
-  line-height: 0.92;
+  line-height: 0.95;
   text-transform: uppercase;
   text-wrap: balance;
-}
-
-.menu-card--featured .menu-card__name {
-  font-size: clamp(2.25rem, 12cqi, 3.5rem);
 }
 
 .menu-card__price {
@@ -1971,29 +1691,28 @@ textarea:focus-visible {
 
 .menu-card__price-from {
   display: block;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.2rem;
   color: var(--text-subtle);
   font-size: 0.6875rem;
   font-weight: 800;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 
 .menu-card__price-value {
   display: block;
-  color: var(--card-glow);
+  color: var(--price-color, var(--text-strong));
   font-family: var(--font-display);
-  font-size: clamp(2rem, 10cqi, 3rem);
+  font-size: 1.875rem;
   font-variant-numeric: tabular-nums;
   font-weight: 900;
-  line-height: 0.9;
-  text-shadow: 0 0 26px color-mix(in srgb, var(--card-glow) 35%, transparent);
+  line-height: 0.95;
 }
 
 .menu-card__status {
   display: inline-flex;
   align-self: flex-start;
-  margin-top: 0.875rem;
+  margin-top: 0.75rem;
   border: 1px solid var(--notice-border);
   border-radius: 999px;
   background: var(--notice-surface);
@@ -2004,14 +1723,14 @@ textarea:focus-visible {
 }
 
 .menu-card__group {
-  margin-top: 1.25rem;
+  margin-top: 1.125rem;
 }
 
 .menu-card__label {
   color: var(--text-subtle);
   font-size: 0.6875rem;
   font-weight: 800;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 
@@ -2026,71 +1745,51 @@ textarea:focus-visible {
   display: inline-flex;
   min-height: 2rem;
   align-items: center;
-  gap: 0.5rem;
   border: 1px solid var(--border-soft);
   border-radius: 999px;
-  background: rgb(255 255 255 / 3%);
-  padding: 0.3rem 0.8rem;
+  background: var(--surface-raised);
+  padding: 0.3rem 0.75rem;
   color: var(--text-muted);
   font-size: 0.8125rem;
   font-weight: 600;
-}
-
-.menu-card__chip::before {
-  width: 0.375rem;
-  height: 0.375rem;
-  border-radius: 50%;
-  background: var(--card-glow);
-  box-shadow: 0 0 8px var(--card-glow);
-  content: "";
 }
 
 .menu-card__sizes {
   display: grid;
   gap: 0.5rem;
   margin-top: 0.5rem;
-  grid-template-columns: repeat(auto-fill, minmax(6rem, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));
 }
 
 .menu-card__size {
   display: grid;
-  gap: 0.2rem;
+  gap: 0.15rem;
   border: 1px solid var(--border-soft);
-  border-radius: 0.75rem;
-  background: linear-gradient(180deg, rgb(255 255 255 / 4%), transparent);
-  padding: 0.6rem 0.8rem 0.55rem;
+  border-radius: 0.5rem;
+  background: var(--surface-raised);
+  padding: 0.5rem 0.75rem;
 }
 
 .menu-card__size-name {
   color: var(--text-muted);
   font-size: 0.75rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
 .menu-card__size-price {
   color: var(--text-strong);
-  font-family: var(--font-display);
-  font-size: 1.5rem;
+  font-size: 1rem;
   font-variant-numeric: tabular-nums;
   font-weight: 800;
-  line-height: 1;
 }
 
 .menu-card__rows {
   display: grid;
-  gap: 0.875rem;
+  gap: 0.75rem;
   border-top: 1px solid var(--border-soft);
   padding-top: 1rem;
   font-size: 0.875rem;
-}
-
-@container body (min-width: 34rem) {
-  .menu-card__rows {
-    column-gap: 2.5rem;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
 
 .menu-card__row-price {
@@ -2104,7 +1803,7 @@ textarea:focus-visible {
   display: grid;
   gap: 0.25rem;
   margin-top: 0.5rem;
-  border-left: 2px solid color-mix(in srgb, var(--card-glow) 45%, transparent);
+  border-left: 1px solid var(--border-soft);
   padding-left: 0.75rem;
   color: var(--text-muted);
 }
@@ -2117,7 +1816,7 @@ textarea:focus-visible {
 
 .menu-card__footer {
   margin-top: auto;
-  padding-top: 1.5rem;
+  padding-top: 1.25rem;
 }
 
 .menu-card__order {
@@ -2126,81 +1825,17 @@ textarea:focus-visible {
   white-space: nowrap;
 }
 
-/* wide slots turn the card sideways: stage on the left, details on the right */
-@container card (min-width: 40rem) {
-  .menu-card__inner {
-    flex-direction: row;
-  }
-
-  .menu-card__stage,
-  .menu-card--featured .menu-card__stage {
-    width: 50%;
-    min-height: 21rem;
-    flex-shrink: 0;
-    border-right: 1px solid var(--border-soft);
-    border-bottom: 0;
-    aspect-ratio: auto;
-  }
-
-  .menu-card__body {
-    justify-content: center;
-    padding: 1.75rem 2rem;
-  }
-
-  .menu-card__set {
-    top: 50%;
-    bottom: auto;
-    height: min(100%, 26rem);
-    transform: translateY(-50%);
-  }
-
-  .menu-card__product {
-    --p: min(60cqh, 70cqw);
-  }
-
-  .menu-card__footer {
-    margin-top: 0;
-    padding-top: 1.75rem;
-  }
-}
-
 .menu-card--unavailable {
   opacity: 0.75;
 }
 
-.menu-card--unavailable .menu-card__stage {
-  filter: grayscale(0.8);
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .menu-card:hover .menu-card__pool {
-    opacity: 1;
-    transform: translateX(-50%) scale(1.12);
-  }
-
-  .menu-card:hover .menu-card__sweep {
-    opacity: 1;
-    transform: translateX(55%);
-    transition:
-      transform 1300ms var(--ease-cinematic),
-      opacity 300ms ease-out;
-  }
-
-  .menu-card:hover .menu-card__glyph {
-    text-shadow:
-      0 0 18px color-mix(in srgb, var(--card-glow) 85%, transparent),
-      0 0 64px color-mix(in srgb, var(--card-glow) 60%, transparent);
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .menu-card__sweep {
-    display: none;
+  .menu-card {
+    transition: none;
   }
 
-  .menu-card__pool,
-  .menu-card__glyph {
-    transition: none;
+  .menu-card:hover {
+    transform: none;
   }
 }
 
@@ -2213,23 +1848,6 @@ textarea:focus-visible {
 .menu-cat-head {
   position: relative;
   padding-bottom: 1rem;
-}
-
-.menu-cat-head::before {
-  position: absolute;
-  top: -70%;
-  left: -8%;
-  z-index: -1;
-  width: min(36rem, 80%);
-  height: 240%;
-  background: radial-gradient(
-    closest-side,
-    color-mix(in srgb, var(--ga) 18%, transparent),
-    transparent
-  );
-  content: "";
-  pointer-events: none;
-  transition: opacity 900ms var(--ease-cinematic);
 }
 
 .menu-cat-head__index {
@@ -2260,11 +1878,9 @@ textarea:focus-visible {
   line-height: 0.95;
   text-transform: uppercase;
   text-wrap: balance;
-  text-shadow: 0 0 36px color-mix(in srgb, var(--ga) 45%, transparent);
   transition:
-    opacity 900ms var(--ease-cinematic),
-    transform 900ms var(--ease-cinematic),
-    filter 900ms var(--ease-cinematic);
+    opacity 400ms ease-out,
+    transform 400ms ease-out;
 }
 
 .menu-cat-head__rule {
@@ -2272,76 +1888,35 @@ textarea:focus-visible {
   height: 2px;
   margin-top: 1rem;
   background: linear-gradient(90deg, var(--ga), var(--gb) 45%, transparent);
-  box-shadow: 0 0 18px color-mix(in srgb, var(--ga) 55%, transparent);
   transform-origin: left;
-  transition: transform 1100ms var(--ease-cinematic) 120ms;
-}
-
-.menu-cine .menu-cat-head:not([data-in])::before {
-  opacity: 0;
+  transition: transform 600ms var(--ease-cinematic);
 }
 
 .menu-cine .menu-cat-head:not([data-in]) .menu-cat-head__title {
   opacity: 0;
-  transform: translate3d(0, 0.6em, 0);
-  filter: blur(6px);
+  transform: translate3d(0, 12px, 0);
 }
 
 .menu-cine .menu-cat-head:not([data-in]) .menu-cat-head__rule {
   transform: scaleX(0);
 }
 
-/* cards: depth-staggered fly-in, then a rim-light sheen on hover */
-.menu-card {
-  position: relative;
-}
-
-.menu-card::after {
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: radial-gradient(
-    22rem circle at var(--mx, 50%) var(--my, 0%),
-    color-mix(in srgb, var(--card-glow, var(--glow)) 14%, transparent),
-    transparent 65%
-  );
-  content: "";
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 420ms var(--ease-cinematic);
-}
-
-.menu-card:hover::after {
-  opacity: 1;
-}
-
-.menu-card:hover {
-  border-color: color-mix(
-    in srgb,
-    var(--card-glow, var(--glow)) 45%,
-    transparent
-  );
-  box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--card-glow, var(--glow)) 22%, transparent),
-    0 30px 80px -44px var(--card-glow, var(--glow));
-}
-
+/* cards: a short rise and fade the first time they enter the view */
 .menu-cine .menu-grid > .menu-card {
   transition:
-    opacity 900ms var(--ease-cinematic) calc(var(--i, 0) * 90ms),
-    transform 1100ms var(--ease-cinematic) calc(var(--i, 0) * 90ms),
-    box-shadow 480ms var(--ease-cinematic),
-    border-color 480ms var(--ease-cinematic);
+    opacity 500ms ease-out calc(var(--i, 0) * 60ms),
+    transform 500ms ease-out calc(var(--i, 0) * 60ms),
+    border-color 240ms ease-out;
 }
 
 .menu-cine .menu-grid > .menu-card:not([data-in]) {
   opacity: 0;
-  transform: perspective(1200px) translate3d(0, 3.5rem, -160px) rotateX(12deg);
+  transform: translate3d(0, 20px, 0);
 }
 
 .menu-cine .menu-grid > .menu-card[data-in]:hover {
   transition-delay: 0s;
-  transition-duration: 240ms, 240ms, 480ms, 480ms;
+  transition-duration: 240ms;
 }
 
 @media (prefers-reduced-motion: reduce) {

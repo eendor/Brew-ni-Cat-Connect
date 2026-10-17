@@ -72,7 +72,7 @@ describe("3D layer (TC-P4-006 – TC-P4-010)", () => {
     expect(screen.queryByRole("button", { name: "Flip the sign" })).toBeNull();
   });
 
-  it("TC-P4-009 — menu cards drop the 'Ready to enjoy?' line and expose a 3D photo slot", () => {
+  it("TC-P4-009 — menu cards drop the 'Ready to enjoy?' line and show a plain photo", () => {
     const item: MenuItem = {
       id: "buldak-carbo",
       name: "Buldak Carbo",
@@ -97,11 +97,14 @@ describe("3D layer (TC-P4-006 – TC-P4-010)", () => {
     expect(
       screen.getByRole("button", { name: "Order Buldak Carbo" }),
     ).toHaveAttribute("data-order-trigger");
-    const slot = container.querySelector<HTMLElement>("[data-three-tile]");
-    expect(slot?.dataset.threeTile).toBe(
-      optimizedSrc("/images/menu/items/buldak-carbo.jpg", 384),
-    );
-    expect(slot?.dataset.glow).toBe("#FF3D7F");
+    expect(container.querySelector("[data-three-tile]")).toBeNull();
+    expect(
+      screen.getByRole("img", {
+        name: "Buldak Carbo spicy noodles with a fried egg",
+      }),
+    ).toBeInTheDocument();
+    const article = container.querySelector<HTMLElement>("article");
+    expect(article?.style.getPropertyValue("--price-color")).toBe("#FF3D7F");
   });
 
   it("TC-P4-010 — glow colours and optimised texture URLs", () => {

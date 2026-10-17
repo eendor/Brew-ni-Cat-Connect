@@ -475,14 +475,14 @@ flowchart LR
 | `src/components/three/engine/` | Renderer setup (ACES, sRGB, shadows), cached HDRI environment, procedural PBR texture generators, post-processing chain (render → bokeh → bloom → output → grain), shared frame loop, device quality and reduced-motion checks, frame budget |
 | `src/components/three/scenes/` | One module per scene: home showcase, menu tiles, cart basket and toss, gallery ring, visit sign and street model, ambient page backdrops, and the shared product models |
 | `src/components/three/canvas/` | Client components that own a `<canvas>`, start and dispose a scene through `useScene`, and connect ScrollTrigger |
-| `src/components/three/*.tsx` | Page-level wrappers with the static fallback: `HomeShowcase`, `MenuHero`, `MenuTilesLayer`, `CartFxLayer`, `GalleryRing`, `VisitStage`, `AmbientBackdrop` |
+| `src/components/three/*.tsx` | Page-level wrappers with the static fallback: `HomeShowcase`, `MenuHero`, `CartFxLayer`, `GalleryRing`, `VisitStage`, `AmbientBackdrop` |
 
 ### 18.2 3D per route
 
 | Route | 3D | Static fallback |
 | --- | --- | --- |
 | `/` | Pinned scroll showcase: PET cup with real refraction, condensation and ice (Matcha, Cat-Feine), takoyaki, fries and Buldak Carbo, with floating ice, tea leaves, coffee beans and bonito flakes; visit sign and street model in "Find us in Kabacan" on a transparent full-bleed canvas (no card behind it) | Five-item photo grid, sign card |
-| `/menu` | Full-viewport hero: glowing "THE MENU" over turning cups, rim light and floating ice, beans and leaves that dolly and fade into the catalog on scroll; a fixed glow field that follows the active category; indexed category headings; menu photos become glossy 3D prints with pointer and scroll parallax; Add to Order throws the item into a 3D basket on the cart button (420 ms) before the drawer opens | Plain hero heading, normal photo thumbnails, lit letter placeholders on a plinth for items without photos |
+| `/menu` | Full-viewport hero: glowing "THE MENU" over turning cups, rim light and floating ice, beans and leaves that dolly and fade into the catalog on scroll; a fixed glow field that follows the active category; indexed category headings; plain menu cards with the shop photo across the top; Add to Order throws the item into a 3D basket on the cart button (420 ms) before the drawer opens | Plain hero heading and the same plain menu cards |
 | `/gallery` | Ambient backdrop; curved, draggable ring of all gallery photos with prev/next buttons and a live caption | Full photo grid (always present) |
 | `/contact` | Ambient backdrop; flip-able OPEN/CLOSED sign and street model (Pulido Eatery on the left, the small Brew ni Cat unit on its right) | Sign card |
 | `/about`, `/cart`, `/checkout` | Subtle ambient backdrop behind the page heading | Plain heading background |
