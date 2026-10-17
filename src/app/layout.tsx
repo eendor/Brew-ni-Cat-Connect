@@ -6,6 +6,8 @@ import { CartDrawer } from "@/components/cart/cart-drawer";
 import { CartUndoToast } from "@/components/cart/cart-undo-toast";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
+import { MotionDirector } from "@/components/motion/motion-director";
+import { RouteCurtain } from "@/components/motion/route-curtain";
 import { ScrollMotion } from "@/components/motion/scroll-motion";
 import { CartFxLayer } from "@/components/three/layers";
 import { siteConfig } from "@/config/site";
@@ -61,6 +63,13 @@ type RootLayoutProps = Readonly<{
   children: ReactNode;
 }>;
 
+/**
+ * Runs before the first paint: flags the page for the motion director so
+ * animated content waits for its entrance instead of flashing in place.
+ * Reduced motion (unless `?motion`) leaves the page static.
+ */
+const MOTION_FLAG = `try{if(new URLSearchParams(location.search).has("motion")||!matchMedia("(prefers-reduced-motion: reduce)").matches)document.documentElement.setAttribute("data-motion","on")}catch(e){}`;
+
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html
@@ -69,7 +78,12 @@ export default function RootLayout({ children }: RootLayoutProps) {
       // lets Next turn smooth scrolling off while it resets the scroll
       // position on navigation (otherwise new pages start part-way down)
       data-scroll-behavior="smooth"
+      // the motion flag above is set before React hydrates
+      suppressHydrationWarning
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: MOTION_FLAG }} />
+      </head>
       <body>
         <a className="skip-link" href="#main-content">
           Skip to main content
@@ -85,6 +99,8 @@ export default function RootLayout({ children }: RootLayoutProps) {
           <CartDrawer />
           <CartUndoToast />
           <ScrollMotion />
+          <MotionDirector />
+          <RouteCurtain />
           <CartFxLayer />
         </CartProvider>
       </body>

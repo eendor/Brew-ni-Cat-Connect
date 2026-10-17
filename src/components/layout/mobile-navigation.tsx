@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
+import { EASE, gsap } from "@/components/motion/gsap";
+import { usePresence } from "@/components/motion/use-presence";
 import type { NavigationItem } from "@/config/site";
 
 import { NavLink } from "./nav-link";
@@ -14,6 +16,48 @@ type MobileNavigationProps = Readonly<{
 export function MobileNavigation({ items }: MobileNavigationProps) {
   const [isOpen, setIsOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const navRef = useRef<HTMLElement>(null);
+  const scrimRef = useRef<HTMLDivElement>(null);
+  // the panel drops in with its links cascading; it lifts away on close
+  const { present } = usePresence(isOpen, navRef, {
+    enter: (nav) =>
+      gsap
+        .timeline()
+        .fromTo(
+          scrimRef.current,
+          { autoAlpha: 0 },
+          { autoAlpha: 1, duration: 0.35, ease: "power2.out" },
+        )
+        .fromTo(
+          nav,
+          { autoAlpha: 0, yPercent: -8 },
+          { autoAlpha: 1, yPercent: 0, duration: 0.55, ease: EASE.enter },
+          0,
+        )
+        .fromTo(
+          nav.querySelectorAll("li, [data-nav-note]"),
+          { autoAlpha: 0, y: 16 },
+          {
+            autoAlpha: 1,
+            y: 0,
+            duration: 0.5,
+            ease: EASE.enter,
+            stagger: 0.05,
+            clearProps: "opacity,visibility,transform",
+          },
+          0.08,
+        ),
+    exit: (nav) =>
+      gsap
+        .timeline()
+        .to(nav, {
+          autoAlpha: 0,
+          yPercent: -6,
+          duration: 0.28,
+          ease: EASE.exit,
+        })
+        .to(scrimRef.current, { autoAlpha: 0, duration: 0.28 }, 0),
+  });
 
   useEffect(() => {
     if (!isOpen) {
@@ -82,11 +126,12 @@ export function MobileNavigation({ items }: MobileNavigationProps) {
         )}
       </button>
 
-      {isOpen
+      {present
         ? createPortal(
             // portalled: the header's backdrop-filter would otherwise be the
             // containing block of this fixed scrim
             <div
+              ref={scrimRef}
               className="mobile-nav-scrim fixed inset-0 z-40 bg-[var(--ink-scrim)] backdrop-blur-sm lg:hidden"
               aria-hidden="true"
               data-testid="mobile-nav-scrim"
@@ -97,10 +142,12 @@ export function MobileNavigation({ items }: MobileNavigationProps) {
         : null}
 
       <nav
+        ref={navRef}
         id="mobile-navigation"
-        className="motion-drop-in absolute inset-x-0 top-full border-t border-[var(--border-soft)] bg-[var(--surface-canvas)] px-5 py-5 shadow-[var(--shadow-card)]"
+        className="absolute inset-x-0 top-full border-t border-[var(--border-soft)] bg-[var(--surface-canvas)] px-5 py-5 shadow-[var(--shadow-card)]"
         aria-label="Mobile navigation"
-        hidden={!isOpen}
+        hidden={!present}
+        inert={present && !isOpen}
       >
         <ul className="mx-auto grid w-full max-w-[var(--shell-width)] gap-1">
           {items.map((item) => (
@@ -115,7 +162,10 @@ export function MobileNavigation({ items }: MobileNavigationProps) {
             </li>
           ))}
         </ul>
-        <div className="mx-auto mt-4 flex w-full max-w-[var(--shell-width)] flex-col gap-1 border-t border-[var(--border-soft)] px-4 pt-4 text-sm text-[var(--text-muted)]">
+        <div
+          className="mx-auto mt-4 flex w-full max-w-[var(--shell-width)] flex-col gap-1 border-t border-[var(--border-soft)] px-4 pt-4 text-sm text-[var(--text-muted)]"
+          data-nav-note=""
+        >
           <span className="font-bold text-[var(--text-strong)]">
             Segundo St, Poblacion, Kabacan
           </span>

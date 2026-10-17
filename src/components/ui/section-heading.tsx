@@ -24,6 +24,7 @@ export function SectionHeading({
       <p className="eyebrow">{eyebrow}</p>
       <h2
         id={id}
+        data-split=""
         className="font-display mt-3 text-3xl text-balance text-[var(--text-strong)] sm:text-4xl lg:text-5xl"
       >
         {title}
