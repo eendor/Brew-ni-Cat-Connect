@@ -66,7 +66,7 @@ export function CartPageView() {
                   <path d="M16 10a4 4 0 0 1-8 0" />
                 </svg>
               </div>
-              <h2 className="font-display text-2xl font-bold text-[var(--text-strong)] sm:text-3xl">
+              <h2 className="font-display text-2xl text-[var(--text-strong)] sm:text-3xl">
                 Your cart is empty
               </h2>
               <p className="mt-3 text-base text-[var(--text-muted)] leading-relaxed">
@@ -87,7 +87,7 @@ export function CartPageView() {
                 <div className="rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-6 sm:p-8 shadow-[var(--shadow-subtle)]">
                   <div className="flex items-center justify-between pb-4 border-b border-[var(--border-soft)] mb-6">
                     <div>
-                      <h2 className="font-display text-2xl font-bold text-[var(--text-strong)]">
+                      <h2 className="font-display text-2xl text-[var(--text-strong)]">
                         Items in Cart
                       </h2>
                       <p className="text-sm text-[var(--text-muted)] mt-1">
@@ -96,7 +96,7 @@ export function CartPageView() {
                     </div>
                     <button
                       type="button"
-                      className="text-sm font-bold text-[var(--text-subtle)] hover:text-red-700 transition-colors"
+                      className="-mr-2 inline-flex min-h-11 items-center rounded-full px-2 text-sm font-bold text-[var(--text-muted)] hover:text-[var(--danger)] transition-colors"
                       onClick={clearCart}
                     >
                       Clear cart
@@ -119,7 +119,7 @@ export function CartPageView() {
 
                 {/* Fulfillment Selection Section */}
                 <div className="rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-6 sm:p-8 shadow-[var(--shadow-subtle)]">
-                  <h3 className="font-display text-xl font-bold text-[var(--text-strong)]">
+                  <h3 className="font-display text-xl text-[var(--text-strong)]">
                     Fulfillment Preference
                   </h3>
                   <p className="mt-1 text-sm text-[var(--text-muted)]">
@@ -219,7 +219,7 @@ export function CartPageView() {
               {/* Right Column: Order Summary Card */}
               <div className="lg:col-span-5 xl:col-span-4">
                 <div className="sticky top-28 rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-6 sm:p-8 shadow-[var(--shadow-card)] space-y-6">
-                  <h3 className="font-display text-xl font-bold text-[var(--text-strong)] pb-4 border-b border-[var(--border-soft)]">
+                  <h3 className="font-display text-xl text-[var(--text-strong)] pb-4 border-b border-[var(--border-soft)]">
                     Order Summary
                   </h3>
 

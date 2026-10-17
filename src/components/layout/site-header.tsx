@@ -6,6 +6,7 @@ import { siteConfig } from "@/config/site";
 import { CartTriggerButton } from "../cart/cart-trigger-button";
 import { Container } from "../ui/container";
 import { MobileNavigation } from "./mobile-navigation";
+import { NavLink } from "./nav-link";
 
 export function SiteHeader() {
   return (
@@ -25,10 +26,10 @@ export function SiteHeader() {
             className="size-12 rounded-full bg-white object-contain p-0.5 transition-transform group-hover:-rotate-2 lg:size-14"
           />
           <span className="leading-tight">
-            <span className="font-display block text-xl leading-none font-black text-[var(--text-strong)]">
+            <span className="font-display block text-xl leading-none text-[var(--text-strong)]">
               {siteConfig.shortName}
             </span>
-            <span className="block text-[0.64rem] font-bold tracking-[0.15em] text-[var(--deep-green)] uppercase">
+            <span className="block text-xs font-bold tracking-[0.08em] text-[var(--deep-green)] uppercase">
               Coffee Shop
             </span>
           </span>
@@ -38,12 +39,12 @@ export function SiteHeader() {
           <ul className="flex items-center gap-1">
             {siteConfig.navigation.map((item) => (
               <li key={item.href}>
-                <Link
+                <NavLink
                   href={item.href}
-                  className="nav-link inline-flex min-h-11 items-center rounded-full px-4 py-2 text-xs font-bold tracking-[0.1em] text-[var(--text-muted)] uppercase hover:text-[var(--text-strong)]"
+                  className="nav-link inline-flex min-h-11 items-center rounded-full px-4 py-2 text-xs font-bold tracking-[0.1em] text-[var(--text-muted)] uppercase hover:text-[var(--text-strong)] aria-[current=page]:text-[var(--text-strong)]"
                 >
                   {item.label}
-                </Link>
+                </NavLink>
               </li>
             ))}
           </ul>

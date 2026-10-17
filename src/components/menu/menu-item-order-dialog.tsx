@@ -163,7 +163,7 @@ export function MenuItemOrderDialog({
   const dialogElement = (
     <div
       ref={dialogRef}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
+      className="fixed inset-0 z-[70] flex items-center justify-center p-4 sm:p-6"
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
@@ -181,7 +181,7 @@ export function MenuItemOrderDialog({
             <span className="eyebrow block">Configure item</span>
             <h2
               id={titleId}
-              className="font-display mt-1 text-2xl font-bold text-[var(--text-strong)]"
+              className="font-display mt-1 text-2xl text-[var(--text-strong)]"
             >
               {item.name}
             </h2>
@@ -190,7 +190,7 @@ export function MenuItemOrderDialog({
           <button
             ref={closeButtonRef}
             type="button"
-            className="inline-flex size-9 items-center justify-center rounded-full text-[var(--text-muted)] hover:bg-[var(--surface-warm)] hover:text-[var(--text-strong)] transition-colors"
+            className="inline-flex size-11 items-center justify-center rounded-full text-[var(--text-muted)] hover:bg-[var(--surface-warm)] hover:text-[var(--text-strong)] transition-colors"
             aria-label="Close dialog"
             onClick={onClose}
           >
@@ -242,7 +242,9 @@ export function MenuItemOrderDialog({
                     >
                       <span className="font-bold text-sm text-[var(--text-strong)]">
                         {variant.name}
-                        {isSelected ? " (Selected)" : ""}
+                        {isSelected ? (
+                          <span className="sr-only"> (selected)</span>
+                        ) : null}
                       </span>
                       {variant.basePrice !== null &&
                       !(
@@ -345,7 +347,7 @@ export function MenuItemOrderDialog({
             <div className="inline-flex items-center rounded-full border border-[var(--border-strong)] bg-[var(--surface-warm)] p-1">
               <button
                 type="button"
-                className="inline-flex size-9 items-center justify-center rounded-full text-[var(--text-strong)] transition-colors hover:bg-[var(--surface-card)] disabled:opacity-40"
+                className="inline-flex size-11 items-center justify-center rounded-full text-[var(--text-strong)] transition-colors hover:bg-[var(--surface-card)] disabled:opacity-40"
                 aria-label="Decrease quantity"
                 disabled={quantity <= 1}
                 onClick={() => setQuantity((q) => Math.max(1, q - 1))}
@@ -367,7 +369,7 @@ export function MenuItemOrderDialog({
               </span>
               <button
                 type="button"
-                className="inline-flex size-9 items-center justify-center rounded-full text-[var(--text-strong)] transition-colors hover:bg-[var(--surface-card)]"
+                className="inline-flex size-11 items-center justify-center rounded-full text-[var(--text-strong)] transition-colors hover:bg-[var(--surface-card)]"
                 aria-label="Increase quantity"
                 onClick={() => setQuantity((q) => q + 1)}
               >
@@ -390,7 +392,7 @@ export function MenuItemOrderDialog({
           {feedbackError ? (
             <div
               role="alert"
-              className="rounded-xl border border-red-300 bg-red-50 p-3 text-xs font-bold text-red-800"
+              className="rounded-xl border border-[var(--danger)] bg-[rgb(255_133_119_/_10%)] p-3 text-sm font-bold text-[var(--danger)]"
             >
               {feedbackError}
             </div>

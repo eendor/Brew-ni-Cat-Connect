@@ -1,9 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 import type { NavigationItem } from "@/config/site";
+
+import { NavLink } from "./nav-link";
 
 type MobileNavigationProps = Readonly<{
   items: readonly NavigationItem[];
@@ -40,7 +41,7 @@ export function MobileNavigation({ items }: MobileNavigationProps) {
       <button
         ref={triggerRef}
         type="button"
-        className="inline-flex size-11 items-center justify-center rounded-full border border-[var(--border-strong)] bg-[var(--surface-card)] text-[var(--text-strong)] shadow-sm transition-colors hover:bg-[var(--surface-warm)]"
+        className="inline-flex size-12 items-center justify-center rounded-full border border-[var(--border-strong)] bg-[var(--surface-card)] text-[var(--text-strong)] shadow-sm transition-colors hover:bg-[var(--surface-warm)]"
         aria-label={isOpen ? "Close navigation" : "Open navigation"}
         aria-expanded={isOpen}
         aria-controls="mobile-navigation"
@@ -82,13 +83,13 @@ export function MobileNavigation({ items }: MobileNavigationProps) {
         <ul className="mx-auto grid w-full max-w-[72rem] gap-1">
           {items.map((item) => (
             <li key={item.href}>
-              <Link
+              <NavLink
                 href={item.href}
-                className="flex min-h-12 items-center rounded-xl px-4 py-3 text-base font-bold text-[var(--text-strong)] transition-colors hover:bg-[var(--accent-soft)]"
+                className="flex min-h-12 items-center rounded-xl px-4 py-3 text-base font-bold text-[var(--text-strong)] transition-colors hover:bg-[var(--accent-soft)] aria-[current=page]:bg-[var(--accent-soft)] aria-[current=page]:text-[var(--accent-solid)]"
                 onClick={closeNavigation}
               >
                 {item.label}
-              </Link>
+              </NavLink>
             </li>
           ))}
         </ul>
