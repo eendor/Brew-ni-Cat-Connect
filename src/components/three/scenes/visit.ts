@@ -31,13 +31,17 @@ function signFace(
   canvas.width = 1024;
   canvas.height = 640;
   const g = context2d(canvas);
+  // the painted panel fills the whole board face (no dark margin), with
+  // rounded corners that follow the board and the enamel border at the edge
   g.fillStyle = "#18151c";
-  g.fillRect(0, 0, 1024, 640);
+  g.beginPath();
+  g.roundRect(0, 0, 1024, 640, 22);
+  g.fill();
   const colour = open ? "#8fe07f" : "#ff6f8f";
   g.strokeStyle = colour;
-  g.lineWidth = 10;
+  g.lineWidth = 14;
   g.beginPath();
-  g.roundRect(40, 40, 944, 560, 30);
+  g.roundRect(22, 22, 980, 596, 18);
   g.stroke();
   g.textAlign = "center";
   g.fillStyle = colour;
@@ -156,10 +160,13 @@ export async function initVisit(
   board.position.y = -2.2;
   board.castShadow = true;
   swing.add(board);
-  const faceGeometry = new THREE.PlaneGeometry(3.16, 1.97);
+  // the face covers the board almost to its edge, so only a hairline of
+  // wood shows; transparent corners follow the board's rounded corners
+  const faceGeometry = new THREE.PlaneGeometry(3.27, 2.03);
   const paint = (map: THREE.Texture) =>
     new THREE.MeshPhysicalMaterial({
       map,
+      alphaTest: 0.5,
       roughness: 0.38,
       clearcoat: 0.8,
       clearcoatRoughness: 0.15,
@@ -483,6 +490,15 @@ export async function initVisit(
       diorama.scale.setScalar(1.1);
       camera.position.set(0, 0.6, 15.5);
       camera.lookAt(0, 0.4, 0);
+    } else if (camera.aspect > 1.9) {
+      // full-bleed band: spread the sign and street out and frame them
+      // tighter so the scene fills the width instead of floating in a box
+      sign.position.set(-3.9, 2.55, 0.6);
+      sign.scale.setScalar(1.05);
+      diorama.position.set(3.4, -0.95, -0.8);
+      diorama.scale.setScalar(0.95);
+      camera.position.set(0, 1.4, 12.4);
+      camera.lookAt(0, 0.45, 0);
     } else {
       sign.position.set(-2.9, 2.6, 0.6);
       sign.scale.setScalar(1);

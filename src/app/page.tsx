@@ -284,7 +284,8 @@ export default function HomePage() {
       </section>
 
       <section
-        className="border-t border-[var(--border-soft)] bg-[var(--surface-warm)] py-16 sm:py-20"
+        id="visit"
+        className="scroll-mt-20 border-t border-[var(--border-soft)] py-16 sm:py-20 lg:scroll-mt-24"
         aria-labelledby="visit-heading"
       >
         <Container>
@@ -369,9 +370,9 @@ export default function HomePage() {
                 </ExternalLink>
               </aside>
             </div>
-            <VisitStage facts={visitFacts} className="mt-10" />
           </Reveal>
         </Container>
+        <VisitStage facts={visitFacts} className="visit-stage--bleed mt-6" />
       </section>
     </>
   );

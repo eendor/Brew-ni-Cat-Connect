@@ -1,6 +1,10 @@
 @import "tailwindcss";
 
 :root {
+  /* full-bleed page shell: wide content cap, fluid gutters */
+  --shell-max: 90rem;
+  --shell-pad: clamp(1rem, 4vw, 4rem);
+  --shell-width: calc(var(--shell-max) + 2 * var(--shell-pad));
   /* Night Shift Glow: a dark studio with coloured rim light per item */
   color-scheme: dark;
   --surface-canvas: #0b0a0d;
@@ -82,12 +86,17 @@
 html {
   min-width: 20rem;
   scroll-behavior: smooth;
+  /* reserve the scrollbar so the header doesn't shift when a modal locks
+     scrolling */
+  scrollbar-gutter: stable;
 }
 
 body {
   min-width: 20rem;
   min-height: 100vh;
   margin: 0;
+  /* full-bleed bands use 100vw; clip the scrollbar-width overhang */
+  overflow-x: clip;
   background:
     radial-gradient(
       ellipse 60% 40% at 85% -10%,
@@ -523,9 +532,9 @@ button:focus-visible,
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.85rem;
     width: 100%;
-    max-width: 72rem;
+    max-width: var(--shell-max);
     margin-inline: auto;
-    padding-inline: 1.25rem;
+    padding-inline: var(--shell-pad);
   }
 
   @media (min-width: 640px) {
@@ -717,30 +726,13 @@ button:focus-visible,
   }
 }
 
-/* Frosted header tightens once the page scrolls */
-.site-header__bar {
-  transition:
-    min-height 500ms var(--ease-out-soft),
-    padding 500ms var(--ease-out-soft);
-}
-
 /* Near-opaque once content scrolls under it, so warm notices and terracotta
-   buttons can't bleed through the blur as a colored glow */
+   buttons can't bleed through the blur as a colored glow. The header keeps
+   one height: shrinking it on scroll shifted the page under the reader. */
 html[data-scrolled] .site-header {
   background-color: rgb(11 10 13 / 88%);
   box-shadow: 0 10px 30px -18px var(--ink-shadow);
   border-bottom-color: rgb(255 255 255 / 8%);
-}
-
-html[data-scrolled] .site-header__bar {
-  min-height: 4rem;
-  padding-block: 0.35rem;
-}
-
-@media (min-width: 1024px) {
-  html[data-scrolled] .site-header__bar {
-    min-height: 4.25rem;
-  }
 }
 
 /* Desktop nav underline that grows from the center */
@@ -790,21 +782,6 @@ html[data-scrolled] .site-header__bar {
 
 .menu-card:hover .menu-card__image {
   transform: scale(1.06);
-}
-
-/* Sticky category bar follows the tightened header height */
-.menu-tabs {
-  transition: top 500ms var(--ease-out-soft);
-}
-
-html[data-scrolled] .menu-tabs {
-  top: calc(4rem - 1px);
-}
-
-@media (min-width: 1024px) {
-  html[data-scrolled] .menu-tabs {
-    top: calc(4.25rem - 1px);
-  }
 }
 
 /* Category tabs: smooth active-state transition driven by scroll-spy */
@@ -859,6 +836,11 @@ textarea:focus-visible {
 
 .motion-pop-in {
   animation: dialog-in 420ms var(--ease-out-soft) both;
+}
+
+.undo-toast {
+  /* no backwards fill: if the compositor is busy the toast still shows */
+  animation: dialog-in 260ms var(--ease-out-soft);
 }
 
 .motion-drop-in:not([hidden]) {
@@ -927,6 +909,7 @@ textarea:focus-visible {
   .motion-fade-in,
   .motion-slide-in-right,
   .motion-pop-in,
+  .undo-toast,
   .motion-drop-in:not([hidden]),
   .skeleton {
     animation: none !important;
@@ -1008,7 +991,7 @@ textarea:focus-visible {
 .showcase__hud {
   position: relative;
   z-index: 2;
-  width: min(80rem, 100% - 2.5rem);
+  width: min(var(--shell-max), 100% - 2 * var(--shell-pad));
   margin-inline: auto;
   padding-block: clamp(3.5rem, 9vh, 6rem) 2.5rem;
 }
@@ -1238,7 +1221,7 @@ textarea:focus-visible {
 }
 
 .showcase__static {
-  width: min(80rem, 100% - 2.5rem);
+  width: min(var(--shell-max), 100% - 2 * var(--shell-pad));
   margin-inline: auto;
   padding-bottom: 4rem;
 }
@@ -1349,6 +1332,20 @@ textarea:focus-visible {
   }
 }
 
+/* Home: the sign and street sit straight on the section, edge to edge, with
+   a transparent canvas, so there is no box or band around the scene. */
+.visit-stage--bleed .visit-stage__canvas {
+  max-width: 90rem;
+  aspect-ratio: 12 / 5;
+  margin-inline: auto;
+}
+
+@media (max-width: 860px) {
+  .visit-stage--bleed .visit-stage__canvas {
+    aspect-ratio: 9 / 10;
+  }
+}
+
 .visit-stage__canvas canvas {
   opacity: 0;
   transition: opacity 900ms var(--ease-cinematic);
@@ -1410,28 +1407,42 @@ textarea:focus-visible {
   }
 }
 
+/* Buttons sit in fixed side columns; the caption has a fixed box (two
+   lines, clamped) so the buttons never move as captions change length. */
 .gallery-ring__controls {
-  display: flex;
+  display: grid;
+  grid-template-columns: 3rem minmax(0, 1fr) 3rem;
   align-items: center;
-  justify-content: center;
-  gap: 1.25rem;
-  width: min(48rem, 100% - 2.5rem);
+  gap: 1rem;
+  width: min(40rem, 100% - 2.5rem);
   margin: 0.5rem auto 0;
 }
 
 .gallery-ring__caption {
   display: grid;
+  align-content: start;
   gap: 0.15rem;
-  min-height: 3em;
-  max-width: 46ch;
+  height: calc(
+    var(--type-label) * 1.5 + var(--type-body-sm) * 1.5 * 2 + 0.15rem
+  );
   color: var(--text-muted);
   font-size: var(--type-body-sm);
+  line-height: 1.5;
   text-align: center;
+}
+
+.gallery-ring__caption > span:last-child {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
 }
 
 .gallery-ring__count {
   color: var(--text-strong);
-  font-size: 0.75rem;
+  font-size: var(--type-label);
+  line-height: 1.5;
   font-weight: 800;
   letter-spacing: 0.14em;
   font-variant-numeric: tabular-nums;
@@ -1494,4 +1505,362 @@ textarea:focus-visible {
   .menu-card {
     transform: none !important;
   }
+}
+
+/* ------------------------------------------------------------------
+ * Menu page: cinematic hero, category glow and card entrances.
+ * The glow pair follows the category in view (category-glow.ts).
+ * ------------------------------------------------------------------ */
+@property --menu-glow-a {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #7cff6b;
+}
+
+@property --menu-glow-b {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #ffb547;
+}
+
+.menu-hero {
+  --glow: var(--menu-glow-a);
+  position: relative;
+  isolation: isolate;
+  color: var(--text-strong);
+}
+
+.menu-hero__hud {
+  position: relative;
+  z-index: 2;
+  width: min(var(--shell-max), 100% - 2 * var(--shell-pad));
+  margin-inline: auto;
+  padding-block: clamp(3rem, 8vh, 5rem) 1rem;
+}
+
+.menu-hero__title {
+  margin-top: 0.75rem;
+  font-family: var(--font-display);
+  font-size: var(--type-display);
+  font-weight: 900;
+  line-height: 0.9;
+  text-transform: uppercase;
+  text-shadow: 0 0 40px color-mix(in srgb, var(--menu-glow-a) 40%, transparent);
+}
+
+.menu-hero__lede {
+  margin-top: 1rem;
+  max-width: 36rem;
+  color: var(--text-muted);
+  font-size: var(--type-lead);
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
+.menu-hero--3d {
+  --header-h: calc(4.5rem + 1px);
+  height: 175vh;
+  margin-top: calc(var(--header-h) * -1);
+}
+
+@media (min-width: 1024px) {
+  .menu-hero--3d {
+    --header-h: calc(5rem + 1px);
+  }
+}
+
+.menu-hero--3d .menu-hero__sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100svh;
+  overflow: hidden;
+}
+
+.menu-hero__stage {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 900ms var(--ease-cinematic);
+}
+
+.menu-hero--ready .menu-hero__stage {
+  opacity: 1;
+}
+
+/* the set fades into the page as the grid takes over */
+.menu-hero__stage canvas {
+  opacity: clamp(0, calc(1 - (var(--hero-p, 0) - 0.5) * 2.4), 1);
+}
+
+.menu-hero--3d .menu-hero__sticky::after {
+  position: absolute;
+  inset: auto 0 0;
+  z-index: 1;
+  height: 60%;
+  background: linear-gradient(
+    to top,
+    var(--surface-canvas) 0%,
+    rgb(11 10 13 / 55%) 40%,
+    transparent 100%
+  );
+  content: "";
+  pointer-events: none;
+}
+
+.menu-hero--3d .menu-hero__hud {
+  position: absolute;
+  inset: auto 0 0;
+  padding-block: 0 clamp(1.5rem, 6vh, 3.5rem);
+  opacity: clamp(0, calc(1 - var(--hero-p, 0) * 2.4), 1);
+  transform: translate3d(0, calc(var(--hero-p, 0) * -8vh), 0);
+}
+
+/* once the backlit letterform is on screen it is the visual title; the H1
+   stays in the accessibility tree */
+.menu-hero--ready .menu-hero__title {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (max-width: 639px) {
+  .menu-hero--3d .menu-hero__lede {
+    font-size: var(--type-body);
+  }
+}
+
+/* page-wide glow field behind the content, tinted by the active category */
+.menu-glow-field {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(
+      60% 45% at 85% 18%,
+      color-mix(in srgb, var(--menu-glow-a) 11%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      50% 40% at 8% 88%,
+      color-mix(in srgb, var(--menu-glow-b) 8%, transparent),
+      transparent 70%
+    );
+  pointer-events: none;
+  transition:
+    --menu-glow-a 900ms var(--ease-cinematic),
+    --menu-glow-b 900ms var(--ease-cinematic);
+}
+
+/* film grain and vignette, matching the home showcase post-processing */
+.cine-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 26;
+  background:
+    radial-gradient(ellipse at center, transparent 58%, rgb(0 0 0 / 30%) 100%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.5 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+@media (min-width: 1024px) and (hover: hover) {
+  .cine-overlay--live {
+    animation: grain-shift 0.9s steps(6) infinite;
+  }
+}
+
+@keyframes grain-shift {
+  0% {
+    background-position:
+      0 0,
+      0 0;
+  }
+
+  100% {
+    background-position:
+      0 0,
+      160px 96px;
+  }
+}
+
+/* menu items without a shop photo get one consistent designed tile */
+.menu-card__placeholder {
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--border-soft);
+  background:
+    radial-gradient(
+      circle at 30% 25%,
+      color-mix(in srgb, var(--c) 28%, transparent),
+      transparent 65%
+    ),
+    linear-gradient(160deg, var(--surface-raised), var(--surface-input));
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 6%);
+}
+
+.menu-card__placeholder span {
+  color: color-mix(in srgb, var(--c) 70%, var(--text-strong));
+  font-family: var(--font-display);
+  font-size: var(--type-price-hero);
+  font-weight: 900;
+  line-height: 1;
+  text-shadow: 0 0 24px color-mix(in srgb, var(--c) 45%, transparent);
+}
+
+/* category heading moment */
+.menu-category {
+  position: relative;
+  isolation: isolate;
+}
+
+.menu-cat-head {
+  position: relative;
+  padding-bottom: 1rem;
+}
+
+.menu-cat-head::before {
+  position: absolute;
+  top: -70%;
+  left: -8%;
+  z-index: -1;
+  width: min(36rem, 80%);
+  height: 240%;
+  background: radial-gradient(
+    closest-side,
+    color-mix(in srgb, var(--ga) 18%, transparent),
+    transparent
+  );
+  content: "";
+  pointer-events: none;
+  transition: opacity 900ms var(--ease-cinematic);
+}
+
+.menu-cat-head__index {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  color: var(--ga);
+  font-family: var(--font-display);
+  font-size: var(--type-title);
+  font-weight: 900;
+  line-height: 1;
+}
+
+.menu-cat-head__index span {
+  color: var(--text-subtle);
+  font-family: var(--font-sans);
+  font-size: var(--type-label);
+  font-weight: 800;
+  letter-spacing: 0.2em;
+}
+
+.menu-cat-head__title {
+  margin-top: 0.5rem;
+  color: var(--text-strong);
+  font-family: var(--font-display);
+  font-size: var(--type-stage);
+  font-weight: 900;
+  line-height: 0.95;
+  text-transform: uppercase;
+  text-wrap: balance;
+  text-shadow: 0 0 36px color-mix(in srgb, var(--ga) 45%, transparent);
+  transition:
+    opacity 900ms var(--ease-cinematic),
+    transform 900ms var(--ease-cinematic),
+    filter 900ms var(--ease-cinematic);
+}
+
+.menu-cat-head__rule {
+  display: block;
+  height: 2px;
+  margin-top: 1rem;
+  background: linear-gradient(90deg, var(--ga), var(--gb) 45%, transparent);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--ga) 55%, transparent);
+  transform-origin: left;
+  transition: transform 1100ms var(--ease-cinematic) 120ms;
+}
+
+.menu-cine .menu-cat-head:not([data-in])::before {
+  opacity: 0;
+}
+
+.menu-cine .menu-cat-head:not([data-in]) .menu-cat-head__title {
+  opacity: 0;
+  transform: translate3d(0, 0.6em, 0);
+  filter: blur(6px);
+}
+
+.menu-cine .menu-cat-head:not([data-in]) .menu-cat-head__rule {
+  transform: scaleX(0);
+}
+
+/* cards: depth-staggered fly-in, then a rim-light sheen on hover */
+.menu-card {
+  position: relative;
+}
+
+.menu-card::after {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    22rem circle at var(--mx, 50%) var(--my, 0%),
+    color-mix(in srgb, var(--ga, var(--glow)) 14%, transparent),
+    transparent 65%
+  );
+  content: "";
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 420ms var(--ease-cinematic);
+}
+
+.menu-card:hover::after {
+  opacity: 1;
+}
+
+.menu-card:hover {
+  border-color: color-mix(in srgb, var(--ga, var(--glow)) 45%, transparent);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--ga, var(--glow)) 22%, transparent),
+    0 30px 80px -44px var(--ga, var(--glow));
+}
+
+.menu-cine .menu-grid > .menu-card {
+  transition:
+    opacity 900ms var(--ease-cinematic) calc(var(--i, 0) * 90ms),
+    transform 1100ms var(--ease-cinematic) calc(var(--i, 0) * 90ms),
+    box-shadow 480ms var(--ease-cinematic),
+    border-color 480ms var(--ease-cinematic);
+}
+
+.menu-cine .menu-grid > .menu-card:not([data-in]) {
+  opacity: 0;
+  transform: perspective(1200px) translate3d(0, 3.5rem, -160px) rotateX(12deg);
+}
+
+.menu-cine .menu-grid > .menu-card[data-in]:hover {
+  transition-delay: 0s;
+  transition-duration: 240ms, 240ms, 480ms, 480ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu-cat-head__title,
+  .menu-cat-head__rule,
+  .menu-glow-field {
+    transition: none;
+  }
+
+  .cine-overlay {
+    animation: none;
+  }
+}
+
+/* Category bar spans the viewport while its tabs stay on the content edge */
+.menu-tabs--bleed {
+  margin-inline: calc(50% - 50vw);
+  padding-inline: calc(50vw - 50%);
 }
