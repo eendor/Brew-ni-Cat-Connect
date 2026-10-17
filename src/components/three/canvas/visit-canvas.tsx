@@ -58,7 +58,7 @@ export default function VisitCanvas({
   return (
     <canvas
       ref={canvasRef}
-      className="block size-full cursor-pointer"
+      className="block size-full"
       aria-hidden="true"
       data-testid="visit-canvas"
     />
