@@ -139,3 +139,73 @@ test("TC-P2-028 — Menu handles retrieval failure without fabricated fallback d
     page.getByRole("navigation", { name: "Menu categories" }),
   ).toHaveCount(0);
 });
+
+const spyCategories = [
+  "Alpha Drinks",
+  "Bravo Bites",
+  "Charlie Noodles",
+  "Delta Combos",
+].map((name, index) => ({ id: `spy-category-${index + 1}`, name }));
+
+const spyItems = spyCategories.flatMap((category, c) =>
+  [1, 2, 3, 4, 5].map((n) => ({
+    id: `spy-item-${c + 1}-${n}`,
+    category_id: category.id,
+    name: `${category.name} ${n}`,
+    flavors: "",
+    variants_json: [
+      { id: `spy-variant-${c + 1}-${n}`, name: "Regular", basePrice: 70 + n },
+    ],
+    is_available: true,
+  })),
+);
+
+test("TC-P4-019 — the active category tab follows the page and a clicked tab is current at once", async ({
+  page,
+}) => {
+  await mockMenuResponses(page, spyCategories, spyItems);
+  await page.goto("/menu");
+  const nav = page.getByRole("navigation", { name: "Menu categories" });
+  await expect(nav.getByRole("link")).toHaveCount(4);
+  const tab = (name: string) => nav.getByRole("link", { name });
+  const current = nav.locator('[aria-current="true"]');
+
+  // bringing a category up under the tab bar makes its tab current
+  await page
+    .locator("#menu-category-3")
+    .evaluate((section) => section.scrollIntoView());
+  await expect(tab("Charlie Noodles")).toHaveAttribute("aria-current", "true", {
+    timeout: 1000,
+  });
+  await expect(current).toHaveCount(1);
+
+  // and scrolling back up hands it back
+  await page
+    .locator("#menu-category-2")
+    .evaluate((section) => section.scrollIntoView());
+  await expect(tab("Bravo Bites")).toHaveAttribute("aria-current", "true", {
+    timeout: 1000,
+  });
+
+  // a clicked tab is current straight away and its section is on screen
+  await tab("Delta Combos").click();
+  await expect(tab("Delta Combos")).toHaveAttribute("aria-current", "true", {
+    timeout: 300,
+  });
+  await expect(
+    page.getByRole("heading", { level: 2, name: "Delta Combos" }),
+  ).toBeInViewport();
+  await tab("Alpha Drinks").click();
+  await expect(tab("Alpha Drinks")).toHaveAttribute("aria-current", "true", {
+    timeout: 300,
+  });
+  await expect(current).toHaveCount(1);
+
+  // scrolling by hand right after a click takes over again; at the bottom
+  // of the page the last category is current
+  await page.mouse.move(200, 600);
+  await page.mouse.wheel(0, 40_000);
+  await expect(tab("Delta Combos")).toHaveAttribute("aria-current", "true", {
+    timeout: 2000,
+  });
+});

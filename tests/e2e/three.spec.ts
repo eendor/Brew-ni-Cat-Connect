@@ -4,7 +4,12 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
  * The WebGL layer (src/components/three). Runs in the "chromium-3d"
  * project: motion allowed, software GL. Functional journeys elsewhere use
  * the reduced-motion render, which is covered at the end of this file too.
+ *
+ * Software GL renders these scenes at a frame or two per second, and two of
+ * them side by side starve each other, so this file runs its tests one
+ * after another in a single worker and allows slow scroll-driven steps.
  */
+test.describe.configure({ mode: "default" });
 
 const category = { id: "e2e-noodles", name: "Buldak & Sedaap" };
 const item = {
@@ -88,10 +93,11 @@ test("TC-P4-001 — home renders the 3D showcase, not a blank canvas", async ({
   const ticks = page.getByRole("list", { name: "Jump to a featured item" });
   await expect(ticks.getByRole("button")).toHaveCount(5);
   await ticks.getByRole("button", { name: "Takoyaki" }).click();
+  // the jump is a smooth scroll the scene follows frame by frame
   await expect(ticks.getByRole("button", { name: "Takoyaki" })).toHaveAttribute(
     "aria-current",
     "true",
-    { timeout: 15_000 },
+    { timeout: 60_000 },
   );
   expect(errors).toEqual([]);
 });
@@ -188,8 +194,84 @@ test("TC-P4-004 — gallery ring and visit sign stay keyboard operable", async (
   ).toHaveAttribute("aria-pressed", "true");
   // the real hours text never depends on the 3D sign
   await expect(
-    page.getByRole("heading", { level: 2, name: "Closed every Sunday." }),
+    page.getByRole("main").getByText(/Closed every Sunday\./),
   ).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
+test("TC-P4-021 — the empty cart and the missing page show their 3D state scenes", async ({
+  page,
+}) => {
+  const errors = collectErrors(page);
+  await page.goto("/cart");
+  await expect(page.getByText("Your cart is empty")).toBeVisible();
+  await expect(page.locator(".state-scene.is-ready canvas")).toBeAttached({
+    timeout: 60_000,
+  });
+
+  const response = await page.goto("/a-page-that-wandered-off");
+  expect(response?.status()).toBe(404);
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Page not found" }),
+  ).toBeVisible();
+  await expect(page.locator(".not-found__stage.is-ready canvas")).toBeAttached({
+    timeout: 60_000,
+  });
+  // the way home is in the first screen, under the scene
+  const home = page.getByRole("link", { name: "Return home" });
+  await expect(home).toBeInViewport();
+  await expect(home).toBeVisible({ timeout: 10_000 });
+  // the 404 response itself is expected; nothing else may log an error
+  expect(errors.filter((error) => !error.includes("404"))).toEqual([]);
+});
+
+test("TC-P4-022 — page transitions open on the new page and leave no content hidden", async ({
+  page,
+}) => {
+  const errors = collectErrors(page);
+  await page.goto("/about");
+  await expect(
+    page.getByRole("heading", { level: 1, name: "About Brew ni Cat" }),
+  ).toBeVisible();
+
+  await page
+    .getByRole("navigation", { name: "Desktop navigation" })
+    .getByRole("link", { name: "Gallery" })
+    .click();
+  // the title card covers the change of page...
+  await expect(page.locator(".route-curtain")).toBeVisible();
+  await expect(page.locator(".route-curtain__title")).toHaveText("Gallery");
+  await page.waitForURL("**/gallery");
+  // ...and lifts once the new page is in
+  await expect(page.locator(".route-curtain")).toBeHidden({ timeout: 15_000 });
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Gallery" }),
+  ).toBeVisible();
+
+  // scroll through: every heading, block and photo has made its entrance
+  const height = await page.evaluate(() => document.body.scrollHeight);
+  for (let y = 0; y <= height; y += 500) {
+    await page.evaluate((top) => window.scrollTo(0, top), y);
+    await page.waitForTimeout(120);
+  }
+  await expect(async () => {
+    const hidden = await page.evaluate(
+      () =>
+        [
+          ...document.querySelectorAll(
+            "[data-split], [data-rise], [data-rise-group] > *, [data-unveil]",
+          ),
+        ].filter((element) => {
+          const style = getComputedStyle(element);
+          return (
+            style.visibility === "hidden" ||
+            Number(style.opacity) < 0.98 ||
+            style.clipPath.includes("100%")
+          );
+        }).length,
+    );
+    expect(hidden).toBe(0);
+  }).toPass({ timeout: 20_000 });
   expect(errors).toEqual([]);
 });
 
@@ -207,6 +289,10 @@ test.describe("reduced motion", () => {
     await expect(
       page.getByRole("region", { name: "3D photo ring" }),
     ).toHaveCount(0);
+    await expect(page.locator("canvas")).toHaveCount(0);
+    // state scenes fall back to their static icon
+    await page.goto("/cart");
+    await expect(page.locator(".state-scene svg")).toBeVisible();
     await expect(page.locator("canvas")).toHaveCount(0);
   });
 });

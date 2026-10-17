@@ -31,7 +31,7 @@ export default defineConfig({
       // The WebGL layer itself, with motion allowed and software GL.
       name: "chromium-3d",
       testMatch: /three\.spec\.ts/,
-      timeout: 90_000,
+      timeout: 180_000,
       use: {
         ...devices["Desktop Chrome"],
         contextOptions: { reducedMotion: "no-preference" },

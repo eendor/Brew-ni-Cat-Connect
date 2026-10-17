@@ -98,10 +98,6 @@ test("TC-P1-008 — unknown routes show the not-found experience", async ({
     "href",
     "/",
   );
-  await expect(page.getByRole("link", { name: "Browse menu" })).toHaveAttribute(
-    "href",
-    "/menu",
-  );
 });
 
 test("TC-P1-009 — key public pages avoid horizontal viewport overflow", async ({

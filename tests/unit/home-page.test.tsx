@@ -29,19 +29,9 @@ describe("Home page", () => {
   it("TC-P2-002 — presents approved favorite groups and public visit details", () => {
     render(<HomePage />);
 
-    for (const favorite of ["Matcha", "Takoyaki", "Fries"]) {
-      expect(
-        screen.getByRole("heading", { level: 3, name: favorite }),
-      ).toBeInTheDocument();
-    }
-
-    const favoriteMenuLinks = screen.getAllByRole("link", {
-      name: "Browse the menu",
-    });
-    expect(favoriteMenuLinks).toHaveLength(3);
-    for (const link of favoriteMenuLinks) {
-      expect(link).toHaveAttribute("href", "/menu");
-    }
+    // one menu action on the page: the hero's (the favourites section that
+    // repeated the hero's items and links was removed)
+    expect(screen.getAllByRole("link", { name: /menu/i })).toHaveLength(1);
 
     expect(screen.getByText("Beside Pulido Eatery")).toBeInTheDocument();
     expect(screen.getByText("Cash and GCash")).toBeInTheDocument();
