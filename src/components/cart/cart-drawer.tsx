@@ -245,9 +245,9 @@ export function CartDrawer() {
               </div>
 
               <p className="text-xs leading-5 text-[var(--text-muted)]">
-                Pickup at Segundo St or your own rider · pay Cash or GCash at
-                the shop · the {siteConfig.operations.takeoutFee} is not in the
-                subtotal.
+                Pick up at Segundo St and pay Cash or GCash at the shop, or have
+                a local rider order and deliver it. The{" "}
+                {siteConfig.operations.takeoutFee} is not in the subtotal.
               </p>
 
               <div className="grid gap-2">

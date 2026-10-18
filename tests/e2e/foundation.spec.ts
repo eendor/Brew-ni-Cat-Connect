@@ -103,18 +103,30 @@ test("TC-P1-008 — unknown routes show the not-found experience", async ({
 test("TC-P1-009 — key public pages avoid horizontal viewport overflow", async ({
   page,
 }) => {
+  // one category and item, so /menu renders its full-bleed category bar
   await page.route("**/rest/v1/categories*", async (route) => {
     await route.fulfill({
       status: 200,
       contentType: "application/json",
-      body: "[]",
+      body: JSON.stringify([{ id: "e2e-category", name: "E2E Category" }]),
     });
   });
   await page.route("**/rest/v1/items*", async (route) => {
     await route.fulfill({
       status: 200,
       contentType: "application/json",
-      body: "[]",
+      body: JSON.stringify([
+        {
+          id: "e2e-item",
+          category_id: "e2e-category",
+          name: "E2E Item",
+          flavors: "",
+          variants_json: [
+            { id: "e2e-variant", name: "Regular", basePrice: 75 },
+          ],
+          is_available: true,
+        },
+      ]),
     });
   });
 
@@ -124,6 +136,7 @@ test("TC-P1-009 — key public pages avoid horizontal viewport overflow", async 
     for (const path of [
       "/",
       "/menu",
+      "/about",
       "/gallery",
       "/contact",
       "/cart",
@@ -131,16 +144,25 @@ test("TC-P1-009 — key public pages avoid horizontal viewport overflow", async 
     ]) {
       await page.goto(path);
       await page.evaluate(() => document.fonts.ready);
+      if (path === "/menu") {
+        await expect(
+          page.getByRole("navigation", { name: "Menu categories" }),
+        ).toBeVisible();
+      }
 
+      // compare with the page's layout width: the stable scrollbar gutter
+      // makes clientWidth 15 px wider than the layout in headless Chromium
       const dimensions = await page.evaluate(() => ({
-        clientWidth: document.documentElement.clientWidth,
+        layoutWidth: Math.ceil(
+          document.documentElement.getBoundingClientRect().width,
+        ),
         scrollWidth: document.documentElement.scrollWidth,
       }));
 
       expect(
         dimensions.scrollWidth,
         `${path} at viewport width ${width}px`,
-      ).toBeLessThanOrEqual(dimensions.clientWidth + 1);
+      ).toBeLessThanOrEqual(dimensions.layoutWidth + 1);
     }
   }
 });

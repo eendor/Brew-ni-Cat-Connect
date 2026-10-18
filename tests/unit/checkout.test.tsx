@@ -1,8 +1,15 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { CheckoutView } from "@/components/checkout/checkout-view";
+import { siteConfig } from "@/config/site";
 import { CartProvider, useCart } from "@/context/cart-context";
 import type { MenuCatalog } from "@/types/menu";
 import type { CartState } from "@/types/ordering";
@@ -142,7 +149,7 @@ describe("Checkout Flow & Step Transitions", () => {
     expect(screen.getAllByText("3").length).toBeGreaterThan(0); // total items: 2 + 1
   });
 
-  it("TC-P3-CHK-003 — switches between Pickup and Customer-Arranged Rider with current business wording", async () => {
+  it("TC-P3-CHK-003 — switches between Pickup at Shop and Rider Delivery with the rider wording", async () => {
     const user = userEvent.setup();
     renderCheckout(testCartState);
 
@@ -150,36 +157,38 @@ describe("Checkout Flow & Step Transitions", () => {
       name: /Pickup at Shop/i,
     });
     const riderRadio = screen.getByRole("radio", {
-      name: /Customer-Arranged Rider/i,
+      name: /Rider Delivery/i,
     });
 
     expect(pickupRadio).toBeChecked();
     expect(riderRadio).not.toBeChecked();
+    expect(
+      screen.getByRole("group", { name: "Payment Preference at Shop" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByLabelText(/Delivery Address/i)).toBeNull();
 
-    // Select customer-arranged rider
     await user.click(riderRadio);
     expect(riderRadio).toBeChecked();
 
-    // Check business wording
+    expect(screen.getByText("How Rider Delivery Works:")).toBeInTheDocument();
     expect(
-      screen.getByText("How External Rider Pickup Works:"),
+      screen.getByText("Prepare your order summary on this page."),
     ).toBeInTheDocument();
     expect(
-      screen.getByText("Prepare your order summary through this page."),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(/Contact and book your external rider yourself/i),
+      screen.getByText(/send it to one of the local riders listed there/i),
     ).toBeInTheDocument();
     expect(
       screen.getByText(
-        /Rider availability, delivery fees, arrival time, and rider payment are separate from Brew ni Cat/i,
+        /Delivery fee, timing and payment are agreed with your rider\. Brew ni Cat doesn.t book riders or charge rider fees\./,
       ),
     ).toBeInTheDocument();
+
+    // the rider settles payment, so the shop payment choice is hidden and
+    // the delivery address is asked for instead
     expect(
-      screen.getByText(
-        /The shop does not calculate, book, or charge rider fees/i,
-      ),
-    ).toBeInTheDocument();
+      screen.queryByRole("group", { name: /Payment Preference/i }),
+    ).toBeNull();
+    expect(screen.getByLabelText(/Delivery Address/i)).toBeRequired();
   });
 
   it("TC-P3-CHK-004 — validates required contact fields before allowing transition to review", async () => {
@@ -354,6 +363,78 @@ describe("Checkout Flow & Step Transitions", () => {
     expect(
       screen.getByRole("link", { name: "Return to Home" }),
     ).toHaveAttribute("href", "/");
+  });
+
+  it("TC-P4-028 — rider delivery needs an address and ends with the rider list", async () => {
+    const user = userEvent.setup();
+    renderCheckout(testCartState);
+
+    await user.click(screen.getByRole("radio", { name: /Rider Delivery/i }));
+    await user.type(screen.getByLabelText(/Full Name/i), "Pedro Penduko");
+    await user.type(
+      screen.getByLabelText(/Contact Phone Number/i),
+      "09279876543",
+    );
+    await user.click(
+      screen.getByRole("button", { name: /Continue to Order Review/i }),
+    );
+
+    // no address yet: the step stays and focus goes to the field
+    const addressInput = screen.getByLabelText(/Delivery Address/i);
+    expect(
+      screen.getByText("Please enter the delivery address for your rider."),
+    ).toBeInTheDocument();
+    await waitFor(() => expect(addressInput).toHaveFocus());
+
+    await user.type(addressInput, "Purok 2, Poblacion, Kabacan");
+    await user.click(
+      screen.getByRole("button", { name: /Continue to Order Review/i }),
+    );
+
+    // the review shows where it goes and who settles payment
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Review Order" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Delivery Address")).toBeInTheDocument();
+    expect(screen.getByText("Purok 2, Poblacion, Kabacan")).toBeInTheDocument();
+    expect(screen.getByText("Agreed with your rider")).toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole("button", { name: /Proceed to Send to Rider/i }),
+    );
+
+    expect(
+      screen.getByRole("heading", {
+        level: 1,
+        name: "Order Summary for Your Rider",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", {
+        level: 2,
+        name: "Order Summary for Your Rider",
+      }),
+    ).toBeInTheDocument();
+
+    const summaryText = document.querySelector("pre")?.textContent ?? "";
+    expect(summaryText).toContain("Fulfillment: Rider delivery");
+    expect(summaryText).toContain(
+      `Order and pick up at: ${siteConfig.shortName}, ${siteConfig.address.street}`,
+    );
+    expect(summaryText).toContain("Deliver to: Purok 2, Poblacion, Kabacan");
+    expect(summaryText).toContain(
+      "Payment and delivery fee: agreed with the rider",
+    );
+    expect(summaryText).not.toContain("Payment preference");
+
+    // the next step is a rider, not the shop's own contact links
+    const riders = within(
+      screen.getByRole("list", { name: "Rider delivery services" }),
+    ).getAllByRole("link");
+    expect(riders).toHaveLength(siteConfig.externalRiders.length);
+    expect(
+      screen.queryByRole("link", { name: "Message on Facebook" }),
+    ).toBeNull();
   });
 
   it("TC-P4-016 — a successful copy confirms it and clears the cart", async () => {

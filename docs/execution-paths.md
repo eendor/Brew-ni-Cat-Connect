@@ -87,7 +87,7 @@ Expected success outcome: exactly one order is stored, its line-item snapshot an
 | Server/database timeout before outcome is known | Show a pending/retry-safe state and reconcile by idempotency key | Never advise a blind duplicate submission |
 | Shop rejects order | Persist `rejected`, show a customer-safe reason when supplied, and stop preparation transitions | Order retained for audit/history according to retention policy |
 | Payment workflow needed | Cash and GCash are confirmed for public information. **TODO: Confirm with Brew ni Cat owner.** Define any future online proof/provider, settlement, refund, and failure rules before implementation | No online payment operation or record is created in Phase 2 |
-| Delivery requested | The customer may independently book and pay a preferred external rider after arranging the shop order; Brew ni Cat does not control availability, fee, or ETA. In-app rider booking/integrated delivery remains Deferred | Phase 2 displays information only and collects no delivery data |
+| Delivery requested | The customer sends the order summary to a local rider, who orders at the shop for the customer and delivers it; the fee, timing and payment are agreed with the rider, and Brew ni Cat does not control availability, fee, or ETA. In-app rider booking/integrated delivery remains Deferred | Checkout collects a delivery address only for the summary the customer sends to the rider; nothing is sent to a server |
 
 ### 4.3 Order state rules
 
@@ -314,7 +314,7 @@ flowchart TD
 - `TODO: Confirm with Brew ni Cat owner.` Required customer data and account verification policy.
 - `TODO: Confirm with Brew ni Cat owner.` Pickup workflow, acceptance/rejection reasons, preparation/status terminology, cancellation, and completion policy.
 - Cash/GCash are confirmed for display. **TODO: Confirm with Brew ni Cat owner.** Define any future online payment proof/provider and failure/refund policy.
-- Customer-arranged external-rider information is confirmed. **TODO: Confirm with Brew ni Cat owner.** Decide whether any future integrated delivery/location workflow enters scope.
+- Customer-arranged rider delivery is confirmed (a local rider orders at the shop and delivers). **TODO: Confirm with Brew ni Cat owner.** Decide whether any future integrated delivery/location workflow enters scope.
 - `TODO: Confirm with Brew ni Cat owner.` Loyalty earning, redemption, expiry, and reversal rules.
 - POS source-of-truth and interface decisions await a documented assessment of the existing POS.
 - Messenger account linking, human handoff, policy, and data-retention design await the Messenger phase.
@@ -358,7 +358,7 @@ The initial public observation followed the zero-row branch and remains valid fa
 
 ## 19. Phase 3 Browser-side Ordering Path
 
-Phase 3 implements the browser side of §4 (PRs #7, #14 and #20). The path ends with an order summary that the customer sends to the shop, not with a server-side order.
+Phase 3 implements the browser side of §4 (PRs #7, #14, #20 and #25). The path ends with an order summary that the customer sends to the shop or, for rider delivery, to a local rider, not with a server-side order.
 
 ```mermaid
 flowchart TD
@@ -371,7 +371,7 @@ flowchart TD
     E -->|Price changed| E1[Line repriced with a warning]
     E -->|Item no longer available| E2[Line removed with a warning]
     E -->|Menu cannot load| E3[Local cart kept]
-    E -->|Unchanged| F[Details step with name, phone, pickup method and payment]
+    E -->|Unchanged| F[Details step with name, phone and fulfillment, then payment for pickup or an address for rider delivery]
     E1 --> F
     E2 --> F
     E3 --> F
@@ -381,15 +381,15 @@ flowchart TD
     G -- Yes --> H[Review step]
     H --> I[Send step shows the order summary]
     I --> J{Copy to clipboard}
-    J -- Copied --> K[Cart emptied and the customer pastes the summary into Messenger or reads it out on the phone]
+    J -- Copied --> K[Cart emptied and the customer pastes the summary into a message to the shop or a rider, or reads it out on the phone]
     J -- Blocked --> L[Summary selected for a manual copy and the cart kept]
 ```
 
 1. **Item selection:** the order dialog requires an option or size ("Please choose an option or size.") and, where the price depends on it, a flavor ("Please choose a flavor to complete this selection."). Unavailable items can't be added.
 2. **Cart:** prices come only from the current catalog, in integer centavos (PR #7). The cart is kept in `localStorage` under `brew_ni_cat_cart_v1`, and a removal can be undone from a toast for 5 seconds.
 3. **Revalidation:** checkout reloads the public menu, reprices lines to the current menu price and removes lines that are no longer available, with a warning for each. If the menu can't load, the local cart is kept.
-4. **Details:** full name and a Philippine mobile number (`09XXXXXXXXX` or `+639XXXXXXXXX`; spaces, hyphens and brackets are ignored), pickup at the shop or an external rider pickup, and Cash or GCash at the counter. Errors are shown per field and focus moves to the first invalid field (PR #20).
-5. **Summary:** the prepared summary is kept in `sessionStorage` for up to 12 hours, with an in-memory fallback when storage is blocked, and it no longer applies once the cart changes.
-6. **Send:** a successful copy empties the cart and shows "Copied. Paste it into Messenger or read it out on the phone." If the clipboard is blocked, the summary text is selected for a manual copy and the cart stays. "Start a new order" clears both the summary and the cart.
+4. **Details:** full name and a Philippine mobile number (`09XXXXXXXXX` or `+639XXXXXXXXX`; spaces, hyphens and brackets are ignored), then pickup at the shop or rider delivery. Pickup asks for Cash or GCash at the counter; rider delivery asks for a delivery address instead and hides the payment choice, because payment is agreed with the rider (PR #25). Errors are shown per field and focus moves to the first invalid field (PR #20).
+5. **Summary:** the prepared summary, including the delivery address for rider delivery (a pickup summary leaves it out), is kept in `sessionStorage` for up to 12 hours, with an in-memory fallback when storage is blocked, and it no longer applies once the cart changes.
+6. **Send:** a successful copy empties the cart and shows "Copied. Paste it into Messenger or read it out on the phone." for pickup, or "Copied. Paste it into a message to your rider on Facebook." for rider delivery. If the clipboard is blocked, the summary text is selected for a manual copy and the cart stays. Pickup offers Message on Facebook and Call or Text; rider delivery lists the three local rider services instead. "Start a new order" clears both the summary and the cart.
 
 Nothing is sent to a server, no order reference is issued and no rider is booked. Server validation, order submission, order references and status updates in §4 remain Planned.

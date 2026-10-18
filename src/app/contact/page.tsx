@@ -6,6 +6,7 @@ import { Container } from "@/components/ui/container";
 import { ExternalLink } from "@/components/ui/external-link";
 import { PageIntro } from "@/components/ui/page-intro";
 import { Reveal } from "@/components/ui/reveal";
+import { RiderList } from "@/components/ui/rider-list";
 import { siteConfig } from "@/config/site";
 
 export const metadata: Metadata = {
@@ -205,54 +206,43 @@ export default function ContactPage() {
 
             <Reveal
               delayMs={100}
-              className="rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-7 shadow-[var(--shadow-subtle)] lg:col-span-2"
+              className="@container rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-7 shadow-[var(--shadow-subtle)] lg:col-span-2"
             >
-              <p className="eyebrow">External rider pickup</p>
+              <p className="eyebrow">Rider delivery</p>
               <h2
                 data-split=""
                 className="font-display mt-3 text-3xl text-[var(--text-strong)]"
               >
-                Arrange your preferred rider separately.
+                Let a local rider order it for you.
               </h2>
-              <ol className="mt-5 grid gap-3 text-[var(--text-muted)] sm:grid-cols-3">
+              <ol className="mt-5 grid gap-3 text-[var(--text-muted)] @xl:grid-cols-3">
                 <li className="rounded-xl bg-[var(--surface-warm)] p-4">
                   <strong className="block text-[var(--text-strong)]">
-                    1. Arrange your order
+                    1. Message a rider
                   </strong>
-                  Contact Brew ni Cat directly.
+                  Send your order to one of the riders below. Checkout can
+                  prepare the order summary for you.
                 </li>
                 <li className="rounded-xl bg-[var(--surface-warm)] p-4">
                   <strong className="block text-[var(--text-strong)]">
-                    2. Book a rider
+                    2. The rider orders
                   </strong>
-                  Choose and contact an external rider yourself.
+                  The rider orders it at Brew ni Cat and picks it up.
                 </li>
                 <li className="rounded-xl bg-[var(--surface-warm)] p-4">
                   <strong className="block text-[var(--text-strong)]">
-                    3. Rider pickup
+                    3. Delivered to you
                   </strong>
-                  The rider collects the prepared order at the shop.
+                  The rider brings your order to your address.
                 </li>
               </ol>
               <p className="mt-5 leading-7 text-[var(--text-muted)]">
-                Rider availability, delivery fees, arrival time, and rider
-                payment are separate from Brew ni Cat. The ₱10 takeout box fee
-                does not include any rider charge.
+                Delivery fee, timing and payment are agreed with your rider.
+                Brew ni Cat doesn&apos;t book riders or charge rider fees, and
+                the {siteConfig.operations.takeoutFee} fee doesn&apos;t include
+                any rider charge.
               </p>
-              <div
-                className="mt-6 flex flex-wrap gap-3"
-                aria-label="External rider pages"
-              >
-                {siteConfig.externalRiders.map((riderUrl, index) => (
-                  <ExternalLink
-                    key={riderUrl}
-                    href={riderUrl}
-                    className="button-secondary"
-                  >
-                    External rider page {index + 1}
-                  </ExternalLink>
-                ))}
-              </div>
+              <RiderList className="mt-6" />
             </Reveal>
           </div>
         </Container>

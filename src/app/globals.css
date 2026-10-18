@@ -87,7 +87,8 @@ body {
   min-width: 20rem;
   min-height: 100vh;
   margin: 0;
-  /* full-bleed bands use 100vw; clip the scrollbar-width overhang */
+  /* keeps the page from scrolling sideways; body's overflow passes to the
+     viewport, so this doesn't clip anything inside the page */
   overflow-x: clip;
   background:
     radial-gradient(
@@ -100,6 +101,13 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+}
+
+/* full-bleed bands such as the menu's category bar use 100vw, which is wider
+   than the page while a desktop scrollbar takes space; main clips that
+   overhang (clip, unlike hidden, keeps sticky bars working) */
+main {
+  overflow-x: clip;
 }
 
 .font-display {
