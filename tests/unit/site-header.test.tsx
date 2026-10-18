@@ -2,6 +2,7 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import { SiteHeader } from "@/components/layout/site-header";
+import { siteConfig } from "@/config/site";
 
 describe("SiteHeader", () => {
   it("TC-P1-001 / TC-P2-004 — renders one desktop Menu action and a distinct visit CTA", () => {
@@ -87,5 +88,48 @@ describe("SiteHeader", () => {
       screen.queryByRole("navigation", { name: "Mobile navigation" }),
     ).not.toBeInTheDocument();
     expect(openButton).toHaveFocus();
+  });
+
+  it("TC-P4-033 — the mobile menu links Facebook and TikTok with named round buttons", async () => {
+    const user = userEvent.setup();
+    render(<SiteHeader />);
+
+    await user.click(screen.getByRole("button", { name: "Open navigation" }));
+    const navigation = screen.getByRole("navigation", {
+      name: "Mobile navigation",
+    });
+
+    const facebook = within(navigation).getByRole("link", {
+      name: "Brew ni Cat on Facebook",
+    });
+    const tiktok = within(navigation).getByRole("link", {
+      name: "Brew ni Cat on TikTok",
+    });
+    expect(facebook).toHaveAttribute("href", siteConfig.social.facebook);
+    expect(tiktok).toHaveAttribute("href", siteConfig.social.tiktok);
+    for (const link of [facebook, tiktok]) {
+      expect(link).toHaveAttribute("target", "_blank");
+      expect(link).toHaveAttribute("rel", "noopener noreferrer");
+    }
+
+    // still one link per page; the two social links are the only extras
+    expect(within(navigation).getAllByRole("link")).toHaveLength(
+      siteConfig.navigation.length + 2,
+    );
+
+    // the address and hours icons and the brand marks are decorative
+    const icons = navigation.querySelectorAll("svg");
+    expect(icons).toHaveLength(4);
+    icons.forEach((icon) => {
+      expect(icon).toHaveAttribute("aria-hidden", "true");
+      expect(icon).toHaveAttribute("focusable", "false");
+    });
+
+    // the page opens in a new tab, so the menu stays where it was
+    facebook.addEventListener("click", (event) => event.preventDefault());
+    await user.click(facebook);
+    expect(
+      screen.getByRole("navigation", { name: "Mobile navigation" }),
+    ).toBeInTheDocument();
   });
 });

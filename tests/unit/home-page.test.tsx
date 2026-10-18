@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 
 import HomePage from "@/app/page";
+import { siteConfig } from "@/config/site";
 
 describe("Home page", () => {
   it("TC-P1-002 / TC-P2-001 — renders the real brand headline and customer CTAs", () => {
@@ -48,5 +49,33 @@ describe("Home page", () => {
     expect(pageText).not.toMatch(/next milestone/);
     expect(pageText).not.toMatch(/future customer experience/);
     expect(pageText).not.toMatch(/ordering not yet active/);
+  });
+
+  it("TC-P4-032 — keeps the visit labels and the Maps link name, with decorative icons", () => {
+    const { container } = render(<HomePage />);
+
+    const terms = Array.from(container.querySelectorAll("dt"));
+    expect(terms.map((term) => term.textContent)).toEqual([
+      "Find us",
+      "Landmark",
+      "Hours",
+      "Payment",
+    ]);
+    terms.forEach((term) => {
+      expect(term.querySelectorAll("svg")).toHaveLength(1);
+    });
+
+    const maps = screen.getByRole("link", { name: "Open in Maps" });
+    expect(maps).toHaveAttribute("href", siteConfig.address.mapUrl);
+    expect(maps).toHaveAttribute("target", "_blank");
+    expect(maps).toHaveAttribute("rel", "noopener noreferrer");
+
+    // four fact labels, the address pin and the Maps button
+    const icons = container.querySelectorAll("svg");
+    expect(icons).toHaveLength(6);
+    icons.forEach((icon) => {
+      expect(icon).toHaveAttribute("aria-hidden", "true");
+      expect(icon).toHaveAttribute("focusable", "false");
+    });
   });
 });
