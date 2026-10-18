@@ -340,7 +340,7 @@ This functional pass is not authorization acceptance. HEAD-only/no-body probes f
 
 ### Automated scope
 
-Phase 3 adds the browser-side ordering flow and the 3D and motion layer. The whole Vitest suite now runs 130 tests in 18 files. In [`test-cases.md`](test-cases.md), §10 covers cart pricing, the cart reducer and the cart selectors; §11 covers menu photos, the menu loading and tab states, and the checkout validation and copy cases; and §12 covers the 3D and motion layer with its static fallbacks and cart-toss bridge, the order dialog, the checkout copy result and stored summary, the phone checks and the rider delivery flow. The tests inject deterministic catalogs and contain no credential value.
+Phase 3 adds the browser-side ordering flow and the 3D and motion layer. The whole Vitest suite now runs 136 tests in 19 files. In [`test-cases.md`](test-cases.md), §10 covers cart pricing, the cart reducer and the cart selectors; §11 covers menu photos, the menu loading and tab states, and the checkout validation and copy cases; and §12 covers the 3D and motion layer with its static fallbacks and cart-toss bridge, the order dialog, the checkout copy result and stored summary, the phone checks, the rider delivery flow and the decorative social/contact icons (`TC-P4-030`–`TC-P4-035`). The tests inject deterministic catalogs and contain no credential value. `tests/setup.ts` clears public Supabase settings so unit tests never fetch the live menu when those variables are in the shell.
 
 Playwright runs two projects against the production build:
 
@@ -353,7 +353,7 @@ The follow-up run on 2026-10-18 passed 25/25: 16 in `chromium` and 9 in `chromiu
 
 ### Manual checks
 
-MAN-P4-003, a click-through on the development laptop's integrated GPU, passed on 2026-10-18 on five profiles: 1440 px, 1024 px, an iPad Mini profile with a 2× slower CPU, 390 px, and a Pixel 7 profile with a 4× slower CPU. Every page and the full order flow worked, with no console errors and no sideways scrolling. The tablet and phones held 60 fps idle and about 35–56 fps while scrolling; at 1440 px the home and menu heroes ran at 22–31 fps, and the order-summary scene stalls once, for about a second, when it first starts. These frame rates are observations, not a signed-off target: the Lighthouse method that NFR-001 calls for has not been run. MAN-P4-008, a visual review of the rider flow on the cart, checkout and contact pages from 1440 px down to 320 px, passed on 2026-10-18. MAN-P4-007, a click-through on a physical phone, is still to do and now includes the rider flow.
+MAN-P4-003, a click-through on the development laptop's integrated GPU, passed on 2026-10-18 on five profiles: 1440 px, 1024 px, an iPad Mini profile with a 2× slower CPU, 390 px, and a Pixel 7 profile with a 4× slower CPU. Every page and the full order flow worked, with no console errors and no sideways scrolling. The tablet and phones held 60 fps idle and about 35–56 fps while scrolling; at 1440 px the home and menu heroes ran at 22–31 fps, and the order-summary scene stalls once, for about a second, when it first starts. These frame rates are observations, not a signed-off target: the Lighthouse method that NFR-001 calls for has not been run. MAN-P4-008, a visual review of the rider flow on the cart, checkout and contact pages from 1440 px down to 320 px, passed on 2026-10-18. MAN-P4-009, a narrow-width review of the social and contact icons, is still to do. MAN-P4-007, a click-through on a physical phone, is still to do and now includes the rider flow.
 
 ### Evidence and status
 
