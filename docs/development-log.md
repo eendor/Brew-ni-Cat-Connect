@@ -776,3 +776,20 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Git branch:** `fix/rider-ordering-flow`\
 **Pull request:** [#25](https://github.com/eendor/Brew-ni-Cat-Connect/pull/25) — self-reviewed and squash-merged into `main` on 2026-10-18\
 **Next action:** Icons for the Facebook and TikTok links and the contact details, the GCash QR once the owner sends it, and the click-through on a physical phone (MAN-P4-007), which now includes the rider flow.
+
+## 2026-10-18 — Social and contact icons on the public site
+
+**Date:** 2026-10-18\
+**Phase:** Phase 3 — Menu and Ordering Flow\
+**Task:** Add clear Facebook, TikTok and contact icons beside the existing social and visit details, without changing link names or adding an icon package.\
+**Summary:**
+- **Icon set:** new `src/components/ui/icons.tsx` holds decorative inline SVGs: Facebook and TikTok from Simple Icons 16.33.0 (CC0) and the interface shapes from Lucide 1.51.0 (ISC, with Feather's MIT notice for the clock and navigation shapes). Icons use `currentColor` and stay hidden from screen readers; visible text or an `aria-label` names each control.
+- **Placement:** the footer shows a map pin, phone, mail, Facebook, TikTok and clock beside the existing copy; the contact page, home visit facts, mobile menu (including two named round social buttons), rider cards and checkout fulfillment/contact buttons get matching marks.
+- **Tests:** TC-P4-030 to TC-P4-035 cover accessible names and decorative SVGs. TC-P3-052 now waits for the menu scroll spy before scrolling. `tests/setup.ts` clears public Supabase settings so unit tests never fetch the live menu when those variables are in the shell.
+- **No new dependencies:** shapes are copied as is; license notices sit in the icon file header.
+
+**Files/modules affected:** new `src/components/ui/icons.tsx`, `src/components/layout/site-footer.tsx`, `src/components/layout/mobile-navigation.tsx`, `src/app/contact/page.tsx`, `src/app/page.tsx`, `src/components/ui/rider-list.tsx`, `src/components/checkout/checkout-view.tsx`, `tests/setup.ts`, `tests/unit/menu-catalog.test.tsx`, new `tests/unit/site-footer.test.tsx`, `tests/unit/business-pages.test.tsx`, `tests/unit/home-page.test.tsx`, `tests/unit/site-header.test.tsx`, `tests/unit/rider-list.test.tsx`, `tests/unit/checkout.test.tsx`, `docs/test-cases.md`, `docs/code-review.md`, this log. No new direct dependencies.\
+**Testing performed:** `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm test` (19 files / 136 tests passed), `npm run build`, `npm run test:e2e` (25/25 passed: 16 in `chromium`, 9 in `chromium-3d`), `npm run audit` (0 vulnerabilities), `python3 scripts/validate_phase0_docs.py` (PASS). Six cold `npm ci` + `npm test` runs also passed, including one with Supabase settings exported in the shell.\
+**Git branch:** `feat/social-icons`\
+**Pull request:** [#26](https://github.com/eendor/Brew-ni-Cat-Connect/pull/26) — self-reviewed and squash-merged into `main` on 2026-10-18\
+**Next action:** Lead spot-check MAN-P4-009, the GCash QR once the owner sends it, and the click-through on a physical phone (MAN-P4-007).

@@ -2,7 +2,7 @@
 
 **Version:** 0.1 Draft\
 **Status:** Phase 1–3 dependencies installed and locked, including `three` and `gsap` for the 3D and motion layer (PR #23); live public catalog API rendering verified; manually RLS-disabled access remains a production security blocker\
-**Last updated:** 2026-10-18
+**Last updated:** 2026-10-18 (PR #26 notes vendor icon shapes copied inline)
 
 ## 1. Current technology state
 
@@ -27,6 +27,14 @@ Supabase JavaScript is installed solely for Phase 2 public read-only catalog ret
 | three.js               | WebGL rendering for the 3D layer                               | `0.186.1`                       | MIT          | Added in PR #23; loaded only in client components via `next/dynamic`     |
 | GSAP (with ScrollTrigger and SplitText) | Shared frame ticker and scroll progress for 3D scenes; site motion layer (entrances, split-line headings, overlay exits, page transitions) | `3.15.0` | GSAP Standard "No Charge" License | Free for this use, including the SplitText plugin; see https://gsap.com/standard-license |
 | `@tailwindcss/postcss` | Tailwind CSS PostCSS adapter                                   | `4.3.3`                         | MIT          | Installed for CSS compilation                                                               |
+
+
+## 2a. Vendor icon shapes (copied, not installed)
+
+| Source | Purpose | Version used | License | Status / notes |
+| ------ | ------- | ------------ | ------- | -------------- |
+| Lucide | Interface icons (map pin, phone, mail, clock, and related shapes) | `1.51.0` shapes | ISC (clock and navigation also carry Feather MIT) | Copied into `src/components/ui/icons.tsx`; not an npm dependency |
+| Simple Icons | Facebook and TikTok brand marks | `16.33.0` shapes | CC0 1.0 | Same file; decorative only beside visible text or `aria-label` |
 
 ## 3. Quality and test dependencies
 
