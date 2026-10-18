@@ -46,7 +46,11 @@ export function PageIntro({
             <p className="eyebrow" data-rise="">
               {eyebrow}
             </p>
+            {/* keyed by the title: when a checkout step renames the page, a
+                fresh heading replaces the split one, whose lines and label
+                would otherwise bring the old title back */}
             <h1
+              key={title}
               id="page-heading"
               data-split=""
               className="font-display mt-3 text-5xl leading-[1.02] text-balance text-[var(--text-strong)] sm:text-6xl"
