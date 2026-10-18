@@ -84,8 +84,8 @@ export const galleryImages: readonly GalleryImage[] = [
     alt: "Siamese cat in front of the café’s leafy interior wall",
   },
   {
-    src: "/images/shop/photo_011.jpg",
-    alt: "Spicy noodles served with a fried egg and seaweed at Brew ni Cat",
+    src: "/images/shop/photo_012.jpg",
+    alt: "Three iced drinks with cat stickers lined up behind the syrup pumps",
     featured: true,
   },
   {
