@@ -29,9 +29,10 @@ export function PageIntro({
         <nav aria-label="Breadcrumb" data-rise="">
           <ol className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
             <li>
+              {/* a 44 px tap target; the negative margin keeps the line height */}
               <Link
                 href="/"
-                className="rounded-sm font-bold underline decoration-[var(--border-strong)] underline-offset-4 transition-colors hover:text-[var(--text-strong)]"
+                className="-my-3 inline-flex min-h-11 min-w-11 items-center rounded-sm font-bold underline decoration-[var(--border-strong)] underline-offset-4 transition-colors hover:text-[var(--text-strong)]"
               >
                 Home
               </Link>
