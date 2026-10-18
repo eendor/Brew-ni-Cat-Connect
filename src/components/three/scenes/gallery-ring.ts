@@ -12,7 +12,7 @@ export type RingPhoto = Readonly<{ src: string; alt: string }>;
 
 /**
  * Curved, draggable ring of the real gallery photos. The camera sits inside
- * the ring; the photo facing it is in full colour, the rest fall back into
+ * the ring; the photo facing it is in full color, the rest fall back into
  * the dark. Frames are only drawn while something changes.
  */
 export async function initGalleryRing(

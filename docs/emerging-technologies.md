@@ -219,7 +219,7 @@ A later native Android app using Kotlin and Jetpack Compose may provide mobile-o
 
 ### 9.1 Purpose
 
-The intended integration prevents staff from maintaining independent menu/order data for each channel and allows online orders and fulfilment status to pass through controlled business workflows.
+The intended integration prevents staff from maintaining independent menu/order data for each channel and allows online orders and fulfillment status to pass through controlled business workflows.
 
 ### 9.2 Boundary
 

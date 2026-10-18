@@ -9,7 +9,7 @@ export type ShowcaseItem = Readonly<{
   name: string;
   nickname: string;
   price: string;
-  /** Rim-light colour for the studio set while this item is on stage. */
+  /** Rim-light color for the studio set while this item is on stage. */
   glow: string;
   photo: string;
   alt: string;
@@ -64,8 +64,8 @@ export const showcaseItems: readonly ShowcaseItem[] = [
 ];
 
 /**
- * Glow colour for a menu item name, used for the add-to-cart toss. Items
- * without a colour of their own get Cat-Feine amber.
+ * Glow color for a menu item name, used for the add-to-cart toss. Items
+ * without a color of their own get Cat-Feine amber.
  */
 export function glowForItem(name: string): string {
   const n = name.toLowerCase();

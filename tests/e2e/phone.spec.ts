@@ -131,7 +131,7 @@ test("TC-P4-023 — a phone can tap through the whole order flow", async ({
   ).toBeVisible();
   await checkTargets("menu");
 
-  // an item with sizes and flavours: 2 × 8 pcs, Cheese
+  // an item with sizes and flavors: 2 × 8 pcs, Cheese
   await page.getByRole("button", { name: "Order Takoyaki" }).tap();
   const dialog = page.getByRole("dialog");
   await expect(dialog).toBeVisible();

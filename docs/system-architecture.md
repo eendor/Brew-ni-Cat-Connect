@@ -197,7 +197,7 @@ Version 0.1 distinguishes business stewardship, system of record, and integratio
 | Product/category/public variants and flavors | Existing Supabase `categories` and `items` catalog, read-only in Phase 2 | Brew ni Cat | Publishable reads currently succeed; POS-hardcoded add-ons are not treated as live catalog data; avoid bidirectional edits |
 | Published price and availability | Existing Supabase `items.variants_json` and `items.is_available`, read-only in Phase 2 | Brew ni Cat | Live browse values render; RLS-disabled exposure is not least privilege, and a later checkout server must still revalidate authoritative current values |
 | Online order request and immutable item/price snapshot | Shared backend initially proposed | Brew ni Cat | POS receives through a controlled interface; final ownership depends on integration design |
-| Acceptance and fulfilment status | Authority undecided pending shop/POS workflow analysis | Authorized shop process | Customer-visible backend state must reconcile rather than guess |
+| Acceptance and fulfillment status | Authority undecided pending shop/POS workflow analysis | Authorized shop process | Customer-visible backend state must reconcile rather than guess |
 | Order status history/audit metadata | Shared backend plus required POS audit | Brew ni Cat | Append/history-oriented; retention to be defined |
 | Loyalty ledger and balance | Shared backend proposed | Brew ni Cat | Ledger transactions are authoritative; clients display derived results |
 | Messenger event identifiers/content | Minimum server-side records required for processing and policy | Platform/customer/business roles require privacy review | Define minimization and deletion/retention before launch |
@@ -366,7 +366,7 @@ These decisions are recorded in [`decisions.md`](decisions.md) with context, alt
 
 - Hosting/runtime and regional deployment choice for the Next.js application.
 - Approved customer authentication methods and required profile data.
-- Catalog, price, availability, order acceptance, and fulfilment sources of truth after POS assessment.
+- Catalog, price, availability, order acceptance, and fulfillment sources of truth after POS assessment.
 - Staff/admin access boundary and role model.
 - Payment/pickup/cancellation/loyalty business policies.
 - Delivery scope: `TODO: Confirm with Brew ni Cat owner.`

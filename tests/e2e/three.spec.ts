@@ -48,7 +48,7 @@ function collectErrors(page: Page) {
   return errors;
 }
 
-/** Colour spread of what is actually on screen over a canvas. */
+/** Color spread of what is actually on screen over a canvas. */
 async function pixelSpread(page: Page, target: Locator) {
   const png = (await target.screenshot()).toString("base64");
   return page.evaluate(async (data) => {
@@ -311,7 +311,8 @@ test("TC-P4-026 — the checkout heading follows each step after its split entra
   await expect(
     page.getByRole("heading", { level: 1, name: "Review Order" }),
   ).toBeVisible();
-  // a resize (or a phone turning) must not bring the first title back
+  // a resize (or a phone turning) must not bring the first title back; the
+  // wait lets the heading's debounced re-split run before the check
   await page.setViewportSize({ width: 1100, height: 900 });
   await page.waitForTimeout(1000);
   await expect(heading).toHaveText("Review Order");

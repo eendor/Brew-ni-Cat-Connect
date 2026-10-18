@@ -101,7 +101,7 @@ export function makeBackdrop() {
         vec3 col = uBg + vec3(0.018, 0.016, 0.02) * smoothstep(0.0, 0.6, suv.y);
         vec2 d = (suv - uCenter) * vec2(uAspect, 1.0) / min(uAspect, 1.0);
         float r2 = dot(d, d);
-        // coloured backlight spilling on the wall behind the product
+        // colored backlight spilling on the wall behind the product
         float spill = exp(-r2 * 4.0) * 0.12 + exp(-r2 * 18.0) * 0.18;
         col += uGlow * spill * uGlowStr;
         vec2 tuv = (suv - uRect.xy) / uRect.zw;
@@ -211,7 +211,7 @@ export async function initShowcase(
   backdropMaterial.uniforms.uA!.value = titles[0] ?? null;
   backdropMaterial.uniforms.uB!.value = titles[1] ?? null;
 
-  // studio rig: a large soft key, a fill, and two coloured strip lights
+  // studio rig: a large soft key, a fill, and two colored strip lights
   // behind the product acting as rim lights (the glow is the rim, not neon)
   const key = new THREE.DirectionalLight("#fff4e6", 2.4);
   key.position.set(3.5, 6, 6);

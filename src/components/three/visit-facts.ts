@@ -4,7 +4,7 @@ import type { VisitFacts } from "./scenes/visit";
 
 /**
  * Text painted on the 3D sign and street model. Hours and days restate
- * `siteConfig.operations.hoursNotice`; the neighbour sign is the confirmed
+ * `siteConfig.operations.hoursNotice`; the neighbor sign is the confirmed
  * landmark ("Beside Pulido Eatery").
  */
 export const visitFacts: VisitFacts = {
@@ -12,6 +12,6 @@ export const visitFacts: VisitFacts = {
   days: "Monday to Saturday",
   closedDay: siteConfig.operations.closedDays,
   shopSign: siteConfig.shortName,
-  neighbourSign: siteConfig.address.landmark.replace(/^Beside\s+/i, ""),
+  neighborSign: siteConfig.address.landmark.replace(/^Beside\s+/i, ""),
   street: siteConfig.address.street.split(",")[0] ?? "Segundo St",
 };

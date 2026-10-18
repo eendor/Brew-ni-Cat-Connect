@@ -18,7 +18,7 @@ import {
 } from "../engine/textures";
 
 /**
- * Physically based product models for the showcase. Geometry is modelled
+ * Physically based product models for the showcase. Geometry is modeled
  * procedurally to the proportions in the shop's own photos; surfaces use
  * MeshPhysicalMaterial with generated normal/roughness maps and the studio
  * HDRI for reflections.
@@ -133,7 +133,7 @@ export async function makeCup(stickerSrc: string) {
   const points: THREE.Vector2[] = [new THREE.Vector2(0, Y0)];
   for (let i = 0; i <= 28; i++) {
     const y = Y0 + 0.02 + (i / 28) * (CUP_H - 0.08);
-    // shallow moulded ribs near the base, like real PET cups
+    // shallow molded ribs near the base, like real PET cups
     const rib = y < Y0 + 0.5 ? Math.sin(i * 2.4) * 0.006 : 0;
     points.push(new THREE.Vector2(cupR(y) + rib, y));
   }
@@ -888,7 +888,7 @@ export function beanGeometry() {
     let x = p.getX(i);
     const y = p.getY(i);
     let z = p.getZ(i);
-    // flatten one face and press the centre cut into it
+    // flatten one face and press the center cut into it
     if (z > 0) z *= 0.45;
     const groove =
       z > 0 ? Math.exp(-Math.pow(x * 9, 2)) * 0.12 * (1 - y * y * 3) : 0;

@@ -2,7 +2,7 @@ import * as THREE from "three";
 
 /**
  * Procedural PBR maps (albedo, normal, roughness) generated on the client.
- * They give the modelled food, ice and cups real surface detail without
+ * They give the modeled food, ice and cups real surface detail without
  * shipping large texture files. Every map is small (128–512px) and tiled.
  */
 
@@ -94,7 +94,7 @@ export function normalFromHeight(
   return dataTexture(data, size, false);
 }
 
-function greyTexture(values: Float32Array, size: number) {
+function grayTexture(values: Float32Array, size: number) {
   const data = new Uint8Array(size * size * 4);
   for (let i = 0; i < size * size; i++) {
     const v = Math.round(Math.min(1, Math.max(0, values[i] ?? 0)) * 255);
@@ -177,7 +177,7 @@ export function condensationMaps(size = 512, seed = 3): SurfaceMaps {
   }
   return {
     normalMap: normalFromHeight(height, size, 1.1),
-    roughnessMap: greyTexture(rough, size),
+    roughnessMap: grayTexture(rough, size),
   };
 }
 
@@ -193,7 +193,7 @@ export function iceMaps(size = 256, seed = 17): SurfaceMaps {
   for (let i = 0; i < n.length; i++) rough[i] = 0.04 + (n[i] ?? 0) * 0.2;
   return {
     normalMap: normalFromHeight(cracks, size, 2.4),
-    roughnessMap: greyTexture(rough, size),
+    roughnessMap: grayTexture(rough, size),
   };
 }
 
@@ -217,7 +217,7 @@ export function batterMaps(size = 256, seed = 5): SurfaceMaps {
       [0.8, "#d99a4e"],
     ]),
     normalMap: normalFromHeight(height, size, 3),
-    roughnessMap: greyTexture(rough, size),
+    roughnessMap: grayTexture(rough, size),
   };
 }
 
@@ -237,7 +237,7 @@ export function sauceMaps(
       [0.75, base],
     ]),
     normalMap: normalFromHeight(n, size, 1.2),
-    roughnessMap: greyTexture(rough, size),
+    roughnessMap: grayTexture(rough, size),
   };
 }
 
@@ -263,7 +263,7 @@ export function fryMaps(size = 128, seed = 21): SurfaceMaps {
       [0.75, "#efc56f"],
     ]),
     normalMap: normalFromHeight(height, size, 2),
-    roughnessMap: greyTexture(rough, size),
+    roughnessMap: grayTexture(rough, size),
   };
 }
 
@@ -279,12 +279,12 @@ export function beanMaps(size = 128, seed = 31): SurfaceMaps {
       [0.85, "#5a3218"],
     ]),
     normalMap: normalFromHeight(n, size, 1.6),
-    roughnessMap: greyTexture(rough, size),
+    roughnessMap: grayTexture(rough, size),
   };
 }
 
 /**
- * Tea leaf: midrib plus alternating lateral veins, with colour variation
+ * Tea leaf: midrib plus alternating lateral veins, with color variation
  * from the stem out. UV space is the leaf's bounding box.
  */
 export function leafMaps(size = 256, seed = 41): SurfaceMaps {
@@ -317,11 +317,11 @@ export function leafMaps(size = 256, seed = 41): SurfaceMaps {
       [0.8, "#6fa043"],
     ]),
     normalMap: normalFromHeight(height, size, 2.2),
-    roughnessMap: greyTexture(rough, size),
+    roughnessMap: grayTexture(rough, size),
   };
 }
 
-/** Matte expanded-foam or paper with fine fibre noise. */
+/** Matte expanded-foam or paper with fine fiber noise. */
 export function matteMaps(
   light: string,
   dark: string,
@@ -336,7 +336,7 @@ export function matteMaps(
       [0.7, light],
     ]),
     normalMap: normalFromHeight(n, size, 0.8),
-    roughnessMap: greyTexture(rough, size),
+    roughnessMap: grayTexture(rough, size),
   };
 }
 
@@ -361,6 +361,6 @@ export function woodMaps(size = 256, seed = 61): SurfaceMaps {
       [0.85, "#6b452a"],
     ]),
     normalMap: normalFromHeight(field, size, 1.5),
-    roughnessMap: greyTexture(rough, size),
+    roughnessMap: grayTexture(rough, size),
   };
 }

@@ -16,7 +16,7 @@ export type VisitFacts = Readonly<{
   days: string;
   closedDay: string;
   shopSign: string;
-  neighbourSign: string;
+  neighborSign: string;
   street: string;
 }>;
 
@@ -37,14 +37,14 @@ function signFace(
   g.beginPath();
   g.roundRect(0, 0, 1024, 640, 22);
   g.fill();
-  const colour = open ? "#8fe07f" : "#ff6f8f";
-  g.strokeStyle = colour;
+  const color = open ? "#8fe07f" : "#ff6f8f";
+  g.strokeStyle = color;
   g.lineWidth = 14;
   g.beginPath();
   g.roundRect(22, 22, 980, 596, 18);
   g.stroke();
   g.textAlign = "center";
-  g.fillStyle = colour;
+  g.fillStyle = color;
   g.font = `900 250px ${display}`;
   g.fillText(open ? "OPEN" : "CLOSED", 512, 300);
   g.fillStyle = "#F4F1EA";
@@ -68,7 +68,7 @@ function label(
   text: string,
   w: number,
   h: number,
-  colour: string,
+  color: string,
   bg: string,
   size: number,
   display: string,
@@ -79,7 +79,7 @@ function label(
   const g = context2d(canvas);
   g.fillStyle = bg;
   g.fillRect(0, 0, w, h);
-  g.fillStyle = colour;
+  g.fillStyle = color;
   g.textAlign = "center";
   g.textBaseline = "middle";
   g.font = `900 ${size}px ${display}`;
@@ -255,7 +255,7 @@ export async function initVisit(
   road.receiveShadow = true;
   diorama.add(road);
   /*
-   * Facing the street: Pulido Eatery is the larger two-storey concrete
+   * Facing the street: Pulido Eatery is the larger two-story concrete
    * building on the left, and Brew ni Cat is the small single-room unit
    * right next to it on its right, with a roll-up shutter and a serving
    * counter. Relative sizes follow the shop's own photos of the frontage.
@@ -269,12 +269,12 @@ export async function initVisit(
     });
   };
   const ribbed = corrugated();
-  const metal = (colour: string, repeat: number) => {
+  const metal = (color: string, repeat: number) => {
     const normalMap = ribbed.clone();
     normalMap.needsUpdate = true;
     normalMap.repeat.set(repeat, 1);
     return new THREE.MeshPhysicalMaterial({
-      color: colour,
+      color,
       metalness: 0.75,
       roughness: 0.42,
       normalMap,
@@ -285,14 +285,14 @@ export async function initVisit(
     text: string,
     w: number,
     h: number,
-    colour: string,
+    color: string,
     glow: number,
   ) => {
     const map = label(
       text,
       768,
       Math.round((768 * h) / w),
-      colour,
+      color,
       "#120f16",
       Math.round(((768 * h) / w) * 0.56),
       display,
@@ -322,7 +322,7 @@ export async function initVisit(
     );
   const FRONT = 0.7; // front face of a 1.4-deep block, relative to its group
 
-  /* Pulido Eatery: wide two-storey neighbour on the left */
+  /* Pulido Eatery: wide two-story neighbor on the left */
   const eatery = new THREE.Group();
   const eateryW = 2.85;
   const eateryH = 2.05;
@@ -351,7 +351,7 @@ export async function initVisit(
   eateryAwning.castShadow = true;
   eatery.add(eateryAwning);
   const eaterySign = signPlaque(
-    facts.neighbourSign.toUpperCase(),
+    facts.neighborSign.toUpperCase(),
     eateryW * 0.7,
     0.24,
     "#B9B3C2",

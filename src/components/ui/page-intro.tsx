@@ -11,7 +11,7 @@ type PageIntroProps = Readonly<{
   title: string;
   description: ReactNode;
   aside?: ReactNode;
-  /** Colour and ingredients of the decorative 3D backdrop. */
+  /** Color and ingredients of the decorative 3D backdrop. */
   mood?: AmbientMood;
 }>;
 

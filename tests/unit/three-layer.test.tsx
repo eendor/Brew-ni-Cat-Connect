@@ -65,7 +65,7 @@ describe("3D layer (TC-P4-006 – TC-P4-010)", () => {
       days: "Monday to Saturday",
       closedDay: "Sunday",
       shopSign: "Brew ni Cat",
-      neighbourSign: "Pulido Eatery",
+      neighborSign: "Pulido Eatery",
       street: "Segundo St",
     });
     render(<VisitStage facts={visitFacts} />);
@@ -103,13 +103,13 @@ describe("3D layer (TC-P4-006 – TC-P4-010)", () => {
         name: "Buldak Carbo spicy noodles with a fried egg",
       }),
     ).toBeInTheDocument();
-    // uniform cards: no per-item glow colour or other inline styling
+    // uniform cards: no per-item glow color or other inline styling
     const article = container.querySelector<HTMLElement>("article");
     expect(article).not.toBeNull();
     expect(article?.getAttribute("style")).toBeNull();
   });
 
-  it("TC-P4-010 — glow colours and optimised texture URLs", () => {
+  it("TC-P4-010 — glow colors and optimized texture URLs", () => {
     expect(glowForItem("Buldak Cheese")).toBe("#5EE1FF");
     expect(glowForItem("Something new")).toBe("#FFB547");
     expect(optimizedSrc("/images/a b.jpg", 640)).toBe(

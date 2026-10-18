@@ -60,7 +60,7 @@ flowchart TD
     D1 --> D
     F --> G[Review cart]
     G --> H[Begin checkout]
-    H --> I[Provide required customer and fulfilment details]
+    H --> I[Provide required customer and fulfillment details]
     I --> J{Server revalidates availability, price, totals, and request}
     J -- Invalid --> J1[Keep recoverable cart and show field or item errors]
     J1 --> G
@@ -282,7 +282,7 @@ flowchart TD
 
 ### Required POS design decisions before implementation
 
-- Which system is authoritative for product identity, published content, price, availability, order acceptance, fulfilment status, inventory, and refunds.
+- Which system is authoritative for product identity, published content, price, availability, order acceptance, fulfillment status, inventory, and refunds.
 - Whether integration is API-based, event-based, or performed through a controlled adapter.
 - Stable external identifiers, schema/version negotiation, and compatibility policy.
 - Idempotency, retry, dead-letter/quarantine, monitoring, and reconciliation procedures.

@@ -1,5 +1,5 @@
 /**
- * URL of the Next image optimiser for a local photo, so WebGL textures load
+ * URL of the Next image optimizer for a local photo, so WebGL textures load
  * the same resized, cached file the page already uses. Kept free of
  * three.js imports so ordinary cards can call it without pulling in WebGL.
  */

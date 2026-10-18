@@ -26,7 +26,7 @@ import {
 import { makeBackdrop, titleTexture } from "./showcase";
 
 export type StateKind = "empty" | "ready" | "lost";
-/** The panel colour behind the scene, so the canvas edge disappears. */
+/** The panel color behind the scene, so the canvas edge disappears. */
 export type StateTone = "canvas" | "card";
 
 const TONES: Record<StateTone, string> = {
@@ -83,7 +83,7 @@ export async function initState(
   key.position.set(3, 6, 6);
   const fill = new THREE.DirectionalLight("#dfe6ff", 0.35);
   fill.position.set(-5, 2, 4);
-  // the brand's two rim colours from behind, as on the menu hero
+  // the brand's two rim colors from behind, as on the menu hero
   const rimA = new THREE.SpotLight(DRINKS_GLOW.a, 55, 20, 0.6, 0.9, 2);
   rimA.position.set(-3.6, 2.6, -3.2);
   const rimB = new THREE.SpotLight(DRINKS_GLOW.b, 45, 20, 0.6, 0.9, 2);
@@ -204,7 +204,7 @@ export async function initState(
     });
   } else {
     // a soft studio light on the wall behind the cup, fading to exactly the
-    // panel colour at the canvas edge: clear plastic and ice need something
+    // panel color at the canvas edge: clear plastic and ice need something
     // bright behind them to read as clear
     const edge = new THREE.Color(TONES[tone]);
     backlight = new THREE.Mesh(
