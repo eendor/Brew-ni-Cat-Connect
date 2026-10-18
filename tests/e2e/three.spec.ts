@@ -1,4 +1,10 @@
-import { expect, test, type Locator, type Page } from "@playwright/test";
+import {
+  devices,
+  expect,
+  test,
+  type Locator,
+  type Page,
+} from "@playwright/test";
 
 /**
  * The WebGL layer (src/components/three). Runs in the "chromium-3d"
@@ -273,6 +279,107 @@ test("TC-P4-022 — page transitions open on the new page and leave no content h
     expect(hidden).toBe(0);
   }).toPass({ timeout: 20_000 });
   expect(errors).toEqual([]);
+});
+
+test("TC-P4-026 — the checkout heading follows each step after its split entrance", async ({
+  page,
+}) => {
+  const errors = collectErrors(page);
+  await mockMenu(page);
+  await page.goto("/menu");
+  await page.getByRole("button", { name: "Order Buldak Carbo" }).click({
+    timeout: 45_000,
+  });
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Add to Order" })
+    .click();
+  await page
+    .locator('[aria-labelledby="cart-drawer-title"]')
+    .getByRole("link", { name: "Proceed to Checkout" })
+    .click();
+  await page.waitForURL("**/checkout");
+  await expect(page.locator(".route-curtain")).toBeHidden({ timeout: 15_000 });
+  const heading = page.locator("#page-heading");
+  // the title made its line-by-line entrance, so later steps start from it
+  await expect(heading.locator(".split-line")).not.toHaveCount(0);
+  await expect(heading).toHaveAccessibleName("Checkout");
+
+  await page.getByLabel(/Full Name/).fill("Maria Santos");
+  await page.getByLabel(/Contact Phone Number/).fill("0918 123 4567");
+  await page.getByRole("button", { name: /Continue to Order Review/ }).click();
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Review Order" }),
+  ).toBeVisible();
+  // a resize (or a phone turning) must not bring the first title back
+  await page.setViewportSize({ width: 1100, height: 900 });
+  await page.waitForTimeout(1000);
+  await expect(heading).toHaveText("Review Order");
+  await expect(heading).toHaveAccessibleName("Review Order");
+
+  await page.getByRole("button", { name: /Proceed to Send to Shop/ }).click();
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Order Summary for Shop" }),
+  ).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
+test.describe("phone", () => {
+  const { viewport, userAgent, deviceScaleFactor, isMobile, hasTouch } =
+    devices["Pixel 7"];
+  test.use({ viewport, userAgent, deviceScaleFactor, isMobile, hasTouch });
+
+  test("TC-P4-025 — a phone gets the 3D layer at phone quality and can tap through it", async ({
+    page,
+  }) => {
+    const errors = collectErrors(page);
+    await mockMenu(page);
+    await page.goto("/");
+    await expect(page.locator(".showcase--ready")).toBeVisible({
+      timeout: 45_000,
+    });
+    await page.waitForTimeout(1500);
+    const stage = page.locator(".showcase__stage canvas");
+    expect(await pixelSpread(page, stage)).toBeGreaterThan(12);
+    // phones draw at a capped pixel ratio, not the screen's 2.6×
+    const ratio = await stage.evaluate(
+      (canvas: HTMLCanvasElement) => canvas.width / canvas.clientWidth,
+    );
+    expect(ratio).toBeLessThanOrEqual(1.26);
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth - window.innerWidth,
+      ),
+    ).toBeLessThanOrEqual(0);
+
+    // mobile navigation → the title card → the 3D menu hero
+    await page.getByRole("button", { name: "Open navigation" }).tap();
+    await page
+      .getByRole("navigation", { name: "Mobile navigation" })
+      .getByRole("link", { name: "Menu", exact: true })
+      .tap();
+    await expect(page.locator(".route-curtain__title")).toHaveText("The Menu");
+    await page.waitForURL("**/menu");
+    await expect(page.locator(".route-curtain")).toBeHidden({
+      timeout: 15_000,
+    });
+    await expect(page.locator(".menu-hero--ready")).toBeAttached({
+      timeout: 45_000,
+    });
+
+    await page.getByRole("button", { name: "Order Buldak Carbo" }).tap();
+    await page
+      .getByRole("dialog")
+      .getByRole("button", { name: "Add to Order" })
+      .tap();
+    const drawer = page.locator('[aria-labelledby="cart-drawer-title"]');
+    await expect(drawer).toBeVisible({ timeout: 10_000 });
+    await expect(drawer).toContainText("Buldak Carbo");
+    await expect(
+      page.getByRole("button", { name: "Open cart (1 item)" }).first(),
+    ).toBeAttached();
+    expect(errors).toEqual([]);
+  });
 });
 
 test.describe("reduced motion", () => {
