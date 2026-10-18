@@ -1,9 +1,9 @@
 # Brew ni Cat Connect — System Architecture
 
 **Version:** 0.1 Draft\
-**Date:** 2026-08-24\
+**Date:** 2026-10-18\
 **Document status:** Living architecture baseline\
-**Implementation status:** Phase 1 is Tested and merged. Phase 2 implements the public showcase and typed browser-runtime Supabase catalog reads; the publishable runtime now renders 6 categories/16 items. RLS is manually disabled and unrelated business tables are publicly reachable, so production security hardening remains blocked. Customer data, writes, authentication, realtime, Messenger, Android, and POS integration remain Planned or Deferred.
+**Implementation status:** Phases 1 and 2 are merged; Phase 2 passed Renier's independent QA (PR #6). Phase 2 implements the public showcase and typed browser-runtime Supabase catalog reads; the publishable runtime renders 6 categories/16 items. Phase 3 adds client-side ordering (a `localStorage` cart, checkout and a copy-to-send order summary, with no server writes) and the three.js and GSAP experience layer (§18). RLS is manually disabled and unrelated business tables are publicly reachable, so production security hardening remains blocked. Server-side orders, customer data, authentication, realtime, Messenger, Android, and POS integration remain Planned or Deferred.
 
 ## 1. Architecture objective
 
@@ -123,18 +123,18 @@ Arrows show logical data flow, not a final deployment topology. Direct client-to
 
 | Component | Responsibility | Status in Version 0.1 |
 |---|---|---|
-| Next.js App Router web application | Public business content, responsive customer UI, route boundaries, later authenticated ordering screens | **Implemented through the Phase 2 showcase** using Next.js 16.3.2; developer automation passed and independent review is pending |
-| React component layer | Accessible, reusable presentation and interaction components | **Implemented through Phase 2:** shared shell, public sections, gallery, menu catalog/cards/states, and factual routes |
+| Next.js App Router web application | Public business content, responsive customer UI, route boundaries, later authenticated ordering screens | **Implemented through Phase 3** using Next.js 16.3.8; Phase 2 merged after Renier's independent QA (PR #6) |
+| React component layer | Accessible, reusable presentation and interaction components | **Implemented through Phase 3:** shared shell, public sections, gallery, menu catalog/cards/states, factual routes, cart and checkout, and the 3D page wrappers (§18) |
 | TypeScript types/configuration | Compile-time types for UI, configuration, catalog mapping, and later integration boundaries | **Implemented for the public UI and menu catalog boundary**; ordering/customer contracts remain later work |
-| Tailwind CSS presentation layer | Project-owned warm design tokens, responsive layout, focus styles, and reduced-motion baseline | **Implemented** using Tailwind CSS 4.3.3; scroll and page motion added in PR #16 |
+| Tailwind CSS presentation layer | Project-owned Night Shift Glow design tokens, responsive layout, focus styles, and reduced-motion baseline | **Implemented** using Tailwind CSS 4.3.3; dark Night Shift Glow tokens since PR #23 (ADR-014) |
 | Client cart and checkout (Phase 3) | Catalog-priced cart domain, persisted cart context, cart drawer/page, and checkout producing a send-to-shop order summary | **Implemented client-side** in PRs #7 and #14, with checkout field validation in `src/lib/ordering/validation.ts` (PR #20); server-side order creation and revalidation (FR-021, FR-024, FR-025) remain planned |
-| Motion layer | `ScrollMotion` scroll hook, `template.tsx` route fade, header/card/overlay transitions | **Implemented** in PR #16, refined in PRs #17 and #18; off under reduced motion |
-| Automated verification boundary | Component behavior, route smoke checks, representative-width overflow checks, type/lint/build gates | **Implemented for Phase 1:** Vitest/Testing Library, Playwright, and GitHub Actions configuration |
+| Motion layer | `ScrollMotion` scroll hook, GSAP motion director, route curtain, overlay presence and the `template.tsx` page wrapper | **Implemented** in PR #16, refined in PRs #17 and #18, moved to GSAP in PR #23 (ADR-015, §18); off under reduced motion |
+| Automated verification boundary | Component behavior, route smoke checks, representative-width overflow checks, type/lint/build gates | **Implemented:** Vitest/Testing Library, Playwright (`chromium` and `chromium-3d` projects, §18.3) and GitHub Actions; CI runs every check except Playwright |
 | Backend-for-frontend/application service layer | Authenticate/authorize, validate requests, calculate authoritative outcomes, coordinate transactions, expose channel-neutral use cases | Proposed; interfaces evolve with requirements |
 | Public Supabase catalog client | Read current approved categories/items through public configuration | **Implemented in Phase 2; live 6-category/16-item response verified** |
 | Supabase Auth | Customer identity and session lifecycle | Selected for a later phase; sign-in methods and provider configuration remain undecided |
 | PostgreSQL | Canonical customer-facing data, constraints, order snapshots/history, loyalty ledger | Planned for Phase 4; schema not yet approved |
-| Row Level Security | Enforce least-privilege database access | **Current blocker:** owner manually disabled RLS; public table grants expose catalog and unrelated business relations. Restore/test intended-catalog-only policies before production |
+| Row Level Security | Enforce least-privilege database access | **Current blocker:** RLS manually disabled; public table grants expose catalog and unrelated business relations. Restore/test intended-catalog-only policies before production |
 | Realtime | Authorized order-status refresh notifications | Planned after canonical states exist |
 | Messenger webhook | Verify Meta requests, normalize messages, invoke shared services, return policy-compliant responses | Deferred to Phase 7 |
 | Conversational assistant | Grounded interpretation/discovery; never transaction authority | Candidate within Phase 7 subject to evaluation |
@@ -197,7 +197,7 @@ Version 0.1 distinguishes business stewardship, system of record, and integratio
 | Product/category/public variants and flavors | Existing Supabase `categories` and `items` catalog, read-only in Phase 2 | Brew ni Cat | Publishable reads currently succeed; POS-hardcoded add-ons are not treated as live catalog data; avoid bidirectional edits |
 | Published price and availability | Existing Supabase `items.variants_json` and `items.is_available`, read-only in Phase 2 | Brew ni Cat | Live browse values render; RLS-disabled exposure is not least privilege, and a later checkout server must still revalidate authoritative current values |
 | Online order request and immutable item/price snapshot | Shared backend initially proposed | Brew ni Cat | POS receives through a controlled interface; final ownership depends on integration design |
-| Acceptance and fulfilment status | Authority undecided pending shop/POS workflow analysis | Authorized shop process | Customer-visible backend state must reconcile rather than guess |
+| Acceptance and fulfillment status | Authority undecided pending shop/POS workflow analysis | Authorized shop process | Customer-visible backend state must reconcile rather than guess |
 | Order status history/audit metadata | Shared backend plus required POS audit | Brew ni Cat | Append/history-oriented; retention to be defined |
 | Loyalty ledger and balance | Shared backend proposed | Brew ni Cat | Ledger transactions are authoritative; clients display derived results |
 | Messenger event identifiers/content | Minimum server-side records required for processing and policy | Platform/customer/business roles require privacy review | Define minimization and deletion/retention before launch |
@@ -366,7 +366,7 @@ These decisions are recorded in [`decisions.md`](decisions.md) with context, alt
 
 - Hosting/runtime and regional deployment choice for the Next.js application.
 - Approved customer authentication methods and required profile data.
-- Catalog, price, availability, order acceptance, and fulfilment sources of truth after POS assessment.
+- Catalog, price, availability, order acceptance, and fulfillment sources of truth after POS assessment.
 - Staff/admin access boundary and role model.
 - Payment/pickup/cancellation/loyalty business policies.
 - Delivery scope: `TODO: Confirm with Brew ni Cat owner.`
@@ -441,7 +441,7 @@ Compilation, CI, and static route generation do not contact Supabase. Missing pu
 
 ### 17.3 Access blocker and required change boundary
 
-Initial public credential probes returned HTTP 200 and zero rows; a controlled privileged read-only comparison found six categories and sixteen items. That is retained as **BEFORE** evidence. After the owner/developer manually disabled RLS, the website publishable identity returned the current 6-category/16-item catalog. The application/follow-up made no database, RLS, or business-data change.
+Initial public credential probes returned HTTP 200 and zero rows; a controlled privileged read-only comparison found six categories and sixteen items. That is retained as **BEFORE** evidence. After RLS was manually disabled, the website publishable identity returned the current 6-category/16-item catalog. The application/follow-up made no database, RLS, or business-data change.
 
 The required production follow-up is to restore RLS and add a separately reviewed public view or explicit minimum-field/row `SELECT` policies. Verification must run as the anonymous/public role and prove that approved catalog fields are readable while internal/customer/business records and all writes remain denied. Current HEAD-only/no-body probes found unrelated business relations publicly reachable, and writes were not tested. The browser must never receive privileged credentials.
 
@@ -498,7 +498,7 @@ flowchart LR
 - Layout is full-bleed: section backgrounds and 3D stages span the viewport; text and grids sit in `Container` (`--shell-max` 90rem of content plus `--shell-pad` fluid gutters). Cart and checkout split into form/items and summary columns from 900 px.
 - On the home page the showcase stage starts under the translucent header (negative top margin equal to the header height) so the heading, actions and item controls fit in the first screen; a bottom scrim keeps that copy at AA contrast over the glows.
 - Scenes pause when off screen or when the tab is hidden, release their WebGL context on unmount or when they fail part-way through starting, and compile their shaders before they show. Scenes far down a page start when they come within 800 px of the viewport; the cart toss starts when the browser is idle.
-- State scenes paint the colour of the panel they sit on, with a soft studio light behind the clear cup, so the canvas edge disappears.
-- Textures for photos load through the Next image optimiser (`/_next/image`), so no extra image copies ship.
+- State scenes paint the color of the panel they sit on, with a soft studio light behind the clear cup, so the canvas edge disappears.
+- Textures for photos load through the Next image optimizer (`/_next/image`), so no extra image copies ship.
 - The motion director only touches elements marked with data attributes; it waits for the route curtain on client-side navigations and does nothing under reduced motion. A flag set before first paint holds animated content until the director takes over, with a 3 s CSS failsafe.
 - Playwright runs functional journeys with reduced motion (static render) and a separate `chromium-3d` project with software WebGL for the 3D and motion checks; that project runs its tests one after another.

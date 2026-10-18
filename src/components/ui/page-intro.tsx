@@ -11,7 +11,7 @@ type PageIntroProps = Readonly<{
   title: string;
   description: ReactNode;
   aside?: ReactNode;
-  /** Colour and ingredients of the decorative 3D backdrop. */
+  /** Color and ingredients of the decorative 3D backdrop. */
   mood?: AmbientMood;
 }>;
 
@@ -29,9 +29,10 @@ export function PageIntro({
         <nav aria-label="Breadcrumb" data-rise="">
           <ol className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
             <li>
+              {/* a 44 px tap target; the negative margin keeps the line height */}
               <Link
                 href="/"
-                className="rounded-sm font-bold underline decoration-[var(--border-strong)] underline-offset-4 transition-colors hover:text-[var(--text-strong)]"
+                className="-my-3 inline-flex min-h-11 min-w-11 items-center rounded-sm font-bold underline decoration-[var(--border-strong)] underline-offset-4 transition-colors hover:text-[var(--text-strong)]"
               >
                 Home
               </Link>
@@ -45,7 +46,11 @@ export function PageIntro({
             <p className="eyebrow" data-rise="">
               {eyebrow}
             </p>
+            {/* keyed by the title: when a checkout step renames the page, a
+                fresh heading replaces the split one, whose lines and label
+                would otherwise bring the old title back */}
             <h1
+              key={title}
               id="page-heading"
               data-split=""
               className="font-display mt-3 text-5xl leading-[1.02] text-balance text-[var(--text-strong)] sm:text-6xl"

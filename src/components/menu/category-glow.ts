@@ -1,6 +1,6 @@
 /**
- * Colour pairs for menu categories, taken from the Night Shift Glow item
- * colours (drinks green and amber, bites orange and yellow, buldak pink and
+ * Color pairs for menu categories, taken from the Night Shift Glow item
+ * colors (drinks green and amber, bites orange and yellow, buldak pink and
  * cyan, …). The catalog uses them for each category's index number and the
  * rule under its heading; cards stay neutral.
  */

@@ -32,7 +32,7 @@ const moods: Record<
 /**
  * Quiet studio backdrop for interior page headers: a few real-looking ice
  * cubes, tea leaves and roasted beans drifting at different depths, rim-lit
- * in the page's colour and softened by depth of field. Purely decorative.
+ * in the page's color and softened by depth of field. Purely decorative.
  */
 export async function initAmbient(
   canvas: HTMLCanvasElement,
@@ -57,7 +57,7 @@ export async function initAmbient(
   rim2.position.set(-5, -1, -5);
   scene.add(key, rim, rim2, rim.target, rim2.target);
 
-  // a soft coloured wash on the back wall, like a gelled background light
+  // a soft colored wash on the back wall, like a gelled background light
   const wash = new THREE.Mesh(
     new THREE.PlaneGeometry(40, 20),
     new THREE.ShaderMaterial({

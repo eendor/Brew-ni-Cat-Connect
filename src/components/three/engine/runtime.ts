@@ -60,7 +60,7 @@ export function getQuality(): Quality {
   };
 }
 
-/** Pointer position in normalised device coords plus raw client pixels. */
+/** Pointer position in normalized device coords plus raw client pixels. */
 export const pointer = { x: 0, y: 0, px: -9999, py: -9999 };
 let pointerBound = false;
 export function bindPointer() {

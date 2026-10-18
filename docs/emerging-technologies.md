@@ -1,9 +1,9 @@
 # Brew ni Cat Connect — Emerging Technologies
 
 **Version:** 0.1 Draft\
-**Date:** 2026-08-24\
+**Date:** 2026-10-18\
 **Document status:** Living technology assessment\
-**Implementation status:** Phase 1 is Tested and merged. Phase 2 implements the public showcase and a narrow read-only Supabase catalog client; the publishable runtime now renders 6 categories and 16 items after the owner manually disabled RLS. This table-grant-based state is not least privilege and is a production security blocker. Supabase authentication/writes/realtime, Messenger/AI, Android, and POS integration remain Planned or Deferred.
+**Implementation status:** Phases 1 and 2 are merged; Phase 2 passed Renier's independent QA (PR #6). Phase 2 implements the public showcase and a narrow read-only Supabase catalog client; the publishable runtime now renders 6 categories and 16 items after RLS was manually disabled. This table-grant-based state is not least privilege and is a production security blocker. Phase 3 adds browser-side ordering with no server writes and a three.js (WebGL 2) and GSAP presentation layer (PR #23, §15). Supabase authentication/writes/realtime, Messenger/AI, Android, and POS integration remain Planned or Deferred.
 
 ## 1. Purpose
 
@@ -36,6 +36,7 @@ Each technology must demonstrate:
 | Technology | Status | Genuine purpose | Primary limitation | Introduction gate |
 |---|---|---|---|---|
 | Next.js App Router + React + TypeScript | **Implemented and locally verified for the Phase 1 foundation** | Responsive, discoverable business site and later customer ordering UI with shared typed web code | Framework/runtime complexity and dependency updates | Phase 1 shell, lint, types, component/browser tests, and production build verified; feature data and backend remain later work |
+| three.js (WebGL 2) and GSAP | **Implemented in PR #23 as a decorative presentation layer** | Physically based 3D scenes, scroll-linked motion and page transitions on the public pages, cart and checkout | GPU and bundle cost on integrated graphics and phones; no meaning or control may depend on the canvas | Static rendering under reduced motion or without WebGL 2; `aria-hidden` canvases with HTML controls (ADR-014, ADR-015) |
 | Supabase cloud platform | **Limited Phase 2 public catalog client implemented; wider platform Planned** | Current read-only catalog now; later managed PostgreSQL, authentication, controlled writes, and optional realtime/storage/server functions | Live rows render, but RLS is manually disabled and unrelated business tables are publicly reachable; vendor coupling and key/RLS separation require care | Restore RLS; add/test explicit catalog-only anonymous `SELECT`; later data model/threat/RLS tests |
 | Realtime order updates | Planned after ordering/backend | Timely customer-visible order status across supported channels | Connectivity, ordering, and delivery are not guaranteed; adds subscription cost/complexity | Canonical order-state model and authorization implemented first |
 | Secured Messenger webhook | Deferred to Phase 7 | Meet customers on an existing channel for menu questions, discovery, guided ordering, and tracking | Platform policies, review, message windows, identity linking, webhook security | Stable shared backend and Meta configuration/approval |
@@ -218,7 +219,7 @@ A later native Android app using Kotlin and Jetpack Compose may provide mobile-o
 
 ### 9.1 Purpose
 
-The intended integration prevents staff from maintaining independent menu/order data for each channel and allows online orders and fulfilment status to pass through controlled business workflows.
+The intended integration prevents staff from maintaining independent menu/order data for each channel and allows online orders and fulfillment status to pass through controlled business workflows.
 
 ### 9.2 Boundary
 
@@ -282,8 +283,22 @@ Phase 2 brings cloud data into scope only because the existing Supabase catalog 
 
 **Credential and trust boundary:** The client accepts only `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`. It disables session persistence because Phase 2 has no authentication. A privileged key is not imported, bundled, logged, or used as a public fallback.
 
-**Observed access history:** Initial public probes returned HTTP 200 and zero catalog rows while a controlled privileged read-only comparison confirmed six categories and sixteen items. After the owner/developer manually disabled RLS on the relevant catalog tables, the publishable runtime returned the current 6-category/16-item catalog and the site rendered it. The application did not weaken RLS or mutate business data.
+**Observed access history:** Initial public probes returned HTTP 200 and zero catalog rows while a controlled privileged read-only comparison confirmed six categories and sixteen items. After RLS was manually disabled on the relevant catalog tables, the publishable runtime returned the current 6-category/16-item catalog and the site rendered it. The application did not weaken RLS or mutate business data.
 
 **Current limitation:** Access depends on table grants rather than tested least-privilege RLS. HEAD-only/no-body probes found unrelated business tables publicly reachable. Restoring RLS and adding explicit intended-catalog-only anonymous `SELECT` policies is a production blocker; public writes were not tested.
 
 **Scope limit:** Authentication, customer/order data, writes, realtime, Storage, Edge Functions, loyalty, Messenger, Android, and POS synchronization remain outside Phase 2. Supabase JavaScript 2.112.3 is the only newly installed integration library.
+
+## 15. Phase 3 WebGL and Motion Increment
+
+Phase 3 adds a three.js and GSAP presentation layer in PR #23 (ADR-014 and ADR-015). It is decorative: every page keeps its full HTML content and controls, and the ordering path works without it.
+
+**Purpose and role:** three 0.186.1 renders the home showcase, the menu hero, the gallery ring, the visit stage, the ambient page backdrops and the cart, checkout and not-found state scenes from `src/components/three/`. gsap 3.15.0 (ScrollTrigger and SplitText) drives entrances, scroll reveals, overlay exits and page transitions from `src/components/motion/`. Both run only in the browser: scenes load through `next/dynamic` with `ssr: false` and share the GSAP ticker.
+
+**Accessibility and fallback:** Canvases are `aria-hidden`, and every control is ordinary HTML. Under `prefers-reduced-motion`, or on a device without WebGL 2, the static page renders and nothing animates. Rendering pauses while a canvas is off screen, and the WebGL context is released when a scene unmounts.
+
+**Assets and data:** Models are built in code. The Studio Small 09 HDRI (CC0, Poly Haven) and the cat sticker are bundled under `public/three/`, the photo textures are the shop's own local menu and gallery photos, and fonts are self-hosted through `next/font`. No runtime CDN is contacted. The layer fetches no catalog or customer data and sends nothing; the cart toss only receives the added item's local photo, color and name from the order dialog.
+
+**Measured cost:** In the PR #24 click-through on an integrated GPU, the phone and tablet profiles held 60 fps idle and 35–56 fps while scrolling, and the 1440 px desktop profile ran at 22–31 fps. The order-summary scene stalls once for about one second. Frame-budget tuning is in the Backlog, and the physical-phone check (`MAN-P4-007`) is still pending.
+
+**Scope limit:** The Phase 3 cart, checkout and order summary added no runtime dependency; `three` and `gsap` are the only Phase 3 runtime additions.

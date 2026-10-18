@@ -1,9 +1,9 @@
 # Brew ni Cat Connect — Software Requirements Specification
 
 - **Version:** 0.1 Draft
-- **Date:** 2026-08-18; Phase 2 addendum 2026-08-24
-- **Phase:** Living specification through Phase 2
-- **Document status:** Version 0.1 remains a draft. Phase 1 is Tested and merged; the implemented Phase 2 showcase is in Testing / Review. Public live catalog rendering, final local follow-up gates, and both hosted workflows for evidence head `975561b` are verified; independent review remains pending, and manually RLS-disabled access remains a production security blocker. Later capabilities remain Planned or Deferred as marked.
+- **Date:** 2026-08-18; Phase 2 addendum 2026-08-24; Phase 3 status 2026-10-18
+- **Phase:** Living specification through Phase 3
+- **Document status:** Version 0.1 remains a draft. Phases 1 and 2 are merged; Phase 2 merged after Renier's independent QA (PR #6). Phase 3 browser-side ordering (cart, checkout and the order summary sent to the shop) and the 3D and motion layer are merged, and server-side order creation remains Planned. Manually RLS-disabled access remains a production security blocker. Later capabilities remain Planned or Deferred as marked.
 
 ## 1. Purpose
 
@@ -150,7 +150,7 @@ This diagram is a logical target, not an implementation claim. Detailed deployme
 
 - **Web interface:** responsive, keyboard-accessible customer experience over HTTPS.
 - **Backend interface:** versioned, validated service contracts; privileged operations execute server-side.
-- **Public catalog:** Phase 2 introduces a narrow browser-runtime, read-only Supabase catalog boundary using public configuration only. The publishable identity now returns the live catalog after the owner manually disabled RLS; this grant-based access is not a production least-privilege boundary.
+- **Public catalog:** Phase 2 introduces a narrow browser-runtime, read-only Supabase catalog boundary using public configuration only. The publishable identity now returns the live catalog after RLS was manually disabled; this grant-based access is not a production least-privilege boundary.
 - **Authentication:** Supabase Auth remains the selected planned provider under ADR-002; authentication, customer data, writes, and realtime activation remain gated to later design.
 - **Realtime:** authenticated order-status subscriptions with a polling/manual-refresh fallback where supported.
 - **Messenger:** verified webhooks and approved API permissions; no secret in client code.
@@ -267,6 +267,12 @@ The client brief dated 2026-08-24 confirms the Phase 2 public facts and asset pe
 
 The owner-approved final About story is not available. Phase 2 uses only the restrained factual points supplied in the brief and does not invent an owner biography, testimonial, award, mission, or market-leading claim.
 
-The existing Supabase catalog is the authoritative source for current categories, item names, availability, variants, flavor prices, and combo descriptions. Old menu posters are visual reference only. POS and read-only discovery identified `categories` and `items`; the typed browser data layer maps only approved catalog fields. Initial anonymous access returned HTTP 200 with zero rows; after the owner manually disabled RLS, the publishable runtime returned 6 categories/16 items and rendered them without privileged access or a business-data mutation. The current table-grant-based exposure—including publicly reachable unrelated business tables—is a production security blocker, not a least-privilege policy solution.
+The existing Supabase catalog is the authoritative source for current categories, item names, availability, variants, flavor prices, and combo descriptions. Old menu posters are visual reference only. POS and read-only discovery identified `categories` and `items`; the typed browser data layer maps only approved catalog fields. Initial anonymous access returned HTTP 200 with zero rows; after RLS was manually disabled, the publishable runtime returned 6 categories/16 items and rendered them without privileged access or a business-data mutation. The current table-grant-based exposure—including publicly reachable unrelated business tables—is a production security blocker, not a least-privilege policy solution.
 
 Phase 2 delivery content is informational: a customer independently books a preferred external rider after arranging the shop order and pays the rider separately. Brew ni Cat does not employ/book the rider or control rider availability, fee, or ETA. Online ordering and delivery integration remain outside this increment.
+
+## 16. Phase 3 Status Addendum
+
+Phase 3 browser-side ordering is merged: the ordering core and cart domain in PR #7, Van's cart drawer, cart page and checkout in PR #14, and Shan's checkout validation module in PR #20. A guest customer builds a cart, chooses pickup at the shop or an external rider pickup, chooses Cash or GCash at the counter, and copies the prepared order summary into Messenger or reads it out on the phone. Nothing is written to a server. FR-017 to FR-020 and FR-022 are In development (client-side); FR-021, FR-024 and FR-025 remain Planned until a server-side order backend exists. See [`functional-requirements.md`](functional-requirements.md) §15.
+
+The three.js and GSAP experience in PR #23 (ADR-014 and ADR-015) and its follow-ups in PR #24 change presentation only. They add no data flow, account, payment or order write, and the §15 RLS blocker still applies.

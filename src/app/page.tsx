@@ -149,7 +149,7 @@ export default function HomePage() {
                 Coffee, cats, and community.
               </h2>
               <p className="mt-4 max-w-xl text-base leading-7 text-[var(--text-muted)] sm:text-lg">
-                A glimpse of the food, familiar faces, cozy corners, and cats
+                A glimpse of the drinks, familiar faces, cozy corners, and cats
                 that shape the Brew ni Cat atmosphere.
               </p>
             </div>

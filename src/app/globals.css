@@ -5,7 +5,7 @@
   --shell-max: 90rem;
   --shell-pad: clamp(1rem, 4vw, 4rem);
   --shell-width: calc(var(--shell-max) + 2 * var(--shell-pad));
-  /* Night Shift Glow: a dark studio with coloured rim light per item */
+  /* Night Shift Glow: a dark studio with colored rim light per item */
   color-scheme: dark;
   --surface-canvas: #0b0a0d;
   --surface-canvas-translucent: rgb(11 10 13 / 72%);
@@ -633,7 +633,7 @@ html[data-scrolled] .site-header {
   transition-duration: 120ms;
 }
 
-/* Form fields: smooth focus and validation colour changes */
+/* Form fields: smooth focus and validation color changes */
 input,
 select,
 textarea {

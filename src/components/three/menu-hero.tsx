@@ -54,7 +54,7 @@ export function MenuHero() {
               <li>
                 <Link
                   href="/"
-                  className="inline-flex min-h-11 items-center rounded-sm font-bold underline decoration-[var(--border-strong)] underline-offset-4 transition-colors hover:text-[var(--text-strong)]"
+                  className="inline-flex min-h-11 min-w-11 items-center rounded-sm font-bold underline decoration-[var(--border-strong)] underline-offset-4 transition-colors hover:text-[var(--text-strong)]"
                 >
                   Home
                 </Link>

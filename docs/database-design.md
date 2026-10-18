@@ -1,14 +1,14 @@
 # Brew ni Cat Connect — Database Design
 
 **Version:** 0.1 Draft
-**Last updated:** 2026-08-24
+**Last updated:** 2026-10-18
 **Status:** Phase 2 read-only catalog discovery and live public verification; no schema implementation or migration. RLS is currently manually disabled on the relevant catalog tables, which is a production security blocker.
 
 ## 1. Scope
 
 This document records only the production catalog structures observed through existing POS source inspection and controlled read-only Supabase discovery for the Phase 2 public menu. It does not authorize schema changes, administrative access, customer data, ordering, inventory, sales, expenses, or POS synchronization.
 
-No table, policy, function, trigger, migration, or production row was created, changed, or deleted by the application or automated follow-up. The owner/developer separately disabled RLS on the relevant catalog tables before the live-menu follow-up.
+No table, policy, function, trigger, migration, or production row was created, changed, or deleted by the application or automated follow-up. RLS was separately disabled on the relevant catalog tables before the live-menu follow-up.
 
 ## 2. Discovered Catalog Tables
 
@@ -86,7 +86,7 @@ Initial read-only Data API probes using both locally available public credential
 
 ### 5.2 Current follow-up state
 
-The owner/developer manually disabled RLS on the relevant catalog tables. The application and verification process did not make that configuration change. With the same `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` used by the browser runtime, public GET requests then returned the real 6-category/16-item catalog and the Menu rendered it without a privileged fallback.
+RLS was manually disabled on the relevant catalog tables. The application and verification process did not make that configuration change. With the same `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` used by the browser runtime, public GET requests then returned the real 6-category/16-item catalog and the Menu rendered it without a privileged fallback.
 
 This public access depends on table-level grants while RLS is disabled. It is not a least-privilege production design. HEAD-only/no-body checks also showed public reachability for `inventory`, `recipe_mappings`, `expenses`, `orders`, `order_items`, and `app_release`. Probes for `customers`, `sales`, and `payments` returned HTTP 404, which is ambiguous and is not proof of an authorization denial. No unrelated row body or business-data mutation was performed, and public writes were not tested.
 

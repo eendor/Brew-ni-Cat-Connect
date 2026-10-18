@@ -2,13 +2,13 @@
 
 **Project:** Brew ni Cat Connect
 **Version:** 0.1 Draft
-**Date:** 2026-08-24
-**Phase:** Living baseline through Phase 2
-**Document status:** Phase 1 controls are verified historical evidence. Phase 2 public catalog/media implementation is in Testing / Review and awaits independent review. Live public catalog rendering is verified, but the manually RLS-disabled database state is a production security blocker; later-feature controls remain Planned.
+**Date:** 2026-08-24; Phase 3 addendum 2026-10-18
+**Phase:** Living baseline through Phase 3
+**Document status:** Phase 1 controls are verified historical evidence. The Phase 2 public catalog and media merged on 2026-09-16 after Renier's independent QA (PR #6), and the Phase 3 browser-side cart, checkout and 3D layer (§17) merged through PR #24. Live public catalog rendering is verified, but the manually RLS-disabled database state is a production security blocker; later-feature controls remain Planned.
 
 ## 1. Current State and Purpose
 
-Brew ni Cat Connect now has a customer-facing Phase 2 showcase and a browser-runtime, read-only Supabase catalog client. It has no authentication, order processing, customer records, loyalty, online payment, analytics, Messenger, Android, or POS synchronization. Application code collects no customer personal data and configures the public Supabase client without session persistence. Approved photographs may contain customers, but the site does not identify them or infer attributes.
+Brew ni Cat Connect now has a customer-facing Phase 2 showcase, a browser-runtime, read-only Supabase catalog client and, since Phase 3, a browser-side cart and checkout. It has no authentication, server-side order processing, customer records, loyalty, online payment, analytics, Messenger, Android, or POS synchronization. Checkout asks for a name, a phone number and optional notes for the order summary; they stay in the visitor's browser and are never sent to Supabase or any other server (§17). The public Supabase client is configured without session persistence. Approved photographs may contain customers, but the site does not identify them or infer attributes.
 
 This document establishes an engineering baseline for protecting customer and business information across the future website, shared backend, Android client, Messenger channel, and existing POS integration. It is not a legal opinion or a completed compliance assessment. The business must designate an accountable privacy role and obtain qualified advice when a legal interpretation or formal compliance determination is required.
 
@@ -67,7 +67,7 @@ Final decisions about controller/processor roles, privacy notices, lawful bases,
 
 ## 4. Data Inventory and Minimization
 
-The following is a planning inventory, not evidence that the data is already collected.
+The following is a planning inventory, not evidence that the data is already collected. The browser-only cart and checkout data added in Phase 3 are described in §17.
 
 | Data domain | Minimum candidate data | Intended purpose | Classification | Retention / disposition | Status |
 | --- | --- | --- | --- | --- | --- |
@@ -139,7 +139,7 @@ Threat modeling will be revisited for every material architecture change. Initia
 
 The initial Phase 2 public probes returned HTTP 200 with zero `categories` and `items` rows while a controlled privileged read-only comparison confirmed catalog rows existed. That **BEFORE** observation is retained as historical failure-state evidence.
 
-For the live-menu follow-up on 2026-08-24, the project owner/developer manually disabled RLS on the relevant catalog tables. Using the same browser publishable configuration as the application, read-only GET requests then returned 6 categories and 16 items, with 0 unavailable items and 0 unmatched item/category relationships. The application and this follow-up made no RLS, policy, schema, menu, price, inventory, sales, expense, customer, order, or other business-data change.
+For the live-menu follow-up on 2026-08-24, RLS was manually disabled on the relevant catalog tables. Using the same browser publishable configuration as the application, read-only GET requests then returned 6 categories and 16 items, with 0 unavailable items and 0 unmatched item/category relationships. The application and this follow-up made no RLS, policy, schema, menu, price, inventory, sales, expense, customer, order, or other business-data change.
 
 The current public catalog therefore depends on table-level public grants while RLS is disabled. A successful public read proves availability, not least-privilege authorization. Explicit projections constrain this application request, but they do not prevent another holder of the public key from requesting other granted fields or tables. This state is not an acceptable production authorization boundary.
 
@@ -255,7 +255,7 @@ The earlier local privileged discovery credential was used only for the retained
 
 ### 16.2 RLS/access decision
 
-The owner/developer manually disabled RLS on the relevant catalog tables to unblock public catalog verification. This allowed the publishable runtime to display the real menu, but it is not a least-privilege security resolution. Current access depends on table grants, and the follow-up did not test writes against production.
+RLS was manually disabled on the relevant catalog tables to unblock public catalog verification. This allowed the publishable runtime to display the real menu, but it is not a least-privilege security resolution. Current access depends on table grants, and the follow-up did not test writes against production.
 
 Before production deployment, restore RLS and add reviewed, explicit anonymous `SELECT` policies limited to the intended public catalog rows and fields. A non-production or otherwise approved policy test must demonstrate that approved catalog reads succeed, catalog writes fail, unrelated business/customer relations remain unreadable, and client bundles contain no privileged value. This remains an open Phase 2 security limitation and production blocker.
 
@@ -288,3 +288,24 @@ The contact page publishes only the confirmed business address, phone, email, pa
 ### 16.5 Pre-PR checks
 
 Before commit/PR, inspect staged and unstaged diffs, verify `.env.local` is untracked/ignored, search tracked text for credential-like values without printing any value, inspect browser-facing source for privileged-variable references, and run formatter/lint/type/test/build/browser/document validators. Record literal results only after execution.
+
+## 17. Phase 3 Security and Privacy Addendum
+
+### 17.1 Browser-only cart and checkout
+
+- The cart is kept in `localStorage` under `brew_ni_cat_cart_v1`. It holds the order lines and the fulfillment choice only, never a name or phone number. Prices come only from the current catalog, checkout checks them against the live menu again, and a stored cart that fails validation is discarded.
+- Checkout asks for a name, a Philippine mobile number and optional notes. They are held in page state and in the prepared summary only.
+- The prepared summary is kept in `sessionStorage` under `brew-ni-cat:prepared-summary`, so it is gone when the tab closes. It is shape-checked, ignored after 12 hours, dropped when the cart changes, and cleared by **Start a new order**. When storage is blocked or full, it is kept in memory for the rest of the visit.
+- Sending is manual. The copy button writes the summary to the clipboard, and the customer sends it to Brew ni Cat through Facebook Messenger or by phone. Nothing is submitted to Supabase or any other server, and the name and phone number are never logged. A successful copy empties the cart; a failed copy says so and selects the text instead.
+
+### 17.2 3D and motion layer
+
+- The three.js and GSAP layer (PR #23, ADR-014 and ADR-015) is decorative. It loads the bundled HDRI, the cat sticker and the shop's own photos from `public/`, so no runtime CDN is contacted.
+- It reads no customer data and sends nothing. The cart toss receives only the added item's local photo, color and name from the order dialog, and the 3D engine logs only its own errors to the browser console.
+
+### 17.3 Configuration, fonts and dependencies
+
+- Application code reads only `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`. No server-only or privileged variable is used at runtime.
+- Since PR #23, `next build` downloads the Big Shoulders and Archivo font files from Google Fonts through `next/font/google` and serves them from the site. A build therefore needs network access to Google Fonts, though still no production credential (compare §16.1), and visitors' browsers make no request to Google.
+- `next.config.ts` turns off the `X-Powered-By` header. No Content Security Policy or other security headers are configured yet; add and test them before production deployment, together with the RLS restoration in §16.2.
+- `npm run audit` reports 0 vulnerabilities after PR #24 replaced the `fast-glob` copy inside the Next.js lint plugin (dev-only tooling) with `tinyglobby`.

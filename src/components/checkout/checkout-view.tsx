@@ -873,7 +873,7 @@ export function CheckoutView({
                     </div>
                     <Link
                       href="/cart"
-                      className="text-xs font-bold text-[var(--accent-strong)] hover:underline"
+                      className="-my-1.5 inline-flex min-h-11 items-center text-xs font-bold text-[var(--accent-strong)] hover:underline"
                     >
                       Edit items in cart
                     </Link>
@@ -895,7 +895,7 @@ export function CheckoutView({
                     <button
                       type="button"
                       onClick={() => goToStep("details")}
-                      className="text-xs font-bold text-[var(--accent-strong)] hover:underline"
+                      className="-my-1.5 inline-flex min-h-11 items-center text-xs font-bold text-[var(--accent-strong)] hover:underline"
                     >
                       Edit details
                     </button>

@@ -1,7 +1,7 @@
 # Architecture Decision Records
 
 **Document version:** 0.1 Draft\
-**Last updated:** 2026-08-23
+**Last updated:** 2026-10-18
 
 Statuses used here are `Proposed`, `Accepted`, `Superseded`, and `Deferred`. Acceptance records a direction; it does not claim implementation.
 
@@ -114,7 +114,7 @@ Statuses used here are `Proposed`, `Accepted`, `Superseded`, and `Deferred`. Acc
 **Reason:** This uses the real current source without creating a second catalog, keeps database records out of source, creates a reusable typed boundary, and preserves stable CI/build behavior.\
 **Initial consequences:** The first public probes returned HTTP 200 with zero rows while privileged read-only discovery confirmed six categories and sixteen items. The application retained a truthful unavailable state, did not use a privileged key, did not mutate business data, and did not present fake/poster prices. The adapter sorts categories/items alphabetically because no display-order field was discovered. Add-ons remain absent because the POS values are hardcoded rather than live catalog records. This narrow exception does not activate customer auth/order/backend scope early.
 
-**2026-08-24 live-menu follow-up amendment:** The owner/developer manually disabled RLS on the relevant catalog tables outside the application to unblock verification. The publishable browser identity then returned 6 categories and 16 items, with 0 unavailable and 0 unmatched rows, and the real Menu rendered at all required widths. The application continues to use public configuration and read-only projections and made no RLS or business-data change.
+**2026-08-24 live-menu follow-up amendment:** RLS was manually disabled on the relevant catalog tables outside the application to unblock verification. The publishable browser identity then returned 6 categories and 16 items, with 0 unavailable and 0 unmatched rows, and the real Menu rendered at all required widths. The application continues to use public configuration and read-only projections and made no RLS or business-data change.
 
 This manual state is a temporary functional-verification condition, not a revision of the least-privilege target. Public access now depends on table grants, and HEAD-only/no-body probes found unrelated `inventory`, `recipe_mappings`, `expenses`, `orders`, `order_items`, and `app_release` relations publicly reachable. Restoring RLS and adding explicit intended-catalog-only anonymous `SELECT` policies remains a production security blocker. Public writes were not tested.
 
@@ -182,19 +182,18 @@ This manual state is a temporary functional-verification condition, not a revisi
 **Decision:** Add a three.js (plain, not React Three Fiber) and GSAP ScrollTrigger layer under `src/components/three/`, loaded with `next/dynamic` and `ssr: false`, on top of pages that still render completely without it. This partly supersedes ADR-013: GSAP is now a dependency, but only the 3D layer uses it; CSS motion elsewhere is unchanged.\
 **Date:** 2026-10-17\
 **Status:** Accepted and implemented in PR #23 (reworked and merged on 2026-10-18)\
-**Context:** The owner asked for a full 3D site in a dark "Night Shift Glow" look that reads as real product photography, not cartoon art, without losing the live menu, real cart, checkout or accessibility of `main`.\
+**Context:** The goal was a full 3D site in a dark "Night Shift Glow" look that reads as real product photography, not cartoon art, without losing the live menu, real cart, checkout or accessibility of `main`.\
 **Consequences:**
 - Every 3D scene is decorative (`aria-hidden`). Headings, prices, hours, photos with alt text, forms and buttons stay real HTML, and each 3D control has a keyboard-operable HTML button.
 - The 3D layer mounts only after hydration, when WebGL 2 is available and `prefers-reduced-motion` is not set. Otherwise the server-rendered static version stays (static showcase grid, photo thumbnails, sign fallback, no ring).
 - Rendering is physically based: `MeshPhysicalMaterial` with transmission, IOR 1.45 and clearcoat; a bundled CC0 studio HDRI for light and reflections; ACES filmic tone mapping with sRGB output; soft shadow maps and contact shadows; subtle depth of field, bloom and film grain.
 - Food and drink models are procedural with generated PBR maps (albedo, normal, roughness) because no CC0 photoscans of takoyaki, shoestring fries or buldak exist.
 - Phones get a lower pixel-ratio cap, fewer particles and no depth of field. A frame-time budget drops depth of field and bloom and lowers the pixel ratio when frames run slow.
-- The project design system was updated to the dark direction rather than overridden. On 2026-10-17 the design and product context was rewritten for Night Shift Glow: a #0B0A0D studio canvas with #15131A blocks, #F4F1EA / #B9B3C2 text, one glow colour per featured item, matcha #7CFF6B as the only filled action colour, Big Shoulders with Archivo, a documented type ramp and radius scale, realistic PBR rules with no cartoon styling, static reduced-motion fallbacks, and an AA-on-black rule for any accent used as text. The site was then audited against the new system and aligned to it in the same branch (type and radius tokens in `globals.css`, a coral error colour, larger touch targets, a scrim behind the showcase copy and overlay layering).
+- The project design system was updated to the dark direction rather than overridden. On 2026-10-17 the design and product context was rewritten for Night Shift Glow: a #0B0A0D studio canvas with #15131A blocks, #F4F1EA / #B9B3C2 text, one glow color per featured item, matcha #7CFF6B as the only filled action color, Big Shoulders with Archivo, a documented type ramp and radius scale, realistic PBR rules with no cartoon styling, static reduced-motion fallbacks, and an AA-on-black rule for any accent used as text. The site was then audited against the new system and aligned to it in the same branch (type and radius tokens in `globals.css`, a coral error color, larger touch targets, a scrim behind the showcase copy and overlay layering).
 - Adding an item still goes through `useCart().addItem`; the 3D toss only delays opening the drawer by 0.42 s when the cart layer is running.
 - Pages are full-bleed (2026-10-17): backgrounds and 3D stages span the viewport and content uses a 90rem cap with fluid gutters, replacing the earlier 72rem column. The 1440 px content band is intentional: on wider screens the backgrounds and 3D stages keep going while text stays at a readable measure.
 - Rework before merge (2026-10-18): the category glow bus, the page glow field, the film-grain overlay and the additive glow floors under the products were removed, along with glow shadows on cards and buttons; menu cards are plain and uniform with a neutral price. The cart layer no longer keeps a spinning basket in the header: it runs only on `/menu`, starts when the browser is idle, and draws only during a toss, after which the real cart button bumps. Off-screen scenes (the home visit sign) start when the visitor nears them. Scenes compile their shaders before they show, free their renderer if they fail part-way through starting, and retry a failed HDRI download. The gallery ring shows only the photos without people. Empty cart, order-ready and not-found states get small realistic scenes built from the same cup model.
-
----
+- Follow-up (2026-10-18, PR #24): a scripted click-through on the laptop's integrated GPU passed every page and the full order flow on five desktop, tablet and phone profiles. Phones and the tablet hold 60 fps idle; at 1440 px the home and menu heroes run at 22–31 fps, and the order-summary scene stalls once, for about a second, while its lighting and shaders are prepared. Tuning the frame budget is an open Backlog item.
 
 ---
 
@@ -203,10 +202,11 @@ This manual state is a temporary functional-verification condition, not a revisi
 **Decision:** Page entrances, scroll reveals, overlay enter and exit, and page transitions use GSAP (with ScrollTrigger and SplitText) through three pieces in `src/components/motion/`: a motion director that animates elements by data attribute (`data-split`, `data-rise`, `data-rise-group`, `data-unveil`, `data-magnetic`), a route curtain that covers internal navigations with a title card, and a presence hook that keeps overlays mounted through their exit. This supersedes ADR-013 for the page itself; ADR-014's 3D layer already used GSAP.\
 **Date:** 2026-10-18\
 **Status:** Accepted and implemented in PR #23\
-**Context:** The owner asked for every animation, transition and state to feel lively and cinematic, in step with the 3D layer. CSS transitions could not give overlays an exit, headings a line-by-line reveal, or navigations a transition.\
+**Context:** Every animation, transition and state needed to feel lively and cinematic, in step with the 3D layer. CSS transitions could not give overlays an exit, headings a line-by-line reveal, or navigations a transition.\
 **Consequences:**
 - Pages stay server components: they only carry data attributes, and the director runs once per route before paint. A flag set before first paint holds animated content until the director takes over, with a CSS failsafe that shows everything after 3 s if it never does.
 - Nothing animates under `prefers-reduced-motion` (or in browsers that can't report it): the flag is never set and the curtain never covers. GSAP's ScrollTrigger and SplitText register only once motion runs.
 - Internal link clicks get the curtain; modified clicks, new tabs, downloads, in-page anchors and back/forward keep plain navigation. The curtain waits at most 6 s for a page.
 - The cart drawer, order dialog, mobile navigation and undo toast now animate out as well as in, and are inert while leaving.
 - GSAP core, ScrollTrigger and SplitText are in the shared client bundle. The functional Playwright journeys keep running with reduced motion; the `chromium-3d` project checks the curtain and that no content is left hidden after scrolling.
+- SplitText replaces a heading's content and sets its label, so a heading whose text changes in place is keyed by that text and remounted instead of updated. The checkout heading needed this (PR #24): after a step renamed the page, the old split heading kept the previous title as its label and brought it back on resize.

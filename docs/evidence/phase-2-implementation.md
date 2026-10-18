@@ -5,6 +5,8 @@
 **Branch:** `feat/showcase-website`
 **Status:** Testing / Review; the live publishable-key Menu follow-up, final local quality gates, and both hosted workflows for evidence head `975561b` passed. [Pull Request #2](https://github.com/eendor/Brew-ni-Cat-Connect/pull/2) remains open/unmerged, the RLS-disabled production security blocker remains open, and independent QA/review remains pending
 
+**Merge update (2026-10-18):** Pull Request #2 merged on 2026-09-16 as `ae002f1` after Renier's independent QA ([`../phase-2-qa-report.md`](../phase-2-qa-report.md), Pull Request #6). The status above and the rest of this record are kept as written at handoff, and the RLS-disabled production security blocker in §7.1 remains open. The curated gallery list in §2 is the Phase 2 set; later pull requests changed it, and Pull Request #24 replaced `photo_011.jpg`, a near copy of a menu photo, with `photo_012.jpg`.
+
 ## 1. Implemented Increment
 
 The Phase 2 branch replaces the public development placeholders with the real Brew ni Cat customer showcase:
@@ -76,7 +78,7 @@ These are historical point-in-time observations, not hardcoded runtime fallback 
 
 ### 3.2 Live Menu follow-up — after manual RLS disablement
 
-On 2026-08-24, after the owner/developer manually disabled RLS on the relevant catalog tables, the same publishable configuration used by the website returned:
+On 2026-08-24, after RLS was manually disabled on the relevant catalog tables, the same publishable configuration used by the website returned:
 
 | Public query | Literal result |
 | --- | --- |
@@ -89,7 +91,7 @@ The returned categories were Buldak & Sedaap, Cat Treats, Cat-Tastic Bites, Cat-
 
 The follow-up corrected display handling for a database zero base-price sentinel when real flavor prices exist. Takoyaki now displays `From ₱40` and does not present `₱0` as a customer price. Supabase records remain authoritative; poster prices were not used.
 
-The application and automation made no RLS, policy, schema, menu, product, price, category, variant, availability, inventory, sales, expense, customer, order, or POS data mutation. The owner's manual RLS change is recorded separately and must not be confused with a row-data change.
+The application and automation made no RLS, policy, schema, menu, product, price, category, variant, availability, inventory, sales, expense, customer, order, or POS data mutation. The manual RLS change is recorded separately and must not be confused with a row-data change.
 
 Detailed fields and relationships are in [`../database-design.md`](../database-design.md).
 
@@ -174,7 +176,7 @@ The refreshed follow-up secret review passed. `.env.local` remained ignored and 
 
 ### 7.1 Current RLS and public exposure limitation
 
-RLS is currently manually disabled by the owner/developer on the relevant catalog tables. The application still uses the publishable key only, but public reads now depend on table grants rather than a tested least-privilege RLS policy. HEAD-only/no-body public probes found `inventory` (11), `recipe_mappings` (20), `expenses` (76), `orders` (1,942), `order_items` (4,276), and `app_release` (19) reachable. `customers`, `sales`, and `payments` returned HTTP 404, which cannot distinguish absent/unexposed relations from an authorization boundary.
+RLS is currently manually disabled on the relevant catalog tables. The application still uses the publishable key only, but public reads now depend on table grants rather than a tested least-privilege RLS policy. HEAD-only/no-body public probes found `inventory` (11), `recipe_mappings` (20), `expenses` (76), `orders` (1,942), `order_items` (4,276), and `app_release` (19) reachable. `customers`, `sales`, and `payments` returned HTTP 404, which cannot distinguish absent/unexposed relations from an authorization boundary.
 
 [`public-access-audit.json`](phase-2/public-access-audit.json) records the method and result without credential values or unrelated row bodies. No unrelated row body was retrieved and no write was attempted. This is a production security blocker. Restore RLS and add/test explicit anonymous `SELECT` policies limited to intended public catalog data before deployment; this hardening work is not complete.
 

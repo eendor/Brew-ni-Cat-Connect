@@ -4,6 +4,7 @@
 - **Date:** 2026-08-18
 - **Phase:** Phase 0 — Planning and Specification
 - **Status note:** All requirements are **Planned** and represent initial engineering acceptance targets, not measured results. Targets that depend on hosting/service-plan or owner policy must be reviewed before production release.
+- **Status update (2026-10-18):** The status column is unchanged, because no target has yet been signed off against the full method in its row. Phases 1 to 3 run checks that bear on several targets: the dependency audit (NFR-020), keyboard and focus checks (NFR-030), reduced motion (NFR-032), responsive layout checks (NFR-034), format, lint and type checks (NFR-037) and the production build (NFR-039). The results are in [`test-cases.md`](test-cases.md) and [`testing-strategy.md`](testing-strategy.md).
 
 ## 1. Measurement conventions
 

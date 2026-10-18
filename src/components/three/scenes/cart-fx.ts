@@ -136,7 +136,7 @@ export async function initCartFx(canvas: HTMLCanvasElement, quality: Quality) {
     rim.color.set(detail.glow);
     rim.position.set(c.x, c.y, -120);
 
-    // fly straight away on the item colour; the photo lands on the face
+    // fly straight away on the item color; the photo lands on the face
     // as soon as it has loaded
     const id = ++tossId;
     paintFace(detail.glow);
@@ -146,7 +146,7 @@ export async function initCartFx(canvas: HTMLCanvasElement, quality: Quality) {
           if (id === tossId) paintFace(detail.glow, photo);
         })
         .catch(() => {
-          // keep the plain colour face
+          // keep the plain color face
         });
     }
 

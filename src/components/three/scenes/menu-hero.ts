@@ -79,7 +79,7 @@ export async function initMenuHero(
   const fill = new THREE.DirectionalLight("#dfe6ff", 0.35);
   fill.position.set(-6, 2, 4);
   scene.add(fill);
-  // two coloured strip lights behind the set: the glow is the rim, not neon
+  // two colored strip lights behind the set: the glow is the rim, not neon
   const rimLeft = new THREE.SpotLight(DRINKS_GLOW.a, 75, 20, 0.55, 0.9, 2);
   rimLeft.position.set(-4, 2.6, -3.2);
   const rimRight = new THREE.SpotLight(DRINKS_GLOW.b, 60, 20, 0.55, 0.9, 2);

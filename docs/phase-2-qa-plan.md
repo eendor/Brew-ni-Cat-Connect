@@ -12,6 +12,8 @@
 
 **Status:** Test preparation only — execution pending
 
+**Execution update:** Executed. The results were recorded on 2026-09-16 in [`phase-2-qa-report.md`](phase-2-qa-report.md) (PR #6); the status above is kept as written when the plan was prepared.
+
 ## 1. Scope and Status Rules
 
 This document defines the independent QA cases for the Phase 2 public showcase website.

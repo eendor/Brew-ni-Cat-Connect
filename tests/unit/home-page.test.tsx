@@ -29,7 +29,7 @@ describe("Home page", () => {
   it("TC-P2-002 — presents approved favorite groups and public visit details", () => {
     render(<HomePage />);
 
-    // one menu action on the page: the hero's (the favourites section that
+    // one menu action on the page: the hero's (the favorites section that
     // repeated the hero's items and links was removed)
     expect(screen.getAllByRole("link", { name: /menu/i })).toHaveLength(1);
 

@@ -12,7 +12,7 @@ const StateCanvas = dynamic(() => import("./canvas/state-canvas"), {
 
 type StateSceneProps = Readonly<{
   kind: StateKind;
-  /** The panel colour it sits on: the page canvas or a card. */
+  /** The panel color it sits on: the page canvas or a card. */
   tone: StateTone;
   /** Size and spacing of the box; the scene fills it. */
   className?: string;

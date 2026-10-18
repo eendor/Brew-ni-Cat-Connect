@@ -7,7 +7,7 @@ import { siteConfig } from "@/config/site";
 import { Container } from "../ui/container";
 
 const footerLinkClass =
-  "inline-flex min-h-11 items-center rounded-sm text-sm leading-6 text-[var(--footer-muted)] transition-colors hover:text-[var(--text-strong)]";
+  "inline-flex min-h-11 min-w-11 items-center rounded-sm text-sm leading-6 text-[var(--footer-muted)] transition-colors hover:text-[var(--text-strong)]";
 
 export function SiteFooter() {
   return (

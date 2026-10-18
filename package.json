@@ -47,6 +47,11 @@
     "vite": "8.2.2",
     "vitest": "4.1.11"
   },
+  "overrides": {
+    "@next/eslint-plugin-next": {
+      "fast-glob": "npm:tinyglobby@0.2.17"
+    }
+  },
   "license": "UNLICENSED",
   "description": "Omnichannel online ordering and intelligent customer engagement platform for Brew ni Cat Coffee Shop.",
   "repository": {

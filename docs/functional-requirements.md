@@ -1,9 +1,9 @@
 # Brew ni Cat Connect — Functional Requirements
 
 - **Version:** 0.1 Draft
-- **Date:** 2026-08-18; Phase 2 status update 2026-08-24
-- **Phase:** Living requirements through Phase 2
-- **Status note:** Phase 1 is Tested and merged. Phase 2 requirements are Implemented or In development only where marked; developer automation passed and independent QA remains pending. Later and conditional capabilities remain Planned or Deferred.
+- **Date:** 2026-08-18; Phase 2 status update 2026-08-24; Phase 3 status update 2026-10-18
+- **Phase:** Living requirements through Phase 3
+- **Status note:** Phases 1 and 2 are merged; Phase 2 passed Renier's independent QA (PR #6). Phase 3 browser-side ordering requirements are In development (client-side) where marked, and server-side ordering remains Planned (§15). Later and conditional capabilities remain Planned or Deferred.
 
 ## 1. Requirement conventions
 
@@ -22,7 +22,7 @@
 | FR-003 | The system shall display configured location, opening hours (11 AM to 10 PM, closed every Sunday), contact information, payment/takeout facts, and social links. | Each confirmed field renders accurately and each link uses its configured destination; the site states that the shop is open 11 AM to 10 PM, closed every Sunday, and tells customers to check Facebook/contact the shop for any schedule changes. | Must | 2 | Implemented |
 | FR-004 | The system shall provide consistent navigation to Home, Menu, About, Gallery, and Contact content, plus ordering/account entry points only when those modules are enabled. | Every visible navigation control reaches the named destination using keyboard, pointer, and touch; one Menu destination is shown and disabled modules are not presented as operational. | Must | 2 | Implemented |
 | FR-005 | The system shall present an owner-approved gallery with meaningful alternative text or an explicit decorative-image treatment. | Every rendered image comes from the approved local set, avoids identifying customers, and has meaningful generic alternative text or an appropriate empty alternative. | Should | 2 | Implemented |
-| FR-006 | The system shall present approved customer-favorite groups and shall obtain any displayed current product name or price from the authoritative menu source. | Matcha, Takoyaki, and Fries may be labelled as customer favorites without unsupported analytics; all three cards link to the live Menu, any specific catalog record/price matches Supabase, and a truthful state appears if public rows are unavailable. | Should | 2–4 | Implemented |
+| FR-006 | The system shall present approved customer-favorite groups and shall obtain any displayed current product name or price from the authoritative menu source. | Matcha, Takoyaki, and Fries may be labeled as customer favorites without unsupported analytics; all three cards link to the live Menu, any specific catalog record/price matches Supabase, and a truthful state appears if public rows are unavailable. | Should | 2–4 | Implemented |
 | FR-007 | The system shall display promotions only when an approved promotion is active and its conditions are available to the customer. | Before start and after end, the promotion is absent or explicitly inactive; while active, configured terms and validity period render. Promotion rules are **TODO: Confirm with Brew ni Cat owner.** | Should | 2–4 | Planned |
 | FR-008 | The system shall provide clear loading, empty, and recoverable error states for public dynamic content. | Simulated success, empty response, configuration/retrieval failure, and retry each yield a distinct non-blocking, accessible UI state. | Must | 2 | Implemented |
 | FR-009 | The system shall expose page titles, headings, and share/search metadata derived from approved business content. | Each public route has one descriptive page title and primary heading; metadata accurately identifies the Kabacan business and does not claim online ordering is live. | Should | 2 | Implemented |
@@ -37,7 +37,7 @@
 | FR-013 | The system shall enforce required option groups, allowed choice counts, and mutually exclusive choices when configuring a product. | Invalid configurations cannot be added to the cart; valid minimum/maximum combinations can be added and retain selected choices. Option rules are **TODO: Confirm with Brew ni Cat owner.** | Must | 3–4 | Planned |
 | FR-014 | The system shall calculate the displayed configured-item price from the authoritative base price, option adjustments, add-ons, and quantity. | Unit and line totals match the server-side calculation for zero, one, and multiple adjustments; client-supplied prices are not trusted. | Must | 3–4 | Planned |
 | FR-015 | The system shall distinguish available, temporarily unavailable, and unknown-availability products without enabling purchase in Phase 2. | The public browse UI presents each returned availability state with text rather than color alone; Phase 3 ordering controls remain absent. | Must | 2–4 | Implemented |
-| FR-016 | The system shall allow customers to navigate the public menu by category while retaining access to the complete returned catalog. | Selecting a category navigation link reaches its labelled section without hiding other returned categories or requiring a page reload. | Should | 2–3 | Implemented |
+| FR-016 | The system shall allow customers to navigate the public menu by category while retaining access to the complete returned catalog. | Selecting a category navigation link reaches its labeled section without hiding other returned categories or requiring a page reload. | Should | 2–3 | Implemented |
 
 ## 4. Ordering
 
@@ -169,3 +169,11 @@ The Phase 2 public routes and typed catalog client exist. The final formatter, a
 FR-006, FR-010, FR-011, and FR-015 are **Implemented** because the publishable runtime now returns and renders the current 6-category/16-item catalog while retaining deterministic loading/empty/error coverage and omitting poster-derived or privileged data. This functional status does not close the security requirement: RLS is manually disabled, unrelated business tables are publicly reachable, and RLS restoration plus explicit catalog-only policies remain a production blocker.
 
 FR-012–FR-014 remain Planned for Phase 3 because browse cards are not a purchase configuration/detail workflow, and no cart or price calculation is implemented. FR-007 remains Planned until an approved promotion exists.
+
+## 15. Phase 3 Implementation Status Note
+
+- **Client-side ordering (In development):** FR-017 to FR-020 and FR-022. PR #7 prices cart lines from the current catalog in integer centavos, Van's PR #14 adds the cart drawer, cart page and checkout and keeps the cart in `localStorage`, and Shan's PR #20 moves checkout field validation into a tested module. Checkout ends with an order summary that the customer copies into Messenger or reads out on the phone. These requirements are not Implemented or Tested, because no server-side order exists yet.
+- **Server-side ordering (Planned):** FR-021, FR-024 and FR-025 need a server-side order backend for price revalidation, idempotent creation and an order reference. FR-023 and FR-026 to FR-028 also remain Planned.
+- **Product detail and configuration (Planned):** the menu order dialog (PRs #14 and #18) lets a customer pick an option or size, a flavor and a quantity, and it requires an option before adding ("Please choose an option or size."). FR-012 to FR-014 still remain Planned: they need published detail fields, owner-confirmed option rules and a server-side price check, and no test case cites them yet.
+- **Superseded wording:** in §14, "no cart or price calculation is implemented" is superseded by PRs #7 and #14, and "Renier's QA and peer review remain pending" is superseded by Renier's Phase 2 QA report in PR #6.
+- **Presentation only:** the 3D and motion layer (PR #23) and its follow-ups (PR #24) change no requirement status. FR-029 and FR-030 remain Deferred: Cash or GCash at the counter and an external rider pickup are choices the customer states in the summary, not online payment or delivery.
