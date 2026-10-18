@@ -4,6 +4,21 @@ import { VisitStage } from "@/components/three/visit-stage";
 import { visitFacts } from "@/components/three/visit-facts";
 import { Container } from "@/components/ui/container";
 import { ExternalLink } from "@/components/ui/external-link";
+import {
+  ClockIcon,
+  FacebookIcon,
+  HouseIcon,
+  ImagesIcon,
+  MailIcon,
+  MapPinIcon,
+  MessageCircleIcon,
+  NavigationIcon,
+  PackageIcon,
+  PhoneIcon,
+  StoreIcon,
+  TikTokIcon,
+  WalletIcon,
+} from "@/components/ui/icons";
 import { PageIntro } from "@/components/ui/page-intro";
 import { Reveal } from "@/components/ui/reveal";
 import { RiderList } from "@/components/ui/rider-list";
@@ -20,13 +35,19 @@ const contactCards = [
     label: "Call or text",
     value: siteConfig.contact.phone,
     href: siteConfig.contact.phoneHref,
+    icon: <PhoneIcon className="size-4 shrink-0" />,
   },
   {
     label: "Email",
     value: siteConfig.contact.email,
     href: siteConfig.contact.emailHref,
+    icon: <MailIcon className="size-4 shrink-0" />,
   },
 ] as const;
+
+// Amber marks beside facts; icons inside links and buttons keep the
+// link's own color instead.
+const factIconClass = "shrink-0 text-[var(--accent-strong)]";
 
 export default function ContactPage() {
   return (
@@ -60,29 +81,35 @@ export default function ContactPage() {
               Find us on Segundo St
             </h2>
             <address
-              className="mt-6 text-lg leading-8 text-[var(--text-muted)] not-italic"
+              className="mt-6 flex gap-3 text-lg leading-8 text-[var(--text-muted)] not-italic"
               data-rise=""
             >
-              <strong className="text-[var(--text-strong)]">
-                {siteConfig.name}
-              </strong>
-              <br />
-              {siteConfig.address.street}
-              <br />
-              {siteConfig.address.locality}
-              <br />
-              {siteConfig.address.country}
-              <br />
-              <strong className="mt-2 inline-block text-[var(--accent-solid)]">
-                {siteConfig.address.landmark}
-              </strong>
+              <MapPinIcon className={`mt-1.5 size-5 ${factIconClass}`} />
+              <span>
+                <strong className="text-[var(--text-strong)]">
+                  {siteConfig.name}
+                </strong>
+                <br />
+                {siteConfig.address.street}
+                <br />
+                {siteConfig.address.locality}
+                <br />
+                {siteConfig.address.country}
+                <br />
+                <strong className="mt-2 inline-block text-[var(--accent-solid)]">
+                  {siteConfig.address.landmark}
+                </strong>
+              </span>
             </address>
             <div data-rise="">
-              <p className="mt-8 text-lg font-semibold text-[var(--text-strong)]">
-                Open {visitFacts.hours}, {visitFacts.days}. Closed every{" "}
-                {visitFacts.closedDay}.
+              <p className="mt-8 flex gap-3 text-lg font-semibold text-[var(--text-strong)]">
+                <ClockIcon className={`mt-1 size-5 ${factIconClass}`} />
+                <span>
+                  Open {visitFacts.hours}, {visitFacts.days}. Closed every{" "}
+                  {visitFacts.closedDay}.
+                </span>
               </p>
-              <p className="mt-2 text-sm leading-6 text-[var(--text-muted)]">
+              <p className="mt-2 pl-8 text-sm leading-6 text-[var(--text-muted)]">
                 Schedule changes are posted on{" "}
                 <ExternalLink
                   href={siteConfig.social.facebook}
@@ -99,6 +126,7 @@ export default function ContactPage() {
                 className="button-primary"
                 data-magnetic=""
               >
+                <NavigationIcon className="size-4.5 shrink-0" />
                 Get directions
               </ExternalLink>
             </div>
@@ -129,7 +157,10 @@ export default function ContactPage() {
                   href={contact.href}
                   className="surface-lift block h-full rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-6 shadow-[var(--shadow-subtle)]"
                 >
-                  <span className="eyebrow">{contact.label}</span>
+                  <span className="eyebrow flex items-center gap-2">
+                    {contact.icon}
+                    {contact.label}
+                  </span>
                   <span className="mt-3 block wrap-anywhere text-lg font-extrabold text-[var(--accent-solid)] sm:text-xl">
                     {contact.value}
                   </span>
@@ -150,18 +181,21 @@ export default function ContactPage() {
                 href={siteConfig.social.facebook}
                 className="button-secondary"
               >
+                <FacebookIcon className="size-4.5 shrink-0" />
                 Facebook page
               </ExternalLink>
               <ExternalLink
                 href={siteConfig.social.facebookPhotos}
                 className="button-secondary"
               >
+                <ImagesIcon className="size-4.5 shrink-0" />
                 Facebook photos
               </ExternalLink>
               <ExternalLink
                 href={siteConfig.social.tiktok}
                 className="button-secondary"
               >
+                <TikTokIcon className="size-4.5 shrink-0" />
                 TikTok
               </ExternalLink>
             </div>
@@ -186,7 +220,8 @@ export default function ContactPage() {
               </h2>
               <dl className="mt-6 grid gap-4">
                 <div>
-                  <dt className="text-sm font-bold text-[var(--text-subtle)]">
+                  <dt className="flex items-center gap-2 text-sm font-bold text-[var(--text-subtle)]">
+                    <WalletIcon className={`size-4 ${factIconClass}`} />
                     Payment methods
                   </dt>
                   <dd className="mt-1 text-lg font-extrabold text-[var(--text-strong)]">
@@ -194,7 +229,8 @@ export default function ContactPage() {
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-sm font-bold text-[var(--text-subtle)]">
+                  <dt className="flex items-center gap-2 text-sm font-bold text-[var(--text-subtle)]">
+                    <PackageIcon className={`size-4 ${factIconClass}`} />
                     Takeout packaging
                   </dt>
                   <dd className="mt-1 text-lg font-extrabold text-[var(--text-strong)]">
@@ -217,6 +253,9 @@ export default function ContactPage() {
               </h2>
               <ol className="mt-5 grid gap-3 text-[var(--text-muted)] @xl:grid-cols-3">
                 <li className="rounded-xl bg-[var(--surface-warm)] p-4">
+                  <MessageCircleIcon
+                    className={`mb-3 size-6 ${factIconClass}`}
+                  />
                   <strong className="block text-[var(--text-strong)]">
                     1. Message a rider
                   </strong>
@@ -224,12 +263,14 @@ export default function ContactPage() {
                   prepare the order summary for you.
                 </li>
                 <li className="rounded-xl bg-[var(--surface-warm)] p-4">
+                  <StoreIcon className={`mb-3 size-6 ${factIconClass}`} />
                   <strong className="block text-[var(--text-strong)]">
                     2. The rider orders
                   </strong>
                   The rider orders it at Brew ni Cat and picks it up.
                 </li>
                 <li className="rounded-xl bg-[var(--surface-warm)] p-4">
+                  <HouseIcon className={`mb-3 size-6 ${factIconClass}`} />
                   <strong className="block text-[var(--text-strong)]">
                     3. Delivered to you
                   </strong>

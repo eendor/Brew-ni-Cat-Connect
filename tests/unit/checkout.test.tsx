@@ -437,6 +437,45 @@ describe("Checkout Flow & Step Transitions", () => {
     ).toBeNull();
   });
 
+  it("TC-P4-035 — the fulfillment and contact icons are decorative and keep the names", async () => {
+    const user = userEvent.setup();
+    renderCheckout(testCartState);
+
+    // the store and motorbike sit above each option's title
+    const options = [
+      {
+        radio: screen.getByRole("radio", { name: /Pickup at Shop/i }),
+        title: /^Pickup at Shop/,
+      },
+      {
+        radio: screen.getByRole("radio", { name: /Rider Delivery/i }),
+        title: /^Rider Delivery/,
+      },
+    ];
+    for (const { radio, title } of options) {
+      expect(radio).toHaveAccessibleName(title);
+      const icons = radio.closest("label")?.querySelectorAll("svg") ?? [];
+      expect(icons).toHaveLength(1);
+      expect(icons[0]).toHaveAttribute("aria-hidden", "true");
+      expect(icons[0]).toHaveAttribute("focusable", "false");
+    }
+
+    await reachSendStep(user);
+
+    const facebook = screen.getByRole("link", { name: "Message on Facebook" });
+    const call = screen.getByRole("link", {
+      name: `Call or Text ${siteConfig.contact.phone}`,
+    });
+    expect(facebook).toHaveAttribute("href", siteConfig.social.facebook);
+    expect(call).toHaveAttribute("href", siteConfig.contact.phoneHref);
+    for (const link of [facebook, call]) {
+      const icons = link.querySelectorAll("svg");
+      expect(icons).toHaveLength(1);
+      expect(icons[0]).toHaveAttribute("aria-hidden", "true");
+      expect(icons[0]).toHaveAttribute("focusable", "false");
+    }
+  });
+
   it("TC-P4-016 — a successful copy confirms it and clears the cart", async () => {
     const user = userEvent.setup();
     const writeText = vi.fn().mockResolvedValue(undefined);

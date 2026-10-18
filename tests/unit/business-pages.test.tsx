@@ -77,6 +77,40 @@ describe("Contact and location page", () => {
       siteConfig.externalRiders.length,
     );
   });
+
+  it("TC-P4-031 — keeps the contact page's link and label names, with decorative icons", () => {
+    const { container } = render(<ContactPage />);
+
+    expect(
+      screen.getByRole("link", { name: "Get directions" }),
+    ).toHaveAttribute("href", siteConfig.address.mapUrl);
+    expect(screen.getByRole("link", { name: "Facebook" })).toHaveAttribute(
+      "href",
+      siteConfig.social.facebook,
+    );
+    expect(screen.getByRole("link", { name: "Facebook page" })).toHaveAttribute(
+      "href",
+      siteConfig.social.facebook,
+    );
+    expect(
+      screen.getByRole("link", { name: "Facebook photos" }),
+    ).toHaveAttribute("href", siteConfig.social.facebookPhotos);
+    expect(screen.getByRole("link", { name: "TikTok" })).toHaveAttribute(
+      "href",
+      siteConfig.social.tiktok,
+    );
+    expect(screen.getByText("Payment methods")).toBeInTheDocument();
+    expect(screen.getByText("Takeout packaging")).toBeInTheDocument();
+
+    // 13 page icons plus a Facebook mark on each rider card; the rider
+    // cards' arrows are older and hidden the same way
+    expect(container.querySelectorAll('svg[focusable="false"]')).toHaveLength(
+      13 + siteConfig.externalRiders.length,
+    );
+    container.querySelectorAll("svg").forEach((icon) => {
+      expect(icon).toHaveAttribute("aria-hidden", "true");
+    });
+  });
 });
 
 describe("Gallery page", () => {

@@ -2,12 +2,24 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { ExternalLink } from "@/components/ui/external-link";
+import {
+  ClockIcon,
+  FacebookIcon,
+  MailIcon,
+  MapPinIcon,
+  PhoneIcon,
+  TikTokIcon,
+} from "@/components/ui/icons";
 import { siteConfig } from "@/config/site";
 
 import { Container } from "../ui/container";
 
 const footerLinkClass =
-  "inline-flex min-h-11 min-w-11 items-center rounded-sm text-sm leading-6 text-[var(--footer-muted)] transition-colors hover:text-[var(--text-strong)]";
+  "inline-flex min-h-11 min-w-11 items-center gap-2 rounded-sm text-sm leading-6 text-[var(--footer-muted)] transition-colors hover:text-[var(--text-strong)]";
+
+// 1rem icons. Beside text that wraps, mt-1 centers one on the first
+// 1.5rem line.
+const footerIconClass = "size-4 shrink-0";
 
 export function SiteFooter() {
   return (
@@ -56,23 +68,27 @@ export function SiteFooter() {
             Find us
           </h2>
           <address className="mt-4 grid gap-1 text-sm leading-6 text-[var(--footer-muted)] not-italic">
-            <p>
-              {siteConfig.address.street}
-              <br />
-              {siteConfig.address.locality}, {siteConfig.address.country}
-              <br />
-              <span className="text-[var(--text-strong)]">
-                {siteConfig.address.landmark}
+            <p className="flex gap-2">
+              <MapPinIcon className={`mt-1 ${footerIconClass}`} />
+              <span>
+                {siteConfig.address.street}
+                <br />
+                {siteConfig.address.locality}, {siteConfig.address.country}
+                <br />
+                <span className="text-[var(--text-strong)]">
+                  {siteConfig.address.landmark}
+                </span>
               </span>
             </p>
             <a href={siteConfig.contact.phoneHref} className={footerLinkClass}>
+              <PhoneIcon className={footerIconClass} />
               {siteConfig.contact.phone}
             </a>
-            <a
-              href={siteConfig.contact.emailHref}
-              className={`${footerLinkClass} break-all`}
-            >
-              {siteConfig.contact.email}
+            <a href={siteConfig.contact.emailHref} className={footerLinkClass}>
+              <MailIcon className={footerIconClass} />
+              <span className="min-w-0 break-all">
+                {siteConfig.contact.email}
+              </span>
             </a>
           </address>
         </section>
@@ -87,6 +103,7 @@ export function SiteFooter() {
                 href={siteConfig.social.facebook}
                 className={footerLinkClass}
               >
+                <FacebookIcon className={footerIconClass} />
                 Facebook
               </ExternalLink>
             </li>
@@ -95,12 +112,14 @@ export function SiteFooter() {
                 href={siteConfig.social.tiktok}
                 className={footerLinkClass}
               >
+                <TikTokIcon className={footerIconClass} />
                 TikTok
               </ExternalLink>
             </li>
           </ul>
-          <p className="mt-3 text-sm leading-6 text-[var(--footer-muted)]">
-            {siteConfig.operations.hoursNotice}
+          <p className="mt-3 flex gap-2 text-sm leading-6 text-[var(--footer-muted)]">
+            <ClockIcon className={`mt-1 ${footerIconClass}`} />
+            <span>{siteConfig.operations.hoursNotice}</span>
           </p>
         </section>
       </Container>

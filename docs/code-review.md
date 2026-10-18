@@ -297,3 +297,17 @@ Teammates' commits, and Renier's PR #6 title (`QA: Phase 2 independent QA result
 
 **Known limitations:** The GCash QR is still pending from the owner. The rider list can't show whether a rider is available. The click-through on a physical phone (MAN-P4-007) is still to do and now includes the rider flow.\
 **Status:** Self-reviewed by the lead developer. Locally, Vitest passed 130/130 in 18 files and Playwright 25/25 (16 + 9), and the build, the audit and the docs validator passed. Squash-merged on 2026-10-18 after CI passed.
+
+## 2026-10-18 — Social and contact icons (PR #26)
+
+**Module:** Inline icon set, footer, contact page, home visit facts, mobile navigation, rider list, checkout fulfillment and contact buttons, unit tests and the Vitest setup**Author:** Lead developer**Reviewer:** Self-reviewed by the lead developer**Date:** 2026-10-18
+
+**Findings:**
+
+1. Facebook and TikTok marks (Simple Icons 16.33.0, CC0) and the interface shapes (Lucide 1.51.0, ISC; clock and navigation also carry Feather's MIT notice) are copied into `src/components/ui/icons.tsx`. No npm icon package was added. Every icon is decorative (`aria-hidden`, `focusable="false"`) and uses `currentColor`.
+2. The footer, contact page, home visit strip, mobile menu, rider cards and checkout now show the icons beside the same link and label text. Icon-only social buttons in the mobile menu are named with `aria-label`. Accessible names of existing links are unchanged (TC-P4-030 to TC-P4-035).
+3. TC-P3-052 could lose its first scroll event when the scroll spy's effect ran after the test resumed on a cold or busy machine. The test now waits for `window.addEventListener("scroll", …, { passive: true })` before scrolling.
+4. Unit tests that load checkout without a menu loader were hitting the live catalog when `NEXT_PUBLIC_SUPABASE_*` was exported in the shell, which dropped the test cart's items. `tests/setup.ts` now deletes those two public settings so unit tests stay offline, matching CI.
+5. No runtime dependency, data access or credential handling changed.
+
+**Known limitations:** MAN-P4-009 (narrow-width icon layout) is left for a quick lead spot-check after merge. The GCash QR and the physical-phone click-through (MAN-P4-007) remain open.**Status:** Self-reviewed by the lead developer. Locally, Vitest passed 136/136 in 19 files and Playwright 25/25 (16 + 9), and the build, the audit and the docs validator passed. Squash-merged on 2026-10-18 after CI passed.

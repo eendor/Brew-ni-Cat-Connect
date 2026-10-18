@@ -1,6 +1,7 @@
 import Image from "next/image";
 
 import { ExternalLink } from "@/components/ui/external-link";
+import { FacebookIcon } from "@/components/ui/icons";
 import { siteConfig } from "@/config/site";
 
 type RiderListProps = Readonly<{
@@ -38,6 +39,7 @@ export function RiderList({ className = "" }: RiderListProps) {
                   {rider.name}
                 </span>{" "}
                 <span className="mt-1 inline-flex items-center gap-1 whitespace-nowrap text-sm font-bold text-[var(--accent-strong)]">
+                  <FacebookIcon className="size-3.5 shrink-0" />
                   Facebook page
                   <svg
                     viewBox="0 0 16 16"

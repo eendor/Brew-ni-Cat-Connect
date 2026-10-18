@@ -1,4 +1,4 @@
-import { act, render, screen, within } from "@testing-library/react";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, vi } from "vitest";
 
@@ -126,10 +126,19 @@ describe("MenuCatalog", () => {
       return 0;
     });
     vi.stubGlobal("cancelAnimationFrame", () => {});
+    const addListener = vi.spyOn(window, "addEventListener");
     render(<MenuCatalog loadMenu={() => Promise.resolve(populatedCatalog)} />);
     const nav = await screen.findByRole("navigation", {
       name: "Menu categories",
     });
+    // The scroll spy starts listening in an effect that runs just after the
+    // menu appears. On a busy machine that can be a moment later, so wait
+    // for it before scrolling.
+    await waitFor(() =>
+      expect(addListener).toHaveBeenCalledWith("scroll", expect.any(Function), {
+        passive: true,
+      }),
+    );
     const tabs = within(nav).getAllByRole("link");
     expect(tabs[0]).toHaveAttribute("aria-current", "true");
 

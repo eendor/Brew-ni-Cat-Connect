@@ -5,9 +5,23 @@ import { createPortal } from "react-dom";
 
 import { EASE, gsap } from "@/components/motion/gsap";
 import { usePresence } from "@/components/motion/use-presence";
-import type { NavigationItem } from "@/config/site";
+import { ExternalLink } from "@/components/ui/external-link";
+import {
+  ClockIcon,
+  FacebookIcon,
+  MapPinIcon,
+  TikTokIcon,
+} from "@/components/ui/icons";
+import { siteConfig, type NavigationItem } from "@/config/site";
 
 import { NavLink } from "./nav-link";
+
+// 1rem icons; mt-0.5 centers one on the first 1.25rem line of small text.
+const noteIconClass = "mt-0.5 size-4 shrink-0 text-[var(--accent-strong)]";
+
+// 48px round icon links, named by their aria-label.
+const socialLinkClass =
+  "inline-flex size-12 items-center justify-center rounded-full border border-[var(--border-strong)] bg-[var(--surface-card)] text-[var(--text-strong)] transition-colors hover:border-[var(--accent-solid)] hover:text-[var(--accent-solid)]";
 
 type MobileNavigationProps = Readonly<{
   items: readonly NavigationItem[];
@@ -166,10 +180,30 @@ export function MobileNavigation({ items }: MobileNavigationProps) {
           className="mx-auto mt-4 flex w-full max-w-[var(--shell-width)] flex-col gap-1 border-t border-[var(--border-soft)] px-4 pt-4 text-sm text-[var(--text-muted)]"
           data-nav-note=""
         >
-          <span className="font-bold text-[var(--text-strong)]">
+          <span className="flex items-start gap-2 font-bold text-[var(--text-strong)]">
+            <MapPinIcon className={noteIconClass} />
             Segundo St, Poblacion, Kabacan
           </span>
-          <span>Open 11 AM to 10 PM. Closed every Sunday.</span>
+          <span className="flex items-start gap-2">
+            <ClockIcon className={noteIconClass} />
+            Open 11 AM to 10 PM. Closed every Sunday.
+          </span>
+          <div className="mt-3 flex gap-3">
+            <ExternalLink
+              href={siteConfig.social.facebook}
+              aria-label="Brew ni Cat on Facebook"
+              className={socialLinkClass}
+            >
+              <FacebookIcon className="size-5" />
+            </ExternalLink>
+            <ExternalLink
+              href={siteConfig.social.tiktok}
+              aria-label="Brew ni Cat on TikTok"
+              className={socialLinkClass}
+            >
+              <TikTokIcon className="size-5" />
+            </ExternalLink>
+          </div>
         </div>
       </nav>
     </div>

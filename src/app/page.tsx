@@ -6,6 +6,13 @@ import { visitFacts } from "@/components/three/visit-facts";
 import { VisitStage } from "@/components/three/visit-stage";
 import { ExternalLink } from "@/components/ui/external-link";
 import { Container } from "@/components/ui/container";
+import {
+  ClockIcon,
+  MapPinIcon,
+  NavigationIcon,
+  StoreIcon,
+  WalletIcon,
+} from "@/components/ui/icons";
 import { Reveal } from "@/components/ui/reveal";
 import { homeGalleryImages } from "@/config/gallery";
 import { siteConfig } from "@/config/site";
@@ -23,19 +30,28 @@ export default function HomePage() {
           <Reveal>
             <dl className="grid overflow-hidden rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] shadow-[var(--shadow-card)] sm:grid-cols-2 lg:grid-cols-4">
               <div className="p-5 sm:border-r sm:border-[var(--border-soft)] sm:p-6">
-                <dt className="eyebrow">Find us</dt>
+                <dt className="eyebrow flex items-center gap-2">
+                  <MapPinIcon className="size-4 shrink-0" />
+                  Find us
+                </dt>
                 <dd className="mt-2 font-bold text-[var(--text-strong)]">
                   Segundo St, Poblacion, Kabacan
                 </dd>
               </div>
               <div className="border-t border-[var(--border-soft)] p-5 sm:border-t-0 lg:border-r lg:border-[var(--border-soft)] sm:p-6">
-                <dt className="eyebrow">Landmark</dt>
+                <dt className="eyebrow flex items-center gap-2">
+                  <StoreIcon className="size-4 shrink-0" />
+                  Landmark
+                </dt>
                 <dd className="mt-2 font-bold text-[var(--text-strong)]">
                   {siteConfig.address.landmark}
                 </dd>
               </div>
               <div className="border-t border-[var(--border-soft)] p-5 sm:border-r sm:border-[var(--border-soft)] lg:border-t-0 sm:p-6">
-                <dt className="eyebrow">Hours</dt>
+                <dt className="eyebrow flex items-center gap-2">
+                  <ClockIcon className="size-4 shrink-0" />
+                  Hours
+                </dt>
                 <dd className="mt-2 font-bold text-[var(--text-strong)]">
                   <span>Mon–Sat</span>
                   <span className="ml-1 text-sm font-semibold text-[var(--accent-strong)]">
@@ -47,7 +63,10 @@ export default function HomePage() {
                 </dd>
               </div>
               <div className="border-t border-[var(--border-soft)] p-5 sm:border-t-0 sm:p-6">
-                <dt className="eyebrow">Payment</dt>
+                <dt className="eyebrow flex items-center gap-2">
+                  <WalletIcon className="size-4 shrink-0" />
+                  Payment
+                </dt>
                 <dd className="mt-2 font-bold text-[var(--text-strong)]">
                   Cash and GCash
                 </dd>
@@ -214,10 +233,12 @@ export default function HomePage() {
               Find us in Kabacan
             </h2>
             <address
-              className="mt-4 text-base leading-7 text-[var(--text-muted)] not-italic sm:text-lg"
+              className="mt-4 flex gap-2 text-base leading-7 text-[var(--text-muted)] not-italic sm:text-lg"
               data-rise=""
             >
-              {`${siteConfig.address.street}, ${siteConfig.address.locality} · ${siteConfig.address.landmark}`}
+              {/* mt-1.5 centers the 1rem pin on the first 1.75rem line. */}
+              <MapPinIcon className="mt-1.5 size-4 shrink-0 text-[var(--accent-strong)]" />
+              <span>{`${siteConfig.address.street}, ${siteConfig.address.locality} · ${siteConfig.address.landmark}`}</span>
             </address>
           </div>
           <div data-rise="">
@@ -226,6 +247,7 @@ export default function HomePage() {
               className="button-primary"
               data-magnetic=""
             >
+              <NavigationIcon className="size-4.5 shrink-0" />
               Open in Maps
             </ExternalLink>
           </div>

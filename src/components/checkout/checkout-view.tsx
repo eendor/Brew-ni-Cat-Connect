@@ -12,6 +12,12 @@ import {
 
 import { Container } from "@/components/ui/container";
 import { ExternalLink } from "@/components/ui/external-link";
+import {
+  FacebookIcon,
+  MotorbikeIcon,
+  PhoneIcon,
+  StoreIcon,
+} from "@/components/ui/icons";
 import { PageIntro } from "@/components/ui/page-intro";
 import { RiderList } from "@/components/ui/rider-list";
 import { StateScene } from "@/components/three/state-scene";
@@ -548,6 +554,7 @@ export function CheckoutView({
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div>
+                          <StoreIcon className="mb-3 size-6 shrink-0 text-[var(--accent-strong)]" />
                           <span className="font-extrabold text-[var(--text-strong)] text-base block">
                             Pickup at Shop
                           </span>
@@ -583,6 +590,7 @@ export function CheckoutView({
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div>
+                          <MotorbikeIcon className="mb-3 size-6 shrink-0 text-[var(--accent-strong)]" />
                           <span className="font-extrabold text-[var(--text-strong)] text-base block">
                             Rider Delivery
                           </span>
@@ -1289,12 +1297,14 @@ export function CheckoutView({
                         href={siteConfig.social.facebook}
                         className="button-primary flex-1 text-center"
                       >
+                        <FacebookIcon className="size-4.5 shrink-0" />
                         Message on Facebook
                       </ExternalLink>
                       <a
                         href={siteConfig.contact.phoneHref}
                         className="button-secondary flex-1 text-center"
                       >
+                        <PhoneIcon className="size-4.5 shrink-0" />
                         Call or Text {siteConfig.contact.phone}
                       </a>
                     </div>

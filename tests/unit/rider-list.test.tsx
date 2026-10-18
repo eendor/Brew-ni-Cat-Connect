@@ -33,4 +33,27 @@ describe("Rider list", () => {
       );
     });
   });
+
+  it("TC-P4-034 — the Facebook mark and the arrow on each rider card are decorative", () => {
+    render(<RiderList />);
+
+    const links = within(
+      screen.getByRole("list", { name: "Rider delivery services" }),
+    ).getAllByRole("link");
+    expect(links).toHaveLength(siteConfig.externalRiders.length);
+
+    links.forEach((link, index) => {
+      expect(link).toHaveAccessibleName(
+        `${siteConfig.externalRiders[index]?.name} Facebook page`,
+      );
+      const icons = link.querySelectorAll("svg");
+      expect(icons).toHaveLength(2);
+      icons.forEach((icon) => {
+        expect(icon).toHaveAttribute("aria-hidden", "true");
+      });
+      // the mark comes first and fills with the label's amber
+      expect(icons[0]).toHaveAttribute("fill", "currentColor");
+      expect(icons[0]).toHaveAttribute("focusable", "false");
+    });
+  });
 });
