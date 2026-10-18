@@ -39,10 +39,25 @@ export const siteConfig = {
     tiktok:
       "https://www.tiktok.com/@potelco/video/7649246393923570965?_r=1&_t=ZS-977tdEv9JjR",
   },
+  /** Local delivery services in Kabacan. A rider orders at the shop for the
+   *  customer and delivers it. Names are the services' public Facebook page
+   *  titles and logos their public profile photos (checked 2026-10-18). */
   externalRiders: [
-    "https://www.facebook.com/papa.s.delivery.2025",
-    "https://www.facebook.com/profile.php?id=100072119632881",
-    "https://www.facebook.com/profile.php?id=100065168154381",
+    {
+      name: "Papa's Delivery",
+      href: "https://www.facebook.com/papa.s.delivery.2025",
+      logo: "/images/riders/papas-delivery.jpg",
+    },
+    {
+      name: "Momshie's Pamalengke and Delivery Kabacan",
+      href: "https://www.facebook.com/profile.php?id=100072119632881",
+      logo: "/images/riders/momshies-pamalengke-delivery.jpg",
+    },
+    {
+      name: "M&S Delivery Express Kabacan",
+      href: "https://www.facebook.com/profile.php?id=100065168154381",
+      logo: "/images/riders/ms-delivery-express.jpg",
+    },
   ],
   navigation: [
     { label: "Home", href: "/" },

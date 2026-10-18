@@ -3,6 +3,7 @@ import { render, screen, within } from "@testing-library/react";
 import AboutPage from "@/app/about/page";
 import ContactPage from "@/app/contact/page";
 import GalleryPage from "@/app/gallery/page";
+import { siteConfig } from "@/config/site";
 
 describe("About page", () => {
   it("TC-P2-015 — renders the restrained, confirmed Brew ni Cat business facts", () => {
@@ -50,22 +51,31 @@ describe("Contact and location page", () => {
     expect(screen.getAllByText(/11 AM – 10 PM/).length).toBeGreaterThan(0);
   });
 
-  it("TC-P2-017 — explains the independent rider workflow without promising fees or ETA", () => {
+  it("TC-P2-017 — explains rider delivery and lists the local riders without promising fees or ETA", () => {
     const { container } = render(<ContactPage />);
 
-    expect(screen.getByText("1. Arrange your order")).toBeInTheDocument();
-    expect(screen.getByText("2. Book a rider")).toBeInTheDocument();
-    expect(screen.getByText("3. Rider pickup")).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", {
+        level: 2,
+        name: "Let a local rider order it for you.",
+      }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("1. Message a rider")).toBeInTheDocument();
+    expect(screen.getByText("2. The rider orders")).toBeInTheDocument();
+    expect(screen.getByText("3. Delivered to you")).toBeInTheDocument();
     expect(container).toHaveTextContent(
-      "Rider availability, delivery fees, arrival time, and rider payment are separate from Brew ni Cat.",
+      "Delivery fee, timing and payment are agreed with your rider. Brew ni Cat doesn't book riders or charge rider fees",
+    );
+    expect(container.textContent).not.toMatch(
+      /minutes|free delivery|guaranteed|delivery fee: ₱/i,
     );
 
-    const riderLinks = screen.getByLabelText("External rider pages");
-    expect(within(riderLinks).getAllByRole("link")).toHaveLength(3);
-    for (const link of within(riderLinks).getAllByRole("link")) {
-      expect(link).toHaveAttribute("target", "_blank");
-      expect(link).toHaveAttribute("rel", "noopener noreferrer");
-    }
+    const riderList = screen.getByRole("list", {
+      name: "Rider delivery services",
+    });
+    expect(within(riderList).getAllByRole("link")).toHaveLength(
+      siteConfig.externalRiders.length,
+    );
   });
 });
 

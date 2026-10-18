@@ -51,5 +51,29 @@ describe("Checkout Validation Utilities", () => {
         "Please enter a valid Philippine mobile number (e.g. 0912 345 6789 or +63 912 345 6789).",
       );
     });
+
+    it("TC-P4-027 — asks for a delivery address only with rider delivery", () => {
+      const details = { name: "Shan Besto", phone: "0912 345 6789" };
+
+      // pickup: no address needed, even when the field is blank
+      expect(validateDetails({ ...details, address: "" }).isValid).toBe(true);
+
+      for (const address of [undefined, "", "   "]) {
+        const result = validateDetails(
+          { ...details, address },
+          { requireAddress: true },
+        );
+        expect(result.isValid).toBe(false);
+        expect(result.errors).toEqual({
+          address: "Please enter the delivery address for your rider.",
+        });
+      }
+
+      const delivered = validateDetails(
+        { ...details, address: "Purok 2, Poblacion, Kabacan" },
+        { requireAddress: true },
+      );
+      expect(delivered).toEqual({ isValid: true, errors: {} });
+    });
   });
 });

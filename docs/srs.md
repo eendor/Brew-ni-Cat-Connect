@@ -246,7 +246,7 @@ Each implementation pull request must cite applicable requirement IDs. Each test
 3. Confirm the longer owner-approved About story and any future permanent operating-hours policy.
 4. Define guest checkout policy versus account-required ordering. **TODO: Confirm with Brew ni Cat owner.**
 5. Define allowed order states, staff response expectations, cancellation/rejection handling, and customer notices. **TODO: Confirm with Brew ni Cat owner.**
-6. Define online payment and fulfillment scope; Phase 2 publishes Cash/GCash and the customer-arranged external-rider model as information only. **TODO: Confirm with Brew ni Cat owner.**
+6. Define online payment and fulfillment scope; Cash/GCash and the customer-arranged rider delivery model are published as information, and checkout only prepares a summary the customer sends to the shop or a rider. **TODO: Confirm with Brew ni Cat owner.**
 7. Define loyalty formulas, reward inventory/rules, expiration, and adjustment authority. **TODO: Confirm with Brew ni Cat owner.**
 8. Complete the existing POS integration contract and source-of-truth approval before Phase 6; Phase 2 source inspection was limited to catalog discovery.
 9. Define personal-data retention and the operational process for privacy requests. **TODO: Confirm with Brew ni Cat owner.**
@@ -273,6 +273,8 @@ Phase 2 delivery content is informational: a customer independently books a pref
 
 ## 16. Phase 3 Status Addendum
 
-Phase 3 browser-side ordering is merged: the ordering core and cart domain in PR #7, Van's cart drawer, cart page and checkout in PR #14, and Shan's checkout validation module in PR #20. A guest customer builds a cart, chooses pickup at the shop or an external rider pickup, chooses Cash or GCash at the counter, and copies the prepared order summary into Messenger or reads it out on the phone. Nothing is written to a server. FR-017 to FR-020 and FR-022 are In development (client-side); FR-021, FR-024 and FR-025 remain Planned until a server-side order backend exists. See [`functional-requirements.md`](functional-requirements.md) §15.
+Phase 3 browser-side ordering is merged: the ordering core and cart domain in PR #7, Van's cart drawer, cart page and checkout in PR #14, and Shan's checkout validation module in PR #20. A guest customer builds a cart, chooses pickup at the shop (with Cash or GCash at the counter) or rider delivery (with a delivery address), and copies the prepared order summary into a message to the shop or a rider, or reads it out on the phone. Nothing is written to a server. FR-017 to FR-020 and FR-022 are In development (client-side); FR-021, FR-024 and FR-025 remain Planned until a server-side order backend exists. See [`functional-requirements.md`](functional-requirements.md) §15.
 
 The three.js and GSAP experience in PR #23 (ADR-014 and ADR-015) and its follow-ups in PR #24 change presentation only. They add no data flow, account, payment or order write, and the §15 RLS blocker still applies.
+
+PR #25 updates the rider model after the lead developer confirmed how the local riders work (2026-10-18): the customer sends the prepared summary to one of three listed local rider services, and the rider orders at Brew ni Cat for the customer, picks the order up and delivers it. Checkout asks for a delivery address only for rider delivery and hides the payment choice, because the delivery fee, timing and payment are agreed with the rider. Brew ni Cat still does not book riders, charge rider fees or promise an ETA, and FR-030 stays Deferred. This supersedes the §15 wording that the customer books the rider after arranging the shop order.

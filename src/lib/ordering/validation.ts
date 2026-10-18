@@ -12,6 +12,8 @@ export function validatePhoneNumber(phone: string): boolean {
 export interface CheckoutDetails {
   name: string;
   phone: string;
+  /** Where the rider delivers; only asked for with rider delivery. */
+  address?: string;
 }
 
 export interface ValidationResult {
@@ -19,15 +21,25 @@ export interface ValidationResult {
   errors: {
     name?: string;
     phone?: string;
+    address?: string;
   };
 }
 
+export type ValidationOptions = Readonly<{
+  /** Rider delivery needs an address; pickup does not. */
+  requireAddress?: boolean;
+}>;
+
 /**
- * Validates checkout form details (Name and Phone Number).
+ * Validates checkout form details (Name and Phone Number, plus the delivery
+ * address when a rider delivers the order).
  * Matches live form error messages.
  */
-export function validateDetails(details: CheckoutDetails): ValidationResult {
-  const errors: { name?: string; phone?: string } = {};
+export function validateDetails(
+  details: CheckoutDetails,
+  options: ValidationOptions = {},
+): ValidationResult {
+  const errors: ValidationResult["errors"] = {};
 
   if (!details.name || details.name.trim().length === 0) {
     errors.name = "Please enter your full name.";
@@ -38,6 +50,10 @@ export function validateDetails(details: CheckoutDetails): ValidationResult {
   } else if (!validatePhoneNumber(details.phone)) {
     errors.phone =
       "Please enter a valid Philippine mobile number (e.g. 0912 345 6789 or +63 912 345 6789).";
+  }
+
+  if (options.requireAddress && !details.address?.trim()) {
+    errors.address = "Please enter the delivery address for your rider.";
   }
 
   return {

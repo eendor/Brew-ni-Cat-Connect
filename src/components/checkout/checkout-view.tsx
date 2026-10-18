@@ -13,6 +13,7 @@ import {
 import { Container } from "@/components/ui/container";
 import { ExternalLink } from "@/components/ui/external-link";
 import { PageIntro } from "@/components/ui/page-intro";
+import { RiderList } from "@/components/ui/rider-list";
 import { StateScene } from "@/components/three/state-scene";
 import { siteConfig } from "@/config/site";
 import { useCart } from "@/context/cart-context";
@@ -35,6 +36,9 @@ export type CheckoutStep = "details" | "review" | "send";
 export type CustomerDetails = Readonly<{
   name: string;
   phone: string;
+  /** Where the rider delivers. Empty for pickup; missing in summaries
+   *  saved before rider delivery existed. */
+  address?: string;
   notes: string;
   paymentPreference: "Cash" | "GCash";
 }>;
@@ -62,6 +66,7 @@ function isPreparedSummary(value: unknown): value is PreparedOrderSummary {
     typeof customer?.name === "string" &&
     typeof customer.phone === "string" &&
     typeof customer.notes === "string" &&
+    (customer.address === undefined || typeof customer.address === "string") &&
     (customer.paymentPreference === "Cash" ||
       customer.paymentPreference === "GCash") &&
     Array.isArray(summary.lines) &&
@@ -92,10 +97,19 @@ function orderSignature(
 type CopyState = "idle" | "copied" | "failed";
 
 export function formatOrderSummaryText(summary: PreparedOrderSummary): string {
-  const fulfillmentText =
-    summary.fulfillment === "pickup"
-      ? `Pickup at Shop (${siteConfig.address.street}, ${siteConfig.address.locality})`
-      : "Customer-Arranged External Rider";
+  const shop = siteConfig.address;
+  const isRiderDelivery = summary.fulfillment === "external-rider";
+  const deliverTo = summary.customer.address?.trim();
+
+  // A rider orders at the shop for the customer, so the rider's copy names
+  // the shop to order from and the address to deliver to.
+  const fulfillmentLines = isRiderDelivery
+    ? [
+        `Fulfillment: Rider delivery`,
+        `Order and pick up at: ${siteConfig.shortName}, ${shop.street}, ${shop.locality} (${shop.landmark})`,
+        deliverTo ? `Deliver to: ${deliverTo}` : null,
+      ]
+    : [`Fulfillment: Pickup at Shop (${shop.street}, ${shop.locality})`];
 
   const itemsText = summary.lines
     .map(
@@ -108,12 +122,14 @@ export function formatOrderSummaryText(summary: PreparedOrderSummary): string {
     `Brew ni Cat Coffee Shop — Order Summary`,
     `Customer: ${summary.customer.name}`,
     `Phone: ${summary.customer.phone}`,
-    `Fulfillment: ${fulfillmentText}`,
+    ...fulfillmentLines,
     summary.customer.notes ? `Notes: ${summary.customer.notes}` : null,
     `Items:`,
     itemsText,
     `Subtotal: ${formatPrice(summary.subtotal)}`,
-    `Payment preference: ${summary.customer.paymentPreference} at counter`,
+    isRiderDelivery
+      ? `Payment and delivery fee: agreed with the rider`
+      : `Payment preference: ${summary.customer.paymentPreference} at counter`,
     `Takeout box: ${siteConfig.operations.takeoutBoxPrice}, not included in the subtotal (the shop confirms it).`,
   ]
     .filter(Boolean)
@@ -154,11 +170,20 @@ export function CheckoutView({
     orderSignature(storedSummary.lines, storedSummary.fulfillment) !==
       orderSignature(lines, fulfillment);
   const preparedSummary = summaryIsStale ? null : storedSummary;
-  const step: CheckoutStep = preparedSummary ? "send" : formStep;
+  // If the cart changes on the last step (in the cart drawer or another
+  // tab), the old summary is dropped and the visitor reviews the new cart.
+  const step: CheckoutStep = preparedSummary
+    ? "send"
+    : formStep === "send"
+      ? "review"
+      : formStep;
+  const isRiderDelivery =
+    (preparedSummary?.fulfillment ?? fulfillment) === "external-rider";
   const flowRef = useRef<HTMLElement>(null);
   const [customer, setCustomer] = useState<CustomerDetails>({
     name: "",
     phone: "",
+    address: "",
     notes: "",
     paymentPreference: "Cash",
   });
@@ -176,6 +201,7 @@ export function CheckoutView({
 
   const nameInputId = useId();
   const phoneInputId = useId();
+  const addressInputId = useId();
   const notesInputId = useId();
 
   useEffect(() => {
@@ -230,7 +256,9 @@ export function CheckoutView({
 
   function handleProceedToReview(e: React.FormEvent) {
     e.preventDefault();
-    const result = validateDetailsHelper(customer);
+    const result = validateDetailsHelper(customer, {
+      requireAddress: isRiderDelivery,
+    });
     setErrors(result.errors);
     if (result.isValid) {
       goToStep("review");
@@ -238,7 +266,11 @@ export function CheckoutView({
     }
     // On phones the submit button sits far below the fields; take the
     // visitor to the first field that needs fixing.
-    const firstInvalid = result.errors.name ? nameInputId : phoneInputId;
+    const firstInvalid = result.errors.name
+      ? nameInputId
+      : result.errors.phone
+        ? phoneInputId
+        : addressInputId;
     setTimeout(() => document.getElementById(firstInvalid)?.focus(), 0);
   }
 
@@ -248,7 +280,8 @@ export function CheckoutView({
         hour: "2-digit",
         minute: "2-digit",
       }),
-      customer,
+      // a pickup order carries no delivery address
+      customer: isRiderDelivery ? customer : { ...customer, address: "" },
       fulfillment,
       lines: [...lines],
       subtotal,
@@ -285,7 +318,7 @@ export function CheckoutView({
       return;
     }
     setCopyState("copied");
-    // copied: the order now lives in the visitor's message to the shop
+    // copied: the order now lives in the visitor's message to the shop or rider
     clearCart({ undoable: false });
     copyTimerRef.current = window.setTimeout(() => setCopyState("idle"), 2500);
   }
@@ -354,18 +387,25 @@ export function CheckoutView({
             ? "Checkout"
             : step === "review"
               ? "Review Order"
-              : "Order Summary for Shop"
+              : isRiderDelivery
+                ? "Order Summary for Your Rider"
+                : "Order Summary for Shop"
         }
         description={
           step === "details" ? (
             <p>
-              Confirm your contact details and fulfillment option. Payment is
-              settled directly with the shop upon collection.
+              Choose pickup or rider delivery and add your contact details. No
+              payment is taken on this website.
             </p>
           ) : step === "review" ? (
             <p>
               Double check your order items, contact details, and fulfillment
               arrangement before preparing your order summary.
+            </p>
+          ) : isRiderDelivery ? (
+            <p>
+              Your order summary is ready. Send it to a local rider on Facebook;
+              the rider orders it at Brew ni Cat and delivers it to you.
             </p>
           ) : (
             <p>
@@ -470,7 +510,9 @@ export function CheckoutView({
                 >
                   3
                 </span>
-                <span className="sr-only sm:not-sr-only">Send to Shop</span>
+                <span className="sr-only sm:not-sr-only">
+                  {isRiderDelivery ? "Send to Rider" : "Send to Shop"}
+                </span>
               </li>
             </ol>
           </nav>
@@ -498,10 +540,10 @@ export function CheckoutView({
 
                   <div className="mt-5 grid gap-4 sm:grid-cols-2">
                     <label
-                      className={`surface-lift flex cursor-pointer flex-col justify-between rounded-2xl border p-5 transition-all ${
+                      className={`surface-lift flex cursor-pointer flex-col justify-between rounded-2xl p-5 ${
                         fulfillment === "pickup"
-                          ? "border-[var(--accent-solid)] bg-[var(--surface-warm)] ring-2 ring-[var(--accent-solid)]"
-                          : "border-[var(--border-soft)] bg-[var(--surface-card)] hover:bg-[var(--surface-warm)]"
+                          ? "outline-2 outline-[var(--accent-solid)]"
+                          : ""
                       }`}
                     >
                       <div className="flex items-start justify-between gap-3">
@@ -533,19 +575,19 @@ export function CheckoutView({
                     </label>
 
                     <label
-                      className={`surface-lift flex cursor-pointer flex-col justify-between rounded-2xl border p-5 transition-all ${
+                      className={`surface-lift flex cursor-pointer flex-col justify-between rounded-2xl p-5 ${
                         fulfillment === "external-rider"
-                          ? "border-[var(--accent-solid)] bg-[var(--surface-warm)] ring-2 ring-[var(--accent-solid)]"
-                          : "border-[var(--border-soft)] bg-[var(--surface-card)] hover:bg-[var(--surface-warm)]"
+                          ? "outline-2 outline-[var(--accent-solid)]"
+                          : ""
                       }`}
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div>
                           <span className="font-extrabold text-[var(--text-strong)] text-base block">
-                            Customer-Arranged Rider
+                            Rider Delivery
                           </span>
                           <span className="text-xs text-[var(--accent-strong)] font-semibold mt-1 block">
-                            External rider pickup
+                            A local rider orders and delivers
                           </span>
                         </div>
                         <input
@@ -560,50 +602,35 @@ export function CheckoutView({
                         />
                       </div>
                       <p className="mt-4 text-xs text-[var(--text-muted)] leading-relaxed">
-                        Arrange and pay your own preferred rider (e.g.,
-                        Papa&apos;s Delivery). Your rider collects the order at
-                        the shop.
+                        Send your order summary to a local delivery service in
+                        Kabacan. The rider orders it at the shop for you and
+                        brings it to your address.
                       </p>
                     </label>
                   </div>
 
-                  {fulfillment === "external-rider" ? (
+                  {isRiderDelivery ? (
                     <div className="mt-6 rounded-2xl border border-[var(--notice-border)] bg-[var(--notice-surface)] p-5 text-xs leading-6 text-[var(--notice-text)]">
                       <strong className="block text-sm font-bold mb-1">
-                        How External Rider Pickup Works:
+                        How Rider Delivery Works:
                       </strong>
                       <ol className="list-decimal pl-4 space-y-1 mb-3">
-                        <li>Prepare your order summary through this page.</li>
+                        <li>Prepare your order summary on this page.</li>
                         <li>
-                          Contact Brew ni Cat via Facebook Messenger or phone to
-                          place the order.
+                          On the last step, send it to one of the local riders
+                          listed there.
                         </li>
                         <li>
-                          Contact and book your external rider yourself
-                          (Papa&apos;s Delivery, local rider, etc.).
-                        </li>
-                        <li>
-                          Your rider collects the prepared order at the shop
-                          counter ({siteConfig.address.street},{" "}
-                          {siteConfig.address.landmark}).
+                          The rider orders at Brew ni Cat, picks it up at{" "}
+                          {siteConfig.address.street} (
+                          {siteConfig.address.landmark}) and delivers it to you.
                         </li>
                       </ol>
                       <p className="border-t border-[var(--notice-border)] pt-2 text-[var(--notice-text)]">
-                        Rider availability, delivery fees, arrival time, and
-                        rider payment are separate from Brew ni Cat. The shop
-                        does not calculate, book, or charge rider fees.
+                        Delivery fee, timing and payment are agreed with your
+                        rider. Brew ni Cat doesn&apos;t book riders or charge
+                        rider fees.
                       </p>
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        {siteConfig.externalRiders.map((riderUrl, index) => (
-                          <ExternalLink
-                            key={riderUrl}
-                            href={riderUrl}
-                            className="inline-flex items-center text-xs font-bold text-[var(--accent-solid)] underline"
-                          >
-                            Rider Partner {index + 1}
-                          </ExternalLink>
-                        ))}
-                      </div>
                     </div>
                   ) : null}
                 </div>
@@ -614,8 +641,8 @@ export function CheckoutView({
                     2. Customer Contact Information
                   </h2>
                   <p className="mt-1 text-sm text-[var(--text-muted)]">
-                    This information will be included in your order summary for
-                    the shop.
+                    This information will be included in your order summary for{" "}
+                    {isRiderDelivery ? "your rider" : "the shop"}.
                   </p>
 
                   <div className="mt-6 grid gap-5 sm:grid-cols-2">
@@ -636,6 +663,7 @@ export function CheckoutView({
                         id={nameInputId}
                         type="text"
                         required
+                        autoComplete="name"
                         value={customer.name}
                         onChange={(e) => {
                           setCustomer((prev) => ({
@@ -681,6 +709,7 @@ export function CheckoutView({
                         id={phoneInputId}
                         type="tel"
                         required
+                        autoComplete="tel"
                         value={customer.phone}
                         onChange={(e) => {
                           setCustomer((prev) => ({
@@ -709,54 +738,104 @@ export function CheckoutView({
                       ) : null}
                     </div>
 
-                    <div className="sm:col-span-2">
-                      <fieldset>
-                        <legend className="block text-sm font-bold text-[var(--text-strong)]">
-                          Payment Preference at Shop
-                        </legend>
-                        <div className="mt-1 flex flex-wrap gap-x-6">
-                          <label className="flex min-h-11 items-center gap-2 cursor-pointer text-sm font-semibold text-[var(--text-strong)]">
-                            <input
-                              type="radio"
-                              name="payment-preference"
-                              value="Cash"
-                              checked={customer.paymentPreference === "Cash"}
-                              onChange={() =>
-                                setCustomer((prev) => ({
-                                  ...prev,
-                                  paymentPreference: "Cash",
-                                }))
-                              }
-                              className="size-4 accent-[var(--accent-solid)]"
-                            />
-                            Cash at counter
-                          </label>
-                          <label className="flex min-h-11 items-center gap-2 cursor-pointer text-sm font-semibold text-[var(--text-strong)]">
-                            <input
-                              type="radio"
-                              name="payment-preference"
-                              value="GCash"
-                              checked={customer.paymentPreference === "GCash"}
-                              onChange={() =>
-                                setCustomer((prev) => ({
-                                  ...prev,
-                                  paymentPreference: "GCash",
-                                }))
-                              }
-                              className="size-4 accent-[var(--accent-solid)]"
-                            />
-                            GCash at counter
-                          </label>
-                        </div>
-                      </fieldset>
-                    </div>
+                    {isRiderDelivery ? (
+                      <div className="sm:col-span-2">
+                        <label
+                          htmlFor={addressInputId}
+                          className="block text-sm font-bold text-[var(--text-strong)]"
+                        >
+                          Delivery Address{" "}
+                          <span
+                            className="text-[var(--danger)]"
+                            aria-hidden="true"
+                          >
+                            *
+                          </span>
+                        </label>
+                        <input
+                          id={addressInputId}
+                          type="text"
+                          required
+                          autoComplete="street-address"
+                          value={customer.address ?? ""}
+                          onChange={(e) => {
+                            setCustomer((prev) => ({
+                              ...prev,
+                              address: e.target.value,
+                            }));
+                            if (errors.address) {
+                              setErrors((prev) => ({ ...prev, address: "" }));
+                            }
+                          }}
+                          aria-invalid={!!errors.address}
+                          aria-describedby={
+                            errors.address ? "address-error" : undefined
+                          }
+                          placeholder="e.g. House no., street, barangay, landmark"
+                          className="mt-2 block w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface-input)] min-h-12 px-4 py-3 text-base text-[var(--text-strong)] placeholder-[var(--text-subtle)] aria-[invalid=true]:border-[var(--danger)] focus:border-[var(--accent-solid)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-solid)]"
+                        />
+                        {errors.address ? (
+                          <p
+                            id="address-error"
+                            role="alert"
+                            className="mt-1.5 text-sm font-bold text-[var(--danger)]"
+                          >
+                            {errors.address}
+                          </p>
+                        ) : null}
+                      </div>
+                    ) : (
+                      <div className="sm:col-span-2">
+                        <fieldset>
+                          <legend className="block text-sm font-bold text-[var(--text-strong)]">
+                            Payment Preference at Shop
+                          </legend>
+                          <div className="mt-1 flex flex-wrap gap-x-6">
+                            <label className="flex min-h-11 items-center gap-2 cursor-pointer text-sm font-semibold text-[var(--text-strong)]">
+                              <input
+                                type="radio"
+                                name="payment-preference"
+                                value="Cash"
+                                checked={customer.paymentPreference === "Cash"}
+                                onChange={() =>
+                                  setCustomer((prev) => ({
+                                    ...prev,
+                                    paymentPreference: "Cash",
+                                  }))
+                                }
+                                className="size-4 accent-[var(--accent-solid)]"
+                              />
+                              Cash at counter
+                            </label>
+                            <label className="flex min-h-11 items-center gap-2 cursor-pointer text-sm font-semibold text-[var(--text-strong)]">
+                              <input
+                                type="radio"
+                                name="payment-preference"
+                                value="GCash"
+                                checked={customer.paymentPreference === "GCash"}
+                                onChange={() =>
+                                  setCustomer((prev) => ({
+                                    ...prev,
+                                    paymentPreference: "GCash",
+                                  }))
+                                }
+                                className="size-4 accent-[var(--accent-solid)]"
+                              />
+                              GCash at counter
+                            </label>
+                          </div>
+                        </fieldset>
+                      </div>
+                    )}
 
                     <div className="sm:col-span-2">
                       <label
                         htmlFor={notesInputId}
                         className="block text-sm font-bold text-[var(--text-strong)]"
                       >
-                        Special Instructions or Preferred Pickup Time (Optional)
+                        {isRiderDelivery
+                          ? "Special Instructions or Delivery Notes (Optional)"
+                          : "Special Instructions or Preferred Pickup Time (Optional)"}
                       </label>
                       <textarea
                         id={notesInputId}
@@ -768,7 +847,11 @@ export function CheckoutView({
                             notes: e.target.value,
                           }))
                         }
-                        placeholder="e.g. Less ice for iced latte, preferred pickup time today, pack pastries separately..."
+                        placeholder={
+                          isRiderDelivery
+                            ? "e.g. Less ice for iced latte, deliver after 3 PM, call when you arrive..."
+                            : "e.g. Less ice for iced latte, preferred pickup time today, pack pastries separately..."
+                        }
                         className="mt-2 block w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface-input)] min-h-12 px-4 py-3 text-base text-[var(--text-strong)] placeholder-[var(--text-subtle)] aria-[invalid=true]:border-[var(--danger)] focus:border-[var(--accent-solid)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-solid)]"
                       />
                     </div>
@@ -793,18 +876,17 @@ export function CheckoutView({
 
                     <div className="flex justify-between text-[var(--text-muted)]">
                       <span>Fulfillment</span>
-                      <span className="font-bold text-[var(--text-strong)] capitalize">
-                        {fulfillment === "pickup"
-                          ? "Pickup at shop"
-                          : "External rider"}
+                      <span className="font-bold text-[var(--text-strong)]">
+                        {isRiderDelivery ? "Rider delivery" : "Pickup at shop"}
                       </span>
                     </div>
 
                     <div className="flex justify-between gap-4 text-[var(--text-muted)]">
                       <span>Takeout box</span>
                       <span className="text-right text-xs font-semibold text-[var(--text-subtle)]">
-                        {siteConfig.operations.takeoutBoxPrice}, paid at the
-                        shop · not in subtotal
+                        {isRiderDelivery
+                          ? `${siteConfig.operations.takeoutBoxPrice} · not in subtotal`
+                          : `${siteConfig.operations.takeoutBoxPrice}, paid at the shop · not in subtotal`}
                       </span>
                     </div>
 
@@ -814,7 +896,9 @@ export function CheckoutView({
                           Subtotal
                         </span>
                         <span className="block text-xs text-[var(--text-subtle)]">
-                          Catalog exact
+                          {isRiderDelivery
+                            ? "Before delivery fee"
+                            : "Catalog exact"}
                         </span>
                       </div>
                       <span className="text-3xl font-black text-[var(--accent-strong)]">
@@ -829,8 +913,10 @@ export function CheckoutView({
                     </strong>
                     {siteConfig.operations.hoursNotice} The{" "}
                     {siteConfig.operations.takeoutFee} is not included in the
-                    subtotal; the shop confirms it when you order. Payment is
-                    settled via Cash or GCash directly with the shop.
+                    subtotal.{" "}
+                    {isRiderDelivery
+                      ? "The shop confirms it when your rider orders. Delivery fee and payment are agreed with your rider."
+                      : "The shop confirms it when you order. Payment is settled via Cash or GCash directly with the shop."}
                   </div>
 
                   <button
@@ -901,7 +987,7 @@ export function CheckoutView({
                     </button>
                   </div>
 
-                  <dl className="grid gap-4 sm:grid-cols-2 text-sm">
+                  <dl className="grid gap-4 sm:grid-cols-2 text-sm [overflow-wrap:anywhere]">
                     <div className="rounded-xl bg-[var(--surface-warm)] p-4">
                       <dt className="text-xs font-bold uppercase tracking-wider text-[var(--text-subtle)]">
                         Customer Name
@@ -924,34 +1010,55 @@ export function CheckoutView({
                       <dt className="text-xs font-bold uppercase tracking-wider text-[var(--text-subtle)]">
                         Fulfillment Mode
                       </dt>
-                      <dd className="mt-1 font-bold text-[var(--text-strong)] text-base">
-                        {fulfillment === "pickup"
-                          ? "Pickup at Shop"
-                          : "Customer-Arranged Rider"}
+                      <dd className="mt-1">
+                        <span className="block text-base font-bold text-[var(--text-strong)]">
+                          {isRiderDelivery
+                            ? "Rider Delivery"
+                            : "Pickup at Shop"}
+                        </span>
+                        <span className="mt-0.5 block text-xs text-[var(--text-muted)]">
+                          {isRiderDelivery
+                            ? `A local rider orders at ${siteConfig.address.street} and delivers`
+                            : `${siteConfig.address.street}, ${siteConfig.address.locality} (${siteConfig.address.landmark})`}
+                        </span>
                       </dd>
-                      <span className="text-xs text-[var(--text-muted)] mt-0.5 block">
-                        {fulfillment === "pickup"
-                          ? `${siteConfig.address.street}, ${siteConfig.address.locality} (${siteConfig.address.landmark})`
-                          : "You independently book & pay your external rider"}
-                      </span>
                     </div>
 
                     <div className="rounded-xl bg-[var(--surface-warm)] p-4">
                       <dt className="text-xs font-bold uppercase tracking-wider text-[var(--text-subtle)]">
-                        Payment Preference
+                        {isRiderDelivery ? "Payment" : "Payment Preference"}
                       </dt>
-                      <dd className="mt-1 font-bold text-[var(--text-strong)] text-base">
-                        {customer.paymentPreference} at counter
+                      <dd className="mt-1">
+                        <span className="block text-base font-bold text-[var(--text-strong)]">
+                          {isRiderDelivery
+                            ? "Agreed with your rider"
+                            : `${customer.paymentPreference} at counter`}
+                        </span>
+                        <span className="mt-0.5 block text-xs text-[var(--text-muted)]">
+                          {isRiderDelivery
+                            ? "Delivery fee not in the subtotal"
+                            : "Settled directly with shop"}
+                        </span>
                       </dd>
-                      <span className="text-xs text-[var(--text-muted)] mt-0.5 block">
-                        Settled directly with shop
-                      </span>
                     </div>
+
+                    {isRiderDelivery ? (
+                      <div className="sm:col-span-2 rounded-xl bg-[var(--surface-warm)] p-4">
+                        <dt className="text-xs font-bold uppercase tracking-wider text-[var(--text-subtle)]">
+                          Delivery Address
+                        </dt>
+                        <dd className="mt-1 font-bold text-[var(--text-strong)] text-base">
+                          {customer.address}
+                        </dd>
+                      </div>
+                    ) : null}
 
                     {customer.notes ? (
                       <div className="sm:col-span-2 rounded-xl bg-[var(--surface-warm)] p-4">
                         <dt className="text-xs font-bold uppercase tracking-wider text-[var(--text-subtle)]">
-                          Special Instructions / Timing
+                          {isRiderDelivery
+                            ? "Special Instructions / Delivery Notes"
+                            : "Special Instructions / Timing"}
                         </dt>
                         <dd className="mt-1 text-sm text-[var(--text-strong)]">
                           {customer.notes}
@@ -980,17 +1087,16 @@ export function CheckoutView({
                     <div className="flex justify-between text-[var(--text-muted)]">
                       <span>Fulfillment</span>
                       <span className="font-bold text-[var(--text-strong)]">
-                        {fulfillment === "pickup"
-                          ? "Pickup at shop"
-                          : "External rider"}
+                        {isRiderDelivery ? "Rider delivery" : "Pickup at shop"}
                       </span>
                     </div>
 
                     <div className="flex justify-between gap-4 text-[var(--text-muted)]">
                       <span>Takeout box</span>
                       <span className="text-right text-xs font-semibold text-[var(--text-subtle)]">
-                        {siteConfig.operations.takeoutBoxPrice}, paid at the
-                        shop · not in subtotal
+                        {isRiderDelivery
+                          ? `${siteConfig.operations.takeoutBoxPrice} · not in subtotal`
+                          : `${siteConfig.operations.takeoutBoxPrice}, paid at the shop · not in subtotal`}
                       </span>
                     </div>
 
@@ -1000,7 +1106,9 @@ export function CheckoutView({
                           Subtotal
                         </span>
                         <span className="block text-xs text-[var(--text-subtle)]">
-                          Payable at counter
+                          {isRiderDelivery
+                            ? "Before delivery fee"
+                            : "Payable at counter"}
                         </span>
                       </div>
                       <span className="text-3xl font-black text-[var(--accent-strong)]">
@@ -1013,10 +1121,9 @@ export function CheckoutView({
                     <strong className="block font-bold">
                       Order Preparation Notice
                     </strong>
-                    Proceeding generates your complete order summary. Online
-                    order transmission will be added in a future phase; you will
-                    send this summary directly to the shop via Facebook
-                    Messenger or phone to place your order.
+                    {isRiderDelivery
+                      ? "Proceeding generates your complete order summary. You then send it to a local rider on Facebook, and the rider places the order at the shop."
+                      : "Proceeding generates your complete order summary. Online order transmission will be added in a future phase; you will send this summary directly to the shop via Facebook Messenger or phone to place your order."}
                   </div>
 
                   <button
@@ -1024,7 +1131,10 @@ export function CheckoutView({
                     onClick={handleProceedToSend}
                     className="button-primary w-full text-center py-3.5 text-base"
                   >
-                    Proceed to Send to Shop{"\u00a0"}→
+                    {isRiderDelivery
+                      ? "Proceed to Send to Rider"
+                      : "Proceed to Send to Shop"}
+                    {"\u00a0"}→
                   </button>
 
                   <button
@@ -1039,10 +1149,10 @@ export function CheckoutView({
             </div>
           )}
 
-          {/* STEP 3: Order Summary for the Shop (Send to Shop) */}
+          {/* STEP 3: The order summary to send to the shop, or to a rider */}
           {step === "send" && preparedSummary && (
             <div className="mx-auto max-w-4xl">
-              <div className="rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-8 sm:p-12 shadow-[var(--shadow-card)] text-center">
+              <div className="rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-5 sm:p-12 shadow-[var(--shadow-card)] text-center">
                 <StateScene
                   kind="ready"
                   tone="card"
@@ -1072,7 +1182,9 @@ export function CheckoutView({
                   tabIndex={-1}
                   className="font-display mt-2 text-3xl text-[var(--text-strong)] sm:text-4xl outline-none"
                 >
-                  Order Summary for the Shop
+                  {isRiderDelivery
+                    ? "Order Summary for Your Rider"
+                    : "Order Summary for the Shop"}
                 </h2>
 
                 {/* Plain truthful explanation: no fake order placed */}
@@ -1081,14 +1193,13 @@ export function CheckoutView({
                     Notice: The website does not transmit orders to the shop
                     yet.
                   </strong>
-                  Online order transmission is coming in a future update. No
-                  order has been sent to Brew ni Cat. Please copy your order
-                  summary below and message or call the shop to place your
-                  order.
+                  {isRiderDelivery
+                    ? "No order has been sent to Brew ni Cat or to any rider. Copy your order summary below and message one of the local riders; the rider places the order at the shop for you."
+                    : "Online order transmission is coming in a future update. No order has been sent to Brew ni Cat. Please copy your order summary below and message or call the shop to place your order."}
                 </div>
 
                 {/* Formatted Order Text Box with Copy Button */}
-                <div className="mt-6 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-warm)] p-5 text-left">
+                <div className="mt-6 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-warm)] p-4 sm:p-5 text-left">
                   <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-[var(--border-strong)]/40 mb-3">
                     <span className="text-xs font-bold uppercase tracking-wider text-[var(--text-subtle)]">
                       Formatted Order Summary
@@ -1136,7 +1247,9 @@ export function CheckoutView({
                     }
                   >
                     {copyState === "copied"
-                      ? "Copied. Paste it into Messenger or read it out on the phone."
+                      ? isRiderDelivery
+                        ? "Copied. Paste it into a message to your rider on Facebook."
+                        : "Copied. Paste it into Messenger or read it out on the phone."
                       : copyState === "failed"
                         ? "Couldn’t copy automatically. The summary is selected, so copy it with Ctrl+C or a long press."
                         : null}
@@ -1150,35 +1263,50 @@ export function CheckoutView({
                   </pre>
                 </div>
 
-                {/* Direct Shop Action Links */}
-                <div className="mt-6 p-6 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-card)] text-left space-y-4">
-                  <h3 className="font-bold text-[var(--text-strong)] text-base">
-                    Next step: Contact Brew ni Cat to arrange your order
-                  </h3>
-                  <p className="text-xs text-[var(--text-muted)] leading-relaxed">
-                    Paste your copied order summary into Facebook Messenger or
-                    read it over the phone:
-                  </p>
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <ExternalLink
-                      href={siteConfig.social.facebook}
-                      className="button-primary flex-1 text-center"
-                    >
-                      Message on Facebook
-                    </ExternalLink>
-                    <a
-                      href={siteConfig.contact.phoneHref}
-                      className="button-secondary flex-1 text-center"
-                    >
-                      Call or Text {siteConfig.contact.phone}
-                    </a>
+                {/* Next step: who to send the summary to */}
+                {isRiderDelivery ? (
+                  <div className="mt-6 p-4 sm:p-6 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-card)] text-left space-y-4">
+                    <h3 className="font-bold text-[var(--text-strong)] text-base">
+                      Next step: Message a rider with your order summary
+                    </h3>
+                    <p className="text-xs text-[var(--text-muted)] leading-relaxed">
+                      Open a rider&apos;s Facebook page and paste your copied
+                      order summary into Messenger:
+                    </p>
+                    <RiderList />
                   </div>
-                </div>
+                ) : (
+                  <div className="mt-6 p-4 sm:p-6 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-card)] text-left space-y-4">
+                    <h3 className="font-bold text-[var(--text-strong)] text-base">
+                      Next step: Contact Brew ni Cat to arrange your order
+                    </h3>
+                    <p className="text-xs text-[var(--text-muted)] leading-relaxed">
+                      Paste your copied order summary into Facebook Messenger or
+                      read it over the phone:
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <ExternalLink
+                        href={siteConfig.social.facebook}
+                        className="button-primary flex-1 text-center"
+                      >
+                        Message on Facebook
+                      </ExternalLink>
+                      <a
+                        href={siteConfig.contact.phoneHref}
+                        className="button-secondary flex-1 text-center"
+                      >
+                        Call or Text {siteConfig.contact.phone}
+                      </a>
+                    </div>
+                  </div>
+                )}
 
                 {/* Next Steps Guidance */}
-                <div className="mt-6 rounded-2xl bg-[var(--surface-warm)] p-6 text-left text-sm leading-relaxed space-y-3">
+                <div className="mt-6 rounded-2xl bg-[var(--surface-warm)] p-4 sm:p-6 text-left text-sm leading-relaxed space-y-3">
                   <h4 className="font-bold text-[var(--text-strong)] text-base">
-                    Fulfillment & Collection Guide
+                    {isRiderDelivery
+                      ? "Rider Delivery Guide"
+                      : "Fulfillment & Collection Guide"}
                   </h4>
 
                   {preparedSummary.fulfillment === "pickup" ? (
@@ -1209,19 +1337,30 @@ export function CheckoutView({
                   ) : (
                     <ol className="list-decimal pl-5 space-y-2 text-[var(--text-muted)]">
                       <li>
-                        Send your order summary to Brew ni Cat so the shop can
-                        prepare it.
+                        Send your order summary to one of the riders above on
+                        Facebook.
                       </li>
                       <li>
-                        Book your preferred external rider (e.g. Papa&apos;s
-                        Delivery). Provide the rider with your order details and
-                        the shop address: {siteConfig.address.street},{" "}
-                        {siteConfig.address.locality} (
-                        {siteConfig.address.landmark}).
+                        The rider orders it at Brew ni Cat,{" "}
+                        <strong className="text-[var(--text-strong)]">
+                          {siteConfig.address.street},{" "}
+                          {siteConfig.address.locality}
+                        </strong>{" "}
+                        ({siteConfig.address.landmark}), and picks it up.
                       </li>
                       <li>
-                        Your rider collects your prepared order at the counter.
-                        Settle the rider&apos;s delivery fee directly with them.
+                        The rider delivers it to{" "}
+                        <strong className="text-[var(--text-strong)]">
+                          {preparedSummary.customer.address?.trim() ||
+                            "your address"}
+                        </strong>
+                        . Delivery fee and payment are agreed with the rider;
+                        the {siteConfig.operations.takeoutFee} is not included
+                        in the{" "}
+                        <strong className="text-[var(--text-strong)]">
+                          {formatPrice(preparedSummary.subtotal)}
+                        </strong>{" "}
+                        subtotal.
                       </li>
                     </ol>
                   )}

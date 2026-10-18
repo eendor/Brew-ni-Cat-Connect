@@ -27,8 +27,9 @@ export default function MenuPage() {
             <strong className="text-[var(--text-strong)]">
               How ordering works:
             </strong>{" "}
-            add items to build an order summary for pickup or your own rider,
-            then copy it at checkout and message or call the shop.
+            add items to build an order summary, then copy it at checkout and
+            send it to the shop for pickup, or to a local rider who orders and
+            delivers it for you.
           </p>
           <MenuCatalog />
         </Container>

@@ -119,8 +119,9 @@ test("TC-P2-025 — Contact page publishes confirmed visit and rider information
     main.getByText("₱10 takeout box", { exact: true }),
   ).toBeVisible();
   await expect(main.getByText(/Closed every Sunday/i).first()).toBeVisible();
+  // exact: each rider link is also named "… Facebook page"
   await expect(
-    main.getByRole("link", { name: "Facebook page" }),
+    main.getByRole("link", { name: "Facebook page", exact: true }),
   ).toHaveAttribute("href", /facebook\.com/);
   await expect(main.getByRole("link", { name: "TikTok" })).toHaveAttribute(
     "href",
@@ -129,19 +130,37 @@ test("TC-P2-025 — Contact page publishes confirmed visit and rider information
 
   await expect(
     main.getByRole("heading", {
-      name: "Arrange your preferred rider separately.",
+      name: "Let a local rider order it for you.",
     }),
   ).toBeVisible();
   await expect(
-    main.getByText(/rider availability, delivery fees, arrival time/i),
+    main.getByText(
+      /Delivery fee, timing and payment are agreed with your rider/,
+    ),
   ).toBeVisible();
-  await expect(
-    main.getByRole("link", { name: "External rider page 1" }),
-  ).toBeVisible();
-  await expect(
-    main.getByRole("link", { name: "External rider page 2" }),
-  ).toBeVisible();
-  await expect(
-    main.getByRole("link", { name: "External rider page 3" }),
-  ).toBeVisible();
+
+  const riders = main.getByRole("list", { name: "Rider delivery services" });
+  for (const name of [
+    "Papa's Delivery",
+    "Momshie's Pamalengke and Delivery Kabacan",
+    "M&S Delivery Express Kabacan",
+  ]) {
+    await expect(
+      riders.getByRole("link", { name: `${name} Facebook page` }),
+    ).toHaveAttribute("href", /^https:\/\/www\.facebook\.com\//);
+  }
+
+  // every rider logo loads (they are lazy, so bring each into view)
+  const logos = riders.locator("img");
+  await expect(logos).toHaveCount(3);
+  for (const logo of await logos.all()) {
+    await logo.scrollIntoViewIfNeeded();
+    await expect
+      .poll(() =>
+        logo.evaluate(
+          (img: HTMLImageElement) => img.complete && img.naturalWidth > 0,
+        ),
+      )
+      .toBe(true);
+  }
 });

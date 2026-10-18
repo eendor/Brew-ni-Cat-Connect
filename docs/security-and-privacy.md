@@ -229,7 +229,7 @@ Evidence must include the exact command or procedure, date, commit/deployment id
 ## 14. Open Decisions and Owner Inputs
 
 - TODO: Confirm with Brew ni Cat owner. Identify the customer profile fields that are necessary.
-- The customer-arranged external-rider information is confirmed for public display and collects no location. **TODO: Confirm with Brew ni Cat owner.** Decide whether any future integrated delivery feature is approved and, if so, the minimum location/contact data required.
+- The customer-arranged rider delivery information is confirmed for public display. Checkout asks for a delivery address only when the customer picks rider delivery; it stays in the browser and goes only into the summary the customer sends to a rider. **TODO: Confirm with Brew ni Cat owner.** Decide whether any future integrated delivery feature is approved and, if so, the minimum location/contact data required.
 - Cash and GCash are confirmed for public display. **TODO: Confirm with Brew ni Cat owner.** Define any future online payment proof/provider, settlement, failure, and refund workflow.
 - TODO: Confirm with Brew ni Cat owner. Set retention needs for accounts, orders, loyalty, inquiries, and security logs.
 - TODO: Confirm with Brew ni Cat owner. Designate the business's accountable privacy/security contacts and escalation route.
@@ -283,7 +283,7 @@ The client approved the local shop/customer imagery for website use. Phase 2 lim
 
 ### 16.4 Public delivery and contact information
 
-The contact page publishes only the confirmed business address, phone, email, payments, takeout fee, social links, and informational rider links. It collects no address/contact form data. Rider links are external; the copy states that customers book and pay riders independently and that Brew ni Cat does not control availability, fee, or ETA. External links use appropriate browser separation.
+The contact page publishes only the confirmed business address, phone, email, payments, takeout fee, social links, and the three local rider services (name, public Facebook page and public profile photo). It collects no address/contact form data. Rider links are external; the copy states that the rider orders at the shop for the customer, that the delivery fee, timing and payment are agreed with the rider, and that Brew ni Cat does not book riders or charge rider fees. External links use appropriate browser separation (`target="_blank"` with `rel="noopener noreferrer"`). The rider logos are stored locally, resized to 256 × 256 px with metadata removed, so the page loads nothing from Facebook.
 
 ### 16.5 Pre-PR checks
 
@@ -294,9 +294,9 @@ Before commit/PR, inspect staged and unstaged diffs, verify `.env.local` is untr
 ### 17.1 Browser-only cart and checkout
 
 - The cart is kept in `localStorage` under `brew_ni_cat_cart_v1`. It holds the order lines and the fulfillment choice only, never a name or phone number. Prices come only from the current catalog, checkout checks them against the live menu again, and a stored cart that fails validation is discarded.
-- Checkout asks for a name, a Philippine mobile number and optional notes. They are held in page state and in the prepared summary only.
+- Checkout asks for a name, a Philippine mobile number and optional notes, plus a delivery address when the customer picks rider delivery. They are held in page state and in the prepared summary only, and a pickup summary leaves out any address typed earlier.
 - The prepared summary is kept in `sessionStorage` under `brew-ni-cat:prepared-summary`, so it is gone when the tab closes. It is shape-checked, ignored after 12 hours, dropped when the cart changes, and cleared by **Start a new order**. When storage is blocked or full, it is kept in memory for the rest of the visit.
-- Sending is manual. The copy button writes the summary to the clipboard, and the customer sends it to Brew ni Cat through Facebook Messenger or by phone. Nothing is submitted to Supabase or any other server, and the name and phone number are never logged. A successful copy empties the cart; a failed copy says so and selects the text instead.
+- Sending is manual. The copy button writes the summary to the clipboard, and the customer sends it to Brew ni Cat through Facebook Messenger or by phone, or, for rider delivery, to a local rider on Facebook. Nothing is submitted to Supabase or any other server, and the name, phone number and address are never logged. A successful copy empties the cart; a failed copy says so and selects the text instead.
 
 ### 17.2 3D and motion layer
 

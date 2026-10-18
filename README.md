@@ -29,9 +29,9 @@ Evidence for each Phase 3 pull request is in [`docs/evidence/phase-3-verificatio
 - **Menu:** the current catalog, read from Supabase at browser runtime, with category tabs, plain photo cards and an order dialog for the option or size, flavor and quantity.
 - **About:** restrained facts confirmed for the business.
 - **Gallery:** 30 curated, approved shop and customer photos, newest Facebook favorites first. The 3D photo ring uses only the photos without people.
-- **Contact:** location, opening hours, Cash or GCash, the ₱10 takeout box, social links and independent riders.
+- **Contact:** location, opening hours, Cash or GCash, the ₱10 takeout box, social links, and how rider delivery works, with the three local rider services and their Facebook pages.
 - **Cart and cart drawer:** kept in the browser (`localStorage`), with prices rechecked against the current catalog.
-- **Checkout:** three steps (details, review, and the order summary for the shop). The customer chooses pickup at the shop or an external rider pickup and pays Cash or GCash at the counter, then copies the summary into Messenger or reads it out on the phone. Nothing is written to a server.
+- **Checkout:** three steps (details, review, and the order summary). For pickup, the customer chooses Cash or GCash at the counter, then copies the summary into Messenger or reads it out on the phone. For rider delivery, the customer adds a delivery address and sends the summary to one of the listed local riders, who orders it at the shop and delivers it; the delivery fee, timing and payment are agreed with the rider. Nothing is written to a server.
 
 The 3D scenes load after the static page. Visitors who prefer reduced motion, or whose browser lacks WebGL 2, get the static page. Old menu-poster artwork is a visual reference only and is not the source of current names or prices.
 
@@ -102,7 +102,7 @@ npm run build
 python3 scripts/validate_phase0_docs.py
 ```
 
-As of PR #24, formatting, the dependency audit (0 vulnerabilities, dev tooling included), lint, type checking, 127 of 127 unit and component tests in 17 files, the production build with 9 of 9 static pages, 25 of 25 Playwright tests and the documentation validator all pass. GitHub Actions runs the same checks, except Playwright, on pull requests to `main` and on pushes to `main` and `feat/**` branches.
+As of PR #25, formatting, the dependency audit (0 vulnerabilities, dev tooling included), lint, type checking, 130 of 130 unit and component tests in 18 files, the production build with 9 of 9 static pages, 25 of 25 Playwright tests and the documentation validator all pass. GitHub Actions runs the same checks, except Playwright, on pull requests to `main` and on pushes to `main` and `feat/**` branches.
 
 ## End-to-End Tests
 

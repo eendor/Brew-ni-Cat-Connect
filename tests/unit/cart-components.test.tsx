@@ -189,21 +189,25 @@ describe("CartPageView Component", () => {
       name: /Pickup at Shop/i,
     });
     const riderRadio = screen.getByRole("radio", {
-      name: /Customer-Arranged Rider/i,
+      name: /Rider Delivery/i,
     });
 
     expect(pickupRadio).toBeChecked();
     expect(riderRadio).not.toBeChecked();
+    // the chosen option is outlined, since the card styles override borders
+    expect(pickupRadio.closest("label")).toHaveClass("outline-2");
+    expect(riderRadio.closest("label")).not.toHaveClass("outline-2");
 
-    // Switch to external rider
+    // Switch to rider delivery
     await user.click(riderRadio);
     expect(riderRadio).toBeChecked();
-    expect(screen.getByText("Rider Arrangement Notice")).toBeInTheDocument();
+    expect(riderRadio.closest("label")).toHaveClass("outline-2");
+    expect(pickupRadio.closest("label")).not.toHaveClass("outline-2");
+    expect(screen.getByText("How Rider Delivery Works")).toBeInTheDocument();
     expect(
-      screen.getByText(
-        /Brew ni Cat does not calculate, book, or collect rider fees/i,
-      ),
+      screen.getByText(/Brew ni Cat doesn.t book riders or charge rider fees/),
     ).toBeInTheDocument();
+    expect(screen.getByText("Agreed with your rider")).toBeInTheDocument();
   });
 
   it("clears cart lines from cart page", async () => {

@@ -274,3 +274,26 @@ Teammates' commits, and Renier's PR #6 title (`QA: Phase 2 independent QA result
 
 **Known limitations:** The click-through on a physical phone (MAN-P4-007) is still to do. The seven unprefixed commit subjects stay in history, as the process exception above (recorded in this pull request) explains.\
 **Status:** Self-reviewed by the lead developer. Locally, Vitest passed 127/127 in 17 files and Playwright 25/25 (16 + 9), and the build, the audit and the docs validator passed. Squash-merged on 2026-10-18 after CI passed.
+
+## 2026-10-18 — Rider delivery flow (PR #25)
+
+**Module:** Checkout view, cart page and drawer copy, checkout validation (address setting), the new rider list, the contact rider card, site config, rider logos, the global `main` style, unit and e2e tests (including the TC-P1-009 overflow test), and the docs\
+**Author:** Lead developer\
+**Reviewer:** Self-reviewed by the lead developer\
+**Date:** 2026-10-18
+
+**Findings:**
+
+1. The site described the rider flow wrongly: it told customers to order from the shop and book a rider separately. The lead developer confirmed that a local rider orders at the shop for the customer and delivers it, and every rider message now says so, with no fee, ETA or free-delivery promise (TC-P2-017 checks the contact page for them).
+2. Rider delivery needs an address. It is required only with rider delivery (TC-P4-027, TC-P4-028), left out of pickup summaries, and kept in the browser like the name and phone number; nothing is sent to a server. Summaries saved before this change have no address and still load.
+3. The selected fulfillment card in Van's cart page and checkout never looked selected: `.surface-lift` is unlayered, so its border, background and shadow beat Tailwind's utilities. The selected card now uses an outline, which `.surface-lift` doesn't set, and MAN-P4-008 confirms it shows.
+4. If the cart changed on the last step, checkout rendered an empty step, because the step stayed on "send" after the stale summary was dropped. It now falls back to the review.
+5. The review's hints were `span` elements directly inside the `dl` groups, which HTML doesn't allow there; they now sit inside the `dd`.
+6. The rider links are named "{rider name} Facebook page". A space between the two spans keeps the words from running together in the accessible name (TC-P4-029), and the logos are decorative (`alt=""`) because the name sits next to them. The Playwright check for the shop's own "Facebook page" link now matches the name exactly, since the rider links contain the same words.
+7. The logos are the services' public profile photos, resized to 256 × 256 px with metadata removed. Their cover photos are not used, and listing a rider is not an endorsement or partnership.
+8. At 390 px the rider cards left about 120 px for text, so "Facebook page" wrapped. The rider list now sizes itself to its container: compact rows with 40 px logos below 20rem, larger rows from 20rem and three columns from 42rem. Van's checkout summary uses less padding on phones (`p-5` instead of `p-8` on the card, and `p-4` instead of `p-5` or `p-6` on the boxes inside it; unchanged from the `sm` breakpoint), and the contact page's three steps stack until their container is 36rem wide. MAN-P4-008 found every label on one line down to 320 px.
+9. On desktop the menu's category bar overhung the page by 7.5 px on each side: the bar is 100vw wide, and the desktop scrollbar gutter takes part of that width. The `overflow-x: clip` on `body` didn't contain it, because the browser applies body's overflow to the viewport instead of to body. `main` now clips sideways overflow. Unlike `hidden`, `clip` doesn't make a scroll container, so the sticky bars keep working, and the order dialog, mobile navigation and cart drawer render outside `main`. TC-P1-009 in Van's `tests/e2e/foundation.spec.ts` had missed the overhang: it loaded an empty menu, so the bar never rendered, and it compared with `clientWidth`, which the stable gutter makes 15 px wider than the layout in headless Chromium. It now loads one mocked category and item, also checks `/about`, and compares with the layout width. It fails on the build without the fix (at 375 px, `/menu` measured 368 px of content in a 360 px layout) and passes with it.
+10. No runtime dependency, data access or credential handling changed.
+
+**Known limitations:** The GCash QR is still pending from the owner. The rider list can't show whether a rider is available. The click-through on a physical phone (MAN-P4-007) is still to do and now includes the rider flow.\
+**Status:** Self-reviewed by the lead developer. Locally, Vitest passed 130/130 in 18 files and Playwright 25/25 (16 + 9), and the build, the audit and the docs validator passed. Squash-merged on 2026-10-18 after CI passed.

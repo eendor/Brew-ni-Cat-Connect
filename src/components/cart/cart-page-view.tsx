@@ -34,7 +34,7 @@ export function CartPageView() {
         description={
           <p>
             Review your selected drinks, snacks, and cat treats. Choose pickup
-            at our shop or arrange your preferred external rider.
+            at our shop or have a local rider order and deliver it.
           </p>
         }
       />
@@ -135,10 +135,10 @@ export function CartPageView() {
                     </legend>
                     <div className="grid gap-4 sm:grid-cols-2">
                       <label
-                        className={`surface-lift flex cursor-pointer flex-col justify-between rounded-2xl border p-5 transition-all ${
+                        className={`surface-lift flex cursor-pointer flex-col justify-between rounded-2xl p-5 ${
                           fulfillment === "pickup"
-                            ? "border-[var(--accent-solid)] bg-[var(--surface-warm)] ring-2 ring-[var(--accent-solid)]"
-                            : "border-[var(--border-soft)] bg-[var(--surface-card)] hover:bg-[var(--surface-warm)]"
+                            ? "outline-2 outline-[var(--accent-solid)]"
+                            : ""
                         }`}
                       >
                         <div className="flex items-start justify-between gap-3">
@@ -169,19 +169,19 @@ export function CartPageView() {
                       </label>
 
                       <label
-                        className={`surface-lift flex cursor-pointer flex-col justify-between rounded-2xl border p-5 transition-all ${
+                        className={`surface-lift flex cursor-pointer flex-col justify-between rounded-2xl p-5 ${
                           fulfillment === "external-rider"
-                            ? "border-[var(--accent-solid)] bg-[var(--surface-warm)] ring-2 ring-[var(--accent-solid)]"
-                            : "border-[var(--border-soft)] bg-[var(--surface-card)] hover:bg-[var(--surface-warm)]"
+                            ? "outline-2 outline-[var(--accent-solid)]"
+                            : ""
                         }`}
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div>
                             <div className="font-extrabold text-[var(--text-strong)] text-base">
-                              Customer-Arranged Rider
+                              Rider Delivery
                             </div>
                             <div className="text-xs text-[var(--accent-strong)] font-semibold mt-1">
-                              External rider pickup
+                              A local rider orders and delivers
                             </div>
                           </div>
                           <input
@@ -198,9 +198,9 @@ export function CartPageView() {
                           />
                         </div>
                         <p className="mt-4 text-xs text-[var(--text-muted)] leading-relaxed">
-                          You independently book and pay your preferred rider
-                          (e.g. Papa&apos;s Delivery). The rider collects your
-                          order at the shop.
+                          Send your order summary to a local delivery service in
+                          Kabacan. The rider orders it at the shop for you and
+                          brings it to your address.
                         </p>
                       </label>
                     </div>
@@ -209,11 +209,13 @@ export function CartPageView() {
                   {fulfillment === "external-rider" ? (
                     <div className="mt-5 rounded-2xl border border-[var(--notice-border)] bg-[var(--notice-surface)] p-4 text-xs leading-6 text-[var(--notice-text)]">
                       <strong className="block font-bold">
-                        Rider Arrangement Notice
+                        How Rider Delivery Works
                       </strong>
-                      Rider availability, delivery fees, arrival time, and rider
-                      payment are separate from Brew ni Cat. Brew ni Cat does
-                      not calculate, book, or collect rider fees.
+                      At checkout you prepare an order summary and send it to a
+                      local rider on Facebook. The rider orders it at Brew ni
+                      Cat and delivers it to you. Delivery fee, timing and
+                      payment are agreed with your rider; Brew ni Cat
+                      doesn&apos;t book riders or charge rider fees.
                     </div>
                   ) : null}
                 </div>
@@ -236,10 +238,10 @@ export function CartPageView() {
 
                     <div className="flex justify-between text-[var(--text-muted)]">
                       <span>Fulfillment</span>
-                      <span className="font-bold text-[var(--text-strong)] capitalize">
+                      <span className="font-bold text-[var(--text-strong)]">
                         {fulfillment === "pickup"
                           ? "Pickup at shop"
-                          : "External rider"}
+                          : "Rider delivery"}
                       </span>
                     </div>
 
@@ -248,15 +250,16 @@ export function CartPageView() {
                       <span className="font-semibold text-[var(--text-subtle)] text-xs text-right max-w-44">
                         {fulfillment === "pickup"
                           ? "None (Pickup)"
-                          : "Handled directly with rider"}
+                          : "Agreed with your rider"}
                       </span>
                     </div>
 
                     <div className="flex justify-between gap-4 text-[var(--text-muted)]">
                       <span>Takeout box</span>
                       <span className="text-right text-xs font-semibold text-[var(--text-subtle)]">
-                        {siteConfig.operations.takeoutBoxPrice}, paid at the
-                        shop · not in subtotal
+                        {fulfillment === "pickup"
+                          ? `${siteConfig.operations.takeoutBoxPrice}, paid at the shop · not in subtotal`
+                          : `${siteConfig.operations.takeoutBoxPrice} · not in subtotal`}
                       </span>
                     </div>
 
@@ -279,9 +282,10 @@ export function CartPageView() {
                     <strong className="block font-bold text-[var(--text-strong)]">
                       Payment Policy
                     </strong>
-                    Payment is settled directly with the shop via Cash or GCash
-                    when picked up or when your rider arrives. No online payment
-                    is charged on this website.
+                    {fulfillment === "pickup"
+                      ? "Payment is settled directly with the shop via Cash or GCash when you pick up your order."
+                      : "Payment and the delivery fee are agreed with your rider."}{" "}
+                    No online payment is charged on this website.
                   </div>
 
                   <Link
