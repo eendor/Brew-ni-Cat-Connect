@@ -300,7 +300,10 @@ Teammates' commits, and Renier's PR #6 title (`QA: Phase 2 independent QA result
 
 ## 2026-10-18 — Social and contact icons (PR #26)
 
-**Module:** Inline icon set, footer, contact page, home visit facts, mobile navigation, rider list, checkout fulfillment and contact buttons, unit tests and the Vitest setup**Author:** Lead developer**Reviewer:** Self-reviewed by the lead developer**Date:** 2026-10-18
+**Module:** Inline icon set, footer, contact page, home visit facts, mobile navigation, rider list, checkout fulfillment and contact buttons, unit tests and the Vitest setup\
+**Author:** Lead developer\
+**Reviewer:** Self-reviewed by the lead developer\
+**Date:** 2026-10-18
 
 **Findings:**
 
@@ -310,4 +313,5 @@ Teammates' commits, and Renier's PR #6 title (`QA: Phase 2 independent QA result
 4. Unit tests that load checkout without a menu loader were hitting the live catalog when `NEXT_PUBLIC_SUPABASE_*` was exported in the shell, which dropped the test cart's items. `tests/setup.ts` now deletes those two public settings so unit tests stay offline, matching CI.
 5. No runtime dependency, data access or credential handling changed.
 
-**Known limitations:** MAN-P4-009 (narrow-width icon layout) is left for a quick lead spot-check after merge. The GCash QR and the physical-phone click-through (MAN-P4-007) remain open.**Status:** Self-reviewed by the lead developer. Locally, Vitest passed 136/136 in 19 files and Playwright 25/25 (16 + 9), and the build, the audit and the docs validator passed. Squash-merged on 2026-10-18 after CI passed.
+**Known limitations:** MAN-P4-009 (narrow-width icon layout) is left for a quick lead spot-check after merge. The GCash QR and the physical-phone click-through (MAN-P4-007) remain open.\
+**Status:** Self-reviewed by the lead developer. Locally, Vitest passed 136/136 in 19 files and Playwright 25/25 (16 + 9), and the build, the audit and the docs validator passed. Squash-merged on 2026-10-18 after CI passed.
