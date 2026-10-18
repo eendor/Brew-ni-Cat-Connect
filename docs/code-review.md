@@ -1,7 +1,7 @@
 # Code Review and Inspection Record
 
 **Document version:** 0.1 Draft\
-**Last updated:** 2026-08-24
+**Last updated:** 2026-10-18
 
 This document separates developer self-inspection from independent teammate review. A pull request or automated check is not recorded as peer approval until a named teammate has actually reviewed it.
 
@@ -82,7 +82,7 @@ This document separates developer self-inspection from independent teammate revi
 
 ### Known limitation / blocker
 
-The initial production public probes returned HTTP 200 with zero `categories` and `items` rows; that **BEFORE** result is retained historically. After the owner/developer manually disabled RLS, publishable GET requests returned 6 categories and 16 items and `/menu` rendered them at all required widths. The application still uses the publishable identity only and made no RLS or business-data change.
+The initial production public probes returned HTTP 200 with zero `categories` and `items` rows; that **BEFORE** result is retained historically. After RLS was manually disabled, publishable GET requests returned 6 categories and 16 items and `/menu` rendered them at all required widths. The application still uses the publishable identity only and made no RLS or business-data change.
 
 This functional pass exposes a more serious current blocker: public access depends on grants rather than least-privilege RLS, and HEAD-only/no-body probes found unrelated inventory, recipe, expense, order, order-item, and release tables publicly reachable. Restore RLS and test explicit catalog-only anonymous `SELECT` policies before production. Public writes were not tested.
 
@@ -94,6 +94,14 @@ This functional pass exposes a more serious current blocker: public access depen
 **Recommendations:** Review the checklist and cases in `docs/evidence/phase-2-implementation.md` and `docs/test-cases.md`; separately verify business facts, public access behavior, mobile/keyboard/media experience, typing, environment separation, and scope.\
 **Changes made:** Not applicable until review findings exist.\
 **Status:** Developer self-inspection, local automation, branch push, open [Pull Request #2](https://github.com/eendor/Brew-ni-Cat-Connect/pull/2), and the initial/follow-up hosted workflows are complete. Renier's independent review remains pending. Do not merge or mark Done before that review.
+
+### Independent Phase 2 QA closure
+
+**Reviewer:** Renier Apal (QA)\
+**Date:** 2026-09-16
+
+**Findings:** Renier's independent QA, which included a security and code review pass, ended with "PASS FOR PHASE 2 MERGE WITH KNOWN PRE-PRODUCTION SECURITY FOLLOW-UP". The follow-up is the RLS-disabled catalog access described above. The plan is in [`phase-2-qa-plan.md`](phase-2-qa-plan.md) and the results are in [`phase-2-qa-report.md`](phase-2-qa-report.md), recorded in PR #6 (merged as `5007a30`).\
+**Status:** Pull Request #2 merged on 2026-09-16 as `ae002f1` after that QA. The RLS blocker stays open until catalog-only policies are restored. The handoff above is kept as written at the time.
 
 ## 2026-09-18 — Phase 3 ordering core (PR #7)
 
@@ -155,7 +163,7 @@ This functional pass exposes a more serious current blocker: public access depen
 **Findings:** Presentation only; no data, ordering, or pricing logic changed. Removes the PR #17 hover workaround along with the menu stagger. Header glow fix checked by computed opacity because headless Chromium does not show it.\
 **Status:** Self-reviewed by the lead developer; merged as `a887c12`.
 
-## 2026-10-16 — Phase 3 checkout validation refactor and test coverage
+## 2026-10-16 — Phase 3 checkout validation refactor and test coverage (PR #20)
 
 **Module:** `src/lib/ordering/validation.ts`, `tests/unit/checkout-validation.test.ts`\
 **Author:** Shan Besto\
@@ -173,6 +181,14 @@ This functional pass exposes a more serious current blocker: public access depen
 
 **Status:** Approved by the lead developer and merged as `902fb6b` (PR #20). Post-merge gates on `main` passed: Vitest 115/115 in 15 files, Playwright 13/13, build, lint, typecheck, format, docs validator.
 
+## 2026-10-17 — Category tab highlight test (PR #21)
+
+**Module:** `tests/unit/menu-catalog.test.tsx`\
+**Date:** 2026-10-17
+
+**Findings:** Test-only fix for TC-P3-052, which failed once on `main` and passed on re-run. The fake `IntersectionObserver` now records each callback with the elements it observes, so the test only notifies the menu observer and not a `Reveal` one. The file passed 7/7 three times in a row, Vitest passed 115/115 and CI passed.\
+**Status:** Self-reviewed by the lead developer; merged as `3b1f7ed`.
+
 ## 2026-10-17 — Direct-to-main documentation commits (process exception)
 
 **Module:** Project documentation only\
@@ -186,4 +202,75 @@ This functional pass exposes a more serious current blocker: public access depen
 | `ad5f0a5` | 2026-10-17 | Synced docs with PR #20 (5 files) | Pushed without prior approval |
 
 **Findings:** Neither commit touches application code, tests, configuration, or data. Both were reviewed after the fact against the merged PRs they describe. CI failed once on `ad5f0a5` because of the flaky TC-P3-052 test, unrelated to the docs; a re-run passed and the test fix is in PR #21.\
-**Status:** Accepted as documented exceptions by the lead developer. Docs syncs go through a `docs/` branch and pull request from now on.
+**Status:** Accepted as documented exceptions by the lead developer. Docs syncs go through a `docs/` branch and pull request from now on. Recorded in PR #22, merged as `80c1839`.
+
+## 2026-10-18 — Three.js experience, motion layer and dark redesign (PR #23)
+
+**Module:** `src/components/three/`, `src/components/motion/`, `src/app/globals.css`, every page, and Van's cart, order dialog and checkout views\
+**Author:** Lead developer\
+**Reviewer:** Self-reviewed by the lead developer\
+**Date:** 2026-10-18
+
+**Findings:**
+
+1. Scope stays presentational: no new data access, credentials or runtime network calls. The HDRI and textures are bundled locally, and no 3D file fetches catalog or customer data.
+2. The category tab spy measures the layout once a frame, so the highlight follows the page and a clicked tab is current at once.
+3. Copy clears the cart only after a successful clipboard write. The prepared summary, which holds the name and phone, is kept in `sessionStorage`, is shape-checked, expires after 12 hours and is dropped when the cart changes.
+4. Scenes free their renderer when a start fails, retry a failed HDRI, compile their shaders before they show and pause off screen. No full-screen WebGL canvas stays running on every page.
+5. Accessibility: every 3D and state scene is `aria-hidden` beside real text, overlays keep their focus traps and are inert while they animate out, the copy result is announced in a live region, and reduced motion gets the static site with no canvas or animation.
+6. Design rules: menu cards are plain and uniform with no lit stage, glow floor or neon type; there are no scroll hints; the sign is not boxed; the gallery ring only shows photos without people.
+7. Repeated menu links and sections are removed, long option names wrap, and nothing spills out of the order dialogs at 1440, 1024, 768 and 390 px.
+
+**Known limitations:** The real-GPU click-through (MAN-P4-003), plus the duplicate photos and dev-only lint advisories already on `main`, were left for PR #24.\
+**Status:** Self-reviewed by the lead developer, since GitHub does not allow approving your own pull request. Vitest passed 127/127 in 17 files and Playwright 21/21 (14 + 7) locally, and CI passed. Squash-merged on 2026-10-18 as `cf52cb3`.
+
+## 2026-10-18 — Commit and pull request titles without a type prefix (process exception)
+
+**Module:** Git history and pull request titles only\
+**Date:** 2026-10-18
+
+`CONTRIBUTING.md` and `docs/development-standards.md` §13 ask for imperative, Conventional Commit-style subjects such as `feat: …`, `fix: …` and `docs: …`. Merge commits aside, seven commits on `main` do not follow it:
+
+| Commit | Date | Author | Subject | Pull request |
+| --- | --- | --- | --- | --- |
+| `b666e91` | 2026-08-26 | Van | `docs:add Phase 2 project management readiness` (no space after the colon) | #4 |
+| `00d42c1` | 2026-09-05 | Rizjie | `Add phase 2 showcase presentation doc` | #5 |
+| `3cf14fd` | 2026-09-05 | Rizjie | `Update Phase 2 : mark resolved observations, add future suggestions and confirmation items` | #5 |
+| `70b12a9` | 2026-09-24 | Lead developer | `Add 12 new Facebook photos to the curated gallery` | #9 |
+| `f0fa38e` | 2026-09-24 | Lead developer | `Polish gallery and cinematic showcase UI (#10)` | #10 |
+| `937d6f5` | 2026-10-05 | Lead developer | `Polish homepage visit logistics, customer favorites, and cat lounge etiquette (#11)` | #11 |
+| `5f33fc7` | 2026-10-15 | Van | `Fix: addressed feedback from code review` | #14 |
+
+**Findings:** The commits are already on `main` and in every teammate's clone. Rewording them would mean rewriting shared history and force-pushing `main`, which §13 rules out without team coordination, and every clone would have to be reset; the subjects are a labeling slip and the code they carry was reviewed. Pull request titles can change without touching history, so the lead developer's seven unprefixed titles were retitled on 2026-10-18:
+
+| Pull request | Old title | New title |
+| --- | --- | --- |
+| #1 | Phase 1: Initialize Brew ni Cat Connect web foundation | feat: initialize the Brew ni Cat Connect web foundation (Phase 1) |
+| #2 | Phase 2: Build Brew ni Cat public showcase website | feat: build the Brew ni Cat public showcase website (Phase 2) |
+| #7 | Phase 3: Add ordering core and cart domain | feat: add the ordering core and cart domain (Phase 3) |
+| #8 (closed, not merged) | Add 12 new Facebook photos to the curated gallery | feat: add 12 new Facebook photos to the curated gallery |
+| #9 | Add 12 new Facebook photos to the curated gallery | feat: add 12 new Facebook photos to the curated gallery |
+| #10 | Polish gallery layout after new Facebook photos | feat: polish the gallery layout after the new Facebook photos |
+| #11 | Polish homepage visit logistics, customer favorites, and cat lounge etiquette | feat: polish homepage visit logistics, customer favorites, and cat lounge etiquette |
+
+Teammates' commits, and Renier's PR #6 title (`QA: Phase 2 independent QA results`), stay as their authors wrote them. The stale `feat/threejs-experience` branch, whose tree matched `main` after the PR #23 squash merge, was deleted locally and on GitHub.\
+**Status:** Accepted as documented exceptions by the lead developer. New commits and pull request titles carry a type prefix, the reviewer checks the title before merging, and a squash merge reuses the prefixed title as the commit subject.
+
+## 2026-10-18 — PR #23 follow-ups (PR #24)
+
+**Module:** Shop photos and gallery config, footer, breadcrumbs, the split page heading, checkout review links (classes only), the npm override, Playwright phone and 3D checks, and the docs\
+**Author:** Lead developer\
+**Reviewer:** Self-reviewed by the lead developer\
+**Date:** 2026-10-18
+
+**Findings:**
+
+1. MAN-P4-003 passed. A scripted click-through on the integrated GPU covered every page and the full order flow at 1440 and 1024 px, on an iPad Mini profile and on two phone profiles, with no failures, no console errors and no sideways scrolling. The tablet and phones held 60 fps idle and about 35–56 fps while scrolling, and the 1440 px heroes ran at 22–31 fps. Frame-budget tuning has a Backlog card.
+2. After a checkout step renamed the page, the split heading kept the previous title as its label. Keying the heading by its title fixes it; TC-P4-026 failed on the PR #23 code and passes now.
+3. TC-P4-024 found tap targets under 44 px on the footer links, both breadcrumbs and the two checkout review links. They now reach 44 px without moving the layout, and Van's checkout view changed in its link classes only.
+4. Three duplicate shop photos are removed (`photo_011.jpg`, `photo_082.jpg` and `photo_085.jpg`), and the gallery keeps 30 photos with no duplicates.
+5. An npm override swaps `fast-glob` in `@next/eslint-plugin-next` for `tinyglobby`, which clears the braces advisory without the downgrade that `npm audit fix --force` proposed. `npm run audit` reports 0 vulnerabilities.
+6. No runtime dependency, data access or credential handling changed.
+
+**Known limitations:** The click-through on a physical phone (MAN-P4-007) is still to do. The seven unprefixed commit subjects stay in history, as the process exception above (recorded in this pull request) explains.\
+**Status:** Self-reviewed by the lead developer. Locally, Vitest passed 127/127 in 17 files and Playwright 25/25 (16 + 9), and the build, the audit and the docs validator passed. Squash-merged on 2026-10-18 after CI passed.

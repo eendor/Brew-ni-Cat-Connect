@@ -2,15 +2,15 @@
 
 **Project:** Brew ni Cat Connect
 **Version:** 0.1 Draft
-**Date:** 2026-08-24
-**Phase:** Living standards through Phase 2
-**Document status:** Phase 1 is Tested and merged; Phase 2 showcase/catalog standards passed developer verification and await independent review.
+**Date:** 2026-10-18 (first drafted 2026-08-18)
+**Phase:** Living standards through Phase 3
+**Document status:** Phases 1 and 2 are merged; Phase 2 passed Renier's independent QA (PR #6). Phase 3 browser-side ordering and the 3D and motion layer are merged (PRs #7, #14, #20, #23 and #24); their rules are in §19.
 
 ## 1. Purpose and Current State
 
 These standards define how Brew ni Cat Connect will be designed, implemented, reviewed, tested, and documented. They apply to web code, shared backend code, database changes, future integrations, test code, scripts, and documentation.
 
-The web application uses **Next.js App Router with React and strict TypeScript**, styled with Tailwind CSS project tokens. Phase 2 adds only the justified read-only Supabase catalog boundary and approved public media. Exact installed dependency versions are recorded in `docs/software-and-apis.md` and locked in `package-lock.json`. Local formatter, lint, type-check, unit/component test, end-to-end test, coverage, and production-build commands are configured; command outcomes are reported only in dated test evidence and the development log. GitHub Actions performs the lightweight pull-request validation gate, while Playwright remains a required local Phase 1 check.
+The web application uses **Next.js App Router with React and strict TypeScript**, styled with Tailwind CSS project tokens. Phase 2 adds only the justified read-only Supabase catalog boundary and approved public media. Phase 3 adds the browser-side cart and checkout and the three.js and GSAP presentation layer, with no server writes. Exact installed dependency versions are recorded in `docs/software-and-apis.md` and locked in `package-lock.json`. Local formatter, lint, type-check, unit/component test, end-to-end test, coverage, and production-build commands are configured; command outcomes are reported only in dated test evidence and the development log. GitHub Actions performs the lightweight pull-request validation gate, while Playwright remains a required local Phase 1 check.
 
 Normative language:
 
@@ -36,28 +36,38 @@ The implemented foundation uses this deliberately small structure:
 
 ```text
 src/
-  app/             App Router pages, root layout, global styles, and state boundaries
+  app/             App Router pages, root layout, page template, global styles, and state boundaries
   components/
+    cart/          Cart drawer, cart page, cart button, and undo toast
+    checkout/      Three-step checkout and the send-to-shop order summary
     layout/        Reusable site shell and navigation components
-    menu/          Read-only catalog UI and explicit customer states
+    menu/          Catalog UI, the order dialog, and explicit customer states
+    motion/        GSAP motion director, route curtain, scroll hook, and overlay presence
+    three/         three.js engine, scenes, canvases, and page wrappers with static fallbacks
     ui/            Small shared presentation primitives
   config/          Typed project-owned public business/gallery configuration
+  context/         Cart context with localStorage persistence
   lib/
+    accessibility/ Dialog focus trap
     menu/          Catalog fetch, mapping, and price display helpers
+    ordering/      Cart pricing, reducer, selectors, checkout validation, and summary storage
     supabase/      Public client creation only
-  types/           Application-level catalog and row boundary types
+  types/           Application-level catalog, ordering, and row boundary types
 tests/
   unit/            Vitest and Testing Library behavior tests
-  e2e/             Playwright browser smoke tests
+  e2e/             Playwright journeys (chromium) and 3D/motion checks (chromium-3d)
   setup.ts         Shared DOM matcher and cleanup setup
-public/            Approved official logo, menu reference art, and shop photographs
+public/
+  images/          Approved official logo, menu reference art, and shop photographs
+  three/           Bundled HDRI and the cat sticker used by the 3D layer
+scripts/           Docs validator and live-menu evidence capture
 docs/              Version-controlled project documentation
 .github/workflows/ Pull-request and branch validation
 ```
 
 Rules:
 
-- Add `features/`, ordering/customer domain, server, or mutation infrastructure only when an approved capability needs it; the Phase 2 catalog folders exist because a real typed read boundary now needs them.
+- Add `features/`, customer domain, server, or mutation infrastructure only when an approved capability needs it; the Phase 2 catalog folders and the Phase 3 ordering folders exist because a real typed boundary needs them.
 - Prefer feature-local code until it is demonstrably shared.
 - When a domain layer is introduced, do not import route/UI concerns into it.
 - Wrap external providers behind narrow project-owned interfaces where this improves testability or prevents vendor concepts from spreading.
@@ -189,7 +199,7 @@ The target is WCAG 2.2 Level AA for customer-facing flows, with automated checks
 - Do not use color alone to communicate state. Meet approved contrast requirements.
 - Provide meaningful alternative text for informative images and empty alternative text for decorative images.
 - Respect reduced-motion preferences and avoid unnecessary animation.
-- Keep touch targets and spacing usable on common phones.
+- Keep touch targets at least 44 by 44 CSS pixels, with spacing usable on common phones. Links inside a sentence are exempt, as in WCAG 2.5.8, and a radio or checkbox counts its whole label. `TC-P4-024` checks every page at 360, 390 and 412 px.
 - Test zoom/reflow and content expansion; avoid fixed heights that clip translated or enlarged text.
 - Announce important asynchronous status changes appropriately without excessive live-region noise.
 - Optimize images and fonts and preserve layout dimensions to reduce shifts on slower mobile connections.
@@ -294,3 +304,15 @@ Standards may evolve when the team gains evidence. A material exception must be 
 - Gallery configuration must use approved local files, generic factual alt text, responsive Next.js Image sizing, and a curated initial set rather than rendering all 139 files.
 
 Repository text uses LF through `.gitattributes` (`* text=auto eol=lf`) and Prettier `endOfLine: lf`. Windows `.bat`/`.cmd` files remain CRLF. PNG/JPEG/WebP/GIF/ICO assets are explicitly binary and are not line-normalized. Contributors should let Git and Prettier normalize text instead of creating line-ending-only review noise; `npm run format:check` is the verification command.
+
+## 19. Phase 3 Ordering, 3D, and Motion Rules
+
+- Cart prices come only from the current catalog, in integer centavos (ADR-011). Client totals are for display; a future order backend must price the order again on the server.
+- Checkout ends in a summary the customer sends to the shop (ADR-012). Code must not write orders, customer details or payments anywhere until a server-side order backend is approved.
+- Checkout field rules live in `src/lib/ordering/validation.ts` with unit tests. Components show each error next to its field and move focus to the first invalid field.
+- The customer's name and phone stay in the browser. The cart uses `localStorage`, and the prepared summary uses `sessionStorage` with a 12-hour limit. Neither is logged or sent anywhere.
+- 3D scenes are decorative (`aria-hidden`). Content, prices and controls stay in HTML, each 3D control has a keyboard-operable HTML button, and every page renders completely without WebGL 2 or under reduced motion (ADR-014).
+- three.js code stays in `src/components/three/`, loads through `next/dynamic` with `ssr: false`, runs on the shared GSAP ticker, pauses off screen and releases its WebGL context on unmount.
+- Motion runs through the motion director and its data attributes (`data-split`, `data-rise`, `data-rise-group`, `data-unveil`, `data-magnetic`), and nothing animates under `prefers-reduced-motion` (ADR-015). A `data-split` heading whose text changes in place is keyed by that text.
+- Assets for the 3D layer are bundled locally with no runtime CDN, and their sources and licenses are recorded in `software-and-apis.md`.
+- Each approved photo appears once. Exact or near copies of another gallery or menu photo stay out of the gallery (PR #24).

@@ -3,8 +3,8 @@
 **Project:** Brew ni Cat Connect\
 **Academic title:** Development of an Omnichannel Online Ordering and Intelligent Customer Engagement System for Brew ni Cat Coffee Shop\
 **Version:** 0.1 Draft\
-**Status:** Version 0.1 Draft — Phase 2 public showcase in Testing / Review\
-**Last updated:** 2026-08-24
+**Status:** Version 0.1 Draft — Phases 1 and 2 merged; Phase 3 browser-side ordering and the 3D and motion layer merged, server-side order creation planned\
+**Last updated:** 2026-10-18
 
 ## 1. Purpose
 
@@ -24,10 +24,10 @@ No unverified claim is made about current business processes, transaction volume
 | Role | Intended interaction | Current status |
 | --- | --- | --- |
 | Visitor | View confirmed public business information and the read-only current menu | Phase 2 implemented surface; publishable runtime renders 6 categories/16 items; RLS-disabled production security blocker remains |
-| Customer | Order, track orders, and use account features when implemented | Planned |
+| Customer | Order, track orders, and use account features when implemented | Phase 3 browser-side cart and checkout merged: the customer prepares an order summary and sends it to the shop; server-side orders, tracking and accounts are Planned |
 | Shop staff | Receive and update online orders through an approved integration workflow | Planned; workflow requires POS analysis |
 | Business owner/authorized manager | Confirm business content, scope, policies, and integration decisions | Required stakeholder |
-| Development team | Design, implement, test, review, deploy, and maintain the system | Active through Phase 2 |
+| Development team | Design, implement, test, review, deploy, and maintain the system | Active through Phase 3 |
 | Academic evaluators | Assess requirements, design evidence, tests, and process artifacts | Planned repository audience |
 
 Role names describe system responsibilities and do not define specific people or permissions. Authorization rules will be specified before protected features are implemented.
@@ -54,7 +54,7 @@ These items are planned roadmap scope, not implemented functionality.
 
 1. Phase 0: specification and architecture.
 2. Phase 1: web project foundation and responsive shell.
-3. Phase 2: public business showcase using confirmed content or labelled fixtures.
+3. Phase 2: public business showcase using confirmed content or labeled fixtures.
 4. Phase 3: menu and ordering experience.
 5. Phase 4: cloud backend and customer accounts.
 6. Later phases: customer experience, POS integration, Messenger, Android, QA, and deployment.
@@ -77,7 +77,7 @@ Connect will interact through an explicitly designed integration boundary. Direc
 
 ## 5. Business-information boundary
 
-The Phase 2 client brief confirms the public address and landmark, contact details, Facebook/TikTok destinations, Cash/GCash acceptance, ₱10 takeout box, opening-hours notice, official logo, approved shop/customer imagery, and customer-arranged external-rider information. The existing Supabase catalog is the current menu source; its publishable runtime now returns 6 categories and 16 items after the owner manually disabled RLS.
+The Phase 2 client brief confirms the public address and landmark, contact details, Facebook/TikTok destinations, Cash/GCash acceptance, ₱10 takeout box, opening-hours notice, official logo, approved shop/customer imagery, and customer-arranged external-rider information. The existing Supabase catalog is the current menu source; its publishable runtime now returns 6 categories and 16 items after RLS was manually disabled.
 
 The following values remain unresolved:
 
@@ -89,7 +89,7 @@ The following values remain unresolved:
 
 For each unresolved owner decision: **TODO: Confirm with Brew ni Cat owner.**
 
-Development fixtures, if later needed, will be stored separately from production data and visibly labelled `MOCK DATA — FOR DEVELOPMENT ONLY`.
+Development fixtures, if later needed, will be stored separately from production data and visibly labeled `MOCK DATA — FOR DEVELOPMENT ONLY`.
 
 ## 6. Explicit exclusions and constraints
 
@@ -126,10 +126,16 @@ Success will be evaluated against approved requirements rather than invented bus
 
 Business-specific acceptance targets remain **TODO: Confirm with Brew ni Cat owner.**
 
-## 8. Phase 2 Current Public Boundary
+## 9. Phase 2 Current Public Boundary
 
 Phase 1 was tested, approved by Renier Apal, and merged through Pull Request #1 at merge commit `11c546d`. Phase 2 replaces the placeholders with Home, Menu, About, Gallery, and Contact experiences using the official logo, 19 curated approved photographs, and the client-confirmed facts dated 2026-08-24.
 
 Current-menu retrieval is the one intentional Phase 2 Supabase exception to the original later-backend roadmap. It is read-only, runs at browser request time through public configuration, maps `categories` and `items` into application types, and does not include authentication, customer records, ordering, or mutations. The initial zero-row state remains historical evidence; the current publishable runtime renders the live catalog. Because RLS is manually disabled and unrelated business tables are publicly reachable, restoring RLS and verifying explicit catalog-only anonymous `SELECT` policies remains a production release prerequisite.
 
 The published independent-rider information does not enable delivery: customers book/pay riders separately and Brew ni Cat does not control fees, availability, or ETA.
+
+## 10. Phase 3 Current Ordering Boundary
+
+Phase 2 merged on 2026-09-16 as `ae002f1` through Pull Request #2, after Renier's independent QA (Pull Request #6). Phase 3 adds browser-side ordering: the ordering core and cart domain (Pull Request #7), Van's cart drawer, cart page and checkout (Pull Request #14), and Shan's checkout validation (Pull Request #20). Prices come only from the current catalog. Checkout asks for a name, a Philippine mobile number and optional notes, which stay in the browser, and ends in an order summary that the customer copies and sends to Brew ni Cat through Facebook Messenger or by phone. No order, name or phone number is sent to Supabase or any other server; server-side order creation, online payment and order tracking remain Planned.
+
+Pull Request #23 adds the Night Shift Glow redesign on a decorative three.js and GSAP layer (ADR-014 and ADR-015); every page keeps its HTML content and controls without it. Pull Request #24 adds phone checks and 44 px tap targets and removes duplicate photographs, leaving 30 curated gallery photographs. The Phase 2 RLS blocker in §9 still stands.

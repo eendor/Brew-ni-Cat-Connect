@@ -1,14 +1,14 @@
 # Software Libraries and APIs
 
 **Version:** 0.1 Draft\
-**Status:** Phase 2 public showcase dependencies installed and locked; live public catalog API rendering verified; manually RLS-disabled access remains a production security blocker\
-**Last updated:** 2026-08-24
+**Status:** Phase 1–3 dependencies installed and locked, including `three` and `gsap` for the 3D and motion layer (PR #23); live public catalog API rendering verified; manually RLS-disabled access remains a production security blocker\
+**Last updated:** 2026-10-18
 
 ## 1. Current technology state
 
 Phase 1 established the web foundation with **Next.js App Router, React, TypeScript, and Tailwind CSS**. Phase 2 retains that foundation and adds the public showcase plus a typed read-only Supabase catalog client. The repository commits `package-lock.json`, pins every direct dependency to an exact version, and requires Node.js 24.x. Vitest and Testing Library provide unit/component testing, Playwright provides browser smoke testing, and ESLint, Prettier, TypeScript, and the Next.js production build form the local quality gate.
 
-The Phase 0 planning register dated 2026-08-18 is retained in repository history. The tables below supersede its registry observations with versions actually installed through Phase 2. An installed version documents the project toolchain; it does not by itself claim that a check passed. Executed results belong in the test evidence and development log.
+The Phase 0 planning register dated 2026-08-18 is retained in repository history. The tables below supersede its registry observations with versions actually installed as of PR #24. An installed version documents the project toolchain; it does not by itself claim that a check passed. Executed results belong in the test evidence and development log.
 
 Supabase JavaScript is installed solely for Phase 2 public read-only catalog retrieval. Meta Messenger Platform and Android dependencies are not installed; no POS mutation/synchronization dependency exists.
 
@@ -16,9 +16,9 @@ Supabase JavaScript is installed solely for Phase 2 public read-only catalog ret
 
 | Technology             | Purpose                                                        | Installed / supported version   | License      | Status / notes                                                                              |
 | ---------------------- | -------------------------------------------------------------- | ------------------------------- | ------------ | ------------------------------------------------------------------------------------------- |
-| Node.js                | Web build and runtime                                          | `>=24.0.0 <25`; local `24.19.0` | MIT          | Supported engine range is declared in `package.json`; `.nvmrc` selects major 24             |
+| Node.js                | Web build and runtime                                          | `>=24.0.0 <25`; local `24.22.0` | MIT          | Supported engine range is declared in `package.json`; `.nvmrc` selects major 24             |
 | npm                    | Reproducible package installation                              | Local `12.0.2`                  | Artistic-2.0 | Uses the committed `package-lock.json`; npm is the only package manager for the web project |
-| Python                 | Dependency-free specification document validation             | `>=3.10`; local `3.14.7`        | PSF License  | GitHub Actions selects Python 3.14 for the repository validator                            |
+| Python                 | Dependency-free specification document validation             | `>=3.10`; local `3.14.8`        | PSF License  | GitHub Actions selects Python 3.14 for the repository validator                            |
 | Next.js                | App Router, rendering, routing, metadata, and production build | `16.3.8`                        | MIT          | Upgraded from 16.3.2 in PR #11; strict mode on, powered-by header off                        |
 | React                  | Component UI runtime                                           | `19.2.8`                        | MIT          | Installed with the Next.js-compatible pinned version                                        |
 | React DOM              | Browser/server React rendering                                 | `19.2.8`                        | MIT          | Installed with React at the same pinned version                                             |
@@ -59,7 +59,7 @@ Supabase JavaScript is installed solely for Phase 2 public read-only catalog ret
 | `npm run dev`           | Start the Next.js development server                           |
 | `npm run build`         | Create the production Next.js build                            |
 | `npm run start`         | Serve an existing production build                             |
-| `npm run audit`         | Fail on reported high- or critical-severity advisories         |
+| `npm run audit`         | Fail on high or critical advisories in production dependencies, or critical ones anywhere |
 | `npm run format`        | Apply Prettier formatting                                      |
 | `npm run format:check`  | Verify formatting without changing files                       |
 | `npm run lint`          | Run ESLint with warnings treated as failures                   |
@@ -136,7 +136,7 @@ The app intentionally performs retrieval in the browser after render. This keeps
 
 The five local menu posters are assets, not an API or data source. Current names/prices come from the live Supabase publishable response. That functional data path does not make the current RLS-disabled access least privilege.
 
-## Phase 3 additions (PRs #7, #12, #14, #16)
+## 10. Phase 3 additions (PRs #7, #12, #14, #16, #23, #24)
 
 The ordering work in Phase 3 added no runtime dependencies. The 3D layer in PR #23 adds `three` and `gsap`.
 
@@ -146,13 +146,14 @@ The ordering work in Phase 3 added no runtime dependencies. The 3D layer in PR #
 - **Dependency security (PR #12):** `sharp` 0.35.5 and `source-map-js` 1.2.2 through `npm audit fix`; production audit reports 0 vulnerabilities.
 - **3D experience (PR #23):** `src/components/three/` (engine, scenes, canvases and page wrappers with static fallbacks) on three.js and GSAP ScrollTrigger, loaded client-side with `next/dynamic`. Reduced motion and devices without WebGL 2 get the static page.
 - **Motion layer (PR #23):** `src/components/motion/` drives entrances, scroll reveals, overlay exits and page transitions with GSAP (ScrollTrigger and SplitText), replacing the CSS-only approach of PR #16 (ADR-015). Nothing animates under `prefers-reduced-motion`.
+- **Lint tooling advisory (PR #24):** `eslint-config-next` 16.3.8 brings in `@next/eslint-plugin-next`, which depends on `fast-glob` → `micromatch` → `braces`. Every `braces` version carries a high-severity stack-exhaustion advisory ([GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm)), and `npm audit fix --force` would downgrade `eslint-config-next` to 14. Instead, an npm `overrides` entry in `package.json` swaps `fast-glob` for `tinyglobby` 0.2.17 inside that plugin only (`"fast-glob": "npm:tinyglobby@0.2.17"`); `tinyglobby` uses `picomatch`, not `braces`, and was already installed for Vite, Vitest and typescript-eslint. The plugin only calls the glob for its `no-html-link-for-pages` rule when `settings.next.rootDir` is set, which this project doesn't set. `tinyglobby` returns folders with a trailing slash, so check that rule again if `rootDir` is ever configured. Remove the override once a Next.js release drops `fast-glob` or the chain is fixed. `npm run audit` now reports 0 vulnerabilities, dev tooling included.
 
-## 6. Third-party assets in the 3D layer
+## 11. Third-party assets in the 3D layer
 
-| Asset | File | Source and author | Licence | Notes |
+| Asset | File | Source and author | License | Notes |
 | --- | --- | --- | --- | --- |
 | Studio Small 09 HDRI (1K) | `public/three/hdri/studio_small_09_1k.hdr` | Poly Haven, by Sergej Majboroda | CC0 1.0 | Image-based lighting and reflections; downloaded from polyhaven.com and bundled locally (no runtime CDN) |
 | Big Shoulders (display) and Archivo (body) | Served by `next/font/google` | Google Fonts | SIL Open Font License 1.1 | Self-hosted at build time by Next.js; Google Fonts now ships "Big Shoulders Display" as the "Big Shoulders" family |
 | Cat sticker on the 3D cup | `public/three/cat-sticker.png` | Cut from the shop's own Matcha product photo | Shop-owned, same terms as the other approved shop photos | Not a stock image |
-| Food, drink, sign and street models | Generated in code (`src/components/three/scenes/models.ts` and scene files) | Project code | Project licence | Procedural geometry with generated albedo, normal and roughness maps (`engine/textures.ts`); no third-party models |
+| Food, drink, sign and street models | Generated in code (`src/components/three/scenes/models.ts` and scene files) | Project code | Project license | Procedural geometry with generated albedo, normal and roughness maps (`engine/textures.ts`); no third-party models |
 

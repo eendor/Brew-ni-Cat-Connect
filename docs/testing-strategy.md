@@ -3,9 +3,9 @@
 **Project:** Brew ni Cat Connect
 **Version:** 0.1 Draft
 **Original date:** 2026-08-18
-**Last updated:** 2026-08-24
-**Phase:** Living strategy through Phase 2
-**Document status:** Phase 1 evidence is complete and merged. Phase 2 live public Menu verification, the final local quality-gate rerun, and both hosted workflows for evidence head `975561b` passed. Pull Request #2 is open/unmerged, the RLS-disabled production security blocker remains open, and independent QA/review is pending.
+**Last updated:** 2026-10-18
+**Phase:** Living strategy through Phase 3
+**Document status:** Phase 1 evidence is complete and merged. Phase 2 live public Menu verification, the final local quality-gate rerun, and both hosted workflows for evidence head `975561b` passed. Pull Request #2 merged on 2026-09-16 as `ae002f1` after Renier's independent QA (Pull Request #6); the RLS-disabled production security blocker remains open. Phase 3 verification is in §23.
 
 ## 1. Current Test Status
 
@@ -21,7 +21,7 @@ The original Phase 0 baseline contained no application runtime or test result. P
 - Four Phase 1 review screenshots and developer inspections were retained. Renier subsequently completed independent manual QA and peer review with no blocking defect; Pull Request #1 was approved and merged as `11c546d`.
 - GitHub Actions is configured for format, lint, typecheck, unit/component test, and production-build validation. A remote workflow result is not claimed until the feature branch/PR workflow has completed.
 
-The detailed cases and reproducible local evidence are in `docs/test-cases.md` and `docs/evidence/phase-1-verification.md`. Test results remain valid only for the identified working tree/commit and environment.
+The detailed cases and reproducible local evidence are in `docs/test-cases.md` and `docs/evidence/phase-1-verification.md`. Test results remain valid only for the identified working tree/commit and environment. Phases 2 and 3 extend this baseline; their status is in §22 and §23.
 
 ## 2. Objectives
 
@@ -122,7 +122,7 @@ Seed data must be deterministic, synthetic, minimal, and labeled `MOCK DATA — 
 
 ## 9. End-to-End Testing with Playwright
 
-Playwright exercises a production build. Phase 2 expands the shell regression to real Home/About/Gallery/Contact/Menu/404 content, navigation and representative-width overflow; unit/component tests inject deterministic menu loaders. Ordering workflows are added only when implemented.
+Playwright exercises a production build. Phase 2 expands the shell regression to real Home/About/Gallery/Contact/Menu/404 content, navigation and representative-width overflow; unit/component tests inject deterministic menu loaders. Ordering workflows are added only when implemented. Phase 3 adds the browser-side order journey up to the send-to-shop summary and a separate `chromium-3d` project for the 3D layer (§23).
 
 Planned journeys by phase include:
 
@@ -245,7 +245,7 @@ Phase 1 implements `.github/workflows/ci.yml` for pushes to `main` and `feat/**`
 
 Playwright is intentionally omitted from the hosted lightweight workflow to avoid installing and caching browser binaries on every run. `npm run test:e2e` remains a required local pre-review check, and its passing Chromium result is recorded in the Phase 1 verification evidence. The team can add browser CI when critical customer workflows make the added execution cost proportionate.
 
-The workflow grants only read access to repository contents, has a 15-minute timeout, and cancels superseded runs for the same workflow/ref. No protected application credentials are required because Phase 2 catalog retrieval starts in the browser at runtime, while automated tests mock or intercept the catalog boundary and the build is live-service independent. Production deployment remains separate and unconfigured. A local result is not represented as a GitHub Actions result; a linked remote run must complete before CI is marked passed.
+The workflow grants only read access to repository contents, has a 15-minute timeout, and cancels superseded runs for the same workflow/ref. No protected application credentials are required because Phase 2 catalog retrieval starts in the browser at runtime, while automated tests mock or intercept the catalog boundary and the build does not call Supabase. Since PR #23 the build downloads the Big Shoulders and Archivo fonts from Google Fonts through `next/font/google`, so it needs network access, though still no credential. Production deployment remains separate and unconfigured. A local result is not represented as a GitHub Actions result; a linked remote run must complete before CI is marked passed.
 
 ## 17. Test Case and Evidence Records
 
@@ -300,8 +300,8 @@ Before production launch, Brew ni Cat's authorized business representative will 
 | --- | --- |
 | Phase 0 — Specification | Strategy reviewed for consistency; all test results remain truthfully `Not Run` |
 | Phase 1 — Foundation | 4 unit/component and 5 Chromium E2E tests, static/build gates, developer inspection, independent Renier QA, and peer review completed; Pull Request #1 merged as `11c546d`. |
-| Phase 2 — Public showcase | Real content/navigation/media and typed menu mapping success/loading/empty/error/availability states are covered; build remains live-service independent; publishable runtime returned and rendered the current 6-category/16-item catalog at five widths; the final follow-up gates and refreshed secret/bundle scans passed; RLS restoration/least-privilege policy work and independent Renier QA/review remain required before production/merge. |
-| Phase 3 — Menu/ordering | Critical calculation, product-configuration, cart, checkout-form/domain validation, and pre-submission journey cases pass; no persisted order is claimed before the backend exists |
+| Phase 2 — Public showcase | Real content/navigation/media and typed menu mapping success/loading/empty/error/availability states are covered; build remains live-service independent; publishable runtime returned and rendered the current 6-category/16-item catalog at five widths; the final follow-up gates and refreshed secret/bundle scans passed; independent Renier QA passed (Pull Request #6) and Pull Request #2 merged as `ae002f1`; RLS restoration/least-privilege policy work remains required before production. |
+| Phase 3 — Menu/ordering | Critical calculation, product-configuration, cart, checkout-form/domain validation, and pre-submission journey cases pass; no persisted order is claimed before the backend exists. These cases pass for the merged browser-side flow (§23). |
 | Phase 4 — Backend/accounts | Migration, auth, RLS cross-user denial, server validation, transaction, idempotent order creation, and recovery cases pass in isolation |
 | Phase 5 — Customer experience | History, tracking, favorites, reorder, loyalty, concurrency, and authorization cases pass |
 | Phase 6 — POS integration | Contract, source-of-truth, replay, conflict, offline/failure, security, and non-production integration cases pass |
@@ -326,10 +326,35 @@ Playwright retains the 404 and five responsive widths (320, 375, 768, 1024, and 
 
 A live check must use the public runtime identity and compare representative category/item names, variants/sizes, flavor-specific prices, optional combo descriptions, and availability against current Supabase records. The initial 2026-08-24 discovery returned HTTP 200 with zero rows; that is retained as **BEFORE** failure-state evidence.
 
-After the owner/developer manually disabled RLS on the relevant catalog tables, the same publishable runtime returned 6 categories and 16 items, with 0 unavailable items and 0 unmatched relationships. Unmocked `/menu` inspection at 320, 375, 768, 1024, and 1440 rendered all current records with zero body overflow and zero console errors. `docs/evidence/phase-2/live-menu-review.json` is the machine-readable result. Current Supabase records, not posters, are the expected-result source.
+After RLS was manually disabled on the relevant catalog tables, the same publishable runtime returned 6 categories and 16 items, with 0 unavailable items and 0 unmatched relationships. Unmocked `/menu` inspection at 320, 375, 768, 1024, and 1440 rendered all current records with zero body overflow and zero console errors. `docs/evidence/phase-2/live-menu-review.json` is the machine-readable result. Current Supabase records, not posters, are the expected-result source.
 
 This functional pass is not authorization acceptance. HEAD-only/no-body probes found unrelated business tables publicly reachable, and public writes were not tested. Never run mutation tests against production. Restore RLS and prove intended catalog-only anonymous `SELECT` access plus denial of unrelated tables/writes through an approved policy test before production.
 
 ### Evidence and status
 
 `docs/evidence/phase-2-implementation.md` is the handoff record. It distinguishes initial and follow-up observations and records command summaries, counts, exit statuses, screenshot paths, commits, open [Pull Request #2](https://github.com/eendor/Brew-ni-Cat-Connect/pull/2), and hosted workflow results. The final local follow-up commands passed, implementation/evidence commit `4eaeca0` exists, and both hosted workflows for evidence head `975561b` passed. The live Pull Request check rollup remains authoritative for the metadata-only evidence update. Automated success moves the card to Testing / Review, not Done; the security blocker remains open and Renier's independent results stay unchecked until performed.
+
+**Merge update:** Renier's independent QA then passed with the result "PASS FOR PHASE 2 MERGE WITH KNOWN PRE-PRODUCTION SECURITY FOLLOW-UP" ([`phase-2-qa-report.md`](phase-2-qa-report.md), Pull Request #6), and Pull Request #2 merged on 2026-09-16 as `ae002f1`. The RLS security blocker above remains open.
+
+## 23. Phase 3 Verification Addendum
+
+### Automated scope
+
+Phase 3 adds the browser-side ordering flow and the 3D and motion layer. The whole Vitest suite now runs 127 tests in 17 files. In [`test-cases.md`](test-cases.md), §10 covers cart pricing, the cart reducer and the cart selectors; §11 covers menu photos, the menu loading and tab states, and the checkout validation and copy cases; and §12 covers the 3D and motion layer with its static fallbacks and cart-toss bridge, the order dialog, the checkout copy result and stored summary, and the phone checks. The tests inject deterministic catalogs and contain no credential value.
+
+Playwright runs two projects against the production build:
+
+| Project | Specs | Settings | What it checks |
+| --- | --- | --- | --- |
+| `chromium` | `foundation`, `menu`, `phone` and `showcase` | Desktop Chrome with reduced motion; the phone cases switch to a Pixel 7 profile | Routes, menu states and the order journey on the static render, without animation timing |
+| `chromium-3d` | `three.spec.ts` | Desktop Chrome with motion allowed and software WebGL (SwiftShader), a 180 s timeout and tests run one after another; one group uses a Pixel 7 profile and one turns reduced motion back on | The 3D layer draws real pixels, falls back with reduced motion, and leaves ordering usable |
+
+The follow-up run on 2026-10-18 passed 25/25: 16 in `chromium` and 9 in `chromium-3d`. TC-P4-023 to TC-P4-026 were added in that run: a whole order tapped through on a phone profile, sideways scrolling and 44 px tap targets on seven routes at 412, 390 and 360 px, the 3D layer at phone quality, and the checkout heading after its split entrance. Playwright still runs only locally (§16).
+
+### Manual checks
+
+MAN-P4-003, a click-through on the development laptop's integrated GPU, passed on 2026-10-18 on five profiles: 1440 px, 1024 px, an iPad Mini profile with a 2× slower CPU, 390 px, and a Pixel 7 profile with a 4× slower CPU. Every page and the full order flow worked, with no console errors and no sideways scrolling. The tablet and phones held 60 fps idle and about 35–56 fps while scrolling; at 1440 px the home and menu heroes ran at 22–31 fps, and the order-summary scene stalls once, for about a second, when it first starts. These frame rates are observations, not a signed-off target: the Lighthouse method that NFR-001 calls for has not been run. MAN-P4-007, a click-through on a physical phone, is still to do.
+
+### Evidence and status
+
+[`evidence/phase-3-verification.md`](evidence/phase-3-verification.md) lists each merged Phase 3 pull request with its evidence and results. Checkout ends in a summary that the customer copies and sends to the shop; no order is stored or sent to a server, so no persisted order is claimed (§20). The RLS blocker in §22 still stands.

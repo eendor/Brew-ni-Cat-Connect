@@ -1,48 +1,54 @@
 # Brew ni Cat Connect
 
-**Development status:** Phase 2 — Public Showcase Website: Testing / Review
+**Development status:** Phase 3 — Menu and Ordering Experience: browser-side ordering and the 3D experience merged; server-side order creation planned
 **Specification version:** 0.1 Draft (living specification)
-**Last updated:** 2026-08-24
+**Last updated:** 2026-10-18
 
 Brew ni Cat Connect is the customer-facing omnichannel platform for Brew ni Cat Coffee Shop in Kabacan, Cotabato. It complements the existing Brew ni Cat POS; it does not recreate or expose the POS.
 
 ## Project Status
 
-Phase 1 was independently tested and approved by Renier Apal, then merged to `main` in merge commit `11c546d`. Phase 2 is being developed on `feat/showcase-website` and must remain unmerged until independent QA and pull-request review are complete.
+| Area                                    | Status                                                                                                                                                                                                                                                                                                                                                                         |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Phase 0 specification                   | Version 0.1 Draft complete                                                                                                                                                                                                                                                                                                                                                     |
+| Phase 1 web foundation                  | Independently tested and approved by Renier; merged 2026-08-23 as `11c546d` ([PR #1](https://github.com/eendor/Brew-ni-Cat-Connect/pull/1))                                                                                                                                                                                                                                    |
+| Phase 2 public showcase                 | Merged 2026-09-16 as `ae002f1` ([PR #2](https://github.com/eendor/Brew-ni-Cat-Connect/pull/2)) after Renier's independent QA ([report](docs/phase-2-qa-report.md), [PR #6](https://github.com/eendor/Brew-ni-Cat-Connect/pull/6))                                                                                                                                              |
+| Phase 3 browser-side ordering           | Merged: the ordering core ([PR #7](https://github.com/eendor/Brew-ni-Cat-Connect/pull/7)), Van's cart drawer, cart page and checkout ([PR #14](https://github.com/eendor/Brew-ni-Cat-Connect/pull/14)) and Shan's checkout validation ([PR #20](https://github.com/eendor/Brew-ni-Cat-Connect/pull/20)). Checkout ends in an order summary that the customer sends to the shop |
+| Menu presentation                       | Product photos, card layout, the order dialog and header polish merged in PRs #16 to #18                                                                                                                                                                                                                                                                                       |
+| 3D and motion layer                     | The Night Shift Glow redesign (ADR-014) on three.js and GSAP merged in [PR #23](https://github.com/eendor/Brew-ni-Cat-Connect/pull/23); phone checks, tap targets and the duplicate-photo cleanup followed in [PR #24](https://github.com/eendor/Brew-ni-Cat-Connect/pull/24)                                                                                                  |
+| Read-only current menu                  | Live publishable runtime verified; manually disabled RLS remains a production security blocker                                                                                                                                                                                                                                                                                 |
+| Server-side orders and accounts         | Planned: server revalidation, single order creation and order references (FR-021, FR-024, FR-025) in Phases 3–4; customer accounts in Phase 4                                                                                                                                                                                                                                  |
+| Online payment and delivery             | Deferred until the owner approves the rules                                                                                                                                                                                                                                                                                                                                    |
+| Messenger, Android, and POS integration | Deferred to their approved roadmap phases                                                                                                                                                                                                                                                                                                                                      |
 
-| Area                                    | Status                                                                                                                       |
-| --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| Phase 0 specification                   | Version 0.1 Draft complete                                                                                                   |
-| Phase 1 web foundation                  | Tested, approved, and merged                                                                                                 |
-| Phase 2 public showcase                 | Implementation and automated validation complete; independent QA and peer review pending                                     |
-| Read-only current menu                  | Live publishable runtime verified: 6 categories/16 items render; manually disabled RLS remains a production security blocker |
-| Online ordering and accounts            | Deferred to later phases                                                                                                     |
-| Messenger, Android, and POS integration | Deferred to their approved roadmap phases                                                                                    |
+Evidence for each Phase 3 pull request is in [`docs/evidence/phase-3-verification.md`](docs/evidence/phase-3-verification.md).
 
-## Phase 2 Public Experience
+## What the Site Does
 
-The current increment replaces the Phase 1 placeholders with customer-facing routes for:
+- **Home:** a 3D showcase that steps through five featured items (Matcha, Cat-Feine, Takoyaki, Fries and Buldak Carbo), the visit facts, an about preview, a gallery preview and the visit details.
+- **Menu:** the current catalog, read from Supabase at browser runtime, with category tabs, plain photo cards and an order dialog for the option or size, flavor and quantity.
+- **About:** restrained facts confirmed for the business.
+- **Gallery:** 30 curated, approved shop and customer photos, newest Facebook favorites first. The 3D photo ring uses only the photos without people.
+- **Contact:** location, opening hours, Cash or GCash, the ₱10 takeout box, social links and independent riders.
+- **Cart and cart drawer:** kept in the browser (`localStorage`), with prices rechecked against the current catalog.
+- **Checkout:** three steps (details, review, and the order summary for the shop). The customer chooses pickup at the shop or an external rider pickup and pays Cash or GCash at the counter, then copies the summary into Messenger or reads it out on the phone. Nothing is written to a server.
 
-- Home, including the official logo, featured customer-favorite groups, gallery and visit previews;
-- a read-only Menu that retrieves the current catalog through Supabase public configuration at browser runtime;
-- About, using restrained facts confirmed for the business;
-- Gallery, using a curated set of 30 approved local shop/customer photographs (newest Facebook favorites first); and
-- Contact, location, payment, takeout, opening hours (11 AM to 10 PM, closed every Sunday), social, and independent-rider information.
-
-No cart, checkout, account, order write, payment processing, rider booking, or database administration is included. Old menu-poster artwork is a visual reference only and is not the source of current names or prices.
+The 3D scenes load after the static page. Visitors who prefer reduced motion, or whose browser lacks WebGL 2, get the static page. Old menu-poster artwork is a visual reference only and is not the source of current names or prices.
 
 ## Tech Stack
 
-- Next.js 16.3.2 with App Router
+- Next.js 16.3.8 with App Router
 - React and React DOM 19.2.8
 - TypeScript 5.9.3
 - Tailwind CSS 4.3.3
+- three.js 0.186.1 for the 3D scenes
+- GSAP 3.15.0 with ScrollTrigger and SplitText for motion
 - Supabase JavaScript 2.112.3 for public read-only catalog access
 - Vitest 4.1.11 and Testing Library
 - Playwright 1.62.1
 - ESLint 9.39.5 and Prettier 3.9.6
 
-Exact versions and licenses are recorded in [`docs/software-and-apis.md`](docs/software-and-apis.md).
+Exact versions, licenses and third-party assets are recorded in [`docs/software-and-apis.md`](docs/software-and-apis.md).
 
 ## Requirements
 
@@ -69,9 +75,9 @@ NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
 ```
 
-The Phase 2 browser runtime uses only these public variables. `.env.local` and other value-bearing environment files are ignored. Privileged credentials must never be exposed to browser code or committed.
+The browser runtime uses only these two public variables. `.env.example` also lists `NEXT_PUBLIC_SUPABASE_ANON_KEY` and the server-side names for environment parity; the current site does not read them. `SUPABASE_SECRET_KEY` is privileged and server-only: it must never reach browser code or take a `NEXT_PUBLIC_` prefix. `.env.local` and other value-bearing environment files are ignored, and credentials must never be committed.
 
-The initial public probes returned an empty catalog; those **BEFORE** captures remain as failure-state evidence. After the owner/developer manually disabled RLS on the relevant catalog tables, the website's publishable runtime returned and rendered 6 categories and 16 items. The application still uses no privileged fallback and made no business-data or RLS change.
+The initial public probes returned an empty catalog; those **BEFORE** captures remain as failure-state evidence. After RLS was manually disabled on the relevant catalog tables during Phase 2, the website's publishable runtime returned and rendered 6 categories and 16 items. The application still uses no privileged fallback and made no business-data or RLS change.
 
 This current access depends on table grants and is not least privilege. HEAD-only/no-body checks found unrelated inventory, recipe, expense, order, order-item, and release tables publicly reachable. Restoring RLS and adding tested, explicit catalog-only anonymous `SELECT` policies is a production security blocker.
 
@@ -81,7 +87,7 @@ This current access depends on table grants and is not least privilege. HEAD-onl
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). Public routes are `/`, `/menu`, `/about`, `/gallery`, and `/contact`.
+Open [http://localhost:3000](http://localhost:3000). The routes are `/`, `/menu`, `/about`, `/gallery`, `/contact`, `/cart`, and `/checkout`.
 
 ## Quality Checks
 
@@ -93,10 +99,10 @@ npm run typecheck
 npm run test
 npm run test:coverage
 npm run build
-python scripts/validate_phase0_docs.py
+python3 scripts/validate_phase0_docs.py
 ```
 
-The final local Phase 2 follow-up passed formatting, dependency audit, lint, type checking, 21 of 21 unit/component tests in 6 files, the production build with 7 of 7 static pages, 13 of 13 Playwright tests, and the documentation validator. Literal results and the unmocked five-width live review are recorded in [`docs/evidence/phase-2-implementation.md`](docs/evidence/phase-2-implementation.md). Both hosted workflows for follow-up evidence head `975561b` passed. [Pull Request #2](https://github.com/eendor/Brew-ni-Cat-Connect/pull/2) remains open/unmerged, and Renier's independent QA remains pending.
+As of PR #24, formatting, the dependency audit (0 vulnerabilities, dev tooling included), lint, type checking, 127 of 127 unit and component tests in 17 files, the production build with 9 of 9 static pages, 25 of 25 Playwright tests and the documentation validator all pass. GitHub Actions runs the same checks, except Playwright, on pull requests to `main` and on pushes to `main` and `feat/**` branches.
 
 ## End-to-End Tests
 
@@ -107,7 +113,7 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-The suite builds the production application, starts it locally, and exercises representative desktop/mobile public routes. Generated reports and test results are ignored by Git.
+The suite builds the production application, starts it locally and runs two Playwright projects. `chromium` covers the public routes, the menu, the phone order flow and tap targets with reduced motion on, so it sees the static page. `chromium-3d` turns motion back on and renders the WebGL scenes through SwiftShader software rendering, so it needs no GPU. Generated reports and test results are ignored by Git.
 
 ## Documentation
 
@@ -115,28 +121,35 @@ The suite builds the production application, starts it locally, and exercises re
 - [`docs/functional-requirements.md`](docs/functional-requirements.md) — testable requirements and implementation status
 - [`docs/system-architecture.md`](docs/system-architecture.md) — current architecture and trust boundaries
 - [`docs/database-design.md`](docs/database-design.md) — discovered read-only menu schema boundary
-- [`docs/security-and-privacy.md`](docs/security-and-privacy.md) — public-key, RLS, secret, and privacy controls
-- [`docs/testing-strategy.md`](docs/testing-strategy.md) and [`docs/test-cases.md`](docs/test-cases.md) — Phase 2 verification plan and cases
-- [`docs/evidence/phase-2-implementation.md`](docs/evidence/phase-2-implementation.md) — implementation and QA handoff record
+- [`docs/security-and-privacy.md`](docs/security-and-privacy.md) — public-key, RLS, secret, browser-storage, and privacy controls
+- [`docs/software-and-apis.md`](docs/software-and-apis.md) — installed libraries, APIs, and third-party assets
+- [`docs/development-standards.md`](docs/development-standards.md) — coding, branching, and review standards
+- [`docs/testing-strategy.md`](docs/testing-strategy.md) and [`docs/test-cases.md`](docs/test-cases.md) — verification plan and cases
+- [`docs/code-review.md`](docs/code-review.md) — self-inspection and teammate review record
+- [`docs/phase-2-qa-report.md`](docs/phase-2-qa-report.md) — Renier's independent Phase 2 QA report
+- [`docs/evidence/phase-2-implementation.md`](docs/evidence/phase-2-implementation.md) — Phase 2 implementation and QA handoff record
+- [`docs/evidence/phase-3-verification.md`](docs/evidence/phase-3-verification.md) — Phase 3 evidence for each pull request
 - [`docs/decisions.md`](docs/decisions.md) — architecture decision records
 - [`docs/development-log.md`](docs/development-log.md) — truthful milestone history
 
 ## Current Limitations
 
-The following remain outside Phase 2:
+The current site does not include:
 
-- online ordering, product configuration for purchase, cart, checkout, and order submission;
+- server-side order creation: the customer sends the prepared summary to the shop, and server revalidation, single order creation and order references (FR-021, FR-024, FR-025) are planned;
 - customer authentication, profiles, history, tracking, favorites, loyalty, and rewards;
-- payment processing or direct rider booking;
+- online payment processing or direct rider booking;
 - Messenger, Android, and POS synchronization changes;
-- database migrations, production-data mutations, or administrative functions; and
+- database migrations, production-data mutations, or administrative functions;
+- restored RLS with catalog-only read policies, which remains a production security blocker;
+- a steady 60 fps for the 3D scenes on integrated GPUs at desktop widths (tuning is planned) or a completed click-through on a physical phone (MAN-P4-007); and
 - an owner biography that has not been approved.
 
 The shop is open 11 AM to 10 PM and closed every Sunday. Customers are directed to the official Facebook page or the shop contact details for any schedule changes.
 
 ## Contributing
 
-Use focused feature branches, meaningful Conventional Commit-style messages, appropriate automated tests, and pull requests for reviewable work. See [`CONTRIBUTING.md`](CONTRIBUTING.md) and [`docs/development-standards.md`](docs/development-standards.md).
+Use focused branches (`feat/`, `fix/`, `docs/`, `test/`, or `integration/`), commit subjects that start with `feat:`, `fix:`, `style:`, `docs:`, `test:`, or `chore:`, appropriate automated tests, and pull requests for reviewable work. See [`CONTRIBUTING.md`](CONTRIBUTING.md) and [`docs/development-standards.md`](docs/development-standards.md).
 
 ## License
 
