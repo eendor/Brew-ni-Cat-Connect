@@ -315,3 +315,21 @@ Teammates' commits, and Renier's PR #6 title (`QA: Phase 2 independent QA result
 
 **Known limitations:** MAN-P4-009 (narrow-width icon layout) is left for a quick lead spot-check after merge. The GCash QR and the physical-phone click-through (MAN-P4-007) remain open.\
 **Status:** Self-reviewed by the lead developer. Locally, Vitest passed 136/136 in 19 files and Playwright 25/25 (16 + 9), and the build, the audit and the docs validator passed. Squash-merged on 2026-10-18 after CI passed.
+
+## 2026-10-19 — GCash QR on pickup checkout and Abellera St address (PR #29)
+
+**Module:** Checkout send step, `public/images/payment/gcash-qr.svg`, site config, address copy across pages, tests and docs\
+**Author:** Rodnee Glen Martin\
+**Reviewer:** Rodnee Glen Martin (self-review)\
+**Date:** 2026-10-19
+
+**Findings:**
+
+1. The pickup send step shows the shop QR only when the customer picks GCash. The image has a clear accessible name and a caption saying to pay once the shop confirms the total.
+2. The QR is a static SVG in `public/`. No runtime dependency, data access or credential handling changed.
+3. The street changed from Segundo St to Abellera St in `siteConfig` and in every hard-coded copy, test and doc (15 files).
+4. PR #29 merged without a test for the QR or doc updates. I added TC-P4-036 and TC-P4-037 and updated the business content register, functional requirements, test cases and development log in this follow-up.
+5. PR #29 was merged without labels; I added `enhancement`, `documentation` and `phase-3`.
+
+**Known limitations:** The map pin coordinates were not checked against Abellera St. The physical-phone click-through (MAN-P4-007) remains open.\
+**Status:** Self-reviewed. Vitest passed 138/138 in 19 files; the build, the audit and the docs validator passed. CI passed on PR #29 before the squash merge.

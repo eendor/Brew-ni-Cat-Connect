@@ -103,7 +103,7 @@ npm run build
 python3 scripts/validate_phase0_docs.py
 ```
 
-As of PR #25, formatting, the dependency audit (0 vulnerabilities, dev tooling included), lint, type checking, 130 of 130 unit and component tests in 18 files, the production build with 9 of 9 static pages, 25 of 25 Playwright tests and the documentation validator all pass. GitHub Actions runs the same checks, except Playwright, on pull requests to `main` and on pushes to `main` and `feat/**` branches.
+As of PR #30, formatting, the dependency audit (0 vulnerabilities, dev tooling included), lint, type checking, 138 of 138 unit and component tests in 19 files, the production build with 9 of 9 static pages, 25 of 25 Playwright tests (last run for PR #26) and the documentation validator all pass. GitHub Actions runs the same checks, except Playwright, on pull requests to `main` and on pushes to `main` and `feat/**` branches.
 
 ## End-to-End Tests
 
