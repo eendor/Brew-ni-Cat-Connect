@@ -793,3 +793,10 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Git branch:** `feat/social-icons`\
 **Pull request:** [#26](https://github.com/eendor/Brew-ni-Cat-Connect/pull/26) — self-reviewed and squash-merged into `main` on 2026-10-18\
 **Next action:** Lead spot-check MAN-P4-009, the GCash QR once the owner sends it, and the click-through on a physical phone (MAN-P4-007).
+
+## 2026-10-19 — GCash QR on pickup checkout and Abellera St address
+
+- **Shipped (PR #29):** the pickup send step shows the shop GCash QR when GCash is chosen, and the shop street is now Abellera St instead of Segundo St.
+- **Review follow-up:** I added TC-P4-036 and TC-P4-037 for the QR, marked the GCash QR Confirmed in the business content register, and added the PR #29 code review entry.
+
+**Next action:** Check the map pin against Abellera St and do the click-through on a physical phone (MAN-P4-007).

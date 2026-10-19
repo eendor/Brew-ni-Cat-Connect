@@ -26,7 +26,7 @@ This document tracks all business facts, copy, and media assets for Brew ni Cat 
 | **Payment Methods** | **Accepted:** Cash, GCash<br>*(Note: Maya / Maya QR removed)* | **Confirmed** | Approved | Cash on pickup and GCash accepted only. |
 | **Delivery Model** | * Customer messages a local rider with the order summary.<br>* The rider orders at Brew ni Cat for the customer and picks it up.<br>* The rider delivers to the customer's address.<br>* Delivery fee, timing and payment are agreed with the rider.<br>* No in-house delivery fleet; Brew ni Cat does not book riders or charge rider fees. | **Confirmed** | Approved | Customer-arranged external rider model from the Phase 2 client brief. Updated 2026-10-18: the lead developer confirmed that the rider orders at the shop for the customer. |
 | **Rider Delivery Services** | [Papa's Delivery](https://www.facebook.com/papa.s.delivery.2025)<br>[Momshie's Pamalengke and Delivery Kabacan](https://www.facebook.com/profile.php?id=100072119632881)<br>[M&S Delivery Express Kabacan](https://www.facebook.com/profile.php?id=100065168154381)<br>Logos in `public/images/riders/` | **Confirmed** | Approved | The three Facebook links came with the Phase 2 client brief (2026-08-24). Names and logos added 2026-10-18 (PR #25), supplied by the lead developer: the logos are the services' public profile photos, resized to 256 × 256 px with metadata removed, and their cover photos are not used. Listing a rider is not an endorsement or partnership. |
-| **GCash QR Code** | Not yet supplied | **Pending** | Yes, awaiting owner | Requested from the owner (Popot). Not shown on the site until the shop sends it; no placeholder QR is used. |
+| **GCash QR Code** | Shop counter QR Ph code, redrawn as `public/images/payment/gcash-qr.svg` | **Confirmed** | Approved | Shown on the pickup checkout step when the customer picks GCash (PR #29). |
 | **Menu Product Photos** | Six product photos supplied by the shop (Takoyaki, Buldak Carbo, Buldak Cheese, Fries, Cat-Feine, Matcha) in `public/images/menu/items/`; one photo per item, EXIF/GPS removed. Menu-board images are not used on cards. | **Confirmed** | Approved | Shop-provided photos, approved for the Menu on 2026-10-15 (PR #16). Items without a matching photo stay imageless. |
 | **Menu Items & Pricing** | Product catalog in Supabase DB | **Confirmed** | Approved | Supabase DB holds official pricing. Posters are secondary visuals. |
 
@@ -53,7 +53,7 @@ This document tracks all business facts, copy, and media assets for Brew ni Cat 
 5. **Payment Methods:**
    **Accepted:** Cash, GCash
    *(Note: Maya / Maya QR removed)*
-   **GCash QR:** Pending from the owner; not shown until the shop sends it.
+   **GCash QR:** Confirmed; shown on the pickup checkout step for GCash (PR #29).
 
 6. **Delivery Model:**
    * Customer messages a local rider with the order summary.

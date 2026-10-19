@@ -476,6 +476,30 @@ describe("Checkout Flow & Step Transitions", () => {
     }
   });
 
+  it("TC-P4-036 — pickup with GCash shows the shop QR", async () => {
+    const user = userEvent.setup();
+    renderCheckout(testCartState);
+
+    await user.click(screen.getByRole("radio", { name: /GCash at counter/i }));
+    await reachSendStep(user);
+
+    const qr = screen.getByRole("img", {
+      name: "Brew ni Cat GCash and InstaPay QR code",
+    });
+    expect(qr).toHaveAttribute("src", "/images/payment/gcash-qr.svg");
+  });
+
+  it("TC-P4-037 — pickup with Cash shows no GCash QR", async () => {
+    const user = userEvent.setup();
+    renderCheckout(testCartState);
+
+    await reachSendStep(user);
+
+    expect(
+      screen.queryByRole("img", { name: /GCash and InstaPay QR code/i }),
+    ).not.toBeInTheDocument();
+  });
+
   it("TC-P4-016 — a successful copy confirms it and clears the cart", async () => {
     const user = userEvent.setup();
     const writeText = vi.fn().mockResolvedValue(undefined);
