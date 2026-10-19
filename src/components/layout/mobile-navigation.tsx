@@ -182,7 +182,7 @@ export function MobileNavigation({ items }: MobileNavigationProps) {
         >
           <span className="flex items-start gap-2 font-bold text-[var(--text-strong)]">
             <MapPinIcon className={noteIconClass} />
-            Segundo St, Poblacion, Kabacan
+            Abellera St, Poblacion, Kabacan
           </span>
           <span className="flex items-start gap-2">
             <ClockIcon className={noteIconClass} />

@@ -31,7 +31,7 @@ describe("Contact and location page", () => {
       screen.getByRole("heading", { level: 1, name: "Contact & location" }),
     ).toBeInTheDocument();
     const address = document.querySelector("address");
-    expect(address).toHaveTextContent("Segundo St, Poblacion");
+    expect(address).toHaveTextContent("Abellera St, Poblacion");
     expect(address).toHaveTextContent("Kabacan, Cotabato 9407");
     expect(address).toHaveTextContent("Philippines");
     expect(address).toHaveTextContent("Beside Pulido Eatery");

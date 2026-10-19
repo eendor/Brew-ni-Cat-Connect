@@ -66,7 +66,7 @@ describe("3D layer (TC-P4-006 – TC-P4-010)", () => {
       closedDay: "Sunday",
       shopSign: "Brew ni Cat",
       neighborSign: "Pulido Eatery",
-      street: "Segundo St",
+      street: "Abellera St",
     });
     render(<VisitStage facts={visitFacts} />);
     expect(screen.queryByRole("button", { name: "Flip the sign" })).toBeNull();

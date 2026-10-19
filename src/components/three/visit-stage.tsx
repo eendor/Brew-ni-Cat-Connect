@@ -12,7 +12,7 @@ const VisitCanvas = dynamic(() => import("./canvas/visit-canvas"), {
 });
 
 /**
- * Hanging OPEN / CLOSED sign and a small street model of Segundo St. The
+ * Hanging OPEN / CLOSED sign and a small street model of Abellera St. The
  * hours stay as real text beside it; the sign is decorative, and the flip
  * button only changes which side of the sign faces you. Without WebGL (or
  * with reduced motion) the sign is plain type set straight on the page.

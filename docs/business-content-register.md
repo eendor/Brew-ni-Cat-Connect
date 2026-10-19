@@ -19,7 +19,7 @@ This document tracks all business facts, copy, and media assets for Brew ni Cat 
 | Data / Asset Area | Details / Value | Status | Owner Approval Required? | Notes / Instructions |
 | :--- | :--- | :--- | :--- | :--- |
 | **Official Logo & Branding** | Store logo and color palette assets stored in `/public/images/` | **Confirmed** | Approved | Sourced from official brand folder. |
-| **Store Address & Location** | **Address:** Segundo St, Poblacion, Kabacan, Cotabato 9407, Philippines<br>**Landmark:** Beside Pulido Eatery | **Confirmed** | Approved | Exact street level details and landmark verified. |
+| **Store Address & Location** | **Address:** Abellera St, Poblacion, Kabacan, Cotabato 9407, Philippines<br>**Landmark:** Beside Pulido Eatery | **Confirmed** | Approved | Exact street level details and landmark verified. |
 | **Contact Information** | **Phone:** 0976 630 4785<br>**Email:** popotpulido06@gmail.com | **Confirmed** | Approved | Active store contact details confirmed. |
 | **Social Media Links** | **Facebook:** Confirmed<br>**TikTok:** Confirmed<br>*(Note: Instagram is explicitly omitted/not supported)* | **Confirmed** | Approved | Official FB and TikTok channels active. No Instagram. |
 | **Operating Hours** | **Open 11 AM to 10 PM, Monday to Saturday. Closed every Sunday.** Customers should check Facebook or contact the shop for any schedule changes. | **Confirmed** | Approved | Owner confirmed Sunday closure on 2026-09-24 and opening hours of 11 AM to 10 PM on 2026-10-11 (both relayed by Lead Developer). |
@@ -35,7 +35,7 @@ This document tracks all business facts, copy, and media assets for Brew ni Cat 
 ## 3. Confirmed Business Details Summary
 
 1. **Address & Location:**
-   **Address:** Segundo St, Poblacion, Kabacan, Cotabato 9407, Philippines
+   **Address:** Abellera St, Poblacion, Kabacan, Cotabato 9407, Philippines
    **Landmark:** Beside Pulido Eatery
 
 2. **Contact Information:**

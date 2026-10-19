@@ -159,7 +159,7 @@ export function RouteCurtain() {
           <p ref={titleRef} className="route-curtain__title" />
         </div>
         <span ref={lineRef} className="route-curtain__line" />
-        <p className="route-curtain__place">Segundo St · Kabacan</p>
+        <p className="route-curtain__place">Abellera St · Kabacan</p>
       </div>
     </div>
   );
