@@ -14,6 +14,18 @@ const STAGGER = 0.08;
 
 type Player = (delay: number) => void;
 
+/** Longest wait for hydration; the CSS failsafe shows content at 3 s. */
+const HYDRATION_WAIT_MS = 2500;
+
+/**
+ * React marks each DOM node it has hydrated with an internal fiber key.
+ * Inline styles written before that make React report a mismatch, so the
+ * director waits until every animated element carries one.
+ */
+function isHydrated(element: Element) {
+  return Object.keys(element).some((key) => key.startsWith("__reactFiber$"));
+}
+
 /**
  * Scroll and entrance motion for every page, declared with data attributes
  * so pages stay server components:
@@ -41,6 +53,37 @@ export function MotionDirector() {
       return;
     }
     root.setAttribute("data-motion", "on");
+
+    let stop: (() => void) | undefined;
+    let frame = 0;
+    const deadline = performance.now() + HYDRATION_WAIT_MS;
+    const begin = () => {
+      const pending = document.querySelectorAll(`${SPLIT}, ${RISE}, ${UNVEIL}`);
+      if (
+        performance.now() < deadline &&
+        Array.from(pending).some((element) => !isHydrated(element))
+      ) {
+        frame = requestAnimationFrame(begin);
+        return;
+      }
+      stop = start();
+    };
+    // usually everything is hydrated already, so this runs before paint
+    begin();
+
+    return () => {
+      cancelAnimationFrame(frame);
+      stop?.();
+    };
+  }, [pathname]);
+
+  return null;
+}
+
+/** Sets up every animation on the page; returns its cleanup. */
+function start() {
+  const root = document.documentElement;
+  {
     const { ScrollTrigger, SplitText } = motionPlugins();
 
     const players = new Map<Element, Player>();
@@ -174,7 +217,5 @@ export function MotionDirector() {
       cleanups.forEach((cleanup) => cleanup());
       ctx.revert();
     };
-  }, [pathname]);
-
-  return null;
+  }
 }

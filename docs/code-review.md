@@ -333,3 +333,20 @@ Teammates' commits, and Renier's PR #6 title (`QA: Phase 2 independent QA result
 
 **Known limitations:** The map pin coordinates were not checked against Abellera St. The physical-phone click-through (MAN-P4-007) remains open.\
 **Status:** Self-reviewed. Vitest passed 138/138 in 19 files; the build, the audit and the docs validator passed. CI passed on PR #29 before the squash merge.
+
+## 2026-10-19 — Motion waits for hydration (PR #31)
+
+**Module:** `src/components/motion/motion-director.tsx`\
+**Author:** Rodnee Glen Martin\
+**Reviewer:** Rodnee Glen Martin (self-review)\
+**Date:** 2026-10-19
+
+**Findings:**
+
+1. The dev overlay reported a hydration mismatch on the home eyebrow (`data-rise`): GSAP wrote its starting inline styles before React had hydrated that part of the page, so React found a `style` attribute it did not render.
+2. The director now checks that every animated element is hydrated before it sets anything. Normally that is true on the first check, so motion still starts before paint. If not, it checks again each frame for up to 2.5 s, then starts anyway. The CSS hold keeps the elements hidden meanwhile, and its 3 s failsafe is unchanged.
+3. Hydration is detected by React's internal fiber key on each DOM node. That is not a public API, but if it ever changes the director only waits the 2.5 s limit and then works as before.
+4. No runtime dependency, data access or credential handling changed.
+
+**Known limitations:** No automated test covers hydration timing. It was not checked in the browser.\
+**Status:** Self-reviewed. Vitest passed 138/138 in 19 files; the build, the audit and the docs validator passed.

@@ -800,3 +800,9 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Review follow-up:** I added TC-P4-036 and TC-P4-037 for the QR, marked the GCash QR Confirmed in the business content register, and added the PR #29 code review entry.
 
 **Next action:** Check the map pin against Abellera St and do the click-through on a physical phone (MAN-P4-007).
+
+## 2026-10-19 — Motion waits for hydration
+
+- **Fixed (PR #31):** the motion director no longer sets inline styles on elements React has not hydrated yet, which caused a hydration mismatch on the home showcase eyebrow.
+
+**Next action:** Check the map pin against Abellera St and do the click-through on a physical phone (MAN-P4-007).
