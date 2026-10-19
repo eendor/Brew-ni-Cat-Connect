@@ -1,6 +1,7 @@
 "use client";
 
 import { validateDetails as validateDetailsHelper } from "@/lib/ordering/validation";
+import Image from "next/image";
 import Link from "next/link";
 import {
   useEffect,
@@ -1320,30 +1321,49 @@ export function CheckoutView({
                   </h4>
 
                   {preparedSummary.fulfillment === "pickup" ? (
-                    <ol className="list-decimal pl-5 space-y-2 text-[var(--text-muted)]">
-                      <li>
-                        Send your order summary to Brew ni Cat via Facebook or
-                        phone ({siteConfig.contact.phone}).
-                      </li>
-                      <li>
-                        Head to Brew ni Cat at{" "}
-                        <strong className="text-[var(--text-strong)]">
-                          {siteConfig.address.street},{" "}
-                          {siteConfig.address.locality}
-                        </strong>{" "}
-                        ({siteConfig.address.landmark}).
-                      </li>
-                      <li>
-                        Pay{" "}
-                        <strong className="text-[var(--text-strong)]">
-                          {formatPrice(preparedSummary.subtotal)}
-                        </strong>{" "}
-                        via {preparedSummary.customer.paymentPreference} at the
-                        counter. The {siteConfig.operations.takeoutFee} is not
-                        included in that amount; the shop confirms it when you
-                        order.
-                      </li>
-                    </ol>
+                    <>
+                      <ol className="list-decimal pl-5 space-y-2 text-[var(--text-muted)]">
+                        <li>
+                          Send your order summary to Brew ni Cat via Facebook or
+                          phone ({siteConfig.contact.phone}).
+                        </li>
+                        <li>
+                          Head to Brew ni Cat at{" "}
+                          <strong className="text-[var(--text-strong)]">
+                            {siteConfig.address.street},{" "}
+                            {siteConfig.address.locality}
+                          </strong>{" "}
+                          ({siteConfig.address.landmark}).
+                        </li>
+                        <li>
+                          Pay{" "}
+                          <strong className="text-[var(--text-strong)]">
+                            {formatPrice(preparedSummary.subtotal)}
+                          </strong>{" "}
+                          via {preparedSummary.customer.paymentPreference} at
+                          the counter. The {siteConfig.operations.takeoutFee} is
+                          not included in that amount; the shop confirms it when
+                          you order.
+                        </li>
+                      </ol>
+                      {preparedSummary.customer.paymentPreference ===
+                        "GCash" && (
+                        <figure className="mt-4 flex flex-col items-center gap-2 rounded-2xl bg-white p-4 text-center">
+                          <Image
+                            src="/images/payment/gcash-qr.svg"
+                            alt="Brew ni Cat GCash and InstaPay QR code"
+                            width={240}
+                            height={240}
+                            unoptimized
+                            className="size-60"
+                          />
+                          <figcaption className="text-xs leading-5 text-neutral-700">
+                            The same GCash QR as at the counter. Pay once the
+                            shop confirms your order total.
+                          </figcaption>
+                        </figure>
+                      )}
+                    </>
                   ) : (
                     <ol className="list-decimal pl-5 space-y-2 text-[var(--text-muted)]">
                       <li>
