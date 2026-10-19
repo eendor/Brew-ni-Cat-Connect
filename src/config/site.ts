@@ -6,7 +6,7 @@ export const siteConfig = {
     "Discover Brew ni Cat Coffee Shop in Kabacan, Cotabato, browse the current menu, and find contact and visit information.",
   openingDate: "June 12, 2026",
   address: {
-    street: "Segundo St, Poblacion",
+    street: "Abellera St, Poblacion",
     locality: "Kabacan, Cotabato 9407",
     country: "Philippines",
     landmark: "Beside Pulido Eatery",

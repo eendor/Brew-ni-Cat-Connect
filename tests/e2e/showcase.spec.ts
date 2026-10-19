@@ -104,7 +104,7 @@ test("TC-P2-025 — Contact page publishes confirmed visit and rider information
 
   const main = page.getByRole("main");
   const address = main.locator("address");
-  await expect(address).toContainText("Segundo St, Poblacion");
+  await expect(address).toContainText("Abellera St, Poblacion");
   await expect(address).toContainText("Kabacan, Cotabato 9407");
   await expect(address).toContainText("Philippines");
   await expect(address).toContainText("Beside Pulido Eatery");

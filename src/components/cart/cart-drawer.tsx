@@ -245,8 +245,8 @@ export function CartDrawer() {
               </div>
 
               <p className="text-xs leading-5 text-[var(--text-muted)]">
-                Pick up at Segundo St and pay Cash or GCash at the shop, or have
-                a local rider order and deliver it. The{" "}
+                Pick up at Abellera St and pay Cash or GCash at the shop, or
+                have a local rider order and deliver it. The{" "}
                 {siteConfig.operations.takeoutFee} is not in the subtotal.
               </p>
 

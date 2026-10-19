@@ -107,7 +107,7 @@ Do not invent owner biography or business origin story.
 
 Show:
 
-- Segundo St, Poblacion, Kabacan, Cotabato 9407
+- Abellera St, Poblacion, Kabacan, Cotabato 9407
 - beside Pulido Eatery
 - phone
 - email
@@ -269,7 +269,7 @@ Reviewed by Rizjie against the live Phase 2 pages.
 - Observation: Map pin did not point to the actual/accurate location of Brew ni Cat.
 - Page: Contact / Location
 - Why it may be confusing: Customers using the map for directions could go to the wrong place.
-- Suggested improvement: Correct the map coordinates to match the actual shop location (Segundo St, Poblacion, Kabacan, Cotabato, beside Pulido Eatery).
+- Suggested improvement: Correct the map coordinates to match the actual shop location (Abellera St, Poblacion, Kabacan, Cotabato, beside Pulido Eatery).
 - Status: ✅ Resolved — map location corrected.
 
 **Observation 6**

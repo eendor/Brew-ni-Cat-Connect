@@ -35,7 +35,7 @@ export default function HomePage() {
                   Find us
                 </dt>
                 <dd className="mt-2 font-bold text-[var(--text-strong)]">
-                  Segundo St, Poblacion, Kabacan
+                  Abellera St, Poblacion, Kabacan
                 </dd>
               </div>
               <div className="border-t border-[var(--border-soft)] p-5 sm:border-t-0 lg:border-r lg:border-[var(--border-soft)] sm:p-6">

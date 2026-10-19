@@ -27,7 +27,7 @@ import { siteConfig } from "@/config/site";
 export const metadata: Metadata = {
   title: "Contact and Location",
   description:
-    "Find Brew ni Cat Coffee Shop on Segundo St in Poblacion, Kabacan, beside Pulido Eatery, and view current contact details.",
+    "Find Brew ni Cat Coffee Shop on Abellera St in Poblacion, Kabacan, beside Pulido Eatery, and view current contact details.",
 };
 
 const contactCards = [
@@ -58,7 +58,7 @@ export default function ContactPage() {
         title="Contact & location"
         description={
           <p>
-            Find Brew ni Cat on Segundo St in Poblacion, Kabacan, and get in
+            Find Brew ni Cat on Abellera St in Poblacion, Kabacan, and get in
             touch before your visit.
           </p>
         }
@@ -78,7 +78,7 @@ export default function ContactPage() {
               id="location-heading"
               className="font-display mt-3 text-4xl text-[var(--text-strong)] sm:text-5xl"
             >
-              Find us on Segundo St
+              Find us on Abellera St
             </h2>
             <address
               className="mt-6 flex gap-3 text-lg leading-8 text-[var(--text-muted)] not-italic"

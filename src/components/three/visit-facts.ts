@@ -13,5 +13,5 @@ export const visitFacts: VisitFacts = {
   closedDay: siteConfig.operations.closedDays,
   shopSign: siteConfig.shortName,
   neighborSign: siteConfig.address.landmark.replace(/^Beside\s+/i, ""),
-  street: siteConfig.address.street.split(",")[0] ?? "Segundo St",
+  street: siteConfig.address.street.split(",")[0] ?? "Abellera St",
 };
