@@ -1,14 +1,17 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
+import { modelSpecFor } from "@/components/three/menu-models";
+import { useThreeEnabled } from "@/components/three/use-three-enabled";
 import { getMenuItemImage } from "@/config/menu-item-images";
 import { formatOptionName } from "@/lib/menu/format-name";
 import { formatPrice, getLowestItemPrice } from "@/lib/menu/format-price";
 import type { MenuCatalog, MenuItem, MenuVariant } from "@/types/menu";
 
 import { MenuItemOrderDialog } from "./menu-item-order-dialog";
+import { MenuItemViewer, type ViewerPick } from "./menu-item-viewer";
 
 type MenuItemCardProps = Readonly<{
   item: MenuItem;
@@ -54,6 +57,11 @@ function isSimpleVariant(variant: MenuVariant) {
 
 export function MenuItemCard({ item, catalog }: MenuItemCardProps) {
   const [isOrderOpen, setIsOrderOpen] = useState(false);
+  const [isViewerOpen, setIsViewerOpen] = useState(false);
+  // the size and flavor picked in the 3D viewer, if the order came from it
+  const [orderPreset, setOrderPreset] = useState<ViewerPick | null>(null);
+  const threeEnabled = useThreeEnabled();
+  const hasModel = useMemo(() => modelSpecFor(item) !== null, [item]);
   const prices = getItemPrices(item).filter(
     (price): price is number => price !== null,
   );
@@ -66,6 +74,8 @@ export function MenuItemCard({ item, catalog }: MenuItemCardProps) {
     item.availability === "available" && item.variants.length > 0;
   const simpleSizes =
     item.variants.length > 0 && item.variants.every(isSimpleVariant);
+  // the 3D button appears after hydration, only with WebGL and motion on
+  const canView = threeEnabled && hasModel;
 
   return (
     <article
@@ -201,25 +211,58 @@ export function MenuItemCard({ item, catalog }: MenuItemCardProps) {
           </p>
         )}
 
-        {canOrder ? (
+        {canOrder || canView ? (
           <div className="menu-card__footer">
-            <button
-              type="button"
-              data-order-trigger=""
-              onClick={() => setIsOrderOpen(true)}
-              className="button-primary menu-card__order"
-              aria-label={`Order ${item.name}`}
-            >
-              Add to order
-            </button>
+            {canView ? (
+              <button
+                type="button"
+                onClick={() => setIsViewerOpen(true)}
+                className="button-ghost menu-card__view3d"
+                aria-label={`View ${item.name} in 3D`}
+                aria-haspopup="dialog"
+              >
+                View in 3D
+              </button>
+            ) : null}
+            {canOrder ? (
+              <button
+                type="button"
+                data-order-trigger=""
+                onClick={() => {
+                  setOrderPreset(null);
+                  setIsOrderOpen(true);
+                }}
+                className="button-primary menu-card__order"
+                aria-label={`Order ${item.name}`}
+              >
+                Add to order
+              </button>
+            ) : null}
           </div>
         ) : null}
       </div>
+
+      {isViewerOpen ? (
+        <MenuItemViewer
+          item={item}
+          onClose={() => setIsViewerOpen(false)}
+          onOrder={
+            canOrder
+              ? (pick) => {
+                  setOrderPreset(pick);
+                  setIsOrderOpen(true);
+                }
+              : undefined
+          }
+        />
+      ) : null}
 
       {isOrderOpen ? (
         <MenuItemOrderDialog
           item={item}
           catalog={catalog}
+          initialVariantId={orderPreset?.variantId}
+          initialFlavor={orderPreset?.flavor}
           onClose={() => setIsOrderOpen(false)}
         />
       ) : null}

@@ -30,7 +30,7 @@ const repeat = (texture: THREE.Texture | undefined, x: number, y: number) => {
 };
 
 /** Pushes vertices along their normals by tileable noise for organic shapes. */
-function displace(
+export function displace(
   geometry: THREE.BufferGeometry,
   amount: number,
   seed: number,
@@ -63,11 +63,11 @@ function displace(
 /* ------------------------------------------------------------------ */
 /* Iced drink in a clear PET cup                                       */
 /* ------------------------------------------------------------------ */
-const CUP_H = 3.0;
-const R_BOT = 0.6;
-const R_TOP = 0.86;
-const Y0 = -1.5;
-const cupR = (y: number) => R_BOT + ((y - Y0) / CUP_H) * (R_TOP - R_BOT);
+export const CUP_H = 3.0;
+export const R_BOT = 0.6;
+export const R_TOP = 0.86;
+export const Y0 = -1.5;
+export const cupR = (y: number) => R_BOT + ((y - Y0) / CUP_H) * (R_TOP - R_BOT);
 
 const drinkLayers = {
   matcha: [
@@ -107,7 +107,10 @@ export function iceGeometry(seed: number, size = 0.42) {
   return displace(geometry, size * 0.18, seed, 3);
 }
 
-export async function makeCup(stickerSrc: string) {
+export async function makeCup(
+  stickerSrc: string,
+  options: { lid?: "dome" | "flat" } = {},
+) {
   const group = new THREE.Group();
   const condensation = condensationMaps(512, 3);
   repeat(condensation.normalMap, 3, 2);
@@ -162,7 +165,9 @@ export async function makeCup(stickerSrc: string) {
     lidPoints.push(
       new THREE.Vector2(
         (1 - t) * (R_TOP + 0.07) + 0.0001,
-        yTop + 0.04 + Math.sin(t * Math.PI * 0.5) * 0.42,
+        yTop +
+          0.04 +
+          Math.sin(t * Math.PI * 0.5) * (options.lid === "flat" ? 0.03 : 0.42),
       ),
     );
   }
@@ -335,13 +340,21 @@ export async function makeCup(stickerSrc: string) {
   sticker.position.y = sy;
   group.add(sticker);
 
-  return { group, setDrink, setFill };
+  return { group, setDrink, setFill, liquid, cubes };
 }
 
 /* ------------------------------------------------------------------ */
 /* Takoyaki in a foam clamshell                                        */
 /* ------------------------------------------------------------------ */
-export function makeTakoyaki(mobile: boolean) {
+export function makeTakoyaki(
+  mobile: boolean,
+  options: { rows?: number; cols?: number } = {},
+) {
+  // 2×3 is the showcase tray; the Menu viewer builds 4–16 piece trays
+  const rows = options.rows ?? 2;
+  const cols = options.cols ?? 3;
+  const width = cols * 0.82 + 0.24;
+  const depth = rows * 0.82 + 0.26;
   const inner = new THREE.Group();
   const foamMaps = matteMaps("#e2ddd4", "#c4bdb2", 128, 51);
   repeat(foamMaps.map, 4, 4);
@@ -354,18 +367,18 @@ export function makeTakoyaki(mobile: boolean) {
     sheenColor: new THREE.Color("#ffffff"),
   });
   const base = new THREE.Mesh(
-    new RoundedBoxGeometry(2.7, 0.42, 1.9, 4, 0.1),
+    new RoundedBoxGeometry(width, 0.42, depth, 4, 0.1),
     foam,
   );
   base.castShadow = true;
   base.receiveShadow = true;
   inner.add(base);
   const lid = new THREE.Mesh(
-    new RoundedBoxGeometry(2.7, 0.14, 1.9, 4, 0.06),
+    new RoundedBoxGeometry(width, 0.14, depth, 4, 0.06),
     foam,
   );
-  lid.geometry.translate(0, 0, -0.95);
-  lid.position.set(0, 0.22, -0.92);
+  lid.geometry.translate(0, 0, -depth / 2);
+  lid.position.set(0, 0.22, -(depth / 2 - 0.03));
   lid.rotation.x = 1.85;
   lid.castShadow = true;
   inner.add(lid);
@@ -392,23 +405,27 @@ export function makeTakoyaki(mobile: boolean) {
   const random = rng(77);
   const tops: THREE.Vector3[] = [];
   const balls: THREE.Vector3[] = [];
-  for (let r = 0; r < 2; r++) {
-    for (let c = 0; c < 3; c++) {
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
       const geometry = displace(
         new THREE.SphereGeometry(0.4, 48, 32),
         0.05,
-        200 + r * 3 + c,
+        200 + r * cols + c,
         2.5,
       );
       const ball = new THREE.Mesh(geometry, ballMaterial);
-      ball.position.set((c - 1) * 0.82, 0.52, (r - 0.5) * 0.82);
+      ball.position.set(
+        (c - (cols - 1) / 2) * 0.82,
+        0.52,
+        (r - (rows - 1) / 2) * 0.82,
+      );
       ball.scale.set(1, 0.88, 1);
       ball.castShadow = true;
       const cap = new THREE.Mesh(
         displace(
           new THREE.SphereGeometry(0.415, 48, 18, 0, Math.PI * 2, 0, 1.05),
           0.03,
-          300 + r * 3 + c,
+          300 + r * cols + c,
         ),
         sauceMaterial,
       );
@@ -462,7 +479,7 @@ export function makeTakoyaki(mobile: boolean) {
   const nori = new THREE.InstancedMesh(
     new THREE.BoxGeometry(0.035, 0.01, 0.03),
     new THREE.MeshStandardMaterial({ color: "#2a4f18", roughness: 0.8 }),
-    mobile ? 60 : 110,
+    Math.round(((mobile ? 60 : 110) * balls.length) / 6),
   );
   const flakeGeometry = new THREE.PlaneGeometry(0.18, 0.11, 6, 3);
   const flakePosition = flakeGeometry.attributes.position!;
@@ -480,14 +497,14 @@ export function makeTakoyaki(mobile: boolean) {
       sheen: 0.8,
       sheenColor: new THREE.Color("#f6d6b8"),
     }),
-    mobile ? 18 : 32,
+    Math.round(((mobile ? 18 : 32) * balls.length) / 6),
   );
   const m4 = new THREE.Matrix4();
   const q = new THREE.Quaternion();
   const e = new THREE.Euler();
   const s = new THREE.Vector3(1, 1, 1);
   for (let i = 0; i < nori.count; i++) {
-    const top = tops[i % 6] ?? new THREE.Vector3();
+    const top = tops[i % tops.length] ?? new THREE.Vector3();
     const a = random() * Math.PI * 2;
     const rr = random() * 0.3;
     const p = top
@@ -503,7 +520,7 @@ export function makeTakoyaki(mobile: boolean) {
     nori.setMatrixAt(i, m4);
   }
   for (let i = 0; i < bonito.count; i++) {
-    const top = tops[i % 6] ?? new THREE.Vector3();
+    const top = tops[i % tops.length] ?? new THREE.Vector3();
     const p = top
       .clone()
       .add(
@@ -521,13 +538,16 @@ export function makeTakoyaki(mobile: boolean) {
   inner.position.y = -0.3;
   const wrap = new THREE.Group();
   wrap.add(inner);
+  // the Menu viewer spins the tray about its own axis and tops each ball
+  wrap.userData.spin = inner;
+  wrap.userData.tops = tops;
   return wrap;
 }
 
 /* ------------------------------------------------------------------ */
 /* Fries in a wire cone with a paper liner                             */
 /* ------------------------------------------------------------------ */
-export function makeFries(mobile: boolean) {
+export function makeFries(mobile: boolean, count?: number) {
   const inner = new THREE.Group();
   const wire = new THREE.MeshPhysicalMaterial({
     color: "#26252b",
@@ -625,7 +645,7 @@ export function makeFries(mobile: boolean) {
   paper.castShadow = true;
   inner.add(paper);
 
-  const N = mobile ? 26 : 38;
+  const N = count ?? (mobile ? 26 : 38);
   const maps = fryMaps(128, 21);
   const fry = new THREE.InstancedMesh(
     displace(new RoundedBoxGeometry(0.12, 1.5, 0.12, 3, 0.035), 0.012, 401, 4),
@@ -672,13 +692,17 @@ export function makeFries(mobile: boolean) {
   inner.rotation.x = 0.18;
   const wrap = new THREE.Group();
   wrap.add(inner);
+  wrap.userData.fries = fry;
   return wrap;
 }
 
 /* ------------------------------------------------------------------ */
 /* Buldak Carbo: glazed bowl, sauced noodles, fried egg, seaweed       */
 /* ------------------------------------------------------------------ */
-export function makeBuldak(mobile: boolean) {
+export function makeBuldak(
+  mobile: boolean,
+  options: { sauce?: [string, string]; egg?: boolean; seaweed?: boolean } = {},
+) {
   const inner = new THREE.Group();
   const bowlPoints: THREE.Vector2[] = [];
   for (let i = 0; i <= 24; i++) {
@@ -714,7 +738,12 @@ export function makeBuldak(mobile: boolean) {
   bowl.receiveShadow = true;
   inner.add(bowl);
 
-  const sauce = sauceMaps("#e3893d", "#b5521e", 128, 18);
+  const sauce = sauceMaps(
+    options.sauce?.[0] ?? "#e3893d",
+    options.sauce?.[1] ?? "#b5521e",
+    128,
+    18,
+  );
   repeat(sauce.map, 6, 1);
   repeat(sauce.normalMap, 6, 1);
   const random = rng(123);
@@ -762,90 +791,94 @@ export function makeBuldak(mobile: boolean) {
   inner.add(noodles);
   strands.forEach((g) => g.dispose());
 
-  // fried egg: irregular white with crisp edge, glossy domed yolk
-  const white = new THREE.Shape();
-  for (let i = 0; i <= 48; i++) {
-    const a = (i / 48) * Math.PI * 2;
-    const r = 0.62 + Math.sin(a * 3 + 1) * 0.06 + Math.sin(a * 7) * 0.03;
-    const x = Math.cos(a) * r;
-    const y = Math.sin(a) * r;
-    if (i === 0) white.moveTo(x, y);
-    else white.lineTo(x, y);
-  }
-  const whiteGeometry = new THREE.ExtrudeGeometry(white, {
-    depth: 0.04,
-    bevelEnabled: true,
-    bevelThickness: 0.03,
-    bevelSize: 0.03,
-    bevelSegments: 3,
-    curveSegments: 24,
-  });
-  const edge = matteMaps("#f7f2e8", "#d9b98d", 128, 131);
-  const egg = new THREE.Group();
-  const eggWhite = new THREE.Mesh(
-    whiteGeometry,
-    new THREE.MeshPhysicalMaterial({
-      map: edge.map,
-      normalMap: edge.normalMap,
-      roughness: 0.3,
-      clearcoat: 0.4,
-      sheen: 0.6,
-      sheenColor: new THREE.Color("#ffffff"),
-    }),
-  );
-  eggWhite.rotation.x = -Math.PI / 2;
-  egg.add(eggWhite);
-  const yolk = new THREE.Mesh(
-    new THREE.SphereGeometry(0.24, 48, 24, 0, Math.PI * 2, 0, Math.PI / 2),
-    new THREE.MeshPhysicalMaterial({
-      color: "#f2a31b",
-      roughness: 0.08,
-      clearcoat: 1,
-      clearcoatRoughness: 0.04,
-      sheen: 0.5,
-      sheenColor: new THREE.Color("#ffd27a"),
-      emissive: "#5a2a00",
-      emissiveIntensity: 0.2,
-    }),
-  );
-  yolk.scale.set(1, 0.55, 1);
-  yolk.position.set(0.08, 0.07, -0.05);
-  egg.add(yolk);
-  egg.position.set(0.18, 0.36, 0.1);
-  egg.rotation.set(0.12, 0.4, -0.08);
-  egg.castShadow = true;
-  inner.add(egg);
-
-  const seaweed = new THREE.InstancedMesh(
-    new THREE.BoxGeometry(0.42, 0.006, 0.05),
-    new THREE.MeshPhysicalMaterial({
-      color: "#0f1a10",
-      roughness: 0.45,
-      sheen: 0.4,
-      sheenColor: new THREE.Color("#3a5a3a"),
-    }),
-    mobile ? 8 : 14,
-  );
-  const m4 = new THREE.Matrix4();
-  const q = new THREE.Quaternion();
-  const e = new THREE.Euler();
-  for (let i = 0; i < seaweed.count; i++) {
-    const a = random() * Math.PI * 2;
-    const r = 0.3 + random() * 0.8;
-    m4.compose(
-      new THREE.Vector3(
-        Math.cos(a) * r,
-        0.3 + random() * 0.08,
-        Math.sin(a) * r,
-      ),
-      q.setFromEuler(
-        e.set((random() - 0.5) * 0.3, random() * 3, (random() - 0.5) * 0.3),
-      ),
-      new THREE.Vector3(1, 1, 1),
+  if (options.egg ?? true) {
+    // fried egg: irregular white with crisp edge, glossy domed yolk
+    const white = new THREE.Shape();
+    for (let i = 0; i <= 48; i++) {
+      const a = (i / 48) * Math.PI * 2;
+      const r = 0.62 + Math.sin(a * 3 + 1) * 0.06 + Math.sin(a * 7) * 0.03;
+      const x = Math.cos(a) * r;
+      const y = Math.sin(a) * r;
+      if (i === 0) white.moveTo(x, y);
+      else white.lineTo(x, y);
+    }
+    const whiteGeometry = new THREE.ExtrudeGeometry(white, {
+      depth: 0.04,
+      bevelEnabled: true,
+      bevelThickness: 0.03,
+      bevelSize: 0.03,
+      bevelSegments: 3,
+      curveSegments: 24,
+    });
+    const edge = matteMaps("#f7f2e8", "#d9b98d", 128, 131);
+    const egg = new THREE.Group();
+    const eggWhite = new THREE.Mesh(
+      whiteGeometry,
+      new THREE.MeshPhysicalMaterial({
+        map: edge.map,
+        normalMap: edge.normalMap,
+        roughness: 0.3,
+        clearcoat: 0.4,
+        sheen: 0.6,
+        sheenColor: new THREE.Color("#ffffff"),
+      }),
     );
-    seaweed.setMatrixAt(i, m4);
+    eggWhite.rotation.x = -Math.PI / 2;
+    egg.add(eggWhite);
+    const yolk = new THREE.Mesh(
+      new THREE.SphereGeometry(0.24, 48, 24, 0, Math.PI * 2, 0, Math.PI / 2),
+      new THREE.MeshPhysicalMaterial({
+        color: "#f2a31b",
+        roughness: 0.08,
+        clearcoat: 1,
+        clearcoatRoughness: 0.04,
+        sheen: 0.5,
+        sheenColor: new THREE.Color("#ffd27a"),
+        emissive: "#5a2a00",
+        emissiveIntensity: 0.2,
+      }),
+    );
+    yolk.scale.set(1, 0.55, 1);
+    yolk.position.set(0.08, 0.07, -0.05);
+    egg.add(yolk);
+    egg.position.set(0.18, 0.36, 0.1);
+    egg.rotation.set(0.12, 0.4, -0.08);
+    egg.castShadow = true;
+    inner.add(egg);
   }
-  inner.add(seaweed);
+
+  if (options.seaweed ?? true) {
+    const seaweed = new THREE.InstancedMesh(
+      new THREE.BoxGeometry(0.42, 0.006, 0.05),
+      new THREE.MeshPhysicalMaterial({
+        color: "#0f1a10",
+        roughness: 0.45,
+        sheen: 0.4,
+        sheenColor: new THREE.Color("#3a5a3a"),
+      }),
+      mobile ? 8 : 14,
+    );
+    const m4 = new THREE.Matrix4();
+    const q = new THREE.Quaternion();
+    const e = new THREE.Euler();
+    for (let i = 0; i < seaweed.count; i++) {
+      const a = random() * Math.PI * 2;
+      const r = 0.3 + random() * 0.8;
+      m4.compose(
+        new THREE.Vector3(
+          Math.cos(a) * r,
+          0.3 + random() * 0.08,
+          Math.sin(a) * r,
+        ),
+        q.setFromEuler(
+          e.set((random() - 0.5) * 0.3, random() * 3, (random() - 0.5) * 0.3),
+        ),
+        new THREE.Vector3(1, 1, 1),
+      );
+      seaweed.setMatrixAt(i, m4);
+    }
+    inner.add(seaweed);
+  }
   inner.scale.setScalar(1.15);
   // Tilt the bowl toward the camera once, then spin the contents around the
   // bowl's own axis. Spinning the tilted group instead turned the opening

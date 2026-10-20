@@ -806,3 +806,23 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Fixed (PR #31):** the motion director no longer sets inline styles on elements React has not hydrated yet, which caused a hydration mismatch on the home showcase eyebrow.
 
 **Next action:** Check the map pin against Abellera St and do the click-through on a physical phone (MAN-P4-007).
+
+## 2026-10-20 — Every menu item in 3D, and the Contact sign fit
+
+**Date:** 2026-10-20\
+**Phase:** Phase 3 — Menu and Ordering Flow\
+**Task:** Let customers see every menu item in 3D from the Menu page while the home showcase stays as it is, and fix the Contact page's 3D OPEN/CLOSED sign, which was cut off on the left.\
+**Summary:**
+- **Menu 3D viewer:** each card keeps its photo and, when the 3D layer is on, gets a View in 3D button. It opens one three.js viewer with drag to spin, size and flavor chips, the flavor photo or the card photo, the price and Add to order, which opens the order dialog on the same size and flavor.
+- **Models:** every live menu item has a model built in code. A registry maps the item, size and flavor to a model: drinks with their own layers (vanilla matcha, dirty matcha with espresso, caramel matcha with drizzle, vanilla Oreo with a cookie base, crumbs and a flat lid), takoyaki trays by count and topping, fries by size and seasoning, noodles, nachos, combos built from their package contents, a foam take-out clamshell and a cat-face bowl of fish treats and kibble.
+- **Photos:** four drink photos from the lead developer's files (Vanilla Matcha Meow, Dirty Neko, Vanilla Oreo Whisker and Caramel Matcha Tail) show in the viewer when that flavor is picked. Vanilla Oreo Whisker is also the Oreo card's photo.
+- **Order dialog (Van's):** new optional `initialVariantId` and `initialFlavor` props preset the size and flavor. Only the item's own options and flavors are accepted.
+- **Contact sign:** on the Contact page's narrower canvas the camera now steps back until the sign and the street fit inside it.
+- **Tests:** unit cases TC-P4-038 to TC-P4-051 cover the flavor photos, the model registry, the viewer and the order dialog presets. Browser cases TC-P4-052 to TC-P4-058 cover the viewer, a tour of every item's sizes and flavors, the phone view and the Contact sign at two widths.
+- **Team:** Renier's and Rizjie's Trello cards now hold small Phase 3 coding tasks that don't touch the 3D code, plus their tests. Renier has an in-cart badge on menu cards, a Rider Delivery browser test and Playwright in CI. Rizjie has a checkout step indicator, a mobile cart bar on the Menu page and phone fixes on the cart and checkout pages.
+
+**Files/modules affected:** new `src/components/menu/menu-item-viewer.tsx`, `src/components/three/canvas/menu-viewer-canvas.tsx`, `src/components/three/menu-models.ts`, `src/components/three/scenes/menu-models-3d.ts` and `src/components/three/scenes/menu-viewer.ts`; `src/components/menu/menu-item-card.tsx`, `src/components/menu/menu-item-order-dialog.tsx` (Van's), `src/components/three/scenes/models.ts`, `src/components/three/scenes/visit.ts`, `src/config/menu-item-images.ts` and `src/app/globals.css`; four photos in `public/images/menu/items/`; new `tests/unit/menu-models.test.ts` and `tests/unit/menu-viewer.test.tsx`, plus `tests/unit/menu-item-images.test.ts` and `tests/e2e/three.spec.ts`; the docs listed in the pull request.\
+**Testing performed:** `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm test` (21 files / 152 tests passed), `npm run build` (9 of 9 static pages), `npm run test:e2e` (32/32 passed: 16 in `chromium`, 16 in `chromium-3d`), `npm run audit` (0 vulnerabilities), `python3 scripts/validate_phase0_docs.py` (PASS). TC-P4-058 was also run on a build with the old Contact camera, where it failed at the left edge.\
+**Git branch:** `feat/menu-3d-models`\
+**Pull request:** [#32](https://github.com/eendor/Brew-ni-Cat-Connect/pull/32) — self-reviewed and squash-merged into `main` on 2026-10-20\
+**Next action:** FR-018 (edit a cart line's size or flavor), the teammates' Phase 3 pull requests, and the click-through on a physical phone (MAN-P4-007), which now includes the 3D viewer.
