@@ -1,3 +1,5 @@
+import { inflateSync } from "node:zlib";
+
 import {
   devices,
   expect,
@@ -5,6 +7,11 @@ import {
   type Locator,
   type Page,
 } from "@playwright/test";
+
+import { defaultFlavor, modelSpecFor } from "@/components/three/menu-models";
+import { formatOptionName } from "@/lib/menu/format-name";
+import { mapMenuCatalog } from "@/lib/menu/map-menu-catalog";
+import type { MenuItem, MenuVariant } from "@/types/menu";
 
 /**
  * The WebGL layer (src/components/three). Runs in the "chromium-3d"
@@ -48,33 +55,500 @@ function collectErrors(page: Page) {
   return errors;
 }
 
-/** Color spread of what is actually on screen over a canvas. */
-async function pixelSpread(page: Page, target: Locator) {
-  const png = (await target.screenshot()).toString("base64");
-  return page.evaluate(async (data) => {
-    const image = new Image();
-    image.src = `data:image/png;base64,${data}`;
-    await image.decode();
-    const canvas = document.createElement("canvas");
-    canvas.width = image.width;
-    canvas.height = image.height;
-    const context = canvas.getContext("2d");
-    if (!context) return 0;
-    context.drawImage(image, 0, 0);
-    const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
-    let sum = 0;
-    let squares = 0;
-    let count = 0;
-    for (let i = 0; i < pixels.length; i += 16) {
-      const value =
-        ((pixels[i] ?? 0) + (pixels[i + 1] ?? 0) + (pixels[i + 2] ?? 0)) / 3;
-      sum += value;
-      squares += value * value;
-      count += 1;
+/**
+ * Decodes a screenshot (an 8-bit RGB or RGBA PNG) here in Node. Decoding it
+ * in the page would queue behind the software GL frames on its main thread.
+ */
+function readPng(png: Buffer) {
+  let width = 0;
+  let height = 0;
+  let channels = 0;
+  const chunks: Buffer[] = [];
+  for (let at = 8; at < png.length;) {
+    const length = png.readUInt32BE(at);
+    const type = png.toString("ascii", at + 4, at + 8);
+    const body = png.subarray(at + 8, at + 8 + length);
+    if (type === "IHDR") {
+      width = body.readUInt32BE(0);
+      height = body.readUInt32BE(4);
+      const [depth, color, , , interlace] = body.subarray(8, 13);
+      if (depth !== 8 || (color !== 2 && color !== 6) || interlace !== 0) {
+        throw new Error("screenshot is not an 8-bit RGB(A) PNG");
+      }
+      channels = color === 6 ? 4 : 3;
+    } else if (type === "IDAT") {
+      chunks.push(body);
+    } else if (type === "IEND") {
+      break;
     }
-    const mean = sum / count;
-    return Math.sqrt(Math.max(0, squares / count - mean * mean));
-  }, png);
+    at += length + 12;
+  }
+  const raw = inflateSync(Buffer.concat(chunks));
+  const stride = width * channels;
+  const pixels = new Uint8Array(height * stride);
+  for (let row = 0; row < height; row += 1) {
+    const filter = raw[row * (stride + 1)];
+    const from = row * (stride + 1) + 1;
+    const to = row * stride;
+    for (let i = 0; i < stride; i += 1) {
+      const left = i >= channels ? (pixels[to + i - channels] ?? 0) : 0;
+      const up = row > 0 ? (pixels[to - stride + i] ?? 0) : 0;
+      const corner =
+        row > 0 && i >= channels
+          ? (pixels[to - stride + i - channels] ?? 0)
+          : 0;
+      let guess = 0;
+      if (filter === 1) guess = left;
+      else if (filter === 2) guess = up;
+      else if (filter === 3) guess = (left + up) >> 1;
+      else if (filter === 4) {
+        // Paeth: whichever neighbour is closest to left + up - corner
+        const p = left + up - corner;
+        const toLeft = Math.abs(p - left);
+        const toUp = Math.abs(p - up);
+        const toCorner = Math.abs(p - corner);
+        guess =
+          toLeft <= toUp && toLeft <= toCorner
+            ? left
+            : toUp <= toCorner
+              ? up
+              : corner;
+      }
+      pixels[to + i] = ((raw[from + i] ?? 0) + guess) & 0xff;
+    }
+  }
+  return { width, height, channels, pixels };
+}
+
+/** Color spread of what is actually on screen over a canvas. */
+async function pixelSpread(target: Locator, style?: string) {
+  const { channels, pixels } = readPng(await target.screenshot({ style }));
+  let sum = 0;
+  let squares = 0;
+  let count = 0;
+  // every fourth pixel is plenty
+  for (let i = 0; i < pixels.length; i += channels * 4) {
+    const value =
+      ((pixels[i] ?? 0) + (pixels[i + 1] ?? 0) + (pixels[i + 2] ?? 0)) / 3;
+    sum += value;
+    squares += value * value;
+    count += 1;
+  }
+  const mean = sum / count;
+  return Math.sqrt(Math.max(0, squares / count - mean * mean));
+}
+
+/**
+ * Share of pixels that differ clearly between two same-size screenshots,
+ * over the whole image and over a strip `edge` pixels wide down each side.
+ */
+function changedShare(first: Buffer, second: Buffer, edge = 8) {
+  const x = readPng(first);
+  const y = readPng(second);
+  if (x.width !== y.width || x.height !== y.height) {
+    throw new Error("screenshots differ in size");
+  }
+  const { width, height } = x;
+  const counts = { whole: 0, left: 0, right: 0 };
+  for (let row = 0; row < height; row += 1) {
+    for (let column = 0; column < width; column += 1) {
+      const i = (row * width + column) * x.channels;
+      const j = (row * width + column) * y.channels;
+      const delta = Math.max(
+        Math.abs((x.pixels[i] ?? 0) - (y.pixels[j] ?? 0)),
+        Math.abs((x.pixels[i + 1] ?? 0) - (y.pixels[j + 1] ?? 0)),
+        Math.abs((x.pixels[i + 2] ?? 0) - (y.pixels[j + 2] ?? 0)),
+      );
+      if (delta <= 24) continue;
+      counts.whole += 1;
+      if (column < edge) counts.left += 1;
+      if (column >= width - edge) counts.right += 1;
+    }
+  }
+  return {
+    whole: counts.whole / Math.max(1, width * height),
+    left: counts.left / Math.max(1, edge * height),
+    right: counts.right / Math.max(1, edge * height),
+  };
+}
+
+/** Errors, plus the warnings a 3D scene logs when it gives up. */
+function collectProblems(page: Page) {
+  const problems = collectErrors(page);
+  page.on("console", (message) => {
+    if (message.type() === "warning" && /^3D /.test(message.text())) {
+      problems.push(message.text());
+    }
+  });
+  return problems;
+}
+
+/** The live menu, as the database rows the Menu page reads. */
+const liveCategories = [
+  { id: "live-noodles", name: "Buldak & Sedaap" },
+  { id: "live-bites", name: "Cat-Tastic Bites" },
+  { id: "live-drinks", name: "Cat-Tastic Drinks" },
+  { id: "live-combos", name: "Combos & Packages" },
+  { id: "live-box", name: "Take-out Box" },
+  { id: "live-treats", name: "Cat Treats" },
+];
+
+type VariantRow = Readonly<{
+  id: string;
+  name: string;
+  basePrice: number;
+  priceByFlavor?: Readonly<Record<string, number>>;
+  description?: string;
+}>;
+
+const option = (
+  id: string,
+  name: string,
+  basePrice: number,
+  description?: string,
+): VariantRow => ({ id, name, basePrice, description });
+
+const cups = (id: string, prices: readonly [number, number, number]) =>
+  (["12oz", "16oz", "22oz"] as const).map((name, index) =>
+    option(`${id}-${name}`, name, prices[index] ?? 0),
+  );
+
+const takoyakiFlavors = [
+  "Veggie Whiskers",
+  "Cheesy Calico",
+  "Squid Treats",
+  "Shrimp Whisker",
+];
+const takoyakiSize = (pieces: number, prices: readonly number[]) => ({
+  id: `takoyaki-${pieces}`,
+  name: `${pieces}pcs`,
+  basePrice: 0,
+  priceByFlavor: Object.fromEntries(
+    takoyakiFlavors.map((flavor, index) => [flavor, prices[index] ?? 0]),
+  ),
+});
+
+const row = (
+  categoryId: string,
+  name: string,
+  variants: readonly VariantRow[],
+  flavors: readonly string[] = [],
+) => ({
+  id: `live-${name.toLowerCase().replace(/\W+/g, "-")}`,
+  category_id: categoryId,
+  name,
+  flavors: flavors.join("|"),
+  variants_json: variants,
+  is_available: true,
+});
+
+const liveRows = [
+  row("live-noodles", "Buldak Carbo", [
+    option("carbo-plain", "Plain Carbo Samyang", 119),
+    option("carbo-milk", "Carbo Samyang w/ Milk", 129),
+    option("carbo-egg", "Carbo Samyang w/ Egg", 135),
+  ]),
+  row("live-noodles", "Buldak Cheese", [
+    option("cheese-plain", "Plain Cheese Samyang", 109),
+    option("cheese-milk", "Cheese Samyang w/ Milk", 119),
+    option("cheese-egg", "Cheese Samyang w/ Egg", 130),
+  ]),
+  row("live-noodles", "Sedaap Original", [option("sedaap", "Regular", 65)]),
+  row(
+    "live-noodles",
+    "Sedaap Spicy Chicken",
+    [option("sedaap-spicy", "Regular", 69)],
+    ["1 Paw (Mild)", "2 Paws (Medium)", "3 Paws (Extra Hot)"],
+  ),
+  row("live-treats", "Cat Treats", [option("treats", "Regular", 5)]),
+  row("live-box", "Take-out Box", [option("box", "Regular", 10)]),
+  row(
+    "live-bites",
+    "Fries (Cat Claws)",
+    [
+      option("fries-small", "Small", 30),
+      option("fries-medium", "Medium", 50),
+      option("fries-large", "Large", 70),
+      option("fries-jumbo", "Jumbo", 150),
+    ],
+    ["BBQ Scratch", "Cheesy Purr", "Sour Cream Meow", "Spicy Claw"],
+  ),
+  row("live-bites", "Nachos (Kitty Litter Crisps)", [
+    option("nachos-nvm", "Nachos+Veggies+Meat", 99),
+    option("nachos-nfm", "Nachos+Fries+Meat", 119),
+    option("nachos-nfmv", "Nachos+Fries+Meat+Veggies", 129),
+  ]),
+  row(
+    "live-bites",
+    "Takoyaki (Pawsome Balls)",
+    [
+      takoyakiSize(4, [40, 50, 55, 60]),
+      takoyakiSize(8, [80, 100, 110, 120]),
+      takoyakiSize(12, [120, 150, 160, 180]),
+      takoyakiSize(16, [150, 200, 210, 240]),
+    ],
+    takoyakiFlavors,
+  ),
+  row(
+    "live-drinks",
+    "Cat-Feine (Classic Coffee)",
+    cups("coffee", [49, 59, 79]),
+    [
+      "Salted Caramel Tail",
+      "Vanilla Iced Whisker",
+      "Caramel Meow-chiato",
+      "Hazelnut Hairball",
+      "Salted Caramel Paws",
+      "Siamese Latte",
+    ],
+  ),
+  row(
+    "live-drinks",
+    "Matcha (The Lucky Green Neko)",
+    cups("matcha", [49, 59, 79]),
+    [
+      "Dirty Neko",
+      "Vanilla Matcha Meow",
+      "Caramel Matcha Tail",
+      "Salted Caramel Meow-cha",
+    ],
+  ),
+  row("live-drinks", "Oreo (The Tuxedo Cat)", cups("oreo", [49, 59, 79]), [
+    "Caramel Oreo Kitten",
+    "Oreo Iced Paw-tte",
+    "Vanilla Oreo Whisker",
+  ]),
+  row("live-drinks", "Soda (Fizzy Felines)", cups("soda", [39, 49, 69]), [
+    "Yogurt Yarn",
+    "Honey Peach Paws",
+    "Passion Fruit Purr",
+    "Kiwi Kitten",
+    "Strawberry Scratch",
+    "Lychee Litter",
+    "Blueberry Bite",
+    "Grumpy Grapes",
+    "Green Apple Alley Cat",
+  ]),
+  row("live-combos", "Cat Association", [
+    option(
+      "scaredy",
+      "Scaredy Cats",
+      450,
+      "16pcs Veggie Takoyaki + Jumbo Fries (Any flavor) + 4pcs 12oz soda",
+    ),
+    option(
+      "lazy",
+      "Lazy Cats",
+      340,
+      "12pcs Cheese Takoyaki + 2pcs 16oz soda (Any flavor) + 2pcs 16oz coffee (Any flavor)",
+    ),
+    option(
+      "grumpy",
+      "Grumpy Cats",
+      480,
+      "Jumbo fries (Any flavor) + nachos + meat + veggies + 4pcs 16oz coffee (Any flavor)",
+    ),
+    option(
+      "funny",
+      "Funny Cats",
+      470,
+      "Jumbo Fries (Any flavor) + 3pcs 16oz coffee (Any flavor) + 3pcs 16oz soda (Any flavor)",
+    ),
+    option(
+      "super",
+      "Super Cats",
+      590,
+      "Jumbo Fries (Any flavor) + 16pcs Veggie Takoyaki + 2pcs 22oz soda (Any flavor) + 2pcs 22oz coffee (Any flavor)",
+    ),
+  ]),
+  row("live-combos", "Couple of Cats", [
+    option(
+      "two-tail",
+      "Two Tail",
+      205,
+      "8pcs Squid Takoyaki + 2pcs 16oz soda (Any flavor)",
+    ),
+    option(
+      "two-paw",
+      "Two Paw",
+      145,
+      "Medium Fries (Any flavor) + 2pcs 12oz coffee (Any flavor)",
+    ),
+    option(
+      "latte-luna",
+      "Latte & Luna",
+      175,
+      "Nachos + meat + veggies + 2pcs 12oz soda (Any flavor)",
+    ),
+    option(
+      "sweet",
+      "Sweet Kittens",
+      205,
+      "8pcs Cheese Takoyaki + 1pc 16oz soda (Any flavor) + 1pc 16oz coffee (Any flavor)",
+    ),
+    option(
+      "duo",
+      "Duo Siamese",
+      195,
+      "8pcs Veggie Takoyaki + 2pcs 16oz coffee (Any flavor)",
+    ),
+  ]),
+  row("live-combos", "Single-Paw-rtner Combos", [
+    option(
+      "classy",
+      "Classy Cat Combo",
+      105,
+      "4pcs Cheese Takoyaki + 16oz coffee (Any flavor)",
+    ),
+    option(
+      "fizzy",
+      "Fizzy Kitten Combo",
+      65,
+      "Small Fries (Any flavor) + 12oz soda (Any flavor)",
+    ),
+    option(
+      "persian",
+      "Persian Combo",
+      175,
+      "Nachos + Veggies + Meat + 16oz coffee (Any flavor)",
+    ),
+    option(
+      "kasper",
+      "Kasper Combo",
+      90,
+      "4pcs Squid Takoyaki + 12oz soda (Any flavor)",
+    ),
+  ]),
+];
+
+/** The same rows mapped the way the page maps them, in page order. */
+const liveCatalog = mapMenuCatalog(liveCategories, liveRows);
+const liveItems = (...categoryIds: string[]) =>
+  categoryIds.flatMap(
+    (id) =>
+      liveCatalog.categories.find((category) => category.id === id)?.items ??
+      [],
+  );
+function liveItem(name: string) {
+  const found = liveItems(...liveCategories.map(({ id }) => id)).find(
+    (entry) => entry.name === name,
+  );
+  if (!found) throw new Error(`${name} is not on the live menu`);
+  return found;
+}
+
+/** The model the viewer should show for a pick, from the same registry. */
+const modelKey = (
+  item: MenuItem,
+  variant: MenuVariant | undefined,
+  flavor: string | null,
+) => modelSpecFor(item, variant, flavor)?.key ?? "no model";
+
+/** The stage's own text and photo, hidden so a pixel check sees the scene. */
+const HIDE_STAGE_TEXT =
+  ".menu-viewer__photo, .menu-viewer__status, .menu-viewer__hint { visibility: hidden !important; }";
+
+/**
+ * Opens the Menu on the live items and scrolls past the 3D hero, which
+ * pauses its scene and leaves the (software) GPU to the item viewer.
+ */
+async function openLiveMenu(page: Page) {
+  await page.route("**/rest/v1/categories*", (route) =>
+    route.fulfill({ json: liveCategories }),
+  );
+  await page.route("**/rest/v1/items*", (route) =>
+    route.fulfill({ json: liveRows }),
+  );
+  await page.goto("/menu");
+  await expect(page.locator(".menu-hero--ready")).toBeAttached({
+    timeout: 45_000,
+  });
+  await page.evaluate(() => {
+    const hero = document.querySelector(".menu-hero");
+    const bottom = hero
+      ? hero.getBoundingClientRect().bottom + window.scrollY
+      : 0;
+    window.scrollTo({ top: bottom + 240, behavior: "instant" });
+  });
+}
+
+/**
+ * Waits until the stage shows a lit scene, not a blank canvas: the canvas
+ * has faded in after its first model, and what it draws has contrast.
+ * Software GL draws a frame or two a second, so this polls.
+ */
+async function expectDrawn(stage: Locator, label: string) {
+  await expect(stage.locator(".menu-viewer__canvas"), label).toHaveCSS(
+    "opacity",
+    "1",
+    { timeout: 15_000 },
+  );
+  await expect
+    .poll(() => pixelSpread(stage, HIDE_STAGE_TEXT), {
+      message: `${label} is drawn`,
+      timeout: 30_000,
+    })
+    .toBeGreaterThan(12);
+}
+
+/** The exit plays at software GL's frame or two a second, so allow time. */
+const CLOSED = { timeout: 30_000 };
+
+/** Opens an item's 3D preview and waits for its first model. */
+async function openViewer(
+  page: Page,
+  item: MenuItem,
+  action: "click" | "tap" = "click",
+) {
+  await page
+    .getByRole("button", { name: `View ${item.name} in 3D`, exact: true })
+    [action]();
+  const viewer = page.getByRole("dialog", { name: item.name, exact: true });
+  const stage = viewer.locator(".menu-viewer__stage");
+  const canvas = viewer.locator(".menu-viewer__canvas");
+  await expect(stage, item.name).toHaveAttribute("data-state", "ready", {
+    timeout: 90_000,
+  });
+  await expect(canvas).toHaveAttribute(
+    "data-model",
+    modelKey(item, item.variants[0], defaultFlavor(item, item.variants[0])),
+  );
+  return { viewer, stage, canvas };
+}
+
+/**
+ * Opens an item's 3D preview, checks its model is drawn, then picks every
+ * size and every flavor in turn, waiting each time until the model for
+ * that pick has been built, compiled and put on screen.
+ */
+async function tourViewer(page: Page, item: MenuItem) {
+  const { viewer, stage, canvas } = await openViewer(page, item);
+  await expectDrawn(stage, item.name);
+
+  let variant = item.variants[0];
+  let flavor = defaultFlavor(item, variant);
+  const pick = async (name: string) => {
+    await viewer.getByRole("button", { name, exact: true }).click();
+    await expect(canvas, `${item.name}: ${name}`).toHaveAttribute(
+      "data-model",
+      modelKey(item, variant, flavor),
+      { timeout: 60_000 },
+    );
+  };
+  for (const next of item.variants.slice(1)) {
+    variant = next;
+    // a size priced per flavor starts on a flavor when none is picked yet
+    flavor ??= defaultFlavor(item, next);
+    await pick(formatOptionName(next.name));
+  }
+  for (const next of item.flavors) {
+    if (next === flavor) continue;
+    flavor = next;
+    await pick(next);
+  }
+  await expect(stage).toHaveAttribute("data-state", "ready");
+  await viewer.getByRole("button", { name: "Close 3D preview" }).click();
+  await expect(viewer).toHaveCount(0, CLOSED);
 }
 
 test("TC-P4-001 — home renders the 3D showcase, not a blank canvas", async ({
@@ -93,7 +567,7 @@ test("TC-P4-001 — home renders the 3D showcase, not a blank canvas", async ({
   ).toBeVisible();
   await page.waitForTimeout(1500);
   expect(
-    await pixelSpread(page, page.locator(".showcase__stage canvas")),
+    await pixelSpread(page.locator(".showcase__stage canvas")),
   ).toBeGreaterThan(12);
 
   const ticks = page.getByRole("list", { name: "Jump to a featured item" });
@@ -325,6 +799,155 @@ test("TC-P4-026 — the checkout heading follows each step after its split entra
   expect(errors).toEqual([]);
 });
 
+test("TC-P4-052 — a menu item opens in 3D, spins, and orders the option picked there", async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  const carbo = liveItem("Buldak Carbo");
+  const withEgg = carbo.variants.find(
+    (entry) => entry.name === "Carbo Samyang w/ Egg",
+  );
+  await openLiveMenu(page);
+  const { viewer, stage, canvas } = await openViewer(page, carbo);
+  await expect(viewer.getByText("3D preview", { exact: true })).toBeVisible();
+  await expectDrawn(stage, carbo.name);
+  // the real photo stays in the corner of the stage
+  await expect(
+    viewer.getByRole("img", {
+      name: "Buldak Carbo spicy noodles with a fried egg",
+    }),
+  ).toBeVisible();
+
+  // drag to spin: the canvas takes the drag and keeps drawing after it. The
+  // model also turns on its own (and a slow GPU drops effects), so the grab
+  // state proves the drag and the pixels prove the drawing.
+  const before = await stage.screenshot({ style: HIDE_STAGE_TEXT });
+  const box = await canvas.boundingBox();
+  if (!box) throw new Error("the 3D canvas is not on screen");
+  await page.mouse.move(box.x + box.width * 0.35, box.y + box.height / 2);
+  await page.mouse.down();
+  await expect(canvas).toHaveClass(/is-dragging/);
+  await page.mouse.move(box.x + box.width * 0.65, box.y + box.height / 2, {
+    steps: 6,
+  });
+  await page.mouse.up();
+  await expect(canvas).not.toHaveClass(/is-dragging/);
+  await expect
+    .poll(
+      async () =>
+        changedShare(before, await stage.screenshot({ style: HIDE_STAGE_TEXT }))
+          .whole,
+      { message: "the scene keeps drawing after the drag", timeout: 30_000 },
+    )
+    .toBeGreaterThan(0.01);
+
+  // an option picked in 3D swaps the model in place and carries its price
+  await viewer
+    .getByRole("button", { name: "Carbo Samyang w/ Egg", exact: true })
+    .click();
+  await expect(viewer.getByTestId("menu-viewer-price")).toHaveText("₱135");
+  await expect(canvas).toHaveAttribute(
+    "data-model",
+    modelKey(carbo, withEgg, null),
+    { timeout: 60_000 },
+  );
+
+  // ...and into the order: the order dialog opens on the same option
+  await viewer
+    .getByRole("button", { name: "Add Buldak Carbo to order", exact: true })
+    .click();
+  await expect(page.locator(".menu-viewer__stage")).toHaveCount(0, CLOSED);
+  const order = page.getByRole("dialog").filter({ hasText: "Configure item" });
+  await expect(order).toBeVisible({ timeout: 15_000 });
+  await expect(
+    order.getByRole("button", { name: /^Carbo Samyang w\/ Egg/ }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await order.getByRole("button", { name: "Add to Order" }).click();
+  const drawer = page.locator('[aria-labelledby="cart-drawer-title"]');
+  await expect(drawer).toBeVisible({ timeout: 10_000 });
+  await expect(drawer).toContainText("Buldak Carbo");
+  await expect(drawer).toContainText("₱135");
+  expect(problems).toEqual([]);
+});
+
+test("TC-P4-053 — every noodle dish has a 3D model for each option and flavor", async ({
+  page,
+}) => {
+  test.setTimeout(600_000);
+  const problems = collectProblems(page);
+  await openLiveMenu(page);
+  for (const item of liveItems("live-noodles")) await tourViewer(page, item);
+  expect(problems).toEqual([]);
+});
+
+test("TC-P4-054 — every bite has a 3D model for each size and flavor", async ({
+  page,
+}) => {
+  test.setTimeout(600_000);
+  const problems = collectProblems(page);
+  await openLiveMenu(page);
+  for (const item of liveItems("live-bites")) await tourViewer(page, item);
+  expect(problems).toEqual([]);
+});
+
+test("TC-P4-055 — every drink has a 3D model for each size and flavor", async ({
+  page,
+}) => {
+  test.setTimeout(600_000);
+  const problems = collectProblems(page);
+  await openLiveMenu(page);
+  for (const item of liveItems("live-drinks")) await tourViewer(page, item);
+  expect(problems).toEqual([]);
+});
+
+test("TC-P4-056 — every combo, the take-out box and the cat treats have 3D models", async ({
+  page,
+}) => {
+  test.setTimeout(600_000);
+  const problems = collectProblems(page);
+  await openLiveMenu(page);
+  for (const item of liveItems("live-combos", "live-box", "live-treats")) {
+    await tourViewer(page, item);
+  }
+  expect(problems).toEqual([]);
+});
+
+test("TC-P4-058 — the Contact sign and street sit inside the canvas, not cut off at its sides", async ({
+  page,
+}) => {
+  const errors = collectErrors(page);
+  // the scene, without the page's own animated backdrop behind it
+  const still = ".ambient-backdrop { visibility: hidden !important; }";
+  const blank = `${still} .visit-stage__canvas canvas { visibility: hidden !important; }`;
+  // wide screens frame the scene in a 7:6 canvas beside the visit details
+  for (const width of [1280, 960]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/contact");
+    const stage = page.locator(".visit-stage__canvas");
+    await expect(stage).toHaveClass(/is-ready/, { timeout: 45_000 });
+    await stage.scrollIntoViewIfNeeded();
+    // the canvas fades in, and the page's entrances settle
+    await page.waitForTimeout(1500);
+    // each screenshot waits on a software GL frame, so keep the last pair
+    let share = { whole: 0, left: 1, right: 1 };
+    await expect
+      .poll(
+        async () => {
+          share = changedShare(
+            await stage.screenshot({ style: still }),
+            await stage.screenshot({ style: blank }),
+          );
+          return share.whole;
+        },
+        { message: `the scene is drawn at ${width}px`, timeout: 60_000 },
+      )
+      .toBeGreaterThan(0.05);
+    expect(share.left, `left edge at ${width}px`).toBeLessThan(0.002);
+    expect(share.right, `right edge at ${width}px`).toBeLessThan(0.002);
+  }
+  expect(errors).toEqual([]);
+});
+
 test.describe("phone", () => {
   const { viewport, userAgent, deviceScaleFactor, isMobile, hasTouch } =
     devices["Pixel 7"];
@@ -341,7 +964,7 @@ test.describe("phone", () => {
     });
     await page.waitForTimeout(1500);
     const stage = page.locator(".showcase__stage canvas");
-    expect(await pixelSpread(page, stage)).toBeGreaterThan(12);
+    expect(await pixelSpread(stage)).toBeGreaterThan(12);
     // phones draw at a capped pixel ratio, not the screen's 2.6×
     const ratio = await stage.evaluate(
       (canvas: HTMLCanvasElement) => canvas.width / canvas.clientWidth,
@@ -380,6 +1003,45 @@ test.describe("phone", () => {
       page.getByRole("button", { name: "Open cart (1 item)" }).first(),
     ).toBeAttached();
     expect(errors).toEqual([]);
+  });
+
+  test("TC-P4-057 — on a phone the 3D preview fits the screen and answers taps", async ({
+    page,
+  }) => {
+    const problems = collectProblems(page);
+    const takoyaki = liveItem("Takoyaki (Pawsome Balls)");
+    const sixteen = takoyaki.variants.find((entry) => entry.name === "16pcs");
+    await openLiveMenu(page);
+    const { viewer, stage, canvas } = await openViewer(page, takoyaki, "tap");
+    await expectDrawn(stage, takoyaki.name);
+    // phones draw at a capped pixel ratio, not the screen's 2.6×
+    const ratio = await canvas.evaluate(
+      (element: HTMLCanvasElement) => element.width / element.clientWidth,
+    );
+    expect(ratio).toBeLessThanOrEqual(1.26);
+    // the panel fits the screen, with no sideways scroll
+    const panel = await viewer.locator("[data-overlay=panel]").boundingBox();
+    if (!panel) throw new Error("the 3D preview panel is not on screen");
+    const width = page.viewportSize()?.width ?? 0;
+    expect(panel.x).toBeGreaterThanOrEqual(0);
+    expect(panel.x + panel.width).toBeLessThanOrEqual(width + 0.5);
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth - window.innerWidth,
+      ),
+    ).toBeLessThanOrEqual(0);
+
+    // a size priced per flavor keeps the flavor shown and its price
+    await viewer.getByRole("button", { name: "16pcs", exact: true }).tap();
+    await expect(canvas).toHaveAttribute(
+      "data-model",
+      modelKey(takoyaki, sixteen, "Veggie Whiskers"),
+      { timeout: 60_000 },
+    );
+    await expect(viewer.getByTestId("menu-viewer-price")).toHaveText("₱150");
+    await viewer.getByRole("button", { name: "Close 3D preview" }).tap();
+    await expect(viewer).toHaveCount(0, CLOSED);
+    expect(problems).toEqual([]);
   });
 });
 

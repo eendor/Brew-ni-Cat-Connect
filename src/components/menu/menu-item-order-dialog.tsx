@@ -31,12 +31,18 @@ const emptySubscribe = () => () => {};
 type MenuItemOrderDialogProps = Readonly<{
   item: MenuItem;
   catalog?: MenuCatalog;
+  /** Opens with this size or option picked, e.g. from the 3D viewer. */
+  initialVariantId?: string;
+  /** Opens with this flavor picked, when the item lists it. */
+  initialFlavor?: string | null;
   onClose: () => void;
 }>;
 
 export function MenuItemOrderDialog({
   item,
   catalog,
+  initialVariantId,
+  initialFlavor,
   onClose,
 }: MenuItemOrderDialogProps) {
   const { addItem, openDrawer } = useCart();
@@ -49,10 +55,21 @@ export function MenuItemOrderDialog({
     () => false,
   );
 
-  const [selectedVariantId, setSelectedVariantId] = useState<string>(
-    () => item.variants[0]?.id ?? "",
+  // A preset only counts when it names one of this item's own options.
+  const presetVariantId =
+    item.variants.find((variant) => variant.id === initialVariantId)?.id ??
+    item.variants[0]?.id ??
+    "";
+  const presetFlavor =
+    initialFlavor && item.flavors.includes(initialFlavor)
+      ? initialFlavor
+      : null;
+
+  const [selectedVariantId, setSelectedVariantId] =
+    useState<string>(presetVariantId);
+  const [selectedFlavor, setSelectedFlavor] = useState<string | null>(
+    presetFlavor,
   );
-  const [selectedFlavor, setSelectedFlavor] = useState<string | null>(null);
   const [quantity, setQuantity] = useState<number>(1);
   const [feedbackError, setFeedbackError] = useState<string | null>(null);
 
@@ -60,8 +77,8 @@ export function MenuItemOrderDialog({
   // to Order always submits what was picked last, even on rapid clicks
   // that land before React re-renders this component.
   const selectionRef = useRef({
-    variantId: item.variants[0]?.id ?? "",
-    flavor: null as string | null,
+    variantId: presetVariantId,
+    flavor: presetFlavor,
     quantity: 1,
   });
   const submittedRef = useRef(false);

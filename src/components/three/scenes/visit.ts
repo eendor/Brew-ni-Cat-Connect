@@ -477,6 +477,10 @@ export async function initVisit(
   scene.add(diorama);
 
   let mobile = false;
+  /** Camera distance at which `halfWidth` units fill half the canvas width. */
+  const fitDistance = (halfWidth: number) =>
+    halfWidth /
+    (Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.aspect);
   function resize() {
     const r = canvas.getBoundingClientRect();
     renderer.setSize(Math.max(1, r.width), Math.max(1, r.height), false);
@@ -504,7 +508,11 @@ export async function initVisit(
       sign.scale.setScalar(1);
       diorama.position.set(2.4, -1.3, -0.8);
       diorama.scale.setScalar(0.88);
-      camera.position.set(0, 2.2, 15);
+      // The sign's left edge (plus its swing) and the street's far corner
+      // reach about 4.75 units from center. On squarer boxes, like the
+      // Contact page's 7:6 canvas, step the camera back until both fit
+      // instead of letting the canvas edge cut the sign off.
+      camera.position.set(0, 2.2, Math.max(15, 0.6 + fitDistance(5)));
       camera.lookAt(0, 0.2, 0);
     }
     warm.target.position.copy(diorama.position);

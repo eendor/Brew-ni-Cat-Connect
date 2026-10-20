@@ -301,4 +301,6 @@ Phase 3 adds a three.js and GSAP presentation layer in PR #23 (ADR-014 and ADR-0
 
 **Measured cost:** In the PR #24 click-through on an integrated GPU, the phone and tablet profiles held 60 fps idle and 35–56 fps while scrolling, and the 1440 px desktop profile ran at 22–31 fps. The order-summary scene stalls once for about one second. Frame-budget tuning is in the Backlog, and the physical-phone check (`MAN-P4-007`) is still pending.
 
+**Menu 3D viewer (PR #32):** each menu card can open a 3D preview of that item. A registry maps the item, its size and its flavor to a model built in code, and the viewer uses the same renderer, studio lighting, post-processing and frame-budget governor as the other scenes. One viewer scene runs at a time, and its WebGL context is released when the dialog closes. The View in 3D button appears only when the 3D layer runs, so the card photo, the static menu and the order dialog remain the full fallback. The viewer adds no dependency and fetches nothing.
+
 **Scope limit:** The Phase 3 cart, checkout and order summary added no runtime dependency; `three` and `gsap` are the only Phase 3 runtime additions.

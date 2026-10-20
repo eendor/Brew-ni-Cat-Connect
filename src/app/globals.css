@@ -1549,8 +1549,15 @@ textarea:focus-visible {
 }
 
 .menu-card__footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.625rem;
   margin-top: auto;
   padding-top: 1.25rem;
+}
+
+.menu-card__footer > * {
+  flex: 1 1 10rem;
 }
 
 .menu-card__order {
@@ -1559,11 +1566,150 @@ textarea:focus-visible {
   white-space: nowrap;
 }
 
+.menu-card__view3d {
+  min-height: 3rem;
+  white-space: nowrap;
+}
+
+/* Menu 3D viewer: a dark studio stage. The real photo fills it while the
+   model loads (or when 3D is off), then tucks into the corner. */
+.menu-viewer__stage {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  width: 100%;
+  max-height: 62vh;
+  aspect-ratio: 1 / 1;
+  border: 1px solid var(--border-soft);
+  border-radius: 1.25rem;
+  background: #0b0a0d;
+}
+
+.menu-viewer__canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+  opacity: 0;
+  touch-action: pan-y;
+  transition: opacity 700ms var(--ease-cinematic);
+}
+
+.menu-viewer__canvas.is-dragging {
+  cursor: grabbing;
+}
+
+.menu-viewer__stage[data-state="ready"] .menu-viewer__canvas {
+  opacity: 1;
+}
+
+.menu-viewer__photo {
+  position: absolute;
+  z-index: 1;
+  bottom: 0;
+  left: 0;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+  pointer-events: none;
+  transition:
+    width 600ms var(--ease-cinematic),
+    height 600ms var(--ease-cinematic),
+    left 600ms var(--ease-cinematic),
+    bottom 600ms var(--ease-cinematic),
+    border-radius 600ms var(--ease-cinematic);
+}
+
+.menu-viewer__stage[data-state="ready"] .menu-viewer__photo {
+  bottom: 1rem;
+  left: 1rem;
+  width: 5.5rem;
+  height: 5.5rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 1rem;
+  box-shadow: 0 10px 30px rgb(0 0 0 / 45%);
+}
+
+.menu-viewer__status {
+  position: absolute;
+  z-index: 2;
+  bottom: 1rem;
+  left: 50%;
+  max-width: calc(100% - 2rem);
+  border-radius: 999px;
+  background: rgb(11 10 13 / 78%);
+  padding: 0.45rem 0.95rem;
+  color: var(--text-strong);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-align: center;
+  transform: translateX(-50%);
+}
+
+.menu-viewer__stage[data-state="ready"] .menu-viewer__status {
+  overflow: hidden;
+  clip-path: inset(50%);
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  white-space: nowrap;
+}
+
+.menu-viewer__hint {
+  position: absolute;
+  z-index: 2;
+  right: 1rem;
+  bottom: 1rem;
+  border-radius: 999px;
+  background: rgb(11 10 13 / 62%);
+  padding: 0.4rem 0.85rem;
+  color: rgb(244 241 234 / 85%);
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  pointer-events: none;
+  text-transform: uppercase;
+  animation: menu-viewer-hint 600ms var(--ease-cinematic) 400ms both;
+}
+
+@keyframes menu-viewer-hint {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+@media (max-width: 639px) {
+  .menu-viewer__stage[data-state="ready"] .menu-viewer__photo {
+    bottom: 0.75rem;
+    left: 0.75rem;
+    width: 3.75rem;
+    height: 3.75rem;
+  }
+
+  .menu-viewer__hint {
+    right: 0.75rem;
+    bottom: 0.75rem;
+  }
+}
+
 .menu-card--unavailable {
   opacity: 0.75;
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .menu-viewer__canvas,
+  .menu-viewer__photo {
+    transition: none;
+  }
+
+  .menu-viewer__hint {
+    animation: none;
+  }
+
   .menu-card {
     transition: none;
   }

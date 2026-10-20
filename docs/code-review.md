@@ -350,3 +350,25 @@ Teammates' commits, and Renier's PR #6 title (`QA: Phase 2 independent QA result
 
 **Known limitations:** No automated test covers hydration timing. It was not checked in the browser.\
 **Status:** Self-reviewed. Vitest passed 138/138 in 19 files; the build, the audit and the docs validator passed.
+
+## 2026-10-20 — Menu 3D viewer for every item and the Contact sign fit (PR #32)
+
+**Module:** `src/components/menu/menu-item-viewer.tsx`, `src/components/three/menu-models.ts`, `src/components/three/scenes/menu-models-3d.ts`, `src/components/three/scenes/menu-viewer.ts`, `src/components/menu/menu-item-order-dialog.tsx`, `src/components/three/scenes/visit.ts`\
+**Author:** Rodnee Glen Martin\
+**Reviewer:** Rodnee Glen Martin (self-review)\
+**Date:** 2026-10-20
+
+**Findings:**
+
+1. Every menu card keeps its photo. When the 3D layer is on, a card with a model gets a View in 3D button that opens one three.js viewer dialog with drag to spin (with inertia and an idle turntable), size and flavor chips, the flavor photo or the card photo, the price and Add to order. The model for an item, size and flavor comes from one registry in `menu-models.ts`. It has no three.js import, so a card can check it without loading WebGL. The builders in `menu-models-3d.ts` cover cups with their drink layers, takoyaki, fries, noodles, nachos, combos built from their package contents, a foam take-out clamshell with a back hinge, and a cat-face bowl of fish treats and kibble. The home showcase is unchanged.
+2. The button appears only after hydration, with WebGL 2 and motion allowed, and only for items with a model. Sold-out items can be viewed but not ordered: Add to order is disabled. If the model cannot load, the stage keeps the photo.
+3. Add to order opens the order dialog on the viewer's pick. The dialog gained `initialVariantId` and `initialFlavor`, and it only takes a preset that names one of the item's own options or flavors. Anything else falls back to the first size and no flavor (TC-P4-051).
+4. The browser tour found a bug in my first version. Sizes priced per flavor (Takoyaki) opened on the first flavor in the size's price list, which arrives sorted by name, instead of the first flavor on the menu. `defaultFlavor` now follows the menu's flavor order (TC-P4-043, TC-P4-047).
+5. The canvas sets `data-model` to the shown model's key once that model is on screen, so the browser tours wait for the exact model of each pick instead of a timer.
+6. The Contact sign was cut off on the left. On the Contact page's 7:6 canvas, the camera at z = 15 showed 4.50 units each side of the sign, but the sign and its swing reach about 4.75. The camera now steps back until 5 units fit (`fitDistance`), to about z = 16.6 on that canvas; canvases wider than about 1.3:1 keep z = 15. TC-P4-058 checks both edges at 1280 and 960 px. It failed on the old camera (3.0% of the left edge strip changed at 1280 px) and passes with the fix (0% at both edges and both widths).
+7. The four new drink photos (Vanilla Matcha Meow, Dirty Neko, Vanilla Oreo Whisker and Caramel Matcha Tail) are 1200 × 1200 JPEGs with no EXIF or XMP block. Vanilla Oreo Whisker is also the Oreo card's photo, since that card had none.
+8. No new dependency: the viewer uses three 0.186.1 and gsap 3.15.0, which the project already has. It fetches nothing, and the photos are local.
+9. The browser pixel checks decode screenshots in Node (`inflateSync`) instead of in the page, because software WebGL leaves the page too little time for the decode.
+
+**Known limitations:** The drag check proves the drag through the canvas's grab state. The pixel check after it only proves that the scene keeps drawing, because the model also turns on its own and, on a slow GPU, the quality governor drops effects and redraws the whole frame. The viewer was not checked by hand or on a physical phone (MAN-P4-007 is still to do). The `chromium-3d` project runs only locally.\
+**Status:** Self-reviewed. Vitest passed 152/152 in 21 files and Playwright 32/32 (16 in `chromium`, 16 in `chromium-3d`); the build (9 of 9 static pages), lint, type checking, the audit and the docs validator passed.
