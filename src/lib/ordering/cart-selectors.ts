@@ -32,6 +32,16 @@ export function getCartItemCount(state: CartState): number {
   return state.lines.reduce((total, line) => total + line.quantity, 0);
 }
 
+export function getItemQuantityInCart(
+  state: CartState,
+  itemId: string,
+): number {
+  return state.lines.reduce(
+    (total, line) => (line.itemId === itemId ? total + line.quantity : total),
+    0,
+  );
+}
+
 /** Sum of all line totals, in pesos. */
 export function getCartSubtotal(state: CartState): number {
   return calculateSubtotal(state.lines);

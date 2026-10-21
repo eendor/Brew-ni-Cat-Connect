@@ -200,6 +200,11 @@ Added with the ordering core in PR #7 (2026-09-18): Vitest 69/69 passed; Playwri
 | TC-P3-045 | FR-017, FR-018, FR-020, FR-021, FR-022 | Cart reducer | Rejects a second safe line when the combined subtotal would overflow | Static test catalog | Unit test in `tests/unit/cart-reducer.test.ts` | Rejects a second safe line when the combined subtotal would overflow | Matched in the 69/69 Vitest run on PR #7 and later 109/109 runs | Passed | `tests/unit/cart-reducer.test.ts` |
 | TC-P3-046 | FR-017, FR-018, FR-020, FR-021, FR-022 | Cart reducer | Rejects a quantity update that would make the cart subtotal unsafe | Static test catalog | Unit test in `tests/unit/cart-reducer.test.ts` | Rejects a quantity update that would make the cart subtotal unsafe | Matched in the 69/69 Vitest run on PR #7 and later 109/109 runs | Passed | `tests/unit/cart-reducer.test.ts` |
 | TC-P3-047 | FR-018, FR-021 | Cart pricing | Rejects a variant flavor price when the flavor is not allowed by the item | Static test catalog | Unit test in `tests/unit/cart-pricing.test.ts` | Rejects a variant flavor price when the flavor is not allowed by the item | Matched in the 69/69 Vitest run on PR #7 and later 109/109 runs | Passed | `tests/unit/cart-pricing.test.ts` |
+| TC-P3-056 | FR-017, FR-020 | Cart selectors | Returns zero quantity for an item in an empty cart | Cart is empty | Query the quantity of a menu item | Returns 0 | Passed locally | `tests/unit/cart-selectors.test.ts` |
+| TC-P3-057 | FR-017, FR-020 | Cart selectors | Returns the quantity for one cart line | Cart contains one line for the item | Query the item's quantity | Returns the line quantity | Passed locally | `tests/unit/cart-selectors.test.ts` |
+| TC-P3-058 | FR-017, FR-020 | Cart selectors | Sums quantities across variants of the same item | Cart contains multiple variants of the same item | Query the item's quantity | Returns the sum of quantities across its variants | Passed locally | `tests/unit/cart-selectors.test.ts` |
+| TC-P3-059 | FR-017, FR-020 | Cart selectors | Counts only the requested menu item | Cart contains multiple menu items | Query each item's quantity | Each result includes only that item's quantities | Passed locally | `tests/unit/cart-selectors.test.ts` |
+| TC-P3-060 | FR-017, FR-020 | Menu ordering | Adds a menu item with the selected quantity | Menu item is available in the mocked catalog | Open the item dialog, increase quantity to 2, and click "Add to Order" | Cart drawer displays the item and 2 items; menu card shows "Add to order (2 in cart)" | Passed locally; verify again after ID update | `tests/e2e/ordering.spec.ts` |
 
 ## 11. Phase 3 Menu Photos and Motion Cases
 
@@ -216,6 +221,7 @@ Run on 2026-10-15 for branch `feat/menu-photos-motion`: Vitest 109/109 passed in
 | TC-P3-053 | FR-022 | Checkout | Name & Phone Validation | User on Checkout Step | Enter valid name and valid PH mobile number (`0912 345 6789`) | Form allows proceeding to review | Matched in the 115/115 Vitest run (PR #20) | Passed | `tests/unit/checkout-validation.test.ts` |
 | TC-P3-054 | FR-022 | Checkout | Invalid Phone Input | User on Checkout Step | Enter non-numeric string (`abcdefghij`) or invalid length | Error message displays and validation fails | Matched in the 115/115 Vitest run (PR #20) | Passed | `tests/unit/checkout-validation.test.ts` |
 | TC-P3-055 | FR-020 | Checkout | Copy Order Summary | Review Step reached | Click "Copy Summary and Message Shop" | Order text copied to clipboard with confirmation toast | Verified UI behavior in PR #14; 2026-10-18: the button reads "Copy order summary" and, since PR #23, a status line replaces the toast; TC-P4-016 covers it | Passed | `docs/code-review.md` |
+
 
 ## 12. 3D Experience Layer Cases
 

@@ -64,5 +64,8 @@ jobs:
       - name: Build production application
         run: npm run build
 
-      # Playwright remains a required local Phase 2 check; browser installation is
-      # intentionally omitted here to keep the pull-request workflow lightweight.
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run ordering E2E test
+        run: npx playwright test tests/e2e/ordering.spec.ts --project=chromium

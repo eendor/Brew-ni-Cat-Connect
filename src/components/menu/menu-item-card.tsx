@@ -3,6 +3,8 @@
 import Image from "next/image";
 import { useMemo, useState } from "react";
 
+import { useCart } from "@/context/cart-context";
+import { getItemQuantityInCart } from "@/lib/ordering/cart-selectors";
 import { modelSpecFor } from "@/components/three/menu-models";
 import { useThreeEnabled } from "@/components/three/use-three-enabled";
 import { getMenuItemImage } from "@/config/menu-item-images";
@@ -58,6 +60,8 @@ function isSimpleVariant(variant: MenuVariant) {
 export function MenuItemCard({ item, catalog }: MenuItemCardProps) {
   const [isOrderOpen, setIsOrderOpen] = useState(false);
   const [isViewerOpen, setIsViewerOpen] = useState(false);
+  const { state: cartState } = useCart();
+  const cartQuantity = getItemQuantityInCart(cartState, item.id);
   // the size and flavor picked in the 3D viewer, if the order came from it
   const [orderPreset, setOrderPreset] = useState<ViewerPick | null>(null);
   const threeEnabled = useThreeEnabled();
@@ -235,7 +239,9 @@ export function MenuItemCard({ item, catalog }: MenuItemCardProps) {
                 className="button-primary menu-card__order"
                 aria-label={`Order ${item.name}`}
               >
-                Add to order
+                {cartQuantity > 0
+                  ? `Add to order (${cartQuantity} in cart)`
+                  : "Add to order"}
               </button>
             ) : null}
           </div>
