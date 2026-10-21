@@ -229,20 +229,26 @@ export function MenuItemCard({ item, catalog }: MenuItemCardProps) {
               </button>
             ) : null}
             {canOrder ? (
-              <button
-                type="button"
-                data-order-trigger=""
-                onClick={() => {
-                  setOrderPreset(null);
-                  setIsOrderOpen(true);
-                }}
-                className="button-primary menu-card__order"
-                aria-label={`Order ${item.name}`}
-              >
-                {cartQuantity > 0
-                  ? `Add to order (${cartQuantity} in cart)`
-                  : "Add to order"}
-              </button>
+              <div className="menu-card__order-group">
+                <button
+                  type="button"
+                  data-order-trigger=""
+                  onClick={() => {
+                    setOrderPreset(null);
+                    setIsOrderOpen(true);
+                  }}
+                  className="button-primary menu-card__order"
+                  aria-label={`Order ${item.name}`}
+                >
+                  Add to order
+                </button>
+
+                {cartQuantity > 0 ? (
+                  <span className="menu-card__cart-badge">
+                    {cartQuantity} in cart
+                  </span>
+                ) : null}
+              </div>
             ) : null}
           </div>
         ) : null}
