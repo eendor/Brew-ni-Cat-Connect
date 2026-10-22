@@ -82,6 +82,7 @@ const live = {
   ),
   treats: menuItem("Cat Treats", [variant("regular", "Regular", 5)]),
   box: menuItem("Take-out Box", [variant("regular", "Regular", 10)]),
+  water: menuItem("Bottled Water", [variant("bottle", "Regular", 15)]),
   fries: menuItem(
     "Fries (Cat Claws)",
     [
@@ -263,6 +264,7 @@ describe("Menu 3D models (TC-P4-040 – TC-P4-043)", () => {
       [live.sedaapSpicy, "noodles"],
       [live.treats, "cat-treats"],
       [live.box, "takeout-box"],
+      [live.water, "bottled-water"],
       [live.fries, "fries"],
       [live.nachos, "nachos"],
       [live.takoyaki, "takoyaki"],
@@ -274,7 +276,7 @@ describe("Menu 3D models (TC-P4-040 – TC-P4-043)", () => {
       [live.coupleOfCats, "combo"],
       [live.singlePaw, "combo"],
     ];
-    expect(kinds).toHaveLength(16);
+    expect(kinds).toHaveLength(17);
     for (const [item, kind] of kinds) {
       const shape = modelSpecFor(item);
       expect(shape?.kind, item.name).toBe(kind);
@@ -291,6 +293,8 @@ describe("Menu 3D models (TC-P4-040 – TC-P4-043)", () => {
     expect(part(spec(live.cheese), "noodles").style).toBe("cheese");
     expect(part(spec(live.sedaap), "noodles").style).toBe("sedaap");
     expect(part(spec(live.sedaapSpicy), "noodles").style).toBe("sedaap-spicy");
+    // bottled water keeps the cool blue glow, not the coffee default
+    expect(spec(live.water).glow).toBe("#5EE1FF");
     expect(
       modelSpecFor(menuItem("Mystery Brew", [variant("r", "Regular", 10)])),
     ).toBeNull();
