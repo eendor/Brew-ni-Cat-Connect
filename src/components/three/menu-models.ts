@@ -61,7 +61,8 @@ export type ModelPart =
       fries: boolean;
     }>
   | Readonly<{ kind: "takeout-box" }>
-  | Readonly<{ kind: "cat-treats" }>;
+  | Readonly<{ kind: "cat-treats" }>
+  | Readonly<{ kind: "bottled-water" }>;
 
 export type ModelShape =
   ModelPart | Readonly<{ kind: "combo"; parts: ReadonlyArray<ModelPart> }>;
@@ -103,7 +104,8 @@ type ItemKind =
   | "soda"
   | "combo"
   | "takeout-box"
-  | "cat-treats";
+  | "cat-treats"
+  | "bottled-water";
 
 /** Exact names, like the photo map: base name or parenthetical nickname. */
 const itemKinds: ReadonlyArray<readonly [ItemKind, ReadonlyArray<string>]> = [
@@ -121,6 +123,7 @@ const itemKinds: ReadonlyArray<readonly [ItemKind, ReadonlyArray<string>]> = [
   ["combo", ["cat association", "couple of cats", "single-paw-rtner combos"]],
   ["takeout-box", ["take-out box"]],
   ["cat-treats", ["cat treats"]],
+  ["bottled-water", ["bottled water", "bottle of water"]],
 ];
 
 const kindByName: ReadonlyMap<string, ItemKind> = new Map(
@@ -533,5 +536,7 @@ export function modelSpecFor(
       return withMeta({ kind: "takeout-box" }, glow);
     case "cat-treats":
       return withMeta({ kind: "cat-treats" }, glow);
+    case "bottled-water":
+      return withMeta({ kind: "bottled-water" }, "#5EE1FF");
   }
 }
