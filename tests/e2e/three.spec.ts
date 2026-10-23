@@ -262,6 +262,7 @@ const liveRows = [
   ),
   row("live-treats", "Cat Treats", [option("treats", "Regular", 5)]),
   row("live-box", "Take-out Box", [option("box", "Regular", 10)]),
+  row("live-drinks", "Bottled Water", [option("water", "Regular", 15)]),
   row(
     "live-bites",
     "Fries (Cat Claws)",

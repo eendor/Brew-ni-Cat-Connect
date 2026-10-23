@@ -1781,6 +1781,198 @@ async function buildCombo(parts: ReadonlyArray<ModelPart>, mobile: boolean) {
 }
 
 /* ------------------------------------------------------------------ */
+/* Bottled water: a clear PET bottle with a blue cap and a shop label  */
+/* ------------------------------------------------------------------ */
+
+const BOTTLE_BASE = -1.6;
+const BOTTLE_BODY_TOP = 0.55;
+const BOTTLE_NECK = 1.25;
+const BOTTLE_R = 0.58;
+const NECK_R = 0.2;
+const LABEL_LOW = -0.4;
+const LABEL_HIGH = 0.35;
+
+/** Outer radius of the bottle at height y: ribbed body, round shoulder, neck. */
+function bottleRadius(y: number) {
+  if (y <= BOTTLE_BODY_TOP) {
+    // molded grip rings below the label
+    const ribbed = y > -1.35 && y < LABEL_LOW - 0.08;
+    return ribbed
+      ? BOTTLE_R - 0.022 * Math.max(0, Math.sin((y + 1.35) * 22))
+      : BOTTLE_R;
+  }
+  if (y <= BOTTLE_NECK) {
+    const t = (y - BOTTLE_BODY_TOP) / (BOTTLE_NECK - BOTTLE_BODY_TOP);
+    return NECK_R + (BOTTLE_R - NECK_R) * (0.5 + 0.5 * Math.cos(t * Math.PI));
+  }
+  return NECK_R;
+}
+
+/** Profile from the middle of the base up the wall to the top of the neck. */
+function bottleProfile(inset: number, top: number, steps: number) {
+  const points = [
+    new THREE.Vector2(0, BOTTLE_BASE + inset),
+    new THREE.Vector2(BOTTLE_R - 0.08 - inset, BOTTLE_BASE + inset),
+    new THREE.Vector2(BOTTLE_R - 0.02 - inset, BOTTLE_BASE + 0.05 + inset),
+  ];
+  const start = BOTTLE_BASE + 0.12;
+  for (let i = 0; i <= steps; i++) {
+    const y = start + (i / steps) * (top - start);
+    points.push(new THREE.Vector2(bottleRadius(y) - inset, y));
+  }
+  return points;
+}
+
+function bottleLabelTexture() {
+  const canvas = document.createElement("canvas");
+  canvas.width = 1024;
+  canvas.height = 256;
+  const g = context2d(canvas);
+  const sky = g.createLinearGradient(0, 0, 0, 256);
+  sky.addColorStop(0, "#1f6fd1");
+  sky.addColorStop(1, "#0d4a9e");
+  g.fillStyle = sky;
+  g.fillRect(0, 0, 1024, 256);
+  // a light wave along the bottom
+  g.fillStyle = "#5ec8f5";
+  g.beginPath();
+  g.moveTo(0, 256);
+  for (let x = 0; x <= 1024; x += 8) {
+    g.lineTo(x, 200 + 12 * Math.sin((x / 1024) * Math.PI * 6));
+  }
+  g.lineTo(1024, 256);
+  g.closePath();
+  g.fill();
+  g.fillStyle = "#ffffff";
+  g.textAlign = "center";
+  g.textBaseline = "middle";
+  // twice round the bottle, so the name always faces the viewer once a turn
+  for (const x of [256, 768]) {
+    g.font = "700 64px system-ui, sans-serif";
+    g.fillText("Brew ni Cat", x, 96);
+    g.font = "600 26px system-ui, sans-serif";
+    g.fillText("PURIFIED DRINKING WATER", x, 150);
+  }
+  const texture = canvasTexture(canvas);
+  texture.wrapS = THREE.RepeatWrapping;
+  return texture;
+}
+
+/** Vertical grip ridges round a cylinder, by pushing side vertices out. */
+function ridged(
+  geometry: THREE.CylinderGeometry,
+  radius: number,
+  ridges: number,
+) {
+  const position = geometry.attributes.position!;
+  for (let i = 0; i < position.count; i++) {
+    const x = position.getX(i);
+    const z = position.getZ(i);
+    const r = Math.hypot(x, z);
+    if (r < radius * 0.98) continue;
+    const bump = 1 + 0.04 * Math.max(0, Math.cos(Math.atan2(z, x) * ridges));
+    position.setXYZ(i, x * bump, position.getY(i), z * bump);
+  }
+  geometry.computeVertexNormals();
+  return geometry;
+}
+
+function buildBottledWater(mobile: boolean) {
+  const inner = new THREE.Group();
+  const segments = mobile ? 64 : 112;
+  const steps = mobile ? 90 : 160;
+  const neckTop = 1.52;
+
+  // PET plastic, like the cups: clear, thin, a faint blue cast
+  const plastic = new THREE.MeshPhysicalMaterial({
+    color: 0xffffff,
+    transmission: 1,
+    thickness: 0.06,
+    ior: 1.45,
+    roughness: 0.04,
+    metalness: 0,
+    clearcoat: 0.8,
+    clearcoatRoughness: 0.06,
+    specularIntensity: 1,
+    attenuationColor: new THREE.Color("#e4f3fb"),
+    attenuationDistance: 3,
+    envMapIntensity: 1.2,
+  });
+  const shell = new THREE.Mesh(
+    new THREE.LatheGeometry(bottleProfile(0, neckTop, steps), segments),
+    plastic,
+  );
+  shell.castShadow = true;
+  inner.add(shell);
+
+  // the water: opaque, so it shows through the bottle's transmission pass
+  const fill = 0.95;
+  const waterPoints = bottleProfile(0.035, fill, steps);
+  waterPoints.push(new THREE.Vector2(0, fill));
+  const water = new THREE.Mesh(
+    new THREE.LatheGeometry(waterPoints, segments),
+    new THREE.MeshPhysicalMaterial({
+      color: "#cfeefc",
+      emissive: "#7cc6ee",
+      emissiveIntensity: 0.14,
+      roughness: 0.05,
+      clearcoat: 1,
+      clearcoatRoughness: 0.04,
+      envMapIntensity: 1,
+    }),
+  );
+  inner.add(water);
+
+  // wrap-around label
+  const label = new THREE.Mesh(
+    new THREE.CylinderGeometry(
+      BOTTLE_R + 0.006,
+      BOTTLE_R + 0.006,
+      LABEL_HIGH - LABEL_LOW,
+      segments,
+      1,
+      true,
+    ),
+    new THREE.MeshPhysicalMaterial({
+      map: bottleLabelTexture(),
+      roughness: 0.45,
+      clearcoat: 0.4,
+      clearcoatRoughness: 0.2,
+    }),
+  );
+  label.position.y = (LABEL_HIGH + LABEL_LOW) / 2;
+  inner.add(label);
+
+  // ridged cap and the tamper ring under it
+  const capMaterial = new THREE.MeshPhysicalMaterial({
+    color: "#2f7fd8",
+    roughness: 0.35,
+    clearcoat: 0.5,
+    clearcoatRoughness: 0.25,
+  });
+  const capR = NECK_R + 0.05;
+  const capH = 0.3;
+  const cap = new THREE.Mesh(
+    ridged(new THREE.CylinderGeometry(capR, capR, capH, 96, 1), capR, 36),
+    capMaterial,
+  );
+  cap.position.y = neckTop + capH / 2 - 0.04;
+  cap.castShadow = true;
+  const ring = new THREE.Mesh(
+    new THREE.TorusGeometry(capR - 0.01, 0.028, 12, 72),
+    capMaterial,
+  );
+  ring.rotation.x = Math.PI / 2;
+  ring.position.y = neckTop - 0.09;
+  inner.add(cap, ring);
+
+  inner.position.y = -0.1;
+  const wrap = tilted(inner, 0.12);
+  wrap.userData.fit = sweptBox(wrap).getSize(new THREE.Vector3());
+  return wrap;
+}
+
+/* ------------------------------------------------------------------ */
 /* Entry point                                                         */
 /* ------------------------------------------------------------------ */
 
@@ -1803,6 +1995,8 @@ async function buildPart(
       return buildTakeoutBox();
     case "cat-treats":
       return buildCatTreats(mobile);
+    case "bottled-water":
+      return buildBottledWater(mobile);
   }
 }
 
