@@ -1571,6 +1571,22 @@ textarea:focus-visible {
   white-space: nowrap;
 }
 
+.menu-card__order-group {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.menu-card__cart-badge {
+  justify-self: center;
+  border: 1px solid var(--accent-solid);
+  border-radius: 999px;
+  background: var(--accent-soft);
+  padding: 0.3rem 0.75rem;
+  color: var(--accent-solid);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
 /* Menu 3D viewer: a dark studio stage. The real photo fills it while the
    model loads (or when 3D is off), then tucks into the corner. */
 .menu-viewer__stage {

@@ -8,6 +8,7 @@ import {
   getCartSubtotal,
   hasCartLine,
   isCartEmpty,
+  getItemQuantityInCart,
 } from "@/lib/ordering/cart-selectors";
 import { createInitialCartState } from "@/lib/ordering/cart-reducer";
 import type { MenuCatalog } from "@/types/menu";
@@ -138,5 +139,56 @@ describe("cart selectors", () => {
     expect(draft.subtotal).toBe(220);
     expect(draft.lineCount).toBe(2);
     expect(draft.itemCount).toBe(3);
+  });
+
+  it("TC-P3-056 — returns zero when the item is not in an empty cart", () => {
+    const empty = createInitialCartState();
+
+    expect(getItemQuantityInCart(empty, "takoyaki")).toBe(0);
+  });
+
+  it("TC-P3-057 — returns the quantity for one cart line", () => {
+    const state = populatedCart();
+
+    expect(getItemQuantityInCart(state, "takoyaki")).toBe(1);
+  });
+
+  it("TC-P3-058 — adds quantities across two sizes of the same item", () => {
+    const state: CartState = {
+      ...createInitialCartState(),
+      lines: [
+        {
+          key: "takoyaki::takoyaki-4::Veggie",
+          itemId: "takoyaki",
+          itemName: "Takoyaki",
+          variantId: "takoyaki-4",
+          variantName: "4pcs",
+          flavor: "Veggie",
+          unitPrice: 40,
+          quantity: 1,
+          lineTotal: 40,
+        },
+        {
+          key: "takoyaki::takoyaki-8::Veggie",
+          itemId: "takoyaki",
+          itemName: "Takoyaki",
+          variantId: "takoyaki-8",
+          variantName: "8pcs",
+          flavor: "Veggie",
+          unitPrice: 70,
+          quantity: 2,
+          lineTotal: 140,
+        },
+      ],
+    };
+
+    expect(getItemQuantityInCart(state, "takoyaki")).toBe(3);
+  });
+
+  it("TC-P3-059 — counts only the requested menu item", () => {
+    const state = populatedCart();
+
+    expect(getItemQuantityInCart(state, "matcha")).toBe(2);
+    expect(getItemQuantityInCart(state, "takoyaki")).toBe(1);
   });
 });

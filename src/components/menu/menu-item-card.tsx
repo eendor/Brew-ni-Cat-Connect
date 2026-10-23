@@ -3,6 +3,8 @@
 import Image from "next/image";
 import { useMemo, useState } from "react";
 
+import { useCart } from "@/context/cart-context";
+import { getItemQuantityInCart } from "@/lib/ordering/cart-selectors";
 import { modelSpecFor } from "@/components/three/menu-models";
 import { useThreeEnabled } from "@/components/three/use-three-enabled";
 import { getMenuItemImage } from "@/config/menu-item-images";
@@ -58,6 +60,8 @@ function isSimpleVariant(variant: MenuVariant) {
 export function MenuItemCard({ item, catalog }: MenuItemCardProps) {
   const [isOrderOpen, setIsOrderOpen] = useState(false);
   const [isViewerOpen, setIsViewerOpen] = useState(false);
+  const { state: cartState } = useCart();
+  const cartQuantity = getItemQuantityInCart(cartState, item.id);
   // the size and flavor picked in the 3D viewer, if the order came from it
   const [orderPreset, setOrderPreset] = useState<ViewerPick | null>(null);
   const threeEnabled = useThreeEnabled();
@@ -225,18 +229,26 @@ export function MenuItemCard({ item, catalog }: MenuItemCardProps) {
               </button>
             ) : null}
             {canOrder ? (
-              <button
-                type="button"
-                data-order-trigger=""
-                onClick={() => {
-                  setOrderPreset(null);
-                  setIsOrderOpen(true);
-                }}
-                className="button-primary menu-card__order"
-                aria-label={`Order ${item.name}`}
-              >
-                Add to order
-              </button>
+              <div className="menu-card__order-group">
+                <button
+                  type="button"
+                  data-order-trigger=""
+                  onClick={() => {
+                    setOrderPreset(null);
+                    setIsOrderOpen(true);
+                  }}
+                  className="button-primary menu-card__order"
+                  aria-label={`Order ${item.name}`}
+                >
+                  Add to order
+                </button>
+
+                {cartQuantity > 0 ? (
+                  <span className="menu-card__cart-badge">
+                    {cartQuantity} in cart
+                  </span>
+                ) : null}
+              </div>
             ) : null}
           </div>
         ) : null}
