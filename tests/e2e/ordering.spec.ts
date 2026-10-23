@@ -30,7 +30,7 @@ async function mockMenu(page: Page) {
   );
 }
 
-test("TC-P3-060 adds two Takoyaki and validates Rider Delivery checkout", async ({
+test("TC-P3-060 — adds two Takoyaki and validates Rider Delivery checkout", async ({
   page,
 }) => {
   await mockMenu(page);
