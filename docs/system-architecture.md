@@ -239,7 +239,7 @@ sequenceDiagram
     API->>Catalog: Load current products/options/availability
     Catalog-->>API: Canonical current records
     API->>API: Calculate authoritative snapshots/totals
-    API->>DB: Begin transaction; check idempotency
+    API->>DB: Begin transaction, check idempotency key
     DB->>DB: Insert order, item snapshots, initial history
     DB->>Outbox: Insert integration event when POS integration exists
     DB-->>API: Commit one order and reference
