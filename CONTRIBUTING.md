@@ -1,13 +1,13 @@
 # Contributing to Brew ni Cat Connect
 
-## Before changing code or documentation
+## Before changing code
 
 1. Read the relevant requirement IDs and architecture decisions.
 2. Confirm the work belongs to the current roadmap phase.
 3. Check `git status` and start from an up-to-date `main` branch.
-4. Create a focused branch for a meaningful feature, test, documentation set, or fix.
+4. Create one branch per task, named on its Trello card (for example `feat/p4-order-api`).
 
-Suggested branch prefixes are `feat/`, `fix/`, `docs/`, `test/`, and `integration/`.
+Use the `feat/`, `fix/` or `test/` prefix.
 
 ## Change requirements
 
@@ -15,16 +15,15 @@ Suggested branch prefixes are `feat/`, `fix/`, `docs/`, `test/`, and `integratio
 - Label and isolate fixtures as `MOCK DATA — FOR DEVELOPMENT ONLY`.
 - Never commit credentials, personal customer data, or production exports.
 - Keep functionality traceable to requirements.
-- Update affected documentation and the development log.
-- Add tests for important business logic and report only commands that were actually run.
-- Run formatting, linting, type checking, tests, and a production build when the application foundation exists.
+- Add tests for your code (unit, component or browser tests) in the same pull request.
+- Before pushing, run `npm run format`, `npm run lint`, `npm run typecheck` and `npm test`. CI runs these on every pull request, plus the dependency audit, the production build and the chromium browser tests.
 
 ## Commits
 
 Use an imperative, meaningful subject, for example:
 
 ```text
-docs: document ordering execution paths
+feat: add order tracking page
 feat: add accessible mobile navigation
 test: cover cart total calculation
 fix: reject invalid order transitions
@@ -39,11 +38,9 @@ A review-ready pull request should include:
 - Summary
 - Requirement IDs addressed
 - Changes
-- Testing commands and literal results
-- Screenshots for visible UI changes, when applicable
-- Security/privacy impact
+- Security or privacy impact, if any
 - Known limitations
-- Documentation updated
-- Checklist
 
-Self-approval is allowed for the lead developer's own pull requests; record the approval in the pull request. Teammate pull requests still need a review before merge. Do not mark a module reviewed without an identifiable review record.
+CI must pass before review. The CI run replaces pasted test results. Documentation updates, screenshots and manual test notes are not needed.
+
+Self-approval is allowed for the lead developer's own pull requests; record the approval in the pull request. Teammate pull requests still need a review by Rodnee or Van before merge. Do not mark a module reviewed without an identifiable review record.

@@ -226,7 +226,7 @@ Accessibility defects in account, cart, checkout, and order-tracking critical pa
 - Public interfaces and complex domain rules should document units, invariants, side effects, and failure behavior.
 - Use `TODO:` only with a specific missing decision/action; owner-dependent business data must use `TODO: Confirm with Brew ni Cat owner.`
 - Clearly label development fixtures as `MOCK DATA — FOR DEVELOPMENT ONLY` and keep them separate from production data access.
-- Update requirements, architecture decisions, execution paths, test cases, security/privacy, API/database design, and the development log when a change affects them.
+- The documents in `docs/` are frozen as of 2026-10-23. Pull requests do not need to update them.
 - Never mark a planned feature implemented, a test passed, or a review completed without evidence.
 
 ## 13. Git and Branch Workflow
@@ -242,7 +242,7 @@ Accessibility defects in account, cart, checkout, and order-tracking critical pa
 - Use only the contributor's configured Git identity. Do not add assistant, automation, or AI co-author trailers.
 - Do not rewrite shared history or force-push a shared branch without explicit team coordination.
 - Inspect staged files and diff before every commit. Do not commit secrets, local environment files, generated build output, dependency folders, or unrelated changes.
-- Pull requests for meaningful modules must include summary, requirement IDs, changes, test commands/results, screenshots for UI changes, accessibility/security considerations, known limitations, and a checklist.
+- Pull requests must include a summary, requirement IDs, changes, security or privacy impact and known limitations. The CI run replaces pasted test results; screenshots and manual test notes are not needed.
 - Self-approval is allowed for the lead developer's own pull requests and must be recorded in the pull request. Teammate pull requests still need a review before merge. Do not represent self-checks as teammate peer review.
 
 ## 14. Code Review Checklist
@@ -281,11 +281,9 @@ A development item is done only when all applicable statements are true:
 2. Implementation follows architecture, security, privacy, accessibility, and coding standards.
 3. Appropriate unit, component, integration, and/or end-to-end tests exist and pass on the target commit.
 4. Formatter, lint, typecheck, and production build pass.
-5. Relevant manual checks are recorded, including mobile/accessibility checks for UI work.
-6. The diff has been self-inspected and meaningful review findings are resolved or documented.
-7. Documentation, test cases, development log, and decisions are updated accurately.
-8. No secret, production personal data, build output, or unrelated file is included.
-9. Commit and push/PR status are recorded truthfully.
+5. The diff has been self-inspected and meaningful review findings are resolved.
+6. No secret, production personal data, build output, or unrelated file is included.
+7. Commit and push/PR status are recorded truthfully.
 
 A phase may move to Testing / Review after its automated gates and developer inspections pass. Phase 2 must remain open and unmerged until Renier completes independent QA and Pull Request review. The live Menu now renders through the publishable runtime, but the manually RLS-disabled, table-grant-based access and unrelated public table exposure must remain visible as a production security blocker until RLS and explicit least-privilege catalog policies are restored and verified.
 
