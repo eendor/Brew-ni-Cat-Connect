@@ -64,9 +64,8 @@ jobs:
       - name: Build production application
         run: npm run build
 
-
-  e2e-ordering:
-    name: Ordering E2E tests
+  e2e:
+    name: Browser tests (chromium)
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
