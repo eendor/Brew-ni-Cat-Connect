@@ -112,6 +112,31 @@ export function isTrackingToken(value: unknown): value is string {
 }
 
 // ---------------------------------------------------------------------------
+// Live status updates
+
+/** Every order's Realtime topic starts with this, as in `order:3kQ…`. */
+export const ORDER_REALTIME_TOPIC_PREFIX = "order:";
+
+/** Number of random base64url characters after the topic prefix. */
+export const ORDER_REALTIME_TOPIC_LENGTH = 22;
+
+const ORDER_REALTIME_TOPIC_PATTERN = new RegExp(
+  `^${ORDER_REALTIME_TOPIC_PREFIX}[A-Za-z0-9_-]{${ORDER_REALTIME_TOPIC_LENGTH}}$`,
+);
+
+/**
+ * Broadcast event the database sends on an order's topic after each status
+ * change. The payload is only `{ status, changedAt }`: treat it as a sign to
+ * read the order again, never as the order itself.
+ */
+export const ORDER_STATUS_CHANGED_EVENT = "status-changed";
+
+/** True for a well-formed order Realtime topic. */
+export function isOrderRealtimeTopic(value: unknown): value is string {
+  return typeof value === "string" && ORDER_REALTIME_TOPIC_PATTERN.test(value);
+}
+
+// ---------------------------------------------------------------------------
 // Customer details
 
 /**
@@ -232,6 +257,13 @@ export type OrderView = Readonly<{
   createdAt: string;
   /** Oldest first. The first event is always `pending`. */
   statusHistory: readonly OrderStatusEvent[];
+  /**
+   * Realtime Broadcast topic for this order's status changes. It is random
+   * for each order and only comes with an authorized read, so only someone
+   * who can see the order learns it. Listen for
+   * {@link ORDER_STATUS_CHANGED_EVENT} on it.
+   */
+  realtimeTopic: string;
 }>;
 
 // ---------------------------------------------------------------------------
