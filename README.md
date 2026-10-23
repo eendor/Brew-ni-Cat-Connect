@@ -1,8 +1,9 @@
 # Brew ni Cat Connect
 
-**Development status:** Phase 3 — Menu and Ordering Experience: browser-side ordering and the 3D experience merged; server-side order creation planned
-**Specification version:** 0.1 Draft (living specification)
-**Last updated:** 2026-10-18
+**Course:** ICT05a Applications Development & Emerging Technologies\
+**Development status:** Phase 3 — Menu and Ordering Experience: browser-side ordering and the 3D experience merged; server-side order creation planned\
+**Specification version:** 0.1 Draft (living specification)\
+**Last updated:** 2026-10-23
 
 Brew ni Cat Connect is the customer-facing omnichannel platform for Brew ni Cat Coffee Shop in Kabacan, Cotabato. It complements the existing Brew ni Cat POS; it does not recreate or expose the POS.
 

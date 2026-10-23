@@ -826,3 +826,9 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Git branch:** `feat/menu-3d-models`\
 **Pull request:** [#32](https://github.com/eendor/Brew-ni-Cat-Connect/pull/32) — self-reviewed and squash-merged into `main` on 2026-10-20\
 **Next action:** FR-018 (edit a cart line's size or flavor), the teammates' Phase 3 pull requests, and the click-through on a physical phone (MAN-P4-007), which now includes the 3D viewer.
+
+## 2026-10-23 — Course named in the README and the repository description
+
+- **Changed:** the README, the project overview and the GitHub repository description now say that Brew ni Cat Connect is our class project for ICT05a Applications Development & Emerging Technologies.
+
+**Next action:** Shared order types for Phase 4 (`src/lib/orders/types.ts`), then the online order tables, the order API and Place order.
