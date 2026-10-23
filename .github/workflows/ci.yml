@@ -95,7 +95,6 @@ jobs:
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
 
-
       - name: Run browser tests (chromium)
         run: npx playwright test --project=chromium
 
@@ -106,4 +105,3 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 7
-
