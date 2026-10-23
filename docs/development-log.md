@@ -1,7 +1,7 @@
 # Development Log
 
 **Document version:** 0.1 Draft\
-**Last updated:** 2026-10-18
+**Last updated:** 2026-10-23
 
 This log records completed work and observed evidence. Planned work is explicitly identified and is not reported as implemented or tested.
 
@@ -849,4 +849,10 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Testing performed:** `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm test` (22 files / 165 tests passed), `npm run build`, `npm run audit` (passed; 0 production vulnerabilities), `python3 -I scripts/validate_phase0_docs.py` (PASS). The browser tests run in CI.\
 **Git branch:** `feat/p4-order-types`\
 **Pull request:** [#38](https://github.com/eendor/Brew-ni-Cat-Connect/pull/38), self-reviewed and squash-merged into `main` on 2026-10-23\
+**Next action:** The online order tables, `POST /api/orders` and Place order on the pickup checkout (`feat/p4-online-orders`).
+
+## 2026-10-23 — No owner biography on the About page
+
+- **Changed:** the owner confirmed that the About page needs no owner biography or longer About story, so `/about` keeps the factual points from the client brief. The README no longer lists the biography under Current Limitations, and the About story question is closed in `docs/srs.md` and `docs/functional-requirements.md`. TC-P2-015 and TC-P2-023 still check that no invented owner biography appears.
+
 **Next action:** The online order tables, `POST /api/orders` and Place order on the pickup checkout (`feat/p4-online-orders`).
