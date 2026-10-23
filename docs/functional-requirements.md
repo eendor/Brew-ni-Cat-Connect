@@ -148,7 +148,7 @@
 
 | Decision | Affected requirements | Status |
 | --- | --- | --- |
-| Approved business content and assets | FR-001–FR-009, FR-059 | Phase 2 facts, official logo, and shop-photo use confirmed; extended About story remains **TODO: Confirm with Brew ni Cat owner.** |
+| Approved business content and assets | FR-001–FR-009, FR-059 | Phase 2 facts, official logo, and shop-photo use confirmed. The owner confirmed on 2026-10-23 that no owner biography or extended About story is needed, so `/about` keeps its factual content. |
 | Authoritative menu, pricing, option, best-seller, promotion, and availability rules | FR-006–FR-016, FR-081 | Supabase is authoritative for current catalog fields; the publishable runtime currently returns 6 categories/16 items. Favorites groups are approved without exact rankings; promotions and ordering option rules remain **TODO: Confirm with Brew ni Cat owner.** |
 | Pickup fields, guest policy, order states, rejection/cancellation instructions | FR-018–FR-028, FR-045, FR-049 | **TODO: Confirm with Brew ni Cat owner.** |
 | Payment and delivery scope | FR-029–FR-030 | Cash/GCash, ₱10 takeout box, and customer-arranged rider delivery (a local rider orders at the shop and delivers; the fee is agreed with the rider) are confirmed for display only. The shop GCash QR is shown on the pickup checkout step when GCash is chosen (PR #29). Online payment, ordering fulfillment, fee calculation, and rider booking remain Deferred. |

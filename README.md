@@ -143,9 +143,8 @@ The current site does not include:
 - online payment processing or direct rider booking;
 - Messenger, Android, and POS synchronization changes;
 - database migrations, production-data mutations, or administrative functions;
-- restored RLS with catalog-only read policies, which remains a production security blocker;
-- a steady 60 fps for the 3D scenes on integrated GPUs at desktop widths (tuning is planned) or a completed click-through on a physical phone (MAN-P4-007); and
-- an owner biography that has not been approved.
+- restored RLS with catalog-only read policies, which remains a production security blocker; and
+- a steady 60 fps for the 3D scenes on integrated GPUs at desktop widths (tuning is planned) or a completed click-through on a physical phone (MAN-P4-007).
 
 The shop is open 11 AM to 10 PM and closed every Sunday. Customers are directed to the official Facebook page or the shop contact details for any schedule changes.
 

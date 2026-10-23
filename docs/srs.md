@@ -243,7 +243,7 @@ Each implementation pull request must cite applicable requirement IDs. Each test
 
 1. Select the eventual deployment target; the limited Phase 2 public catalog client is implemented, while Supabase authentication, writes, customer data, and realtime remain gated to later design.
 2. Restore RLS and obtain approval for explicit least-privilege public catalog `SELECT` policies or a dedicated public view; current grant-based access exposes unrelated business tables.
-3. Confirm the longer owner-approved About story and any future permanent operating-hours policy.
+3. Confirm any future permanent operating-hours policy. The About story is settled: on 2026-10-23 the owner confirmed that no owner biography or longer About story is needed.
 4. Define guest checkout policy versus account-required ordering. **TODO: Confirm with Brew ni Cat owner.**
 5. Define allowed order states, staff response expectations, cancellation/rejection handling, and customer notices. **TODO: Confirm with Brew ni Cat owner.**
 6. Define online payment and fulfillment scope; Cash/GCash and the customer-arranged rider delivery model are published as information, and checkout only prepares a summary the customer sends to the shop or a rider. **TODO: Confirm with Brew ni Cat owner.**
@@ -265,7 +265,7 @@ Version 0.1 remains a draft until review findings and owner-dependent scope item
 
 The client brief dated 2026-08-24 confirms the Phase 2 public facts and asset permissions: Brew ni Cat Coffee Shop opened June 12, 2026; its address is Abellera St, Poblacion, Kabacan, Cotabato 9407, Philippines, beside Pulido Eatery; its public phone and email are configured; Cash and GCash are accepted; and a ₱10 takeout box applies. Operating hours were later confirmed by the Lead Developer on 2026-10-11 as 11 AM to 10 PM, Monday to Saturday, closed every Sunday; the website directs customers to Facebook or the shop contact for any schedule changes.
 
-The owner-approved final About story is not available. Phase 2 uses only the restrained factual points supplied in the brief and does not invent an owner biography, testimonial, award, mission, or market-leading claim.
+The owner confirmed on 2026-10-23 that no owner biography or longer About story is needed. The About page uses only the restrained factual points supplied in the brief and does not invent an owner biography, testimonial, award, mission, or market-leading claim.
 
 The existing Supabase catalog is the authoritative source for current categories, item names, availability, variants, flavor prices, and combo descriptions. Old menu posters are visual reference only. POS and read-only discovery identified `categories` and `items`; the typed browser data layer maps only approved catalog fields. Initial anonymous access returned HTTP 200 with zero rows; after RLS was manually disabled, the publishable runtime returned 6 categories/16 items and rendered them without privileged access or a business-data mutation. The current table-grant-based exposure—including publicly reachable unrelated business tables—is a production security blocker, not a least-privilege policy solution.
 
