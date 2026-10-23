@@ -832,3 +832,21 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Changed:** the README, the project overview and the GitHub repository description now say that Brew ni Cat Connect is our class project for ICT05a Applications Development & Emerging Technologies.
 
 **Next action:** Shared order types for Phase 4 (`src/lib/orders/types.ts`), then the online order tables, the order API and Place order.
+
+## 2026-10-23 — Shared online order types
+
+**Date:** 2026-10-23\
+**Phase:** Phase 4 — Cloud backend and customer accounts\
+**Task:** Put the shared online order types on `main` before Tue Oct 27, so Shan's order page and Renier's live tracking use the same shapes as the order API.\
+**Summary:**
+- **Statuses:** pending, accepted, rejected, preparing, ready, completed and cancelled, with `isOrderStatus` and `isFinalOrderStatus`. The exact names and the cancellation rules stay `TODO: Confirm with Brew ni Cat owner.`
+- **Order shapes:** `OnlineOrder` (what the shop sees), `OrderView` (what the customer sees, with no phone number or internal ids), `OrderItemSnapshot` (a cart line copied when the order is placed) and `OrderStatusHistoryEntry` (who changed the status, when, from what, to what, and a correlation id).
+- **Place order:** `PlaceOrderRequest` sends the picks, the customer details, an idempotency key and the subtotal the customer saw, never a price to charge. `PlaceOrderResult` is either the reference and tracking token or a typed failure: `invalid-request`, `invalid-details`, `empty-cart`, `line-unavailable`, `price-changed` or `server-error`.
+- **Formats:** an order reference is `BNC-` plus six characters without 0, 1, I, L and O (`isOrderReference`). A tracking token is 43 base64url characters (`isTrackingToken`). The payment preference is Cash or GCash (`isPaymentPreference`).
+- **Tests:** TC-P4-059 to TC-P4-063.
+
+**Files/modules affected:** new `src/lib/orders/types.ts` and `tests/unit/order-types.test.ts`; `docs/test-cases.md`, `docs/functional-requirements.md`, `docs/development-standards.md`, `docs/code-review.md` and this log. No new dependencies.\
+**Testing performed:** `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm test` (22 files / 165 tests passed), `npm run build`, `npm run audit` (passed; 0 production vulnerabilities), `python3 -I scripts/validate_phase0_docs.py` (PASS). The browser tests run in CI.\
+**Git branch:** `feat/p4-order-types`\
+**Pull request:** [#38](https://github.com/eendor/Brew-ni-Cat-Connect/pull/38), self-reviewed and squash-merged into `main` on 2026-10-23\
+**Next action:** The online order tables, `POST /api/orders` and Place order on the pickup checkout (`feat/p4-online-orders`).

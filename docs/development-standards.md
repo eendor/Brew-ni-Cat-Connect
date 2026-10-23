@@ -51,6 +51,7 @@ src/
     accessibility/ Dialog focus trap
     menu/          Catalog fetch, mapping, and price display helpers
     ordering/      Cart pricing, reducer, selectors, checkout validation, and summary storage
+    orders/        Shared online order types and their format checks (Phase 4)
     supabase/      Public client creation only
   types/           Application-level catalog, ordering, and row boundary types
 tests/

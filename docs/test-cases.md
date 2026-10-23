@@ -2,13 +2,13 @@
 
 **Project:** Brew ni Cat Connect
 **Specification version:** 0.1 Draft
-**Test record version:** Living record, updated with the rider delivery flow (PR #25)
-**Date:** 2026-10-18 (first drafted 2026-08-24)
-**Status:** Phases 1 and 2 merged, Phase 2 after independent QA (PR #6); the Phase 3 ordering core, cart and checkout merged (PRs #7, #14 and #20); the 3D and motion layer merged in PR #23 and its follow-ups in PR #24; the rider delivery flow updated in PR #25
+**Test record version:** Living record, updated with the shared Phase 4 order types (PR #38)
+**Date:** 2026-10-23 (first drafted 2026-08-24)
+**Status:** Phases 1 and 2 merged, Phase 2 after independent QA (PR #6); the Phase 3 ordering core, cart and checkout merged (PRs #7, #14 and #20); the 3D and motion layer merged in PR #23 and its follow-ups in PR #24; the rider delivery flow updated in PR #25; the shared Phase 4 order types added in PR #38
 
 ## 1. Scope and Status Rules
 
-This living record preserves the Phase 1 foundation evidence, the Phase 2 public showcase/read-only catalog cases, the Phase 3 browser-side ordering cases (cart, checkout and the order summary for the shop or a rider) and the 3D and motion layer cases. It does not claim coverage for server-side order creation, authentication, loyalty, Messenger, Android, POS synchronization, or database mutations.
+This living record preserves the Phase 1 foundation evidence, the Phase 2 public showcase/read-only catalog cases, the Phase 3 browser-side ordering cases (cart, checkout and the order summary for the shop or a rider) and the 3D and motion layer cases. It does not claim coverage for server-side order creation, authentication, loyalty, Messenger, Android, POS synchronization, or database mutations. Section 13 covers only the shared Phase 4 order types and their format checks, not order creation.
 
 Statuses follow `docs/testing-strategy.md`:
 
@@ -292,3 +292,15 @@ Run on 2026-10-17 for branch `feat/threejs-experience`: Vitest 120/120 passed in
 | TC-P4-056 | FR-012, NFR-032 | Menu 3D viewer | Combos, the take-out box and the cat treats have models | As above | Same tour for Cat Association, Couple of Cats, Single-Paw-rtner Combos, the Take-out Box and the Cat Treats | As in TC-P4-053 | Matched in the 32/32 Playwright run | Passed | `tests/e2e/three.spec.ts` |
 | TC-P4-057 | NFR-034, NFR-033 | Menu 3D viewer | On a phone the preview fits the screen and answers taps | Pixel 7 profile in `chromium-3d`, live menu mocked | Tap View Takoyaki (Pawsome Balls) in 3D; tap 16pcs; tap Close 3D preview | Pixel ratio at most 1.26; the panel fits the screen with no sideways scroll; the 16pcs Veggie Whiskers model shows at ₱150; Close leaves the viewer; no console errors | Matched in the 32/32 Playwright run | Passed | `tests/e2e/three.spec.ts` |
 | TC-P4-058 | FR-003, NFR-034 | Visit scene | The Contact sign and street are not cut off at the canvas sides | `chromium-3d`, 1280 × 900 and 960 × 900 | Open `/contact`, wait for the scene, and compare the stage with and without its canvas | The scene changes more than 5% of the stage; under 0.2% of the 8 px strips at the left and right edges change; no console errors | Matched in the 32/32 Playwright run: 0% at both edges and both widths. On the old camera the left strip changed by 3.0% at 1280 px and the test failed | Passed | `tests/e2e/three.spec.ts` |
+
+## 13. Phase 4 Shared Order Types Cases
+
+Run on 2026-10-23 for branch `feat/p4-order-types`: Vitest 165/165 passed in 22 files. These cases test the runtime checks in `src/lib/orders/types.ts`. No order is saved yet.
+
+| ID | Requirement ID(s) | Module | Scenario | Preconditions | Input / action | Expected result | Actual result | Status | Evidence |
+|---|---|---|---|---|---|---|---|---|---|
+| TC-P4-059 | FR-028 | Order types | Only the seven planned statuses are order statuses | Pure function | Check each planned status; then "Pending", "PENDING", " pending", "pending ", an empty string, "shipped", "delivered", null, undefined, 0, true, an object and an array | The list is pending, accepted, rejected, preparing, ready, completed and cancelled, each once, and each passes; every other value fails | Matched in the 165/165 Vitest run | Passed | `tests/unit/order-types.test.ts` |
+| TC-P4-060 | FR-028 | Order types | Rejected, completed and cancelled are the final statuses | Pure function | Ask whether each status is final | Only rejected, completed and cancelled are final, the end states in `docs/execution-paths.md` §4.3 | Matched in the 165/165 Vitest run | Passed | `tests/unit/order-types.test.ts` |
+| TC-P4-061 | FR-025 | Order types | An order reference is `BNC-` plus six easy-to-read characters | Pure function | Check `BNC-7K2Q9F` and each allowed character in all six places; then references with 0, 1, I, L or O, lower case, no or another prefix, five or seven characters, a leading space, a trailing newline, an inner dash, an empty string and non-strings | Well-formed references pass; the alphabet has 31 different characters and none of 0, 1, I, L and O; every other value fails | Matched in the 165/165 Vitest run | Passed | `tests/unit/order-types.test.ts` |
+| TC-P4-062 | FR-045 | Order types | A tracking token is 43 base64url characters | Node `crypto` | Check 20 tokens made from 32 random bytes; then 42 and 44 characters, `+`, `/`, `=` padding, a leading space, a trailing newline, an empty string and non-strings | Each generated token is 43 characters long and passes; every other value fails | Matched in the 165/165 Vitest run | Passed | `tests/unit/order-types.test.ts` |
+| TC-P4-063 | FR-022 | Order types | The payment preference is Cash or GCash, as at checkout | Pure function | Check Cash and GCash; then cash, GCASH, Gcash, Card, Maya, an empty string and non-strings | Only Cash and GCash pass | Matched in the 165/165 Vitest run | Passed | `tests/unit/order-types.test.ts` |

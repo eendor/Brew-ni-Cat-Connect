@@ -372,3 +372,22 @@ Teammates' commits, and Renier's PR #6 title (`QA: Phase 2 independent QA result
 
 **Known limitations:** The drag check proves the drag through the canvas's grab state. The pixel check after it only proves that the scene keeps drawing, because the model also turns on its own and, on a slow GPU, the quality governor drops effects and redraws the whole frame. The viewer was not checked by hand or on a physical phone (MAN-P4-007 is still to do). The `chromium-3d` project runs only locally.\
 **Status:** Self-reviewed. Vitest passed 152/152 in 21 files and Playwright 32/32 (16 in `chromium`, 16 in `chromium-3d`); the build (9 of 9 static pages), lint, type checking, the audit and the docs validator passed.
+
+## 2026-10-23 — Shared online order types (PR #38)
+
+**Module:** `src/lib/orders/types.ts`\
+**Author:** Rodnee Glen Martin\
+**Reviewer:** Rodnee Glen Martin (self-review)\
+**Date:** 2026-10-23
+
+**Findings:**
+
+1. The seven statuses come from `docs/execution-paths.md` §4.3, as an `as const` list with a literal union and no `enum`, as the development standards ask. The final statuses (rejected, completed and cancelled) are the end states of the state diagram. Transition rules are not part of this pull request; they come with the status updates.
+2. No type carries a price from the browser. `PlaceOrderRequest` sends the picks (`CartItemSelection`), the customer details, an idempotency key and the subtotal the customer saw. The server only compares that subtotal and answers `price-changed`, as `docs/execution-paths.md` §4.2 asks.
+3. `OrderView`, what a customer sees, has no phone number, customer id or order id, because a guest can forward the order link.
+4. References use 31 characters without 0, 1, I, L and O, so a reference read out at the counter is not misheard; 31 to the power of 6 gives about 887 million references. A tracking token is 32 random bytes (256 bits) in base64url. Both checks match the whole string, so a leading space or a trailing newline fails.
+5. `OrderItemSnapshot` has the same fields as a cart line without its `key`, so the API can copy priced cart lines into the order.
+6. Rules the owner has not confirmed stay marked `TODO: Confirm with Brew ni Cat owner.`: the status names and the cancellation rules.
+
+**Known limitations:** Types only; nothing is saved yet. The tables, the guest read function and the API come in the next pull request and must match these types.\
+**Status:** Self-reviewed. Vitest passed 165/165 in 22 files; lint, type checking, the build, the audit and the docs validator passed. CI runs the browser tests.
