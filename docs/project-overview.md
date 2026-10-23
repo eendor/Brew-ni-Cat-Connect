@@ -2,9 +2,10 @@
 
 **Project:** Brew ni Cat Connect\
 **Academic title:** Development of an Omnichannel Online Ordering and Intelligent Customer Engagement System for Brew ni Cat Coffee Shop\
+**Course:** ICT05a Applications Development & Emerging Technologies\
 **Version:** 0.1 Draft\
 **Status:** Version 0.1 Draft — Phases 1 and 2 merged; Phase 3 browser-side ordering and the 3D and motion layer merged, server-side order creation planned\
-**Last updated:** 2026-10-18
+**Last updated:** 2026-10-23
 
 ## 1. Purpose
 
