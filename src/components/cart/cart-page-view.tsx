@@ -163,8 +163,8 @@ export function CartPageView() {
                         </div>
                         <p className="mt-4 text-xs text-[var(--text-muted)] leading-relaxed">
                           Collect directly at {siteConfig.address.street},{" "}
-                          {siteConfig.address.locality}. Open Mon–Sat 11 AM – 10
-                          PM.
+                          {siteConfig.address.locality}. Open Mon–Fri 11 AM – 9
+                          PM and Sun 1 PM – 9 PM. Closed Saturday.
                         </p>
                       </label>
 

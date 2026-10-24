@@ -675,7 +675,7 @@ test("TC-P4-004 — gallery ring and visit sign stay keyboard operable", async (
   ).toHaveAttribute("aria-pressed", "true");
   // the real hours text never depends on the 3D sign
   await expect(
-    page.getByRole("main").getByText(/Closed every Sunday\./),
+    page.getByRole("main").getByText(/Closed every Saturday\./),
   ).toBeVisible();
   expect(errors).toEqual([]);
 });

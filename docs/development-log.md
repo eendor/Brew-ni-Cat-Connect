@@ -878,3 +878,20 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Pull request:** [#41](https://github.com/eendor/Brew-ni-Cat-Connect/pull/41), self-reviewed and squash-merged into `main` on 2026-10-24\
 **Next action:** Shan's order page reads `get_online_order()`. The POS order screen needs its own status-change function. `POST /api/orders` needs a rate limit before Place order is turned on.
 
+
+## 2026-10-24 — New shop hours: closed every Saturday
+
+**Date:** 2026-10-24\
+**Phase:** Phase 4 — Cloud backend and customer accounts (content update)\
+**Task:** Lead Developer shared the shop's posted "We are open" schedule: Monday to Friday 11 AM to 9 PM, Sunday 1 PM to 9 PM, closed Saturday. It replaces the hours from 2026-10-11 (11 AM to 10 PM, Monday to Saturday, closed every Sunday).\
+**Summary:**
+- **Config:** `siteConfig.operations` has `closedDays: "Saturday"` and the new `hoursNotice`, which the checkout and the footer show with no other change.
+- **Pages:** the Home hours fact, About, Contact, the cart's pickup note and the mobile menu show the new hours.
+- **3D sign:** `visitFacts` gains `otherDay` and `otherHours` for Sunday. The open side shows the weekday hours, "Monday to Friday" and "Sunday 1 PM – 9 PM". The closed side shows "Every Saturday" and both opening times. A line that is too long shrinks to fit the board. The plain sign without 3D shows Sunday's hours too.
+- **Tests:** TC-P2-002, TC-P2-016 and TC-P4-008 check the new hours, and the Home and Contact tests check that the 10 PM and Sunday-closed text is gone. The browser tests TC-P2-025 and TC-P4-004 look for "Closed every Saturday".
+
+**Files/modules affected:** `src/config/site.ts`, `src/app/page.tsx`, `src/app/about/page.tsx`, `src/app/contact/page.tsx`, `src/components/cart/cart-page-view.tsx`, `src/components/layout/mobile-navigation.tsx`, `src/components/three/visit-facts.ts`, `src/components/three/visit-stage.tsx` and `src/components/three/scenes/visit.ts`; `tests/unit/home-page.test.tsx`, `tests/unit/business-pages.test.tsx`, `tests/unit/three-layer.test.tsx`, `tests/e2e/showcase.spec.ts` and `tests/e2e/three.spec.ts`; `docs/business-content-register.md`, `docs/functional-requirements.md` (FR-003), `docs/srs.md`, `docs/test-cases.md`, `README.md` and this log. No new dependencies.\
+**Testing performed:** `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm test` (31 files / 234 tests passed), `npm run build`, `npm run audit` (passed), `python3 -I scripts/validate_phase0_docs.py` (PASS). The browser tests run in CI.\
+**Git branch:** `fix/shop-hours-saturday-closed`\
+**Pull request:** [#43](https://github.com/eendor/Brew-ni-Cat-Connect/pull/43), self-reviewed and squash-merged into `main` on 2026-10-24\
+**Next action:** Speed up the home intro on low-end Android phones.

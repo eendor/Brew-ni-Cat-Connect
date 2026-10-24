@@ -147,7 +147,7 @@ The current site does not include:
 - restored RLS with catalog-only read policies, which remains a production security blocker (done on 2026-10-24 in PR #41); and
 - a steady 60 fps for the 3D scenes on integrated GPUs at desktop widths (tuning is planned) or a completed click-through on a physical phone (MAN-P4-007).
 
-The shop is open 11 AM to 10 PM and closed every Sunday. Customers are directed to the official Facebook page or the shop contact details for any schedule changes.
+The shop is open 11 AM to 9 PM Monday to Friday and 1 PM to 9 PM on Sunday, and closed every Saturday. Customers are directed to the official Facebook page or the shop contact details for any schedule changes.
 
 ## Contributing
 
