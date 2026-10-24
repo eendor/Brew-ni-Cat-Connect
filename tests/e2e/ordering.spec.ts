@@ -125,3 +125,75 @@ test("TC-P3-060 — adds two Takoyaki and validates Rider Delivery checkout", as
     main.getByRole("link", { name: "Message on Facebook" }),
   ).toHaveCount(0);
 });
+
+test("TC-P4-123 — Place order sends the pickup order and opens its order page", async ({
+  page,
+}) => {
+  test.skip(
+    process.env.NEXT_PUBLIC_ONLINE_ORDERING !== "enabled",
+    "needs a build with NEXT_PUBLIC_ONLINE_ORDERING=enabled",
+  );
+  await mockMenu(page);
+  const sent: Array<Record<string, unknown>> = [];
+  await page.route("**/api/orders", async (route) => {
+    const request = route.request().postDataJSON() as Record<string, unknown>;
+    sent.push(request);
+    await route.fulfill({
+      status: 201,
+      json: {
+        ok: true,
+        reference: "BNC-7K2Q9F",
+        trackingToken: request.trackingToken,
+        status: "pending",
+        createdAt: "2026-10-24T08:00:00.000Z",
+      },
+    });
+  });
+
+  await page.goto("/menu");
+  await page.getByRole("button", { name: "Order Takoyaki" }).click();
+  const orderDialog = page.getByRole("dialog");
+  await orderDialog.getByRole("button", { name: "8 pcs" }).click();
+  await orderDialog.getByRole("button", { name: "Cheese" }).click();
+  await orderDialog.getByRole("button", { name: "Increase quantity" }).click();
+  await orderDialog.getByRole("button", { name: "Add to Order" }).click();
+  await page
+    .getByRole("dialog", { name: "Your Order" })
+    .getByRole("link", { name: "Proceed to Checkout" })
+    .click();
+  await page.waitForURL("**/checkout");
+
+  await page.getByLabel(/Full Name/).fill("E2E Test Customer");
+  await page.getByLabel(/Contact Phone Number/).fill("09171234567");
+  await page.getByRole("button", { name: "Continue to Order Review" }).click();
+  await expect(
+    page.getByRole("button", { name: /Proceed to Send to Shop/ }),
+  ).toHaveCount(0);
+  await page.getByRole("button", { name: "Place order" }).click();
+
+  await page.waitForURL(/\/orders\/BNC-7K2Q9F#token=[A-Za-z0-9_-]{43}$/);
+  expect(sent).toHaveLength(1);
+  const [request] = sent;
+  // what was picked, never a price to charge: the database prices it
+  expect(request).toEqual({
+    idempotencyKey: expect.stringMatching(/^[0-9a-f-]{36}$/),
+    trackingToken: expect.stringMatching(/^[A-Za-z0-9_-]{43}$/),
+    fulfillment: "pickup",
+    customer: {
+      name: "E2E Test Customer",
+      phone: "09171234567",
+      notes: "",
+      paymentPreference: "Cash",
+    },
+    lines: [
+      {
+        itemId: "e2e-takoyaki",
+        variantId: "e2e-8pc",
+        flavor: "Cheese",
+        quantity: 2,
+      },
+    ],
+    expectedSubtotal: 220,
+  });
+  expect(new URL(page.url()).hash).toBe(`#token=${request?.trackingToken}`);
+});

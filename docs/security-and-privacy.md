@@ -2,9 +2,9 @@
 
 **Project:** Brew ni Cat Connect
 **Version:** 0.1 Draft
-**Date:** 2026-08-24; Phase 3 addendum 2026-10-18
-**Phase:** Living baseline through Phase 3
-**Document status:** Phase 1 controls are verified historical evidence. The Phase 2 public catalog and media merged on 2026-09-16 after Renier's independent QA (PR #6), and the Phase 3 browser-side cart, checkout and 3D layer (§17) merged through PR #24. Live public catalog rendering is verified, but the manually RLS-disabled database state is a production security blocker; later-feature controls remain Planned.
+**Date:** 2026-08-24; Phase 3 addendum 2026-10-18; Phase 4 addendum 2026-10-24
+**Phase:** Living baseline through Phase 4
+**Document status:** Phase 1 controls are verified historical evidence. The Phase 2 public catalog and media merged on 2026-09-16 after Renier's independent QA (PR #6), and the Phase 3 browser-side cart, checkout and 3D layer (§17) merged through PR #24. Live public catalog rendering is verified, but the manually RLS-disabled database state is a production security blocker; later-feature controls remain Planned. **Update (2026-10-24):** RLS is back on for every public table (§18.1), which closes that blocker; the online order controls are in §18.
 
 ## 1. Current State and Purpose
 
@@ -259,6 +259,8 @@ RLS was manually disabled on the relevant catalog tables to unblock public catal
 
 Before production deployment, restore RLS and add reviewed, explicit anonymous `SELECT` policies limited to the intended public catalog rows and fields. A non-production or otherwise approved policy test must demonstrate that approved catalog reads succeed, catalog writes fail, unrelated business/customer relations remain unreadable, and client bundles contain no privileged value. This remains an open Phase 2 security limitation and production blocker.
 
+**Update (2026-10-24):** closed by `supabase/migrations/20261024011051_restore_rls.sql` (§18.1).
+
 ### 16.2.1 Public table exposure assessment
 
 HEAD-only/no-body probes using the publishable identity checked accessibility without dumping sensitive records:
@@ -309,3 +311,46 @@ Before commit/PR, inspect staged and unstaged diffs, verify `.env.local` is untr
 - Since PR #23, `next build` downloads the Big Shoulders and Archivo font files from Google Fonts through `next/font/google` and serves them from the site. A build therefore needs network access to Google Fonts, though still no production credential (compare §16.1), and visitors' browsers make no request to Google.
 - `next.config.ts` turns off the `X-Powered-By` header. No Content Security Policy or other security headers are configured yet; add and test them before production deployment, together with the RLS restoration in §16.2.
 - `npm run audit` reports 0 vulnerabilities after PR #24 replaced the `fast-glob` copy inside the Next.js lint plugin (dev-only tooling) with `tinyglobby`.
+
+## 18. Phase 4 Security and Privacy Addendum
+
+### 18.1 RLS restored on the shared database
+
+- `supabase/migrations/20261024011051_restore_rls.sql` turned RLS back on for every public table on 2026-10-24. Guests and signed-in customers can read only the menu (`categories`, `items`) and the POS releases (`app_release`). Everything else, and every change, needs a staff account (`docs/database-design.md` §8.2).
+- Staff is marked in `app_metadata`, which only SQL or the service role can change, so a customer can't make themselves staff. `private.is_staff()` reads `auth.users` on each call, and banned, deleted and anonymous accounts are never staff.
+- PGlite tests check what guests, signed-in customers and staff can each read and change (TC-P4-067 to TC-P4-083). The live apply ran the same kind of checks and would have rolled back on any failure.
+- The POS staff account was marked as staff inside SQL. Its id and sign-in details are not in the repository, the tests or the logs.
+
+### 18.2 What an online order keeps
+
+- A pickup order keeps the name, the phone number (as `+639XXXXXXXXX`), the notes, the payment preference, the lines, the subtotal and the status history. It keeps no address, because online orders are pickup only. Rider delivery still ends with a copied summary and sends nothing to the server.
+- `customer_id` links an order to a signed-in account and becomes null when the account is deleted, so the order stays as a guest order (FR-043). The route places orders without a user session for now, so every order is a guest order until sign-in arrives.
+- How long orders are kept is **TODO: Confirm with Brew ni Cat owner.**
+
+### 18.3 Tracking token and the order link
+
+- The browser makes a 32-byte random tracking token with `crypto.getRandomValues()` and sends it with the order. The database keeps only its SHA-256 hash, in `private.online_order_tokens`, which the API can't reach.
+- The order link is `/orders/BNC-XXXXXX#token=…`. The token is in the `#` fragment, which browsers never send to a server, so it stays out of server and proxy logs.
+- `get_online_order()` returns an order only with the right token, to its own signed-in customer, or to staff. A wrong token and a missing order both return `null`. It never returns the phone number or internal ids (FR-045).
+- The reference (`BNC-` plus six characters) is a label, not a secret. On its own it opens nothing.
+
+### 18.4 Order API controls
+
+- `POST /api/orders` calls `place_online_order()` with the publishable key, as the browser could. No service-role or other privileged key is used anywhere (FR-037).
+- The tables are closed to the API, staff included, so an order can only be written through that function. It prices every line from the live menu, checks the details, and saves the order, its lines, the token hash and the first status in one transaction (FR-021).
+- The route reads only JSON, at most 32 KB, and stops reading a streamed body once it is too big. It refuses text and numbers Postgres can't store (`\u0000`, half of a surrogate pair, numbers too large to be finite) and nesting deeper than 6 levels before anything reaches the database.
+- One checkout attempt saves one order: the idempotency key is unique in the database (FR-024).
+- Answers carry `cache-control: no-store`. A failure log line holds only the event, a correlation id and an error code, never the name, phone, notes, token or idempotency key (TC-P4-119).
+- Customer-facing messages are fixed text. Database error details are never sent to the browser.
+
+### 18.5 Realtime status updates
+
+- Each order gets a random Realtime topic (`order:` plus 22 base64url characters). Only `get_online_order()` returns it, so only someone who can open the order can listen.
+- The broadcast carries only the status and the time of the change, never a name, phone number or line.
+
+### 18.6 Known limits
+
+- `POST /api/orders` has no rate limit yet. Add one, or check the hosting provider's limits, before the flag is turned on for the public.
+- No Content Security Policy is configured yet (§17.3).
+- If an order's outcome is unknown after a server error and the customer then edits the cart, a retry is a new checkout attempt and can save a second order. The shop sees both, with the same name and phone number.
+- Place order is off on the live site (`NEXT_PUBLIC_ONLINE_ORDERING` is empty) until the POS order screen and the order page are ready (`docs/database-design.md` §8.8).

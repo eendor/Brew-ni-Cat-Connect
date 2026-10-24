@@ -163,6 +163,10 @@ test("TC-P4-023 — a phone can tap through the whole order flow", async ({
     page.getByRole("heading", { level: 1, name: "Checkout" }),
   ).toBeVisible();
 
+  // rider delivery copies a summary in every build; pickup places the order
+  // online when the switch is on (TC-P4-123)
+  await page.getByRole("radio", { name: /Rider Delivery/ }).check();
+
   // an empty form sends the thumb to the first field to fix
   await page.getByRole("button", { name: /Continue to Order Review/ }).tap();
   await expect(page.getByLabel(/Full Name/)).toBeFocused();
@@ -171,6 +175,7 @@ test("TC-P4-023 — a phone can tap through the whole order flow", async ({
 
   await page.getByLabel(/Full Name/).fill("Maria Santos");
   await page.getByLabel(/Contact Phone Number/).fill("0918 123 4567");
+  await page.getByLabel("Delivery Address").fill("Purok 2, Kabacan");
   await page.getByRole("button", { name: /Continue to Order Review/ }).tap();
   const main = page.getByRole("main");
   await expect(
@@ -181,17 +186,21 @@ test("TC-P4-023 — a phone can tap through the whole order flow", async ({
   await expect(main).toContainText("₱339");
   await checkTargets("review");
 
-  await page.getByRole("button", { name: /Proceed to Send to Shop/ }).tap();
+  await page.getByRole("button", { name: /Proceed to Send to Rider/ }).tap();
   await expect(
-    page.getByRole("heading", { level: 1, name: "Order Summary for Shop" }),
+    page.getByRole("heading", {
+      level: 1,
+      name: "Order Summary for Your Rider",
+    }),
   ).toBeVisible();
   await expect(
     main.getByRole("button", { name: "Copy order summary" }),
   ).toBeVisible();
   await expect(
-    main.getByRole("link", { name: "Message on Facebook" }),
-  ).toBeVisible();
-  await expect(main.getByRole("link", { name: /Call or Text/ })).toBeVisible();
+    main
+      .getByRole("list", { name: "Rider delivery services" })
+      .getByRole("link"),
+  ).toHaveCount(3);
   await checkTargets("summary");
 
   // the cart keeps the order until the summary is sent or a new one starts

@@ -9,6 +9,15 @@ export function validatePhoneNumber(phone: string): boolean {
   return /^(09\d{9}|\+639\d{9})$/.test(cleanPhone);
 }
 
+/** Checkout form messages. The order API uses the same ones. */
+export const DETAILS_ERROR_MESSAGES = {
+  nameRequired: "Please enter your full name.",
+  phoneRequired: "Please enter your contact phone number.",
+  phoneInvalid:
+    "Please enter a valid Philippine mobile number (e.g. 0912 345 6789 or +63 912 345 6789).",
+  addressRequired: "Please enter the delivery address for your rider.",
+} as const;
+
 export interface CheckoutDetails {
   name: string;
   phone: string;
@@ -42,18 +51,17 @@ export function validateDetails(
   const errors: ValidationResult["errors"] = {};
 
   if (!details.name || details.name.trim().length === 0) {
-    errors.name = "Please enter your full name.";
+    errors.name = DETAILS_ERROR_MESSAGES.nameRequired;
   }
 
   if (!details.phone || details.phone.trim().length === 0) {
-    errors.phone = "Please enter your contact phone number.";
+    errors.phone = DETAILS_ERROR_MESSAGES.phoneRequired;
   } else if (!validatePhoneNumber(details.phone)) {
-    errors.phone =
-      "Please enter a valid Philippine mobile number (e.g. 0912 345 6789 or +63 912 345 6789).";
+    errors.phone = DETAILS_ERROR_MESSAGES.phoneInvalid;
   }
 
   if (options.requireAddress && !details.address?.trim()) {
-    errors.address = "Please enter the delivery address for your rider.";
+    errors.address = DETAILS_ERROR_MESSAGES.addressRequired;
   }
 
   return {
