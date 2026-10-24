@@ -1,6 +1,6 @@
 "use client";
-
-import { validateDetails as validateDetailsHelper } from "@/lib/ordering/validation";
+import { CheckoutSteps } from "./checkout-steps";
+import {validateDetails as validateDetailsHelper } from "@/lib/ordering/validation";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -523,6 +523,7 @@ export function CheckoutView({
               </li>
             </ol>
           </nav>
+                    <CheckoutSteps step={step} />
 
           {/* STEP 1: Details & Fulfillment Form */}
           {step === "details" && (
