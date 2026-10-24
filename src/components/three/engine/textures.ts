@@ -115,6 +115,7 @@ function paletteTexture(
   const data = new Uint8Array(size * size * 4);
   const colors = stops.map(([t, hex]) => [t, new THREE.Color(hex)] as const);
   const tmp = new THREE.Color();
+  const srgb = new THREE.Color();
   for (let i = 0; i < size * size; i++) {
     const v = field[i] ?? 0;
     let picked = false;
@@ -130,7 +131,7 @@ function paletteTexture(
     }
     if (!picked) tmp.copy(colors[colors.length - 1]?.[1] ?? tmp);
     // palette stops are sRGB hex values; store them as sRGB bytes
-    const srgb = tmp.clone().convertLinearToSRGB();
+    srgb.copy(tmp).convertLinearToSRGB();
     data[i * 4] = srgb.r * 255;
     data[i * 4 + 1] = srgb.g * 255;
     data[i * 4 + 2] = srgb.b * 255;
@@ -155,12 +156,15 @@ export function condensationMaps(size = 512, seed = 3): SurfaceMaps {
   const random = rng(seed);
   const fog = fbm(size, seed + 9, 4, 8);
   for (let i = 0; i < rough.length; i++) rough[i] = 0.18 + (fog[i] ?? 0) * 0.22;
-  const drops = Math.round(size * 1.6);
+  // the drops are tuned on a 512 px map; a smaller map keeps every drop and
+  // shrinks it, so the cup looks the same with a quarter of the work
+  const unit = size / 512;
+  const drops = 819;
   for (let d = 0; d < drops; d++) {
     const cx = random() * size;
     const cy = random() * size;
     const big = random() > 0.9;
-    const r = big ? 5 + random() * 7 : 1.2 + random() * 3.2;
+    const r = (big ? 5 + random() * 7 : 1.2 + random() * 3.2) * unit;
     const stretch = big ? 1.2 + random() * 0.6 : 1;
     for (let y = -Math.ceil(r * stretch); y <= Math.ceil(r * stretch); y++) {
       for (let x = -Math.ceil(r); x <= Math.ceil(r); x++) {

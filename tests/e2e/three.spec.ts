@@ -1051,6 +1051,33 @@ test.describe("phone", () => {
     await expect(viewer).toHaveCount(0, CLOSED);
     expect(problems).toEqual([]);
   });
+
+  test("TC-P4-128 — a phone gets the lite showcase at 1× with the small HDRI", async ({
+    page,
+  }) => {
+    const errors = collectErrors(page);
+    const hdris: string[] = [];
+    page.on("request", (request) => {
+      const { pathname } = new URL(request.url());
+      if (pathname.startsWith("/three/hdri/")) hdris.push(pathname);
+    });
+    await page.goto("/");
+    await expect(page.locator(".showcase--ready")).toBeVisible({
+      timeout: 45_000,
+    });
+    const stage = page.locator(".showcase__stage canvas");
+    await expect(stage).toHaveAttribute("data-tier", "lite");
+    await page.waitForTimeout(1500);
+    // no post effects, shadows or refraction, and still a drawn scene
+    expect(await pixelSpread(stage)).toBeGreaterThan(12);
+    const ratio = await stage.evaluate(
+      (canvas: HTMLCanvasElement) => canvas.width / canvas.clientWidth,
+    );
+    expect(ratio).toBeLessThanOrEqual(1.01);
+    // the phone downloads only the half-size HDRI
+    expect(hdris).toEqual(["/three/hdri/studio_small_09_512.hdr"]);
+    expect(errors).toEqual([]);
+  });
 });
 
 test.describe("reduced motion", () => {

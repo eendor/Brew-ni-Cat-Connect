@@ -5,6 +5,7 @@ import {
   canvasTexture,
   context2d,
   disposeScene,
+  loadImage,
   makeRenderer,
   studioEnvironment,
 } from "../engine/renderer";
@@ -13,6 +14,7 @@ import {
   clamp01,
   damp,
   fontFamilies,
+  nextTask,
   pointer,
   smooth,
   type Quality,
@@ -26,6 +28,7 @@ import {
   floaterMaterials,
   iceGeometry,
   leafGeometry,
+  liteMaterials,
   makeBuldak,
   makeCup,
   makeFries,
@@ -33,30 +36,64 @@ import {
 } from "./models";
 
 const BG = new THREE.Color("#0B0A0D");
+const STICKER = "/three/cat-sticker.png";
 
-/** Large display-face title drawn once per product for the lit back wall. */
-export function titleTexture(text: string, family: string) {
+/**
+ * Large display-face title drawn once per product for the lit back wall.
+ * `scale` shrinks the whole canvas. The wall's halo blurs with a mip bias,
+ * which counts from the level the on-screen size picks, so it looks the
+ * same at either scale.
+ */
+export function titleTexture(text: string, family: string, scale = 1) {
   const canvas = document.createElement("canvas");
-  canvas.width = 2048;
-  canvas.height = 640;
+  canvas.width = Math.round(2048 * scale);
+  canvas.height = Math.round(640 * scale);
   const g = context2d(canvas);
-  let size = 640;
+  const maxWidth = 1720 * scale;
+  let size = 640 * scale;
   g.font = `900 ${size}px ${family}`;
   const width = g.measureText(text).width;
-  if (width > 1720) size *= 1720 / width;
+  if (width > maxWidth) size *= maxWidth / width;
   g.font = `900 ${size}px ${family}`;
   const metrics = g.measureText(text);
   g.textAlign = "center";
   g.fillStyle = "#fff";
   g.fillText(
     text,
-    1024,
-    320 +
+    canvas.width / 2,
+    canvas.height / 2 +
       (metrics.actualBoundingBoxAscent - metrics.actualBoundingBoxDescent) / 2,
   );
   const texture = canvasTexture(canvas, false);
   texture.generateMipmaps = true;
   return texture;
+}
+
+/**
+ * Sends every texture in the scene to the GPU now, hidden products' too,
+ * so neither the first frames nor the first scroll to a product stall on
+ * an upload. `extra` holds textures only a shader uniform points at.
+ */
+function uploadTextures(
+  renderer: THREE.WebGLRenderer,
+  scene: THREE.Object3D,
+  extra: readonly THREE.Texture[],
+) {
+  const textures = new Set(extra);
+  scene.traverse((object) => {
+    const material = (object as THREE.Mesh).material;
+    const materials = Array.isArray(material)
+      ? material
+      : material
+        ? [material]
+        : [];
+    for (const m of materials) {
+      for (const value of Object.values(m)) {
+        if (value instanceof THREE.Texture) textures.add(value);
+      }
+    }
+  });
+  textures.forEach((texture) => renderer.initTexture(texture));
 }
 
 /**
@@ -192,11 +229,20 @@ export async function initShowcase(
   quality: Quality,
   hud: ShowcaseHud,
 ) {
-  const renderer = makeRenderer(canvas, quality, { shadows: true });
+  // phones get the lite tier (ADR-014): no post effects, shadows or
+  // refraction, smaller generated textures, and a 1× drawing buffer
+  const lite = quality.lite;
+  const renderer = makeRenderer(canvas, quality, { shadows: !lite });
   renderer.transmissionResolutionScale = quality.mobile ? 0.5 : 1;
-  const env = await studioEnvironment(renderer);
+  if (lite) renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1));
+  canvas.dataset.tier = lite ? "lite" : "full";
+  // the HDRI and the cup sticker download while the textures below are
+  // generated; the catches only stop an early failure counting as unhandled,
+  // the awaits further down still throw
+  const envReady = studioEnvironment(renderer);
+  envReady.catch(() => {});
+  loadImage(STICKER).catch(() => {});
   const scene = new THREE.Scene();
-  scene.environment = env;
   scene.environmentIntensity = 0.55;
   const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 100);
   camera.position.set(0, 0.2, 11);
@@ -205,7 +251,7 @@ export async function initShowcase(
   const { mesh: backdrop, material: backdropMaterial } = makeBackdrop();
   scene.add(backdrop);
   const titles = items.map((item) =>
-    titleTexture(item.name.toUpperCase(), display),
+    titleTexture(item.name.toUpperCase(), display, lite ? 0.5 : 1),
   );
   const last = items.length - 1;
   backdropMaterial.uniforms.uA!.value = titles[0] ?? null;
@@ -215,7 +261,7 @@ export async function initShowcase(
   // behind the product acting as rim lights (the glow is the rim, not neon)
   const key = new THREE.DirectionalLight("#fff4e6", 2.4);
   key.position.set(3.5, 6, 6);
-  key.castShadow = true;
+  key.castShadow = !lite;
   key.shadow.mapSize.set(
     quality.mobile ? 512 : 1024,
     quality.mobile ? 512 : 1024,
@@ -238,21 +284,26 @@ export async function initShowcase(
 
   const stage = new THREE.Group();
   scene.add(stage);
-  const cup = await makeCup("/three/cat-sticker.png");
-  const takoyaki = makeTakoyaki(quality.mobile);
+  // the cup finishes once its sticker arrives (awaited below); the setup
+  // yields between the heavy steps so the page keeps responding meanwhile
+  const cupReady = makeCup(STICKER, { lite });
+  cupReady.catch(() => {});
+  await nextTask();
+  const takoyaki = makeTakoyaki(quality.mobile, { lite });
+  await nextTask();
   const fries = makeFries(quality.mobile);
   const buldak = makeBuldak(quality.mobile);
-  stage.add(cup.group, takoyaki, fries, buldak);
   [takoyaki, fries, buldak].forEach((g) => (g.visible = false));
 
-  // soft shadow catcher plus a contact occlusion blob under the product
+  // soft shadow catcher (the lite tier has no shadows) plus a contact
+  // occlusion blob under the product
   const floor = new THREE.Mesh(
     new THREE.PlaneGeometry(12, 6),
     new THREE.ShadowMaterial({ opacity: 0.5 }),
   );
   floor.rotation.x = -Math.PI / 2;
   floor.receiveShadow = true;
-  scene.add(floor);
+  if (!lite) scene.add(floor);
   const contact = new THREE.Mesh(
     new THREE.PlaneGeometry(3.2, 1.6),
     new THREE.MeshBasicMaterial({
@@ -266,8 +317,9 @@ export async function initShowcase(
   scene.add(contact);
 
   // floating ingredients; weights = presence per product
+  await nextTask();
   const k = quality.mobile ? 0.5 : 1;
-  const mats = floaterMaterials();
+  const mats = floaterMaterials({ lite });
   const floaters: Floaters[] = [
     makeFloaters(
       iceGeometry(7, 1),
@@ -326,13 +378,27 @@ export async function initShowcase(
   ];
   floaters.forEach((f) => scene.add(f.mesh));
 
-  const post = makePost(renderer, scene, camera, quality, { focus: 11 });
+  const cup = await cupReady;
+  stage.add(cup.group, takoyaki, fries, buldak);
+  if (lite) liteMaterials(scene);
+  scene.environment = await envReady;
+
+  // the lite tier draws straight to the canvas, where three.js applies the
+  // same tone mapping and color space inside each material
+  const post = lite
+    ? null
+    : makePost(renderer, scene, camera, quality, { focus: 11 });
   const budget = new FrameBudget(
     42,
     () => {
-      post.degrade();
-      renderer.setPixelRatio(1);
-      key.castShadow = false;
+      if (post) {
+        post.degrade();
+        renderer.setPixelRatio(1);
+        key.castShadow = false;
+      } else {
+        // nothing left to switch off on the lite tier, so draw fewer pixels
+        renderer.setPixelRatio(0.75);
+      }
       resize();
     },
     quality.forceHigh,
@@ -346,7 +412,7 @@ export async function initShowcase(
     width = Math.max(1, rect?.width ?? 1);
     height = Math.max(1, rect?.height ?? 1);
     renderer.setSize(width, height, false);
-    post.setSize(width, height);
+    post?.setSize(width, height);
     camera.aspect = width / height;
     mobileLayout = camera.aspect < 0.85;
     camera.fov = mobileLayout ? 44 : 32;
@@ -534,18 +600,24 @@ export async function initShowcase(
     rimLeft.target.position.set(0, stage.position.y, 0);
     rimRight.target.position.set(0, stage.position.y, 0);
 
-    post.render(dt, state.time);
+    if (post) post.render(dt, state.time);
+    else renderer.render(scene, camera);
   }
 
-  // every product's shaders are ready before the scene is shown
-  await post.precompile();
+  // every product's shaders compile, and every texture uploads while they
+  // do, before the scene is shown
+  const compiled = post
+    ? post.precompile()
+    : renderer.compileAsync(scene, camera);
+  uploadTextures(renderer, scene, titles);
+  await compiled;
 
   return {
     frame,
     state,
     dispose() {
       observer.disconnect();
-      post.dispose();
+      post?.dispose();
       titles.forEach((t) => t.dispose());
       disposeScene(scene, renderer);
     },

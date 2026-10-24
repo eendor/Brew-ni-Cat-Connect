@@ -895,3 +895,21 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Git branch:** `fix/shop-hours-saturday-closed`\
 **Pull request:** [#43](https://github.com/eendor/Brew-ni-Cat-Connect/pull/43), self-reviewed and squash-merged into `main` on 2026-10-24\
 **Next action:** Speed up the home intro on low-end Android phones.
+
+## 2026-10-25 — A lighter home intro on phones
+
+**Date:** 2026-10-25\
+**Phase:** Phase 4 — Cloud backend and customer accounts (performance fix)\
+**Task:** The home intro loaded slowly, lagged and stuttered on low-end Android phones (the lead developer's and a teammate's). Make it fast there without changing the desktop look.\
+**Summary:**
+- **Phone tier:** `getQuality()` gains `lite`, on for phones without `?quality=high`. On it the home showcase renders straight to the canvas at a pixel ratio of 1 (0.75 if frames stay slow), with no post effects and no shadow maps; the soft contact shadow under each item stays. Clear plastic and ice become an additive gloss instead of refracting the scene, and clearcoat and sheen are off, so the shaders are smaller and each frame draws the scene once.
+- **Smaller assets:** the phone tier makes the cup, takoyaki and floater maps at half size, with the condensation drops scaled so the cup looks the same, and draws the titles at half size. Every phone scene lights with `studio_small_09_512.hdr`, a half-size copy of the HDRI made with `scripts/downsample_hdr.py` (413 KB instead of 1.6 MB).
+- **Every device:** the showcase downloads the HDRI and the cup sticker while it builds the models, lets the page respond between its heavy steps, uploads every texture while the shaders compile, and starts the intro after two drawn frames, so a slow first frame no longer skips part of it.
+- **Desktop look:** unchanged. The generated maps at desktop sizes are byte-for-byte the same as before.
+- **Tests:** TC-P4-124 to TC-P4-128.
+
+**Files/modules affected:** `src/components/three/engine/runtime.ts`, `renderer.ts` and `textures.ts`; `src/components/three/scenes/showcase.ts` and `models.ts`; `src/components/three/canvas/showcase-canvas.tsx`; `public/three/hdri/studio_small_09_512.hdr`; `scripts/downsample_hdr.py`; `tests/unit/three-phone-tier.test.ts` and `tests/e2e/three.spec.ts`; `docs/decisions.md` ADR-014, `docs/software-and-apis.md` §11, `docs/system-architecture.md` §18, `docs/emerging-technologies.md`, `docs/testing-strategy.md` §23, `docs/test-cases.md` §15 and this log. No new package dependencies; the one-off `scripts/downsample_hdr.py` needs NumPy, and nothing in the build or CI runs it.\
+**Testing performed:** `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm test` (32 files / 238 tests passed), `npm run build`, `npm run audit` (passed), `python3 -I scripts/validate_phase0_docs.py` (PASS), and Playwright `chromium-3d` (17/17 passed) on a production build. The `chromium` browser tests run in CI.\
+**Git branch:** `perf/home-intro-low-end-phones`\
+**Pull request:** [#44](https://github.com/eendor/Brew-ni-Cat-Connect/pull/44), self-reviewed and squash-merged into `main` on 2026-10-25\
+**Next action:** The physical-phone check, MAN-P4-007 (due Mon Nov 2), should include the home intro on a low-end Android phone.

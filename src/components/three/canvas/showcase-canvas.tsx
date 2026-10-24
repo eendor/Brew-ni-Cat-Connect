@@ -44,19 +44,27 @@ export default function ShowcaseCanvas({
         start: "top top",
         end: "bottom bottom",
       });
-      const intro = gsap.to(scene.state, {
-        intro: 1,
-        duration: 2.2,
-        ease: "expo.out",
-        delay: 0.15,
-      });
+      // the intro starts once two frames are on screen: the shared ticker
+      // has no lag smoothing, so a slow first frame on a phone would
+      // otherwise skip part of it
+      let intro: gsap.core.Tween | null = null;
+      let drawn = 0;
       const visible = watchVisible(canvas.parentElement ?? canvas);
       return {
         frame: (dt) => {
-          if (visible.visible) scene.frame(dt);
+          if (!visible.visible) return;
+          scene.frame(dt);
+          drawn += 1;
+          if (intro || drawn < 2) return;
+          intro = gsap.to(scene.state, {
+            intro: 1,
+            duration: 2.2,
+            ease: "expo.out",
+            delay: 0.15,
+          });
         },
         dispose: () => {
-          intro.kill();
+          intro?.kill();
           trigger?.kill();
           visible.dispose();
           scene.dispose();
