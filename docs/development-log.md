@@ -856,3 +856,25 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Changed:** the owner confirmed that the About page needs no owner biography or longer About story, so `/about` keeps the factual points from the client brief. The README no longer lists the biography under Current Limitations, and the About story question is closed in `docs/srs.md` and `docs/functional-requirements.md`. TC-P2-015 and TC-P2-023 still check that no invented owner biography appears.
 
 **Next action:** The online order tables, `POST /api/orders` and Place order on the pickup checkout (`feat/p4-online-orders`).
+
+## 2026-10-24 — Online orders, the order API and Place order
+
+**Date:** 2026-10-24\
+**Phase:** Phase 4 — Cloud backend and customer accounts\
+**Task:** Card "Rodnee — Online order tables, order API and Place order": the order tables, `POST /api/orders` and Place order on the pickup checkout, due Fri Oct 30.\
+**Summary:**
+- **RLS restored:** `20261024011051_restore_rls.sql` turns RLS back on for every public table. Guests read only the menu and the POS releases, and the POS staff account keeps full access through `private.is_staff()`. It was applied to the live database on 2026-10-24, with the staff account marked in the same request.
+- **Tables:** `20261024064600_customer_tables.sql` adds the online order tables (orders, lines, status history and the private token hashes) and the Phase 5 customer tables (profiles, favorites, loyalty transactions and data requests), all with RLS. Online orders are kept apart from the POS `orders` sales (ADR-016).
+- **Order functions:** `20261024064700_online_order_functions.sql` adds `place_online_order()` and `get_online_order()`. The first prices each line from the live menu with the cart's rules, checks the details, and saves the order, its lines and its first `pending` history row together. The second opens an order only with its token, to its customer, or to staff. Each status change broadcasts `status-changed` on the order's Realtime topic. Both migrations are live.
+- **Order API:** `POST /api/orders` reads at most 32 KB of JSON, checks the token, calls `place_online_order()` with the publishable key, and maps each answer to a status code and a customer-safe message.
+- **Place order:** on the pickup checkout, Place order sends the order and opens `/orders/BNC-…#token=…`. A retry reuses the key and token, a changed price shows the new subtotal, and an unavailable line is named. Rider delivery keeps the copied summary.
+- **Switch:** Place order is on only when `NEXT_PUBLIC_ONLINE_ORDERING=enabled`. It stays off on the live site until the POS order screen and the order page are on `main`.
+- **Live site:** <https://brew-ni-cat-connect.vercel.app> deploys from GitHub on Vercel, and the Supabase Auth URLs point to it.
+- **Tests:** TC-P4-064 to TC-P4-123. The database tests run the migrations on PGlite with a copy of the live POS tables. TC-P4-023 and TC-P4-026 now take rider delivery, because pickup places the order online when the switch is on.
+
+**Files/modules affected:** `supabase/migrations/` and `supabase/rollbacks/` (three each); `src/app/api/orders/route.ts`; `src/lib/orders/` (`order-link.ts`, `online-ordering.ts`, `place-order.ts`, `place-order-server.ts`, `order-client.ts`, `types.ts`); `src/lib/ordering/validation.ts`; `src/components/checkout/checkout-view.tsx`; `tests/database/`, six new unit test files, `tests/unit/checkout.test.tsx` and three browser specs; `vitest.config.ts`, `tests/setup.ts`, `.env.example` and the CI workflow; `docs/database-design.md` §8, `docs/decisions.md` ADR-016, `docs/software-and-apis.md` §12, `docs/security-and-privacy.md` §18, `docs/test-cases.md` §14, `docs/functional-requirements.md` §16, `docs/development-standards.md`, `docs/code-review.md`, the RLS notes in `README.md`, `docs/srs.md` and `docs/project-overview.md`, and this log. New dev dependency: `@electric-sql/pglite` 0.5.8 (Apache-2.0).\
+**Testing performed:** `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm test` (31 files / 234 tests passed), `npm run build`, `npm run audit` (passed), `python3 -I scripts/validate_phase0_docs.py` (PASS), Playwright `chromium` 18/18 on a build with the switch on, and `chromium-3d` TC-P4-026.\
+**Git branch:** `feat/p4-online-orders`\
+**Pull request:** [#41](https://github.com/eendor/Brew-ni-Cat-Connect/pull/41), self-reviewed and squash-merged into `main` on 2026-10-24\
+**Next action:** Shan's order page reads `get_online_order()`. The POS order screen needs its own status-change function. `POST /api/orders` needs a rate limit before Place order is turned on.
+

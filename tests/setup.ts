@@ -8,6 +8,8 @@ import { afterEach } from "vitest";
 // the menu by default would fetch it mid-test and drop the test cart's items.
 delete process.env.NEXT_PUBLIC_SUPABASE_URL;
 delete process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+// Place order is off unless a test turns it on.
+delete process.env.NEXT_PUBLIC_ONLINE_ORDERING;
 
 afterEach(() => {
   cleanup();

@@ -391,3 +391,24 @@ Teammates' commits, and Renier's PR #6 title (`QA: Phase 2 independent QA result
 
 **Known limitations:** Types only; nothing is saved yet. The tables, the guest read function and the API come in the next pull request and must match these types.\
 **Status:** Self-reviewed. Vitest passed 165/165 in 22 files; lint, type checking, the build, the audit and the docs validator passed. CI runs the browser tests.
+
+## 2026-10-24 — Online orders, the order API and Place order (PR #41)
+
+**Module:** `supabase/migrations/`, `src/app/api/orders/route.ts`, `src/lib/orders/` and the pickup checkout\
+**Author:** Rodnee Glen Martin\
+**Reviewer:** Rodnee Glen Martin (self-review)\
+**Date:** 2026-10-24
+
+**Findings:**
+
+1. The browser sends only the picks and the subtotal it saw. `place_online_order()` prices every line from the live `items` rows with the cart's rules, and TC-P4-084 checks that SQL and the cart agree on 250 random menus.
+2. The order, its lines, the token hash and the first `pending` history row are saved in one function call. `on conflict (idempotency_key) do nothing` makes a retry return the first order, and a reused key with another token is refused.
+3. The new tables have RLS on and no write policies, so nobody writes orders directly, staff included. Guests read an order only through `get_online_order()` with its token. Only the token's SHA-256 hash is stored, and the token travels in the link's `#` fragment, which browsers never send to a server.
+4. The route uses the publishable-key client with no session. There is no secret or service-role key in the app, and the logs hold only the event, a correlation id and an error code.
+5. The route reads at most 32 KB of JSON, six levels deep, and refuses text Postgres can't store before it reaches the database. The database checks every field again.
+6. `private.is_staff()` reads the role from `app_metadata`, which users can't change. The POS staff account was marked inside the same SQL request that turned RLS on, so the POS never lost access, and its account id is not stored in the repository.
+7. Each status change broadcasts once on the order's random Realtime topic. A failed broadcast only raises a warning, so the status change is still saved.
+8. Place order is on only when `NEXT_PUBLIC_ONLINE_ORDERING=enabled`. When it is off, pickup keeps the copied summary and the API answers 503. Van's checkout step bar is unchanged.
+
+**Known limitations:** `POST /api/orders` has no rate limit yet; it needs one before Place order is turned on for the public. If an answer is lost and the customer then edits the cart, the next try can create a second order. Status changes come with the POS order screen, which needs its own database function because the tables are closed. The order page `/orders/[reference]` is Shan's card. Order retention stays `TODO: Confirm with Brew ni Cat owner.`\
+**Status:** Self-reviewed. Vitest passed 234/234 in 31 files, and Playwright `chromium` passed 18/18 with the switch on; `chromium-3d` TC-P4-026 passed. Lint, type checking, the build, the audit and the docs validator passed.

@@ -279,6 +279,12 @@ export type PlaceOrderRequest = Readonly<{
    * double tap or a retry never creates a second order (FR-024).
    */
   idempotencyKey: string;
+  /**
+   * The order's tracking token, made in the browser with the idempotency key
+   * and sent again with it. The database keeps only its SHA-256 hash, and a
+   * retry must send the same token to get the order back.
+   */
+  trackingToken: string;
   fulfillment: OnlineOrderFulfillment;
   customer: OrderCustomer;
   lines: readonly CartItemSelection[];

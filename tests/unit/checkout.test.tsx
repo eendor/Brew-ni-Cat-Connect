@@ -14,6 +14,11 @@ import { CartProvider, useCart } from "@/context/cart-context";
 import type { MenuCatalog } from "@/types/menu";
 import type { CartState } from "@/types/ordering";
 
+// the checkout opens a placed order with the app router
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn() }),
+}));
+
 const testCartState: CartState = {
   lines: [
     {

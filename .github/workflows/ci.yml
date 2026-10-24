@@ -72,6 +72,8 @@ jobs:
     env:
       NEXT_PUBLIC_SUPABASE_URL: "https://example.supabase.co"
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "placeholder-publishable-key"
+      # Place order is tested against a mocked order API (TC-P4-123)
+      NEXT_PUBLIC_ONLINE_ORDERING: "enabled"
 
     steps:
       - name: Check out repository
