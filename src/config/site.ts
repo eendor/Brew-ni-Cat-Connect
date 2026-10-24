@@ -21,9 +21,10 @@ export const siteConfig = {
     phoneHref: "tel:+639766304785",
   },
   operations: {
-    closedDays: "Sunday",
+    closedDays: "Saturday",
+    /** From the shop's "We are open" poster (shared 2026-10-24). */
     hoursNotice:
-      "Open 11 AM to 10 PM, Monday to Saturday. Closed every Sunday. Check our Facebook page or contact us for any schedule changes.",
+      "Open 11 AM to 9 PM, Monday to Friday, and 1 PM to 9 PM on Sunday. Closed every Saturday. Check our Facebook page or contact us for any schedule changes.",
     payments: ["Cash", "GCash"],
     takeoutFee: "₱10 takeout box",
     /** Confirmed price; when it applies is not documented, so it is never

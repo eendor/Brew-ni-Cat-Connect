@@ -45,10 +45,15 @@ describe("Contact and location page", () => {
     ).toHaveAttribute("href", "mailto:popotpulido06@gmail.com");
     expect(screen.getByText("Cash · GCash")).toBeInTheDocument();
     expect(screen.getByText("₱10 takeout box")).toBeInTheDocument();
-    expect(screen.getAllByText(/Closed every Sunday/i).length).toBeGreaterThan(
+    expect(
+      screen.getAllByText(/Closed every Saturday/i).length,
+    ).toBeGreaterThan(0);
+    expect(screen.getAllByText(/11 AM – 9 PM/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/1 PM – 9 PM on Sunday/).length).toBeGreaterThan(
       0,
     );
-    expect(screen.getAllByText(/11 AM – 10 PM/).length).toBeGreaterThan(0);
+    // the old Monday to Saturday hours are gone
+    expect(screen.queryByText(/10 PM|Closed every Sunday/i)).toBeNull();
   });
 
   it("TC-P2-017 — explains rider delivery and lists the local riders without promising fees or ETA", () => {

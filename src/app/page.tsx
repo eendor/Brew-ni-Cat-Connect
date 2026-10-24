@@ -53,12 +53,13 @@ export default function HomePage() {
                   Hours
                 </dt>
                 <dd className="mt-2 font-bold text-[var(--text-strong)]">
-                  <span>Mon–Sat</span>
-                  <span className="ml-1 text-sm font-semibold text-[var(--accent-strong)]">
-                    · Closed every Sunday
+                  <span className="block">Mon–Fri · 11 AM – 9 PM</span>
+                  <span className="block">Sun · 1 PM – 9 PM</span>
+                  <span className="block text-sm font-semibold text-[var(--accent-strong)]">
+                    Closed every Saturday
                   </span>
                   <span className="block text-xs font-normal text-[var(--text-muted)]">
-                    11 AM – 10 PM · check Facebook for changes
+                    Check Facebook for changes
                   </span>
                 </dd>
               </div>

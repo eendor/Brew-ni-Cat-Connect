@@ -186,7 +186,8 @@ export function MobileNavigation({ items }: MobileNavigationProps) {
           </span>
           <span className="flex items-start gap-2">
             <ClockIcon className={noteIconClass} />
-            Open 11 AM to 10 PM. Closed every Sunday.
+            Open Mon–Fri 11 AM to 9 PM and Sun 1 PM to 9 PM. Closed every
+            Saturday.
           </span>
           <div className="mt-3 flex gap-3">
             <ExternalLink

@@ -1,6 +1,6 @@
 # Business Content Register
 
-**Last Updated:** 2026-10-18
+**Last Updated:** 2026-10-24
 **Maintainer:** Shan (Technical Writer / Documenter)
 
 This document tracks all business facts, copy, and media assets for Brew ni Cat Connect. It establishes the single source of truth for project data across Phase 2 and beyond.
@@ -22,7 +22,7 @@ This document tracks all business facts, copy, and media assets for Brew ni Cat 
 | **Store Address & Location** | **Address:** Abellera St, Poblacion, Kabacan, Cotabato 9407, Philippines<br>**Landmark:** Beside Pulido Eatery | **Confirmed** | Approved | Exact street level details and landmark verified. |
 | **Contact Information** | **Phone:** 0976 630 4785<br>**Email:** popotpulido06@gmail.com | **Confirmed** | Approved | Active store contact details confirmed. |
 | **Social Media Links** | **Facebook:** Confirmed<br>**TikTok:** Confirmed<br>*(Note: Instagram is explicitly omitted/not supported)* | **Confirmed** | Approved | Official FB and TikTok channels active. No Instagram. |
-| **Operating Hours** | **Open 11 AM to 10 PM, Monday to Saturday. Closed every Sunday.** Customers should check Facebook or contact the shop for any schedule changes. | **Confirmed** | Approved | Owner confirmed Sunday closure on 2026-09-24 and opening hours of 11 AM to 10 PM on 2026-10-11 (both relayed by Lead Developer). |
+| **Operating Hours** | **Open 11 AM to 9 PM, Monday to Friday, and 1 PM to 9 PM on Sunday. Closed every Saturday.** Customers should check Facebook or contact the shop for any schedule changes. | **Confirmed** | Approved | Owner confirmed Sunday closure on 2026-09-24 and opening hours of 11 AM to 10 PM on 2026-10-11 (both relayed by Lead Developer). Updated 2026-10-24 from the shop's posted "We are open" schedule (relayed by Lead Developer): Monday to Friday 11 AM to 9 PM, Sunday 1 PM to 9 PM, closed Saturday. This replaces the Monday to Saturday hours and the Sunday closure. |
 | **Payment Methods** | **Accepted:** Cash, GCash<br>*(Note: Maya / Maya QR removed)* | **Confirmed** | Approved | Cash on pickup and GCash accepted only. |
 | **Delivery Model** | * Customer messages a local rider with the order summary.<br>* The rider orders at Brew ni Cat for the customer and picks it up.<br>* The rider delivers to the customer's address.<br>* Delivery fee, timing and payment are agreed with the rider.<br>* No in-house delivery fleet; Brew ni Cat does not book riders or charge rider fees. | **Confirmed** | Approved | Customer-arranged external rider model from the Phase 2 client brief. Updated 2026-10-18: the lead developer confirmed that the rider orders at the shop for the customer. |
 | **Rider Delivery Services** | [Papa's Delivery](https://www.facebook.com/papa.s.delivery.2025)<br>[Momshie's Pamalengke and Delivery Kabacan](https://www.facebook.com/profile.php?id=100072119632881)<br>[M&S Delivery Express Kabacan](https://www.facebook.com/profile.php?id=100065168154381)<br>Logos in `public/images/riders/` | **Confirmed** | Approved | The three Facebook links came with the Phase 2 client brief (2026-08-24). Names and logos added 2026-10-18 (PR #25), supplied by the lead developer: the logos are the services' public profile photos, resized to 256 × 256 px with metadata removed, and their cover photos are not used. Listing a rider is not an endorsement or partnership. |
@@ -48,7 +48,7 @@ This document tracks all business facts, copy, and media assets for Brew ni Cat 
    *(Note: Instagram is explicitly omitted/not supported)*
 
 4. **Operating Hours:**
-   **Open 11 AM to 10 PM, Monday to Saturday. Closed every Sunday.** Check the official Facebook page or shop contact details for any schedule changes.
+   **Open 11 AM to 9 PM, Monday to Friday, and 1 PM to 9 PM on Sunday. Closed every Saturday.** Check the official Facebook page or shop contact details for any schedule changes.
 
 5. **Payment Methods:**
    **Accepted:** Cash, GCash

@@ -12,8 +12,12 @@ import { damp, fontFamilies, pointer, type Quality } from "../engine/runtime";
 import { fbm, matteMaps, normalFromHeight, woodMaps } from "../engine/textures";
 
 export type VisitFacts = Readonly<{
+  /** The main hours and the days they apply to. */
   hours: string;
   days: string;
+  /** A day with its own hours, like a shorter Sunday. */
+  otherDay: string;
+  otherHours: string;
   closedDay: string;
   shopSign: string;
   neighborSign: string;
@@ -53,13 +57,17 @@ function signFace(
     open ? facts.hours.toUpperCase() : `EVERY ${facts.closedDay.toUpperCase()}`,
     512,
     438,
+    920,
   );
   g.fillStyle = "#B9B3C2";
   g.font = `800 34px ${body}`;
-  g.fillText(
-    (open ? facts.days : `Open ${facts.days}`).toUpperCase(),
-    512,
-    528,
+  const other = `${facts.otherDay} ${facts.otherHours}`;
+  const notes = open
+    ? [facts.days, other]
+    : [`Open ${facts.days} ${facts.hours}`, other];
+  // maxWidth squeezes a long line instead of letting it run off the board
+  notes.forEach((note, index) =>
+    g.fillText(note.toUpperCase(), 512, 510 + index * 48, 920),
   );
   return canvasTexture(canvas);
 }
