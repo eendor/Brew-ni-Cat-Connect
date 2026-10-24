@@ -3,6 +3,7 @@
 import { validateDetails as validateDetailsHelper } from "@/lib/ordering/validation";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   useEffect,
   useId,
@@ -30,9 +31,22 @@ import {
   saveStoredSummary,
   subscribeStoredSummary,
 } from "@/lib/ordering/summary-storage";
+import { getAddItemFailureMessage } from "@/lib/ordering/cart-reducer";
 import { fetchPublicMenu } from "@/lib/menu/fetch-public-menu";
 import { formatOptionName } from "@/lib/menu/format-name";
 import { formatPrice } from "@/lib/menu/format-price";
+import { isOnlineOrderingEnabled } from "@/lib/orders/online-ordering";
+import { placeOrder, type PlaceOrder } from "@/lib/orders/order-client";
+import { buildOrderPath } from "@/lib/orders/order-link";
+import {
+  buildOrderDraft,
+  createIdempotencyKey,
+  createTrackingToken,
+  MAX_CUSTOMER_NAME_LENGTH,
+  MAX_ORDER_NOTES_LENGTH,
+  placeOrderFailure,
+} from "@/lib/orders/place-order";
+import type { PlaceOrderResult } from "@/lib/orders/types";
 import type { MenuCatalog } from "@/types/menu";
 import type { CartItem, FulfillmentType } from "@/types/ordering";
 
@@ -145,11 +159,34 @@ export function formatOrderSummaryText(summary: PreparedOrderSummary): string {
 
 type CheckoutViewProps = Readonly<{
   loadMenu?: () => Promise<MenuCatalog>;
+  /**
+   * Place order for pickup orders. Off until the shop can see online orders
+   * (`src/lib/orders/online-ordering.ts`); then pickup copies a summary too.
+   */
+  onlineOrdering?: boolean;
+  submitOrder?: PlaceOrder;
+  /** Opens a placed order's page. Defaults to client-side navigation. */
+  openOrder?: (path: string) => void;
 }>;
+
+/** What a failed Place order tells the customer. */
+type PlaceOrderNotice = Readonly<{
+  message: string;
+  details: readonly string[];
+}>;
+
+/** The picked lines and quantities, without prices. */
+function selectionOf(lines: readonly CartItem[]) {
+  return lines.map((line) => `${line.key}x${line.quantity}`).join(",");
+}
 
 export function CheckoutView({
   loadMenu = fetchPublicMenu,
+  onlineOrdering = isOnlineOrderingEnabled(),
+  submitOrder = placeOrder,
+  openOrder,
 }: CheckoutViewProps) {
+  const router = useRouter();
   const {
     lines,
     fulfillment,
@@ -201,6 +238,29 @@ export function CheckoutView({
   const [copyState, setCopyState] = useState<CopyState>("idle");
   const copyTimerRef = useRef<number | undefined>(undefined);
   const summaryTextRef = useRef<HTMLPreElement>(null);
+
+  // Place order (pickup only; rider delivery always copies a summary)
+  const placesOnline = onlineOrdering && !isRiderDelivery;
+  const [isPlacing, setIsPlacing] = useState(false);
+  const placingRef = useRef(false);
+  const [placeNotice, setPlaceNotice] = useState<PlaceOrderNotice | null>(null);
+  const [placedOrder, setPlacedOrder] = useState<Readonly<{
+    reference: string;
+    path: string;
+  }> | null>(null);
+  // The same order keeps its key and token, so a retry after an unclear
+  // failure gets the saved order back instead of saving it twice. A changed
+  // order is a new one.
+  const attemptRef = useRef<Readonly<{
+    draft: string;
+    idempotencyKey: string;
+    trackingToken: string;
+  }> | null>(null);
+  // A new subtotal the shop's menu gave and the customer has been shown.
+  const [newSubtotal, setNewSubtotal] = useState<Readonly<{
+    selection: string;
+    subtotal: number;
+  }> | null>(null);
 
   const step1HeadingRef = useRef<HTMLHeadingElement>(null);
   const step2HeadingRef = useRef<HTMLHeadingElement>(null);
@@ -268,6 +328,7 @@ export function CheckoutView({
     });
     setErrors(result.errors);
     if (result.isValid) {
+      setPlaceNotice(null);
       goToStep("review");
       return;
     }
@@ -328,6 +389,126 @@ export function CheckoutView({
     // copied: the order now lives in the visitor's message to the shop or rider
     clearCart({ undoable: false });
     copyTimerRef.current = window.setTimeout(() => setCopyState("idle"), 2500);
+  }
+
+  /** Reloads the menu so the cart shows current prices and availability. */
+  async function refreshCartFromMenu() {
+    try {
+      const result = revalidateWithCatalog(await loadMenu());
+      if (result.warnings.length > 0) setRevalidationWarnings(result.warnings);
+    } catch {
+      // the notice already says what changed; the cart stays as it is
+    }
+  }
+
+  async function handlePlaceOrder() {
+    if (placingRef.current) return;
+    placingRef.current = true;
+    setIsPlacing(true);
+    setPlaceNotice(null);
+
+    const selection = selectionOf(lines);
+    const draft = buildOrderDraft(
+      customer,
+      lines,
+      newSubtotal?.selection === selection ? newSubtotal.subtotal : subtotal,
+    );
+    const draftJson = JSON.stringify(draft);
+    if (attemptRef.current?.draft !== draftJson) {
+      attemptRef.current = {
+        draft: draftJson,
+        idempotencyKey: createIdempotencyKey(),
+        trackingToken: createTrackingToken(),
+      };
+    }
+    const { idempotencyKey, trackingToken } = attemptRef.current;
+
+    let result: PlaceOrderResult;
+    try {
+      result = await submitOrder({ ...draft, idempotencyKey, trackingToken });
+    } catch {
+      result = placeOrderFailure("server-error");
+    }
+    placingRef.current = false;
+    setIsPlacing(false);
+
+    if (result.ok) {
+      const path = buildOrderPath(result.reference, result.trackingToken);
+      attemptRef.current = null;
+      setPlacedOrder({ reference: result.reference, path });
+      clearCart({ undoable: false });
+      if (openOrder) openOrder(path);
+      else router.push(path);
+      return;
+    }
+
+    switch (result.reason) {
+      case "invalid-details": {
+        setErrors({ ...result.fieldErrors });
+        goToStep("details");
+        return;
+      }
+      case "price-changed": {
+        setNewSubtotal({ selection, subtotal: result.subtotal });
+        setPlaceNotice({
+          message: result.message,
+          details: [`New subtotal: ${formatPrice(result.subtotal)}`],
+        });
+        void refreshCartFromMenu();
+        return;
+      }
+      case "line-unavailable": {
+        setPlaceNotice({
+          message: result.message,
+          details: result.lines.map((problem) => {
+            const line = lines[problem.index];
+            const reason = getAddItemFailureMessage(problem.reason);
+            return line
+              ? `${line.itemName} (${formatOptionName(line.variantName)}${line.flavor ? `, ${line.flavor}` : ""}): ${reason}`
+              : reason;
+          }),
+        });
+        void refreshCartFromMenu();
+        return;
+      }
+      default:
+        setPlaceNotice({ message: result.message, details: [] });
+    }
+  }
+
+  // Placed: the cart is empty now, so show where the order went until its
+  // page opens.
+  if (placedOrder) {
+    return (
+      <>
+        <PageIntro
+          mood="checkout"
+          eyebrow="Checkout"
+          title="Order placed"
+          description={
+            <p>
+              Your order {placedOrder.reference} is with Brew ni Cat. Pay at the
+              counter when you pick it up.
+            </p>
+          }
+        />
+        <section className="py-16 sm:py-20">
+          <Container>
+            <div
+              role="status"
+              className="mx-auto max-w-lg text-center rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-8 sm:p-12 shadow-[var(--shadow-subtle)]"
+            >
+              <p className="text-sm text-[var(--text-muted)]">
+                Opening your order…
+              </p>
+              <Link href={placedOrder.path} className="button-primary mt-6">
+                View your order
+              </Link>
+            </div>
+          </Container>
+        </section>
+      </>
+    );
   }
 
   // If cart is empty and not on send step, show empty cart notice
@@ -407,7 +588,11 @@ export function CheckoutView({
           ) : step === "review" ? (
             <p>
               Double check your order items, contact details, and fulfillment
-              arrangement before preparing your order summary.
+              arrangement before{" "}
+              {placesOnline
+                ? "placing your order"
+                : "preparing your order summary"}
+              .
             </p>
           ) : isRiderDelivery ? (
             <p>
@@ -670,6 +855,7 @@ export function CheckoutView({
                         type="text"
                         required
                         autoComplete="name"
+                        maxLength={MAX_CUSTOMER_NAME_LENGTH}
                         value={customer.name}
                         onChange={(e) => {
                           setCustomer((prev) => ({
@@ -846,12 +1032,20 @@ export function CheckoutView({
                       <textarea
                         id={notesInputId}
                         rows={3}
+                        maxLength={MAX_ORDER_NOTES_LENGTH}
                         value={customer.notes}
-                        onChange={(e) =>
+                        onChange={(e) => {
                           setCustomer((prev) => ({
                             ...prev,
                             notes: e.target.value,
-                          }))
+                          }));
+                          if (errors.notes) {
+                            setErrors((prev) => ({ ...prev, notes: "" }));
+                          }
+                        }}
+                        aria-invalid={!!errors.notes}
+                        aria-describedby={
+                          errors.notes ? "notes-error" : undefined
                         }
                         placeholder={
                           isRiderDelivery
@@ -860,6 +1054,15 @@ export function CheckoutView({
                         }
                         className="mt-2 block w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface-input)] min-h-12 px-4 py-3 text-base text-[var(--text-strong)] placeholder-[var(--text-subtle)] aria-[invalid=true]:border-[var(--danger)] focus:border-[var(--accent-solid)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-solid)]"
                       />
+                      {errors.notes ? (
+                        <p
+                          id="notes-error"
+                          role="alert"
+                          className="mt-1.5 text-sm font-bold text-[var(--danger)]"
+                        >
+                          {errors.notes}
+                        </p>
+                      ) : null}
                     </div>
                   </div>
                 </div>
@@ -1129,19 +1332,50 @@ export function CheckoutView({
                     </strong>
                     {isRiderDelivery
                       ? "Proceeding generates your complete order summary. You then send it to a local rider on Facebook, and the rider places the order at the shop."
-                      : "Proceeding generates your complete order summary. Online order transmission will be added in a future phase; you will send this summary directly to the shop via Facebook Messenger or phone to place your order."}
+                      : placesOnline
+                        ? "Place order sends your order straight to the shop. You pay at the counter when you pick it up, and the next page shows your order's status."
+                        : "Proceeding generates your complete order summary. Online order transmission will be added in a future phase; you will send this summary directly to the shop via Facebook Messenger or phone to place your order."}
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={handleProceedToSend}
-                    className="button-primary w-full text-center py-3.5 text-base"
-                  >
-                    {isRiderDelivery
-                      ? "Proceed to Send to Rider"
-                      : "Proceed to Send to Shop"}
-                    {"\u00a0"}→
-                  </button>
+                  {placesOnline && placeNotice ? (
+                    <div
+                      role="alert"
+                      className="rounded-2xl border border-[var(--danger)] bg-[var(--surface-warm)] p-4 text-sm text-[var(--text-strong)]"
+                    >
+                      <strong className="block font-bold">
+                        {placeNotice.message}
+                      </strong>
+                      {placeNotice.details.length > 0 ? (
+                        <ul className="mt-2 list-disc space-y-1 pl-5 text-xs">
+                          {placeNotice.details.map((detail) => (
+                            <li key={detail}>{detail}</li>
+                          ))}
+                        </ul>
+                      ) : null}
+                    </div>
+                  ) : null}
+
+                  {placesOnline ? (
+                    <button
+                      type="button"
+                      onClick={() => void handlePlaceOrder()}
+                      disabled={isPlacing}
+                      className="button-primary w-full text-center py-3.5 text-base disabled:cursor-wait disabled:opacity-70"
+                    >
+                      {isPlacing ? "Placing order…" : "Place order"}
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleProceedToSend}
+                      className="button-primary w-full text-center py-3.5 text-base"
+                    >
+                      {isRiderDelivery
+                        ? "Proceed to Send to Rider"
+                        : "Proceed to Send to Shop"}
+                      {"\u00a0"}→
+                    </button>
+                  )}
 
                   <button
                     type="button"

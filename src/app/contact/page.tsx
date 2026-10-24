@@ -105,7 +105,8 @@ export default function ContactPage() {
               <p className="mt-8 flex gap-3 text-lg font-semibold text-[var(--text-strong)]">
                 <ClockIcon className={`mt-1 size-5 ${factIconClass}`} />
                 <span>
-                  Open {visitFacts.hours}, {visitFacts.days}. Closed every{" "}
+                  Open {visitFacts.hours}, {visitFacts.days}, and{" "}
+                  {visitFacts.otherHours} on {visitFacts.otherDay}. Closed every{" "}
                   {visitFacts.closedDay}.
                 </span>
               </p>

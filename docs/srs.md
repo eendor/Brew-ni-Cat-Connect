@@ -199,7 +199,7 @@ Only requirements-justified domains will be designed. Candidate domains include 
 ### 10.2 Dependencies
 
 - Selected hosting/cloud platform and service plan.
-- The existing Supabase project for read-only current-menu retrieval; live rows now render, but RLS restoration and reviewed least-privilege anonymous catalog policies are still required before production. Authentication, customer data, writes, and realtime retain their later-phase activation review.
+- The existing Supabase project for read-only current-menu retrieval; live rows now render, but RLS restoration and reviewed least-privilege anonymous catalog policies are still required before production. **Update (2026-10-24):** RLS is restored with catalog-only guest reads (PR #41). Authentication, customer data, writes, and realtime retain their later-phase activation review.
 - Meta developer application, permissions, policies, and webhook endpoint for Messenger.
 - Android tooling and distribution credentials for the mobile phase.
 - A documented existing-POS integration contract.
@@ -242,7 +242,7 @@ Each implementation pull request must cite applicable requirement IDs. Each test
 ## 13. Open decisions
 
 1. Select the eventual deployment target; the limited Phase 2 public catalog client is implemented, while Supabase authentication, writes, customer data, and realtime remain gated to later design.
-2. Restore RLS and obtain approval for explicit least-privilege public catalog `SELECT` policies or a dedicated public view; current grant-based access exposes unrelated business tables.
+2. Restore RLS and obtain approval for explicit least-privilege public catalog `SELECT` policies or a dedicated public view; current grant-based access exposes unrelated business tables. **Update (2026-10-24):** done in PR #41.
 3. Confirm any future permanent operating-hours policy. The About story is settled: on 2026-10-23 the owner confirmed that no owner biography or longer About story is needed.
 4. Define guest checkout policy versus account-required ordering. **TODO: Confirm with Brew ni Cat owner.**
 5. Define allowed order states, staff response expectations, cancellation/rejection handling, and customer notices. **TODO: Confirm with Brew ni Cat owner.**
@@ -263,7 +263,7 @@ Version 0.1 remains a draft until review findings and owner-dependent scope item
 
 ## 15. Phase 2 Public Showcase Addendum
 
-The client brief dated 2026-08-24 confirms the Phase 2 public facts and asset permissions: Brew ni Cat Coffee Shop opened June 12, 2026; its address is Abellera St, Poblacion, Kabacan, Cotabato 9407, Philippines, beside Pulido Eatery; its public phone and email are configured; Cash and GCash are accepted; and a ₱10 takeout box applies. Operating hours were later confirmed by the Lead Developer on 2026-10-11 as 11 AM to 10 PM, Monday to Saturday, closed every Sunday; the website directs customers to Facebook or the shop contact for any schedule changes.
+The client brief dated 2026-08-24 confirms the Phase 2 public facts and asset permissions: Brew ni Cat Coffee Shop opened June 12, 2026; its address is Abellera St, Poblacion, Kabacan, Cotabato 9407, Philippines, beside Pulido Eatery; its public phone and email are configured; Cash and GCash are accepted; and a ₱10 takeout box applies. Operating hours were later confirmed by the Lead Developer on 2026-10-11 as 11 AM to 10 PM, Monday to Saturday, closed every Sunday. On 2026-10-24 the shop's posted schedule replaced them: 11 AM to 9 PM, Monday to Friday, and 1 PM to 9 PM on Sunday, closed every Saturday. The website directs customers to Facebook or the shop contact for any schedule changes.
 
 The owner confirmed on 2026-10-23 that no owner biography or longer About story is needed. The About page uses only the restrained factual points supplied in the brief and does not invent an owner biography, testimonial, award, mission, or market-leading claim.
 
@@ -275,6 +275,6 @@ Phase 2 delivery content is informational: a customer independently books a pref
 
 Phase 3 browser-side ordering is merged: the ordering core and cart domain in PR #7, Van's cart drawer, cart page and checkout in PR #14, and Shan's checkout validation module in PR #20. A guest customer builds a cart, chooses pickup at the shop (with Cash or GCash at the counter) or rider delivery (with a delivery address), and copies the prepared order summary into a message to the shop or a rider, or reads it out on the phone. Nothing is written to a server. FR-017 to FR-020 and FR-022 are In development (client-side); FR-021, FR-024 and FR-025 remain Planned until a server-side order backend exists. See [`functional-requirements.md`](functional-requirements.md) §15.
 
-The three.js and GSAP experience in PR #23 (ADR-014 and ADR-015) and its follow-ups in PR #24 change presentation only. They add no data flow, account, payment or order write, and the §15 RLS blocker still applies.
+The three.js and GSAP experience in PR #23 (ADR-014 and ADR-015) and its follow-ups in PR #24 change presentation only. They add no data flow, account, payment or order write, and the §15 RLS blocker still applies. **Update (2026-10-24):** the RLS blocker is closed (PR #41).
 
 PR #25 updates the rider model after the lead developer confirmed how the local riders work (2026-10-18): the customer sends the prepared summary to one of three listed local rider services, and the rider orders at Brew ni Cat for the customer, picks the order up and delivers it. Checkout asks for a delivery address only for rider delivery and hides the payment choice, because the delivery fee, timing and payment are agreed with the rider. Brew ni Cat still does not book riders, charge rider fees or promise an ETA, and FR-030 stays Deferred. This supersedes the §15 wording that the customer books the rider after arranging the shop order.

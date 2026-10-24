@@ -675,7 +675,7 @@ test("TC-P4-004 — gallery ring and visit sign stay keyboard operable", async (
   ).toHaveAttribute("aria-pressed", "true");
   // the real hours text never depends on the 3D sign
   await expect(
-    page.getByRole("main").getByText(/Closed every Sunday\./),
+    page.getByRole("main").getByText(/Closed every Saturday\./),
   ).toBeVisible();
   expect(errors).toEqual([]);
 });
@@ -780,8 +780,12 @@ test("TC-P4-026 — the checkout heading follows each step after its split entra
   await expect(heading.locator(".split-line")).not.toHaveCount(0);
   await expect(heading).toHaveAccessibleName("Checkout");
 
+  // rider delivery copies a summary in every build; pickup places the order
+  // online when the switch is on
+  await page.getByRole("radio", { name: /Rider Delivery/ }).check();
   await page.getByLabel(/Full Name/).fill("Maria Santos");
   await page.getByLabel(/Contact Phone Number/).fill("0918 123 4567");
+  await page.getByLabel("Delivery Address").fill("Purok 2, Kabacan");
   await page.getByRole("button", { name: /Continue to Order Review/ }).click();
   await expect(
     page.getByRole("heading", { level: 1, name: "Review Order" }),
@@ -793,9 +797,12 @@ test("TC-P4-026 — the checkout heading follows each step after its split entra
   await expect(heading).toHaveText("Review Order");
   await expect(heading).toHaveAccessibleName("Review Order");
 
-  await page.getByRole("button", { name: /Proceed to Send to Shop/ }).click();
+  await page.getByRole("button", { name: /Proceed to Send to Rider/ }).click();
   await expect(
-    page.getByRole("heading", { level: 1, name: "Order Summary for Shop" }),
+    page.getByRole("heading", {
+      level: 1,
+      name: "Order Summary for Your Rider",
+    }),
   ).toBeVisible();
   expect(errors).toEqual([]);
 });

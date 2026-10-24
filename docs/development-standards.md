@@ -37,6 +37,7 @@ The implemented foundation uses this deliberately small structure:
 ```text
 src/
   app/             App Router pages, root layout, page template, global styles, and state boundaries
+    api/orders/    Place order route, `POST /api/orders` (Phase 4)
   components/
     cart/          Cart drawer, cart page, cart button, and undo toast
     checkout/      Three-step checkout and the send-to-shop order summary
@@ -51,17 +52,21 @@ src/
     accessibility/ Dialog focus trap
     menu/          Catalog fetch, mapping, and price display helpers
     ordering/      Cart pricing, reducer, selectors, checkout validation, and summary storage
-    orders/        Shared online order types and their format checks (Phase 4)
+    orders/        Shared online order types, order links, Place order helpers and the order API client (Phase 4)
     supabase/      Public client creation only
   types/           Application-level catalog, ordering, and row boundary types
 tests/
   unit/            Vitest and Testing Library behavior tests
   e2e/             Playwright journeys (chromium) and 3D/motion checks (chromium-3d)
+  database/        Migration tests on PGlite, a Postgres copy in WebAssembly (Phase 4)
   setup.ts         Shared DOM matcher and cleanup setup
 public/
   images/          Approved official logo, menu reference art, and shop photographs
   three/           Bundled HDRI and the cat sticker used by the 3D layer
 scripts/           Docs validator and live-menu evidence capture
+supabase/
+  migrations/      Database changes, applied in file-name order (Phase 4)
+  rollbacks/       The undo script for each migration
 docs/              Version-controlled project documentation
 .github/workflows/ Pull-request and branch validation
 ```

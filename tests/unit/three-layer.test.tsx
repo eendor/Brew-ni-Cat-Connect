@@ -61,9 +61,11 @@ describe("3D layer (TC-P4-006 – TC-P4-010)", () => {
 
   it("TC-P4-008 — visit facts restate the confirmed hours and landmark", () => {
     expect(visitFacts).toEqual({
-      hours: "11 AM – 10 PM",
-      days: "Monday to Saturday",
-      closedDay: "Sunday",
+      hours: "11 AM – 9 PM",
+      days: "Monday to Friday",
+      otherDay: "Sunday",
+      otherHours: "1 PM – 9 PM",
+      closedDay: "Saturday",
       shopSign: "Brew ni Cat",
       neighborSign: "Pulido Eatery",
       street: "Abellera St",

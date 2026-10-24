@@ -1,9 +1,10 @@
 # Brew ni Cat Connect
 
 **Course:** ICT05a Applications Development & Emerging Technologies\
-**Development status:** Phase 3 — Menu and Ordering Experience: browser-side ordering and the 3D experience merged; server-side order creation planned\
+**Development status:** Phase 3 — Menu and Ordering Experience is finishing its last checkout polish, and Phase 4 — Cloud backend and customer accounts has started: the online order tables, the order API and Place order are merged, and Place order stays off on the live site until the POS order screen is ready\
+**Live site:** <https://brew-ni-cat-connect.vercel.app>\
 **Specification version:** 0.1 Draft (living specification)\
-**Last updated:** 2026-10-23
+**Last updated:** 2026-10-24
 
 Brew ni Cat Connect is the customer-facing omnichannel platform for Brew ni Cat Coffee Shop in Kabacan, Cotabato. It complements the existing Brew ni Cat POS; it does not recreate or expose the POS.
 
@@ -18,8 +19,8 @@ Brew ni Cat Connect is the customer-facing omnichannel platform for Brew ni Cat 
 | Menu presentation                       | Product photos, card layout, the order dialog and header polish merged in PRs #16 to #18                                                                                                                                                                                                                                                                                       |
 | 3D and motion layer                     | The Night Shift Glow redesign (ADR-014) on three.js and GSAP merged in [PR #23](https://github.com/eendor/Brew-ni-Cat-Connect/pull/23); phone checks, tap targets and the duplicate-photo cleanup followed in [PR #24](https://github.com/eendor/Brew-ni-Cat-Connect/pull/24)                                                                                                  |
 | Rider delivery and social icons         | Rider flow and local rider list in [PR #25](https://github.com/eendor/Brew-ni-Cat-Connect/pull/25); decorative Facebook/TikTok and contact icons (inline Lucide/Simple Icons shapes, no icon package) in [PR #26](https://github.com/eendor/Brew-ni-Cat-Connect/pull/26)                                                                                                       |
-| Read-only current menu                  | Live publishable runtime verified; manually disabled RLS remains a production security blocker                                                                                                                                                                                                                                                                                 |
-| Server-side orders and accounts         | Planned: server revalidation, single order creation and order references (FR-021, FR-024, FR-025) in Phases 3–4; customer accounts in Phase 4                                                                                                                                                                                                                                  |
+| Read-only current menu                  | Live publishable runtime verified; manually disabled RLS was a production security blocker until PR #41 restored it on 2026-10-24                                                                                                                                                                                                                                              |
+| Server-side orders and accounts         | Merged in [PR #41](https://github.com/eendor/Brew-ni-Cat-Connect/pull/41) for pickup: server revalidation, single order creation and order references (FR-021, FR-024, FR-025), off on the live site until the POS order screen is ready; customer accounts in Phase 4                                                                                                         |
 | Online payment and delivery             | Deferred until the owner approves the rules                                                                                                                                                                                                                                                                                                                                    |
 | Messenger, Android, and POS integration | Deferred to their approved roadmap phases                                                                                                                                                                                                                                                                                                                                      |
 
@@ -81,7 +82,7 @@ The browser runtime uses only these two public variables. `.env.example` also li
 
 The initial public probes returned an empty catalog; those **BEFORE** captures remain as failure-state evidence. After RLS was manually disabled on the relevant catalog tables during Phase 2, the website's publishable runtime returned and rendered 6 categories and 16 items. The application still uses no privileged fallback and made no business-data or RLS change.
 
-This current access depends on table grants and is not least privilege. HEAD-only/no-body checks found unrelated inventory, recipe, expense, order, order-item, and release tables publicly reachable. Restoring RLS and adding tested, explicit catalog-only anonymous `SELECT` policies is a production security blocker.
+This current access depends on table grants and is not least privilege. HEAD-only/no-body checks found unrelated inventory, recipe, expense, order, order-item, and release tables publicly reachable. Restoring RLS and adding tested, explicit catalog-only anonymous `SELECT` policies is a production security blocker. **Update (2026-10-24):** RLS is back on for every public table, and guests can read only the menu and the POS releases (PR #41).
 
 ## Running the Development Server
 
@@ -138,15 +139,15 @@ The suite builds the production application, starts it locally and runs two Play
 
 The current site does not include:
 
-- server-side order creation: the customer sends the prepared summary to the shop, and server revalidation, single order creation and order references (FR-021, FR-024, FR-025) are planned;
+- server-side order creation: the customer sends the prepared summary to the shop, and server revalidation, single order creation and order references (FR-021, FR-024, FR-025) are planned (PR #41 adds them for pickup, but Place order stays off on the live site until the POS order screen is ready);
 - customer authentication, profiles, history, tracking, favorites, loyalty, and rewards;
 - online payment processing or direct rider booking;
 - Messenger, Android, and POS synchronization changes;
 - database migrations, production-data mutations, or administrative functions;
-- restored RLS with catalog-only read policies, which remains a production security blocker; and
+- restored RLS with catalog-only read policies, which remains a production security blocker (done on 2026-10-24 in PR #41); and
 - a steady 60 fps for the 3D scenes on integrated GPUs at desktop widths (tuning is planned) or a completed click-through on a physical phone (MAN-P4-007).
 
-The shop is open 11 AM to 10 PM and closed every Sunday. Customers are directed to the official Facebook page or the shop contact details for any schedule changes.
+The shop is open 11 AM to 9 PM Monday to Friday and 1 PM to 9 PM on Sunday, and closed every Saturday. Customers are directed to the official Facebook page or the shop contact details for any schedule changes.
 
 ## Contributing
 

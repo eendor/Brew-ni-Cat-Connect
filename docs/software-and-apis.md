@@ -2,7 +2,8 @@
 
 **Version:** 0.1 Draft\
 **Status:** Phase 1–3 dependencies installed and locked, including `three` and `gsap` for the 3D and motion layer (PR #23); live public catalog API rendering verified; manually RLS-disabled access remains a production security blocker\
-**Last updated:** 2026-10-18 (PR #26 notes vendor icon shapes copied inline)
+**Last updated:** 2026-10-24 (PR #41 adds `POST /api/orders`, the order database functions and PGlite for database tests)\
+**Update (2026-10-24):** RLS is back on for every public table, so the RLS blocker in the status above is closed (§12).
 
 ## 1. Current technology state
 
@@ -56,6 +57,7 @@ Supabase JavaScript is installed solely for Phase 2 public read-only catalog ret
 | React type definitions     | React component typing                          | `19.2.18`         | MIT        | Installed as `@types/react`                                      |
 | React DOM type definitions | React DOM typing                                | `19.2.4`          | MIT        | Installed as `@types/react-dom`                                  |
 | three.js type definitions | three.js typing                                | `0.186.0`         | MIT        | Installed as `@types/three`                                      |
+| `@electric-sql/pglite`     | Postgres in WebAssembly for the database tests  | `0.5.8`           | Apache-2.0 | Test-only; runs the Supabase migrations in `tests/database/` with no live database (PR #41) |
 | `actions/checkout`         | GitHub Actions repository checkout              | `v7`               | MIT        | Workflow major; latest release observed as `v7.0.1` on 2026-08-23 |
 | `actions/setup-node`       | GitHub Actions Node.js and npm cache setup       | `v7`               | MIT        | Workflow major; latest release observed as `v7.0.0` on 2026-08-23 |
 | `actions/setup-python`     | GitHub Actions Python setup for document checks | `v7`               | MIT        | Workflow major; latest release observed as `v7.0.0` on 2026-08-23 |
@@ -165,3 +167,53 @@ The ordering work in Phase 3 added no runtime dependencies. The 3D layer in PR #
 | Cat sticker on the 3D cup | `public/three/cat-sticker.png` | Cut from the shop's own Matcha product photo | Shop-owned, same terms as the other approved shop photos | Not a stock image |
 | Food, drink, sign and street models | Generated in code (`src/components/three/scenes/models.ts` and scene files) | Project code | Project license | Procedural geometry with generated albedo, normal and roughness maps (`engine/textures.ts`); no third-party models |
 
+## 12. Phase 4 order API (PR #41)
+
+PR #41 adds no runtime dependency. `@electric-sql/pglite` is a test-only dev dependency.
+
+| Technology / API | Purpose | Notes |
+| --- | --- | --- |
+| `POST /api/orders` (`src/app/api/orders/route.ts`) | Place a pickup order | Next.js route handler. Calls `place_online_order()` with the publishable key; no privileged key |
+| `public.place_online_order(p_request, p_correlation_id)` | Price, check and save an order in one transaction | Database function (`docs/database-design.md` §8.5) |
+| `public.get_online_order(p_reference, p_tracking_token)` | Read one order for the order page | Database function, called from the browser with the publishable key |
+| Supabase Realtime broadcast | `status-changed` with `{ status, changedAt }` on the order's topic | Sent by a database trigger after each status change (§8.6) |
+
+**Request.** JSON (`content-type: application/json`), at most 32 KB:
+
+```json
+{
+  "idempotencyKey": "UUID, new for each checkout attempt",
+  "trackingToken": "43 base64url characters, made in the browser",
+  "fulfillment": "pickup",
+  "customer": {
+    "name": "…",
+    "phone": "09XXXXXXXXX",
+    "notes": "…",
+    "paymentPreference": "Cash or GCash"
+  },
+  "lines": [{ "itemId": "…", "variantId": "…", "flavor": null, "quantity": 1 }],
+  "expectedSubtotal": 235
+}
+```
+
+The browser sends what was picked and the subtotal the customer saw, never a price to charge. The route checks the size, the JSON and the token's format, and the database function checks everything else.
+
+**Answers.** Every answer is JSON with `cache-control: no-store` and an `x-correlation-id` header.
+
+| Status | Body | When |
+| --- | --- | --- |
+| 201 | `{ ok: true, reference, trackingToken, status, createdAt }` | The order was saved |
+| 200 | The same | A retry with the same idempotency key; the saved order comes back |
+| 400 | `reason: "invalid-request"` | The body isn't a JSON object, has text or numbers the database can't store, nests too deep, or has a bad token or request shape |
+| 413 | `reason: "invalid-request"` | The body is over 32 KB |
+| 415 | `reason: "invalid-request"` | The body isn't JSON |
+| 422 | `reason: "empty-cart"`, or `"invalid-details"` with `fieldErrors` for `name`, `phone` or `notes` | Nothing to order, or a checkout detail is wrong |
+| 409 | `reason: "line-unavailable"` with `lines: [{ index, reason }]`, or `"price-changed"` with the new `subtotal` | A line can't be ordered now, or the menu price changed |
+| 502 | `reason: "server-error"` | The database failed, couldn't be reached, or answered in an unexpected shape |
+| 503 | `reason: "server-error"` | Online ordering is off or the database isn't configured |
+
+Every refusal also has a customer-safe `message`. The browser client (`src/lib/orders/order-client.ts`) turns no answer, or an answer it doesn't recognize, into a `server-error` the customer can retry with the same idempotency key.
+
+**Flag.** `NEXT_PUBLIC_ONLINE_ORDERING=enabled` turns Place order on for pickup. It is read at build time, so changing it needs a redeploy. It is empty (off) on the live site until the POS order screen and the order page are ready (`docs/database-design.md` §8.8). CI builds the browser tests with it on, against a mocked order API.
+
+**RLS.** `20261024011051_restore_rls.sql` turned RLS back on for every public table. The menu (`categories`, `items`) and `app_release` stay readable with the publishable key, and everything else needs a staff account (`docs/database-design.md` §8.2). This closes the RLS blocker noted in §9.

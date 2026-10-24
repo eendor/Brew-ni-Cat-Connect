@@ -1,7 +1,7 @@
 # Architecture Decision Records
 
 **Document version:** 0.1 Draft\
-**Last updated:** 2026-10-18
+**Last updated:** 2026-10-24
 
 Statuses used here are `Proposed`, `Accepted`, `Superseded`, and `Deferred`. Acceptance records a direction; it does not claim implementation.
 
@@ -161,7 +161,7 @@ This manual state is a temporary functional-verification condition, not a revisi
 
 **Decision:** Until server order creation exists, checkout produces an order summary the customer copies to Messenger or reads over the phone, instead of a simulated order reference.\
 **Date:** 2026-10-15\
-**Status:** Accepted and implemented (PR #14)\
+**Status:** Accepted and implemented (PR #14). For pickup, superseded by ADR-016 once online ordering is turned on; rider delivery keeps the summary.\
 **Context:** A fake order ID would claim an order exists when the shop never received it.\
 **Consequences:** FR-024 and FR-025 stay planned; the cart persists in `localStorage` and is revalidated against the catalog at checkout.
 
@@ -210,3 +210,19 @@ This manual state is a temporary functional-verification condition, not a revisi
 - The cart drawer, order dialog, mobile navigation and undo toast now animate out as well as in, and are inert while leaving.
 - GSAP core, ScrollTrigger and SplitText are in the shared client bundle. The functional Playwright journeys keep running with reduced motion; the `chromium-3d` project checks the curtain and that no content is left hidden after scrolling.
 - SplitText replaces a heading's content and sets its label, so a heading whose text changes in place is keyed by that text and remounted instead of updated. The checkout heading needed this (PR #24): after a step renamed the page, the old split heading kept the previous title as its label and brought it back on resize.
+
+---
+
+## ADR-016 — Online Orders Apart From POS Sales, Priced in the Database
+
+**Decision:** Online pickup orders go into their own tables (`online_orders`, `online_order_items`, `online_order_status_history`), not the POS `orders` and `order_items`. One database function, `place_online_order()`, prices every line from the live menu, checks the details, and saves the order, its lines, the tracking token hash and the first status in one transaction. `POST /api/orders` calls it with the publishable key, and Place order stays behind the `NEXT_PUBLIC_ONLINE_ORDERING` flag until the shop can see online orders.\
+**Date:** 2026-10-24\
+**Status:** Accepted and implemented in PR #41. The flag is off on the live site until the POS order screen and the order page are on `main`.\
+**Context:** The POS `orders` table records completed sales and feeds the shop's reports and stock. An online order is a request the shop has not accepted yet, so writing it there would count sales that may never happen. The browser can't be trusted with prices, and FR-037 rules out a privileged key on the server.\
+**Consequences:**
+- The POS keeps its tables and sync unchanged. How an accepted online order is counted as a POS sale is decided with the POS order screen.
+- The tables stay closed to the API. The two `security definer` functions (`place_online_order()` and `get_online_order()`) are the only way in, so the publishable key is enough and no service-role key is used anywhere.
+- Prices come only from the menu at the moment of ordering, with the same rules as the cart (copied from `src/lib/menu/map-menu-catalog.ts`, `src/lib/ordering/cart-pricing.ts` and `cart-reducer.ts`). If the subtotal the customer saw is out of date, nothing is saved and the new subtotal comes back. PGlite tests compare the SQL with the cart on random menus (TC-P4-084), so a change to the cart's rules needs the same change in SQL.
+- One checkout attempt saves one order: the browser sends an idempotency key, and a retry gets the same order back (FR-024).
+- Guests open their order with the reference and a 43-character tracking token. The token goes in the link's `#` fragment, so it never reaches a server log, and the database keeps only its SHA-256 hash (FR-045).
+- With the flag off, pickup checkout keeps the copy-summary flow from ADR-012 and the route answers 503. Rider delivery always keeps the summary, because the rider orders at the counter.
