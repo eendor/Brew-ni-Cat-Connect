@@ -53,6 +53,53 @@ as $$
 $$;
 
 -- ---------------------------------------------------------------------------
+-- Extensions schema with pgcrypto, as on every Supabase project.
+
+create schema extensions;
+grant usage on schema extensions to anon, authenticated, service_role;
+create extension pgcrypto with schema extensions;
+
+-- ---------------------------------------------------------------------------
+-- Supabase Realtime: realtime.messages and realtime.send(), with the columns
+-- and behavior of the live versions. A failed send only raises a warning.
+
+create schema realtime;
+grant usage on schema realtime to anon, authenticated, service_role;
+
+create table realtime.messages (
+  id uuid not null default gen_random_uuid(),
+  topic text not null,
+  extension text not null,
+  payload jsonb,
+  event text,
+  private boolean default false,
+  inserted_at timestamp without time zone not null default now(),
+  updated_at timestamp without time zone not null default now(),
+  primary key (id, inserted_at)
+);
+
+create function realtime.send(
+  payload jsonb,
+  event text,
+  topic text,
+  private boolean default true
+)
+returns void
+language plpgsql
+as $$
+begin
+  begin
+    execute format('set local realtime.topic to %L', topic);
+    insert into realtime.messages (payload, event, topic, private, extension)
+    values (payload, event, topic, private, 'broadcast');
+  exception
+    when others then
+      raise warning 'ErrorSendingBroadcastMessage: %', sqlerrm;
+  end;
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
 -- POS tables
 
 create table public.categories (

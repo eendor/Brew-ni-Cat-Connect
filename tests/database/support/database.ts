@@ -11,6 +11,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 import { PGlite } from "@electric-sql/pglite";
+import { pgcrypto } from "@electric-sql/pglite/contrib/pgcrypto";
 
 const MIGRATIONS_DIR = fileURLToPath(
   new URL("../../../supabase/migrations/", import.meta.url),
@@ -31,7 +32,7 @@ export function listMigrations(): string[] {
 
 /** A new database in the state the live one was in before our migrations. */
 export async function createBaselineDatabase(): Promise<PGlite> {
-  const db = await PGlite.create();
+  const db = await PGlite.create({ extensions: { pgcrypto } });
   await db.exec(readFileSync(BASELINE_FILE, "utf8"));
   return db;
 }
@@ -149,7 +150,28 @@ export async function runAs<T = Record<string, unknown>>(
   sql: string,
   params: unknown[] = [],
 ): Promise<Outcome<T>> {
+  return execAs<T>(db, actor, sql, params, false);
+}
+
+/** Like `runAs`, but a statement that succeeds is committed. */
+export async function commitAs<T = Record<string, unknown>>(
+  db: PGlite,
+  actor: Actor,
+  sql: string,
+  params: unknown[] = [],
+): Promise<Outcome<T>> {
+  return execAs<T>(db, actor, sql, params, true);
+}
+
+async function execAs<T>(
+  db: PGlite,
+  actor: Actor,
+  sql: string,
+  params: unknown[],
+  keep: boolean,
+): Promise<Outcome<T>> {
   return db.transaction(async (tx) => {
+    let failed = false;
     try {
       await tx.query("select set_config('request.jwt.claims', $1, true)", [
         claimsFor(actor),
@@ -162,13 +184,16 @@ export async function runAs<T = Record<string, unknown>>(
         affectedRows: result.affectedRows ?? 0,
       };
     } catch (error) {
+      failed = true;
       return {
         ok: false,
         code: errorCode(error),
         message: error instanceof Error ? error.message : String(error),
       };
     } finally {
-      await tx.rollback();
+      if (failed || !keep) {
+        await tx.rollback();
+      }
     }
   });
 }
