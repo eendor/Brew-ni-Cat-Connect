@@ -109,10 +109,11 @@ export function iceGeometry(seed: number, size = 0.42) {
 
 export async function makeCup(
   stickerSrc: string,
-  options: { lid?: "dome" | "flat" } = {},
+  options: { lid?: "dome" | "flat"; lite?: boolean } = {},
 ) {
   const group = new THREE.Group();
-  const condensation = condensationMaps(512, 3);
+  // `lite` (phones on the home showcase) halves the generated maps
+  const condensation = condensationMaps(options.lite ? 256 : 512, 3);
   repeat(condensation.normalMap, 3, 2);
   repeat(condensation.roughnessMap, 3, 2);
   // PET plastic: IOR ~1.45, thin wall, beaded condensation on the outside
@@ -271,7 +272,7 @@ export async function makeCup(
   };
 
   // ice in the drink: polished and wet; outside the cup the floaters refract
-  const ice = iceMaps(256, 17);
+  const ice = iceMaps(options.lite ? 128 : 256, 17);
   const iceInCup = new THREE.MeshPhysicalMaterial({
     color: "#dfeaf0",
     roughness: 0.05,
@@ -348,7 +349,7 @@ export async function makeCup(
 /* ------------------------------------------------------------------ */
 export function makeTakoyaki(
   mobile: boolean,
-  options: { rows?: number; cols?: number } = {},
+  options: { rows?: number; cols?: number; lite?: boolean } = {},
 ) {
   // 2×3 is the showcase tray; the Menu viewer builds 4–16 piece trays
   const rows = options.rows ?? 2;
@@ -383,7 +384,7 @@ export function makeTakoyaki(
   lid.castShadow = true;
   inner.add(lid);
 
-  const batter = batterMaps(256, 5);
+  const batter = batterMaps(options.lite ? 128 : 256, 5);
   const ballMaterial = new THREE.MeshPhysicalMaterial({
     map: batter.map,
     normalMap: batter.normalMap,
@@ -934,9 +935,9 @@ export function beanGeometry() {
   return geometry;
 }
 
-export function floaterMaterials() {
-  const ice = iceMaps(256, 23);
-  const leaf = leafMaps(256, 41);
+export function floaterMaterials(options: { lite?: boolean } = {}) {
+  const ice = iceMaps(options.lite ? 128 : 256, 23);
+  const leaf = leafMaps(options.lite ? 128 : 256, 41);
   const bean = beanMaps(128, 31);
   const fries = fryMaps(128, 29);
   return {
@@ -998,6 +999,43 @@ export function floaterMaterials() {
       side: THREE.DoubleSide,
     }),
   };
+}
+
+/**
+ * The home showcase's phone tier (ADR-014). Transmission costs a second
+ * render of the scene every frame, and clearcoat and sheen each add a
+ * lighting layer to every pixel, so phones go without them. Clear parts
+ * (the cup, its lid and the floating ice) become an additive gloss instead:
+ * reflections keep their full strength, whatever is behind shows through,
+ * and draw order doesn't matter.
+ */
+export function liteMaterials(root: THREE.Object3D) {
+  const seen = new Set<THREE.Material>();
+  root.traverse((object) => {
+    const mesh = object as THREE.Mesh;
+    if (!mesh.isMesh) return;
+    const materials = Array.isArray(mesh.material)
+      ? mesh.material
+      : [mesh.material];
+    for (const material of materials) {
+      if (seen.has(material)) continue;
+      seen.add(material);
+      if (!(material as THREE.MeshPhysicalMaterial).isMeshPhysicalMaterial)
+        continue;
+      const physical = material as THREE.MeshPhysicalMaterial;
+      if (physical.transmission > 0) {
+        physical.transmission = 0;
+        physical.transparent = true;
+        physical.depthWrite = false;
+        physical.blending = THREE.AdditiveBlending;
+        // as a tint the color lets light through; as a base it would fog
+        physical.color.multiplyScalar(0.12);
+      }
+      physical.clearcoat = 0;
+      physical.sheen = 0;
+      physical.needsUpdate = true;
+    }
+  });
 }
 
 export function flakeGeometry() {

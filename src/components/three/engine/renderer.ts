@@ -7,10 +7,14 @@ export { optimizedSrc } from "./image-src";
 
 /** CC0 studio HDRI from Poly Haven, bundled in /public (see docs). */
 export const STUDIO_HDRI = "/three/hdri/studio_small_09_1k.hdr";
+/** Half-size copy for phones, made with scripts/downsample_hdr.py. */
+export const STUDIO_HDRI_SMALL = "/three/hdri/studio_small_09_512.hdr";
 
 /** The renderer living on each canvas, so a failed start can still free it. */
 const renderers = new WeakMap<HTMLCanvasElement, THREE.WebGLRenderer>();
 const freed = new WeakSet<THREE.WebGLRenderer>();
+/** Renderers made for the phone tier; they light scenes with the small HDRI. */
+const liteRenderers = new WeakSet<THREE.WebGLRenderer>();
 
 export function makeRenderer(
   canvas: HTMLCanvasElement,
@@ -24,6 +28,7 @@ export function makeRenderer(
     powerPreference: "high-performance",
   });
   renderers.set(canvas, renderer);
+  if (quality.lite) liteRenderers.add(renderer);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, quality.maxDpr));
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 0.95;
@@ -55,22 +60,29 @@ export function releaseRenderer(canvas: HTMLCanvasElement) {
   if (renderer) freeRenderer(renderer);
 }
 
-let hdrData: Promise<THREE.DataTexture> | null = null;
+const hdrData = new Map<string, Promise<THREE.DataTexture>>();
 const envCache = new WeakMap<THREE.WebGLRenderer, Promise<THREE.Texture>>();
 
 /**
- * Prefiltered (PMREM) studio environment for one renderer. The HDR file is
+ * Prefiltered (PMREM) studio environment for one renderer. Each HDR file is
  * downloaded once and shared; each WebGL context gets its own PMREM target.
+ * Phone-tier renderers use the half-size file, a quarter of the download
+ * with a smaller PMREM, so every scene on a phone shares that one small copy.
  * A failed download is forgotten so the next scene can try again.
  */
 export function studioEnvironment(renderer: THREE.WebGLRenderer) {
   let env = envCache.get(renderer);
   if (!env) {
-    hdrData ??= new HDRLoader().loadAsync(STUDIO_HDRI).catch((error) => {
-      hdrData = null;
-      throw error;
-    });
-    env = hdrData.then((source) => {
+    const src = liteRenderers.has(renderer) ? STUDIO_HDRI_SMALL : STUDIO_HDRI;
+    let data = hdrData.get(src);
+    if (!data) {
+      data = new HDRLoader().loadAsync(src).catch((error) => {
+        hdrData.delete(src);
+        throw error;
+      });
+      hdrData.set(src, data);
+    }
+    env = data.then((source) => {
       source.mapping = THREE.EquirectangularReflectionMapping;
       const pmrem = new THREE.PMREMGenerator(renderer);
       const target = pmrem.fromEquirectangular(source);

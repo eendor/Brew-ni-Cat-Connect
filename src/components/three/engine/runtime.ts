@@ -10,6 +10,11 @@ export type Quality = Readonly<{
   maxDpr: number;
   /** `?quality=high` keeps bloom and depth of field on slow GPUs (captures). */
   forceHigh: boolean;
+  /**
+   * Phones without `?quality=high`: scenes light with the half-size HDRI,
+   * and the home showcase drops its heaviest effects (ADR-014).
+   */
+  lite: boolean;
 }>;
 
 export function prefersReducedMotion(): boolean {
@@ -53,10 +58,12 @@ export function getQuality(): Quality {
     "(max-width: 760px), (pointer: coarse)",
   ).matches;
   const params = new URLSearchParams(window.location.search);
+  const forceHigh = params.get("quality") === "high";
   return {
     mobile,
     maxDpr: mobile ? 1.25 : 1.75,
-    forceHigh: params.get("quality") === "high",
+    forceHigh,
+    lite: mobile && !forceHigh,
   };
 }
 
@@ -158,6 +165,11 @@ export function whenNear(
       once: true,
     });
   });
+}
+
+/** Resolves on a later task, so a long scene setup lets the page respond. */
+export function nextTask() {
+  return new Promise<void>((resolve) => setTimeout(resolve, 0));
 }
 
 /** Resolves when the browser is next idle, or after `timeout` ms at most. */
