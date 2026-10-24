@@ -635,11 +635,8 @@ export function CheckoutView({
           <nav aria-label="Checkout Progress" className="mb-10">
             <ol className="flex items-center justify-center gap-2 sm:gap-6 text-sm font-bold">
               <li
-                className={`flex items-center gap-2 ${
-                  step === "details"
-                    ? "text-[var(--accent-strong)] font-extrabold"
-                    : "text-[var(--accent-solid)] font-semibold"
-                }`}
+                aria-current={step === "details" ? "step" : undefined}
+                className={`flex items-center gap-2 ${step === "details"}`}
               >
                 <span
                   className={`flex size-7 items-center justify-center rounded-full text-xs ${
@@ -660,6 +657,7 @@ export function CheckoutView({
               </li>
 
               <li
+                aria-current={step === "review" ? "step" : undefined}
                 className={`flex items-center gap-2 ${
                   step === "review"
                     ? "text-[var(--accent-strong)] font-extrabold"
@@ -687,6 +685,7 @@ export function CheckoutView({
               </li>
 
               <li
+                aria-current={step === "send" ? "step" : undefined}
                 className={`flex items-center gap-2 ${
                   step === "send"
                     ? "text-[var(--accent-strong)] font-extrabold"
@@ -708,7 +707,6 @@ export function CheckoutView({
               </li>
             </ol>
           </nav>
-
           {/* STEP 1: Details & Fulfillment Form */}
           {step === "details" && (
             <form
@@ -766,7 +764,6 @@ export function CheckoutView({
                         {siteConfig.operations.hoursNotice}
                       </p>
                     </label>
-
                     <label
                       className={`surface-lift flex cursor-pointer flex-col justify-between rounded-2xl p-5 ${
                         fulfillment === "external-rider"

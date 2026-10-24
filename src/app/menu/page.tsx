@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { MenuCatalog } from "@/components/menu/menu-catalog";
 import { MenuHero } from "@/components/three/menu-hero";
 import { Container } from "@/components/ui/container";
+import { MenuCartBar } from "@/components/cart/menu-cart-bar";
 
 export const metadata: Metadata = {
   title: "Current Menu",
@@ -16,7 +17,7 @@ export default function MenuPage() {
       <MenuHero />
       <section
         id="menu-catalog"
-        className="menu-catalog-section scroll-mt-20 pt-10 pb-12 sm:pb-16 lg:pb-20"
+        className="menu-catalog-section scroll-mt-20 pt-10 pb-24 min-[769px]:pb-16 lg:pb-20"
         aria-label="Current Brew ni Cat menu"
       >
         <Container>
@@ -34,6 +35,8 @@ export default function MenuPage() {
           <MenuCatalog />
         </Container>
       </section>
+
+      <MenuCartBar />
     </>
   );
 }

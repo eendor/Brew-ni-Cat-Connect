@@ -660,4 +660,21 @@ describe("Checkout Flow & Step Transitions", () => {
     // The subtotal should revalidate to ₱95, not ₱1
     expect(await screen.findByText("₱95")).toBeInTheDocument();
   });
+  it("TC-P3-CHK-010 — the progress bar marks only the current step with aria-current", async () => {
+    const user = userEvent.setup();
+    renderCheckout(testCartState);
+
+    const progress = () =>
+      screen.getByRole("navigation", { name: "Checkout Progress" });
+    const current = () => progress().querySelectorAll('[aria-current="step"]');
+
+    // Step 1: only Details is current
+    expect(current()).toHaveLength(1);
+    expect(current()[0]).toHaveTextContent("Details");
+
+    // Step 3: only Send is current
+    await reachSendStep(user);
+    expect(current()).toHaveLength(1);
+    expect(current()[0]).toHaveTextContent("Send");
+  });
 });
