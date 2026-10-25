@@ -5,8 +5,10 @@ import {
   OrderView,
 } from "@/lib/orders/types";
 
-// Keep fixture for local work while Place order is off on live site
-const USE_MOCK_DATA = true;
+// MOCK DATA — FOR DEVELOPMENT ONLY. While Place order is off on the live
+// site, `npm run dev` shows this order at /orders/BNC-234567#token= plus
+// any 43 letters or digits. Production builds never use it.
+const USE_MOCK_DATA = process.env.NODE_ENV === "development";
 
 const MOCK_ORDER: OrderView = {
   reference: "BNC-234567",
@@ -58,23 +60,21 @@ export async function fetchOrder(
     return null;
   }
 
-  if (USE_MOCK_DATA) {
+  if (USE_MOCK_DATA && reference === MOCK_ORDER.reference) {
     return MOCK_ORDER;
   }
 
-  try {
-    const supabase = getPublicSupabaseClient();
-    const { data, error } = await supabase.rpc("get_online_order", {
-      p_reference: reference,
-      p_tracking_token: trackingToken,
-    });
+  const supabase = getPublicSupabaseClient();
+  const { data, error } = await supabase.rpc("get_online_order", {
+    p_reference: reference,
+    p_tracking_token: trackingToken,
+  });
 
-    if (error || !data) {
-      return null;
-    }
-
-    return data as OrderView;
-  } catch {
-    return null;
+  // A failed request throws, so the page shows its error state. No data
+  // means no order matches this reference and token.
+  if (error) {
+    throw new Error("The order could not be loaded.");
   }
+
+  return (data as OrderView | null) ?? null;
 }

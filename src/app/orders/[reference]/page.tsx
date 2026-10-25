@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import { siteConfig } from "@/config/site";
+import { formatPrice } from "@/lib/menu/format-price";
 import { fetchOrder } from "@/lib/orders/fetch-order";
 import { readTrackingTokenFromHash } from "@/lib/orders/order-link";
 import { isOrderReference, OrderView } from "@/lib/orders/types";
@@ -52,35 +54,35 @@ export default function OrderConfirmationPage() {
 
   if (state.status === "loading") {
     return (
-      <main className="container mx-auto max-w-2xl px-4 py-16 text-center">
+      <div className="container mx-auto max-w-2xl px-4 py-16 text-center">
         <div className="animate-pulse space-y-4">
           <div className="h-8 bg-zinc-800 rounded w-1/2 mx-auto" />
           <div className="h-4 bg-zinc-800 rounded w-3/4 mx-auto" />
           <div className="h-48 bg-zinc-900 border border-zinc-800 rounded-xl mt-6" />
         </div>
         <p className="mt-4 text-sm text-zinc-400">Loading order details...</p>
-      </main>
+      </div>
     );
   }
 
   if (state.status === "not-found") {
     return (
-      <main className="container mx-auto max-w-xl px-4 py-20 text-center">
+      <div className="container mx-auto max-w-xl px-4 py-20 text-center">
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-8">
           <h1 className="text-2xl font-bold text-white uppercase tracking-wide">
             Order Not Found
           </h1>
           <p className="mt-3 text-zinc-400 text-sm">
-            We couldn't find an order matching this reference or tracking link.
+            We couldn’t find an order matching this reference or tracking link.
           </p>
         </div>
-      </main>
+      </div>
     );
   }
 
   if (state.status === "error") {
     return (
-      <main className="container mx-auto max-w-xl px-4 py-20 text-center">
+      <div className="container mx-auto max-w-xl px-4 py-20 text-center">
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-8">
           <h1 className="text-2xl font-bold text-red-500 uppercase tracking-wide">
             Something Went Wrong
@@ -93,19 +95,19 @@ export default function OrderConfirmationPage() {
             Try Again
           </button>
         </div>
-      </main>
+      </div>
     );
   }
 
   const { order } = state;
 
   return (
-    <main className="container mx-auto max-w-3xl px-4 py-12">
+    <div className="container mx-auto max-w-3xl px-4 py-12">
       <header className="border-b border-zinc-800 pb-6 mb-8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-extrabold text-white tracking-tight uppercase">
-              Order Confirmed
+              Order Placed
             </h1>
             <p className="text-sm text-zinc-400 mt-1 font-mono">
               Reference:{" "}
@@ -121,15 +123,7 @@ export default function OrderConfirmationPage() {
       </header>
 
       <section className="space-y-6">
-        {/* Spot for Renier's Live Tracker (Week 2) */}
-        <div className="bg-zinc-900/50 border border-dashed border-zinc-700 rounded-xl p-6 text-center">
-          <p className="text-xs uppercase tracking-widest text-zinc-400 font-bold mb-1">
-            Order Status Tracking
-          </p>
-          <p className="text-sm text-zinc-500 italic">
-            [Live order status tracker placeholder — integrated in Week 2]
-          </p>
-        </div>
+        {/* Renier's live order tracker goes here in week 2. */}
 
         {/* Customer Details Card */}
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
@@ -178,9 +172,9 @@ export default function OrderConfirmationPage() {
             Items Summary
           </h2>
           <ul className="divide-y divide-zinc-800">
-            {order.items.map((item) => (
+            {order.items.map((item, index) => (
               <li
-                key={item.itemId}
+                key={index}
                 className="py-4 flex justify-between items-center text-sm"
               >
                 <div>
@@ -193,7 +187,7 @@ export default function OrderConfirmationPage() {
                 </div>
                 <div className="text-right">
                   <p className="text-white font-semibold text-base">
-                    ₱{item.lineTotal.toFixed(2)}
+                    {formatPrice(item.lineTotal)}
                   </p>
                   <p className="text-xs text-zinc-500">Qty: {item.quantity}</p>
                 </div>
@@ -205,10 +199,30 @@ export default function OrderConfirmationPage() {
             <span className="text-white uppercase text-sm tracking-wider">
               Subtotal
             </span>
-            <span className="text-white">₱{order.subtotal.toFixed(2)}</span>
+            <span className="text-white">{formatPrice(order.subtotal)}</span>
           </div>
         </div>
+
+        {/* Next steps (FR-026), from the shop facts the checkout uses */}
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
+          <h2 className="text-xs uppercase tracking-widest text-emerald-400 font-bold mb-4">
+            Next Steps
+          </h2>
+          <ul className="list-disc space-y-2 pl-5 text-sm text-zinc-300">
+            <li>Bookmark this page to check your order later.</li>
+            <li>
+              When your order is ready, pick it up at Brew ni Cat,{" "}
+              {siteConfig.address.street}, {siteConfig.address.locality} (
+              {siteConfig.address.landmark}).
+            </li>
+            <li>
+              Pay {formatPrice(order.subtotal)} via {order.paymentPreference} at
+              the counter. The {siteConfig.operations.takeoutFee} is not
+              included in that amount.
+            </li>
+          </ul>
+        </div>
       </section>
-    </main>
+    </div>
   );
 }

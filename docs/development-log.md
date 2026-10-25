@@ -913,9 +913,15 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Git branch:** `perf/home-intro-low-end-phones`\
 **Pull request:** [#44](https://github.com/eendor/Brew-ni-Cat-Connect/pull/44), self-reviewed and squash-merged into `main` on 2026-10-25\
 **Next action:** The physical-phone check, MAN-P4-007 (due Mon Nov 2), should include the home intro on a low-end Android phone.
-### FR-026 Order Confirmation Page Implementation
-- Created `src/lib/orders/fetch-order.ts` with RPC `get_online_order` integration and mock fallback fixture.
-- Implemented `src/app/orders/[reference]/page.tsx` covering loading, not-found, error, and confirmed states aligned with the dark theme.
-- Added a placeholder container for Renier's live order status tracker.
-- Added unit and component test suites in `tests/unit/fetch-order.test.ts` and `tests/unit/order-confirmation-page.test.tsx` (242/242 tests passing).
-- Documented test case `TC-P4-026` in `docs/test-cases.md`.
+
+## 2026-10-25 — Order confirmation page (FR-026)
+
+**Date:** 2026-10-25\
+**Phase:** Phase 4 — Cloud backend and customer accounts\
+**Task:** Show customers their order after Place order (FR-026).\
+**Summary:** `/orders/[reference]` loads one order with `get_online_order()` and the tracking token from the link, then shows its reference, status, items, subtotal, payment, notes, and next steps. It has loading, not-found, and error states, and a wrong reference or token looks the same as a missing order. While Place order is off on the live site, `npm run dev` shows a sample order at `/orders/BNC-234567` (development only). Renier's live tracker (week 2) goes under the header.\
+**Files/modules affected:** `src/app/orders/[reference]/page.tsx`, `src/lib/orders/fetch-order.ts`, `tests/unit/fetch-order.test.ts`, `tests/unit/order-confirmation-page.test.tsx`, `docs/test-cases.md`, `docs/functional-requirements.md`, `docs/development-log.md`.\
+**Testing performed:** `npm run lint` pass, `npm run typecheck` pass, `npm run test` 246/246 passed (TC-P4-129 to TC-P4-136), `npm run format:check` pass, `python3 scripts/validate_phase0_docs.py` PASS, `npm run build` pass.\
+**Git branch:** `feat/p4-order-confirmation`\
+**Pull request:** [#45](https://github.com/eendor/Brew-ni-Cat-Connect/pull/45)\
+**Next action:** Review by Van or Rodnee, then merge. Renier adds the live tracker in week 2.
