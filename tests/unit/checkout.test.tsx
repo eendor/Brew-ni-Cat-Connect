@@ -660,7 +660,8 @@ describe("Checkout Flow & Step Transitions", () => {
     // The subtotal should revalidate to ₱95, not ₱1
     expect(await screen.findByText("₱95")).toBeInTheDocument();
   });
-  it("TC-P3-CHK-010 — the progress bar marks only the current step with aria-current", async () => {
+
+  it("TC-P3-061 — the progress bar marks only the current step with aria-current", async () => {
     const user = userEvent.setup();
     renderCheckout(testCartState);
 

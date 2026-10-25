@@ -24,33 +24,33 @@ afterEach(() => {
 });
 
 describe("MenuCartBar", () => {
-  it("is hidden when the cart is empty", () => {
+  it("TC-P3-062 — is hidden when the cart is empty", () => {
     mockCart({ itemCount: 0, subtotal: 0, isEmpty: true });
     const { container } = render(<MenuCartBar />);
     expect(container.innerHTML).toBe("");
   });
 
-  it("is hidden until the cart has loaded", () => {
+  it("TC-P3-063 — is hidden until the cart has loaded", () => {
     mockCart({ isHydrated: false });
     const { container } = render(<MenuCartBar />);
     expect(container.innerHTML).toBe("");
   });
 
-  it("shows the count and total", () => {
+  it("TC-P3-064 — shows the count and total", () => {
     mockCart();
     const { container } = render(<MenuCartBar />);
     expect(container.textContent).toContain("3 items");
     expect(container.textContent).toContain("385");
   });
 
-  it("uses the singular for one item", () => {
+  it("TC-P3-065 — uses the singular for one item", () => {
     mockCart({ itemCount: 1, subtotal: 120 });
     const { container } = render(<MenuCartBar />);
     expect(container.textContent).toContain("1 item ·");
     expect(container.textContent).toContain("120");
   });
 
-  it("opens the drawer when the button is clicked", () => {
+  it("TC-P3-066 — opens the drawer when the button is clicked", () => {
     mockCart();
     render(<MenuCartBar />);
     fireEvent.click(screen.getByRole("button", { name: "View cart" }));
