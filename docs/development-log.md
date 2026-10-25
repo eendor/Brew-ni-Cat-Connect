@@ -925,3 +925,15 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Git branch:** `feat/p4-order-confirmation`\
 **Pull request:** [#45](https://github.com/eendor/Brew-ni-Cat-Connect/pull/45)\
 **Next action:** Review by Van or Rodnee, then merge. Renier adds the live tracker in week 2.
+
+## 2026-10-25 — Checkout step timer stops when the checkout closes
+
+**Date:** 2026-10-25\
+**Phase:** Phase 4 — Cloud backend and customer accounts\
+**Task:** Fix the failed CI run on `main` after PR #42.\
+**Summary:** Each checkout step change starts a 50 ms timer that scrolls the step into view and focuses its heading. Nothing cancelled it when the checkout closed, so when the last Place order test (TC-P4-102) ended within those 50 ms, the timer ran after the test environment was gone. Vitest then failed the run with `ReferenceError: window is not defined`, even though all 252 tests passed. The checkout now cancels the timer when it closes and when a newer step change replaces it. Customers see no change.\
+**Files/modules affected:** `src/components/checkout/checkout-view.tsx`, `tests/unit/checkout.test.tsx` (TC-P4-137), `docs/test-cases.md` and this log.\
+**Testing performed:** TC-P4-137 failed before the fix and passes after it. `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm test` (35 files / 253 tests passed), `python3 -I scripts/validate_phase0_docs.py` (PASS) and `npm run build` pass.\
+**Git branch:** `fix/checkout-step-timer`\
+**Pull request:** [#46](https://github.com/eendor/Brew-ni-Cat-Connect/pull/46), self-reviewed and squash-merged into `main` on 2026-10-25\
+**Next action:** None.

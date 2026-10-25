@@ -678,4 +678,29 @@ describe("Checkout Flow & Step Transitions", () => {
     expect(current()).toHaveLength(1);
     expect(current()[0]).toHaveTextContent("Send");
   });
+
+  it("TC-P4-137 — leaving checkout right after a step change cancels its scroll and focus", async () => {
+    const user = userEvent.setup();
+    const { unmount } = renderCheckout(testCartState);
+    await user.type(screen.getByLabelText(/Full Name/i), "Pedro Penduko");
+    await user.type(
+      screen.getByLabelText(/Contact Phone Number/i),
+      "09279876543",
+    );
+
+    // the step change and leaving the page happen in the same tick, so the
+    // 50 ms scroll-and-focus timer is still waiting when the checkout unmounts
+    fireEvent.click(
+      screen.getByRole("button", { name: /Continue to Order Review/i }),
+    );
+    unmount();
+    const matchMedia = vi.fn(() => ({ matches: false }));
+    vi.stubGlobal("matchMedia", matchMedia);
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      expect(matchMedia).not.toHaveBeenCalled();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
 });
