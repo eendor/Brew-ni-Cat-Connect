@@ -205,7 +205,12 @@ Added with the ordering core in PR #7 (2026-09-18): Vitest 69/69 passed; Playwri
 | TC-P3-058 | FR-017, FR-020 | Cart selectors | Sums quantities across variants of the same item | Cart contains multiple variants of the same item | Query the item's quantity | Returns the sum of quantities across its variants | Matched in the 156/156 Vitest run on PR #33 | Passed | `tests/unit/cart-selectors.test.ts` |
 | TC-P3-059 | FR-017, FR-020 | Cart selectors | Counts only the requested menu item | Cart contains multiple menu items | Query each item's quantity | Each result includes only that item's quantities | Matched in the 156/156 Vitest run on PR #33 | Passed | `tests/unit/cart-selectors.test.ts` |
 | TC-P3-060 | FR-017, FR-020, FR-022 | Menu ordering | Orders two Takoyaki on a phone and checks out with Rider Delivery | Pixel 7 viewport; menu mocked with one Takoyaki item | Open Menu from the phone nav; order Takoyaki 8 pcs Cheese with quantity 2; proceed to checkout, pick Rider Delivery, fill name and phone and continue without an address; add the address and continue to the rider summary | The drawer lists Takoyaki with "2 items" and the card shows a "2 in cart" badge outside the Order Takoyaki button; without an address the step stays and the rider address error shows; the summary heading reads "Order Summary for Your Rider", the three rider links show and Message on Facebook does not | Matched in the 17/17 Playwright chromium run on PR #33 | Passed | `tests/e2e/ordering.spec.ts` |
-
+| TC-P3-061 | Checkout progress bar active step | `checkout.test.tsx` | Unit | Passed | Marks active step with `aria-current="step"` |
+| TC-P3-062 | Menu cart bar empty state | `menu-cart-bar.test.tsx` | Unit | Passed | Hides bar when cart is empty |
+| TC-P3-063 | Menu cart bar hydration state | `menu-cart-bar.test.tsx` | Unit | Passed | Hides bar until cart has loaded |
+| TC-P3-064 | Menu cart bar count and total | `menu-cart-bar.test.tsx` | Unit | Passed | Displays total item count and formatted price |
+| TC-P3-065 | Menu cart bar single item wording | `menu-cart-bar.test.tsx` | Unit | Passed | Uses singular noun for single item |
+| TC-P3-066 | Menu cart bar drawer trigger | `menu-cart-bar.test.tsx` | Unit | Passed | Opens cart drawer when clicked |
 ## 11. Phase 3 Menu Photos and Motion Cases
 
 Run on 2026-10-15 for branch `feat/menu-photos-motion`: Vitest 109/109 passed in 14 files; Playwright 13/13 passed.
