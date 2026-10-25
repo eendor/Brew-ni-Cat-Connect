@@ -39,7 +39,8 @@ vi.mock("@/lib/orders/fetch-order", () => ({
 
 // Mock order link hash reader
 vi.mock("@/lib/orders/order-link", () => ({
-  readTrackingTokenFromHash: () => "1234567890123456789012345678901234567890123",
+  readTrackingTokenFromHash: () =>
+    "1234567890123456789012345678901234567890123",
 }));
 
 describe("OrderConfirmationPage Component Tests", () => {

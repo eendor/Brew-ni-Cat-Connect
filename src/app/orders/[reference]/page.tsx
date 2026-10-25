@@ -14,7 +14,8 @@ type PageState =
 
 export default function OrderConfirmationPage() {
   const params = useParams();
-  const referenceParam = typeof params.reference === "string" ? params.reference : "";
+  const referenceParam =
+    typeof params.reference === "string" ? params.reference : "";
   const [state, setState] = useState<PageState>({ status: "loading" });
 
   useEffect(() => {
@@ -66,7 +67,9 @@ export default function OrderConfirmationPage() {
     return (
       <main className="container mx-auto max-w-xl px-4 py-20 text-center">
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-8">
-          <h1 className="text-2xl font-bold text-white uppercase tracking-wide">Order Not Found</h1>
+          <h1 className="text-2xl font-bold text-white uppercase tracking-wide">
+            Order Not Found
+          </h1>
           <p className="mt-3 text-zinc-400 text-sm">
             We couldn't find an order matching this reference or tracking link.
           </p>
@@ -79,7 +82,9 @@ export default function OrderConfirmationPage() {
     return (
       <main className="container mx-auto max-w-xl px-4 py-20 text-center">
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-8">
-          <h1 className="text-2xl font-bold text-red-500 uppercase tracking-wide">Something Went Wrong</h1>
+          <h1 className="text-2xl font-bold text-red-500 uppercase tracking-wide">
+            Something Went Wrong
+          </h1>
           <p className="mt-3 text-zinc-400 text-sm">{state.message}</p>
           <button
             onClick={() => window.location.reload()}
@@ -103,7 +108,10 @@ export default function OrderConfirmationPage() {
               Order Confirmed
             </h1>
             <p className="text-sm text-zinc-400 mt-1 font-mono">
-              Reference: <span className="text-emerald-400 font-semibold">{order.reference}</span>
+              Reference:{" "}
+              <span className="text-emerald-400 font-semibold">
+                {order.reference}
+              </span>
             </p>
           </div>
           <span className="self-start sm:self-auto uppercase text-xs font-bold px-4 py-1.5 rounded-full bg-amber-400/10 text-amber-400 border border-amber-400/20 tracking-wider">
@@ -130,21 +138,35 @@ export default function OrderConfirmationPage() {
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
             <div>
-              <p className="text-zinc-500 text-xs uppercase font-medium">Name</p>
-              <p className="text-white font-medium mt-0.5">{order.customerName}</p>
+              <p className="text-zinc-500 text-xs uppercase font-medium">
+                Name
+              </p>
+              <p className="text-white font-medium mt-0.5">
+                {order.customerName}
+              </p>
             </div>
             <div>
-              <p className="text-zinc-500 text-xs uppercase font-medium">Payment</p>
-              <p className="text-white font-medium mt-0.5">{order.paymentPreference}</p>
+              <p className="text-zinc-500 text-xs uppercase font-medium">
+                Payment
+              </p>
+              <p className="text-white font-medium mt-0.5">
+                {order.paymentPreference}
+              </p>
             </div>
             <div>
-              <p className="text-zinc-500 text-xs uppercase font-medium">Fulfillment</p>
-              <p className="text-white font-medium capitalize mt-0.5">{order.fulfillment}</p>
+              <p className="text-zinc-500 text-xs uppercase font-medium">
+                Fulfillment
+              </p>
+              <p className="text-white font-medium capitalize mt-0.5">
+                {order.fulfillment}
+              </p>
             </div>
           </div>
           {order.notes && (
             <div className="mt-4 pt-4 border-t border-zinc-800/80">
-              <p className="text-zinc-500 text-xs uppercase font-medium">Notes</p>
+              <p className="text-zinc-500 text-xs uppercase font-medium">
+                Notes
+              </p>
               <p className="text-zinc-300 text-sm mt-0.5">{order.notes}</p>
             </div>
           )}
@@ -157,15 +179,22 @@ export default function OrderConfirmationPage() {
           </h2>
           <ul className="divide-y divide-zinc-800">
             {order.items.map((item) => (
-              <li key={item.itemId} className="py-4 flex justify-between items-center text-sm">
+              <li
+                key={item.itemId}
+                className="py-4 flex justify-between items-center text-sm"
+              >
                 <div>
-                  <p className="font-semibold text-white text-base">{item.itemName}</p>
+                  <p className="font-semibold text-white text-base">
+                    {item.itemName}
+                  </p>
                   <p className="text-zinc-400 text-xs mt-0.5">
                     {item.variantName} {item.flavor ? `• ${item.flavor}` : ""}
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-white font-semibold text-base">₱{item.lineTotal.toFixed(2)}</p>
+                  <p className="text-white font-semibold text-base">
+                    ₱{item.lineTotal.toFixed(2)}
+                  </p>
                   <p className="text-xs text-zinc-500">Qty: {item.quantity}</p>
                 </div>
               </li>
@@ -173,7 +202,9 @@ export default function OrderConfirmationPage() {
           </ul>
 
           <div className="flex justify-between items-center text-xl font-bold border-t border-zinc-800 pt-5 mt-2">
-            <span className="text-white uppercase text-sm tracking-wider">Subtotal</span>
+            <span className="text-white uppercase text-sm tracking-wider">
+              Subtotal
+            </span>
             <span className="text-white">₱{order.subtotal.toFixed(2)}</span>
           </div>
         </div>

@@ -1,5 +1,9 @@
 import { getPublicSupabaseClient } from "@/lib/supabase/public-client";
-import { isOrderReference, isTrackingToken, OrderView } from "@/lib/orders/types";
+import {
+  isOrderReference,
+  isTrackingToken,
+  OrderView,
+} from "@/lib/orders/types";
 
 // Keep fixture for local work while Place order is off on live site
 const USE_MOCK_DATA = true;
@@ -48,7 +52,7 @@ const MOCK_ORDER: OrderView = {
 
 export async function fetchOrder(
   reference: string,
-  trackingToken: string
+  trackingToken: string,
 ): Promise<OrderView | null> {
   if (!isOrderReference(reference) || !isTrackingToken(trackingToken)) {
     return null;
