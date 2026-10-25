@@ -237,6 +237,7 @@ export function CheckoutView({
   >([]);
   const [copyState, setCopyState] = useState<CopyState>("idle");
   const copyTimerRef = useRef<number | undefined>(undefined);
+  const stepTimerRef = useRef<number | undefined>(undefined);
   const summaryTextRef = useRef<HTMLPreElement>(null);
 
   // Place order (pickup only; rider delivery always copies a summary)
@@ -276,6 +277,7 @@ export function CheckoutView({
   }, [summaryIsStale]);
 
   useEffect(() => () => window.clearTimeout(copyTimerRef.current), []);
+  useEffect(() => () => window.clearTimeout(stepTimerRef.current), []);
 
   // Revalidate cart prices against authoritative menu on mount
   useEffect(() => {
@@ -300,8 +302,10 @@ export function CheckoutView({
   function goToStep(nextStep: CheckoutStep) {
     setStep(nextStep);
     // after the step renders, bring its form section (not the page hero)
-    // to the top under the sticky header and move focus to its heading
-    setTimeout(() => {
+    // to the top under the sticky header and move focus to its heading.
+    // A newer step change or leaving the page cancels it.
+    window.clearTimeout(stepTimerRef.current);
+    stepTimerRef.current = window.setTimeout(() => {
       const reduce = window.matchMedia?.(
         "(prefers-reduced-motion: reduce)",
       ).matches;
