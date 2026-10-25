@@ -913,3 +913,9 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Git branch:** `perf/home-intro-low-end-phones`\
 **Pull request:** [#44](https://github.com/eendor/Brew-ni-Cat-Connect/pull/44), self-reviewed and squash-merged into `main` on 2026-10-25\
 **Next action:** The physical-phone check, MAN-P4-007 (due Mon Nov 2), should include the home intro on a low-end Android phone.
+### FR-026 Order Confirmation Page Implementation
+- Created `src/lib/orders/fetch-order.ts` with RPC `get_online_order` integration and mock fallback fixture.
+- Implemented `src/app/orders/[reference]/page.tsx` covering loading, not-found, error, and confirmed states aligned with the dark theme.
+- Added a placeholder container for Renier's live order status tracker.
+- Added unit and component test suites in `tests/unit/fetch-order.test.ts` and `tests/unit/order-confirmation-page.test.tsx` (242/242 tests passing).
+- Documented test case `TC-P4-026` in `docs/test-cases.md`.
