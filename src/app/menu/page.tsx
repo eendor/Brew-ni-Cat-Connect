@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { MenuCatalog } from "@/components/menu/menu-catalog";
 import { MenuHero } from "@/components/three/menu-hero";
 import { Container } from "@/components/ui/container";
+import { MenuCartBar } from "@/components/cart/menu-cart-bar";
 
 export const metadata: Metadata = {
   title: "Current Menu",
@@ -34,6 +35,8 @@ export default function MenuPage() {
           <MenuCatalog />
         </Container>
       </section>
+
+      <MenuCartBar />
     </>
   );
 }
