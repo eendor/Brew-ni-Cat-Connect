@@ -988,3 +988,13 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `feat/p3-gallery-facebook-photos`.
 - **Next action:** None. The photos were already public on the shop's Facebook page and the owner confirmed the customers are fine with it.
 
+## 2026-10-26 — Smoother page transitions
+
+- **Phase:** 3 (motion follow-up)
+- **Task:** Stop the stutter in the page-transition title card and its rising text.
+- **Summary:** The route curtain, its title and its underline now use the browser's own animations and move only `transform`, so they keep playing while the new page renders and hydrates behind them. The wipe is a slide instead of an animated `clip-path`, which repainted the full screen every frame. Heading lines get `will-change: transform` for their entrance.
+- **Files:** `src/components/motion/route-curtain.tsx`, `src/app/globals.css`.
+- **Testing:** TC-P4-022 and TC-P4-026 still pass.
+- **Branch / PR:** `fix/p3-smooth-page-transition`.
+- **Next action:** Check smoothness on a real phone in MAN-P4-007.
+
