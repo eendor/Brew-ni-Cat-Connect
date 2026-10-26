@@ -937,3 +937,14 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Git branch:** `fix/checkout-step-timer`\
 **Pull request:** [#46](https://github.com/eendor/Brew-ni-Cat-Connect/pull/46), self-reviewed and squash-merged into `main` on 2026-10-25\
 **Next action:** None.
+
+## 2026-10-26 — Requirements for the owner area, live prices, and mini-games
+
+- **Phase:** 9 (planned)
+- **Task:** Turn the instructor's check feedback into requirements.
+- **Summary:** Added FR-082–FR-091 (owner area, menu and price editing, shop settings, no hardcoded prices, audit, loyalty prizes, mini-games, ads only in the mini-game area, prize redemption) and ADR-017. The docs validator now expects FR-001–FR-091. The menu already reads live prices from the POS tables; the home showcase "From ₱" prices and the takeout box fee are the remaining hardcoded prices.
+- **Files:** `docs/functional-requirements.md`, `docs/decisions.md`, `docs/srs.md`, `docs/system-architecture.md`, `docs/execution-paths.md`, `docs/evidence/phase-0-verification.md`, `scripts/validate_phase0_docs.py`.
+- **Testing:** Docs validation PASS, Prettier clean.
+- **Branch / PR:** `docs/owner-dashboard-and-games`.
+- **Next action:** Confirm prize rules and ad account with the owner, then plan the Phase 9 cards.
+

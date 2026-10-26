@@ -227,3 +227,15 @@ This manual state is a temporary functional-verification condition, not a revisi
 - One checkout attempt saves one order: the browser sends an idempotency key, and a retry gets the same order back (FR-024).
 - Guests open their order with the reference and a 43-character tracking token. The token goes in the link's `#` fragment, so it never reaches a server log, and the database keeps only its SHA-256 hash (FR-045).
 - With the flag off, pickup checkout keeps the copy-summary flow from ADR-012 and the route answers 503. Rider delivery always keeps the summary, because the rider orders at the counter.
+
+## ADR-017 — Owner Area, Live Prices, and Loyalty Mini-Games
+
+**Decision:** The shop owner gets a separate owner area (`/owner`) to edit menu items, prices, availability, shop settings, loyalty rewards, and mini-game prizes. Every customer-facing price and fee is read from saved data; none stays in the page code. Owner writes go through `security definer` database functions that check an owner role in the signed-in user's `app_metadata`, so the browser uses only the publishable key and no privileged key exists in the app (FR-037). Loyalty mini-games are decided on the server, limited per customer per day, and pay out loyalty points. Advertising appears only in the mini-game area, after consent.\
+**Date:** 2026-10-26\
+**Status:** Proposed. Not started.\
+**Context:** The instructor's check on 2026-10-26 asked for dynamic prices on every page, an owner side where the owner customizes the menu and prices, and mini-programs in loyalty where customers can win prizes and ads can earn revenue. The menu already reads live prices from the POS tables; the home showcase "From ₱" prices and the takeout box fee are still written in code.\
+**Consequences:**
+- The POS keeps its tables. The owner area and the POS edit the same catalog, so the owner area records every change in the audit table (FR-079, FR-087).
+- Checkout keeps pricing from the database at the moment of ordering (ADR-016), so a price change never changes an order already placed.
+- Prizes need the owner's rules. A game with real prizes may need a promo permit; keep results skill-based or points-based until the owner confirms. **TODO: Confirm with Brew ni Cat owner.**
+- Advertising needs an approved ad account and a domain the team controls; ads never load before consent and never appear on menu, cart, checkout, order, or account pages (FR-090).

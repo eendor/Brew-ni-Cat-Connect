@@ -226,6 +226,7 @@ Only requirements-justified domains will be designed. Candidate domains include 
 | Messenger | FR-058–FR-064 | Phase 7 | Planned; transactional/AI portions conditional |
 | Android | FR-065–FR-070 | Phase 8 | Planned; notifications conditional |
 | Administration / POS integration | FR-071–FR-081 | Phases 4 and 6 | Planned |
+| Owner area, live prices, loyalty mini-games | FR-082–FR-091 | Phase 9 | Planned; prizes and advertising conditional |
 | Cross-cutting quality | NFR-001–NFR-040 | All applicable phases | Planned |
 
 Each implementation pull request must cite applicable requirement IDs. Each test case must cite at least one requirement. A requirement may move to Implemented or Tested only when the corresponding code/evidence exists.
