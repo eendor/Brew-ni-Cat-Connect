@@ -101,6 +101,7 @@ function start() {
             // re-splits (fonts loading, resizes) keep the animation's place
             animation = gsap.from(self.lines, {
               yPercent: 112,
+              force3D: true,
               duration: 1.15,
               ease: EASE.enter,
               stagger: 0.09,
@@ -124,6 +125,7 @@ function start() {
             gsap.to(block, {
               autoAlpha: 1,
               y: 0,
+              force3D: true,
               duration: 1.1,
               ease: EASE.enter,
               delay: delay + extra,

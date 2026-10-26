@@ -1013,3 +1013,13 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `feat/p3-3d-in-order-dialog`.
 - **Next action:** Phone check of the dialog in MAN-P4-007.
 
+
+## 2026-10-26 — Smoother rising text on page entrances
+
+- **Phase:** 3 (motion follow-up)
+- **Task:** The heading lines and blocks that rise into place stuttered on page entrances.
+- **Summary:** Each rising line now has its own compositor layer (`will-change: transform`, `backface-visibility: hidden`) and the GSAP tweens force 3D transforms, so the rise no longer repaints the heading every frame. Timings, the curtain and reduced-motion behavior are unchanged.
+- **Files:** `src/components/motion/motion-director.tsx`, `src/app/globals.css`.
+- **Testing:** TC-P4-022 and TC-P4-026 on a fresh build; checked by eye on a phone in MAN-P4-007.
+- **Branch / PR:** `fix/p3-text-rise-smooth`.
+- **Next action:** Ask the team to confirm the rise feels smooth in MAN-P4-007.

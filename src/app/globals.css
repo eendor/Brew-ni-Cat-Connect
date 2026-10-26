@@ -1757,6 +1757,12 @@ html[data-motion="on"]:not([data-motion-live])
   }
 }
 
+/* each rising line gets its own layer so the rise is composited, not repainted */
+.split-line {
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
 /* line masks for split headings: room for descenders under tight leading */
 .split-line-mask {
   margin-bottom: -0.1em;
