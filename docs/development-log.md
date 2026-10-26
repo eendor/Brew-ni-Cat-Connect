@@ -968,3 +968,13 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `feat/p3-live-3d-menu-cards`.
 - **Next action:** Phone frame-time check in MAN-P4-007.
 
+## 2026-10-26 — Home showcase runs on its own reel
+
+- **Phase:** 3 (home showcase follow-up)
+- **Task:** Keep the home showcase separate from the page scroll and remove the stutter on its transitions.
+- **Summary:** The showcase was a 520vh pinned section whose items changed with the page scroll. It is now one screen tall; the reel advances on its own every few seconds while on screen, on a swipe, or from the item buttons, and the page scrolls normally past it. The glow colour behind the hero now updates a few times a second instead of every frame, which removes a full-section restyle during each transition.
+- **Files:** `src/components/three/home-showcase.tsx`, `src/components/three/canvas/showcase-canvas.tsx`, `src/app/globals.css`, `tests/e2e/three.spec.ts` (TC-P4-145), `docs/test-cases.md`.
+- **Testing:** TC-P4-145 added; TC-P4-001, TC-P4-005 and TC-P4-128 still pass.
+- **Branch / PR:** `fix/p3-showcase-own-reel`.
+- **Next action:** Check smoothness on a real phone in MAN-P4-007.
+

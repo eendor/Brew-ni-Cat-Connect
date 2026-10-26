@@ -504,6 +504,33 @@ async function showCard(page: Page, item: MenuItem) {
   return { media, canvas };
 }
 
+test("TC-P4-145 — the home showcase is one screen tall, runs on its own, and does not follow the page scroll", async ({
+  page,
+}) => {
+  const errors = collectErrors(page);
+  await page.goto("/");
+  await expect(page.locator(".showcase--ready")).toBeVisible({
+    timeout: 45_000,
+  });
+  const section = page.locator("#home-showcase");
+  const height = (await section.boundingBox())?.height ?? 0;
+  const viewport = page.viewportSize()?.height ?? 0;
+  expect(height).toBeLessThanOrEqual(viewport + 2);
+  // picking an item moves the reel
+  const ticks = page.locator(".showcase__ticks button");
+  await ticks.nth(2).click();
+  await expect(ticks.nth(2)).toHaveAttribute("aria-current", "true", {
+    timeout: 20_000,
+  });
+  // scrolling the page leaves the hero behind without changing the pick
+  await page.mouse.wheel(0, 400);
+  await expect
+    .poll(() => page.evaluate(() => window.scrollY), { timeout: 20_000 })
+    .toBeGreaterThan(100);
+  await expect(ticks.nth(2)).toHaveAttribute("aria-current", "true");
+  expect(errors).toEqual([]);
+});
+
 test("TC-P4-001 — home renders the 3D showcase, not a blank canvas", async ({
   page,
 }) => {
