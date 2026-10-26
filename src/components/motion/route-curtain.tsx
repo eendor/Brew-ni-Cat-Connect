@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 
 import { setCurtainCovering } from "./curtain-state";
-import { EASE, gsap, motionAllowed } from "./gsap";
+import { motionAllowed } from "./gsap";
 
 /** The title card shown while each page loads. */
 const TITLES: Readonly<Record<string, string>> = {
@@ -17,6 +17,30 @@ const TITLES: Readonly<Record<string, string>> = {
   "/cart": "Your Order",
   "/checkout": "Checkout",
 };
+
+/**
+ * The curtain runs on the browser's own animations and moves only
+ * `transform`, so the compositor plays it even while the new page renders
+ * and hydrates behind it. Easings match the site's gsap curves.
+ */
+const EASE_WIPE = "cubic-bezier(0.83, 0, 0.17, 1)";
+const EASE_ENTER = "cubic-bezier(0.16, 1, 0.3, 1)";
+const EASE_EXIT = "cubic-bezier(0.32, 0, 0.67, 0)";
+
+function play(
+  element: HTMLElement,
+  from: string,
+  to: string,
+  duration: number,
+  easing: string,
+  property: "transform" = "transform",
+) {
+  return element.animate([{ [property]: from }, { [property]: to }], {
+    duration,
+    easing,
+    fill: "forwards",
+  });
+}
 
 /** Longest the curtain waits for a page before opening anyway. */
 const MAX_WAIT_MS = 6000;
@@ -71,27 +95,52 @@ export function RouteCurtain() {
     const title = titleRef.current;
     const line = lineRef.current;
     if (!curtain || !title || !line) return;
-    let animation: gsap.core.Timeline | null = null;
+    let running: Animation[] = [];
     let timer: number | undefined;
+    // bumped on every start, so a stale step from an earlier run stands down
+    let run = 0;
+
+    const stopAll = () => {
+      running.forEach((animation) => animation.cancel());
+      running = [];
+    };
 
     const open = () => {
       fromRef.current = null;
       window.clearTimeout(timer);
       setCurtainCovering(false);
-      animation?.kill();
-      animation = gsap
-        .timeline({ delay: 0.05 })
-        .to(title, { yPercent: -115, duration: 0.35, ease: EASE.exit })
-        .to(
-          curtain,
-          {
-            clipPath: "inset(0% 0% 100% 0%)",
-            duration: 0.65,
-            ease: EASE.wipe,
-          },
-          "-=0.2",
-        )
-        .set(curtain, { visibility: "hidden" });
+      stopAll();
+      const mine = ++run;
+      const lift = play(
+        title,
+        "translateY(0%)",
+        "translateY(-115%)",
+        350,
+        EASE_EXIT,
+      );
+      lift.pause();
+      const wipe = play(
+        curtain,
+        "translateY(0%)",
+        "translateY(-100%)",
+        650,
+        EASE_WIPE,
+      );
+      wipe.pause();
+      running = [lift, wipe];
+      window.setTimeout(() => {
+        if (mine !== run) return;
+        lift.play();
+        window.setTimeout(() => {
+          if (mine !== run) return;
+          wipe.play();
+          wipe.finished
+            .then(() => {
+              if (mine === run) curtain.style.visibility = "hidden";
+            })
+            .catch(() => {});
+        }, 150);
+      }, 50);
     };
     openRef.current = open;
 
@@ -106,25 +155,36 @@ export function RouteCurtain() {
       fromRef.current = window.location.pathname;
       title.textContent = TITLES[url.pathname] ?? "Brew ni Cat";
       setCurtainCovering(true);
-      animation?.kill();
-      animation = gsap
-        .timeline()
-        .set(curtain, {
-          visibility: "visible",
-          clipPath: "inset(100% 0% 0% 0%)",
-        })
-        .set(title, { yPercent: 115 })
-        .set(line, { scaleX: 0 })
-        .to(curtain, {
-          clipPath: "inset(0% 0% 0% 0%)",
-          duration: 0.5,
-          ease: EASE.wipe,
-        })
-        .add(() => {
+      stopAll();
+      const mine = ++run;
+      curtain.style.visibility = "visible";
+      const cover = play(
+        curtain,
+        "translateY(100%)",
+        "translateY(0%)",
+        500,
+        EASE_WIPE,
+      );
+      const rise = play(
+        title,
+        "translateY(115%)",
+        "translateY(0%)",
+        700,
+        EASE_ENTER,
+      );
+      const draw = play(line, "scaleX(0)", "scaleX(1)", 900, EASE_ENTER);
+      rise.pause();
+      draw.pause();
+      running = [cover, rise, draw];
+      cover.finished
+        .then(() => {
+          if (mine !== run) return;
+          // the title starts rising as the page change begins
+          rise.play();
+          draw.play();
           router.push(`${url.pathname}${url.search}${url.hash}`);
         })
-        .to(title, { yPercent: 0, duration: 0.7, ease: EASE.enter }, "-=0.3")
-        .to(line, { scaleX: 1, duration: 0.9, ease: EASE.enter }, "<");
+        .catch(() => {});
       window.clearTimeout(timer);
       timer = window.setTimeout(() => {
         if (fromRef.current) open();
@@ -135,7 +195,7 @@ export function RouteCurtain() {
     return () => {
       window.removeEventListener("click", onClick, true);
       window.clearTimeout(timer);
-      animation?.kill();
+      stopAll();
       setCurtainCovering(false);
     };
   }, [router]);
