@@ -1,23 +1,20 @@
 "use client";
 
-import Image from "next/image";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 import { useCart } from "@/context/cart-context";
 import { getItemQuantityInCart } from "@/lib/ordering/cart-selectors";
-import { modelSpecFor } from "@/components/three/menu-models";
-import { useThreeEnabled } from "@/components/three/use-three-enabled";
-import { getMenuItemImage } from "@/config/menu-item-images";
 import { formatOptionName } from "@/lib/menu/format-name";
 import { formatPrice, getLowestItemPrice } from "@/lib/menu/format-price";
 import type { MenuCatalog, MenuItem, MenuVariant } from "@/types/menu";
 
 import { MenuItemOrderDialog } from "./menu-item-order-dialog";
-import { MenuItemViewer, type ViewerPick } from "./menu-item-viewer";
+import { MenuItemMedia } from "./menu-item-media";
 
 type MenuItemCardProps = Readonly<{
   item: MenuItem;
   catalog?: MenuCatalog;
+  categoryName?: string;
 }>;
 
 function getItemPrices(item: MenuItem): readonly (number | null)[] {
@@ -57,45 +54,31 @@ function isSimpleVariant(variant: MenuVariant) {
   );
 }
 
-export function MenuItemCard({ item, catalog }: MenuItemCardProps) {
+export function MenuItemCard({
+  item,
+  catalog,
+  categoryName = "",
+}: MenuItemCardProps) {
   const [isOrderOpen, setIsOrderOpen] = useState(false);
-  const [isViewerOpen, setIsViewerOpen] = useState(false);
   const { state: cartState } = useCart();
   const cartQuantity = getItemQuantityInCart(cartState, item.id);
-  // the size and flavor picked in the 3D viewer, if the order came from it
-  const [orderPreset, setOrderPreset] = useState<ViewerPick | null>(null);
-  const threeEnabled = useThreeEnabled();
-  const hasModel = useMemo(() => modelSpecFor(item) !== null, [item]);
   const prices = getItemPrices(item).filter(
     (price): price is number => price !== null,
   );
   const lowestPrice = getLowestItemPrice(prices);
   const singlePrice = new Set(prices).size === 1;
   const unavailable = item.availability === "unavailable";
-  const image = getMenuItemImage(item.name);
   const { base, nickname } = splitName(item.name);
   const canOrder =
     item.availability === "available" && item.variants.length > 0;
   const simpleSizes =
     item.variants.length > 0 && item.variants.every(isSimpleVariant);
-  // the 3D button appears after hydration, only with WebGL and motion on
-  const canView = threeEnabled && hasModel;
 
   return (
     <article
       className={`menu-card${unavailable ? " menu-card--unavailable" : ""}`}
     >
-      {image ? (
-        <div className="menu-card__media">
-          <Image
-            src={image.src}
-            alt={image.alt}
-            fill
-            sizes="(min-width: 1280px) 30vw, (min-width: 768px) 45vw, 92vw"
-            className="object-cover"
-          />
-        </div>
-      ) : null}
+      <MenuItemMedia item={item} categoryName={categoryName} />
 
       <div className="menu-card__body">
         <div className="menu-card__head">
@@ -215,66 +198,33 @@ export function MenuItemCard({ item, catalog }: MenuItemCardProps) {
           </p>
         )}
 
-        {canOrder || canView ? (
+        {canOrder ? (
           <div className="menu-card__footer">
-            {canView ? (
+            <div className="menu-card__order-group">
               <button
                 type="button"
-                onClick={() => setIsViewerOpen(true)}
-                className="button-ghost menu-card__view3d"
-                aria-label={`View ${item.name} in 3D`}
-                aria-haspopup="dialog"
+                data-order-trigger=""
+                onClick={() => setIsOrderOpen(true)}
+                className="button-primary menu-card__order"
+                aria-label={`Order ${item.name}`}
               >
-                View in 3D
+                Add to order
               </button>
-            ) : null}
-            {canOrder ? (
-              <div className="menu-card__order-group">
-                <button
-                  type="button"
-                  data-order-trigger=""
-                  onClick={() => {
-                    setOrderPreset(null);
-                    setIsOrderOpen(true);
-                  }}
-                  className="button-primary menu-card__order"
-                  aria-label={`Order ${item.name}`}
-                >
-                  Add to order
-                </button>
 
-                {cartQuantity > 0 ? (
-                  <span className="menu-card__cart-badge">
-                    {cartQuantity} in cart
-                  </span>
-                ) : null}
-              </div>
-            ) : null}
+              {cartQuantity > 0 ? (
+                <span className="menu-card__cart-badge">
+                  {cartQuantity} in cart
+                </span>
+              ) : null}
+            </div>
           </div>
         ) : null}
       </div>
-
-      {isViewerOpen ? (
-        <MenuItemViewer
-          item={item}
-          onClose={() => setIsViewerOpen(false)}
-          onOrder={
-            canOrder
-              ? (pick) => {
-                  setOrderPreset(pick);
-                  setIsOrderOpen(true);
-                }
-              : undefined
-          }
-        />
-      ) : null}
 
       {isOrderOpen ? (
         <MenuItemOrderDialog
           item={item}
           catalog={catalog}
-          initialVariantId={orderPreset?.variantId}
-          initialFlavor={orderPreset?.flavor}
           onClose={() => setIsOrderOpen(false)}
         />
       ) : null}

@@ -241,3 +241,18 @@ This manual state is a temporary functional-verification condition, not a revisi
 - Checkout keeps pricing from the database at the moment of ordering (ADR-016), so a price change never changes an order already placed.
 - Prizes need the owner's rules. A game with real prizes may need a promo permit; keep results skill-based or points-based until the owner confirms. **TODO: Confirm with Brew ni Cat owner.**
 - Advertising needs an approved ad account and a domain the team controls; ads never load before consent and never appear on menu, cart, checkout, order, or account pages (FR-090).
+
+## ADR-018 — Live 3D Menu Cards Through One Shared WebGL Stage
+
+**Decision:** Each Menu card shows its product floating in 3D by default, with no View in 3D button and no pop-up viewer. One shared WebGL canvas draws every card's model and copies the picture into a plain 2D canvas on each card. Items without a hand-built model get a generic model by category (a cup for drinks, otherwise a take-out box). Photos stay only as the fallback for devices without WebGL or with reduced motion, and when the stage fails.\
+**Date:** 2026-10-26\
+**Status:** Accepted\
+**Context:** The instructor's check asked for a menu that feels alive and for new products to appear without code changes. The old viewer needed a tap, and only items named in a code registry had a model. A WebGL context per card would exceed what phones allow, and one fixed overlay canvas would lag behind scrolling cards.\
+**Alternatives considered:** one context per card (too many contexts on phones); one fixed full-screen canvas behind the page (models drift against scrolling cards); keeping the button and dialog (does not meet the request); deleting the photos (leaves no fallback for old phones and reduced-motion users).\
+**Consequences:**
+- Only one WebGL context exists on the Menu, however long the menu is. Models build one at a time when a card nears the screen and are freed when it is far away; a card left behind keeps its last picture.
+- At most six cards (three on phones, two after a slow-frame check) are drawn each frame, nearest the screen centre first, at a capped pixel ratio.
+- The size and flavor chips of the old viewer are gone; the card shows the item's default model. The order dialog still offers every size and flavor.
+- A product added in the POS appears on the Menu with a 3D model on the next load (FR-083, FR-086). A better model for it is a later design task, not a requirement for it to appear.
+- The `chromium-3d` browser tests draw on software GL and prove each card names the right model and draws; frame time on a real phone is covered by the phone check (MAN-P4-007).
+

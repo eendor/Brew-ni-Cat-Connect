@@ -8,10 +8,9 @@ import {
   type Page,
 } from "@playwright/test";
 
-import { defaultFlavor, modelSpecFor } from "@/components/three/menu-models";
-import { formatOptionName } from "@/lib/menu/format-name";
+import { menuModelSpec } from "@/components/three/menu-models";
 import { mapMenuCatalog } from "@/lib/menu/map-menu-catalog";
-import type { MenuItem, MenuVariant } from "@/types/menu";
+import type { MenuItem } from "@/types/menu";
 
 /**
  * The WebGL layer (src/components/three). Runs in the "chromium-3d"
@@ -438,27 +437,27 @@ function liveItem(name: string) {
   return found;
 }
 
-/** The model the viewer should show for a pick, from the same registry. */
-const modelKey = (
-  item: MenuItem,
-  variant: MenuVariant | undefined,
-  flavor: string | null,
-) => modelSpecFor(item, variant, flavor)?.key ?? "no model";
-
-/** The stage's own text and photo, hidden so a pixel check sees the scene. */
-const HIDE_STAGE_TEXT =
-  ".menu-viewer__photo, .menu-viewer__status, .menu-viewer__hint { visibility: hidden !important; }";
+/** The model a card should float, from the same registry the page uses. */
+const cardModelKey = (item: MenuItem) => {
+  const category = liveCatalog.categories.find((entry) =>
+    entry.items.some((candidate) => candidate.id === item.id),
+  );
+  return menuModelSpec(item, category?.name ?? "").key;
+};
 
 /**
  * Opens the Menu on the live items and scrolls past the 3D hero, which
- * pauses its scene and leaves the (software) GPU to the item viewer.
+ * pauses its scene and leaves the (software) GPU to the menu cards.
  */
-async function openLiveMenu(page: Page) {
+async function openLiveMenu(
+  page: Page,
+  extraRows: ReadonlyArray<(typeof liveRows)[number]> = [],
+) {
   await page.route("**/rest/v1/categories*", (route) =>
     route.fulfill({ json: liveCategories }),
   );
   await page.route("**/rest/v1/items*", (route) =>
-    route.fulfill({ json: liveRows }),
+    route.fulfill({ json: [...liveRows, ...extraRows] }),
   );
   await page.goto("/menu");
   await expect(page.locator(".menu-hero--ready")).toBeAttached({
@@ -473,83 +472,36 @@ async function openLiveMenu(page: Page) {
   });
 }
 
+/** A menu card's picture area, found by the item's name. */
+const cardMedia = (page: Page, item: MenuItem) =>
+  page
+    .locator("article.menu-card")
+    .filter({
+      has: page.getByRole("heading", { name: item.name, exact: true }),
+    })
+    .locator(".menu-card__media");
+
 /**
- * Waits until the stage shows a lit scene, not a blank canvas: the canvas
- * has faded in after its first model, and what it draws has contrast.
- * Software GL draws a frame or two a second, so this polls.
+ * Scrolls a card into view and waits until its model floats there: the
+ * stage has drawn its first frame, names the right model, and what it
+ * draws has contrast. Software GL draws a frame or two a second, so this
+ * polls.
  */
-async function expectDrawn(stage: Locator, label: string) {
-  await expect(stage.locator(".menu-viewer__canvas"), label).toHaveCSS(
-    "opacity",
-    "1",
-    { timeout: 15_000 },
-  );
+async function showCard(page: Page, item: MenuItem) {
+  const media = cardMedia(page, item);
+  await media.scrollIntoViewIfNeeded();
+  await expect(media, item.name).toHaveAttribute("data-stage", "ready", {
+    timeout: 90_000,
+  });
+  const canvas = media.locator(".menu-card__stage");
+  await expect(canvas).toHaveAttribute("data-model", cardModelKey(item));
   await expect
-    .poll(() => pixelSpread(stage, HIDE_STAGE_TEXT), {
-      message: `${label} is drawn`,
+    .poll(() => pixelSpread(media), {
+      message: `${item.name} is drawn`,
       timeout: 30_000,
     })
     .toBeGreaterThan(12);
-}
-
-/** The exit plays at software GL's frame or two a second, so allow time. */
-const CLOSED = { timeout: 30_000 };
-
-/** Opens an item's 3D preview and waits for its first model. */
-async function openViewer(
-  page: Page,
-  item: MenuItem,
-  action: "click" | "tap" = "click",
-) {
-  await page
-    .getByRole("button", { name: `View ${item.name} in 3D`, exact: true })
-    [action]();
-  const viewer = page.getByRole("dialog", { name: item.name, exact: true });
-  const stage = viewer.locator(".menu-viewer__stage");
-  const canvas = viewer.locator(".menu-viewer__canvas");
-  await expect(stage, item.name).toHaveAttribute("data-state", "ready", {
-    timeout: 90_000,
-  });
-  await expect(canvas).toHaveAttribute(
-    "data-model",
-    modelKey(item, item.variants[0], defaultFlavor(item, item.variants[0])),
-  );
-  return { viewer, stage, canvas };
-}
-
-/**
- * Opens an item's 3D preview, checks its model is drawn, then picks every
- * size and every flavor in turn, waiting each time until the model for
- * that pick has been built, compiled and put on screen.
- */
-async function tourViewer(page: Page, item: MenuItem) {
-  const { viewer, stage, canvas } = await openViewer(page, item);
-  await expectDrawn(stage, item.name);
-
-  let variant = item.variants[0];
-  let flavor = defaultFlavor(item, variant);
-  const pick = async (name: string) => {
-    await viewer.getByRole("button", { name, exact: true }).click();
-    await expect(canvas, `${item.name}: ${name}`).toHaveAttribute(
-      "data-model",
-      modelKey(item, variant, flavor),
-      { timeout: 60_000 },
-    );
-  };
-  for (const next of item.variants.slice(1)) {
-    variant = next;
-    // a size priced per flavor starts on a flavor when none is picked yet
-    flavor ??= defaultFlavor(item, next);
-    await pick(formatOptionName(next.name));
-  }
-  for (const next of item.flavors) {
-    if (next === flavor) continue;
-    flavor = next;
-    await pick(next);
-  }
-  await expect(stage).toHaveAttribute("data-state", "ready");
-  await viewer.getByRole("button", { name: "Close 3D preview" }).click();
-  await expect(viewer).toHaveCount(0, CLOSED);
+  return { media, canvas };
 }
 
 test("TC-P4-001 — home renders the 3D showcase, not a blank canvas", async ({
@@ -608,7 +560,7 @@ test("TC-P4-002 — every page mounts its 3D layer without console or hydration 
   expect(errors).toEqual([]);
 });
 
-test("TC-P4-003 — menu cards show plain photos and Add to Order tosses into the real cart", async ({
+test("TC-P4-003 — menu cards show a photo or the 3D picture, and Add to Order tosses into the real cart", async ({
   page,
 }) => {
   const errors = collectErrors(page);
@@ -617,14 +569,18 @@ test("TC-P4-003 — menu cards show plain photos and Add to Order tosses into th
   await expect(
     page.getByRole("button", { name: "Order Buldak Carbo" }),
   ).toBeVisible({ timeout: 45_000 });
-  // menu photos are plain images, not 3D tiles
+  // cards use the shared stage, not per-card 3D tiles, and show no button
   await expect(page.locator("[data-three-tile]")).toHaveCount(0);
   await expect(page.getByText("Ready to enjoy?")).toHaveCount(0);
-  // the DOM photo keeps its alt text for screen readers
+  await expect(page.getByRole("button", { name: /in 3D/i })).toHaveCount(0);
+  // the photo (or, once drawn, the 3D picture) keeps a text alternative
   await expect(
-    page.getByRole("img", {
-      name: "Buldak Carbo spicy noodles with a fried egg",
-    }),
+    page
+      .getByRole("img", {
+        name: "Buldak Carbo spicy noodles with a fried egg",
+      })
+      .or(page.getByRole("img", { name: /3D picture/ }))
+      .first(),
   ).toBeAttached();
 
   await page.getByRole("button", { name: "Order Buldak Carbo" }).click();
@@ -807,29 +763,19 @@ test("TC-P4-026 — the checkout heading follows each step after its split entra
   expect(errors).toEqual([]);
 });
 
-test("TC-P4-052 — a menu item opens in 3D, spins, and orders the option picked there", async ({
+test("TC-P4-052 — a menu card floats its item in 3D with no button, spins on drag, and orders", async ({
   page,
 }) => {
   const problems = collectProblems(page);
   const carbo = liveItem("Buldak Carbo");
-  const withEgg = carbo.variants.find(
-    (entry) => entry.name === "Carbo Samyang w/ Egg",
-  );
   await openLiveMenu(page);
-  const { viewer, stage, canvas } = await openViewer(page, carbo);
-  await expect(viewer.getByText("3D preview", { exact: true })).toBeVisible();
-  await expectDrawn(stage, carbo.name);
-  // the real photo stays in the corner of the stage
-  await expect(
-    viewer.getByRole("img", {
-      name: "Buldak Carbo spicy noodles with a fried egg",
-    }),
-  ).toBeVisible();
+  const { media, canvas } = await showCard(page, carbo);
+  await expect(page.getByRole("button", { name: /in 3D/i })).toHaveCount(0);
 
   // drag to spin: the canvas takes the drag and keeps drawing after it. The
-  // model also turns on its own (and a slow GPU drops effects), so the grab
-  // state proves the drag and the pixels prove the drawing.
-  const before = await stage.screenshot({ style: HIDE_STAGE_TEXT });
+  // model also turns on its own, so the grab state proves the drag and the
+  // pixels prove the drawing.
+  const before = await media.screenshot();
   const box = await canvas.boundingBox();
   if (!box) throw new Error("the 3D canvas is not on screen");
   await page.mouse.move(box.x + box.width * 0.35, box.y + box.height / 2);
@@ -841,81 +787,100 @@ test("TC-P4-052 — a menu item opens in 3D, spins, and orders the option picked
   await page.mouse.up();
   await expect(canvas).not.toHaveClass(/is-dragging/);
   await expect
-    .poll(
-      async () =>
-        changedShare(before, await stage.screenshot({ style: HIDE_STAGE_TEXT }))
-          .whole,
-      { message: "the scene keeps drawing after the drag", timeout: 30_000 },
-    )
+    .poll(async () => changedShare(before, await media.screenshot()).whole, {
+      message: "the scene keeps drawing after the drag",
+      timeout: 30_000,
+    })
     .toBeGreaterThan(0.01);
 
-  // an option picked in 3D swaps the model in place and carries its price
-  await viewer
-    .getByRole("button", { name: "Carbo Samyang w/ Egg", exact: true })
+  // Add to order still opens the order dialog and fills the cart
+  await page
+    .getByRole("button", { name: "Order Buldak Carbo", exact: true })
     .click();
-  await expect(viewer.getByTestId("menu-viewer-price")).toHaveText("₱135");
-  await expect(canvas).toHaveAttribute(
-    "data-model",
-    modelKey(carbo, withEgg, null),
-    { timeout: 60_000 },
-  );
-
-  // ...and into the order: the order dialog opens on the same option
-  await viewer
-    .getByRole("button", { name: "Add Buldak Carbo to order", exact: true })
-    .click();
-  await expect(page.locator(".menu-viewer__stage")).toHaveCount(0, CLOSED);
   const order = page.getByRole("dialog").filter({ hasText: "Configure item" });
   await expect(order).toBeVisible({ timeout: 15_000 });
-  await expect(
-    order.getByRole("button", { name: /^Carbo Samyang w\/ Egg/ }),
-  ).toHaveAttribute("aria-pressed", "true");
   await order.getByRole("button", { name: "Add to Order" }).click();
   const drawer = page.locator('[aria-labelledby="cart-drawer-title"]');
   await expect(drawer).toBeVisible({ timeout: 10_000 });
   await expect(drawer).toContainText("Buldak Carbo");
-  await expect(drawer).toContainText("₱135");
   expect(problems).toEqual([]);
 });
 
-test("TC-P4-053 — every noodle dish has a 3D model for each option and flavor", async ({
+test("TC-P4-144 — a product the owner adds later floats as a generic 3D model with no redeploy", async ({
   page,
 }) => {
+  const problems = collectProblems(page);
+  const extra = [
+    row("live-drinks", "Brown Sugar Boba", [option("boba", "16oz", 85)]),
+    row("live-treats", "Cat Ear Headband", [option("band", "Regular", 120)]),
+  ];
+  await openLiveMenu(page, extra);
+  const catalog = mapMenuCatalog(liveCategories, [...liveRows, ...extra]);
+  const find = (name: string) => {
+    for (const category of catalog.categories) {
+      const found = category.items.find((entry) => entry.name === name);
+      if (found) return { item: found, category: category.name };
+    }
+    throw new Error(`${name} is not on the menu`);
+  };
+  const drink = find("Brown Sugar Boba");
+  const other = find("Cat Ear Headband");
+  // neither has a hand-built model: a drink gets a cup, anything else a box
+  expect(menuModelSpec(drink.item, drink.category)).toMatchObject({
+    kind: "cup",
+  });
+  expect(menuModelSpec(other.item, other.category)).toMatchObject({
+    kind: "takeout-box",
+  });
+  for (const { item, category } of [drink, other]) {
+    const media = cardMedia(page, item);
+    await media.scrollIntoViewIfNeeded();
+    await expect(media, item.name).toHaveAttribute("data-stage", "ready", {
+      timeout: 90_000,
+    });
+    await expect(media.locator(".menu-card__stage")).toHaveAttribute(
+      "data-model",
+      menuModelSpec(item, category).key,
+    );
+    await expect
+      .poll(() => pixelSpread(media), { timeout: 30_000 })
+      .toBeGreaterThan(12);
+  }
+  expect(problems).toEqual([]);
+});
+
+test("TC-P4-053 — every noodle card floats its model", async ({ page }) => {
   test.setTimeout(600_000);
   const problems = collectProblems(page);
   await openLiveMenu(page);
-  for (const item of liveItems("live-noodles")) await tourViewer(page, item);
+  for (const item of liveItems("live-noodles")) await showCard(page, item);
   expect(problems).toEqual([]);
 });
 
-test("TC-P4-054 — every bite has a 3D model for each size and flavor", async ({
-  page,
-}) => {
+test("TC-P4-054 — every bite card floats its model", async ({ page }) => {
   test.setTimeout(600_000);
   const problems = collectProblems(page);
   await openLiveMenu(page);
-  for (const item of liveItems("live-bites")) await tourViewer(page, item);
+  for (const item of liveItems("live-bites")) await showCard(page, item);
   expect(problems).toEqual([]);
 });
 
-test("TC-P4-055 — every drink has a 3D model for each size and flavor", async ({
-  page,
-}) => {
+test("TC-P4-055 — every drink card floats its model", async ({ page }) => {
   test.setTimeout(600_000);
   const problems = collectProblems(page);
   await openLiveMenu(page);
-  for (const item of liveItems("live-drinks")) await tourViewer(page, item);
+  for (const item of liveItems("live-drinks")) await showCard(page, item);
   expect(problems).toEqual([]);
 });
 
-test("TC-P4-056 — every combo, the take-out box and the cat treats have 3D models", async ({
+test("TC-P4-056 — every combo, the take-out box and the cat treats card floats its model", async ({
   page,
 }) => {
   test.setTimeout(600_000);
   const problems = collectProblems(page);
   await openLiveMenu(page);
   for (const item of liveItems("live-combos", "live-box", "live-treats")) {
-    await tourViewer(page, item);
+    await showCard(page, item);
   }
   expect(problems).toEqual([]);
 });
@@ -1013,42 +978,35 @@ test.describe("phone", () => {
     expect(errors).toEqual([]);
   });
 
-  test("TC-P4-057 — on a phone the 3D preview fits the screen and answers taps", async ({
+  test("TC-P4-057 — on a phone the 3D card fits the screen and the order button answers taps", async ({
     page,
   }) => {
     const problems = collectProblems(page);
     const takoyaki = liveItem("Takoyaki (Pawsome Balls)");
-    const sixteen = takoyaki.variants.find((entry) => entry.name === "16pcs");
     await openLiveMenu(page);
-    const { viewer, stage, canvas } = await openViewer(page, takoyaki, "tap");
-    await expectDrawn(stage, takoyaki.name);
+    const { media, canvas } = await showCard(page, takoyaki);
     // phones draw at a capped pixel ratio, not the screen's 2.6×
     const ratio = await canvas.evaluate(
       (element: HTMLCanvasElement) => element.width / element.clientWidth,
     );
     expect(ratio).toBeLessThanOrEqual(1.26);
-    // the panel fits the screen, with no sideways scroll
-    const panel = await viewer.locator("[data-overlay=panel]").boundingBox();
-    if (!panel) throw new Error("the 3D preview panel is not on screen");
+    // the picture fits the screen, with no sideways scroll
+    const frame = await media.boundingBox();
+    if (!frame) throw new Error("the 3D card is not on screen");
     const width = page.viewportSize()?.width ?? 0;
-    expect(panel.x).toBeGreaterThanOrEqual(0);
-    expect(panel.x + panel.width).toBeLessThanOrEqual(width + 0.5);
+    expect(frame.x).toBeGreaterThanOrEqual(0);
+    expect(frame.x + frame.width).toBeLessThanOrEqual(width + 0.5);
     expect(
       await page.evaluate(
         () => document.documentElement.scrollWidth - window.innerWidth,
       ),
     ).toBeLessThanOrEqual(0);
-
-    // a size priced per flavor keeps the flavor shown and its price
-    await viewer.getByRole("button", { name: "16pcs", exact: true }).tap();
-    await expect(canvas).toHaveAttribute(
-      "data-model",
-      modelKey(takoyaki, sixteen, "Veggie Whiskers"),
-      { timeout: 60_000 },
-    );
-    await expect(viewer.getByTestId("menu-viewer-price")).toHaveText("₱150");
-    await viewer.getByRole("button", { name: "Close 3D preview" }).tap();
-    await expect(viewer).toHaveCount(0, CLOSED);
+    await page
+      .getByRole("button", { name: `Order ${takoyaki.name}`, exact: true })
+      .tap();
+    await expect(
+      page.getByRole("dialog").filter({ hasText: "Configure item" }),
+    ).toBeVisible({ timeout: 15_000 });
     expect(problems).toEqual([]);
   });
 

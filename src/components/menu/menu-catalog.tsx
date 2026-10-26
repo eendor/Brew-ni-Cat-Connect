@@ -331,6 +331,7 @@ export function MenuCatalog({ loadMenu = fetchPublicMenu }: MenuCatalogProps) {
                     key={item.id}
                     item={item}
                     catalog={viewState.catalog}
+                    categoryName={category.name}
                   />
                 ))}
               </div>

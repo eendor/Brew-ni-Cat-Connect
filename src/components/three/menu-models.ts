@@ -540,3 +540,39 @@ export function modelSpecFor(
       return withMeta({ kind: "bottled-water" }, "#5EE1FF");
   }
 }
+
+const DRINK_CATEGORY = /drink|beverage|coffee|soda|tea|water|latte|juice/i;
+
+/**
+ * The model shown on a Menu card. Items with a hand-built model use it; any
+ * other item, such as one the owner adds later, gets a generic stand-in by
+ * category so every card floats in 3D without waiting for a redeploy.
+ */
+export function menuModelSpec(
+  item: MenuItem,
+  categoryName: string,
+  variant?: MenuVariant | null,
+  flavor?: string | null,
+): ModelSpec {
+  const built = modelSpecFor(item, variant, flavor);
+  if (built) {
+    return built;
+  }
+  const glow = glowForItem(item.name);
+  if (DRINK_CATEGORY.test(categoryName)) {
+    const size = variant ?? item.variants[0] ?? null;
+    const generic = look(
+      [
+        [0, "#c9a27a"],
+        [0.6, "#e7d3b8"],
+        [1, "#f3e8d8"],
+      ],
+      { milky: true },
+    );
+    return withMeta(
+      { kind: "cup", scale: cupScale(size?.name ?? ""), drink: generic },
+      glow,
+    );
+  }
+  return withMeta({ kind: "takeout-box" }, glow);
+}
