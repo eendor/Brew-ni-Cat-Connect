@@ -986,5 +986,5 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Files:** `public/images/shop/photo_160.jpg`–`photo_177.jpg`, `src/config/gallery.ts`, `tests/unit/gallery-config.test.ts` (TC-P4-146), `tests/unit/business-pages.test.tsx`, `docs/test-cases.md`, `docs/security-and-privacy.md`.
 - **Testing:** TC-P4-146 added; the gallery page test limit raised to 60.
 - **Branch / PR:** `feat/p3-gallery-facebook-photos`.
-- **Next action:** Owner to confirm the customers shown are fine with it.
+- **Next action:** None. The photos were already public on the shop's Facebook page and the owner confirmed the customers are fine with it.
 
