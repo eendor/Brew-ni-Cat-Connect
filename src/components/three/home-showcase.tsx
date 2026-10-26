@@ -3,7 +3,13 @@
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useRef, useState, type CSSProperties } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
 
 import { showcaseItems } from "./showcase-data";
 import { useThreeEnabled } from "./use-three-enabled";
@@ -17,38 +23,77 @@ const SECTION_ID = "home-showcase";
 /**
  * Home hero. Server and first client render are the static version: the
  * real headline, CTAs and the five featured items as photo cards. With
- * WebGL and normal motion, it becomes a pinned 3D showcase that turns
- * through the same five items as you scroll.
+ * WebGL and normal motion, it becomes a 3D showcase that turns through
+ * the same five items on its own, or when you swipe or pick one. The page
+ * scrolls normally past it.
  */
 export function HomeShowcase() {
   const enabled = useThreeEnabled();
   const [failed, setFailed] = useState(false);
   const [ready, setReady] = useState(false);
   const [active, setActive] = useState(0);
+  const [target, setTarget] = useState(0);
+  const pausedUntil = useRef(0);
+  const onScreen = useRef(true);
   const glowRef = useRef<HTMLElement | null>(null);
   const lastGlow = useRef("");
   const three = enabled && !failed;
   const current = showcaseItems[active] ?? showcaseItems[0];
 
   const onProduct = useCallback((index: number) => setActive(index), []);
+  const lastGlowAt = useRef(0);
   const onGlow = useCallback((hex: string) => {
     if (hex === lastGlow.current) return;
+    // the colour changes every frame of a transition; restyling the whole
+    // section that often stutters, so it updates a few times a second
+    const now = performance.now();
+    if (now - lastGlowAt.current < 120) return;
     lastGlow.current = hex;
+    lastGlowAt.current = now;
     glowRef.current?.style.setProperty("--glow", hex);
   }, []);
   const onReady = useCallback(() => setReady(true), []);
   const onError = useCallback(() => setFailed(true), []);
 
   function jumpTo(index: number) {
+    // a pick holds the reel for a while before it moves on by itself
+    pausedUntil.current = performance.now() + 12_000;
+    setTarget(index);
+  }
+
+  // the reel advances on its own while the hero is on screen; the page
+  // scrolls normally past it
+  useEffect(() => {
+    if (!three || !ready) return;
     const section = document.getElementById(SECTION_ID);
-    if (!section) return;
-    const length = section.offsetHeight - window.innerHeight;
-    const last = showcaseItems.length - 1;
-    const q = index === 0 ? 0 : (index + 0.2) / (last + 0.5);
-    window.scrollTo({
-      top: section.offsetTop + length * Math.min(1, q),
-      behavior: "smooth",
+    const observer = new IntersectionObserver((entries) => {
+      onScreen.current = entries.some((entry) => entry.isIntersecting);
     });
+    if (section) observer.observe(section);
+    const timer = window.setInterval(() => {
+      if (!onScreen.current || document.hidden) return;
+      if (performance.now() < pausedUntil.current) return;
+      setTarget((index) => (index + 1) % showcaseItems.length);
+    }, 5500);
+    return () => {
+      window.clearInterval(timer);
+      observer.disconnect();
+    };
+  }, [three, ready]);
+
+  // swipe or drag sideways across the stage to change item
+  const swipe = useRef<number | null>(null);
+  function onPointerDown(event: React.PointerEvent) {
+    swipe.current = event.clientX;
+  }
+  function onPointerUp(event: React.PointerEvent) {
+    const from = swipe.current;
+    swipe.current = null;
+    if (from === null) return;
+    const dx = event.clientX - from;
+    if (Math.abs(dx) < 48) return;
+    const count = showcaseItems.length;
+    jumpTo((target + (dx < 0 ? 1 : count - 1)) % count);
   }
 
   return (
@@ -61,10 +106,15 @@ export function HomeShowcase() {
     >
       <div className="showcase__sticky">
         {three ? (
-          <div className="showcase__stage" aria-hidden="true">
+          <div
+            className="showcase__stage"
+            aria-hidden="true"
+            onPointerDown={onPointerDown}
+            onPointerUp={onPointerUp}
+          >
             <ShowcaseCanvas
               items={showcaseItems}
-              sectionId={SECTION_ID}
+              target={target}
               onProduct={onProduct}
               onGlow={onGlow}
               onReady={onReady}

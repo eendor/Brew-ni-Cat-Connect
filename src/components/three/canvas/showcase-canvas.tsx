@@ -1,18 +1,24 @@
 "use client";
 
 import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+import { useEffect, useRef } from "react";
 
 import { watchVisible } from "../engine/runtime";
 import { initShowcase } from "../scenes/showcase";
 import type { ShowcaseItem } from "../showcase-data";
 import { useScene } from "./use-scene";
 
-gsap.registerPlugin(ScrollTrigger);
+/** Progress (0..1) at which the scene rests on a featured item. */
+function reelPosition(index: number, count: number) {
+  const last = Math.max(1, count - 1);
+  return index <= 0 ? 0 : Math.min(1, (index + 0.2) / (last + 0.5));
+}
 
 type ShowcaseCanvasProps = Readonly<{
   items: readonly ShowcaseItem[];
-  sectionId: string;
+  /** Index of the featured item to show; changes tween the reel to it. */
+  target: number;
   onProduct: (index: number) => void;
   onGlow: (hex: string) => void;
   onReady: () => void;
@@ -21,29 +27,37 @@ type ShowcaseCanvasProps = Readonly<{
 
 export default function ShowcaseCanvas({
   items,
-  sectionId,
+  target,
   onProduct,
   onGlow,
   onReady,
   onError,
 }: ShowcaseCanvasProps) {
+  const targetRef = useRef(target);
+  const reelRef = useRef<((index: number) => void) | null>(null);
+  useEffect(() => {
+    targetRef.current = target;
+    reelRef.current?.(target);
+  }, [target]);
+
   const canvasRef = useScene(
     async (canvas, quality) => {
-      const section = document.getElementById(sectionId);
-      if (!section) throw new Error("showcase section missing");
-      // the trigger is created once the scene exists, so a failed start
-      // leaves nothing behind
-      let trigger: ScrollTrigger | null = null;
+      // the reel moves on its own, not with the page: `reel.t` is the same
+      // 0..1 progress the scene used to read from the page scroll
+      const reel = { t: reelPosition(targetRef.current, items.length) };
       const scene = await initShowcase(canvas, items, quality, {
         onProduct,
         onGlow,
-        progress: () => trigger?.progress ?? 0,
+        progress: () => reel.t,
       });
-      trigger = ScrollTrigger.create({
-        trigger: section,
-        start: "top top",
-        end: "bottom bottom",
-      });
+      reelRef.current = (index: number) => {
+        gsap.to(reel, {
+          t: reelPosition(index, items.length),
+          duration: 1.6,
+          ease: "power3.inOut",
+          overwrite: true,
+        });
+      };
       // the intro starts once two frames are on screen: the shared ticker
       // has no lag smoothing, so a slow first frame on a phone would
       // otherwise skip part of it
@@ -65,7 +79,8 @@ export default function ShowcaseCanvas({
         },
         dispose: () => {
           intro?.kill();
-          trigger?.kill();
+          reelRef.current = null;
+          gsap.killTweensOf(reel);
           visible.dispose();
           scene.dispose();
         },

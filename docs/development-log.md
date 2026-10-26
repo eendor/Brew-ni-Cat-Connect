@@ -958,3 +958,23 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `docs/owner-side-in-pos`.
 - **Next action:** Ask the owner about prizes and the ad account, then plan the Phase 9 cards.
 
+## 2026-10-26 — Menu cards float their product in 3D
+
+- **Phase:** 3 (menu, follow-up to the Menu 3D viewer)
+- **Task:** Remove the View in 3D button and show each product floating in 3D on its card, including products with no hand-built model.
+- **Summary:** One shared WebGL stage (`scenes/menu-stage.ts`) draws every card's model and copies the picture into a 2D canvas on each card, with a slow bob and turn and drag to spin. Unknown items get a generic cup or take-out box by category (`menuModelSpec`). The photo stays only as the fallback. The old viewer dialog, its canvas and scene, and its CSS were removed. ADR-018 records the design.
+- **Files:** `src/components/three/scenes/menu-stage.ts`, `src/components/three/canvas/menu-stage-canvas.tsx`, `src/components/menu/menu-item-media.tsx`, `src/components/menu/menu-item-card.tsx`, `src/components/menu/menu-catalog.tsx`, `src/components/three/menu-models.ts`, `src/app/globals.css`, `tests/unit/menu-stage-card.test.tsx` (renamed from `menu-viewer.test.tsx`), `tests/e2e/three.spec.ts`, `docs/test-cases.md`, `docs/decisions.md`.
+- **Testing:** TC-P4-138 – TC-P4-144 added; TC-P4-052 – TC-P4-057 reworked for cards; TC-P4-044 – TC-P4-050 marked superseded, not deleted.
+- **Branch / PR:** `feat/p3-live-3d-menu-cards`.
+- **Next action:** Phone frame-time check in MAN-P4-007.
+
+## 2026-10-26 — Home showcase runs on its own reel
+
+- **Phase:** 3 (home showcase follow-up)
+- **Task:** Keep the home showcase separate from the page scroll and remove the stutter on its transitions.
+- **Summary:** The showcase was a 520vh pinned section whose items changed with the page scroll. It is now one screen tall; the reel advances on its own every few seconds while on screen, on a swipe, or from the item buttons, and the page scrolls normally past it. The glow colour behind the hero now updates a few times a second instead of every frame, which removes a full-section restyle during each transition.
+- **Files:** `src/components/three/home-showcase.tsx`, `src/components/three/canvas/showcase-canvas.tsx`, `src/app/globals.css`, `tests/e2e/three.spec.ts` (TC-P4-145), `docs/test-cases.md`.
+- **Testing:** TC-P4-145 added; TC-P4-001, TC-P4-005 and TC-P4-128 still pass.
+- **Branch / PR:** `fix/p3-showcase-own-reel`.
+- **Next action:** Check smoothness on a real phone in MAN-P4-007.
+

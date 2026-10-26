@@ -354,6 +354,8 @@ Teammates' commits, and Renier's PR #6 title (`QA: Phase 2 independent QA result
 ## 2026-10-20 — Menu 3D viewer for every item and the Contact sign fit (PR #32)
 
 **Module:** `src/components/menu/menu-item-viewer.tsx`, `src/components/three/menu-models.ts`, `src/components/three/scenes/menu-models-3d.ts`, `src/components/three/scenes/menu-viewer.ts`, `src/components/menu/menu-item-order-dialog.tsx`, `src/components/three/scenes/visit.ts`\
+
+_Update (ADR-018): the viewer dialog described here was replaced by live 3D cards on a shared stage; the review points about the registry, disposal and fallbacks now apply to `menu-stage.ts` and `menu-item-media.tsx`._
 **Author:** Rodnee Glen Martin\
 **Reviewer:** Rodnee Glen Martin (self-review)\
 **Date:** 2026-10-20
