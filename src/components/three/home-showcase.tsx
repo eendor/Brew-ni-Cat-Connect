@@ -81,6 +81,36 @@ export function HomeShowcase() {
     };
   }, [three, ready]);
 
+  // the mouse wheel steps through the items while the page is at its top;
+  // at the first and last item, or once the page has moved, it scrolls the
+  // page as usual
+  const targetNow = useRef(0);
+  useEffect(() => {
+    targetNow.current = target;
+  }, [target]);
+  useEffect(() => {
+    if (!three || !ready) return;
+    const section = document.getElementById(SECTION_ID);
+    if (!section) return;
+    let lockedUntil = 0;
+    const onWheel = (event: WheelEvent) => {
+      if (window.scrollY > 8) return;
+      if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) return;
+      if (Math.abs(event.deltaY) < 4) return;
+      const next = targetNow.current + (event.deltaY > 0 ? 1 : -1);
+      if (next < 0 || next >= showcaseItems.length) return;
+      event.preventDefault();
+      const now = performance.now();
+      // one step per wheel gesture, however long the gesture's tail is
+      if (now < lockedUntil) return;
+      lockedUntil = now + 900;
+      pausedUntil.current = now + 12_000;
+      setTarget(next);
+    };
+    section.addEventListener("wheel", onWheel, { passive: false });
+    return () => section.removeEventListener("wheel", onWheel);
+  }, [three, ready]);
+
   // swipe or drag sideways across the stage to change item
   const swipe = useRef<number | null>(null);
   function onPointerDown(event: React.PointerEvent) {

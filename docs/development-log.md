@@ -998,3 +998,13 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `fix/p3-smooth-page-transition`.
 - **Next action:** Check smoothness on a real phone in MAN-P4-007.
 
+## 2026-10-26 — Showcase steps with the mouse wheel
+
+- **Phase:** 3 (home showcase follow-up)
+- **Task:** Let the visitor move through the home showcase with the mouse wheel.
+- **Summary:** While the page is at its top, one wheel gesture over the showcase moves to the next or previous item and does not scroll the page. At the first or last item, or once the page has moved, the wheel scrolls the page as usual. TC-P4-145 now scrolls with `scrollTo` so it no longer depends on wheel timing.
+- **Files:** `src/components/three/home-showcase.tsx`, `tests/e2e/three.spec.ts` (TC-P4-145, TC-P4-147), `docs/test-cases.md`.
+- **Testing:** TC-P4-145 and TC-P4-147.
+- **Branch / PR:** `feat/p3-showcase-wheel`.
+- **Next action:** Check on a real mouse and trackpad in MAN-P4-007.
+

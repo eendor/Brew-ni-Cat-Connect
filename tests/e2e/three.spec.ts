@@ -516,18 +516,62 @@ test("TC-P4-145 — the home showcase is one screen tall, runs on its own, and d
   const height = (await section.boundingBox())?.height ?? 0;
   const viewport = page.viewportSize()?.height ?? 0;
   expect(height).toBeLessThanOrEqual(viewport + 2);
-  // picking an item moves the reel
+  // scrolling the page far past the hero leaves the current item alone: it
+  // changes by its own timer, swipe or buttons, and only while it is on screen
   const ticks = page.locator(".showcase__ticks button");
-  await ticks.nth(2).click();
-  await expect(ticks.nth(2)).toHaveAttribute("aria-current", "true", {
+  const current = () =>
+    ticks.evaluateAll((buttons) =>
+      buttons.findIndex((button) => button.hasAttribute("aria-current")),
+    );
+  const before = await current();
+  await page.evaluate(() => window.scrollTo(0, 3000));
+  await expect
+    .poll(() => page.evaluate(() => window.scrollY), { timeout: 20_000 })
+    .toBeGreaterThan(1000);
+  await page.waitForTimeout(1500);
+  expect(await current()).toBe(before);
+  expect(errors).toEqual([]);
+});
+
+test("TC-P4-147 — the mouse wheel steps through the showcase at the top, and the page keeps the wheel everywhere else", async ({
+  page,
+}) => {
+  const errors = collectErrors(page);
+  await page.goto("/");
+  await expect(page.locator(".showcase--ready")).toBeVisible({
+    timeout: 45_000,
+  });
+  const ticks = page.locator(".showcase__ticks button");
+  await ticks.first().click();
+  await expect(ticks.first()).toHaveAttribute("aria-current", "true", {
     timeout: 20_000,
   });
-  // scrolling the page leaves the hero behind without changing the pick
-  await page.mouse.wheel(0, 400);
+  // sends a cancelable wheel event to the showcase; true means the page
+  // keeps it (the showcase did not use it)
+  const wheel = (deltaY: number) =>
+    page.evaluate((delta) => {
+      const section = document.getElementById("home-showcase");
+      const event = new WheelEvent("wheel", {
+        deltaY: delta,
+        bubbles: true,
+        cancelable: true,
+      });
+      return section ? section.dispatchEvent(event) : null;
+    }, deltaY);
+  // at the first item, scrolling up has nothing to step back to
+  expect(await wheel(-120)).toBe(true);
+  // scrolling down at the top steps forward instead of moving the page
+  expect(await wheel(120)).toBe(false);
+  await expect(ticks.nth(1)).toHaveAttribute("aria-current", "true", {
+    timeout: 30_000,
+  });
+  expect(await page.evaluate(() => window.scrollY)).toBeLessThan(8);
+  // once the page has moved, the wheel belongs to the page
+  await page.evaluate(() => window.scrollTo(0, 400));
   await expect
     .poll(() => page.evaluate(() => window.scrollY), { timeout: 20_000 })
     .toBeGreaterThan(100);
-  await expect(ticks.nth(2)).toHaveAttribute("aria-current", "true");
+  expect(await wheel(120)).toBe(true);
   expect(errors).toEqual([]);
 });
 
