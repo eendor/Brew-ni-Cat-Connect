@@ -26,6 +26,8 @@ import {
 } from "@/lib/ordering/cart-pricing";
 import type { MenuCatalog, MenuItem } from "@/types/menu";
 
+import { MenuOrderPreview } from "./menu-order-preview";
+
 const emptySubscribe = () => () => {};
 
 type MenuItemOrderDialogProps = Readonly<{
@@ -35,6 +37,8 @@ type MenuItemOrderDialogProps = Readonly<{
   initialVariantId?: string;
   /** Opens with this flavor picked, when the item lists it. */
   initialFlavor?: string | null;
+  /** Used to pick a generic 3D model for items without a photo. */
+  categoryName?: string;
   onClose: () => void;
 }>;
 
@@ -43,6 +47,7 @@ export function MenuItemOrderDialog({
   catalog,
   initialVariantId,
   initialFlavor,
+  categoryName = "",
   onClose,
 }: MenuItemOrderDialogProps) {
   const { addItem, openDrawer } = useCart();
@@ -337,6 +342,13 @@ export function MenuItemOrderDialog({
             </svg>
           </button>
         </div>
+
+        <MenuOrderPreview
+          item={item}
+          categoryName={categoryName}
+          variant={selectedVariant ?? null}
+          flavor={selectedFlavor}
+        />
 
         <div className="mt-6 space-y-6">
           {/* Variant Selection Fieldset */}

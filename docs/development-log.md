@@ -998,3 +998,18 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Testing:** TC-P4-022 and TC-P4-026 cover the curtain.
 - **Branch / PR:** `revert/p3-curtain`.
 - **Next action:** Smooth only the text-line rise.
+
+- **Testing:** TC-P4-022 and TC-P4-026 still pass.
+- **Branch / PR:** `fix/p3-smooth-page-transition`.
+- **Next action:** Check smoothness on a real phone in MAN-P4-007.
+
+## 2026-10-26 — 3D moves into the Add to order dialog
+
+- **Phase:** 3 (menu follow-up)
+- **Task:** Remove the pop-in 3D on Menu cards; show products floating in 3D only in the Add to order dialog.
+- **Summary:** Menu cards are plain photos again. The dialog floats the item's built model, or a generic cup or box. Photo cut-outs were tried and dropped after review: the background removal left artifacts. ADR-018 is superseded by ADR-019. The earlier card-stage PR (#49) was closed because #50 had already carried that work to main. The Home showcase now advances every 3.5 s instead of 5.5 s.
+- **Files:** `src/components/menu/menu-order-preview.tsx`, `menu-item-media.tsx`, `menu-item-card.tsx`, `menu-item-order-dialog.tsx`, `src/components/three/menu-models.ts`, `scenes/menu-models-3d.ts`, `scenes/menu-stage.ts`, `src/config/menu-item-images.ts`, `src/app/globals.css`, tests TC-P4-003, 052–056, 138–144, 148.
+- **Testing:** Vitest 8/8 in the reworked file; TC-P4-052 and TC-P4-144 pass on software GL.
+- **Branch / PR:** `feat/p3-3d-in-order-dialog`.
+- **Next action:** Phone check of the dialog in MAN-P4-007.
+

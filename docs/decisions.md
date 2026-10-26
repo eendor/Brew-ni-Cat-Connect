@@ -246,7 +246,7 @@ This manual state is a temporary functional-verification condition, not a revisi
 
 **Decision:** Each Menu card shows its product floating in 3D by default, with no View in 3D button and no pop-up viewer. One shared WebGL canvas draws every card's model and copies the picture into a plain 2D canvas on each card. Items without a hand-built model get a generic model by category (a cup for drinks, otherwise a take-out box). Photos stay only as the fallback for devices without WebGL or with reduced motion, and when the stage fails.\
 **Date:** 2026-10-26\
-**Status:** Accepted\
+**Status:** Superseded by ADR-019\
 **Context:** The instructor's check asked for a menu that feels alive and for new products to appear without code changes. The old viewer needed a tap, and only items named in a code registry had a model. A WebGL context per card would exceed what phones allow, and one fixed overlay canvas would lag behind scrolling cards.\
 **Alternatives considered:** one context per card (too many contexts on phones); one fixed full-screen canvas behind the page (models drift against scrolling cards); keeping the button and dialog (does not meet the request); deleting the photos (leaves no fallback for old phones and reduced-motion users).\
 **Consequences:**
@@ -256,3 +256,14 @@ This manual state is a temporary functional-verification condition, not a revisi
 - A product added in the POS appears on the Menu with a 3D model on the next load (FR-083, FR-086). A better model for it is a later design task, not a requirement for it to appear.
 - The `chromium-3d` browser tests draw on software GL and prove each card names the right model and draws; frame time on a real phone is covered by the phone check (MAN-P4-007).
 
+## ADR-019 — 3D Product Pictures Only In The Add To Order Dialog
+
+**Decision:** Menu cards go back to plain product photos. The floating 3D picture appears only at the top of the Add to order dialog and is always the item's built model (or a generic cup or box for a product without one). The photo is the fallback for devices without WebGL, with reduced motion, or if the stage fails.
+**Date:** 2026-10-26\
+**Status:** Accepted\
+**Context:** ADR-018 put a 3D picture on every card. On the Menu that made models build, appear and vanish as cards neared the screen. Photo cut-outs were tried for the dialog, but background removal left artifacts (a floating egg, a metal stand, jar lids from behind a cup) and the owner's team preferred the built models.\
+**Alternatives considered:** keeping 3D on every card (pop-in while scrolling); photo cut-outs in the dialog (artifacts, one file per photo); the full photo floating as a flat card.\
+**Consequences:**
+- Scrolling the Menu draws no WebGL at all. One stage exists only while a dialog is open, so no pop-in or pop-out.
+- No cut-out files to make or keep in step with the photos; a product added in the POS later floats a generic model with no redeploy (FR-083, FR-086).
+- ADR-018 is superseded by this decision.
