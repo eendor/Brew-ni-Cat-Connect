@@ -39,7 +39,7 @@ REQUIRED_DOCUMENTS = (
     "decisions.md",
 )
 
-EXPECTED_FR_IDS = list(range(1, 82))
+EXPECTED_FR_IDS = list(range(1, 92))
 EXPECTED_NFR_IDS = list(range(1, 41))
 CANONICAL_OWNER_TODO = "TODO: Confirm with Brew ni Cat owner."
 
