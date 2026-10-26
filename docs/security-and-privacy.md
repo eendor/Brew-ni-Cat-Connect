@@ -283,7 +283,7 @@ No unrelated row body was retrieved. No public write was attempted, so this evid
 
 The client approved the local shop/customer imagery for website use. Phase 2 limits publication to 19 curated images, avoids names and sensitive/personal inferences in alternative text, and does not add face recognition, biometric processing, customer tagging, third-party image upload, or unnecessary metadata display. Approval to display an image does not authorize unrelated reuse.
 
-**Update (2026-10-26):** 18 more photographs from the shop's own Facebook page were added to the gallery (`photo_160`–`photo_177`), taking it to 48. Metadata was removed, alternative text is generic and names no one, and they appear in the full grid only. Several show students in school uniform, so the owner should confirm the customers are fine with being shown; any photo can be taken out by removing its entry in `src/config/gallery.ts`.
+**Update (2026-10-26):** 18 more photographs from the shop's own Facebook page were added to the gallery (`photo_160`–`photo_177`), taking it to 48. Metadata was removed, alternative text is generic and names no one, and they appear in the full grid only. They were already posted on the shop's Facebook page, and the owner confirmed the customers are fine with being shown. Any photo can still be taken out by removing its entry in `src/config/gallery.ts`.
 
 ### 16.4 Public delivery and contact information
 
