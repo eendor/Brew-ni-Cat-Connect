@@ -173,6 +173,16 @@ describe("3D lives in the Add to order dialog (TC-P4-138 – TC-P4-143)", () => 
     expect(within(dialog).getByAltText(MATCHA_PHOTO)).toBeInTheDocument();
   });
 
+  it("TC-P4-149 — before the 3D frame is drawn, or with 3D off, a product with a cut-out shows the still cut-out, not the full photo", async () => {
+    three.enabled = false;
+    renderCard(takoyaki);
+    const dialog = await openOrder(takoyaki);
+    const picture = within(dialog).getByRole("img", { name: /Takoyaki balls/ });
+    expect(decodeURIComponent(picture.getAttribute("src") ?? "")).toContain(
+      "cutouts/takoyaki-pawsome-balls.webp",
+    );
+  });
+
   it("TC-P4-142 — if the 3D stage fails the dialog falls back to the photo", async () => {
     three.fail = true;
     renderCard(matcha);

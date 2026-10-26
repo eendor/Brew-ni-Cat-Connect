@@ -49,6 +49,9 @@ export function MenuOrderPreview({
     [item, categoryName, variant, flavor, cutout],
   );
   const live = threeEnabled && !failed;
+  // until the 3D frame is drawn (or when there is no 3D) the cut-out shows
+  // as a still picture; the full photo is only for products without one
+  const still = !(live && ready) && cutout ? cutout : null;
   if (!photo && !live) return null;
 
   return (
@@ -56,8 +59,17 @@ export function MenuOrderPreview({
       className="order-preview"
       style={live ? { ["--stage-glow" as string]: spec.glow } : undefined}
       data-stage={live ? (ready ? "ready" : "loading") : "photo"}
+      data-cutout={cutout ? "true" : undefined}
     >
-      {photo && !(live && ready) ? (
+      {still ? (
+        <Image
+          src={still.src}
+          alt={still.alt}
+          fill
+          sizes="(min-width: 640px) 32rem, 92vw"
+          className="object-contain p-4"
+        />
+      ) : photo && !(live && ready) ? (
         <Image
           src={photo.src}
           alt={photo.alt}

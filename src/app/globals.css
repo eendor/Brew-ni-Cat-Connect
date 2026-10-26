@@ -1595,6 +1595,7 @@ textarea:focus-visible {
   background: var(--surface-warm);
 }
 
+.order-preview[data-cutout="true"],
 .order-preview[data-stage="loading"],
 .order-preview[data-stage="ready"] {
   background:
