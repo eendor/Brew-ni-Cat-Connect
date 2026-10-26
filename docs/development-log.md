@@ -988,13 +988,13 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `feat/p3-gallery-facebook-photos`.
 - **Next action:** None. The photos were already public on the shop's Facebook page and the owner confirmed the customers are fine with it.
 
-## 2026-10-26 — Smoother page transitions
+
+## 2026-10-26 — Page-transition curtain restored to the original look
 
 - **Phase:** 3 (motion follow-up)
-- **Task:** Stop the stutter in the page-transition title card and its rising text.
-- **Summary:** The route curtain, its title and its underline now use the browser's own animations and move only `transform`, so they keep playing while the new page renders and hydrates behind them. The wipe is a slide instead of an animated `clip-path`, which repainted the full screen every frame. Heading lines get `will-change: transform` for their entrance.
+- **Task:** Undo the compositor-driven curtain from the previous entry's change.
+- **Summary:** The slide-based curtain looked worse than the original wipe, and the stutter that was reported is only in the text lines rising after a page loads. The curtain is back to its original GSAP clip-path wipe; the rising text is handled separately.
 - **Files:** `src/components/motion/route-curtain.tsx`, `src/app/globals.css`.
-- **Testing:** TC-P4-022 and TC-P4-026 still pass.
-- **Branch / PR:** `fix/p3-smooth-page-transition`.
-- **Next action:** Check smoothness on a real phone in MAN-P4-007.
-
+- **Testing:** TC-P4-022 and TC-P4-026 cover the curtain.
+- **Branch / PR:** `revert/p3-curtain`.
+- **Next action:** Smooth only the text-line rise.
