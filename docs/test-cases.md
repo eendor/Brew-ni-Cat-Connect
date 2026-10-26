@@ -386,6 +386,7 @@ Run on 2026-10-24 for branch `feat/p4-online-orders`: Vitest 234/234 passed in 3
 | TC-P4-135 | FR-026, FR-045 | Order page | A link without a token | No `#token` in the link | Open the page | Order Not Found, and no request | Matched in the 246/246 Vitest run | Passed | `tests/unit/order-confirmation-page.test.tsx` |
 | TC-P4-136 | FR-026 | Order page | Loading fails | `fetchOrder` mocked to throw | Open the page | Something Went Wrong with a Try Again button | Matched in the 246/246 Vitest run | Passed | `tests/unit/order-confirmation-page.test.tsx` |
 | TC-P4-137 | NFR-030 | Checkout | Leaving checkout right after a step change | Checkout with one cart item and valid details | Click Continue to Order Review, then leave the page in the same tick | The step's scroll and focus never run after the page is gone | Matched in the 253/253 Vitest run | Passed | `tests/unit/checkout.test.tsx` |
+| TC-P4-146 | FR-009 | Gallery | The gallery list has a full last row, no repeated photos or alt text, and every file exists | Unit test (Vitest) | Read `galleryImages` and check the files under `public/` | The count is divisible by 6; sources and alt texts are unique; every file exists | Matched in this branch's Vitest run | Passed | `tests/unit/gallery-config.test.ts` |
 
 ## 15. Phase 4 Phone Intro Cases
 

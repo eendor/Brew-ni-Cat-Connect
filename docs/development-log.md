@@ -958,3 +958,13 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `docs/owner-side-in-pos`.
 - **Next action:** Ask the owner about prizes and the ad account, then plan the Phase 9 cards.
 
+## 2026-10-26 — Gallery: 18 new shop photos
+
+- **Phase:** 3 (content)
+- **Task:** Add the new Facebook photos to the gallery.
+- **Summary:** 18 of the 23 supplied photos were added as `photo_160`–`photo_177`. Metadata was removed and each has generic alt text. Five were left out (a screenshot-style photo and four crowded group shots with tiny faces) so the gallery stays at a full last row: 48 photos, divisible by 6.
+- **Files:** `public/images/shop/photo_160.jpg`–`photo_177.jpg`, `src/config/gallery.ts`, `tests/unit/gallery-config.test.ts` (TC-P4-146), `tests/unit/business-pages.test.tsx`, `docs/test-cases.md`, `docs/security-and-privacy.md`.
+- **Testing:** TC-P4-146 added; the gallery page test limit raised to 60.
+- **Branch / PR:** `feat/p3-gallery-facebook-photos`.
+- **Next action:** Owner to confirm the customers shown are fine with it.
+
