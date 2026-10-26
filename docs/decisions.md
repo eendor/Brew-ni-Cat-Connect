@@ -256,16 +256,14 @@ This manual state is a temporary functional-verification condition, not a revisi
 - A product added in the POS appears on the Menu with a 3D model on the next load (FR-083, FR-086). A better model for it is a later design task, not a requirement for it to appear.
 - The `chromium-3d` browser tests draw on software GL and prove each card names the right model and draws; frame time on a real phone is covered by the phone check (MAN-P4-007).
 
-## ADR-019 — 3D Product Pictures Only In The Add To Order Dialog, From Photo Cut-Outs
+## ADR-019 — 3D Product Pictures Only In The Add To Order Dialog
 
-**Decision:** Menu cards go back to plain product photos. The floating 3D picture appears only at the top of the Add to order dialog. A product with a photo floats a transparent cut-out of that photo (a flat card that sways, nods and bobs over a soft shadow); a product without a photo floats a built model, or a generic cup or box. The photo stays the fallback for devices without WebGL, with reduced motion, and when the stage fails.\
+**Decision:** Menu cards go back to plain product photos. The floating 3D picture appears only at the top of the Add to order dialog and is always the item's built model (or a generic cup or box for a product without one). The photo is the fallback for devices without WebGL, with reduced motion, or if the stage fails.
 **Date:** 2026-10-26\
 **Status:** Accepted\
-**Context:** ADR-018 put a 3D picture on every card. On the Menu that made models build, appear and vanish as cards neared the screen, and hand-built models did not look like the real food. The owner's photos are the truer picture of each product.\
-**Alternatives considered:** keeping 3D on every card (models pop in and out while scrolling); 3D cards for products without a photo only (the Menu would mix two looks); building a model per product from the photos (not realistic and slow to add new products).\
+**Context:** ADR-018 put a 3D picture on every card. On the Menu that made models build, appear and vanish as cards neared the screen. Photo cut-outs were tried for the dialog, but background removal left artifacts (a floating egg, a metal stand, jar lids from behind a cup) and the owner's team preferred the built models.\
+**Alternatives considered:** keeping 3D on every card (pop-in while scrolling); photo cut-outs in the dialog (artifacts, one file per photo); the full photo floating as a flat card.\
 **Consequences:**
 - Scrolling the Menu draws no WebGL at all. One stage exists only while a dialog is open, so no pop-in or pop-out.
-- Cut-outs are WebP files with transparency in `public/images/menu/items/cutouts/`, made once from the product photos with a background-removal tool and checked by eye. A product with a new photo gets a cut-out by adding one file and one name to `menu-item-images.ts`.
-- A flavor with its own photo floats that flavor's cut-out when it is picked.
-- A product added in the POS later still appears and floats a generic model with no redeploy (FR-083, FR-086).
-
+- No cut-out files to make or keep in step with the photos; a product added in the POS later floats a generic model with no redeploy (FR-083, FR-086).
+- ADR-018 is superseded by this decision.

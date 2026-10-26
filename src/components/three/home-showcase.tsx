@@ -74,7 +74,7 @@ export function HomeShowcase() {
       if (!onScreen.current || document.hidden) return;
       if (performance.now() < pausedUntil.current) return;
       setTarget((index) => (index + 1) % showcaseItems.length);
-    }, 5500);
+    }, 3500);
     return () => {
       window.clearInterval(timer);
       observer.disconnect();

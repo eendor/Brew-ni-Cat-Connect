@@ -10,12 +10,7 @@ import type {
   NoodleStyle,
   TakoyakiTopping,
 } from "../menu-models";
-import {
-  canvasTexture,
-  context2d,
-  disposeScene,
-  photoTexture,
-} from "../engine/renderer";
+import { canvasTexture, context2d, disposeScene } from "../engine/renderer";
 import { smooth } from "../engine/runtime";
 import { fryMaps, matteMaps, rng } from "../engine/textures";
 import {
@@ -2002,40 +1997,7 @@ async function buildPart(
       return buildCatTreats(mobile);
     case "bottled-water":
       return buildBottledWater(mobile);
-    case "cutout":
-      return buildCutout(part.src);
   }
-}
-
-/**
- * The item's photo with the background removed, as a flat card that sways
- * and tilts as it floats. It never turns far enough to show its back.
- */
-async function buildCutout(src: string): Promise<THREE.Group> {
-  const texture = await photoTexture(src, 8);
-  const image = texture.image as HTMLImageElement;
-  const aspect = image.width / image.height;
-  const card = new THREE.Mesh(
-    new THREE.PlaneGeometry(aspect, 1),
-    new THREE.MeshBasicMaterial({
-      map: texture,
-      transparent: true,
-      alphaTest: 0.04,
-      side: THREE.DoubleSide,
-      toneMapped: false,
-    }),
-  );
-  card.position.y = 0.5;
-  const group = new THREE.Group();
-  group.add(card);
-  // no full turns: a sway and a slow nod instead
-  group.userData.spin = [];
-  group.userData.update = (_dt: number, time: number) => {
-    card.rotation.y = Math.sin(time * 0.8) * 0.5;
-    card.rotation.x = Math.sin(time * 0.6 + 1) * 0.06;
-    card.rotation.z = Math.sin(time * 0.7) * 0.03;
-  };
-  return group;
 }
 
 /** Builds the model for a menu item's spec (see `modelSpecFor`). */

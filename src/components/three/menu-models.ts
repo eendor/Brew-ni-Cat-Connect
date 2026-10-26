@@ -60,7 +60,6 @@ export type ModelPart =
       veggies: boolean;
       fries: boolean;
     }>
-  | Readonly<{ kind: "cutout"; src: string }>
   | Readonly<{ kind: "takeout-box" }>
   | Readonly<{ kind: "cat-treats" }>
   | Readonly<{ kind: "bottled-water" }>;
@@ -576,9 +575,4 @@ export function menuModelSpec(
     );
   }
   return withMeta({ kind: "takeout-box" }, glow);
-}
-
-/** A floating cut-out of the item's photo, glowing like a built model. */
-export function cutoutSpec(item: MenuItem, src: string): ModelSpec {
-  return withMeta({ kind: "cutout", src }, glowForItem(item.name));
 }

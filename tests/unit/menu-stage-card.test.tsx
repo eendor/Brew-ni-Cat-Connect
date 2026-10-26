@@ -5,7 +5,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MenuItemCard } from "@/components/menu/menu-item-card";
 import { MenuItemOrderDialog } from "@/components/menu/menu-item-order-dialog";
 import { menuModelSpec, modelSpecFor } from "@/components/three/menu-models";
-import { getMenuCutout } from "@/config/menu-item-images";
 import { CartProvider } from "@/context/cart-context";
 import type { MenuItem, MenuVariant } from "@/types/menu";
 
@@ -173,16 +172,6 @@ describe("3D lives in the Add to order dialog (TC-P4-138 – TC-P4-143)", () => 
     expect(within(dialog).getByAltText(MATCHA_PHOTO)).toBeInTheDocument();
   });
 
-  it("TC-P4-149 — before the 3D frame is drawn, or with 3D off, a product with a cut-out shows the still cut-out, not the full photo", async () => {
-    three.enabled = false;
-    renderCard(takoyaki);
-    const dialog = await openOrder(takoyaki);
-    const picture = within(dialog).getByRole("img", { name: /Takoyaki balls/ });
-    expect(decodeURIComponent(picture.getAttribute("src") ?? "")).toContain(
-      "cutouts/takoyaki-pawsome-balls.webp",
-    );
-  });
-
   it("TC-P4-142 — if the 3D stage fails the dialog falls back to the photo", async () => {
     three.fail = true;
     renderCard(matcha);
@@ -204,24 +193,19 @@ describe("3D lives in the Add to order dialog (TC-P4-138 – TC-P4-143)", () => 
     expect(screen.getByText("Temporarily unavailable")).toBeInTheDocument();
   });
 
-  it("TC-P4-148 — a flavor with a photo floats its cut-out; the others float a built model", async () => {
+  it("TC-P4-148 — the dialog floats a built model, never a photo or cut-out, and picking a flavor keeps it", async () => {
     renderCard(matcha);
     const dialog = await openOrder(matcha);
     const first = await within(dialog).findByTestId("menu-stage-canvas");
     expect(first.getAttribute("data-model")).not.toContain("cutout");
+    expect(within(dialog).queryByAltText(MATCHA_PHOTO)).not.toBeInTheDocument();
 
     await userEvent.click(
       within(dialog).getByRole("button", { name: "Vanilla Matcha Meow" }),
     );
-    const cut = await within(dialog).findByTestId("menu-stage-canvas");
-    expect(cut.getAttribute("data-model")).toContain("cutout");
-    expect(cut.getAttribute("data-model")).toContain(
-      "vanilla-matcha-meow.webp",
-    );
-    expect(getMenuCutout(matcha.name, "Vanilla Matcha Meow")?.src).toBe(
-      "/images/menu/items/cutouts/vanilla-matcha-meow.webp",
-    );
-    expect(getMenuCutout(mystery.name)).toBeNull();
+    const next = await within(dialog).findByTestId("menu-stage-canvas");
+    expect(next.getAttribute("data-model")).not.toContain("cutout");
+    expect(next.getAttribute("data-model")).not.toContain(".webp");
   });
 
   it("TC-P4-051 — the order dialog only takes presets that are the item's own options", () => {

@@ -9,7 +9,6 @@ import {
 } from "@playwright/test";
 
 import { menuModelSpec } from "@/components/three/menu-models";
-import { getMenuCutout } from "@/config/menu-item-images";
 import { mapMenuCatalog } from "@/lib/menu/map-menu-catalog";
 import type { MenuItem } from "@/types/menu";
 
@@ -474,7 +473,7 @@ const categoryOf = (item: MenuItem) =>
 /**
  * Opens an item's Add to order dialog and waits until its model floats
  * there: the stage has drawn its first frame, names the right model (the
- * photo cut-out when the item has one, otherwise a built model), and what
+ * built model), and what
  * it draws has contrast. Software GL draws a frame or two a second, so this
  * polls. The dialog is closed again unless `keepOpen` is set.
  */
@@ -495,16 +494,11 @@ async function showCard(
     timeout: 90_000,
   });
   const canvas = preview.locator(".menu-card__stage");
-  const cutout = getMenuCutout(item.name);
-  if (cutout) {
-    await expect(canvas).toHaveAttribute("data-model", new RegExp(cutout.src));
-  } else {
-    const variant = item.variants[0] ?? null;
-    await expect(canvas).toHaveAttribute(
-      "data-model",
-      menuModelSpec(item, categoryOf(item), variant, null).key,
-    );
-  }
+  const variant = item.variants[0] ?? null;
+  await expect(canvas).toHaveAttribute(
+    "data-model",
+    menuModelSpec(item, categoryOf(item), variant, null).key,
+  );
   await expect
     .poll(() => pixelSpread(preview), {
       message: `${item.name} is drawn`,
