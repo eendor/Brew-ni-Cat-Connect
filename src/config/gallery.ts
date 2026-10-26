@@ -151,6 +151,96 @@ export const galleryImages: readonly GalleryImage[] = [
     alt: "Group gathered with cats inside Brew ni Cat Coffee Shop",
     people: true,
   },
+  {
+    src: "/images/shop/photo_160.jpg",
+    alt: "Two guests at a small table with fries and drinks beside the green leaf wall",
+    people: true,
+  },
+  {
+    src: "/images/shop/photo_161.jpg",
+    alt: "Four friends sharing fries and matcha drinks around a round table",
+    people: true,
+  },
+  {
+    src: "/images/shop/photo_162.jpg",
+    alt: "Three guests at a table of fries and drinks by the café window",
+    people: true,
+  },
+  {
+    src: "/images/shop/photo_163.jpg",
+    alt: "Two guests at a table with a white cat and a black-and-white cat on their laps",
+    people: true,
+  },
+  {
+    src: "/images/shop/photo_164.jpg",
+    alt: "Two guests at a small table with drinks beside the photo wall",
+    people: true,
+  },
+  {
+    src: "/images/shop/photo_165.jpg",
+    alt: "Two guests with a tray of fries and food at a round table",
+    people: true,
+  },
+  {
+    src: "/images/shop/photo_166.jpg",
+    alt: "Three students holding drinks over a basket of fries",
+    people: true,
+  },
+  {
+    src: "/images/shop/photo_167.jpg",
+    alt: "Four young guests at a table with fries and iced drinks",
+    people: true,
+  },
+  {
+    src: "/images/shop/photo_168.jpg",
+    alt: "Four friends seated together under the cloud ceiling",
+    people: true,
+  },
+  {
+    src: "/images/shop/photo_169.jpg",
+    alt: "Three friends at a table with fries and a black-and-white cat",
+    people: true,
+  },
+  {
+    src: "/images/shop/photo_170.jpg",
+    alt: "Guest at a table with fries, an iced drink and a fluffy white cat under the shop logo",
+    people: true,
+  },
+  {
+    src: "/images/shop/photo_171.jpg",
+    alt: "Four teenagers at a table with matcha drinks and fries",
+    people: true,
+  },
+  {
+    src: "/images/shop/photo_172.jpg",
+    alt: "Two guests with a cat and a basket of fries at a round table",
+    people: true,
+  },
+  {
+    src: "/images/shop/photo_173.jpg",
+    alt: "Two guests with iced matcha and berry drinks at a table",
+    people: true,
+  },
+  {
+    src: "/images/shop/photo_174.jpg",
+    alt: "Students with cats and a plate of fries at a corner table",
+    people: true,
+  },
+  {
+    src: "/images/shop/photo_175.jpg",
+    alt: "Two guests with a matcha drink and fries beneath the photo wall",
+    people: true,
+  },
+  {
+    src: "/images/shop/photo_176.jpg",
+    alt: "Two guests each holding a cat with a basket of fries on the table",
+    people: true,
+  },
+  {
+    src: "/images/shop/photo_177.jpg",
+    alt: "Three guests with fries and drinks at a table under the Brew ni Cat sign",
+    people: true,
+  },
 ];
 
 /**

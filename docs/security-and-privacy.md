@@ -283,6 +283,8 @@ No unrelated row body was retrieved. No public write was attempted, so this evid
 
 The client approved the local shop/customer imagery for website use. Phase 2 limits publication to 19 curated images, avoids names and sensitive/personal inferences in alternative text, and does not add face recognition, biometric processing, customer tagging, third-party image upload, or unnecessary metadata display. Approval to display an image does not authorize unrelated reuse.
 
+**Update (2026-10-26):** 18 more photographs from the shop's own Facebook page were added to the gallery (`photo_160`–`photo_177`), taking it to 48. Metadata was removed, alternative text is generic and names no one, and they appear in the full grid only. Several show students in school uniform, so the owner should confirm the customers are fine with being shown; any photo can be taken out by removing its entry in `src/config/gallery.ts`.
+
 ### 16.4 Public delivery and contact information
 
 The contact page publishes only the confirmed business address, phone, email, payments, takeout fee, social links, and the three local rider services (name, public Facebook page and public profile photo). It collects no address/contact form data. Rider links are external; the copy states that the rider orders at the shop for the customer, that the delivery fee, timing and payment are agreed with the rider, and that Brew ni Cat does not book riders or charge rider fees. External links use appropriate browser separation (`target="_blank"` with `rel="noopener noreferrer"`). The rider logos are stored locally, resized to 256 × 256 px with metadata removed, so the page loads nothing from Facebook.
