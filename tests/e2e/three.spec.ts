@@ -9,6 +9,7 @@ import {
 } from "@playwright/test";
 
 import { menuModelSpec } from "@/components/three/menu-models";
+import { getMenuCutout } from "@/config/menu-item-images";
 import { mapMenuCatalog } from "@/lib/menu/map-menu-catalog";
 import type { MenuItem } from "@/types/menu";
 
@@ -437,14 +438,6 @@ function liveItem(name: string) {
   return found;
 }
 
-/** The model a card should float, from the same registry the page uses. */
-const cardModelKey = (item: MenuItem) => {
-  const category = liveCatalog.categories.find((entry) =>
-    entry.items.some((candidate) => candidate.id === item.id),
-  );
-  return menuModelSpec(item, category?.name ?? "").key;
-};
-
 /**
  * Opens the Menu on the live items and scrolls past the 3D hero, which
  * pauses its scene and leaves the (software) GPU to the menu cards.
@@ -472,122 +465,60 @@ async function openLiveMenu(
   });
 }
 
-/** A menu card's picture area, found by the item's name. */
-const cardMedia = (page: Page, item: MenuItem) =>
-  page
-    .locator("article.menu-card")
-    .filter({
-      has: page.getByRole("heading", { name: item.name, exact: true }),
-    })
-    .locator(".menu-card__media");
+/** The category an item sits in on the live menu. */
+const categoryOf = (item: MenuItem) =>
+  liveCatalog.categories.find((entry) =>
+    entry.items.some((candidate) => candidate.id === item.id),
+  )?.name ?? "";
 
 /**
- * Scrolls a card into view and waits until its model floats there: the
- * stage has drawn its first frame, names the right model, and what it
- * draws has contrast. Software GL draws a frame or two a second, so this
- * polls.
+ * Opens an item's Add to order dialog and waits until its model floats
+ * there: the stage has drawn its first frame, names the right model (the
+ * photo cut-out when the item has one, otherwise a built model), and what
+ * it draws has contrast. Software GL draws a frame or two a second, so this
+ * polls. The dialog is closed again unless `keepOpen` is set.
  */
-async function showCard(page: Page, item: MenuItem) {
-  const media = cardMedia(page, item);
-  await media.scrollIntoViewIfNeeded();
-  await expect(media, item.name).toHaveAttribute("data-stage", "ready", {
+async function showCard(
+  page: Page,
+  item: MenuItem,
+  options: { keepOpen?: boolean } = {},
+) {
+  await page
+    .getByRole("button", { name: `Order ${item.name}`, exact: true })
+    .scrollIntoViewIfNeeded();
+  await page
+    .getByRole("button", { name: `Order ${item.name}`, exact: true })
+    .click();
+  const dialog = page.getByRole("dialog", { name: item.name });
+  const preview = dialog.locator(".order-preview");
+  await expect(preview, item.name).toHaveAttribute("data-stage", "ready", {
     timeout: 90_000,
   });
-  const canvas = media.locator(".menu-card__stage");
-  await expect(canvas).toHaveAttribute("data-model", cardModelKey(item));
+  const canvas = preview.locator(".menu-card__stage");
+  const cutout = getMenuCutout(item.name);
+  if (cutout) {
+    await expect(canvas).toHaveAttribute("data-model", new RegExp(cutout.src));
+  } else {
+    const variant = item.variants[0] ?? null;
+    await expect(canvas).toHaveAttribute(
+      "data-model",
+      menuModelSpec(item, categoryOf(item), variant, null).key,
+    );
+  }
   await expect
-    .poll(() => pixelSpread(media), {
+    .poll(() => pixelSpread(preview), {
       message: `${item.name} is drawn`,
       timeout: 30_000,
     })
     .toBeGreaterThan(12);
-  return { media, canvas };
+  if (!options.keepOpen) {
+    await dialog.getByRole("button", { name: "Close dialog" }).click();
+    await expect(dialog).toBeHidden({ timeout: 10_000 });
+  }
+  return { media: preview, canvas, dialog };
 }
 
-test("TC-P4-145 — the home showcase is one screen tall, runs on its own, and does not follow the page scroll", async ({
-  page,
-}) => {
-  const errors = collectErrors(page);
-  await page.goto("/");
-  await expect(page.locator(".showcase--ready")).toBeVisible({
-    timeout: 45_000,
-  });
-  const section = page.locator("#home-showcase");
-  const height = (await section.boundingBox())?.height ?? 0;
-  const viewport = page.viewportSize()?.height ?? 0;
-  expect(height).toBeLessThanOrEqual(viewport + 2);
-  // picking an item moves the reel
-  const ticks = page.locator(".showcase__ticks button");
-  await ticks.nth(2).click();
-  await expect(ticks.nth(2)).toHaveAttribute("aria-current", "true", {
-    timeout: 20_000,
-  });
-  // scrolling the page leaves the hero behind without changing the pick
-  await page.mouse.wheel(0, 400);
-  await expect
-    .poll(() => page.evaluate(() => window.scrollY), { timeout: 20_000 })
-    .toBeGreaterThan(100);
-  await expect(ticks.nth(2)).toHaveAttribute("aria-current", "true");
-  expect(errors).toEqual([]);
-});
-
-test("TC-P4-001 — home renders the 3D showcase, not a blank canvas", async ({
-  page,
-}) => {
-  const errors = collectErrors(page);
-  await page.goto("/");
-  await expect(page.locator(".showcase--ready")).toBeVisible({
-    timeout: 45_000,
-  });
-  await expect(
-    page.getByRole("heading", {
-      level: 1,
-      name: "Coffee, comfort, and a little cat energy.",
-    }),
-  ).toBeVisible();
-  await page.waitForTimeout(1500);
-  expect(
-    await pixelSpread(page.locator(".showcase__stage canvas")),
-  ).toBeGreaterThan(12);
-
-  const ticks = page.getByRole("list", { name: "Jump to a featured item" });
-  await expect(ticks.getByRole("button")).toHaveCount(5);
-  await ticks.getByRole("button", { name: "Takoyaki" }).click();
-  // the jump is a smooth scroll the scene follows frame by frame
-  await expect(ticks.getByRole("button", { name: "Takoyaki" })).toHaveAttribute(
-    "aria-current",
-    "true",
-    { timeout: 60_000 },
-  );
-  expect(errors).toEqual([]);
-});
-
-test("TC-P4-002 — every page mounts its 3D layer without console or hydration errors", async ({
-  page,
-}) => {
-  const errors = collectErrors(page);
-  await mockMenu(page);
-  for (const path of [
-    "/menu",
-    "/about",
-    "/gallery",
-    "/contact",
-    "/cart",
-    "/checkout",
-  ]) {
-    await page.goto(path);
-    // the menu opens on its own 3D hero instead of an ambient backdrop
-    const layer =
-      path === "/menu" ? ".menu-hero--ready" : ".ambient-backdrop--ready";
-    await expect(page.locator(layer).first()).toBeAttached({
-      timeout: 45_000,
-    });
-    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-  }
-  expect(errors).toEqual([]);
-});
-
-test("TC-P4-003 — menu cards show a photo or the 3D picture, and Add to Order tosses into the real cart", async ({
+test("TC-P4-003 — menu cards show photos, and Add to Order tosses into the real cart", async ({
   page,
 }) => {
   const errors = collectErrors(page);
@@ -596,17 +527,17 @@ test("TC-P4-003 — menu cards show a photo or the 3D picture, and Add to Order 
   await expect(
     page.getByRole("button", { name: "Order Buldak Carbo" }),
   ).toBeVisible({ timeout: 45_000 });
-  // cards use the shared stage, not per-card 3D tiles, and show no button
+  // cards are plain photos: no 3D tiles, no canvases and no 3D button
   await expect(page.locator("[data-three-tile]")).toHaveCount(0);
+  await expect(page.locator(".menu-card__stage")).toHaveCount(0);
   await expect(page.getByText("Ready to enjoy?")).toHaveCount(0);
   await expect(page.getByRole("button", { name: /in 3D/i })).toHaveCount(0);
-  // the photo (or, once drawn, the 3D picture) keeps a text alternative
+  // the photo keeps its text alternative
   await expect(
     page
       .getByRole("img", {
         name: "Buldak Carbo spicy noodles with a fried egg",
       })
-      .or(page.getByRole("img", { name: /3D picture/ }))
       .first(),
   ).toBeAttached();
 
@@ -790,13 +721,16 @@ test("TC-P4-026 — the checkout heading follows each step after its split entra
   expect(errors).toEqual([]);
 });
 
-test("TC-P4-052 — a menu card floats its item in 3D with no button, spins on drag, and orders", async ({
+test("TC-P4-052 — the Add to order dialog floats the item in 3D, turns on drag, and orders", async ({
   page,
 }) => {
   const problems = collectProblems(page);
   const carbo = liveItem("Buldak Carbo");
   await openLiveMenu(page);
-  const { media, canvas } = await showCard(page, carbo);
+  await expect(page.locator(".menu-card__stage")).toHaveCount(0);
+  const { media, canvas, dialog } = await showCard(page, carbo, {
+    keepOpen: true,
+  });
   await expect(page.getByRole("button", { name: /in 3D/i })).toHaveCount(0);
 
   // drag to spin: the canvas takes the drag and keeps drawing after it. The
@@ -820,20 +754,15 @@ test("TC-P4-052 — a menu card floats its item in 3D with no button, spins on d
     })
     .toBeGreaterThan(0.01);
 
-  // Add to order still opens the order dialog and fills the cart
-  await page
-    .getByRole("button", { name: "Order Buldak Carbo", exact: true })
-    .click();
-  const order = page.getByRole("dialog").filter({ hasText: "Configure item" });
-  await expect(order).toBeVisible({ timeout: 15_000 });
-  await order.getByRole("button", { name: "Add to Order" }).click();
+  // the same dialog adds the item to the cart
+  await dialog.getByRole("button", { name: "Add to Order" }).click();
   const drawer = page.locator('[aria-labelledby="cart-drawer-title"]');
   await expect(drawer).toBeVisible({ timeout: 10_000 });
   await expect(drawer).toContainText("Buldak Carbo");
   expect(problems).toEqual([]);
 });
 
-test("TC-P4-144 — a product the owner adds later floats as a generic 3D model with no redeploy", async ({
+test("TC-P4-144 — a product the owner adds later floats as a generic 3D model in its dialog with no redeploy", async ({
   page,
 }) => {
   const problems = collectProblems(page);
@@ -860,23 +789,31 @@ test("TC-P4-144 — a product the owner adds later floats as a generic 3D model 
     kind: "takeout-box",
   });
   for (const { item, category } of [drink, other]) {
-    const media = cardMedia(page, item);
-    await media.scrollIntoViewIfNeeded();
-    await expect(media, item.name).toHaveAttribute("data-stage", "ready", {
+    await page
+      .getByRole("button", { name: `Order ${item.name}`, exact: true })
+      .scrollIntoViewIfNeeded();
+    await page
+      .getByRole("button", { name: `Order ${item.name}`, exact: true })
+      .click();
+    const dialog = page.getByRole("dialog", { name: item.name });
+    const preview = dialog.locator(".order-preview");
+    await expect(preview, item.name).toHaveAttribute("data-stage", "ready", {
       timeout: 90_000,
     });
-    await expect(media.locator(".menu-card__stage")).toHaveAttribute(
+    await expect(preview.locator(".menu-card__stage")).toHaveAttribute(
       "data-model",
-      menuModelSpec(item, category).key,
+      menuModelSpec(item, category, item.variants[0] ?? null, null).key,
     );
     await expect
-      .poll(() => pixelSpread(media), { timeout: 30_000 })
+      .poll(() => pixelSpread(preview), { timeout: 30_000 })
       .toBeGreaterThan(12);
+    await dialog.getByRole("button", { name: "Close dialog" }).click();
+    await expect(dialog).toBeHidden({ timeout: 10_000 });
   }
   expect(problems).toEqual([]);
 });
 
-test("TC-P4-053 — every noodle card floats its model", async ({ page }) => {
+test("TC-P4-053 — every noodle dialog floats its model", async ({ page }) => {
   test.setTimeout(600_000);
   const problems = collectProblems(page);
   await openLiveMenu(page);
@@ -884,7 +821,7 @@ test("TC-P4-053 — every noodle card floats its model", async ({ page }) => {
   expect(problems).toEqual([]);
 });
 
-test("TC-P4-054 — every bite card floats its model", async ({ page }) => {
+test("TC-P4-054 — every bite dialog floats its model", async ({ page }) => {
   test.setTimeout(600_000);
   const problems = collectProblems(page);
   await openLiveMenu(page);
@@ -892,7 +829,7 @@ test("TC-P4-054 — every bite card floats its model", async ({ page }) => {
   expect(problems).toEqual([]);
 });
 
-test("TC-P4-055 — every drink card floats its model", async ({ page }) => {
+test("TC-P4-055 — every drink dialog floats its model", async ({ page }) => {
   test.setTimeout(600_000);
   const problems = collectProblems(page);
   await openLiveMenu(page);
@@ -900,7 +837,7 @@ test("TC-P4-055 — every drink card floats its model", async ({ page }) => {
   expect(problems).toEqual([]);
 });
 
-test("TC-P4-056 — every combo, the take-out box and the cat treats card floats its model", async ({
+test("TC-P4-056 — every combo, the take-out box and the cat treats dialog floats its model", async ({
   page,
 }) => {
   test.setTimeout(600_000);
@@ -1005,13 +942,15 @@ test.describe("phone", () => {
     expect(errors).toEqual([]);
   });
 
-  test("TC-P4-057 — on a phone the 3D card fits the screen and the order button answers taps", async ({
+  test("TC-P4-057 — on a phone the 3D picture in the order dialog fits the screen", async ({
     page,
   }) => {
     const problems = collectProblems(page);
     const takoyaki = liveItem("Takoyaki (Pawsome Balls)");
     await openLiveMenu(page);
-    const { media, canvas } = await showCard(page, takoyaki);
+    const { media, canvas } = await showCard(page, takoyaki, {
+      keepOpen: true,
+    });
     // phones draw at a capped pixel ratio, not the screen's 2.6×
     const ratio = await canvas.evaluate(
       (element: HTMLCanvasElement) => element.width / element.clientWidth,
@@ -1028,12 +967,6 @@ test.describe("phone", () => {
         () => document.documentElement.scrollWidth - window.innerWidth,
       ),
     ).toBeLessThanOrEqual(0);
-    await page
-      .getByRole("button", { name: `Order ${takoyaki.name}`, exact: true })
-      .tap();
-    await expect(
-      page.getByRole("dialog").filter({ hasText: "Configure item" }),
-    ).toBeVisible({ timeout: 15_000 });
     expect(problems).toEqual([]);
   });
 

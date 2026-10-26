@@ -78,7 +78,7 @@ export function MenuItemCard({
     <article
       className={`menu-card${unavailable ? " menu-card--unavailable" : ""}`}
     >
-      <MenuItemMedia item={item} categoryName={categoryName} />
+      <MenuItemMedia item={item} />
 
       <div className="menu-card__body">
         <div className="menu-card__head">
@@ -225,6 +225,7 @@ export function MenuItemCard({
         <MenuItemOrderDialog
           item={item}
           catalog={catalog}
+          categoryName={categoryName}
           onClose={() => setIsOrderOpen(false)}
         />
       ) : null}

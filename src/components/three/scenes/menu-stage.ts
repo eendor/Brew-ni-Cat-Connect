@@ -210,7 +210,11 @@ export async function initMenuStage(quality: Quality) {
       slot.built = spec.key;
       slot.scale = scale;
       slot.floorY = (-scale * fit.y) / 2;
-      slot.footprint.set(scale * size.x * 1.1, scale * size.z * 1.1);
+      // a flat cut-out still gets a shadow as deep as a third of its width
+      slot.footprint.set(
+        scale * size.x * 1.1,
+        scale * Math.max(size.z, size.x * 0.3) * 1.1,
+      );
       slot.spin = spinTargets(model).map((target) => ({
         target,
         base: target.rotation.y,

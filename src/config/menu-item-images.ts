@@ -178,3 +178,46 @@ export function getMenuFlavorImage(
 
   return null;
 }
+
+/** Photos that have a transparent cut-out of the product next to them. */
+const CUTOUT_NAMES: ReadonlySet<string> = new Set([
+  "buldak-carbo",
+  "buldak-cheese",
+  "caramel-matcha-tail",
+  "cat-feine-iced-latte",
+  "dirty-neko-matcha",
+  "fries-cat-claws",
+  "takoyaki-pawsome-balls",
+  "vanilla-matcha-meow",
+  "vanilla-oreo-whisker",
+]);
+
+/** The cut-out files, as paths (exported for tests). */
+export const menuCutoutSources: ReadonlyArray<string> = [...CUTOUT_NAMES].map(
+  (name) => `/images/menu/items/cutouts/${name}.webp`,
+);
+
+/**
+ * The transparent cut-out of an item's photo, for the floating 3D picture in
+ * the order dialog. A flavor with its own photo uses that photo's cut-out.
+ * Items without a cut-out return null and get a built model instead.
+ */
+export function getMenuCutout(
+  itemName: string,
+  flavor?: string | null,
+): MenuItemImage | null {
+  const photo =
+    getMenuFlavorImage(itemName, flavor) ?? getMenuItemImage(itemName);
+  const name = photo?.src
+    .split("/")
+    .pop()
+    ?.replace(/\.jpg$/, "");
+  if (!photo || !name || !CUTOUT_NAMES.has(name)) {
+    return null;
+  }
+
+  return {
+    src: `/images/menu/items/cutouts/${name}.webp`,
+    alt: photo.alt,
+  };
+}

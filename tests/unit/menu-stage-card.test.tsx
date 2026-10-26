@@ -1,9 +1,11 @@
 import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { MenuItemCard } from "@/components/menu/menu-item-card";
 import { MenuItemOrderDialog } from "@/components/menu/menu-item-order-dialog";
 import { menuModelSpec, modelSpecFor } from "@/components/three/menu-models";
+import { getMenuCutout } from "@/config/menu-item-images";
 import { CartProvider } from "@/context/cart-context";
 import type { MenuItem, MenuVariant } from "@/types/menu";
 
@@ -108,43 +110,47 @@ function renderCard(item: MenuItem, categoryName = "Drinks") {
   );
 }
 
-describe("Menu cards float their product in 3D (TC-P4-138 – TC-P4-143)", () => {
+async function openOrder(item: MenuItem) {
+  await userEvent.click(
+    screen.getByRole("button", { name: `Order ${item.name}` }),
+  );
+  return screen.getByRole("dialog", { name: item.name });
+}
+
+describe("3D lives in the Add to order dialog (TC-P4-138 – TC-P4-143)", () => {
   beforeEach(() => {
     window.localStorage.clear();
     three.enabled = true;
     three.fail = false;
   });
 
-  it("TC-P4-138 — a card shows its model on the page, with no View in 3D button", async () => {
+  it("TC-P4-138 — a menu card shows its photo and no 3D canvas; the dialog floats the product", async () => {
     renderCard(matcha);
-    const canvas = await screen.findByTestId("menu-stage-canvas");
-    expect(canvas).toHaveAttribute("data-model", modelSpecFor(matcha)?.key);
+    expect(screen.getByAltText(MATCHA_PHOTO)).toBeInTheDocument();
+    expect(screen.queryByTestId("menu-stage-canvas")).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: /in 3D/i }),
     ).not.toBeInTheDocument();
-    // the photo steps aside once the first frame is drawn
-    expect(screen.queryByAltText(MATCHA_PHOTO)).not.toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: `Order ${matcha.name}` }),
-    ).toBeInTheDocument();
+
+    const dialog = await openOrder(matcha);
+    const canvas = await within(dialog).findByTestId("menu-stage-canvas");
+    expect(canvas).toHaveAttribute("data-model", modelSpecFor(matcha)?.key);
   });
 
-  it("TC-P4-139 — an item with no hand-built model and no photo still gets a generic 3D model", async () => {
+  it("TC-P4-139 — an item with no photo and no hand-built model gets a generic cup or box in the dialog", async () => {
     const { unmount } = renderCard(mystery, "Drinks");
-    const cup = await screen.findByTestId("menu-stage-canvas");
-    expect(cup).toHaveAttribute(
-      "data-model",
-      menuModelSpec(mystery, "Drinks").key,
-    );
+    let dialog = await openOrder(mystery);
+    expect(
+      await within(dialog).findByTestId("menu-stage-canvas"),
+    ).toHaveAttribute("data-model", menuModelSpec(mystery, "Drinks").key);
     expect(menuModelSpec(mystery, "Drinks")).toMatchObject({ kind: "cup" });
     unmount();
 
     renderCard(mystery, "Snacks");
-    const box = await screen.findByTestId("menu-stage-canvas");
-    expect(box).toHaveAttribute(
-      "data-model",
-      menuModelSpec(mystery, "Snacks").key,
-    );
+    dialog = await openOrder(mystery);
+    expect(
+      await within(dialog).findByTestId("menu-stage-canvas"),
+    ).toHaveAttribute("data-model", menuModelSpec(mystery, "Snacks").key);
     expect(menuModelSpec(mystery, "Snacks")).toMatchObject({
       kind: "takeout-box",
     });
@@ -157,27 +163,55 @@ describe("Menu cards float their product in 3D (TC-P4-138 – TC-P4-143)", () =>
     );
   });
 
-  it("TC-P4-141 — without WebGL or with reduced motion the card keeps its photo and no canvas", () => {
+  it("TC-P4-141 — without WebGL or with reduced motion the dialog keeps the photo and has no canvas", async () => {
     three.enabled = false;
     renderCard(matcha);
-    expect(screen.queryByTestId("menu-stage-canvas")).not.toBeInTheDocument();
-    expect(screen.getByAltText(MATCHA_PHOTO)).toBeInTheDocument();
+    const dialog = await openOrder(matcha);
+    expect(
+      within(dialog).queryByTestId("menu-stage-canvas"),
+    ).not.toBeInTheDocument();
+    expect(within(dialog).getByAltText(MATCHA_PHOTO)).toBeInTheDocument();
   });
 
-  it("TC-P4-142 — if the 3D stage fails the card falls back to its photo", async () => {
+  it("TC-P4-142 — if the 3D stage fails the dialog falls back to the photo", async () => {
     three.fail = true;
     renderCard(matcha);
-    expect(await screen.findByAltText(MATCHA_PHOTO)).toBeInTheDocument();
-    expect(screen.queryByTestId("menu-stage-canvas")).not.toBeInTheDocument();
+    const dialog = await openOrder(matcha);
+    expect(
+      await within(dialog).findByAltText(MATCHA_PHOTO),
+    ).toBeInTheDocument();
+    expect(
+      within(dialog).queryByTestId("menu-stage-canvas"),
+    ).not.toBeInTheDocument();
   });
 
-  it("TC-P4-143 — sold-out items still show in 3D but cannot be ordered", async () => {
+  it("TC-P4-143 — sold-out items show their photo, have no Order button and open no dialog", () => {
     renderCard(soldOutOreo);
-    expect(await screen.findByTestId("menu-stage-canvas")).toBeInTheDocument();
+    expect(screen.queryByTestId("menu-stage-canvas")).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: `Order ${soldOutOreo.name}` }),
     ).not.toBeInTheDocument();
     expect(screen.getByText("Temporarily unavailable")).toBeInTheDocument();
+  });
+
+  it("TC-P4-148 — a flavor with a photo floats its cut-out; the others float a built model", async () => {
+    renderCard(matcha);
+    const dialog = await openOrder(matcha);
+    const first = await within(dialog).findByTestId("menu-stage-canvas");
+    expect(first.getAttribute("data-model")).not.toContain("cutout");
+
+    await userEvent.click(
+      within(dialog).getByRole("button", { name: "Vanilla Matcha Meow" }),
+    );
+    const cut = await within(dialog).findByTestId("menu-stage-canvas");
+    expect(cut.getAttribute("data-model")).toContain("cutout");
+    expect(cut.getAttribute("data-model")).toContain(
+      "vanilla-matcha-meow.webp",
+    );
+    expect(getMenuCutout(matcha.name, "Vanilla Matcha Meow")?.src).toBe(
+      "/images/menu/items/cutouts/vanilla-matcha-meow.webp",
+    );
+    expect(getMenuCutout(mystery.name)).toBeNull();
   });
 
   it("TC-P4-051 — the order dialog only takes presets that are the item's own options", () => {

@@ -1584,9 +1584,19 @@ textarea:focus-visible {
   font-weight: 700;
 }
 
-/* Menu cards: the product floats in 3D over a soft glow. The photo holds the
-   place while the first frame loads, or stays when 3D is off. */
-.menu-card__media[data-stage] {
+/* Add to order dialog: the product floats in 3D over a soft glow. The photo
+   holds the place while the first frame loads, or stays when 3D is off. */
+.order-preview {
+  position: relative;
+  margin-top: 1.25rem;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: 1.25rem;
+  background: var(--surface-warm);
+}
+
+.order-preview[data-stage="loading"],
+.order-preview[data-stage="ready"] {
   background:
     radial-gradient(
       ellipse at 50% 62%,
@@ -1594,10 +1604,6 @@ textarea:focus-visible {
       transparent 68%
     ),
     var(--surface-warm);
-}
-
-.menu-card__media[data-stage="photo"] {
-  background: var(--surface-warm);
 }
 
 .menu-card__stage {
@@ -1611,7 +1617,7 @@ textarea:focus-visible {
   transition: opacity 0.4s ease;
 }
 
-.menu-card__media[data-stage="ready"] .menu-card__stage {
+.order-preview[data-stage="ready"] .menu-card__stage {
   opacity: 1;
 }
 
