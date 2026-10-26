@@ -948,3 +948,13 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `docs/owner-dashboard-and-games`.
 - **Next action:** Confirm prize rules and ad account with the owner, then plan the Phase 9 cards.
 
+## 2026-10-26 — Owner changes belong in the POS, and all site content is live
+
+- **Phase:** 9 (planned)
+- **Task:** Correct the owner-area requirements after the instructor's feedback and the POS check.
+- **Summary:** The POS web app (Menu and Inventory tabs) and the Android POS already edit the shared catalog, so FR-082, FR-083, FR-085 and FR-087 now say the owner works in the POS and Connect adds no owner area. FR-085 and FR-086 now cover all website content, not only prices. ADR-017 is rewritten to match. The site content table and its POS screen are POS work.
+- **Files:** `docs/functional-requirements.md`, `docs/decisions.md`, `docs/srs.md`, `docs/system-architecture.md`, `docs/execution-paths.md`.
+- **Testing:** Docs validation PASS, Prettier clean.
+- **Branch / PR:** `docs/owner-side-in-pos`.
+- **Next action:** Ask the owner about prizes and the ad account, then plan the Phase 9 cards.
+
