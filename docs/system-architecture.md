@@ -401,7 +401,7 @@ The Phase 1 foundation is **Tested and merged**. Phase 2 showcase/catalog code i
 | Messenger webhook/assistant adapter | FR-058–FR-064 | NFR-018, NFR-022–NFR-028 |
 | Android channel adapter | FR-065–FR-070 | NFR-019, NFR-025, NFR-028, NFR-036 |
 | POS adapter, mapping, and reconciliation | FR-071–FR-081 | NFR-006, NFR-008, NFR-021–NFR-022, NFR-038 |
-| Owner area, live prices, mini-games, advertising | FR-082–FR-091 | NFR-008, NFR-021, NFR-029–NFR-030, NFR-034 |
+| Owner changes in the POS, live website content, mini-games, advertising | FR-082–FR-091 | NFR-008, NFR-021, NFR-029–NFR-030, NFR-034 |
 | Cross-cutting transport, operations, and delivery | Applicable FRs above | NFR-011–NFR-012, NFR-017, NFR-020, NFR-037–NFR-040 |
 
 ## 17. Phase 2 As-built Catalog and Media Boundary
