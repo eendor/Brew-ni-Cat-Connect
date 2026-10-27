@@ -356,3 +356,12 @@ Before commit/PR, inspect staged and unstaged diffs, verify `.env.local` is untr
 - No Content Security Policy is configured yet (§17.3).
 - If an order's outcome is unknown after a server error and the customer then edits the cart, a retry is a new checkout attempt and can save a second order. The shop sees both, with the same name and phone number.
 - Place order is off on the live site (`NEXT_PUBLIC_ONLINE_ORDERING` is empty) until the POS order screen and the order page are ready (`docs/database-design.md` §8.8).
+
+### 18.7 Customer authentication and session security
+
+- **Password handling:** Passwords are never stored, hashed, or handled directly by application server code. All credential storage, salt management, and hashing are delegated to Supabase Auth (FR-031, FR-032). Plaintext passwords never appear in application logs, database tables, or server telemetry.
+- **Session management:** Browser customer sessions are kept through `src/lib/supabase/auth-client.ts` with `persistSession: true`, `autoRefreshToken: true`, and `detectSessionInUrl: true`. `public-client.ts` remains unmodified and deliberately keeps session persistence disabled so public catalog browsing remains completely stateless.
+- **Session expiration and restoration (FR-036):** On ordinary page reload, `AuthProvider` restores any still-valid session. An expired or absent session clears user state to guest (`user: null`), preserving unauthenticated visitors' unrestricted public browsing access across Home, Menu, About, Gallery, Contact, and Cart pages. Route protection and redirection to `/account/sign-in` for protected pages is deferred to the account page guard.
+- **Session termination (FR-033):** Calling `signOut()` terminates the active provider session, resets the in-memory user to null, and updates desktop and mobile header navigation immediately.
+- **Email verification and recovery redirects (FR-034, FR-035):** Sign-up confirmation (`emailRedirectTo`) and password recovery (`redirectTo`) destinations are constructed from `window.location.origin`, aligning with the Supabase project redirect URL whitelist (`http://localhost:3000` and the live site) and preventing open redirect exploits.
+

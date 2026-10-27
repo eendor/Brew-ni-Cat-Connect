@@ -13,6 +13,7 @@ import {
   TikTokIcon,
 } from "@/components/ui/icons";
 import { siteConfig, type NavigationItem } from "@/config/site";
+import { useAuth } from "@/context/auth-context";
 
 import { NavLink } from "./nav-link";
 
@@ -28,6 +29,7 @@ type MobileNavigationProps = Readonly<{
 }>;
 
 export function MobileNavigation({ items }: MobileNavigationProps) {
+  const { user, signOut } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const navRef = useRef<HTMLElement>(null);
@@ -175,6 +177,38 @@ export function MobileNavigation({ items }: MobileNavigationProps) {
               </NavLink>
             </li>
           ))}
+          {user ? (
+            <li className="mt-1 border-t border-[var(--border-soft)] pt-2">
+              <div className="flex items-center justify-between px-4 py-2">
+                <span className="text-xs font-bold text-[var(--text-subtle)] uppercase tracking-wider truncate">
+                  Account
+                  {user.email ? (
+                    <span className="normal-case"> ({user.email})</span>
+                  ) : null}
+                </span>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    closeNavigation();
+                    await signOut();
+                  }}
+                  className="rounded-lg px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-[var(--danger)] hover:bg-[rgb(255_133_119_/_10%)] transition-colors"
+                >
+                  Sign out
+                </button>
+              </div>
+            </li>
+          ) : (
+            <li className="mt-1 border-t border-[var(--border-soft)] pt-2">
+              <NavLink
+                href="/account/sign-in"
+                className="flex min-h-12 items-center rounded-xl px-4 py-3 text-base font-bold text-[var(--text-strong)] transition-colors hover:bg-[var(--accent-soft)] aria-[current=page]:bg-[var(--accent-soft)] aria-[current=page]:text-[var(--accent-solid)]"
+                onClick={closeNavigation}
+              >
+                Sign in
+              </NavLink>
+            </li>
+          )}
         </ul>
         <div
           className="mx-auto mt-4 flex w-full max-w-[var(--shell-width)] flex-col gap-1 border-t border-[var(--border-soft)] px-4 pt-4 text-sm text-[var(--text-muted)]"

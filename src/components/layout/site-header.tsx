@@ -5,6 +5,7 @@ import { siteConfig } from "@/config/site";
 
 import { CartTriggerButton } from "../cart/cart-trigger-button";
 import { Container } from "../ui/container";
+import { AccountNav } from "./account-nav";
 import { MobileNavigation } from "./mobile-navigation";
 import { NavLink } from "./nav-link";
 
@@ -51,6 +52,7 @@ export function SiteHeader() {
         </nav>
 
         <div className="hidden lg:flex lg:items-center lg:gap-4 xl:gap-5">
+          <AccountNav />
           <CartTriggerButton />
           <Link
             href="/contact"
