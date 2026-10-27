@@ -106,4 +106,32 @@ test.describe("Customer Authentication E2E", () => {
     await expect(page.getByRole("link", { name: /^sign in$/i })).toBeVisible();
     await expect(accountButton).not.toBeVisible();
   });
+
+  test("TC-P4-E2E-002 — captures screenshots of new customer auth screens", async ({
+    page,
+  }) => {
+    await page.goto("/account/sign-in");
+    await page.screenshot({
+      path: "docs/evidence/phase-4/screenshots/sign-in.png",
+      fullPage: true,
+    });
+
+    await page.goto("/account/sign-up");
+    await page.screenshot({
+      path: "docs/evidence/phase-4/screenshots/sign-up.png",
+      fullPage: true,
+    });
+
+    await page.goto("/account/forgot-password");
+    await page.screenshot({
+      path: "docs/evidence/phase-4/screenshots/forgot-password.png",
+      fullPage: true,
+    });
+
+    await page.goto("/account/reset-password");
+    await page.screenshot({
+      path: "docs/evidence/phase-4/screenshots/reset-password.png",
+      fullPage: true,
+    });
+  });
 });
