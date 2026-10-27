@@ -1,8 +1,26 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { describe, it, expect, vi } from "vitest";
 
 import { SiteHeader } from "@/components/layout/site-header";
 import { siteConfig } from "@/config/site";
+import { AuthProvider } from "@/context/auth-context";
+import type { SupabaseClient, User } from "@supabase/supabase-js";
+
+function createMockSupabase(user: User | null = null, signOutMock = vi.fn()) {
+  return {
+    auth: {
+      getSession: vi.fn().mockResolvedValue({
+        data: { session: user ? { user, access_token: "tok" } : null },
+        error: null,
+      }),
+      onAuthStateChange: vi.fn().mockReturnValue({
+        data: { subscription: { unsubscribe: vi.fn() } },
+      }),
+      signOut: signOutMock.mockResolvedValue({ error: null }),
+    },
+  } as unknown as SupabaseClient;
+}
 
 describe("SiteHeader", () => {
   it("TC-P1-001 / TC-P2-004 — renders one desktop Menu action and a distinct visit CTA", () => {
@@ -112,9 +130,9 @@ describe("SiteHeader", () => {
       expect(link).toHaveAttribute("rel", "noopener noreferrer");
     }
 
-    // still one link per page; the two social links are the only extras
+    // five page links, the sign-in link, and the two social links
     expect(within(navigation).getAllByRole("link")).toHaveLength(
-      siteConfig.navigation.length + 2,
+      siteConfig.navigation.length + 3,
     );
 
     // the address and hours icons and the brand marks are decorative
@@ -131,5 +149,104 @@ describe("SiteHeader", () => {
     expect(
       screen.getByRole("navigation", { name: "Mobile navigation" }),
     ).toBeInTheDocument();
+  });
+
+  it("TC-P4-AUTH-010 — displays Sign in link on desktop and mobile when signed out", async () => {
+    const user = userEvent.setup();
+    const client = createMockSupabase(null);
+
+    render(
+      <AuthProvider client={client}>
+        <SiteHeader />
+      </AuthProvider>,
+    );
+
+    // Desktop header has Sign in link
+    const signInLinks = screen.getAllByRole("link", { name: /sign in/i });
+    expect(signInLinks.length).toBeGreaterThanOrEqual(1);
+    expect(signInLinks[0]).toHaveAttribute("href", "/account/sign-in");
+
+    // Open mobile navigation and verify mobile Sign in link
+    await user.click(screen.getByRole("button", { name: "Open navigation" }));
+    const mobileNav = screen.getByRole("navigation", {
+      name: "Mobile navigation",
+    });
+    expect(
+      within(mobileNav).getByRole("link", { name: /sign in/i }),
+    ).toHaveAttribute("href", "/account/sign-in");
+  });
+
+  it("TC-P4-AUTH-011 — displays Account menu with Sign out on desktop when signed in", async () => {
+    const user = userEvent.setup();
+    const signOutMock = vi.fn();
+    const mockUser: User = {
+      id: "cust-1",
+      email: "cust@example.com",
+      app_metadata: {},
+      user_metadata: {},
+      aud: "authenticated",
+      created_at: new Date().toISOString(),
+    };
+    const client = createMockSupabase(mockUser, signOutMock);
+
+    render(
+      <AuthProvider client={client}>
+        <SiteHeader />
+      </AuthProvider>,
+    );
+
+    // Account menu button is present once session resolves
+    const accountBtn = await screen.findByRole("button", {
+      name: "Account menu",
+    });
+    expect(accountBtn).toHaveAttribute("aria-expanded", "false");
+
+    // Should not display "Sign in" on desktop
+    expect(
+      screen.queryByRole("link", { name: /^sign in$/i }),
+    ).not.toBeInTheDocument();
+
+    // Click to open account menu
+    await user.click(accountBtn);
+    expect(accountBtn).toHaveAttribute("aria-expanded", "true");
+
+    const signOutBtn = screen.getByRole("menuitem", { name: /sign out/i });
+    expect(signOutBtn).toBeInTheDocument();
+
+    await user.click(signOutBtn);
+    expect(signOutMock).toHaveBeenCalled();
+  });
+
+  it("TC-P4-AUTH-012 — displays Sign out in mobile navigation when signed in", async () => {
+    const user = userEvent.setup();
+    const signOutMock = vi.fn();
+    const mockUser: User = {
+      id: "cust-2",
+      email: "mobile@example.com",
+      app_metadata: {},
+      user_metadata: {},
+      aud: "authenticated",
+      created_at: new Date().toISOString(),
+    };
+    const client = createMockSupabase(mockUser, signOutMock);
+
+    render(
+      <AuthProvider client={client}>
+        <SiteHeader />
+      </AuthProvider>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Open navigation" }));
+    const mobileNav = screen.getByRole("navigation", {
+      name: "Mobile navigation",
+    });
+
+    const mobileSignOutBtn = within(mobileNav).getByRole("button", {
+      name: /sign out/i,
+    });
+    expect(mobileSignOutBtn).toBeInTheDocument();
+
+    await user.click(mobileSignOutBtn);
+    expect(signOutMock).toHaveBeenCalled();
   });
 });

@@ -11,6 +11,7 @@ import { RouteCurtain } from "@/components/motion/route-curtain";
 import { ScrollMotion } from "@/components/motion/scroll-motion";
 import { CartFxLayer } from "@/components/three/layers";
 import { siteConfig } from "@/config/site";
+import { AuthProvider } from "@/context/auth-context";
 import { CartProvider } from "@/context/cart-context";
 
 import "./globals.css";
@@ -88,21 +89,23 @@ export default function RootLayout({ children }: RootLayoutProps) {
         <a className="skip-link" href="#main-content">
           Skip to main content
         </a>
-        <CartProvider>
-          <div className="flex min-h-dvh flex-col">
-            <SiteHeader />
-            <main id="main-content" className="flex-1" tabIndex={-1}>
-              {children}
-            </main>
-            <SiteFooter />
-          </div>
-          <CartDrawer />
-          <CartUndoToast />
-          <ScrollMotion />
-          <MotionDirector />
-          <RouteCurtain />
-          <CartFxLayer />
-        </CartProvider>
+        <AuthProvider>
+          <CartProvider>
+            <div className="flex min-h-dvh flex-col">
+              <SiteHeader />
+              <main id="main-content" className="flex-1" tabIndex={-1}>
+                {children}
+              </main>
+              <SiteFooter />
+            </div>
+            <CartDrawer />
+            <CartUndoToast />
+            <ScrollMotion />
+            <MotionDirector />
+            <RouteCurtain />
+            <CartFxLayer />
+          </CartProvider>
+        </AuthProvider>
       </body>
     </html>
   );

@@ -1023,3 +1023,14 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Testing:** TC-P4-022 and TC-P4-026 on a fresh build; checked by eye on a phone in MAN-P4-007.
 - **Branch / PR:** `fix/p3-text-rise-smooth`.
 - **Next action:** Ask the team to confirm the rise feels smooth in MAN-P4-007.
+
+
+## 2026-10-27 — Customer authentication (FR-031 to FR-036)
+
+- **Phase:** 4 (customer authentication)
+- **Task:** Implement customer authentication: auth client, auth-context with useAuth, sign-up, sign-in, forgot-password, reset-password pages, desktop and mobile navigation auth triggers.
+- **Summary:** Added `src/lib/supabase/auth-client.ts` as a browser Supabase client with session persistence (`persistSession: true`, `autoRefreshToken: true`, `detectSessionInUrl: true`) without altering `public-client.ts`. Created `src/context/auth-context.tsx` with `useAuth()` exposing `user`, `isLoading`, `signUp`, `signIn`, `signOut`, `resetPassword`, and `updatePassword`. On page reload, valid sessions are preserved and expired sessions are directed to `/account/sign-in` without causing infinite redirects or losing unauthenticated public browsing access (FR-036). Created `/account/sign-up`, `/account/sign-in`, `/account/forgot-password`, and `/account/reset-password` in the checkout form design token style, with clear non-sensitive error states for weak passwords (< 6 characters), incorrect passwords, and existing emails. Sign-up prompts customers to verify their email (FR-035). Redirect URLs (`emailRedirectTo` and `redirectTo`) are built from `window.location.origin`. Added "Sign in" links and "Account" menu with "Sign out" in `site-header.tsx` and `mobile-navigation.tsx`.
+- **Files:** `src/lib/supabase/auth-client.ts`, `src/context/auth-context.tsx`, `src/app/layout.tsx`, `src/app/account/sign-up/page.tsx`, `src/app/account/sign-in/page.tsx`, `src/app/account/forgot-password/page.tsx`, `src/app/account/reset-password/page.tsx`, `src/components/account/sign-up-view.tsx`, `src/components/account/sign-in-view.tsx`, `src/components/account/forgot-password-view.tsx`, `src/components/account/reset-password-view.tsx`, `src/components/layout/account-nav.tsx`, `src/components/layout/site-header.tsx`, `src/components/layout/mobile-navigation.tsx`, tests, documentation.
+- **Testing:** Unit tests in `tests/unit/auth-supabase-client.test.ts` and `tests/unit/auth-context.test.tsx`, form component tests in `tests/unit/account-forms.test.tsx`, header auth tests in `tests/unit/site-header.test.tsx`, and Playwright Chromium test in `tests/e2e/auth.spec.ts` (TC-P4-AUTH-001 to TC-P4-AUTH-012, TC-P4-FORM-001 to TC-P4-FORM-011, TC-P4-E2E-001).
+- **Branch / PR:** `feat/p4-customer-auth`.
+- **Next action:** Review by Rodnee; independent QA by Renier.
