@@ -156,7 +156,7 @@ npm run build
 python scripts/validate_phase0_docs.py
 ```
 
-GitHub Actions selects Python 3.14 for the specification-document validator plus Node.js 24 and the manifest-pinned npm 12.0.2, then runs `npm ci`, `audit`, `format:check`, document validation, `lint`, `typecheck`, `test`, and `build`. Playwright remains a required local pre-review command and is omitted from the lightweight hosted job. CI/builds require no Supabase credential or live response. A command is reported as passing only when its dated execution result has been captured for the relevant revision.
+GitHub Actions selects Python 3.14 for the specification-document validator plus Node.js 24 and the manifest-pinned npm 12.0.2, then runs `npm ci`, `audit`, `format:check`, document validation, `lint`, `typecheck`, `test`, and `build`. Playwright remains a required local pre-review command. Since Phase 3, a separate `Browser tests (chromium)` job also runs the `chromium` project in CI. Since PR #59 that job downloads only the headless shell and installs system packages only when Chromium can't start without them. CI/builds require no Supabase credential or live response. A command is reported as passing only when its dated execution result has been captured for the relevant revision.
 
 ## 7. Functions, Domain Logic, and Errors
 

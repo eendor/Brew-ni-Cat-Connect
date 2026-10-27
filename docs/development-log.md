@@ -1034,3 +1034,14 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Testing:** Unit tests in `tests/unit/auth-supabase-client.test.ts` and `tests/unit/auth-context.test.tsx`, form component tests in `tests/unit/account-forms.test.tsx`, header auth tests in `tests/unit/site-header.test.tsx`, and Playwright Chromium tests in `tests/e2e/auth.spec.ts` (TC-P4-149 to TC-P4-173, with TC-P4-173 screenshot capture guarded by `CAPTURE_EVIDENCE=1`).
 - **Branch / PR:** `feat/p4-customer-auth` / PR #58.
 - **Next action:** Re-review and merge by Rodnee; independent QA by Renier.
+
+
+## 2026-10-27 — Faster Playwright install in CI
+
+- **Phase:** 4 (CI upkeep)
+- **Task:** The `Install Playwright Chromium` step in the `Browser tests (chromium)` job was slow. It took 20 to 28 seconds on a normal run, and 8 min 40 s on 2026-10-26.
+- **Summary:** The run log showed the time went to `--with-deps`: apt downloaded fonts and libraries from the Ubuntu mirror at 50 kB/s for 8 min 15 s, while Chromium itself downloaded in about 4 s. The step now runs `npx playwright install --only-shell chromium`, since CI runs headless, then starts the browser once and runs `npx playwright install-deps chromium` only if that fails. The runner image already has Chromium's libraries, and no test compares screenshots, so the extra fonts aren't needed. Caching the browser was not used: it would save only the few seconds of the download, and Playwright's CI guide advises against it.
+- **Files:** `.github/workflows/ci.yml`, `docs/testing-strategy.md`, `docs/development-standards.md`.
+- **Testing:** The `Browser tests (chromium)` job on PR #59 runs the full `chromium` project with the new install step. Its step timings are compared with the runs before it in the PR.
+- **Branch / PR:** `perf/ci-playwright-install`, PR #59.
+- **Next action:** None. If a future runner image drops a library, the step installs the system packages by itself.
