@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -53,7 +53,7 @@ describe("Account Forms Component Tests", () => {
   }
 
   describe("SignUpView (FR-031, FR-035)", () => {
-    it("TC-P4-FORM-001 — shows validation errors on empty or invalid inputs", async () => {
+    it("TC-P4-161 — shows validation errors on empty or invalid inputs", async () => {
       const user = userEvent.setup();
       const client = createMockSupabase();
 
@@ -69,7 +69,7 @@ describe("Account Forms Component Tests", () => {
       expect(screen.getByText("Password is required.")).toBeInTheDocument();
     });
 
-    it("TC-P4-FORM-002 — shows clear error for a weak password (less than 6 characters)", async () => {
+    it("TC-P4-162 — shows clear error for a weak password (less than 6 characters)", async () => {
       const user = userEvent.setup();
       const client = createMockSupabase();
 
@@ -94,7 +94,7 @@ describe("Account Forms Component Tests", () => {
       expect(client.auth.signUp).not.toHaveBeenCalled();
     });
 
-    it("TC-P4-FORM-003 — shows clear error when passwords do not match", async () => {
+    it("TC-P4-163 — shows clear error when passwords do not match", async () => {
       const user = userEvent.setup();
       const client = createMockSupabase();
 
@@ -120,12 +120,13 @@ describe("Account Forms Component Tests", () => {
       expect(client.auth.signUp).not.toHaveBeenCalled();
     });
 
-    it("TC-P4-FORM-004 — shows clear error for an email already in use", async () => {
+    it("TC-P4-164 — does not reveal whether email is already registered and shows confirmation notice (FR-031, FR-032)", async () => {
       const user = userEvent.setup();
       const client = createMockSupabase({
         signUp: vi.fn().mockResolvedValue({
           data: { user: null, session: null },
           error: {
+            code: "user_already_exists",
             message: "User already registered",
             status: 422,
           },
@@ -152,14 +153,15 @@ describe("Account Forms Component Tests", () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText(
-            /this email is already in use\. please sign in instead or reset your password\./i,
-          ),
+          screen.getByRole("heading", { name: /confirm your email/i }),
         ).toBeInTheDocument();
       });
+      expect(
+        screen.queryByText(/this email is already in use/i),
+      ).not.toBeInTheDocument();
     });
 
-    it("TC-P4-FORM-005 — asks customer to confirm their email on successful sign-up (FR-035)", async () => {
+    it("TC-P4-165 — asks customer to confirm their email on successful sign-up (FR-035)", async () => {
       const user = userEvent.setup();
       const client = createMockSupabase({
         signUp: vi.fn().mockResolvedValue({
@@ -202,7 +204,7 @@ describe("Account Forms Component Tests", () => {
   });
 
   describe("SignInView (FR-032)", () => {
-    it("TC-P4-FORM-006 — shows validation errors on empty submit", async () => {
+    it("TC-P4-166 — shows validation errors on empty submit", async () => {
       const user = userEvent.setup();
       const client = createMockSupabase();
 
@@ -218,13 +220,14 @@ describe("Account Forms Component Tests", () => {
       expect(screen.getByText("Password is required.")).toBeInTheDocument();
     });
 
-    it("TC-P4-FORM-007 — shows clear error for wrong password / invalid credentials", async () => {
+    it("TC-P4-167 — distinguishes unconfirmed account from invalid credentials (FR-032)", async () => {
       const user = userEvent.setup();
       const client = createMockSupabase({
         signInWithPassword: vi.fn().mockResolvedValue({
           data: { user: null, session: null },
           error: {
-            message: "Invalid login credentials",
+            code: "email_not_confirmed",
+            message: "Email not confirmed",
             status: 400,
           },
         }),
@@ -240,20 +243,23 @@ describe("Account Forms Component Tests", () => {
         screen.getByLabelText(/email address/i),
         "customer@example.com",
       );
-      await user.type(screen.getByLabelText(/^password/i), "WrongPass123");
+      await user.type(screen.getByLabelText(/^password/i), "CorrectPass123");
 
       await user.click(screen.getByRole("button", { name: /^sign in$/i }));
 
       await waitFor(() => {
         expect(
           screen.getByText(
-            /incorrect email or password\. please check your credentials and try again\./i,
+            /please verify your email address before signing in\. check your inbox for the confirmation link\./i,
           ),
         ).toBeInTheDocument();
       });
+      expect(
+        screen.queryByText(/incorrect email or password/i),
+      ).not.toBeInTheDocument();
     });
 
-    it("TC-P4-FORM-008 — redirects to / on successful sign-in", async () => {
+    it("TC-P4-168 — redirects to / on successful sign-in or shows signed-in notice", async () => {
       const user = userEvent.setup();
       const client = createMockSupabase({
         signInWithPassword: vi.fn().mockResolvedValue({
@@ -286,7 +292,7 @@ describe("Account Forms Component Tests", () => {
   });
 
   describe("ForgotPasswordView (FR-034)", () => {
-    it("TC-P4-FORM-009 — sends password reset link and shows confirmation notice", async () => {
+    it("TC-P4-169 — sends password reset link and shows confirmation notice", async () => {
       const user = userEvent.setup();
       const client = createMockSupabase();
 
@@ -320,8 +326,7 @@ describe("Account Forms Component Tests", () => {
   });
 
   describe("ResetPasswordView (FR-034)", () => {
-    it("TC-P4-FORM-010 — validates weak password and matching passwords", async () => {
-      const user = userEvent.setup();
+    it("TC-P4-170 — protects reset password view when PASSWORD_RECOVERY event is absent (FR-034)", async () => {
       const client = createMockSupabase();
 
       render(
@@ -330,22 +335,29 @@ describe("Account Forms Component Tests", () => {
         </AuthProvider>,
       );
 
-      await user.type(screen.getByLabelText(/^new password/i), "123");
-      await user.type(screen.getByLabelText(/confirm new password/i), "123");
-
-      await user.click(
-        screen.getByRole("button", { name: /update password/i }),
-      );
-
+      await waitFor(() => {
+        expect(
+          screen.getByRole("heading", { name: /invalid or expired link/i }),
+        ).toBeInTheDocument();
+      });
       expect(
-        screen.getByText("Password must be at least 6 characters long."),
+        screen.getByText("This link is invalid or has expired."),
       ).toBeInTheDocument();
-      expect(client.auth.updateUser).not.toHaveBeenCalled();
+      expect(
+        screen.getByRole("link", { name: /forgot password/i }),
+      ).toHaveAttribute("href", "/account/forgot-password");
+      expect(screen.queryByLabelText(/^new password/i)).not.toBeInTheDocument();
     });
 
-    it("TC-P4-FORM-011 — updates password successfully and shows confirmation", async () => {
+    it("TC-P4-171 — updates password when PASSWORD_RECOVERY event is present (FR-034)", async () => {
       const user = userEvent.setup();
+      let authChangeCb: ((event: string, session: unknown) => void) | null =
+        null;
       const client = createMockSupabase({
+        onAuthStateChange: vi.fn().mockImplementation((cb) => {
+          authChangeCb = cb;
+          return { data: { subscription: { unsubscribe: vi.fn() } } };
+        }),
         updateUser: vi.fn().mockResolvedValue({
           data: { user: { id: "u-1" } },
           error: null,
@@ -357,6 +369,22 @@ describe("Account Forms Component Tests", () => {
           <ResetPasswordView />
         </AuthProvider>,
       );
+
+      // Trigger PASSWORD_RECOVERY event from onAuthStateChange
+      act(() => {
+        if (authChangeCb) {
+          authChangeCb("PASSWORD_RECOVERY", {
+            access_token: "tok",
+            user: { id: "u-1", email: "user@example.com" },
+          });
+        }
+      });
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole("heading", { name: /set new password/i }),
+        ).toBeInTheDocument();
+      });
 
       await user.type(
         screen.getByLabelText(/^new password/i),

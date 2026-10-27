@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 test.describe("Customer Authentication E2E", () => {
-  test("TC-P4-E2E-001 — signs in with mocked Supabase Auth and signs out", async ({
+  test("TC-P4-172 — signs in with mocked Supabase Auth and signs out", async ({
     page,
   }) => {
     const mockUser = {
@@ -33,6 +33,8 @@ test.describe("Customer Authentication E2E", () => {
           status: 400,
           contentType: "application/json",
           body: JSON.stringify({
+            code: "invalid_credentials",
+            error_code: "invalid_credentials",
             error: "invalid_grant",
             error_description: "Invalid login credentials",
             message: "Invalid login credentials",
@@ -98,18 +100,23 @@ test.describe("Customer Authentication E2E", () => {
     await accountButton.click();
     await expect(accountButton).toHaveAttribute("aria-expanded", "true");
 
-    const signOutMenuItem = page.getByRole("menuitem", { name: /sign out/i });
-    await expect(signOutMenuItem).toBeVisible();
-    await signOutMenuItem.click();
+    const signOutButton = page.getByRole("button", { name: /sign out/i });
+    await expect(signOutButton).toBeVisible();
+    await signOutButton.click();
 
     // 6. Header should revert to displaying "Sign in"
     await expect(page.getByRole("link", { name: /^sign in$/i })).toBeVisible();
     await expect(accountButton).not.toBeVisible();
   });
 
-  test("TC-P4-E2E-002 — captures screenshots of new customer auth screens", async ({
+  test("TC-P4-173 — captures screenshots of new customer auth screens", async ({
     page,
   }) => {
+    test.skip(
+      process.env.CAPTURE_EVIDENCE !== "1",
+      "Skipped unless CAPTURE_EVIDENCE=1",
+    );
+
     await page.goto("/account/sign-in");
     await page.screenshot({
       path: "docs/evidence/phase-4/screenshots/sign-in.png",

@@ -8,7 +8,7 @@ import { Container } from "@/components/ui/container";
 import { useAuth } from "@/context/auth-context";
 
 export function SignInView() {
-  const { signIn } = useAuth();
+  const { signIn, user, isLoading } = useAuth();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -41,27 +41,27 @@ export function SignInView() {
     try {
       const res = await signIn(trimmedEmail, password);
       if (res.error) {
-        const msg = res.error.message.toLowerCase();
-        const status =
-          "status" in res.error && typeof res.error.status === "number"
-            ? res.error.status
-            : undefined;
-        if (
-          msg.includes("invalid login credentials") ||
-          msg.includes("invalid credentials") ||
-          msg.includes("wrong password") ||
-          msg.includes("not found") ||
-          status === 400
+        const errorCode =
+          "code" in res.error && typeof res.error.code === "string"
+            ? res.error.code
+            : "";
+        if (errorCode === "email_not_confirmed") {
+          setGeneralError(
+            "Please verify your email address before signing in. Check your inbox for the confirmation link.",
+          );
+        } else if (
+          errorCode === "invalid_credentials" ||
+          errorCode === "invalid_grant"
         ) {
           setGeneralError(
             "Incorrect email or password. Please check your credentials and try again.",
           );
-        } else if (msg.includes("email not confirmed")) {
+        } else if (errorCode === "over_email_send_rate_limit") {
           setGeneralError(
-            "Your email address has not been confirmed yet. Please check your inbox for the confirmation link.",
+            "Too many requests. Please wait a moment and try again.",
           );
         } else {
-          setGeneralError(res.error.message);
+          setGeneralError("Something went wrong. Please try again.");
         }
       } else {
         router.push("/");
@@ -72,6 +72,36 @@ export function SignInView() {
       setIsSubmitting(false);
     }
   };
+
+  if (!isLoading && user) {
+    return (
+      <div className="py-12 sm:py-16 lg:py-20">
+        <Container>
+          <div className="mx-auto max-w-md text-center">
+            <p className="eyebrow">Customer Account</p>
+            <h1 className="font-display mt-2 text-4xl tracking-tight text-[var(--text-strong)]">
+              You&apos;re already signed in
+            </h1>
+            <p className="mt-4 text-sm text-[var(--text-muted)]">
+              Signed in as{" "}
+              <span className="font-bold text-[var(--text-strong)]">
+                {user.email}
+              </span>
+              .
+            </p>
+            <div className="mt-8">
+              <Link
+                href="/"
+                className="button-primary inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-bold shadow-sm"
+              >
+                Back to Home
+              </Link>
+            </div>
+          </div>
+        </Container>
+      </div>
+    );
+  }
 
   return (
     <div className="py-12 sm:py-16 lg:py-20">

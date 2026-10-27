@@ -34,7 +34,17 @@ export function ForgotPasswordView() {
     try {
       const res = await resetPassword(trimmedEmail);
       if (res.error) {
-        setGeneralError(res.error.message);
+        const errorCode =
+          "code" in res.error && typeof res.error.code === "string"
+            ? res.error.code
+            : "";
+        if (errorCode === "over_email_send_rate_limit") {
+          setGeneralError(
+            "Too many requests. Please wait a moment and try again.",
+          );
+        } else {
+          setGeneralError("Something went wrong. Please try again.");
+        }
       } else {
         setIsSubmitted(true);
       }

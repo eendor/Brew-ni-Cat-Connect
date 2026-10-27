@@ -6,9 +6,10 @@ import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/context/auth-context";
 
 export function AccountNav() {
-  const { user, signOut } = useAuth();
+  const { user, signOut, isLoading } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -16,6 +17,7 @@ export function AccountNav() {
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
         setIsOpen(false);
+        buttonRef.current?.focus();
       }
     }
 
@@ -34,6 +36,15 @@ export function AccountNav() {
     };
   }, [isOpen]);
 
+  if (isLoading) {
+    return (
+      <div
+        className="inline-flex min-h-11 w-20 items-center justify-center opacity-0"
+        aria-hidden="true"
+      />
+    );
+  }
+
   if (!user) {
     return (
       <Link
@@ -48,11 +59,11 @@ export function AccountNav() {
   return (
     <div className="relative" ref={menuRef}>
       <button
+        ref={buttonRef}
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
         className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-[var(--border-strong)] bg-[var(--surface-card)] px-4 py-2 text-xs font-bold tracking-[0.08em] text-[var(--text-strong)] uppercase transition-colors hover:border-[var(--accent-solid)]"
         aria-expanded={isOpen}
-        aria-haspopup="true"
         aria-label="Account menu"
       >
         <span>Account</span>
@@ -71,27 +82,26 @@ export function AccountNav() {
       </button>
 
       {isOpen && (
-        <div
-          role="menu"
-          aria-label="Account options"
-          className="absolute right-0 mt-2 w-48 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-2 shadow-[var(--shadow-card)] z-50"
-        >
+        <div className="absolute right-0 mt-2 w-48 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-2 shadow-[var(--shadow-card)] z-50">
           {user.email ? (
             <div className="px-3 py-2 text-xs text-[var(--text-muted)] truncate border-b border-[var(--border-soft)] mb-1">
               {user.email}
             </div>
           ) : null}
-          <button
-            type="button"
-            role="menuitem"
-            onClick={async () => {
-              setIsOpen(false);
-              await signOut();
-            }}
-            className="flex w-full items-center rounded-xl px-3 py-2 text-xs font-bold text-[var(--danger)] hover:bg-[rgb(255_133_119_/_10%)] transition-colors text-left uppercase tracking-[0.08em]"
-          >
-            Sign out
-          </button>
+          <ul className="space-y-1">
+            <li>
+              <button
+                type="button"
+                onClick={async () => {
+                  setIsOpen(false);
+                  await signOut();
+                }}
+                className="flex w-full items-center rounded-xl px-3 py-2 text-xs font-bold text-[var(--danger)] hover:bg-[rgb(255_133_119_/_10%)] transition-colors text-left uppercase tracking-[0.08em]"
+              >
+                Sign out
+              </button>
+            </li>
+          </ul>
         </div>
       )}
     </div>

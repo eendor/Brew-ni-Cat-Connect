@@ -49,30 +49,27 @@ export function SignUpView() {
     try {
       const res = await signUp(trimmedEmail, password);
       if (res.error) {
-        const msg = res.error.message.toLowerCase();
-        const status =
-          "status" in res.error && typeof res.error.status === "number"
-            ? res.error.status
-            : undefined;
-        if (
-          msg.includes("already registered") ||
-          msg.includes("already in use") ||
-          msg.includes("unique constraint") ||
-          status === 422
-        ) {
-          setGeneralError(
-            "This email is already in use. Please sign in instead or reset your password.",
-          );
-        } else if (
-          msg.includes("weak") ||
-          msg.includes("least 6") ||
-          msg.includes("short")
-        ) {
+        const errorCode =
+          "code" in res.error && typeof res.error.code === "string"
+            ? res.error.code
+            : "";
+        if (errorCode === "weak_password") {
           setErrors({
             password: "Password must be at least 6 characters long.",
           });
+        } else if (errorCode === "email_address_invalid") {
+          setErrors({
+            email: "Please enter a valid email address.",
+          });
+        } else if (errorCode === "over_email_send_rate_limit") {
+          setGeneralError(
+            "Too many requests. Please wait a moment and try again.",
+          );
+        } else if (errorCode === "user_already_exists") {
+          // Do not reveal whether an account exists (FR-031, FR-032); show the same check inbox screen
+          setIsSubmitted(true);
         } else {
-          setGeneralError(res.error.message);
+          setGeneralError("Something went wrong. Please try again.");
         }
       } else {
         setIsSubmitted(true);
@@ -94,7 +91,7 @@ export function SignUpView() {
               Create an Account
             </h1>
             <p className="mt-2 text-sm text-[var(--text-muted)]">
-              Register for a Brew ni Cat customer account to manage your orders.
+              Join Brew ni Cat to access your customer account.
             </p>
           </div>
 

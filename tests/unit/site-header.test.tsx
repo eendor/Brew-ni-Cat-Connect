@@ -151,7 +151,7 @@ describe("SiteHeader", () => {
     ).toBeInTheDocument();
   });
 
-  it("TC-P4-AUTH-010 — displays Sign in link on desktop and mobile when signed out", async () => {
+  it("TC-P4-158 — displays Sign in link on desktop and mobile when signed out", async () => {
     const user = userEvent.setup();
     const client = createMockSupabase(null);
 
@@ -162,7 +162,9 @@ describe("SiteHeader", () => {
     );
 
     // Desktop header has Sign in link
-    const signInLinks = screen.getAllByRole("link", { name: /sign in/i });
+    const signInLinks = await screen.findAllByRole("link", {
+      name: /sign in/i,
+    });
     expect(signInLinks.length).toBeGreaterThanOrEqual(1);
     expect(signInLinks[0]).toHaveAttribute("href", "/account/sign-in");
 
@@ -176,7 +178,7 @@ describe("SiteHeader", () => {
     ).toHaveAttribute("href", "/account/sign-in");
   });
 
-  it("TC-P4-AUTH-011 — displays Account menu with Sign out on desktop when signed in", async () => {
+  it("TC-P4-159 — displays Account menu with Sign out on desktop when signed in", async () => {
     const user = userEvent.setup();
     const signOutMock = vi.fn();
     const mockUser: User = {
@@ -210,14 +212,14 @@ describe("SiteHeader", () => {
     await user.click(accountBtn);
     expect(accountBtn).toHaveAttribute("aria-expanded", "true");
 
-    const signOutBtn = screen.getByRole("menuitem", { name: /sign out/i });
+    const signOutBtn = screen.getByRole("button", { name: /sign out/i });
     expect(signOutBtn).toBeInTheDocument();
 
     await user.click(signOutBtn);
     expect(signOutMock).toHaveBeenCalled();
   });
 
-  it("TC-P4-AUTH-012 — displays Sign out in mobile navigation when signed in", async () => {
+  it("TC-P4-160 — displays Sign out in mobile navigation when signed in", async () => {
     const user = userEvent.setup();
     const signOutMock = vi.fn();
     const mockUser: User = {

@@ -7,7 +7,7 @@ import { Container } from "@/components/ui/container";
 import { useAuth } from "@/context/auth-context";
 
 export function ResetPasswordView() {
-  const { updatePassword } = useAuth();
+  const { updatePassword, isPasswordRecovery, isLoading } = useAuth();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -41,17 +41,16 @@ export function ResetPasswordView() {
     try {
       const res = await updatePassword(password);
       if (res.error) {
-        const msg = res.error.message.toLowerCase();
-        if (
-          msg.includes("weak") ||
-          msg.includes("least 6") ||
-          msg.includes("short")
-        ) {
+        const errorCode =
+          "code" in res.error && typeof res.error.code === "string"
+            ? res.error.code
+            : "";
+        if (errorCode === "weak_password") {
           setErrors({
             password: "Password must be at least 6 characters long.",
           });
         } else {
-          setGeneralError(res.error.message);
+          setGeneralError("Something went wrong. Please try again.");
         }
       } else {
         setIsSuccess(true);
@@ -62,6 +61,32 @@ export function ResetPasswordView() {
       setIsSubmitting(false);
     }
   };
+
+  if (!isLoading && !isPasswordRecovery) {
+    return (
+      <div className="py-12 sm:py-16 lg:py-20">
+        <Container>
+          <div className="mx-auto max-w-md text-center">
+            <p className="eyebrow">Customer Account</p>
+            <h1 className="font-display mt-2 text-4xl tracking-tight text-[var(--text-strong)]">
+              Invalid or Expired Link
+            </h1>
+            <p className="mt-4 text-sm text-[var(--text-muted)]">
+              This link is invalid or has expired.
+            </p>
+            <div className="mt-8">
+              <Link
+                href="/account/forgot-password"
+                className="button-primary inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-bold shadow-sm"
+              >
+                Forgot password
+              </Link>
+            </div>
+          </div>
+        </Container>
+      </div>
+    );
+  }
 
   return (
     <div className="py-12 sm:py-16 lg:py-20">

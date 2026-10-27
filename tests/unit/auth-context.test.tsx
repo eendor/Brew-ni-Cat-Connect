@@ -16,6 +16,7 @@ function TestConsumer() {
   const {
     user,
     isLoading,
+    isPasswordRecovery,
     signUp,
     signIn,
     signOut,
@@ -27,6 +28,7 @@ function TestConsumer() {
     <div>
       <div data-testid="loading">{isLoading ? "loading" : "ready"}</div>
       <div data-testid="user-email">{user ? user.email : "guest"}</div>
+      <div data-testid="is-recovery">{isPasswordRecovery ? "yes" : "no"}</div>
       <button
         onClick={() => signUp("new@example.com", "Password123!")}
         data-testid="signup-btn"
@@ -120,7 +122,7 @@ describe("AuthContext and useAuth", () => {
     };
   }
 
-  it("TC-P4-AUTH-001 — starts with no user and finishes loading", async () => {
+  it("TC-P4-149 — starts with no user and finishes loading", async () => {
     const { client } = createMockSupabase();
 
     render(
@@ -136,7 +138,7 @@ describe("AuthContext and useAuth", () => {
     expect(routerPush).not.toHaveBeenCalled();
   });
 
-  it("TC-P4-AUTH-002 — restores a still-valid session on reload (FR-036)", async () => {
+  it("TC-P4-150 — restores a still-valid session on reload (FR-036)", async () => {
     const validUser: User = {
       id: "user-123",
       email: "customer@example.com",
@@ -176,7 +178,7 @@ describe("AuthContext and useAuth", () => {
     expect(routerPush).not.toHaveBeenCalled();
   });
 
-  it("TC-P4-AUTH-003 — sends an expired session to sign in on reload (FR-036)", async () => {
+  it("TC-P4-151 — clears an expired session to guest on reload without redirecting (FR-036)", async () => {
     const expiredUser: User = {
       id: "user-expired",
       email: "expired@example.com",
@@ -211,10 +213,10 @@ describe("AuthContext and useAuth", () => {
       expect(screen.getByTestId("loading").textContent).toBe("ready");
     });
     expect(screen.getByTestId("user-email").textContent).toBe("guest");
-    expect(routerPush).toHaveBeenCalledWith("/account/sign-in");
+    expect(routerPush).not.toHaveBeenCalled();
   });
 
-  it("TC-P4-AUTH-004 — signUp builds emailRedirectTo from origin (FR-031, FR-035)", async () => {
+  it("TC-P4-152 — signUp builds emailRedirectTo from origin (FR-031, FR-035)", async () => {
     const user = userEvent.setup();
     const { client, mockAuth } = createMockSupabase();
 
@@ -239,7 +241,7 @@ describe("AuthContext and useAuth", () => {
     });
   });
 
-  it("TC-P4-AUTH-005 — signIn updates user on success (FR-032)", async () => {
+  it("TC-P4-153 — signIn updates user on success (FR-032)", async () => {
     const user = userEvent.setup();
     const loggedInUser: User = {
       id: "signed-in-user",
@@ -304,7 +306,7 @@ describe("AuthContext and useAuth", () => {
     });
   });
 
-  it("TC-P4-AUTH-006 — signOut terminates session and clears user (FR-033)", async () => {
+  it("TC-P4-154 — signOut terminates session and clears user (FR-033)", async () => {
     const user = userEvent.setup();
     const existingUser: User = {
       id: "user-1",
@@ -366,7 +368,7 @@ describe("AuthContext and useAuth", () => {
     });
   });
 
-  it("TC-P4-AUTH-007 — resetPassword builds redirectTo from origin (FR-034)", async () => {
+  it("TC-P4-155 — resetPassword builds redirectTo from origin (FR-034)", async () => {
     const user = userEvent.setup();
     const { client, mockAuth } = createMockSupabase();
 
@@ -390,7 +392,7 @@ describe("AuthContext and useAuth", () => {
     );
   });
 
-  it("TC-P4-AUTH-008 — updatePassword calls updateUser with new password", async () => {
+  it("TC-P4-156 — updatePassword calls updateUser with new password", async () => {
     const user = userEvent.setup();
     const { client, mockAuth } = createMockSupabase();
 
@@ -411,7 +413,7 @@ describe("AuthContext and useAuth", () => {
     });
   });
 
-  it("TC-P4-AUTH-009 — handles auth state change listener events", async () => {
+  it("TC-P4-157 — handles auth state change listener events including PASSWORD_RECOVERY", async () => {
     const { client, triggerAuthStateChange } = createMockSupabase();
 
     render(
@@ -434,9 +436,9 @@ describe("AuthContext and useAuth", () => {
     };
 
     act(() => {
-      triggerAuthStateChange("SIGNED_IN", {
-        access_token: "t",
-        refresh_token: "r",
+      triggerAuthStateChange("PASSWORD_RECOVERY", {
+        access_token: "t-recovery",
+        refresh_token: "r-recovery",
         expires_in: 3600,
         expires_at: Math.floor(Date.now() / 1000) + 3600,
         token_type: "bearer",
@@ -448,6 +450,7 @@ describe("AuthContext and useAuth", () => {
       expect(screen.getByTestId("user-email").textContent).toBe(
         "event@example.com",
       );
+      expect(screen.getByTestId("is-recovery").textContent).toBe("yes");
     });
 
     act(() => {
@@ -456,6 +459,7 @@ describe("AuthContext and useAuth", () => {
 
     await waitFor(() => {
       expect(screen.getByTestId("user-email").textContent).toBe("guest");
+      expect(screen.getByTestId("is-recovery").textContent).toBe("no");
     });
   });
 });

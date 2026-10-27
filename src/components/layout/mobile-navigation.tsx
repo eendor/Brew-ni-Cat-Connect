@@ -181,7 +181,10 @@ export function MobileNavigation({ items }: MobileNavigationProps) {
             <li className="mt-1 border-t border-[var(--border-soft)] pt-2">
               <div className="flex items-center justify-between px-4 py-2">
                 <span className="text-xs font-bold text-[var(--text-subtle)] uppercase tracking-wider truncate">
-                  Account{user.email ? ` (${user.email})` : ""}
+                  Account
+                  {user.email ? (
+                    <span className="normal-case"> ({user.email})</span>
+                  ) : null}
                 </span>
                 <button
                   type="button"

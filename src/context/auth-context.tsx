@@ -6,11 +6,9 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useRef,
   useState,
   type ReactNode,
 } from "react";
-import { useRouter } from "next/navigation";
 import type {
   AuthError,
   AuthResponse,
@@ -25,6 +23,7 @@ import { getAuthSupabaseClient } from "@/lib/supabase/auth-client";
 export type AuthContextValue = Readonly<{
   user: User | null;
   isLoading: boolean;
+  isPasswordRecovery: boolean;
   signUp: (
     email: string,
     password: string,
@@ -55,6 +54,7 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 const fallbackAuthValue: AuthContextValue = {
   user: null,
   isLoading: false,
+  isPasswordRecovery: false,
   signUp: async () => ({
     data: null,
     error: new Error("Authentication service is unavailable"),
@@ -79,27 +79,13 @@ export type AuthProviderProps = Readonly<{
   client?: SupabaseClient;
 }>;
 
-function useRouterSafe() {
-  try {
-    return useRouter();
-  } catch {
-    return null;
-  }
-}
-
 export function AuthProvider({
   children,
   client: clientProp,
 }: AuthProviderProps) {
-  const router = useRouterSafe();
-  const routerRef = useRef(router);
-
-  useEffect(() => {
-    routerRef.current = router;
-  }, [router]);
-
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
 
   const getClient = useCallback((): SupabaseClient | null => {
     if (clientProp) {
@@ -122,15 +108,6 @@ export function AuthProvider({
 
     let isMounted = true;
 
-    const handleExpired = () => {
-      if (
-        typeof window !== "undefined" &&
-        window.location.pathname !== "/account/sign-in"
-      ) {
-        routerRef.current?.push("/account/sign-in");
-      }
-    };
-
     // Initial session read on reload
     client.auth
       .getSession()
@@ -144,7 +121,6 @@ export function AuthProvider({
             session.expires_at * 1000 <= Date.now();
           if (isExpired) {
             setUser(null);
-            handleExpired();
           } else {
             setUser(session.user);
           }
@@ -162,14 +138,19 @@ export function AuthProvider({
       data: { subscription },
     } = client.auth.onAuthStateChange((event, session) => {
       if (!isMounted) return;
-      if (event === "SIGNED_OUT" || !session) {
+      if (event === "PASSWORD_RECOVERY") {
+        setIsPasswordRecovery(true);
+        setUser(session?.user ?? null);
+      } else if (event === "SIGNED_OUT") {
+        setIsPasswordRecovery(false);
+        setUser(null);
+      } else if (!session) {
         setUser(null);
       } else if (
         session.expires_at !== undefined &&
         session.expires_at * 1000 <= Date.now()
       ) {
         setUser(null);
-        handleExpired();
       } else {
         setUser(session.user);
       }
@@ -230,6 +211,7 @@ export function AuthProvider({
 
   const signOut = useCallback(async () => {
     const client = getClient();
+    setIsPasswordRecovery(false);
     if (!client) {
       setUser(null);
       return { error: null };
@@ -283,13 +265,23 @@ export function AuthProvider({
     () => ({
       user,
       isLoading,
+      isPasswordRecovery,
       signUp,
       signIn,
       signOut,
       resetPassword,
       updatePassword,
     }),
-    [user, isLoading, signUp, signIn, signOut, resetPassword, updatePassword],
+    [
+      user,
+      isLoading,
+      isPasswordRecovery,
+      signUp,
+      signIn,
+      signOut,
+      resetPassword,
+      updatePassword,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
