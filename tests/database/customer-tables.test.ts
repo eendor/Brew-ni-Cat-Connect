@@ -622,7 +622,7 @@ describe("the online order and customer tables", () => {
 
 describe("applying and undoing the table migration", () => {
   it("undoes cleanly, leaves the POS tables, and applies again (TC-P4-083)", async () => {
-    const fresh = await createMigratedDatabase();
+    const fresh = await createMigratedDatabase(FUNCTIONS);
     try {
       await seedPosData(fresh);
       await addOrder(fresh, null);

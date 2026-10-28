@@ -260,6 +260,8 @@ Meta sends a signed event to a server-only webhook. The webhook verifies signatu
 
 The integration adapter exchanges only a versioned, minimal contract. It maps stable identifiers, validates messages, deduplicates, retries safely, quarantines unmappable/conflicting records, and supports reconciliation. Neither browser, Android, nor Messenger connects directly to the POS or its database.
 
+As built: the website and the POS app share one Supabase database, and online orders reach the POS through it (§19).
+
 ## 9. Authentication and authorization architecture
 
 ### 9.1 Authentication
@@ -504,3 +506,67 @@ flowchart LR
 - Textures for photos load through the Next image optimizer (`/_next/image`), so no extra image copies ship.
 - The motion director only touches elements marked with data attributes; it waits for the route curtain on client-side navigations and does nothing under reduced motion. A flag set before first paint holds animated content until the director takes over, with a 3 s CSS failsafe.
 - Playwright runs functional journeys with reduced motion (static render) and a separate `chromium-3d` project with software WebGL for the 3D and motion checks; that project runs its tests one after another.
+
+## 19. POS Integration As Built (FR-071)
+
+Recorded on 2026-10-28 for PR #62, from the POS app repository (version 1.1.0) and a read-only look at the live database. It is the integration analysis FR-071 asks for before the POS order screen is built.
+
+### 19.1 POS tables
+
+The shop runs the POS app on one Android tablet. The app keeps the shop's data on the device and syncs it with these tables in the shared Supabase database:
+
+| Table | What it holds | Who writes it |
+| --- | --- | --- |
+| `categories`, `items` | The menu, with sizes in `variants_json` and flavors | The POS app; the website only reads them |
+| `inventory`, `recipe_mappings` | Stock counts, and how much stock each item size uses | The POS app |
+| `orders`, `order_items` | POS sales and their lines | The POS app; from Phase 6 also completed online orders (§19.5) |
+| `expenses` | Shop expenses | The POS app |
+| `app_release` | Published POS builds | The team, by hand |
+
+The website writes only its own tables (`online_orders`, `online_order_items`, `online_order_status_history`, `online_order_tracking` and the customer tables in the database design §8).
+
+### 19.2 Sync and identifiers
+
+- The tablet uploads its rows every 15 minutes (`SyncWorker`, WorkManager) with upserts. Its whole stock count replaces the cloud copy, so stock can only be changed on the tablet.
+- A POS sale id is `device bucket × 1 000 000 000 + local id`, where the bucket comes from a hash of the device id. Ids stay below 1e15. A line id is `sale id × 1000 + line index`.
+- The app also pulls sales saved under other device ids (the live data has some from earlier installs and test devices) and skips the ones it has, so a sale is never added twice. A pulled sale does not deduct stock again; the device that made it already did.
+- The app also listens to `postgres_changes` on `orders` over Realtime, so a sale from another device shows at once. The 15-minute sync catches anything it missed.
+
+### 19.3 Sign-in
+
+The app signs in once with the POS staff account (Supabase Auth password sign-in), keeps the refresh token on the tablet and refreshes the access token before it expires. The account is marked staff in `app_metadata.role`, which the RLS policies check through `private.is_staff()` (database design §8.2). The app has no secret or service-role key (FR-037).
+
+### 19.4 Releases
+
+A new POS build is published by uploading the signed APK and adding a row to `app_release` (version code, version name, APK link, notes, mandatory). The tablet reads the newest row and, when its version code is higher than its own, downloads the APK and opens the Android installer. The steps are in the POS repository's `RELEASE_INSTRUCTIONS.md`.
+
+### 19.5 Online orders in the POS (Phase 6)
+
+- `public.online_orders` is in the `supabase_realtime` publication, so the tablet hears about new orders the way it hears about sales. Realtime applies the RLS policy, so only staff receive every order.
+- Staff change an order only through `public.set_online_order_status()` (database design §9). The request names the status the staff member saw, so a retry or an out-of-date screen can't overwrite a newer status.
+- Completing an order adds one POS sale in the same transaction (ADR-021). The tablet pulls it like a sale from another device, so it shows in the POS sales and reports.
+- The tablet that completes the order deducts its stock, once per order reference, because the cloud stock count is replaced by the tablet's next upload.
+
+Field map from a completed online order to its POS sale:
+
+| POS field | Value |
+| --- | --- |
+| `orders.id` | From 2 000 000 000 000 001 up, above every POS id and below 2^53 |
+| `device_id` | `online` |
+| `timestamp` | When the order was completed, in epoch milliseconds |
+| `subtotal`, `total` | The order's subtotal; `discount_deduction` 0 and `discount_label` empty |
+| `payment_method` | `GCASH` when the customer chose GCash, otherwise `CASH` |
+| `payment_reference`, `cashier_id` | Empty |
+| `cashier_name` | `Online order` |
+| `table_label` | `Online BNC-…` (the order reference) |
+| `is_served`, `status`, `is_voided` | true, `COMPLETED`, false |
+| `order_items.id` | Sale id × 1000 + line number |
+| `item_id`, `item_name`, `variant_id`, `variant_name`, `flavor`, `quantity`, `unit_price`, `total_price` | The order line's item, size, flavor, quantity, unit price and line total |
+
+### 19.6 What the integration does not do
+
+- The website never connects to the tablet, and never writes the menu, stock, recipes, expenses or POS sales itself (FR-078).
+- Online orders are not edited in the POS: staff accept, reject, prepare, finish or cancel them.
+- An online sale is not voided or refunded from the website. If the shop voids it on the tablet, the POS handles it like any other sale.
+- Rider and delivery orders are not in the system yet; the owner is still deciding.
+- Ingredients used for an order cancelled after Preparing are not deducted; the staff adjust the stock by hand.
