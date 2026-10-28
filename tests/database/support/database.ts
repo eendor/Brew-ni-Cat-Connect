@@ -56,11 +56,22 @@ export async function applyRollback(
   await db.exec(readFileSync(`${ROLLBACKS_DIR}${fileName}`, "utf8"));
 }
 
-/** A new database with every migration applied. */
-export async function createMigratedDatabase(): Promise<PGlite> {
+/**
+ * A new database with every migration applied, or only those up to and
+ * including `upTo`. Tests that undo a migration stop there, so later
+ * migrations don't depend on what they remove.
+ */
+export async function createMigratedDatabase(upTo?: string): Promise<PGlite> {
+  const migrations = listMigrations();
+  if (upTo !== undefined && !migrations.includes(upTo)) {
+    throw new Error(`No migration named ${upTo}`);
+  }
   const db = await createBaselineDatabase();
-  for (const fileName of listMigrations()) {
+  for (const fileName of migrations) {
     await applyMigration(db, fileName);
+    if (fileName === upTo) {
+      break;
+    }
   }
   return db;
 }

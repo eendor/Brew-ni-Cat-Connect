@@ -1040,7 +1040,7 @@ describe("order function privileges", () => {
 
 describe("applying and undoing the order migrations", () => {
   it("removes the functions but keeps the orders, then puts them back (TC-P4-093)", async () => {
-    const fresh = await createMigratedDatabase();
+    const fresh = await createMigratedDatabase(FUNCTIONS);
     try {
       await fresh.exec(MENU_SQL);
       const placedRows = await fresh.query<{ result: Result }>(

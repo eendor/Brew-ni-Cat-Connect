@@ -110,6 +110,30 @@ stateDiagram-v2
 
 Invalid or stale transitions must be rejected by the server and must not overwrite a newer status. Every accepted transition must record actor, timestamp, prior state, new state, and a correlation identifier appropriate for audit and troubleshooting.
 
+As built in PR #62 (2026-10-28, migration `20261028153552_online_order_status.sql`), the shop's steps are:
+
+```mermaid
+stateDiagram-v2
+    [*] --> Pending: customer places the order
+    Pending --> Accepted: shop accepts
+    Pending --> Rejected: shop rejects with a reason
+    Accepted --> Preparing: preparation starts
+    Accepted --> Cancelled: shop cancels
+    Preparing --> Ready: ready for pickup
+    Preparing --> Cancelled: shop cancels
+    Ready --> Completed: picked up, POS sale added
+    Ready --> Cancelled: customer never came
+    Rejected --> [*]
+    Cancelled --> [*]
+    Completed --> [*]
+```
+
+- Only shop staff change the status, through `set_online_order_status()`. Customers can't cancel online yet.
+- A pending order is rejected with a reason the customer sees, not cancelled.
+- Each request names the status the staff member saw, so a change from an old status is refused as stale.
+- Each change adds a history row (actor `shop`, time, from, to and correlation id) and an audit row with the staff account (FR-079).
+- When the shop may cancel is still to be confirmed with the owner.
+
 ## 5. Customer account paths
 
 ### 5.1 Registration

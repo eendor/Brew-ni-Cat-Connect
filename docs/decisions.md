@@ -281,3 +281,18 @@ This manual state is a temporary functional-verification condition, not a revisi
 - **Edit order** puts the lines back through the same check as a stored cart, then checkout rechecks their prices against the menu, so an old or hand-edited summary can't bring back a wrong price.
 - A summary saved before this change, with its cart still full, empties the cart when it is copied.
 - TC-P4-016 and TC-P4-017 are superseded by TC-P4-174 to TC-P4-179.
+
+## ADR-021 — A Completed Online Order Becomes One POS Sale In The Database
+
+**Decision:** When staff mark an online order completed, the database adds one sale to the POS tables (`orders` and `order_items`) in the same transaction, with `device_id` `online` and ids from 2 000 000 000 000 001 up. The tablet that completed the order deducts the stock on the tablet, once per order reference.\
+**Date:** 2026-10-28\
+**Status:** Accepted\
+**Context:** FR-075 asks that each online order reach the shop's records at most once. The POS app keeps its sales and stock on each tablet and syncs them through the shared database. It pulls other devices' sales by id, and it uploads its whole stock count, which replaces the cloud copy (system architecture §19.2).\
+**Alternatives considered:** the tablet saves the sale itself (two tablets, or a retry after a lost answer, could save it twice); a separate table for online sales (the POS sales and reports would miss them); deducting the stock in the database (the next upload from a tablet would overwrite it).\
+**Consequences:**
+
+- An order makes at most one sale, even when a request is retried or two tablets press Completed: the link table's primary key and the stale-status check stop a second one.
+- Online sales show in the POS sales and reports on every tablet after its next pull, like a sale from another tablet.
+- The stock is right only if the completing tablet deducts it. If that tablet fails first, the stock stays high until the next count; the reference key stops a double deduction.
+- Ingredients used for an order cancelled after Preparing are not deducted; the staff adjust the stock by hand. This is to be reviewed with the owner.
+- The online sale ids must stay above every POS id. The POS makes ids below 1e15, so the gap is wide.

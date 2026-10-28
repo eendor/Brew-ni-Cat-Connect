@@ -205,6 +205,7 @@ Apply the files in name order, each exactly as committed, in one all-or-nothing 
 2. **After `restore_rls`:** check that staff can read and change the POS tables, that guests and a signed-in customer can read only the menu and the POS releases, and that nothing else is open.
 3. **After the two order migrations:** in a step that is always undone, add a throwaway menu item, place an order as a guest, place it again with the same key, open it with and without its token, change its status as the shop would, and count the broadcasts. Then check RLS and what `anon`, `authenticated` and `service_role` can do.
 4. Try each request on a PGlite copy first, then live with a forced rollback, and only then apply it.
+5. **Before applying `online_order_status` (Phase 6):** in a step that is always undone, place a throwaway order, move it from pending to completed as the POS staff account (found inside SQL, never printed), check its POS sale and lines, check that a guest and a customer get SQLSTATE 42501, and check that `online_orders` is in `supabase_realtime`. Apply it only with the team's OK, since the POS tablets start receiving online orders.
 
 To check what is applied, read `version` and `name` from `supabase_migrations.schema_migrations`. To undo, run the matching files in `supabase/rollbacks/` in reverse order, and delete their rows from `supabase_migrations.schema_migrations`.
 
@@ -221,4 +222,50 @@ While it is off, pickup keeps the copy-summary flow and `POST /api/orders` answe
 
 ### 8.9 Tests
 
-`tests/database/` runs the three migrations on PGlite, a WebAssembly build of Postgres, with a copy of the live POS tables (`tests/database/support/baseline.sql`), stand-ins for Supabase's roles, `auth.uid()`, `auth.users` and `realtime.send()`, and sample POS rows. They need no live database, so they run in CI with the unit tests (TC-P4-067 to TC-P4-093).
+`tests/database/` runs the migrations on PGlite, a WebAssembly build of Postgres, with a copy of the live POS tables (`tests/database/support/baseline.sql`), stand-ins for Supabase's roles, `auth.uid()`, `auth.users` and `realtime.send()`, and sample POS rows. They need no live database, so they run in CI with the unit tests (TC-P4-067 to TC-P4-093). The baseline also has the live `supabase_realtime` publication, and the Phase 6 status migration adds TC-P6-180 to TC-P6-190.
+
+## 9. Phase 6 Online Order Status (2026-10-28)
+
+Migration `20261028153552_online_order_status.sql` (undo: `supabase/rollbacks/20261028153552_online_order_status.sql`) lets the POS app move online orders through their statuses (FR-027, FR-028, FR-076). It logs every staff action (FR-079), turns each completed order into one POS sale (FR-075) and streams new orders to the POS (FR-080). It is not applied to the live database yet (§8.7).
+
+### 9.1 Status steps
+
+| From | To | Rule |
+| --- | --- | --- |
+| `pending` | `accepted` | |
+| `pending` | `rejected` | Needs a reason of 1 to 300 characters, which the customer sees |
+| `accepted` | `preparing` | |
+| `preparing` | `ready` | |
+| `ready` | `completed` | Adds the POS sale (§9.4) |
+| `accepted`, `preparing`, `ready` | `cancelled` | For example when the customer never comes. An optional note goes only to the audit log |
+
+Rejected, cancelled and completed are final. A pending order is rejected, not cancelled, so the customer always sees why.
+
+### 9.2 `public.set_online_order_status(p_reference, p_from_status, p_to_status, p_reason, p_correlation_id)`
+
+1. Runs as its owner with an empty `search_path`. Only `authenticated` can execute it, and it raises SQLSTATE 42501 unless the caller is staff (`private.is_staff()`).
+2. Answers `invalid` for a malformed reference, an unknown status, a reason on a step other than rejecting or cancelling, or a reason over 300 characters. Reasons are trimmed.
+3. Locks the order row. `p_from_status` is the status the staff member saw: if the order has moved on, nothing changes and the answer is `stale` with the current status.
+4. Changes the status, adds a history row (actor `shop`, with the correlation id) and, on `completed`, adds the POS sale, all in one transaction. The trigger from §8.6 then updates the customer's order page.
+5. A retry with the same correlation id and the same step answers `replayed: true` and changes nothing, so a tablet can resend after a lost answer.
+
+It returns `{ ok: true, replayed, reference, status, changedAt, saleId? }`, or `{ ok: false, error, status? }` with `invalid`, `not_found`, `stale`, `not_allowed` or `reason_required`.
+
+### 9.3 New tables
+
+Both are in the `private` schema with RLS on, no policies and no API grants.
+
+- `staff_audit_log`: one row per staff action, done or refused, with the staff account id, the action (`online-order-status`), the order reference, the result, details (from, to, the reason or error, the sale id) and the correlation id. The staff id stays out of the status history, which customers can read. Read it from the Supabase dashboard. How long to keep it is still to be confirmed with the owner (FR-079).
+- `online_order_sales`: the POS sale id of each completed order. Its primary key makes sure an order is recorded once.
+
+### 9.4 The POS sale
+
+`private.record_online_sale()` adds one row to `public.orders` and one row per line to `public.order_items`, with the fields in system architecture §19.5. It never touches `inventory`: the tablet that completes the order deducts the stock (ADR-021). Rejected and cancelled orders make no sale.
+
+### 9.5 Realtime
+
+`public.online_orders` joins the `supabase_realtime` publication, only if the publication exists and the table isn't in it yet. Realtime applies the table's RLS policy, so staff get every order and a customer gets only their own.
+
+### 9.6 Undo
+
+The undo drops the function, its two helpers and the two tables, and takes `online_orders` out of the publication. The orders, their history and the POS sales stay; each sale still names its order in `table_label`. Applying the migration again carries on after the highest `online` sale id.

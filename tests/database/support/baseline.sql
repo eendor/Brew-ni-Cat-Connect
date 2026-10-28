@@ -215,3 +215,13 @@ $$;
 create policy anyone_can_read_releases on public.app_release
   for select to anon, authenticated
   using (true);
+
+-- Realtime streams row changes from these tables to the POS app, as on the
+-- live database.
+create publication supabase_realtime for table
+  public.categories,
+  public.expenses,
+  public.inventory,
+  public.items,
+  public.order_items,
+  public.orders;
