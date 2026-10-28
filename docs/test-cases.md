@@ -149,7 +149,7 @@ The old posters are not an expected-result oracle. Current Supabase public recor
 
 ## 10. Phase 3 Ordering Core Cases
 
-Added with the ordering core in PR #7 (2026-09-18): Vitest 69/69 passed; Playwright 13/13 passed. These cases still pass in the 109/109 Vitest runs on PRs #16–#18.
+Added with the ordering core in PR #7 (2026-09-18): Vitest 69/69 passed; Playwright 13/13 passed. Follow-up run on 2026-10-27 for integrated Phase 3 regression QA on `main` (commit `d71c635`): Vitest 254/254 passed in 36 files; Playwright `chromium` passed 17/17 (1 skipped: TC-P4-123 deferred to online ordering build flag); lint passed with 0 errors / 0 warnings; typecheck passed; production build passed.
 
 | ID | Requirement ID(s) | Module | Scenario | Preconditions | Input / action | Expected result | Actual result | Status | Evidence |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
