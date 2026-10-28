@@ -7,7 +7,12 @@ import {
   releaseRenderer,
   studioEnvironment,
 } from "../engine/renderer";
-import { FrameBudget, damp, type Quality } from "../engine/runtime";
+import {
+  FRAME_BUDGET_MS,
+  FrameBudget,
+  damp,
+  type Quality,
+} from "../engine/runtime";
 import type { ModelSpec } from "../menu-models";
 import {
   buildModel,
@@ -144,11 +149,13 @@ export async function initMenuStage(quality: Quality) {
   let skip = false;
 
   const budget = new FrameBudget(
-    42,
-    () => {
-      heavy = true;
-      renderer.transmissionResolutionScale = 0.35;
-    },
+    FRAME_BUDGET_MS,
+    [
+      () => {
+        heavy = true;
+        renderer.transmissionResolutionScale = 0.35;
+      },
+    ],
     quality.forceHigh,
   );
 

@@ -176,7 +176,7 @@ describe("Phone tier for the home showcase (TC-P4-124 – TC-P4-127)", () => {
     window.history.replaceState(null, "", "/");
     expect(getQuality()).toEqual({
       mobile: false,
-      maxDpr: 1.75,
+      maxDpr: 1.5,
       forceHigh: false,
       lite: false,
     });

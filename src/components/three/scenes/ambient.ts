@@ -6,7 +6,13 @@ import {
   makeRenderer,
   studioEnvironment,
 } from "../engine/renderer";
-import { FrameBudget, damp, pointer, type Quality } from "../engine/runtime";
+import {
+  FRAME_BUDGET_MS,
+  FrameBudget,
+  damp,
+  pointer,
+  type Quality,
+} from "../engine/runtime";
 import { rng } from "../engine/textures";
 import {
   beanGeometry,
@@ -40,7 +46,7 @@ export async function initAmbient(
   mood: AmbientMood,
 ) {
   const config = moods[mood];
-  const renderer = makeRenderer(canvas, quality);
+  const renderer = makeRenderer(canvas, quality, { post: true });
   renderer.transmissionResolutionScale = 0.5;
   const env = await studioEnvironment(renderer);
   const scene = new THREE.Scene();
@@ -126,12 +132,18 @@ export async function initAmbient(
     bloom: 0.3,
   });
   const budget = new FrameBudget(
-    42,
-    () => {
-      post.degrade();
-      renderer.setPixelRatio(1);
-      resize();
-    },
+    FRAME_BUDGET_MS,
+    [
+      () => {
+        post.degrade();
+        renderer.setPixelRatio(1);
+        resize();
+      },
+      () => {
+        renderer.setPixelRatio(0.75);
+        resize();
+      },
+    ],
     quality.forceHigh,
   );
 

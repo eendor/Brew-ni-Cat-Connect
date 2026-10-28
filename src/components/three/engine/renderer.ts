@@ -19,11 +19,13 @@ const liteRenderers = new WeakSet<THREE.WebGLRenderer>();
 export function makeRenderer(
   canvas: HTMLCanvasElement,
   quality: Quality,
-  options: { alpha?: boolean; shadows?: boolean } = {},
+  options: { alpha?: boolean; shadows?: boolean; post?: boolean } = {},
 ) {
   const renderer = new THREE.WebGLRenderer({
     canvas,
-    antialias: !quality.mobile,
+    // a scene drawn through post-processing is antialiased in the effects'
+    // own target, so its canvas doesn't multisample on top of that
+    antialias: !quality.mobile && !options.post,
     alpha: options.alpha ?? false,
     powerPreference: "high-performance",
   });
@@ -38,6 +40,29 @@ export function makeRenderer(
     renderer.shadowMap.type = THREE.PCFShadowMap;
   }
   return renderer;
+}
+
+/**
+ * Draws the shadow maps once a frame, or every third frame after
+ * `slowDown()`. Left alone, three.js redraws them on every render call, and
+ * depth of field renders the scene a second time each frame. Slowing them
+ * down keeps the shadows and every material's shader: switching the light's
+ * shadow off instead would rebuild those shaders in the middle of the scene.
+ */
+export function shadowPacer(renderer: Pick<THREE.WebGLRenderer, "shadowMap">) {
+  renderer.shadowMap.autoUpdate = false;
+  let every = 1;
+  let frame = 0;
+  return {
+    /** Call once a frame, before drawing. */
+    beforeFrame() {
+      renderer.shadowMap.needsUpdate = frame % every === 0;
+      frame += 1;
+    },
+    slowDown() {
+      every = 3;
+    },
+  };
 }
 
 /** Disposes a renderer and drops its context, once. */

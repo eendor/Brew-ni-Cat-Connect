@@ -3,6 +3,11 @@
  * the server: callers only use it from effects inside client components.
  */
 
+import {
+  curtainMoving,
+  whenCurtainSettles,
+} from "@/components/motion/curtain-state";
+
 export type Quality = Readonly<{
   /** Phone-sized or coarse-pointer device: lower DPR, fewer particles. */
   mobile: boolean;
@@ -61,7 +66,7 @@ export function getQuality(): Quality {
   const forceHigh = params.get("quality") === "high";
   return {
     mobile,
-    maxDpr: mobile ? 1.25 : 1.75,
+    maxDpr: mobile ? 1.25 : 1.5,
     forceHigh,
     lite: mobile && !forceHigh,
   };
@@ -117,29 +122,87 @@ export const smooth = (a: number, b: number, x: number) => {
   return t * t * (3 - 2 * t);
 };
 
-/** Watches frame times and steps heavy effects down once on slow devices. */
+/**
+ * The average frame time scenes aim to stay under, about 45 frames a second.
+ * Slower than that reads as stutter, so the frame budget steps effects down.
+ */
+export const FRAME_BUDGET_MS = 22;
+/** Frames left out after a scene starts or steps down, while it settles. */
+const SETTLE_FRAMES = 30;
+/** Frames averaged for each check. */
+const WINDOW_FRAMES = 30;
+/** One long frame (a page task, a garbage collection) counts as this at most. */
+const SAMPLE_CAP_MS = 50;
+
+/** The furthest any scene has stepped down during this visit. */
+let visitLevel = 0;
+
+/**
+ * Watches frame times and steps a scene's heavy effects down, one step at a
+ * time, while its frames average slower than `limitMs`. After each step it
+ * lets the cheaper settings settle before it checks again. A scene that
+ * starts later in the same visit begins at the step earlier scenes reached,
+ * so a slow device doesn't stutter through the same steps on every page.
+ * `disabled` (`?quality=high`) keeps every effect on.
+ */
 export class FrameBudget {
+  /** Steps taken so far. */
+  level = 0;
   private samples: number[] = [];
-  private frames = 0;
-  degraded = false;
+  private settle = SETTLE_FRAMES;
   constructor(
     private readonly limitMs: number,
-    private readonly onDegrade: () => void,
+    private readonly steps: ReadonlyArray<() => void>,
     private readonly disabled = false,
   ) {}
+
   push(dtMs: number) {
-    this.frames += 1;
-    if (this.degraded || this.disabled || this.frames < 30) return;
-    this.samples.push(dtMs);
-    if (this.samples.length > 24) this.samples.shift();
-    if (this.samples.length === 24) {
-      const avg = this.samples.reduce((a, b) => a + b, 0) / 24;
-      if (avg > this.limitMs) {
-        this.degraded = true;
-        this.onDegrade();
-      }
+    if (this.disabled) return;
+    while (this.level < Math.min(visitLevel, this.steps.length)) {
+      this.stepDown();
+    }
+    if (this.level >= this.steps.length) return;
+    if (this.settle > 0) {
+      this.settle -= 1;
+      return;
+    }
+    this.samples.push(Math.min(dtMs, SAMPLE_CAP_MS));
+    if (this.samples.length > WINDOW_FRAMES) this.samples.shift();
+    if (this.samples.length < WINDOW_FRAMES) return;
+    const average =
+      this.samples.reduce((sum, sample) => sum + sample, 0) / WINDOW_FRAMES;
+    if (average > this.limitMs) {
+      this.stepDown();
+      visitLevel = Math.max(visitLevel, this.level);
     }
   }
+
+  private stepDown() {
+    const step = this.steps[this.level];
+    this.level += 1;
+    this.samples = [];
+    this.settle = SETTLE_FRAMES;
+    step?.();
+  }
+}
+
+/** Forgets the steps scenes took during this visit (for tests). */
+export function resetFrameBudgets() {
+  visitLevel = 0;
+}
+
+/**
+ * Resolves once the route curtain has fully opened (at once when it isn't
+ * moving), on a later task so the curtain's last frame paints first.
+ */
+export function whenCurtainSettled(signal: AbortSignal) {
+  if (!curtainMoving()) return Promise.resolve();
+  return new Promise<void>((resolve) => {
+    const cancel = whenCurtainSettles(() => {
+      window.setTimeout(resolve, 0);
+    });
+    signal.addEventListener("abort", cancel, { once: true });
+  });
 }
 
 /**

@@ -622,6 +622,11 @@ test("TC-P4-022 — page transitions open on the new page and leave no content h
   await expect(
     page.getByRole("heading", { level: 1, name: "About Brew ni Cat" }),
   ).toBeVisible();
+  // start from a settled page: on software GL, building the backdrop scene
+  // holds the main thread for seconds, which would delay the click
+  await expect(page.locator(".ambient-backdrop--ready")).toBeAttached({
+    timeout: 45_000,
+  });
 
   await page
     .getByRole("navigation", { name: "Desktop navigation" })
@@ -636,6 +641,10 @@ test("TC-P4-022 — page transitions open on the new page and leave no content h
   await expect(
     page.getByRole("heading", { level: 1, name: "Gallery" }),
   ).toBeVisible();
+  // the new page's 3D waited for the curtain to open, then started
+  await expect(page.locator(".gallery-ring__stage.is-ready")).toBeAttached({
+    timeout: 45_000,
+  });
 
   // scroll through: every heading, block and photo has made its entrance
   const height = await page.evaluate(() => document.body.scrollHeight);

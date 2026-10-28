@@ -6,9 +6,11 @@ import { makePost } from "../engine/post";
 import {
   disposeScene,
   makeRenderer,
+  shadowPacer,
   studioEnvironment,
 } from "../engine/renderer";
 import {
+  FRAME_BUDGET_MS,
   FrameBudget,
   clamp01,
   damp,
@@ -44,7 +46,11 @@ export async function initMenuHero(
   quality: Quality,
   hud: { progress: () => number },
 ) {
-  const renderer = makeRenderer(canvas, quality, { shadows: true });
+  const renderer = makeRenderer(canvas, quality, {
+    shadows: true,
+    post: true,
+  });
+  const shadows = shadowPacer(renderer);
   renderer.transmissionResolutionScale = quality.mobile ? 0.5 : 1;
   const env = await studioEnvironment(renderer);
   const scene = new THREE.Scene();
@@ -163,13 +169,20 @@ export async function initMenuHero(
 
   const post = makePost(renderer, scene, camera, quality, { focus: 11 });
   const budget = new FrameBudget(
-    42,
-    () => {
-      post.degrade();
-      renderer.setPixelRatio(1);
-      key.castShadow = false;
-      resize();
-    },
+    FRAME_BUDGET_MS,
+    [
+      () => {
+        post.degrade();
+        renderer.setPixelRatio(1);
+        renderer.transmissionResolutionScale = 0.5;
+        shadows.slowDown();
+        resize();
+      },
+      () => {
+        renderer.setPixelRatio(0.75);
+        resize();
+      },
+    ],
     quality.forceHigh,
   );
 
@@ -292,6 +305,7 @@ export async function initMenuHero(
     rimLeft.target.position.set(0, stage.position.y, 0);
     rimRight.target.position.set(0, stage.position.y, 0);
 
+    shadows.beforeFrame();
     post.render(dt, time);
   }
 

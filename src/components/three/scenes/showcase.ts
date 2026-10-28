@@ -7,9 +7,11 @@ import {
   disposeScene,
   loadImage,
   makeRenderer,
+  shadowPacer,
   studioEnvironment,
 } from "../engine/renderer";
 import {
+  FRAME_BUDGET_MS,
   FrameBudget,
   clamp01,
   damp,
@@ -232,7 +234,11 @@ export async function initShowcase(
   // phones get the lite tier (ADR-014): no post effects, shadows or
   // refraction, smaller generated textures, and a 1× drawing buffer
   const lite = quality.lite;
-  const renderer = makeRenderer(canvas, quality, { shadows: !lite });
+  const renderer = makeRenderer(canvas, quality, {
+    shadows: !lite,
+    post: !lite,
+  });
+  const shadows = shadowPacer(renderer);
   renderer.transmissionResolutionScale = quality.mobile ? 0.5 : 1;
   if (lite) renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1));
   canvas.dataset.tier = lite ? "lite" : "full";
@@ -388,19 +394,26 @@ export async function initShowcase(
   const post = lite
     ? null
     : makePost(renderer, scene, camera, quality, { focus: 11 });
+  // slow frames switch off the heaviest effects first, then draw fewer
+  // pixels; the lite tier has nothing left to switch off, so only the second
+  const fewerPixels = () => {
+    renderer.setPixelRatio(0.75);
+    resize();
+  };
   const budget = new FrameBudget(
-    42,
-    () => {
-      if (post) {
-        post.degrade();
-        renderer.setPixelRatio(1);
-        key.castShadow = false;
-      } else {
-        // nothing left to switch off on the lite tier, so draw fewer pixels
-        renderer.setPixelRatio(0.75);
-      }
-      resize();
-    },
+    FRAME_BUDGET_MS,
+    post
+      ? [
+          () => {
+            post.degrade();
+            renderer.setPixelRatio(1);
+            renderer.transmissionResolutionScale = 0.5;
+            shadows.slowDown();
+            resize();
+          },
+          fewerPixels,
+        ]
+      : [fewerPixels],
     quality.forceHigh,
   );
 
@@ -600,6 +613,7 @@ export async function initShowcase(
     rimLeft.target.position.set(0, stage.position.y, 0);
     rimRight.target.position.set(0, stage.position.y, 0);
 
+    shadows.beforeFrame();
     if (post) post.render(dt, state.time);
     else renderer.render(scene, camera);
   }

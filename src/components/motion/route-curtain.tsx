@@ -4,7 +4,7 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 
-import { setCurtainCovering } from "./curtain-state";
+import { setCurtainCovering, setCurtainSettled } from "./curtain-state";
 import { EASE, gsap, motionAllowed } from "./gsap";
 
 /** The title card shown while each page loads. */
@@ -91,7 +91,8 @@ export function RouteCurtain() {
           },
           "-=0.2",
         )
-        .set(curtain, { visibility: "hidden" });
+        .set(curtain, { visibility: "hidden" })
+        .call(setCurtainSettled);
     };
     openRef.current = open;
 
@@ -136,7 +137,7 @@ export function RouteCurtain() {
       window.removeEventListener("click", onClick, true);
       window.clearTimeout(timer);
       animation?.kill();
-      setCurtainCovering(false);
+      setCurtainSettled();
     };
   }, [router]);
 

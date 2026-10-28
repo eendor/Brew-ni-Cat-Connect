@@ -1066,3 +1066,13 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Testing:** TC-P6-180 to TC-P6-190 added. Vitest 300/300 in 40 files.
 - **Branch / PR:** `feat/p6-order-status`, PR #62.
 - **Next action:** The POS order screen (Android) uses the function. The migration goes live only with the team's OK, following database design §8.7.
+
+## 2026-10-29 — Smoother 3D and page transitions
+
+- **Phase:** 4 (3D experience layer follow-up)
+- **Task:** Fix the 3D stutter I still saw on the website, mostly during page transitions. The sign-in, sign-up and forgot-password pages have no 3D and stayed smooth.
+- **Summary:** The new page built its 3D scenes while the route curtain was still opening, the old page kept rendering under the closing curtain, and the frame budget stepped down only below 24 fps. Now the shared loop skips scene frames while the curtain moves, and a new page's scenes start after the curtain has fully opened. The frame budget aims for 22 ms a frame, steps down in stages (effects first, then fewer pixels) and keeps the stage for the rest of the visit. Desktop draws at a pixel ratio of at most 1.5. The first step no longer switches shadows off, which rebuilt every lit material's shader mid-scene; shadows are redrawn every third frame instead, and at most once a frame before that. Canvases drawn through post-processing no longer multisample twice. `?quality=high` still keeps the full look (ADR-014 follow-up, system architecture §18.3).
+- **Files:** `src/components/motion/curtain-state.ts`, `src/components/motion/route-curtain.tsx`, `src/components/three/engine/loop.ts`, `src/components/three/engine/runtime.ts`, `src/components/three/engine/renderer.ts`, `src/components/three/canvas/use-scene.ts`, the showcase, ambient, menu hero and menu dialog scenes, `tests/unit/three-frame-pacing.test.tsx`, `tests/unit/three-phone-tier.test.ts`, `tests/e2e/three.spec.ts`, documentation.
+- **Testing:** TC-P4-180 to TC-P4-186 added; TC-P4-022 and TC-P4-127 updated. Vitest 307/307 in 41 files; Playwright `chromium-3d` 16/16 on a production build. TC-P4-022 now waits for the About backdrop to be ready before it clicks: scenes now start after the curtain opens, and on software GL that start delayed the click by more than 5 s.
+- **Branch / PR:** `perf/three-transitions`, PR #63.
+- **Next action:** I check the transitions on the live site after the deploy. The 60 fps goal on integrated GPUs (my Android and release card) stays open until it is measured.
