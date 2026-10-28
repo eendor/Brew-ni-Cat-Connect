@@ -512,6 +512,58 @@ async function showCard(
   return { media: preview, canvas, dialog };
 }
 
+test("TC-P4-002 — every page mounts its 3D layer without console or hydration errors", async ({
+  page,
+}) => {
+  const errors = collectErrors(page);
+  await mockMenu(page);
+  for (const path of [
+    "/menu",
+    "/about",
+    "/gallery",
+    "/contact",
+    "/cart",
+    "/checkout",
+  ]) {
+    await page.goto(path);
+    // the menu opens on its own 3D hero instead of an ambient backdrop
+    const layer =
+      path === "/menu" ? ".menu-hero--ready" : ".ambient-backdrop--ready";
+    await expect(page.locator(layer).first()).toBeAttached({
+      timeout: 45_000,
+    });
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  }
+  expect(errors).toEqual([]);
+});
+
+test("TC-P4-197 — a desktop with an integrated or software GPU gets the lite tier and the small HDRI; ?quality=high brings back the full tier", async ({
+  page,
+}) => {
+  const errors = collectErrors(page);
+  const hdris: string[] = [];
+  page.on("request", (request) => {
+    const { pathname } = new URL(request.url());
+    if (pathname.startsWith("/three/hdri/")) hdris.push(pathname);
+  });
+  const ready = page.locator(".showcase--ready");
+  const stage = page.locator(".showcase__stage canvas");
+
+  // the test browser draws with SwiftShader, a software GPU
+  await page.goto("/");
+  await expect(ready).toBeVisible({ timeout: 45_000 });
+  await expect(stage).toHaveAttribute("data-tier", "lite");
+  expect(await pixelSpread(stage)).toBeGreaterThan(12);
+  expect(hdris).toEqual(["/three/hdri/studio_small_09_512.hdr"]);
+
+  hdris.length = 0;
+  await page.goto("/?quality=high");
+  await expect(ready).toBeVisible({ timeout: 45_000 });
+  await expect(stage).toHaveAttribute("data-tier", "full");
+  expect(hdris).toEqual(["/three/hdri/studio_small_09_1k.hdr"]);
+  expect(errors).toEqual([]);
+});
+
 test("TC-P4-003 — menu cards show photos, and Add to Order tosses into the real cart", async ({
   page,
 }) => {

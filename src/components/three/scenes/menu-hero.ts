@@ -8,6 +8,7 @@ import {
   makeRenderer,
   shadowPacer,
   studioEnvironment,
+  warmUp,
 } from "../engine/renderer";
 import {
   FRAME_BUDGET_MS,
@@ -25,6 +26,7 @@ import {
   floaterMaterials,
   iceGeometry,
   leafGeometry,
+  liteMaterials,
   makeCup,
 } from "./models";
 import {
@@ -46,9 +48,12 @@ export async function initMenuHero(
   quality: Quality,
   hud: { progress: () => number },
 ) {
+  // the lite tier (ADR-014) draws straight to the canvas, with no post
+  // effects, shadows or refraction
+  const lite = quality.lite;
   const renderer = makeRenderer(canvas, quality, {
     shadows: true,
-    post: true,
+    post: !lite,
   });
   const shadows = shadowPacer(renderer);
   renderer.transmissionResolutionScale = quality.mobile ? 0.5 : 1;
@@ -104,7 +109,7 @@ export async function initMenuHero(
       ];
   const cups = await Promise.all(
     layout.map(async (slot) => {
-      const cup = await makeCup("/three/cat-sticker.png");
+      const cup = await makeCup("/three/cat-sticker.png", { lite });
       cup.setDrink(slot.drink);
       stage.add(cup.group);
       return { ...slot, cup };
@@ -117,7 +122,7 @@ export async function initMenuHero(
   );
   floor.rotation.x = -Math.PI / 2;
   floor.receiveShadow = true;
-  scene.add(floor);
+  if (!lite) scene.add(floor);
   const contactTexture = contactShadowTexture();
   const contacts = cups.map((slot) => {
     const contact = new THREE.Mesh(
@@ -135,7 +140,7 @@ export async function initMenuHero(
   });
 
   const k = quality.mobile ? 0.5 : 1;
-  const mats = floaterMaterials();
+  const mats = floaterMaterials({ lite });
   const floaters: Floaters[] = [
     makeFloaters(
       iceGeometry(7, 1),
@@ -166,23 +171,31 @@ export async function initMenuHero(
     ),
   ];
   floaters.forEach((f) => scene.add(f.mesh));
+  if (lite) liteMaterials(scene);
 
-  const post = makePost(renderer, scene, camera, quality, { focus: 11 });
+  const post = lite
+    ? null
+    : makePost(renderer, scene, camera, quality, { focus: 11 });
+  // slow frames switch off the heaviest effects first, then draw fewer
+  // pixels; the lite tier has nothing left to switch off, so only the second
+  const fewerPixels = () => {
+    renderer.setPixelRatio(0.75);
+    resize();
+  };
   const budget = new FrameBudget(
     FRAME_BUDGET_MS,
-    [
-      () => {
-        post.degrade();
-        renderer.setPixelRatio(1);
-        renderer.transmissionResolutionScale = 0.5;
-        shadows.slowDown();
-        resize();
-      },
-      () => {
-        renderer.setPixelRatio(0.75);
-        resize();
-      },
-    ],
+    post
+      ? [
+          () => {
+            post.degrade();
+            renderer.setPixelRatio(1);
+            renderer.transmissionResolutionScale = 0.5;
+            shadows.slowDown();
+            resize();
+          },
+          fewerPixels,
+        ]
+      : [fewerPixels],
     quality.forceHigh,
   );
 
@@ -194,7 +207,7 @@ export async function initMenuHero(
     width = Math.max(1, rect?.width ?? 1);
     height = Math.max(1, rect?.height ?? 1);
     renderer.setSize(width, height, false);
-    post.setSize(width, height);
+    post?.setSize(width, height);
     camera.aspect = width / height;
     mobileLayout = camera.aspect < 0.85;
     camera.fov = mobileLayout ? 44 : 32;
@@ -306,18 +319,23 @@ export async function initMenuHero(
     rimRight.target.position.set(0, stage.position.y, 0);
 
     shadows.beforeFrame();
-    post.render(dt, time);
+    if (post) post.render(dt, time);
+    else renderer.render(scene, camera);
   }
 
   // every product's shaders are ready before the scene is shown
-  await post.precompile();
+  await (post ? post.precompile() : renderer.compileAsync(scene, camera));
+  // products or pieces shown later have their first draw now, out of sight
+  warmUp(renderer, scene, () =>
+    post ? post.render(0, 0) : renderer.render(scene, camera),
+  );
 
   return {
     frame,
     state,
     dispose() {
       observer.disconnect();
-      post.dispose();
+      post?.dispose();
       title.dispose();
       disposeScene(scene, renderer);
     },

@@ -6,6 +6,7 @@ import {
   disposeScene,
   makeRenderer,
   studioEnvironment,
+  warmUp,
 } from "../engine/renderer";
 import {
   clamp01,
@@ -21,6 +22,7 @@ import {
   floaterMaterials,
   iceGeometry,
   leafGeometry,
+  liteMaterials,
   makeCup,
 } from "./models";
 import { makeBackdrop, titleTexture } from "./showcase";
@@ -370,6 +372,14 @@ export async function initState(
     }
     renderer.render(scene, camera);
   }
+
+  // the lite tier (ADR-014) shows clear parts as a gloss, not refraction
+  if (quality.lite) liteMaterials(scene);
+
+  // shaders compile off the main thread and have their first draw now,
+  // before the scene is shown, not in the frames scrolled past it
+  await renderer.compileAsync(scene, camera);
+  warmUp(renderer, scene, () => renderer.render(scene, camera));
 
   return {
     frame,

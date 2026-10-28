@@ -57,7 +57,7 @@ export default function MenuHeroCanvas({
         },
       };
     },
-    { onReady, onError },
+    { onReady, onError, underCurtain: true },
   );
 
   return (

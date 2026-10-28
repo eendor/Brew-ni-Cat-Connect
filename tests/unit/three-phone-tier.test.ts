@@ -1,7 +1,11 @@
 import * as THREE from "three";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { getQuality } from "@/components/three/engine/runtime";
+import {
+  getQuality,
+  lightGpu,
+  resetFrameBudgets,
+} from "@/components/three/engine/runtime";
 import { condensationMaps } from "@/components/three/engine/textures";
 import {
   floaterMaterials,
@@ -63,9 +67,11 @@ function largestMap(root: THREE.Object3D) {
   return largest;
 }
 
-describe("Phone tier for the home showcase (TC-P4-124 – TC-P4-127)", () => {
+describe("Phone and integrated GPU tier (TC-P4-124 – TC-P4-126, TC-P4-190)", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+    resetFrameBudgets();
     window.history.replaceState(null, "", "/");
   });
 
@@ -151,34 +157,95 @@ describe("Phone tier for the home showcase (TC-P4-124 – TC-P4-127)", () => {
     expect(Math.abs(half - full) / full).toBeLessThan(0.05);
   });
 
-  it("TC-P4-127 — only phones without ?quality=high get the lite tier", () => {
-    const device = (phone: boolean) =>
+  it("TC-P4-190 — phones, integrated and software GPUs get the lite tier at 1×; discrete and Apple GPUs keep the full tier; `?quality=` overrides both", () => {
+    // integrated, phone and software GPUs, by the name the browser reports
+    for (const name of [
+      "ANGLE (Intel, Mesa Intel(R) Graphics (ADL GT2), OpenGL ES 3.2)",
+      "ANGLE (Intel, Intel(R) UHD Graphics 620 Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "ANGLE (AMD, AMD Radeon(TM) Graphics Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "AMD Radeon Vega 8 Graphics",
+      "AMD Radeon 780M Graphics (radeonsi, gfx1103_r1)",
+      "Mali-G57 MC2",
+      "Adreno (TM) 610",
+      "PowerVR Rogue GE8320",
+      "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero)), SwiftShader driver)",
+      "llvmpipe (LLVM 17.0.6, 256 bits)",
+      "Microsoft Basic Render Driver",
+    ]) {
+      expect(lightGpu(name), name).toBe(true);
+    }
+    // discrete cards, Apple silicon, and a browser that hides the name
+    for (const name of [
+      "ANGLE (NVIDIA, NVIDIA GeForce RTX 3060 Laptop GPU Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "ANGLE (AMD, AMD Radeon RX 6600 XT Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "ANGLE (Intel, Intel(R) Arc(TM) A770 Graphics Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "ANGLE (Apple, ANGLE Metal Renderer: Apple M2, Unspecified Version)",
+      "",
+    ]) {
+      expect(lightGpu(name), name).toBe(false);
+    }
+
+    const UNMASKED_RENDERER = 0x9246;
+    const device = (phone: boolean, gpu: string, search = "") => {
       vi.stubGlobal("matchMedia", (query: string) => ({
         matches: phone,
         media: query,
       }));
+      vi.stubGlobal("WebGL2RenderingContext", class {});
+      vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue({
+        RENDERER: 0x1f01,
+        getExtension: (name: string) =>
+          name === "WEBGL_debug_renderer_info"
+            ? { UNMASKED_RENDERER_WEBGL: UNMASKED_RENDERER }
+            : name === "WEBGL_lose_context"
+              ? { loseContext: () => {} }
+              : null,
+        getParameter: (key: number) =>
+          key === UNMASKED_RENDERER ? gpu : "WebGL 2",
+      } as never);
+      window.history.replaceState(null, "", `/${search}`);
+      resetFrameBudgets();
+      return getQuality();
+    };
+    const intel =
+      "ANGLE (Intel, Mesa Intel(R) Graphics (ADL GT2), OpenGL ES 3.2)";
+    const nvidia = "ANGLE (NVIDIA, NVIDIA GeForce RTX 3060 Laptop GPU, D3D11)";
 
-    device(true);
-    expect(getQuality()).toEqual({
+    expect(device(true, "Adreno (TM) 610")).toEqual({
       mobile: true,
-      maxDpr: 1.25,
+      maxDpr: 1,
       forceHigh: false,
       lite: true,
     });
-    window.history.replaceState(null, "", "/?quality=high");
-    expect(getQuality()).toMatchObject({
+    expect(device(true, "Adreno (TM) 610", "?quality=high")).toEqual({
       mobile: true,
+      maxDpr: 1.25,
       forceHigh: true,
       lite: false,
     });
-
-    device(false);
-    window.history.replaceState(null, "", "/");
-    expect(getQuality()).toEqual({
+    expect(device(false, intel)).toEqual({
+      mobile: false,
+      maxDpr: 1,
+      forceHigh: false,
+      lite: true,
+    });
+    expect(device(false, intel, "?quality=high")).toEqual({
+      mobile: false,
+      maxDpr: 1.5,
+      forceHigh: true,
+      lite: false,
+    });
+    expect(device(false, nvidia)).toEqual({
       mobile: false,
       maxDpr: 1.5,
       forceHigh: false,
       lite: false,
+    });
+    expect(device(false, nvidia, "?quality=lite")).toEqual({
+      mobile: false,
+      maxDpr: 1,
+      forceHigh: false,
+      lite: true,
     });
   });
 });

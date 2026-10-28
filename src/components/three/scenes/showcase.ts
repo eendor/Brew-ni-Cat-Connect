@@ -9,6 +9,7 @@ import {
   makeRenderer,
   shadowPacer,
   studioEnvironment,
+  warmUp,
 } from "../engine/renderer";
 import {
   FRAME_BUDGET_MS,
@@ -231,17 +232,15 @@ export async function initShowcase(
   quality: Quality,
   hud: ShowcaseHud,
 ) {
-  // phones get the lite tier (ADR-014): no post effects, shadows or
-  // refraction, smaller generated textures, and a 1× drawing buffer
+  // the lite tier (ADR-014): no post effects, shadows or refraction,
+  // smaller generated textures, and a 1× drawing buffer
   const lite = quality.lite;
   const renderer = makeRenderer(canvas, quality, {
-    shadows: !lite,
+    shadows: true,
     post: !lite,
   });
   const shadows = shadowPacer(renderer);
   renderer.transmissionResolutionScale = quality.mobile ? 0.5 : 1;
-  if (lite) renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1));
-  canvas.dataset.tier = lite ? "lite" : "full";
   // the HDRI and the cup sticker download while the textures below are
   // generated; the catches only stop an early failure counting as unhandled,
   // the awaits further down still throw
@@ -625,6 +624,10 @@ export async function initShowcase(
     : renderer.compileAsync(scene, camera);
   uploadTextures(renderer, scene, titles);
   await compiled;
+  // products or pieces shown later have their first draw now, out of sight
+  warmUp(renderer, scene, () =>
+    post ? post.render(0, 0) : renderer.render(scene, camera),
+  );
 
   return {
     frame,

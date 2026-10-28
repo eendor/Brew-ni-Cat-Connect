@@ -7,8 +7,15 @@ import {
   disposeScene,
   makeRenderer,
   studioEnvironment,
+  warmUp,
 } from "../engine/renderer";
-import { damp, fontFamilies, pointer, type Quality } from "../engine/runtime";
+import {
+  damp,
+  fontFamilies,
+  nextTask,
+  pointer,
+  type Quality,
+} from "../engine/runtime";
 import { fbm, matteMaps, normalFromHeight, woodMaps } from "../engine/textures";
 
 export type VisitFacts = Readonly<{
@@ -153,7 +160,10 @@ export async function initVisit(
   const sign = new THREE.Group();
   const swing = new THREE.Group();
   sign.add(swing);
+  // the sign builds while the visitor scrolls toward it: the setup yields
+  // after each generated texture so the scrolling keeps its frames
   const wood = woodMaps(256, 61);
+  await nextTask();
   const board = new THREE.Mesh(
     new RoundedBoxGeometry(3.3, 2.06, 0.12, 4, 0.06),
     new THREE.MeshPhysicalMaterial({
@@ -241,6 +251,7 @@ export async function initVisit(
   plate.receiveShadow = true;
   diorama.add(plate);
   const roadNormal = asphalt();
+  await nextTask();
   roadNormal.repeat.set(4, 1);
   const road = new THREE.Mesh(
     new THREE.PlaneGeometry(5, 0.9),
@@ -277,6 +288,7 @@ export async function initVisit(
     });
   };
   const ribbed = corrugated();
+  await nextTask();
   const metal = (color: string, repeat: number) => {
     const normalMap = ribbed.clone();
     normalMap.needsUpdate = true;
@@ -556,6 +568,11 @@ export async function initVisit(
     pinShadow.scale.setScalar(1.15 - bounce * 0.3);
     renderer.render(scene, camera);
   }
+
+  // shaders compile off the main thread and have their first draw now,
+  // before the scene is shown, not in the frames scrolled past it
+  await renderer.compileAsync(scene, camera);
+  warmUp(renderer, scene, () => renderer.render(scene, camera));
 
   return {
     frame,

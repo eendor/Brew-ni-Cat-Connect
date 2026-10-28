@@ -4,6 +4,8 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useCallback, useRef, useState } from "react";
 
+import { useCurtainHold } from "@/components/motion/use-curtain-hold";
+
 import { useThreeEnabled } from "./use-three-enabled";
 
 const MenuHeroCanvas = dynamic(() => import("./canvas/menu-hero-canvas"), {
@@ -29,6 +31,8 @@ export function MenuHero() {
   }, []);
   const onReady = useCallback(() => setReady(true), []);
   const onError = useCallback(() => setFailed(true), []);
+  // a page opened through the route curtain is revealed with this in place
+  useCurtainHold(enabled && !failed && !ready);
 
   return (
     <section

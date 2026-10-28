@@ -86,7 +86,7 @@ export default function ShowcaseCanvas({
         },
       };
     },
-    { onReady, onError },
+    { onReady, onError, underCurtain: true },
   );
 
   return (

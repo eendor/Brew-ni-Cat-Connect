@@ -21,7 +21,7 @@ import {
   sweptBox,
   type ModelUpdate,
 } from "./menu-models-3d";
-import { contactShadowTexture } from "./models";
+import { contactShadowTexture, liteMaterials } from "./models";
 
 const CAMERA_Z = 11;
 /** The camera always shows at least this half-frame at the model (4:3). */
@@ -190,6 +190,8 @@ export async function initMenuStage(quality: Quality) {
         disposeModel(model);
         return;
       }
+      // the lite tier (ADR-014) shows clear cups as a gloss, not refraction
+      if (quality.lite) liteMaterials(model);
       // measured on its own, then set down with its footprint centered
       const box = sweptBox(model);
       const size = box.getSize(new THREE.Vector3());
