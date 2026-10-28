@@ -203,7 +203,25 @@ test("TC-P4-023 — a phone can tap through the whole order flow", async ({
   ).toHaveCount(3);
   await checkTargets("summary");
 
-  // the cart keeps the order until the summary is sent or a new one starts
+  // the summary holds the order now, so the cart is empty and links back
+  // to it (ADR-020)
+  await page.goto("/cart");
+  await expect(main.getByText("Your cart is empty")).toBeVisible();
+  await checkTargets("empty cart with a saved summary");
+  await main.getByRole("link", { name: "View your order summary" }).tap();
+  await page.waitForURL("**/checkout");
+  await expect(
+    page.getByRole("heading", {
+      level: 1,
+      name: "Order Summary for Your Rider",
+    }),
+  ).toBeVisible();
+
+  // Edit order puts both items back in the cart for a change
+  await main.getByRole("button", { name: "Edit order" }).tap();
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Review Order" }),
+  ).toBeVisible();
   await page.goto("/cart");
   const cartList = main.getByRole("list", { name: "Cart items list" });
   await expect(cartList).toContainText("Takoyaki");

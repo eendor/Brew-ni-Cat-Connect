@@ -68,6 +68,52 @@ function renderCheckout(
   );
 }
 
+const latteCatalog: MenuCatalog = {
+  categories: [
+    {
+      id: "drinks",
+      name: "Drinks",
+      items: [
+        {
+          id: "spanish-latte",
+          name: "Spanish Latte",
+          availability: "available",
+          flavors: [],
+          variants: [
+            {
+              id: "spanish-16",
+              name: "16 oz",
+              basePrice: 90,
+              flavorPrices: [],
+              description: null,
+            },
+          ],
+        },
+      ],
+    },
+  ],
+};
+
+/** Adds a Spanish Latte the way the menu's order dialog does. */
+function AddSpanishLatte() {
+  const { addItem } = useCart();
+  return (
+    <button
+      type="button"
+      onClick={() =>
+        addItem(latteCatalog, {
+          itemId: "spanish-latte",
+          variantId: "spanish-16",
+          flavor: null,
+          quantity: 1,
+        })
+      }
+    >
+      Add Spanish Latte
+    </button>
+  );
+}
+
 /** Fills the details step and walks through to the final summary step. */
 async function reachSendStep(user: ReturnType<typeof userEvent.setup>) {
   await user.type(screen.getByLabelText(/Full Name/i), "Pedro Penduko");
@@ -355,13 +401,13 @@ describe("Checkout Flow & Step Transitions", () => {
     ).toHaveAttribute("href", "/menu");
 
     // The summary survives a refresh of this tab (sessionStorage, never
-    // localStorage, since it holds the name and phone) and the cart is kept
-    // until the summary is copied or a new order is started
+    // localStorage, since it holds the name and phone). It holds the order
+    // now, so the cart is empty (ADR-020)
     expect(window.sessionStorage.getItem(SUMMARY_KEY)).toContain(
       "Iced Caramel Latte",
     );
     expect(window.localStorage.getItem(SUMMARY_KEY)).toBeNull();
-    expect(screen.getByTestId("cart-count")).toHaveTextContent("3");
+    expect(screen.getByTestId("cart-count")).toHaveTextContent("0");
     expect(
       screen.getByText(/Takeout box: ₱10, not included in the subtotal/),
     ).toBeInTheDocument();
@@ -505,7 +551,7 @@ describe("Checkout Flow & Step Transitions", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("TC-P4-016 — a successful copy confirms it and clears the cart", async () => {
+  it("TC-P4-175 — a successful copy confirms it and the summary stays", async () => {
     const user = userEvent.setup();
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.defineProperty(navigator, "clipboard", {
@@ -514,6 +560,8 @@ describe("Checkout Flow & Step Transitions", () => {
     });
     renderCheckout(testCartState);
     await reachSendStep(user);
+    // the cart already gave the order to the summary
+    expect(screen.getByTestId("cart-count")).toHaveTextContent("0");
 
     await user.click(
       screen.getByRole("button", { name: /Copy order summary/i }),
@@ -533,7 +581,7 @@ describe("Checkout Flow & Step Transitions", () => {
     ).toBeInTheDocument();
   });
 
-  it("TC-P4-017 — a failed copy says so, selects the text and keeps the cart", async () => {
+  it("TC-P4-176 — a failed copy says so and selects the text", async () => {
     const user = userEvent.setup();
     Object.defineProperty(navigator, "clipboard", {
       configurable: true,
@@ -568,7 +616,108 @@ describe("Checkout Flow & Step Transitions", () => {
     expect(window.getSelection()?.toString()).toContain(
       "Customer: Pedro Penduko",
     );
+    // the summary still holds the order for a manual copy
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Order Summary for Shop" }),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("cart-count")).toHaveTextContent("0");
+  });
+
+  it("TC-P4-174 — making the summary empties the cart and keeps the order", async () => {
+    const user = userEvent.setup();
+    const first = renderCheckout(testCartState, "summary_empties_cart");
     expect(screen.getByTestId("cart-count")).toHaveTextContent("3");
+    await reachSendStep(user);
+
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Order Summary for Shop" }),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("cart-count")).toHaveTextContent("0");
+    expect(document.querySelector("pre")?.textContent).toContain(
+      "Iced Caramel Latte",
+    );
+    // the emptied cart is what the browser keeps
+    expect(
+      JSON.parse(window.localStorage.getItem("summary_empties_cart") ?? "{}")
+        .lines,
+    ).toEqual([]);
+    first.unmount();
+
+    // a refresh with the empty cart lands back on the same summary
+    renderCheckout(undefined, "summary_empties_cart");
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Order Summary for Shop" }),
+    ).toBeInTheDocument();
+    expect(document.querySelector("pre")?.textContent).toContain(
+      "Customer: Pedro Penduko",
+    );
+  });
+
+  it("TC-P4-177 — Edit order puts the items and details back for a change", async () => {
+    const user = userEvent.setup();
+    const offline = () => Promise.reject(new Error("offline"));
+    const first = renderCheckout(testCartState, "edit_order", offline);
+    await reachSendStep(user);
+
+    await user.click(screen.getByRole("button", { name: "Edit order" }));
+
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Review Order" }),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("cart-count")).toHaveTextContent("3");
+    expect(document.body).toHaveTextContent("Pedro Penduko");
+    expect(window.sessionStorage.getItem(SUMMARY_KEY)).toBeNull();
+
+    // sending again makes a new summary and empties the cart again
+    await user.click(
+      screen.getByRole("button", { name: /Proceed to Send to Shop/i }),
+    );
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Order Summary for Shop" }),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("cart-count")).toHaveTextContent("0");
+    first.unmount();
+
+    // after a refresh the details come back from the summary itself
+    window.sessionStorage.clear();
+    storeSummary();
+    renderCheckout(
+      { ...testCartState, lines: [] },
+      "edit_order_refreshed",
+      offline,
+    );
+    await user.click(screen.getByRole("button", { name: "Edit order" }));
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Review Order" }),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("cart-count")).toHaveTextContent("3");
+    expect(document.body).toHaveTextContent("Maria Clara");
+  });
+
+  it("TC-P4-178 — an item added after the summary starts a new order", async () => {
+    const user = userEvent.setup();
+    render(
+      <CartProvider initialState={testCartState} storageKey="new_after_summary">
+        <CheckoutView loadMenu={() => Promise.reject(new Error("offline"))} />
+        <CartCount />
+        <AddSpanishLatte />
+      </CartProvider>,
+    );
+    await reachSendStep(user);
+    expect(screen.getByTestId("cart-count")).toHaveTextContent("0");
+
+    await user.click(screen.getByRole("button", { name: "Add Spanish Latte" }));
+
+    // only the new item is in the cart, and the old summary is dropped
+    expect(screen.getByTestId("cart-count")).toHaveTextContent("1");
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Review Order" }),
+    ).toBeInTheDocument();
+    expect(document.body).toHaveTextContent("Spanish Latte");
+    expect(document.body).not.toHaveTextContent("Iced Caramel Latte");
+    await waitFor(() =>
+      expect(window.sessionStorage.getItem(SUMMARY_KEY)).toBeNull(),
+    );
   });
 
   it("TC-P4-018 — a stored summary only comes back while it is fresh, well formed and matches the cart", () => {

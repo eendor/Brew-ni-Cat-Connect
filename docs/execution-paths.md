@@ -1,7 +1,7 @@
 # Brew ni Cat Connect — Expected Execution Paths
 
 **Version:** 0.1 Draft\
-**Date:** 2026-08-18; Phase 3 path added 2026-10-18\
+**Date:** 2026-08-18; Phase 3 path added 2026-10-18; cart after the summary updated 2026-10-28\
 **Document status:** Planning baseline\
 **Implementation status:** Phases 1 and 2 are merged; Phase 2 passed Renier's independent QA (PR #6). The Phase 2 discovery routes and read-only menu path are live (§18). Phase 3 adds a browser-side ordering path that ends in an order summary the customer sends to the shop (§19). The server-validated ordering path in §4 and the later paths remain Planned or Deferred.
 
@@ -380,17 +380,19 @@ flowchart TD
     G -- No --> G1[Field errors and focus on the first invalid field]
     G1 --> F
     G -- Yes --> H[Review step]
-    H --> I[Send step shows the order summary]
+    H --> I[Send step shows the order summary and the cart empties]
     I --> J{Copy to clipboard}
-    J -- Copied --> K[Cart emptied and the customer pastes the summary into a message to the shop or a rider, or reads it out on the phone]
-    J -- Blocked --> L[Summary selected for a manual copy and the cart kept]
+    J -- Copied --> K[The customer pastes the summary into a message to the shop or a rider, or reads it out on the phone]
+    J -- Blocked --> L[Summary selected for a manual copy]
+    I -->|Edit order| M[Items and details put back in the cart and rechecked against the menu]
+    M --> H
 ```
 
 1. **Item selection:** the order dialog requires an option or size ("Please choose an option or size.") and, where the price depends on it, a flavor ("Please choose a flavor to complete this selection."). Unavailable items can't be added.
 2. **Cart:** prices come only from the current catalog, in integer centavos (PR #7). The cart is kept in `localStorage` under `brew_ni_cat_cart_v1`, and a removal can be undone from a toast for 5 seconds.
 3. **Revalidation:** checkout reloads the public menu, reprices lines to the current menu price and removes lines that are no longer available, with a warning for each. If the menu can't load, the local cart is kept.
 4. **Details:** full name and a Philippine mobile number (`09XXXXXXXXX` or `+639XXXXXXXXX`; spaces, hyphens and brackets are ignored), then pickup at the shop or rider delivery. Pickup asks for Cash or GCash at the counter; rider delivery asks for a delivery address instead and hides the payment choice, because payment is agreed with the rider (PR #25). Errors are shown per field and focus moves to the first invalid field (PR #20).
-5. **Summary:** the prepared summary, including the delivery address for rider delivery (a pickup summary leaves it out), is kept in `sessionStorage` for up to 12 hours, with an in-memory fallback when storage is blocked, and it no longer applies once the cart changes.
-6. **Send:** a successful copy empties the cart and shows "Copied. Paste it into Messenger or read it out on the phone." for pickup, or "Copied. Paste it into a message to your rider on Facebook." for rider delivery. If the clipboard is blocked, the summary text is selected for a manual copy and the cart stays. Pickup offers Message on Facebook and Call or Text; rider delivery lists the three local rider services instead. "Start a new order" clears both the summary and the cart.
+5. **Summary:** the prepared summary, including the delivery address for rider delivery (a pickup summary leaves it out), is kept in `sessionStorage` for up to 12 hours, with an in-memory fallback when storage is blocked. Once it is made it holds the order, so the cart empties (ADR-020, PR #60), and the empty cart drawer and cart page link back to it with "View your order summary". "Edit order" puts its items and details back and rechecks the prices against the menu. An item added to the empty cart starts a new order, and the old summary no longer applies.
+6. **Send:** a successful copy shows "Copied. Paste it into Messenger or read it out on the phone." for pickup, or "Copied. Paste it into a message to your rider on Facebook." for rider delivery. If the clipboard is blocked, the summary text is selected for a manual copy. Pickup offers Message on Facebook and Call or Text; rider delivery lists the three local rider services instead. "Start a new order" clears both the summary and the cart.
 
 Nothing is sent to a server, no order reference is issued and no rider is booked. Server validation, order submission, order references and status updates in §4 remain Planned.

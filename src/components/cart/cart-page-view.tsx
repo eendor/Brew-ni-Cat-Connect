@@ -8,6 +8,7 @@ import { siteConfig } from "@/config/site";
 import { useCart } from "@/context/cart-context";
 import { StateScene } from "@/components/three/state-scene";
 import { formatPrice } from "@/lib/menu/format-price";
+import { usePreparedSummary } from "@/lib/ordering/prepared-summary";
 import type { FulfillmentType } from "@/types/ordering";
 
 import { CartLineItem } from "./cart-line-item";
@@ -24,6 +25,8 @@ export function CartPageView() {
     setFulfillment,
     clearCart,
   } = useCart();
+  // a summary made at checkout holds the order the cart gave up (ADR-020)
+  const savedSummary = usePreparedSummary();
 
   return (
     <>
@@ -76,10 +79,15 @@ export function CartPageView() {
                 You haven&apos;t added any items to your order yet. Check out
                 our delicious handcrafted drinks and café favorites.
               </p>
-              <div className="mt-8 flex justify-center">
+              <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
                 <Link href="/menu" className="button-primary">
                   Explore Current Menu
                 </Link>
+                {savedSummary ? (
+                  <Link href="/checkout" className="button-secondary">
+                    View your order summary
+                  </Link>
+                ) : null}
               </div>
             </div>
           ) : (

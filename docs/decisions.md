@@ -1,7 +1,7 @@
 # Architecture Decision Records
 
 **Document version:** 0.1 Draft\
-**Last updated:** 2026-10-24
+**Last updated:** 2026-10-28
 
 Statuses used here are `Proposed`, `Accepted`, `Superseded`, and `Deferred`. Acceptance records a direction; it does not claim implementation.
 
@@ -267,3 +267,17 @@ This manual state is a temporary functional-verification condition, not a revisi
 - Scrolling the Menu draws no WebGL at all. One stage exists only while a dialog is open, so no pop-in or pop-out.
 - No cut-out files to make or keep in step with the photos; a product added in the POS later floats a generic model with no redeploy (FR-083, FR-086).
 - ADR-018 is superseded by this decision.
+
+## ADR-020 — The Cart Empties When The Order Summary Is Made
+
+**Decision:** Once checkout makes the order summary, the summary holds the order and the cart empties. **Edit order** on the summary step puts the items and details back for a change. While a summary is saved, the empty cart drawer and cart page link back to it with **View your order summary**. An item added after that starts a new order, and the old summary is dropped.\
+**Date:** 2026-10-28\
+**Status:** Accepted\
+**Context:** The cart used to stay full until the summary was copied or **Start a new order** was pressed. Renier's QA of the live site on a phone found that after the summary was made the cart still held the order, **Proceed to Checkout** jumped straight back to the summary, and a new item joined the old order. Online ordering is still off on the live site, so every order there ends with this summary.\
+**Alternatives considered:** keeping the cart until the copy (the reported problem); emptying it only when Copy, Message on Facebook or Call or Text is pressed (a visitor who types the summary out or takes a screenshot keeps the old cart); asking whether the order was sent (one more step, and the answer can't be checked).\
+**Consequences:**
+- The cart badge, drawer and cart page read empty as soon as the summary shows, so the next item starts a new order instead of joining the one already made.
+- The summary still lives only in `sessionStorage` for up to 12 hours. Closing the tab before sending loses it, as before, and the cart is already empty by then.
+- **Edit order** puts the lines back through the same check as a stored cart, then checkout rechecks their prices against the menu, so an old or hand-edited summary can't bring back a wrong price.
+- A summary saved before this change, with its cart still full, empties the cart when it is copied.
+- TC-P4-016 and TC-P4-017 are superseded by TC-P4-174 to TC-P4-179.

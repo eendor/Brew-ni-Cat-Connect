@@ -4,13 +4,7 @@ import { validateDetails as validateDetailsHelper } from "@/lib/ordering/validat
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  useEffect,
-  useId,
-  useRef,
-  useState,
-  useSyncExternalStore,
-} from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
 import { Container } from "@/components/ui/container";
 import { ExternalLink } from "@/components/ui/external-link";
@@ -26,10 +20,13 @@ import { StateScene } from "@/components/three/state-scene";
 import { siteConfig } from "@/config/site";
 import { useCart } from "@/context/cart-context";
 import {
+  usePreparedSummary,
+  type CustomerDetails,
+  type PreparedOrderSummary,
+} from "@/lib/ordering/prepared-summary";
+import {
   clearStoredSummary,
-  getStoredSummary,
   saveStoredSummary,
-  subscribeStoredSummary,
 } from "@/lib/ordering/summary-storage";
 import { getAddItemFailureMessage } from "@/lib/ordering/cart-reducer";
 import { fetchPublicMenu } from "@/lib/menu/fetch-public-menu";
@@ -53,57 +50,6 @@ import type { CartItem, FulfillmentType } from "@/types/ordering";
 import { CartLineItem } from "../cart/cart-line-item";
 
 export type CheckoutStep = "details" | "review" | "send";
-
-export type CustomerDetails = Readonly<{
-  name: string;
-  phone: string;
-  /** Where the rider delivers. Empty for pickup; missing in summaries
-   *  saved before rider delivery existed. */
-  address?: string;
-  notes: string;
-  paymentPreference: "Cash" | "GCash";
-}>;
-
-export type PreparedOrderSummary = Readonly<{
-  createdAt: string;
-  customer: CustomerDetails;
-  fulfillment: FulfillmentType;
-  lines: readonly CartItem[];
-  subtotal: number;
-  itemCount: number;
-}>;
-
-/** Shape check for a summary read back from storage. */
-function isPreparedSummary(value: unknown): value is PreparedOrderSummary {
-  if (typeof value !== "object" || value === null) return false;
-  const summary = value as Partial<PreparedOrderSummary>;
-  const customer = summary.customer as Partial<CustomerDetails> | undefined;
-  return (
-    typeof summary.createdAt === "string" &&
-    typeof summary.subtotal === "number" &&
-    typeof summary.itemCount === "number" &&
-    (summary.fulfillment === "pickup" ||
-      summary.fulfillment === "external-rider") &&
-    typeof customer?.name === "string" &&
-    typeof customer.phone === "string" &&
-    typeof customer.notes === "string" &&
-    (customer.address === undefined || typeof customer.address === "string") &&
-    (customer.paymentPreference === "Cash" ||
-      customer.paymentPreference === "GCash") &&
-    Array.isArray(summary.lines) &&
-    summary.lines.every(
-      (line: Partial<CartItem> | null) =>
-        typeof line?.key === "string" &&
-        typeof line.itemName === "string" &&
-        typeof line.variantName === "string" &&
-        typeof line.quantity === "number" &&
-        typeof line.unitPrice === "number" &&
-        typeof line.lineTotal === "number",
-    )
-  );
-}
-
-const readPreparedSummary = () => getStoredSummary(isPreparedSummary);
 
 /** What the summary was made from: lines, quantities, prices, fulfillment. */
 function orderSignature(
@@ -196,18 +142,16 @@ export function CheckoutView({
     setFulfillment,
     revalidateWithCatalog,
     clearCart,
+    restoreCart,
   } = useCart();
 
   const [formStep, setStep] = useState<CheckoutStep>("details");
   // The generated summary survives a refresh; while one is stored the page
-  // stays on the final step until the visitor starts a new order. It only
-  // stands for the cart it was made from: once the cart changes (other than
-  // being emptied by a successful copy), the visitor starts again.
-  const storedSummary = useSyncExternalStore(
-    subscribeStoredSummary,
-    readPreparedSummary,
-    () => null,
-  );
+  // stays on the final step until the visitor edits it or starts a new
+  // order. It holds the order, so the cart empties once it is made
+  // (ADR-020). A cart that fills again with something else is a new order,
+  // and the old summary is dropped.
+  const storedSummary = usePreparedSummary();
   const summaryIsStale =
     storedSummary !== null &&
     !isEmpty &&
@@ -360,9 +304,29 @@ export function CheckoutView({
       itemCount,
     };
 
-    // the cart stays until the summary is copied or a new order is started
+    // the summary now holds the order, so the cart empties (ADR-020);
+    // Edit order puts the items back
     saveStoredSummary(summary);
+    clearCart({ undoable: false });
     goToStep("send");
+  }
+
+  /** Puts the summary's items and details back to change the order. */
+  function editOrder(summary: PreparedOrderSummary) {
+    // a summary that is no longer a valid cart (edited by hand) stays as is
+    if (
+      !restoreCart({ lines: summary.lines, fulfillment: summary.fulfillment })
+    )
+      return;
+    setCustomer({
+      ...summary.customer,
+      address: summary.customer.address ?? "",
+    });
+    setCopyState("idle");
+    clearStoredSummary();
+    goToStep("review");
+    // prices may have changed since the summary was made
+    void refreshCartFromMenu();
   }
 
   /** Selects the summary text so it can be copied by hand. */
@@ -384,13 +348,15 @@ export function CheckoutView({
       }
       await navigator.clipboard.writeText(formatOrderSummaryText(summary));
     } catch {
-      // nothing was copied, so the cart stays and the text is selected
+      // nothing was copied, so the text is selected for a manual copy
       selectSummaryText();
       setCopyState("failed");
       return;
     }
     setCopyState("copied");
-    // copied: the order now lives in the visitor's message to the shop or rider
+    // copied: the order now lives in the visitor's message to the shop or
+    // rider, and a cart still holding it (a summary saved before ADR-020)
+    // empties too
     clearCart({ undoable: false });
     copyTimerRef.current = window.setTimeout(() => setCopyState("idle"), 2500);
   }
@@ -1653,6 +1619,13 @@ export function CheckoutView({
                   >
                     Start a new order
                   </Link>
+                  <button
+                    type="button"
+                    className="button-secondary"
+                    onClick={() => editOrder(preparedSummary)}
+                  >
+                    Edit order
+                  </button>
                   <Link href="/" className="button-secondary">
                     Return to Home
                   </Link>
