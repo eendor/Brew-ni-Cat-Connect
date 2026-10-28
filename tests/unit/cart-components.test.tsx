@@ -37,6 +37,29 @@ const populatedState: CartState = {
   fulfillment: "pickup",
 };
 
+/** Saves an order summary the way the checkout does, for the empty cart. */
+function storeOrderSummary() {
+  window.sessionStorage.setItem(
+    "brew-ni-cat:prepared-summary",
+    JSON.stringify({
+      savedAt: Date.now(),
+      summary: {
+        createdAt: "08:15 PM",
+        customer: {
+          name: "Maria Clara",
+          phone: "09181234567",
+          notes: "",
+          paymentPreference: "Cash",
+        },
+        fulfillment: "pickup",
+        lines: populatedState.lines,
+        subtotal: 290,
+        itemCount: 3,
+      },
+    }),
+  );
+}
+
 function CartConsumerDrawer() {
   const { openDrawer } = useCart();
   return (
@@ -107,6 +130,25 @@ describe("CartDrawer Component", () => {
       "href",
       "/menu",
     );
+    // no saved summary, so no link back to one
+    expect(
+      screen.queryByRole("link", { name: "View your order summary" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("TC-P4-179 — the empty drawer links back to a saved order summary", async () => {
+    const user = userEvent.setup();
+    window.sessionStorage.clear();
+    storeOrderSummary();
+    renderWithCart(<CartConsumerDrawer />); // the summary took the order
+
+    await user.click(screen.getByRole("button", { name: "Open Drawer" }));
+
+    expect(screen.getByText("Your cart is empty")).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "View your order summary" }),
+    ).toHaveAttribute("href", "/checkout");
+    window.sessionStorage.clear();
   });
 
   it("displays line items, quantity controls, line totals, and subtotal", async () => {
@@ -174,6 +216,21 @@ describe("CartPageView Component", () => {
     expect(
       screen.getByRole("link", { name: "Explore Current Menu" }),
     ).toHaveAttribute("href", "/menu");
+    expect(
+      screen.queryByRole("link", { name: "View your order summary" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("TC-P4-179 — the empty cart page links back to a saved order summary", () => {
+    window.sessionStorage.clear();
+    storeOrderSummary();
+    renderWithCart(<CartPageView />);
+
+    expect(screen.getByText("Your cart is empty")).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "View your order summary" }),
+    ).toHaveAttribute("href", "/checkout");
+    window.sessionStorage.clear();
   });
 
   it("renders cart lines, fulfillment selector, and order summary", async () => {

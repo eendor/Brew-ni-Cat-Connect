@@ -1,7 +1,7 @@
 # Development Log
 
 **Document version:** 0.1 Draft\
-**Last updated:** 2026-10-23
+**Last updated:** 2026-10-28
 
 This log records completed work and observed evidence. Planned work is explicitly identified and is not reported as implemented or tested.
 
@@ -1045,3 +1045,14 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Testing:** The `Browser tests (chromium)` job on PR #59 runs the full `chromium` project with the new install step. Its step timings are compared with the runs before it in the PR.
 - **Branch / PR:** `perf/ci-playwright-install`, PR #59.
 - **Next action:** None. If a future runner image drops a library, the step installs the system packages by itself.
+
+
+## 2026-10-28 — The cart empties once the order summary is made
+
+- **Phase:** 4 (ordering fix from QA)
+- **Task:** Renier's QA of the live site on a phone found that after the order summary was made, the cart still held the order, Proceed to Checkout jumped straight back to the summary, and a new item joined the old order.
+- **Summary:** The cart was kept on purpose until the summary was copied (2026-10-17 entry). Now the summary holds the order, so making it empties the cart (ADR-020). Edit order on the summary step puts the items and details back, and checkout rechecks their prices against the menu. While a summary is saved, the empty drawer and cart page show View your order summary. An item added after that starts a new order and drops the old summary. The summary's shape check moved into `src/lib/ordering/prepared-summary.ts`, so the checkout, drawer and cart page read the saved summary the same way.
+- **Files:** `src/lib/ordering/prepared-summary.ts`, `src/components/checkout/checkout-view.tsx`, `src/context/cart-context.tsx`, `src/components/cart/cart-drawer.tsx`, `src/components/cart/cart-page-view.tsx`, `tests/unit/checkout.test.tsx`, `tests/unit/cart-components.test.tsx`, `tests/e2e/phone.spec.ts`, `docs/evidence/phase-4/screenshots/`, documentation.
+- **Testing:** TC-P4-174 to TC-P4-179 added and TC-P4-023 updated; TC-P4-016 and TC-P4-017 superseded. Vitest 284/284 in 39 files; Playwright `chromium` 19/20 (TC-P4-173 skipped: it captures screenshots only with `CAPTURE_EVIDENCE=1`) on a production build with the switch on.
+- **Branch / PR:** `fix/p4-cart-after-summary`, PR #61.
+- **Next action:** Renier checks the flow again on the live site after the deploy.

@@ -10,6 +10,7 @@ import { siteConfig } from "@/config/site";
 import { useCart } from "@/context/cart-context";
 import { useFocusTrap } from "@/lib/accessibility/focus-trap";
 import { formatPrice } from "@/lib/menu/format-price";
+import { usePreparedSummary } from "@/lib/ordering/prepared-summary";
 
 import { CartLineItem } from "./cart-line-item";
 
@@ -69,6 +70,8 @@ export function CartDrawer() {
     removeItem,
     clearCart,
   } = useCart();
+  // a summary made at checkout holds the order the cart gave up (ADR-020)
+  const savedSummary = usePreparedSummary();
 
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -197,6 +200,15 @@ export function CartDrawer() {
                 >
                   Browse Menu
                 </Link>
+                {savedSummary ? (
+                  <Link
+                    href="/checkout"
+                    className="button-secondary mt-3 text-sm"
+                    onClick={closeDrawer}
+                  >
+                    View your order summary
+                  </Link>
+                ) : null}
               </div>
             ) : (
               <div className="space-y-4">

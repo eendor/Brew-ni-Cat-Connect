@@ -303,6 +303,12 @@ export type CartContextValue = Readonly<{
   setFulfillment: (fulfillment: FulfillmentType) => void;
   /** Empties the cart; offers an undo unless `undoable` is false. */
   clearCart: (options?: Readonly<{ undoable?: boolean }>) => void;
+  /**
+   * Puts back a cart saved earlier, such as the one in an order summary.
+   * It is checked like a cart read from storage; false means it was not
+   * valid and the cart is unchanged.
+   */
+  restoreCart: (snapshot: CartState) => boolean;
   /** Last removal that can still be undone (shown as a toast for ~5 s). */
   undo: Readonly<{ id: number; message: string }> | null;
   undoLast: () => void;
@@ -410,6 +416,18 @@ export function CartProvider({
     [store],
   );
 
+  const restoreCart = useCallback(
+    (snapshot: CartState) => {
+      // the checkout rechecks these prices against the menu afterwards
+      const validated = validateStoredCartState(snapshot);
+      if (!validated) return false;
+      store.setDirectState(validated);
+      setUndoEntry(null);
+      return true;
+    },
+    [store],
+  );
+
   const undoLast = useCallback(() => {
     if (!undoEntry) return;
     // the snapshot was a valid, already-priced cart state
@@ -461,6 +479,7 @@ export function CartProvider({
       removeItem,
       setFulfillment,
       clearCart,
+      restoreCart,
       undo,
       undoLast,
       dismissUndo,
@@ -484,6 +503,7 @@ export function CartProvider({
       removeItem,
       setFulfillment,
       clearCart,
+      restoreCart,
       undo,
       undoLast,
       dismissUndo,
@@ -525,6 +545,7 @@ const fallbackCartValue: CartContextValue = {
   removeItem: () => {},
   setFulfillment: () => {},
   clearCart: () => {},
+  restoreCart: () => false,
   undo: null,
   undoLast: () => {},
   dismissUndo: () => {},
