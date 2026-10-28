@@ -513,24 +513,24 @@ Recorded on 2026-10-28 for PR #62, from the POS app repository (version 1.1.0) a
 
 ### 19.1 POS tables
 
-The POS app is an Android app that keeps the shop's data on each tablet and syncs it with these tables in the shared Supabase database:
+The shop runs the POS app on one Android tablet. The app keeps the shop's data on the device and syncs it with these tables in the shared Supabase database:
 
 | Table | What it holds | Who writes it |
 | --- | --- | --- |
-| `categories`, `items` | The menu, with sizes in `variants_json` and flavors | POS tablets; the website only reads them |
-| `inventory`, `recipe_mappings` | Stock counts, and how much stock each item size uses | POS tablets |
-| `orders`, `order_items` | POS sales and their lines | POS tablets; from Phase 6 also completed online orders (§19.5) |
-| `expenses` | Shop expenses | POS tablets |
+| `categories`, `items` | The menu, with sizes in `variants_json` and flavors | The POS app; the website only reads them |
+| `inventory`, `recipe_mappings` | Stock counts, and how much stock each item size uses | The POS app |
+| `orders`, `order_items` | POS sales and their lines | The POS app; from Phase 6 also completed online orders (§19.5) |
+| `expenses` | Shop expenses | The POS app |
 | `app_release` | Published POS builds | The team, by hand |
 
 The website writes only its own tables (`online_orders`, `online_order_items`, `online_order_status_history`, `online_order_tracking` and the customer tables in the database design §8).
 
 ### 19.2 Sync and identifiers
 
-- Each tablet uploads its rows every 15 minutes (`SyncWorker`, WorkManager) with upserts. Its whole stock count replaces the cloud copy, so stock can only be changed on a tablet.
+- The tablet uploads its rows every 15 minutes (`SyncWorker`, WorkManager) with upserts. Its whole stock count replaces the cloud copy, so stock can only be changed on the tablet.
 - A POS sale id is `device bucket × 1 000 000 000 + local id`, where the bucket comes from a hash of the device id. Ids stay below 1e15. A line id is `sale id × 1000 + line index`.
-- A tablet pulls other devices' sales by id and skips the ones it has, so a sale is never added twice. A pulled sale does not deduct stock again; the tablet that made it already did.
-- The app also listens to `postgres_changes` on `orders` over Realtime, so a sale from another tablet shows at once. The 15-minute sync catches anything it missed.
+- The app also pulls sales saved under other device ids (the live data has some from earlier installs and test devices) and skips the ones it has, so a sale is never added twice. A pulled sale does not deduct stock again; the device that made it already did.
+- The app also listens to `postgres_changes` on `orders` over Realtime, so a sale from another device shows at once. The 15-minute sync catches anything it missed.
 
 ### 19.3 Sign-in
 
@@ -538,14 +538,14 @@ The app signs in once with the POS staff account (Supabase Auth password sign-in
 
 ### 19.4 Releases
 
-A new POS build is published by uploading the signed APK and adding a row to `app_release` (version code, version name, APK link, notes, mandatory). Each tablet reads the newest row and, when its version code is higher than its own, downloads the APK and opens the Android installer. The steps are in the POS repository's `RELEASE_INSTRUCTIONS.md`.
+A new POS build is published by uploading the signed APK and adding a row to `app_release` (version code, version name, APK link, notes, mandatory). The tablet reads the newest row and, when its version code is higher than its own, downloads the APK and opens the Android installer. The steps are in the POS repository's `RELEASE_INSTRUCTIONS.md`.
 
 ### 19.5 Online orders in the POS (Phase 6)
 
-- `public.online_orders` is in the `supabase_realtime` publication, so the tablets hear about new orders the way they hear about sales. Realtime applies the RLS policy, so only staff receive every order.
-- Staff change an order only through `public.set_online_order_status()` (database design §9). The request names the status the staff member saw, so two tablets can't overwrite each other.
-- Completing an order adds one POS sale in the same transaction (ADR-021). The tablets pull it like a sale from another device, so it shows in the POS sales and reports.
-- The tablet that completes the order deducts its stock, once per order reference, because the cloud stock count is replaced by each tablet's upload.
+- `public.online_orders` is in the `supabase_realtime` publication, so the tablet hears about new orders the way it hears about sales. Realtime applies the RLS policy, so only staff receive every order.
+- Staff change an order only through `public.set_online_order_status()` (database design §9). The request names the status the staff member saw, so a retry or an out-of-date screen can't overwrite a newer status.
+- Completing an order adds one POS sale in the same transaction (ADR-021). The tablet pulls it like a sale from another device, so it shows in the POS sales and reports.
+- The tablet that completes the order deducts its stock, once per order reference, because the cloud stock count is replaced by the tablet's next upload.
 
 Field map from a completed online order to its POS sale:
 
@@ -565,8 +565,8 @@ Field map from a completed online order to its POS sale:
 
 ### 19.6 What the integration does not do
 
-- The website never connects to a tablet, and never writes the menu, stock, recipes, expenses or POS sales itself (FR-078).
+- The website never connects to the tablet, and never writes the menu, stock, recipes, expenses or POS sales itself (FR-078).
 - Online orders are not edited in the POS: staff accept, reject, prepare, finish or cancel them.
-- An online sale is not voided or refunded from the website. If the shop voids it on a tablet, the POS handles it like any other sale.
+- An online sale is not voided or refunded from the website. If the shop voids it on the tablet, the POS handles it like any other sale.
 - Rider and delivery orders are not in the system yet; the owner is still deciding.
 - Ingredients used for an order cancelled after Preparing are not deducted; the staff adjust the stock by hand.

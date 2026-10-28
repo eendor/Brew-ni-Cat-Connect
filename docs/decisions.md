@@ -284,15 +284,15 @@ This manual state is a temporary functional-verification condition, not a revisi
 
 ## ADR-021 — A Completed Online Order Becomes One POS Sale In The Database
 
-**Decision:** When staff mark an online order completed, the database adds one sale to the POS tables (`orders` and `order_items`) in the same transaction, with `device_id` `online` and ids from 2 000 000 000 000 001 up. The tablet that completed the order deducts the stock on the tablet, once per order reference.\
+**Decision:** When staff mark an online order completed, the database adds one sale to the POS tables (`orders` and `order_items`) in the same transaction, with `device_id` `online` and ids from 2 000 000 000 000 001 up. The POS tablet that completed the order deducts the stock on the device, once per order reference.\
 **Date:** 2026-10-28\
 **Status:** Accepted\
-**Context:** FR-075 asks that each online order reach the shop's records at most once. The POS app keeps its sales and stock on each tablet and syncs them through the shared database. It pulls other devices' sales by id, and it uploads its whole stock count, which replaces the cloud copy (system architecture §19.2).\
-**Alternatives considered:** the tablet saves the sale itself (two tablets, or a retry after a lost answer, could save it twice); a separate table for online sales (the POS sales and reports would miss them); deducting the stock in the database (the next upload from a tablet would overwrite it).\
+**Context:** FR-075 asks that each online order reach the shop's records at most once. The shop uses one POS tablet. The app keeps its sales and stock on the device and syncs them through the shared database. It pulls other devices' sales by id, and it uploads its whole stock count, which replaces the cloud copy (system architecture §19.2).\
+**Alternatives considered:** the tablet saves the sale itself (a retry after a lost answer, or a second device, could save it twice); a separate table for online sales (the POS sales and reports would miss them); deducting the stock in the database (the next upload from a tablet would overwrite it).\
 **Consequences:**
 
-- An order makes at most one sale, even when a request is retried or two tablets press Completed: the link table's primary key and the stale-status check stop a second one.
-- Online sales show in the POS sales and reports on every tablet after its next pull, like a sale from another tablet.
-- The stock is right only if the completing tablet deducts it. If that tablet fails first, the stock stays high until the next count; the reference key stops a double deduction.
+- An order makes at most one sale, even when a request is retried or Completed is pressed twice: the link table's primary key and the stale-status check stop a second one.
+- Online sales show in the POS sales and reports after the tablet's next pull, like a sale from another device.
+- The stock is right only if the tablet deducts it. If the tablet fails first, the stock stays high until the next count; the reference key stops a double deduction.
 - Ingredients used for an order cancelled after Preparing are not deducted; the staff adjust the stock by hand. This is to be reviewed with the owner.
 - The online sale ids must stay above every POS id. The POS makes ids below 1e15, so the gap is wide.

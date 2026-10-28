@@ -205,7 +205,7 @@ Apply the files in name order, each exactly as committed, in one all-or-nothing 
 2. **After `restore_rls`:** check that staff can read and change the POS tables, that guests and a signed-in customer can read only the menu and the POS releases, and that nothing else is open.
 3. **After the two order migrations:** in a step that is always undone, add a throwaway menu item, place an order as a guest, place it again with the same key, open it with and without its token, change its status as the shop would, and count the broadcasts. Then check RLS and what `anon`, `authenticated` and `service_role` can do.
 4. Try each request on a PGlite copy first, then live with a forced rollback, and only then apply it.
-5. **Before applying `online_order_status` (Phase 6):** in a step that is always undone, place a throwaway order, move it from pending to completed as the POS staff account (found inside SQL, never printed), check its POS sale and lines, check that a guest and a customer get SQLSTATE 42501, and check that `online_orders` is in `supabase_realtime`. Apply it only with the team's OK, since the POS tablets start receiving online orders.
+5. **Before applying `online_order_status` (Phase 6):** in a step that is always undone, place a throwaway order, move it from pending to completed as the POS staff account (found inside SQL, never printed), check its POS sale and lines, check that a guest and a customer get SQLSTATE 42501, and check that `online_orders` is in `supabase_realtime`. Apply it only with the team's OK, since the shop's tablet starts receiving online orders.
 
 To check what is applied, read `version` and `name` from `supabase_migrations.schema_migrations`. To undo, run the matching files in `supabase/rollbacks/` in reverse order, and delete their rows from `supabase_migrations.schema_migrations`.
 
@@ -247,7 +247,7 @@ Rejected, cancelled and completed are final. A pending order is rejected, not ca
 2. Answers `invalid` for a malformed reference, an unknown status, a reason on a step other than rejecting or cancelling, or a reason over 300 characters. Reasons are trimmed.
 3. Locks the order row. `p_from_status` is the status the staff member saw: if the order has moved on, nothing changes and the answer is `stale` with the current status.
 4. Changes the status, adds a history row (actor `shop`, with the correlation id) and, on `completed`, adds the POS sale, all in one transaction. The trigger from §8.6 then updates the customer's order page.
-5. A retry with the same correlation id and the same step answers `replayed: true` and changes nothing, so a tablet can resend after a lost answer.
+5. A retry with the same correlation id and the same step answers `replayed: true` and changes nothing, so the tablet can resend after a lost answer.
 
 It returns `{ ok: true, replayed, reference, status, changedAt, saleId? }`, or `{ ok: false, error, status? }` with `invalid`, `not_found`, `stale`, `not_allowed` or `reason_required`.
 
