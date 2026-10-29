@@ -512,6 +512,37 @@ async function showCard(
   return { media: preview, canvas, dialog };
 }
 
+test("TC-P4-001 — home renders the 3D showcase, not a blank canvas", async ({
+  page,
+}) => {
+  const errors = collectErrors(page);
+  await page.goto("/");
+  await expect(page.locator(".showcase--ready")).toBeVisible({
+    timeout: 45_000,
+  });
+  await expect(
+    page.getByRole("heading", {
+      level: 1,
+      name: "Coffee, comfort, and a little cat energy.",
+    }),
+  ).toBeVisible();
+  await page.waitForTimeout(1500);
+  expect(
+    await pixelSpread(page.locator(".showcase__stage canvas")),
+  ).toBeGreaterThan(12);
+
+  const ticks = page.getByRole("list", { name: "Jump to a featured item" });
+  await expect(ticks.getByRole("button")).toHaveCount(5);
+  await ticks.getByRole("button", { name: "Takoyaki" }).click();
+  // the jump is a smooth scroll the scene follows frame by frame
+  await expect(ticks.getByRole("button", { name: "Takoyaki" })).toHaveAttribute(
+    "aria-current",
+    "true",
+    { timeout: 60_000 },
+  );
+  expect(errors).toEqual([]);
+});
+
 test("TC-P4-002 — every page mounts its 3D layer without console or hydration errors", async ({
   page,
 }) => {
@@ -937,6 +968,39 @@ test("TC-P4-058 — the Contact sign and street sit inside the canvas, not cut o
     expect(share.left, `left edge at ${width}px`).toBeLessThan(0.002);
     expect(share.right, `right edge at ${width}px`).toBeLessThan(0.002);
   }
+  expect(errors).toEqual([]);
+});
+
+test("TC-P4-189 — the home showcase is a tall pinned section that turns with the page scroll", async ({
+  page,
+}) => {
+  const errors = collectErrors(page);
+  await page.goto("/");
+  await expect(page.locator(".showcase--ready")).toBeVisible({
+    timeout: 45_000,
+  });
+  const viewport = page.viewportSize()?.height ?? 0;
+  const height =
+    (await page.locator("#home-showcase").boundingBox())?.height ?? 0;
+  expect(height).toBeGreaterThan(viewport * 4);
+  const ticks = page.locator(".showcase__ticks button");
+  await expect(ticks.nth(0)).toHaveAttribute("aria-current", "true");
+
+  // scrolling the page turns the showcase while its stage stays pinned
+  await page.evaluate((y) => window.scrollTo(0, y), Math.round(height * 0.45));
+  await expect(ticks.nth(0)).not.toHaveAttribute("aria-current", "true", {
+    timeout: 30_000,
+  });
+  await expect(page.locator(".showcase__stage canvas")).toBeInViewport();
+
+  // an item button scrolls the page to that item
+  await ticks.nth(0).click();
+  await expect
+    .poll(() => page.evaluate(() => window.scrollY), { timeout: 30_000 })
+    .toBeLessThan(5);
+  await expect(ticks.nth(0)).toHaveAttribute("aria-current", "true", {
+    timeout: 30_000,
+  });
   expect(errors).toEqual([]);
 });
 

@@ -1077,3 +1077,13 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Testing:** TC-P4-180 to TC-P4-186 and TC-P4-190 to TC-P4-197 added; TC-P4-022 updated; TC-P4-127 superseded by TC-P4-190; TC-P4-002 restored. Vitest 313/313 in 42 files; Playwright `chromium-3d` 18/18 on a production build (9.4 min). TC-P4-022 waits for the About backdrop to be ready before it clicks: on software GL its start delayed the click by more than 5 s. TC-P4-022 now waits for the About backdrop to be ready before it clicks: scenes now start after the curtain opens, and on software GL that start delayed the click by more than 5 s.
 - **Branch / PR:** `perf/three-transitions`, PR #63.
 - **Next action:** I check the transitions on the live site after the deploy. The 60 fps goal on integrated GPUs (my Android and release card) stays open: idle is close, but scrolling is not there yet.
+
+## 2026-10-29 — Home showcase follows the page scroll again
+
+- **Phase:** 4 (home showcase follow-up)
+- **Task:** Put the home showcase back on the page scroll. I tried the own-reel version from 2026-10-26 and prefer the scroll-driven one.
+- **Summary:** The home showcase is a 520vh section again. The 3D stage stays pinned while the page scrolls through the five featured items, and the item buttons scroll the page to their item. The timer and the swipe from the own-reel version are gone, since scrolling drives it now. The glow colour behind the hero still updates a few times a second, as in the own-reel change.
+- **Files:** `src/components/three/home-showcase.tsx`, `src/components/three/canvas/showcase-canvas.tsx`, `src/app/globals.css`, `tests/unit/home-showcase-scroll.test.tsx`, `tests/e2e/three.spec.ts`, `docs/test-cases.md`.
+- **Testing:** TC-P4-187 to TC-P4-189 added; TC-P4-001 back in the 3D browser suite; TC-P4-145 marked superseded. Vitest 315/315; Playwright `chromium-3d` 20/20 on a production build (9.5 min).
+- **Branch / PR:** `feat/showcase-page-scroll`, PR #64.
+- **Next action:** None for the showcase. The 60 fps check on the laptop's integrated GPU stays on my release card.
