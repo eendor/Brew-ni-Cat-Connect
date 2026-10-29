@@ -11,6 +11,8 @@ import {
   type CSSProperties,
 } from "react";
 
+import { useCurtainHold } from "@/components/motion/use-curtain-hold";
+
 import { showcaseItems } from "./showcase-data";
 import { useThreeEnabled } from "./use-three-enabled";
 
@@ -54,6 +56,8 @@ export function HomeShowcase() {
   }, []);
   const onReady = useCallback(() => setReady(true), []);
   const onError = useCallback(() => setFailed(true), []);
+  // a page opened through the route curtain is revealed with this in place
+  useCurtainHold(enabled && !failed && !ready);
 
   function jumpTo(index: number) {
     // a pick holds the reel for a while before it moves on by itself

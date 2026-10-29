@@ -14,6 +14,7 @@ import {
   loadImage,
   makeRenderer,
   studioEnvironment,
+  warmUp,
 } from "../engine/renderer";
 import type { Quality } from "../engine/runtime";
 
@@ -182,6 +183,11 @@ export async function initCartFx(canvas: HTMLCanvasElement, quality: Quality) {
     toss((event as CustomEvent<CartTossDetail>).detail);
   };
   window.addEventListener(CART_TOSS_EVENT, onToss);
+
+  // shaders compile and have their first draw now, not on the first toss
+  await renderer.compileAsync(scene, camera);
+  warmUp(renderer, scene, () => renderer.render(scene, camera));
+  renderer.clear();
 
   return {
     dispose() {

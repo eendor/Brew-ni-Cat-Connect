@@ -13,31 +13,98 @@ export const STUDIO_HDRI_SMALL = "/three/hdri/studio_small_09_512.hdr";
 /** The renderer living on each canvas, so a failed start can still free it. */
 const renderers = new WeakMap<HTMLCanvasElement, THREE.WebGLRenderer>();
 const freed = new WeakSet<THREE.WebGLRenderer>();
-/** Renderers made for the phone tier; they light scenes with the small HDRI. */
+/** Renderers made for the lite tier; they light scenes with the small HDRI. */
 const liteRenderers = new WeakSet<THREE.WebGLRenderer>();
 
 export function makeRenderer(
   canvas: HTMLCanvasElement,
   quality: Quality,
-  options: { alpha?: boolean; shadows?: boolean } = {},
+  options: { alpha?: boolean; shadows?: boolean; post?: boolean } = {},
 ) {
   const renderer = new THREE.WebGLRenderer({
     canvas,
-    antialias: !quality.mobile,
+    // a scene drawn through post-processing is antialiased in the effects'
+    // own target, so its canvas doesn't multisample on top of that
+    antialias: !quality.mobile && !options.post,
     alpha: options.alpha ?? false,
     powerPreference: "high-performance",
   });
   renderers.set(canvas, renderer);
   if (quality.lite) liteRenderers.add(renderer);
+  canvas.dataset.tier = quality.lite ? "lite" : "full";
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, quality.maxDpr));
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 0.95;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
-  if (options.shadows) {
+  // each shader check is a blocking round trip to the GPU; the three.js docs
+  // advise turning them off in production
+  renderer.debug.checkShaderErrors = process.env.NODE_ENV !== "production";
+  // asked now, while the GPU is idle: asked first by a texture upload, it
+  // waits for every shader still compiling
+  renderer.capabilities.getMaxAnisotropy();
+  // the lite tier goes without shadows: lights that cast them then cost
+  // nothing, and materials compile without the shadow code
+  if (options.shadows && !quality.lite) {
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFShadowMap;
   }
   return renderer;
+}
+
+/**
+ * Draws the shadow maps once a frame, or every third frame after
+ * `slowDown()`. Left alone, three.js redraws them on every render call, and
+ * depth of field renders the scene a second time each frame. Slowing them
+ * down keeps the shadows and every material's shader: switching the light's
+ * shadow off instead would rebuild those shaders in the middle of the scene.
+ */
+export function shadowPacer(renderer: Pick<THREE.WebGLRenderer, "shadowMap">) {
+  renderer.shadowMap.autoUpdate = false;
+  let every = 1;
+  let frame = 0;
+  return {
+    /** Call once a frame, before drawing. */
+    beforeFrame() {
+      renderer.shadowMap.needsUpdate = frame % every === 0;
+      frame += 1;
+    },
+    slowDown() {
+      every = 3;
+    },
+  };
+}
+
+/**
+ * Draws a scene once with every hidden or off-screen object included, so
+ * each shader's first use (a blocking round trip to the GPU) happens while
+ * the scene is still out of sight, not in the frame a product first shows
+ * up in. Lights stay as they are: showing one more would rebuild every
+ * shader for it.
+ */
+export function warmUp(
+  renderer: Pick<THREE.WebGLRenderer, "shadowMap">,
+  scene: THREE.Object3D,
+  draw: () => void,
+) {
+  const shown: THREE.Object3D[] = [];
+  const culled: THREE.Object3D[] = [];
+  scene.traverse((object) => {
+    if (!object.visible && !(object as THREE.Light).isLight) {
+      object.visible = true;
+      shown.push(object);
+    }
+    if (object.frustumCulled) {
+      object.frustumCulled = false;
+      culled.push(object);
+    }
+  });
+  if (renderer.shadowMap.enabled) renderer.shadowMap.needsUpdate = true;
+  try {
+    draw();
+  } finally {
+    shown.forEach((object) => (object.visible = false));
+    culled.forEach((object) => (object.frustumCulled = true));
+  }
 }
 
 /** Disposes a renderer and drops its context, once. */

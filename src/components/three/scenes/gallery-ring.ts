@@ -5,6 +5,7 @@ import {
   makeRenderer,
   optimizedSrc,
   photoTexture,
+  warmUp,
 } from "../engine/renderer";
 import { damp, type Quality } from "../engine/runtime";
 
@@ -223,6 +224,11 @@ export async function initGalleryRing(
     }
     renderer.render(scene, camera);
   }
+
+  // shaders compile off the main thread and have their first draw now,
+  // before the scene is shown, not in the frames scrolled past it
+  await renderer.compileAsync(scene, camera);
+  warmUp(renderer, scene, () => renderer.render(scene, camera));
 
   return {
     frame,

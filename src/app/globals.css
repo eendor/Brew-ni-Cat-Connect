@@ -1038,6 +1038,12 @@ textarea:focus-visible {
   opacity: 1;
 }
 
+/* a 3D layer that becomes ready behind the route curtain, or while it
+   opens, is already there instead of fading in after it */
+[data-curtain] :is(.showcase__stage, .menu-hero__stage, .ambient-backdrop) {
+  transition: none;
+}
+
 .ambient-backdrop::after {
   position: absolute;
   inset: 0;

@@ -5,14 +5,22 @@ import {
   disposeScene,
   makeRenderer,
   studioEnvironment,
+  warmUp,
 } from "../engine/renderer";
-import { FrameBudget, damp, pointer, type Quality } from "../engine/runtime";
+import {
+  FRAME_BUDGET_MS,
+  FrameBudget,
+  damp,
+  pointer,
+  type Quality,
+} from "../engine/runtime";
 import { rng } from "../engine/textures";
 import {
   beanGeometry,
   floaterMaterials,
   iceGeometry,
   leafGeometry,
+  liteMaterials,
 } from "./models";
 
 export type AmbientMood = "about" | "gallery" | "contact" | "cart" | "checkout";
@@ -40,7 +48,10 @@ export async function initAmbient(
   mood: AmbientMood,
 ) {
   const config = moods[mood];
-  const renderer = makeRenderer(canvas, quality);
+  // the lite tier (ADR-014) draws straight to the canvas, with no depth of
+  // field, bloom or refraction
+  const lite = quality.lite;
+  const renderer = makeRenderer(canvas, quality, { post: !lite });
   renderer.transmissionResolutionScale = 0.5;
   const env = await studioEnvironment(renderer);
   const scene = new THREE.Scene();
@@ -77,7 +88,7 @@ export async function initAmbient(
   wash.position.z = -8;
   scene.add(wash);
 
-  const mats = floaterMaterials();
+  const mats = floaterMaterials({ lite });
   const total = quality.mobile ? 9 : 18;
   const random = rng(mood.length * 97 + 13);
   const kinds = [
@@ -120,18 +131,30 @@ export async function initAmbient(
     }
   });
 
-  const post = makePost(renderer, scene, camera, quality, {
-    focus: 11.5,
-    aperture: 0.0012,
-    bloom: 0.3,
-  });
+  if (lite) liteMaterials(scene);
+  const post = lite
+    ? null
+    : makePost(renderer, scene, camera, quality, {
+        focus: 11.5,
+        aperture: 0.0012,
+        bloom: 0.3,
+      });
+  const fewerPixels = () => {
+    renderer.setPixelRatio(0.75);
+    resize();
+  };
   const budget = new FrameBudget(
-    42,
-    () => {
-      post.degrade();
-      renderer.setPixelRatio(1);
-      resize();
-    },
+    FRAME_BUDGET_MS,
+    post
+      ? [
+          () => {
+            post.degrade();
+            renderer.setPixelRatio(1);
+            resize();
+          },
+          fewerPixels,
+        ]
+      : [fewerPixels],
     quality.forceHigh,
   );
 
@@ -140,7 +163,7 @@ export async function initAmbient(
     const w = Math.max(1, r.width);
     const h = Math.max(1, r.height);
     renderer.setSize(w, h, false);
-    post.setSize(w, h);
+    post?.setSize(w, h);
     camera.aspect = w / h;
     camera.fov = camera.aspect < 0.9 ? 55 : 35;
     camera.updateProjectionMatrix();
@@ -180,14 +203,22 @@ export async function initAmbient(
       item.mesh.rotation.y += item.spin.y * dt;
       item.mesh.rotation.z += item.spin.z * dt;
     }
-    post.render(dt, st.time);
+    if (post) post.render(dt, st.time);
+    else renderer.render(scene, camera);
   }
+
+  // the shaders compile off the main thread before the scene is shown
+  await (post ? post.precompile() : renderer.compileAsync(scene, camera));
+  // products or pieces shown later have their first draw now, out of sight
+  warmUp(renderer, scene, () =>
+    post ? post.render(0, 0) : renderer.render(scene, camera),
+  );
 
   return {
     frame,
     dispose() {
       observer.disconnect();
-      post.dispose();
+      post?.dispose();
       disposeScene(scene, renderer);
     },
   };

@@ -4,9 +4,17 @@ import { watchVisible } from "../engine/runtime";
 import { initAmbient, type AmbientMood } from "../scenes/ambient";
 import { useScene } from "./use-scene";
 
-type AmbientCanvasProps = Readonly<{ mood: AmbientMood; onReady: () => void }>;
+type AmbientCanvasProps = Readonly<{
+  mood: AmbientMood;
+  onReady: () => void;
+  onError: () => void;
+}>;
 
-export default function AmbientCanvas({ mood, onReady }: AmbientCanvasProps) {
+export default function AmbientCanvas({
+  mood,
+  onReady,
+  onError,
+}: AmbientCanvasProps) {
   const canvasRef = useScene(
     async (canvas, quality) => {
       const scene = await initAmbient(canvas, quality, mood);
@@ -21,7 +29,7 @@ export default function AmbientCanvas({ mood, onReady }: AmbientCanvasProps) {
         },
       };
     },
-    { onReady },
+    { onReady, onError, underCurtain: true },
   );
   return (
     <canvas

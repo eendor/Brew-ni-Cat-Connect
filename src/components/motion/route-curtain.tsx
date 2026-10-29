@@ -4,7 +4,11 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 
-import { setCurtainCovering } from "./curtain-state";
+import {
+  setCurtainCovering,
+  setCurtainSettled,
+  whenCurtainUnheld,
+} from "./curtain-state";
 import { EASE, gsap, motionAllowed } from "./gsap";
 
 /** The title card shown while each page loads. */
@@ -20,6 +24,11 @@ const TITLES: Readonly<Record<string, string>> = {
 
 /** Longest the curtain waits for a page before opening anyway. */
 const MAX_WAIT_MS = 6000;
+/**
+ * Longest the curtain stays closed, once the new page is in, for that
+ * page's hero 3D to draw its first frame.
+ */
+const HOLD_MAX_MS = 1800;
 
 function internalTarget(event: MouseEvent): URL | null {
   if (
@@ -51,10 +60,11 @@ function internalTarget(event: MouseEvent): URL | null {
 /**
  * Cinematic page transitions. A click on an internal link draws a dark
  * title card up over the page, with the destination's name rising in the
- * display face; the route changes behind it, and the card wipes away as
- * soon as the new page has rendered, which is when that page's entrances
- * start. Back and forward, modified clicks and reduced motion keep plain
- * navigation.
+ * display face; the route changes behind it, and the card wipes away once
+ * the new page has rendered and its hero 3D has drawn its first frame
+ * (`useCurtainHold`, capped at HOLD_MAX_MS). That is when the page's
+ * entrances start. Back and forward, modified clicks and reduced motion keep
+ * plain navigation.
  */
 export function RouteCurtain() {
   const router = useRouter();
@@ -73,10 +83,12 @@ export function RouteCurtain() {
     if (!curtain || !title || !line) return;
     let animation: gsap.core.Timeline | null = null;
     let timer: number | undefined;
+    let cancelHold = () => {};
 
     const open = () => {
       fromRef.current = null;
       window.clearTimeout(timer);
+      cancelHold();
       setCurtainCovering(false);
       animation?.kill();
       animation = gsap
@@ -91,9 +103,16 @@ export function RouteCurtain() {
           },
           "-=0.2",
         )
-        .set(curtain, { visibility: "hidden" });
+        .set(curtain, { visibility: "hidden" })
+        .call(setCurtainSettled);
     };
-    openRef.current = open;
+    // the new page is in: open once its hero 3D is drawn, or at the cap
+    openRef.current = () => {
+      window.clearTimeout(timer);
+      cancelHold();
+      timer = window.setTimeout(open, HOLD_MAX_MS);
+      cancelHold = whenCurtainUnheld(open);
+    };
 
     const onClick = (event: MouseEvent) => {
       if (!motionAllowed()) return;
@@ -135,12 +154,13 @@ export function RouteCurtain() {
     return () => {
       window.removeEventListener("click", onClick, true);
       window.clearTimeout(timer);
+      cancelHold();
       animation?.kill();
-      setCurtainCovering(false);
+      setCurtainSettled();
     };
   }, [router]);
 
-  // the new route has rendered behind the curtain: open it
+  // the new route has rendered behind the curtain: open it once ready
   useEffect(() => {
     if (fromRef.current && pathname !== fromRef.current) openRef.current();
   }, [pathname]);
