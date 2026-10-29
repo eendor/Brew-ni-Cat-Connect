@@ -3,13 +3,7 @@
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type CSSProperties,
-} from "react";
+import { useCallback, useRef, useState, type CSSProperties } from "react";
 
 import { useCurtainHold } from "@/components/motion/use-curtain-hold";
 
@@ -25,18 +19,14 @@ const SECTION_ID = "home-showcase";
 /**
  * Home hero. Server and first client render are the static version: the
  * real headline, CTAs and the five featured items as photo cards. With
- * WebGL and normal motion, it becomes a 3D showcase that turns through
- * the same five items on its own, or when you swipe or pick one. The page
- * scrolls normally past it.
+ * WebGL and normal motion, it becomes a pinned 3D showcase that turns
+ * through the same five items as you scroll.
  */
 export function HomeShowcase() {
   const enabled = useThreeEnabled();
   const [failed, setFailed] = useState(false);
   const [ready, setReady] = useState(false);
   const [active, setActive] = useState(0);
-  const [target, setTarget] = useState(0);
-  const pausedUntil = useRef(0);
-  const onScreen = useRef(true);
   const glowRef = useRef<HTMLElement | null>(null);
   const lastGlow = useRef("");
   const three = enabled && !failed;
@@ -60,44 +50,15 @@ export function HomeShowcase() {
   useCurtainHold(enabled && !failed && !ready);
 
   function jumpTo(index: number) {
-    // a pick holds the reel for a while before it moves on by itself
-    pausedUntil.current = performance.now() + 12_000;
-    setTarget(index);
-  }
-
-  // the reel advances on its own while the hero is on screen; the page
-  // scrolls normally past it
-  useEffect(() => {
-    if (!three || !ready) return;
     const section = document.getElementById(SECTION_ID);
-    const observer = new IntersectionObserver((entries) => {
-      onScreen.current = entries.some((entry) => entry.isIntersecting);
+    if (!section) return;
+    const length = section.offsetHeight - window.innerHeight;
+    const last = showcaseItems.length - 1;
+    const q = index === 0 ? 0 : (index + 0.2) / (last + 0.5);
+    window.scrollTo({
+      top: section.offsetTop + length * Math.min(1, q),
+      behavior: "smooth",
     });
-    if (section) observer.observe(section);
-    const timer = window.setInterval(() => {
-      if (!onScreen.current || document.hidden) return;
-      if (performance.now() < pausedUntil.current) return;
-      setTarget((index) => (index + 1) % showcaseItems.length);
-    }, 3500);
-    return () => {
-      window.clearInterval(timer);
-      observer.disconnect();
-    };
-  }, [three, ready]);
-
-  // swipe or drag sideways across the stage to change item
-  const swipe = useRef<number | null>(null);
-  function onPointerDown(event: React.PointerEvent) {
-    swipe.current = event.clientX;
-  }
-  function onPointerUp(event: React.PointerEvent) {
-    const from = swipe.current;
-    swipe.current = null;
-    if (from === null) return;
-    const dx = event.clientX - from;
-    if (Math.abs(dx) < 48) return;
-    const count = showcaseItems.length;
-    jumpTo((target + (dx < 0 ? 1 : count - 1)) % count);
   }
 
   return (
@@ -110,15 +71,10 @@ export function HomeShowcase() {
     >
       <div className="showcase__sticky">
         {three ? (
-          <div
-            className="showcase__stage"
-            aria-hidden="true"
-            onPointerDown={onPointerDown}
-            onPointerUp={onPointerUp}
-          >
+          <div className="showcase__stage" aria-hidden="true">
             <ShowcaseCanvas
               items={showcaseItems}
-              target={target}
+              sectionId={SECTION_ID}
               onProduct={onProduct}
               onGlow={onGlow}
               onReady={onReady}

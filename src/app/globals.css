@@ -717,8 +717,7 @@ textarea:focus-visible {
   /* Slide the stage up under the frosted header so the pinned 100svh frame
      lines up with the viewport and the HUD isn't pushed below the fold. */
   --header-h: calc(4.5rem + 1px);
-  height: 100vh;
-  height: 100svh;
+  height: 520vh;
   margin-top: calc(var(--header-h) * -1);
 }
 
@@ -733,7 +732,7 @@ textarea:focus-visible {
 }
 
 .showcase--3d .showcase__sticky {
-  position: relative;
+  position: sticky;
   top: 0;
   height: 100vh;
   height: 100svh;
@@ -743,7 +742,6 @@ textarea:focus-visible {
 .showcase__stage {
   position: absolute;
   inset: 0;
-  touch-action: pan-y;
   opacity: 0;
   transition: opacity 900ms var(--ease-cinematic);
 }
