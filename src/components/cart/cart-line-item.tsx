@@ -138,7 +138,7 @@ export function CartLineItem({
               {onRemove ? (
                 <button
                   type="button"
-                  className="inline-flex size-11 items-center justify-center rounded-full text-[var(--text-muted)] hover:text-[var(--danger)] hover:bg-[rgb(255_133_119_/_10%)] transition-colors"
+                  className="inline-flex size-11 items-center justify-center rounded-full text-[var(--text-muted)] hover:text-[var(--danger)] hover:bg-[var(--danger-soft)] transition-colors"
                   aria-label={`Remove ${item.itemName} (${variantName}) from cart`}
                   onClick={onRemove}
                 >

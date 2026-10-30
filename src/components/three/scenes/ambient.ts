@@ -14,6 +14,7 @@ import {
   pointer,
   type Quality,
 } from "../engine/runtime";
+import { STUDIO, studioBackground, UNTONEMAP_GLSL } from "../engine/studio";
 import { rng } from "../engine/textures";
 import {
   beanGeometry,
@@ -55,7 +56,7 @@ export async function initAmbient(
   renderer.transmissionResolutionScale = 0.5;
   const env = await studioEnvironment(renderer);
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color("#0B0A0D");
+  scene.background = studioBackground(!lite);
   scene.environment = env;
   scene.environmentIntensity = 0.5;
   const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 60);
@@ -68,18 +69,23 @@ export async function initAmbient(
   rim2.position.set(-5, -1, -5);
   scene.add(key, rim, rim2, rim.target, rim2.target);
 
-  // a soft colored wash on the back wall, like a gelled background light
+  // the mood color as soft daylight on the cream back wall, fading to the
+  // page color well inside the frame
   const wash = new THREE.Mesh(
     new THREE.PlaneGeometry(40, 20),
     new THREE.ShaderMaterial({
-      uniforms: { uGlow: { value: new THREE.Color(config.glow) } },
+      uniforms: {
+        uGlow: { value: new THREE.Color(config.glow) },
+        uBg: { value: new THREE.Color(STUDIO.canvas) },
+      },
       vertexShader: /* glsl */ `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
       fragmentShader: /* glsl */ `
-        uniform vec3 uGlow; varying vec2 vUv;
+        uniform vec3 uGlow, uBg; varying vec2 vUv;
+        ${UNTONEMAP_GLSL}
         void main(){
           vec2 d = (vUv - vec2(0.72, 0.62)) * vec2(2.0, 1.0);
-          vec3 col = vec3(0.043, 0.039, 0.051) + uGlow * exp(-dot(d, d) * 5.0) * 0.09;
-          gl_FragColor = vec4(col, 1.0);
+          vec3 col = mix(uBg, mix(uBg, uGlow, 0.32), exp(-dot(d, d) * 5.0) * 0.75);
+          gl_FragColor = vec4(untonemap(col), 1.0);
           #include <tonemapping_fragment>
           #include <colorspace_fragment>
         }`,

@@ -166,3 +166,32 @@ test("TC-P1-009 — key public pages avoid horizontal viewport overflow", async 
     }
   }
 });
+
+test("TC-P4-204 — pages paint the light Daylight Glass theme over a fixed window light", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const look = await page.evaluate(() => {
+    const body = getComputedStyle(document.body);
+    const light = getComputedStyle(document.body, "::before");
+    const header = document.querySelector("header");
+    return {
+      scheme: getComputedStyle(document.documentElement).colorScheme,
+      background: body.backgroundColor,
+      text: body.color,
+      light: light.backgroundImage,
+      lightPosition: light.position,
+      headerGlass: header ? getComputedStyle(header).backdropFilter : "",
+      themeColor: document
+        .querySelector('meta[name="theme-color"]')
+        ?.getAttribute("content"),
+    };
+  });
+  expect(look.scheme).toBe("light");
+  expect(look.background).toBe("rgb(246, 238, 225)");
+  expect(look.text).toBe("rgb(29, 42, 33)");
+  expect(look.light).toContain("radial-gradient");
+  expect(look.lightPosition).toBe("fixed");
+  expect(look.headerGlass).toContain("blur(");
+  expect(look.themeColor).toBe("#f6eee1");
+});

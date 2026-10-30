@@ -8,13 +8,15 @@ import {
   warmUp,
 } from "../engine/renderer";
 import { damp, type Quality } from "../engine/runtime";
+import { STUDIO } from "../engine/studio";
 
 export type RingPhoto = Readonly<{ src: string; alt: string }>;
 
 /**
  * Curved, draggable ring of the real gallery photos. The camera sits inside
- * the ring; the photo facing it is in full color, the rest fall back into
- * the dark. Frames are only drawn while something changes.
+ * the ring; the photo facing it is in full color, the rest fade into the
+ * cream wall like prints behind frosted glass. Frames are only drawn while
+ * something changes.
  */
 export async function initGalleryRing(
   canvas: HTMLCanvasElement,
@@ -23,7 +25,7 @@ export async function initGalleryRing(
   onFocus: (index: number) => void,
 ) {
   const renderer = makeRenderer(canvas, quality);
-  renderer.setClearColor("#0B0A0D", 1);
+  renderer.setClearColor(STUDIO.canvas, 1);
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(48, 1, 0.1, 200);
   const N = photos.length;
@@ -37,12 +39,19 @@ export async function initGalleryRing(
   scene.add(ring);
 
   const materials: THREE.ShaderMaterial[] = [];
-  const blank = new THREE.DataTexture(new Uint8Array([21, 19, 26, 255]), 1, 1);
+  // the warm photo well (--surface-warm) until a photo loads
+  const blank = new THREE.DataTexture(
+    new Uint8Array([236, 223, 203, 255]),
+    1,
+    1,
+  );
+  blank.colorSpace = THREE.SRGBColorSpace;
   blank.needsUpdate = true;
+  const wall = new THREE.Color(STUDIO.canvas);
 
   const vertexShader = /* glsl */ `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`;
   const fragmentShader = /* glsl */ `
-    uniform sampler2D uMap; uniform float uFocus, uAspect; uniform vec2 uSize; varying vec2 vUv;
+    uniform sampler2D uMap; uniform float uFocus, uAspect; uniform vec2 uSize; uniform vec3 uBg; varying vec2 vUv;
     float sdRound(vec2 p, vec2 b, float r){ vec2 q = abs(p) - b + r; return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r; }
     void main(){
       vec2 uv = vec2(1.0 - vUv.x, vUv.y);
@@ -55,7 +64,9 @@ export async function initGalleryRing(
       float mask = 1.0 - smoothstep(-0.015, 0.015, d);
       vec3 col = texture2D(uMap, uv).rgb;
       float l = dot(col, vec3(0.299, 0.587, 0.114));
-      col = mix(vec3(l) * 0.6, col, 0.25 + 0.75 * uFocus) * mix(0.12, 1.0, uFocus * uFocus);
+      col = mix(vec3(l), col, 0.25 + 0.75 * uFocus);
+      // prints away from the front fade into the cream wall
+      col = mix(uBg, col, mix(0.2, 1.0, uFocus * uFocus));
       // soft studio sheen across the print
       col += vec3(1.0) * 0.05 * uFocus * smoothstep(0.2, 0.9, vUv.y) * (1.0 - vUv.x);
       gl_FragColor = vec4(col, mask);
@@ -82,6 +93,7 @@ export async function initGalleryRing(
         uFocus: { value: 0 },
         uAspect: { value: 0.75 },
         uSize: { value: new THREE.Vector2(W, H) },
+        uBg: { value: wall },
       },
       vertexShader,
       fragmentShader,
@@ -116,7 +128,7 @@ export async function initGalleryRing(
         dirty = true;
       } catch {
         if (disposed) return;
-        // leave the dark placeholder panel
+        // leave the placeholder panel
       }
     }
   })();

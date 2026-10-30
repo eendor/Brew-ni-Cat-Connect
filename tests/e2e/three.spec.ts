@@ -138,6 +138,14 @@ async function pixelSpread(target: Locator, style?: string) {
 }
 
 /**
+ * Paints black behind the see-through dialog canvas while measuring, so the
+ * spread comes from the model, not the cream backdrop (a white takeout box
+ * is soft on cream by design).
+ */
+const MODEL_ONLY =
+  ".order-preview { background: #000 !important; border-radius: 0 !important; }";
+
+/**
  * Share of pixels that differ clearly between two same-size screenshots,
  * over the whole image and over a strip `edge` pixels wide down each side.
  */
@@ -500,7 +508,7 @@ async function showCard(
     menuModelSpec(item, categoryOf(item), variant, null).key,
   );
   await expect
-    .poll(() => pixelSpread(preview), {
+    .poll(() => pixelSpread(preview, MODEL_ONLY), {
       message: `${item.name} is drawn`,
       timeout: 30_000,
     })
@@ -891,7 +899,7 @@ test("TC-P4-144 — a product the owner adds later floats as a generic 3D model 
       menuModelSpec(item, category, item.variants[0] ?? null, null).key,
     );
     await expect
-      .poll(() => pixelSpread(preview), { timeout: 30_000 })
+      .poll(() => pixelSpread(preview, MODEL_ONLY), { timeout: 30_000 })
       .toBeGreaterThan(12);
     await dialog.getByRole("button", { name: "Close dialog" }).click();
     await expect(dialog).toBeHidden({ timeout: 10_000 });
@@ -969,6 +977,58 @@ test("TC-P4-058 — the Contact sign and street sit inside the canvas, not cut o
     expect(share.right, `right edge at ${width}px`).toBeLessThan(0.002);
   }
   expect(errors).toEqual([]);
+});
+
+/**
+ * Median color of a strip along a screenshot's four edges: what the page
+ * sees where a 3D studio ends.
+ */
+function edgeColor(png: Buffer, strip = 6) {
+  const { width, height, channels, pixels } = readPng(png);
+  const samples: [number[], number[], number[]] = [[], [], []];
+  for (let y = 0; y < height; y += 2) {
+    for (let x = 0; x < width; x += 2) {
+      const onEdge =
+        x < strip || y < strip || x >= width - strip || y >= height - strip;
+      if (!onEdge) continue;
+      const at = (y * width + x) * channels;
+      samples.forEach((values, c) => values.push(pixels[at + c] ?? 0));
+    }
+  }
+  return samples.map((values) => {
+    values.sort((a, b) => a - b);
+    return values[values.length >> 1] ?? 0;
+  });
+}
+
+test("TC-P4-205 — every 3D studio ends in the page's own cream, so its edge disappears", async ({
+  page,
+}) => {
+  test.setTimeout(300_000);
+  await mockMenu(page);
+  // --surface-canvas, #f6eee1
+  const cream = [246, 238, 225];
+  const scenes = [
+    ["/", ".showcase--ready .showcase__stage canvas"],
+    ["/?quality=high", ".showcase--ready .showcase__stage canvas"],
+    ["/menu", ".menu-hero--ready .menu-hero__stage canvas"],
+    ["/about", ".ambient-backdrop--ready canvas"],
+    ["/gallery", ".gallery-ring__stage.is-ready canvas"],
+    ["/a-page-that-wandered-off", ".not-found__stage.is-ready canvas"],
+  ] as const;
+  for (const [path, selector] of scenes) {
+    await page.goto(path);
+    const canvas = page.locator(selector).first();
+    await expect(canvas).toBeAttached({ timeout: 60_000 });
+    await page.waitForTimeout(1500);
+    const edge = edgeColor(await canvas.screenshot());
+    edge.forEach((value, c) => {
+      expect(
+        Math.abs(value - (cream[c] ?? 0)),
+        `${path} edge is rgb(${edge.join(", ")})`,
+      ).toBeLessThanOrEqual(5);
+    });
+  }
 });
 
 test("TC-P4-189 — the home showcase is a tall pinned section that turns with the page scroll", async ({

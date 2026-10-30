@@ -96,7 +96,7 @@ export function AccountNav() {
                   setIsOpen(false);
                   await signOut();
                 }}
-                className="flex w-full items-center rounded-xl px-3 py-2 text-xs font-bold text-[var(--danger)] hover:bg-[rgb(255_133_119_/_10%)] transition-colors text-left uppercase tracking-[0.08em]"
+                className="flex w-full items-center rounded-xl px-3 py-2 text-xs font-bold text-[var(--danger)] hover:bg-[var(--danger-soft)] transition-colors text-left uppercase tracking-[0.08em]"
               >
                 Sign out
               </button>

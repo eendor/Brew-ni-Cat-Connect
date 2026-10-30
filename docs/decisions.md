@@ -181,7 +181,7 @@ This manual state is a temporary functional-verification condition, not a revisi
 
 **Decision:** Add a three.js (plain, not React Three Fiber) and GSAP ScrollTrigger layer under `src/components/three/`, loaded with `next/dynamic` and `ssr: false`, on top of pages that still render completely without it. This partly supersedes ADR-013: GSAP is now a dependency, but only the 3D layer uses it; CSS motion elsewhere is unchanged.\
 **Date:** 2026-10-17\
-**Status:** Accepted and implemented in PR #23 (reworked and merged on 2026-10-18)\
+**Status:** Accepted and implemented in PR #23 (reworked and merged on 2026-10-18). Its dark Night Shift Glow look is superseded by ADR-022; the layer itself stays.\
 **Context:** The goal was a full 3D site in a dark "Night Shift Glow" look that reads as real product photography, not cartoon art, without losing the live menu, real cart, checkout or accessibility of `main`.\
 **Consequences:**
 - Every 3D scene is decorative (`aria-hidden`). Headings, prices, hours, photos with alt text, forms and buttons stay real HTML, and each 3D control has a keyboard-operable HTML button.
@@ -298,3 +298,20 @@ This manual state is a temporary functional-verification condition, not a revisi
 - The stock is right only if the tablet deducts it. If the tablet fails first, the stock stays high until the next count; the reference key stops a double deduction.
 - Ingredients used for an order cancelled after Preparing are not deducted; the staff adjust the stock by hand. This is to be reviewed with the owner.
 - The online sale ids must stay above every POS id. The POS makes ids below 1e15, so the gap is wide.
+
+## ADR-022 — Daylight Glass: A Light Theme In The Shop's Cream And Green
+
+**Decision:** Replace the dark Night Shift Glow look with a light theme taken from the shop: a cream page (`#F6EEE1`, the walls), the shop's deep green (`#1F6B45`) as the only filled action colour, terracotta (`#9E451E`) for accent text and a deep green footer (`#183A2A`). Glassmorphism carries it. A soft window light (green, peach and sage radial washes) is fixed behind the page, and the header, glass panels, the showcase HUD, the menu tabs, the mobile cart bar and secondary buttons are frosted glass. Every opaque 3D scene ends in the same cream: backdrops are designed in on-screen colours and run backwards through three.js's ACES curve (`src/components/three/engine/studio.ts`), and the small state scenes draw on a transparent canvas.\
+**Date:** 2026-10-30\
+**Status:** Accepted\
+**Context:** After checking the live site, the owner asked for a lighter look in the shop's cream with a little green. The site's first draft was light, and glassmorphism was chosen for the background. Photos of the shop give the palette: cream and peach walls, deep green panels, sage plants, light wood and terracotta signs. The 3D layer runs close to its frame budget (PR #63), so the theme can't add much paint work.\
+**Alternatives considered:** keeping the dark theme (the owner asked for a lighter one); a flat light theme without glass (not what was asked for); a backdrop blur on every card (over the smooth window light a blur shows nothing, and each one costs frame time); transparent canvases for the big 3D scenes (depth of field draws an opaque frame, and clear cups need a wall behind them to refract); a dark mode switch (two themes to keep at AA for one deadline).\
+**Consequences:**
+
+- Every colour used as text reaches 4.5:1 on the canvas, on cards, on the warm well and under the brightest window light. `tests/unit/daylight-glass.test.ts` checks this from the stylesheet (TC-P4-202 and TC-P4-203).
+- Item glows tint the cream studio wall like daylight through coloured glass. As text or a border they are mixed 35% with the strong text.
+- The bloom threshold rises from 0.9 to 2.2, above the cream wall, so only highlights on glass and ice glow.
+- A full-width 3D section shows a faint edge where the window light is strongest, because the light is fixed behind the page and the canvas covers it. A CSS mask could hide it but costs frame time.
+- The state scenes lose their `tone` option; on a transparent canvas they fit any panel.
+- ADR-014's dark look is superseded by this decision. Its three.js layer, fallbacks and performance rules stay, and so do ADR-015's motion rules and the route curtain.
+

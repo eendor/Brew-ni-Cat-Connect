@@ -20,6 +20,7 @@ import {
   smooth,
   type Quality,
 } from "../engine/runtime";
+import { studioBackground } from "../engine/studio";
 import {
   beanGeometry,
   contactShadowTexture,
@@ -59,6 +60,7 @@ export async function initMenuHero(
   renderer.transmissionResolutionScale = quality.mobile ? 0.5 : 1;
   const env = await studioEnvironment(renderer);
   const scene = new THREE.Scene();
+  scene.background = studioBackground(!lite);
   scene.environment = env;
   scene.environmentIntensity = 0.55;
   const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 100);

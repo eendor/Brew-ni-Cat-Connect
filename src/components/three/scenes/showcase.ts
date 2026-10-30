@@ -22,6 +22,7 @@ import {
   smooth,
   type Quality,
 } from "../engine/runtime";
+import { STUDIO, studioBackground, UNTONEMAP_GLSL } from "../engine/studio";
 import type { ShowcaseItem } from "../showcase-data";
 import {
   beanGeometry,
@@ -38,7 +39,7 @@ import {
   makeTakoyaki,
 } from "./models";
 
-const BG = new THREE.Color("#0B0A0D");
+const BG = new THREE.Color(STUDIO.canvas);
 const STICKER = "/three/cat-sticker.png";
 
 /**
@@ -100,8 +101,9 @@ function uploadTextures(
 }
 
 /**
- * Back wall: a softly lit studio sweep with the product name as a large
- * backlit letterform. Opaque, so the clear cup refracts it.
+ * Back wall: the page's cream, washed with the item's color behind the
+ * product, with the product name as a large tinted letterform. Opaque, so
+ * the clear cup refracts it.
  */
 export function makeBackdrop() {
   const material = new THREE.ShaderMaterial({
@@ -127,6 +129,7 @@ export function makeBackdrop() {
       uniform vec2 uCenter;
       uniform vec4 uRect;
       varying vec2 vUv;
+      ${UNTONEMAP_GLSL}
       float sampleT(sampler2D t, vec2 uv){
         if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) return 0.0;
         return texture2D(t, uv).a;
@@ -137,13 +140,15 @@ export function makeBackdrop() {
       }
       void main(){
         vec2 suv = vUv;
-        // studio sweep: a lifted floor-to-wall gradient, warm-neutral
-        vec3 col = uBg + vec3(0.018, 0.016, 0.02) * smoothstep(0.0, 0.6, suv.y);
         vec2 d = (suv - uCenter) * vec2(uAspect, 1.0) / min(uAspect, 1.0);
         float r2 = dot(d, d);
-        // colored backlight spilling on the wall behind the product
-        float spill = exp(-r2 * 4.0) * 0.12 + exp(-r2 * 18.0) * 0.18;
-        col += uGlow * spill * uGlowStr;
+        // every effect fades out before the edges, which then match the page
+        vec2 e = abs(suv - 0.5) * 2.0;
+        float edge = 1.0 - smoothstep(0.55, 1.0, max(e.x, e.y));
+        // daylight through the item's color: a pastel wash behind the product
+        vec3 tint = mix(uBg, uGlow, 0.32);
+        float spill = (exp(-r2 * 4.0) * 0.45 + exp(-r2 * 18.0) * 0.4) * uGlowStr;
+        vec3 col = mix(uBg, tint, clamp(spill * edge, 0.0, 1.0));
         vec2 tuv = (suv - uRect.xy) / uRect.zw;
         float ea = smoothstep(0.0, 0.55, uMix), eb = smoothstep(0.45, 1.0, uMix);
         float a = sampleT(uA, tuv + vec2(0.0, ea * 0.3)) * (1.0 - ea);
@@ -152,13 +157,12 @@ export function makeBackdrop() {
         float t = max(a, b) * rv;
         float halo = (sampleBlur(uA, tuv + vec2(0.0, ea * 0.3)) * (1.0 - ea)
           + sampleBlur(uB, tuv - vec2(0.0, (1.0 - eb) * 0.3)) * eb) * rv;
-        col += uGlow * halo * 0.28 * uGlowStr;
-        // letters read like a backlit acrylic panel, not a flat neon fill
-        vec3 face = mix(vec3(0.92, 0.9, 0.86), uGlow, 0.28) * mix(0.55, 1.0, tuv.y);
-        col = mix(col, face, t * 0.92);
-        vec2 v = (suv - 0.5) * vec2(uAspect, 1.0);
-        col *= 1.0 - 0.5 * smoothstep(0.3, 1.15, length(v));
-        gl_FragColor = vec4(max(col, 0.0), 1.0);
+        col = mix(col, tint, clamp(halo * 0.6 * uGlowStr * edge, 0.0, 1.0));
+        // the name reads like a tinted acrylic panel on the wall
+        vec3 face = mix(uBg, uGlow, 0.6) * mix(0.78, 0.92, tuv.y);
+        col = mix(col, face, t * 0.9);
+        // designed in on-screen colors; tone mapping below turns them back
+        gl_FragColor = vec4(untonemap(col), 1.0);
         #include <tonemapping_fragment>
         #include <colorspace_fragment>
       }`,
@@ -248,6 +252,7 @@ export async function initShowcase(
   envReady.catch(() => {});
   loadImage(STICKER).catch(() => {});
   const scene = new THREE.Scene();
+  scene.background = studioBackground(!lite);
   scene.environmentIntensity = 0.55;
   const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 100);
   camera.position.set(0, 0.2, 11);

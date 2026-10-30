@@ -117,7 +117,7 @@ export default function HomePage() {
               ni Cat.
             </p>
 
-            <div className="mt-8 rounded-2xl border border-white/20 bg-white/10 p-5 backdrop-blur-sm">
+            <div className="mt-8 glass-panel rounded-2xl p-5">
               <h3 className="text-xs font-extrabold tracking-wider text-[var(--accent-strong)] uppercase">
                 Visiting the Cats
               </h3>
@@ -155,11 +155,11 @@ export default function HomePage() {
       </section>
 
       <section
-        className="bg-[var(--surface-canvas)] py-16 text-[var(--text-strong)] sm:py-20 lg:py-24"
+        className="py-16 text-[var(--text-strong)] sm:py-20 lg:py-24"
         aria-labelledby="gallery-preview-heading"
       >
         <Container>
-          <Reveal className="flex flex-col gap-6 border-b border-white/10 pb-8 sm:flex-row sm:items-end sm:justify-between">
+          <Reveal className="flex flex-col gap-6 border-b border-[var(--border-soft)] pb-8 sm:flex-row sm:items-end sm:justify-between">
             <div className="max-w-2xl">
               <h2
                 data-split=""
