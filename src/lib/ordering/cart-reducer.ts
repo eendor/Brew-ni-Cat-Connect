@@ -503,6 +503,7 @@ export function replaceCatalogSelection(
     const updatedLine: CartItem = {
       ...existing,
       unitPrice: resolved.unitPrice,
+      quantity,
       lineTotal: calculateLineTotal(resolved.unitPrice, quantity),
     };
     const nextLines = state.lines.map((line, index) =>

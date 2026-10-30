@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it } from "vitest";
@@ -5,7 +6,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { CartDrawer } from "@/components/cart/cart-drawer";
 import { MenuItemCard } from "@/components/menu/menu-item-card";
 import { MenuItemOrderDialog } from "@/components/menu/menu-item-order-dialog";
-import { CartProvider } from "@/context/cart-context";
+import { CartProvider, useCart } from "@/context/cart-context";
 import type { MenuCatalog, MenuItem } from "@/types/menu";
 
 const sampleDrinkItem: MenuItem = {
@@ -256,26 +257,51 @@ describe("MenuItemOrderDialog & MenuItemCard ordering integration", () => {
     expect(screen.getAllByText("₱60").length).toBeGreaterThan(0);
   });
 
-  it("TC-P3-070 — supports edit mode in MenuItemOrderDialog with prepopulated selections and 'Update item' button", async () => {
+  it("TC-P3-070 — supports edit mode in MenuItemOrderDialog with prepopulated selections and updates cart on Update item", async () => {
     const user = userEvent.setup();
+    const initialCartState = {
+      lines: [
+        {
+          key: "iced-matcha::matcha-16::Original",
+          itemId: "iced-matcha",
+          itemName: "Iced Matcha Latte",
+          variantId: "matcha-16",
+          variantName: "16 oz",
+          flavor: "Original",
+          unitPrice: 85,
+          quantity: 3,
+          lineTotal: 255,
+        },
+      ],
+      fulfillment: "pickup" as const,
+    };
+
+    function TestHost() {
+      const { lines } = useCart();
+      const [isEditing, setIsEditing] = useState(true);
+      return (
+        <div>
+          <div data-testid="line-count">{lines.length}</div>
+          <div data-testid="variant-name">{lines[0]?.variantName}</div>
+          <div data-testid="qty">{lines[0]?.quantity}</div>
+          {isEditing && lines[0] ? (
+            <MenuItemOrderDialog
+              item={sampleDrinkItem}
+              catalog={sampleCatalog}
+              editingLine={lines[0]}
+              onClose={() => setIsEditing(false)}
+            />
+          ) : null}
+        </div>
+      );
+    }
+
     render(
-      <CartProvider storageKey="test_edit_mode_storage">
-        <MenuItemOrderDialog
-          item={sampleDrinkItem}
-          catalog={sampleCatalog}
-          editingLine={{
-            key: "iced-matcha::matcha-16::Original",
-            itemId: "iced-matcha",
-            itemName: "Iced Matcha Latte",
-            variantId: "matcha-16",
-            variantName: "16 oz",
-            flavor: "Original",
-            unitPrice: 85,
-            quantity: 3,
-            lineTotal: 255,
-          }}
-          onClose={() => {}}
-        />
+      <CartProvider
+        storageKey="test_edit_mode_storage"
+        initialState={initialCartState}
+      >
+        <TestHost />
       </CartProvider>,
     );
 
@@ -290,5 +316,9 @@ describe("MenuItemOrderDialog & MenuItemCard ordering integration", () => {
     await user.click(
       within(dialog).getByRole("button", { name: "Update item" }),
     );
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.getByTestId("variant-name")).toHaveTextContent("22 oz");
+    expect(screen.getByTestId("qty")).toHaveTextContent("3");
   });
 });

@@ -18,6 +18,15 @@ import type { CartItem, FulfillmentType } from "@/types/ordering";
 import { CartLineItem } from "./cart-line-item";
 import { MenuItemOrderDialog } from "../menu/menu-item-order-dialog";
 
+function findItemCategoryName(catalog: MenuCatalog, itemId: string): string {
+  for (const cat of catalog.categories) {
+    if (cat.items.some((it) => it.id === itemId)) {
+      return cat.name;
+    }
+  }
+  return "";
+}
+
 export function CartPageView() {
   const {
     lines,
@@ -357,6 +366,7 @@ export function CartPageView() {
                 item={item}
                 catalog={catalog}
                 editingLine={editingLine}
+                categoryName={findItemCategoryName(catalog, editingLine.itemId)}
                 onClose={() => setEditingLine(null)}
               />
             );

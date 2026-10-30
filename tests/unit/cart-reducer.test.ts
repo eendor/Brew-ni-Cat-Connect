@@ -898,5 +898,32 @@ describe("cart fulfillment and reducer boundary", () => {
       }
       expect(res.state).toBe(state);
     });
+
+    it("TC-P3-072 — updates quantity when editing an existing cart line with the same configuration", () => {
+      const state = addMatcha(createInitialCartState(), {
+        variantId: "matcha-16",
+        flavor: null,
+        quantity: 3,
+      });
+      const lineKey = state.lines[0]?.key ?? "";
+
+      const res = replaceCatalogSelection(state, catalog, lineKey, {
+        variantId: "matcha-16",
+        flavor: null,
+        quantity: 5,
+      });
+
+      if (!res.ok) {
+        throw new Error(`expected success, got ${res.reason}`);
+      }
+
+      expect(res.state.lines).toHaveLength(1);
+      expect(res.state.lines[0]).toMatchObject({
+        variantId: "matcha-16",
+        quantity: 5,
+        unitPrice: 80,
+        lineTotal: 400,
+      });
+    });
   });
 });
