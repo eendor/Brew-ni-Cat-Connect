@@ -22,7 +22,12 @@ import {
   smooth,
   type Quality,
 } from "../engine/runtime";
-import { STUDIO, studioBackground, UNTONEMAP_GLSL } from "../engine/studio";
+import {
+  STUDIO,
+  studioBackground,
+  TITLE_FACE_GLSL,
+  UNTONEMAP_GLSL,
+} from "../engine/studio";
 import type { ShowcaseItem } from "../showcase-data";
 import {
   beanGeometry,
@@ -102,8 +107,8 @@ function uploadTextures(
 
 /**
  * Back wall: the page's cream, washed with the item's color behind the
- * product, with the product name as a large tinted letterform. Opaque, so
- * the clear cup refracts it.
+ * product, with the product name as a large letterform in a deep shade of
+ * that color. Opaque, so the clear cup refracts it.
  */
 export function makeBackdrop() {
   const material = new THREE.ShaderMaterial({
@@ -130,6 +135,7 @@ export function makeBackdrop() {
       uniform vec4 uRect;
       varying vec2 vUv;
       ${UNTONEMAP_GLSL}
+      ${TITLE_FACE_GLSL}
       float sampleT(sampler2D t, vec2 uv){
         if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) return 0.0;
         return texture2D(t, uv).a;
@@ -158,9 +164,9 @@ export function makeBackdrop() {
         float halo = (sampleBlur(uA, tuv + vec2(0.0, ea * 0.3)) * (1.0 - ea)
           + sampleBlur(uB, tuv - vec2(0.0, (1.0 - eb) * 0.3)) * eb) * rv;
         col = mix(col, tint, clamp(halo * 0.6 * uGlowStr * edge, 0.0, 1.0));
-        // the name reads like a tinted acrylic panel on the wall
-        vec3 face = mix(uBg, uGlow, 0.6) * mix(0.78, 0.92, tuv.y);
-        col = mix(col, face, t * 0.9);
+        // the name in a deep shade of the item's color that reads on the
+        // cream wall (TITLE_FACE)
+        col = mix(col, titleFace(uGlow, clamp(tuv.y, 0.0, 1.0)), t);
         // designed in on-screen colors; tone mapping below turns them back
         gl_FragColor = vec4(untonemap(col), 1.0);
         #include <tonemapping_fragment>
@@ -455,6 +461,8 @@ export async function initShowcase(
 
   const glowColors = items.map((item) => new THREE.Color(item.glow));
   const glow = new THREE.Color();
+  const rim = new THREE.Color();
+  const daylight = new THREE.Color("#fff4e6");
   const v3 = new THREE.Vector3();
   const state = { intro: 0, p: 0, tx: 0, ty: 0, time: 0, lastIndex: -1 };
   const m4 = new THREE.Matrix4();
@@ -491,8 +499,11 @@ export async function initShowcase(
       .lerp(glowColors[Math.min(last, i0 + 1)] ?? glow, f);
     const u = backdropMaterial.uniforms;
     (u.uGlow!.value as THREE.Color).copy(glow);
-    rimLeft.color.copy(glow);
-    rimRight.color.copy(glow);
+    // the rim takes the item's color softened toward daylight: neutral tone
+    // mapping keeps colors saturated, so the pure glow showed as a neon dot
+    rim.copy(glow).lerp(daylight, 0.6);
+    rimLeft.color.copy(rim);
+    rimRight.color.copy(rim);
     u.uA!.value = titles[i0] ?? null;
     u.uB!.value = titles[Math.min(last, i0 + 1)] ?? null;
     u.uMix!.value = smooth(0.15, 0.85, f);

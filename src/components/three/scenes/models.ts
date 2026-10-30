@@ -935,15 +935,21 @@ export function beanGeometry() {
   return geometry;
 }
 
+/** The floating ice material's name, so the phone tier can find it. */
+export const FLOATING_ICE = "floating-ice";
+
 export function floaterMaterials(options: { lite?: boolean } = {}) {
   const ice = iceMaps(options.lite ? 128 : 256, 23);
   const leaf = leafMaps(options.lite ? 128 : 256, 41);
   const bean = beanMaps(128, 31);
   const fries = fryMaps(128, 29);
   return {
-    // free-floating ice refracts the scene behind it
+    // free-floating ice refracts the scene behind it. A cool tint, deeper
+    // where the cube is thick, keeps it readable on the cream studio, where
+    // a near-white cube showed as a white blob.
     ice: new THREE.MeshPhysicalMaterial({
-      color: "#f4fbff",
+      name: FLOATING_ICE,
+      color: "#d9edf5",
       transmission: 1,
       thickness: 0.7,
       ior: 1.31,
@@ -951,12 +957,12 @@ export function floaterMaterials(options: { lite?: boolean } = {}) {
       roughnessMap: ice.roughnessMap,
       normalMap: ice.normalMap,
       normalScale: new THREE.Vector2(0.6, 0.6),
-      attenuationColor: new THREE.Color("#d8ecf5"),
-      attenuationDistance: 1.4,
+      attenuationColor: new THREE.Color("#a9d3e6"),
+      attenuationDistance: 1,
       clearcoat: 1,
       clearcoatRoughness: 0.04,
       specularIntensity: 1,
-      envMapIntensity: 1.3,
+      envMapIntensity: 0.9,
     }),
     leaf: new THREE.MeshPhysicalMaterial({
       map: leaf.map,
@@ -1027,9 +1033,15 @@ export function liteMaterials(root: THREE.Object3D) {
         physical.transmission = 0;
         physical.transparent = true;
         physical.depthWrite = false;
-        physical.blending = THREE.AdditiveBlending;
-        // as a tint the color lets light through; as a base it would fog
-        physical.color.multiplyScalar(0.12);
+        if (physical.name === FLOATING_ICE) {
+          // loose ice has only the cream wall behind it, where an additive
+          // gloss is a white blob; a see-through cool tint keeps its shape
+          physical.opacity = 0.55;
+        } else {
+          physical.blending = THREE.AdditiveBlending;
+          // as a tint the color lets light through; as a base it would fog
+          physical.color.multiplyScalar(0.12);
+        }
       }
       physical.clearcoat = 0;
       physical.sheen = 0;
