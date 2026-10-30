@@ -16,6 +16,7 @@ import { visitFacts } from "@/components/three/visit-facts";
 import { VisitStage } from "@/components/three/visit-stage";
 import { CartProvider } from "@/context/cart-context";
 import type { MenuItem } from "@/types/menu";
+import { fallbackShop } from "@/lib/site-content/fallback-shop";
 
 const toss = {
   from: { x: 10, y: 20, width: 100, height: 40 },
@@ -41,7 +42,21 @@ describe("3D layer (TC-P4-006 – TC-P4-010)", () => {
 
   it("TC-P4-007 — without WebGL the home showcase renders its static fallback", () => {
     expect(shouldRunThree()).toBe(false);
-    render(<HomeShowcase />);
+    const prices = {
+      matcha: 49,
+      catfeine: 55,
+      takoyaki: 40,
+      fries: 30,
+      buldak: null,
+    };
+    render(
+      <HomeShowcase
+        eyebrow="Kabacan, Cotabato · Est. June 2026"
+        title="Coffee, comfort, and a little cat energy."
+        lede="Drinks and snacks in Kabacan."
+        prices={prices}
+      />,
+    );
     expect(
       screen.getByRole("heading", {
         level: 1,
@@ -55,22 +70,43 @@ describe("3D layer (TC-P4-006 – TC-P4-010)", () => {
     expect(within(list).getAllByRole("listitem")).toHaveLength(5);
     for (const item of showcaseItems) {
       expect(within(list).getByRole("img", { name: item.alt })).toBeVisible();
-      expect(within(list).getAllByText(item.price).length).toBeGreaterThan(0);
     }
+    // prices come from the live menu; one it can't give is left out
+    expect(within(list).getByText("From ₱55")).toBeInTheDocument();
+    expect(within(list).getAllByText("From ₱49")).toHaveLength(1);
+    expect(within(list).getAllByText(/^From ₱/)).toHaveLength(4);
   });
 
-  it("TC-P4-008 — visit facts restate the confirmed hours and landmark", () => {
-    expect(visitFacts).toEqual({
+  it("TC-P4-008 — visit facts restate the saved hours and landmark", () => {
+    const facts = visitFacts(fallbackShop.hours, fallbackShop.address);
+    expect(facts).toEqual({
       hours: "11 AM – 9 PM",
       days: "Monday to Friday",
-      otherDay: "Sunday",
-      otherHours: "1 PM – 9 PM",
+      others: "Sunday 1 PM – 9 PM",
       closedDay: "Saturday",
       shopSign: "Brew ni Cat",
       neighborSign: "Pulido Eatery",
       street: "Abellera St",
     });
-    render(<VisitStage facts={visitFacts} />);
+    // a different schedule changes the sign with no code change
+    expect(
+      visitFacts(
+        {
+          ...fallbackShop.hours,
+          days: {
+            ...fallbackShop.hours.days,
+            saturday: { opens: "08:00", closes: "12:30" },
+            sunday: null,
+          },
+        },
+        { ...fallbackShop.address, landmark: "Near the Town Plaza" },
+      ),
+    ).toMatchObject({
+      others: "Saturday 8 AM – 12:30 PM",
+      closedDay: "Sunday",
+      neighborSign: "the Town Plaza",
+    });
+    render(<VisitStage facts={facts} />);
     expect(screen.queryByRole("button", { name: "Flip the sign" })).toBeNull();
   });
 

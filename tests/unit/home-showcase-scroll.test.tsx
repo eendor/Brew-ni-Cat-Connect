@@ -24,6 +24,13 @@ afterEach(() => {
   canvas.props = null;
 });
 
+const props = {
+  eyebrow: "Kabacan, Cotabato · Est. June 2026",
+  title: "Coffee, comfort, and a little cat energy.",
+  lede: "Drinks and snacks in Kabacan.",
+  prices: { matcha: 49, catfeine: 49, takoyaki: 40, fries: 30, buldak: 119 },
+};
+
 function section() {
   const element = document.getElementById("home-showcase");
   if (!element) throw new Error("showcase section missing");
@@ -33,7 +40,7 @@ function section() {
 describe("Home showcase on the page scroll (TC-P4-187 – TC-P4-188)", () => {
   it("TC-P4-187 — the 3D showcase follows the page scroll, and an item button scrolls the page to that item", () => {
     const scrollTo = vi.spyOn(window, "scrollTo").mockImplementation(() => {});
-    render(<HomeShowcase />);
+    render(<HomeShowcase {...props} />);
     expect(section()).toHaveClass("showcase--3d");
     // the scene reads its progress from the page scroll through this section
     expect(canvas.props).toMatchObject({ sectionId: "home-showcase" });
@@ -67,7 +74,7 @@ describe("Home showcase on the page scroll (TC-P4-187 – TC-P4-188)", () => {
 
   it("TC-P4-188 — the glow behind the hero updates at most every 120 ms", () => {
     const now = vi.spyOn(performance, "now").mockReturnValue(1000);
-    render(<HomeShowcase />);
+    render(<HomeShowcase {...props} />);
     const onGlow = canvas.props?.onGlow as (hex: string) => void;
     const glow = () => section().style.getPropertyValue("--glow");
 

@@ -115,8 +115,9 @@ test("TC-P2-025 — Contact page publishes confirmed visit and rider information
     main.getByRole("link", { name: "popotpulido06@gmail.com" }),
   ).toHaveAttribute("href", "mailto:popotpulido06@gmail.com");
   await expect(main.getByText(/Cash.*GCash/)).toBeVisible();
+  // the price comes from the live menu; without it the box shows unpriced
   await expect(
-    main.getByText("₱10 takeout box", { exact: true }),
+    main.getByText(/^(₱\d+(\.\d{2})? takeout box|Takeout box)$/),
   ).toBeVisible();
   await expect(main.getByText(/Closed every Saturday/i).first()).toBeVisible();
   // exact: each rider link is also named "… Facebook page"

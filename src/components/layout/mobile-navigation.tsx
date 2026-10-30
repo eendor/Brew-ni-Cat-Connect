@@ -14,6 +14,8 @@ import {
 } from "@/components/ui/icons";
 import { siteConfig, type NavigationItem } from "@/config/site";
 import { useAuth } from "@/context/auth-context";
+import { useShopFacts } from "@/context/shop-facts-context";
+import { hoursSummary, shortAddress } from "@/lib/site-content/format";
 
 import { NavLink } from "./nav-link";
 
@@ -30,6 +32,7 @@ type MobileNavigationProps = Readonly<{
 
 export function MobileNavigation({ items }: MobileNavigationProps) {
   const { user, signOut } = useAuth();
+  const { address, hours, social } = useShopFacts();
   const [isOpen, setIsOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const navRef = useRef<HTMLElement>(null);
@@ -216,28 +219,31 @@ export function MobileNavigation({ items }: MobileNavigationProps) {
         >
           <span className="flex items-start gap-2 font-bold text-[var(--text-strong)]">
             <MapPinIcon className={noteIconClass} />
-            Abellera St, Poblacion, Kabacan
+            {shortAddress(address)}
           </span>
           <span className="flex items-start gap-2">
             <ClockIcon className={noteIconClass} />
-            Open Mon–Fri 11 AM to 9 PM and Sun 1 PM to 9 PM. Closed every
-            Saturday.
+            {hoursSummary(hours)}
           </span>
           <div className="mt-3 flex gap-3">
-            <ExternalLink
-              href={siteConfig.social.facebook}
-              aria-label="Brew ni Cat on Facebook"
-              className={socialLinkClass}
-            >
-              <FacebookIcon className="size-5" />
-            </ExternalLink>
-            <ExternalLink
-              href={siteConfig.social.tiktok}
-              aria-label="Brew ni Cat on TikTok"
-              className={socialLinkClass}
-            >
-              <TikTokIcon className="size-5" />
-            </ExternalLink>
+            {social.facebook ? (
+              <ExternalLink
+                href={social.facebook}
+                aria-label={`${siteConfig.shortName} on Facebook`}
+                className={socialLinkClass}
+              >
+                <FacebookIcon className="size-5" />
+              </ExternalLink>
+            ) : null}
+            {social.tiktok ? (
+              <ExternalLink
+                href={social.tiktok}
+                aria-label={`${siteConfig.shortName} on TikTok`}
+                className={socialLinkClass}
+              >
+                <TikTokIcon className="size-5" />
+              </ExternalLink>
+            ) : null}
           </div>
         </div>
       </nav>

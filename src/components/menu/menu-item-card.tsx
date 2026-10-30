@@ -5,7 +5,11 @@ import { useState } from "react";
 import { useCart } from "@/context/cart-context";
 import { getItemQuantityInCart } from "@/lib/ordering/cart-selectors";
 import { formatOptionName } from "@/lib/menu/format-name";
-import { formatPrice, getLowestItemPrice } from "@/lib/menu/format-price";
+import {
+  formatPrice,
+  getItemPrices,
+  getLowestItemPrice,
+} from "@/lib/menu/format-price";
 import type { MenuCatalog, MenuItem, MenuVariant } from "@/types/menu";
 
 import { MenuItemOrderDialog } from "./menu-item-order-dialog";
@@ -16,18 +20,6 @@ type MenuItemCardProps = Readonly<{
   catalog?: MenuCatalog;
   categoryName?: string;
 }>;
-
-function getItemPrices(item: MenuItem): readonly (number | null)[] {
-  return item.variants.flatMap((variant) => {
-    const flavorPrices = variant.flavorPrices.map((entry) => entry.price);
-    const basePrice =
-      variant.basePrice === 0 && flavorPrices.length > 0
-        ? []
-        : [variant.basePrice];
-
-    return [...basePrice, ...flavorPrices];
-  });
-}
 
 /** "Fries (Cat Claws)" → name "Fries", nickname "Cat Claws". */
 function splitName(name: string) {

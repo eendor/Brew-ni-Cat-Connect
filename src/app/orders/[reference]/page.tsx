@@ -3,7 +3,13 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { siteConfig } from "@/config/site";
+import { useShopFacts } from "@/context/shop-facts-context";
 import { formatPrice } from "@/lib/menu/format-price";
+import {
+  localityLine,
+  streetLine,
+  takeoutBoxText,
+} from "@/lib/site-content/format";
 import { fetchOrder } from "@/lib/orders/fetch-order";
 import { readTrackingTokenFromHash } from "@/lib/orders/order-link";
 import { isOrderReference, OrderView } from "@/lib/orders/types";
@@ -15,6 +21,7 @@ type PageState =
   | { status: "success"; order: OrderView };
 
 export default function OrderConfirmationPage() {
+  const { address, takeoutBoxPrice } = useShopFacts();
   const params = useParams();
   const referenceParam =
     typeof params.reference === "string" ? params.reference : "";
@@ -221,14 +228,14 @@ export default function OrderConfirmationPage() {
           <ul className="list-disc space-y-2 pl-5 text-sm text-[var(--text-muted)]">
             <li>Bookmark this page to check your order later.</li>
             <li>
-              When your order is ready, pick it up at Brew ni Cat,{" "}
-              {siteConfig.address.street}, {siteConfig.address.locality} (
-              {siteConfig.address.landmark}).
+              When your order is ready, pick it up at {siteConfig.shortName},{" "}
+              {streetLine(address)}, {localityLine(address)}
+              {address.landmark ? ` (${address.landmark})` : null}.
             </li>
             <li>
               Pay {formatPrice(order.subtotal)} via {order.paymentPreference} at
-              the counter. The {siteConfig.operations.takeoutFee} is not
-              included in that amount.
+              the counter. The {takeoutBoxText(takeoutBoxPrice)} is not included
+              in that amount.
             </li>
           </ul>
         </div>

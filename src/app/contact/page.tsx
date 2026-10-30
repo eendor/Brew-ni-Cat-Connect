@@ -23,33 +23,56 @@ import { PageIntro } from "@/components/ui/page-intro";
 import { Reveal } from "@/components/ui/reveal";
 import { RiderList } from "@/components/ui/rider-list";
 import { siteConfig } from "@/config/site";
+import { getMenuFacts } from "@/lib/menu/load-menu-facts";
+import {
+  emailHref,
+  hoursSentence,
+  localityLine,
+  midSentence,
+  phoneHref,
+  sentenceStart,
+  streetLine,
+  takeoutBoxText,
+} from "@/lib/site-content/format";
+import { getSiteContent } from "@/lib/site-content/load";
 
-export const metadata: Metadata = {
-  title: "Contact and Location",
-  description:
-    "Find Brew ni Cat Coffee Shop on Abellera St in Poblacion, Kabacan, beside Pulido Eatery, and view current contact details.",
-};
-
-const contactCards = [
-  {
-    label: "Call or text",
-    value: siteConfig.contact.phone,
-    href: siteConfig.contact.phoneHref,
-    icon: <PhoneIcon className="size-4 shrink-0" />,
-  },
-  {
-    label: "Email",
-    value: siteConfig.contact.email,
-    href: siteConfig.contact.emailHref,
-    icon: <MailIcon className="size-4 shrink-0" />,
-  },
-] as const;
+export async function generateMetadata(): Promise<Metadata> {
+  const { address } = await getSiteContent();
+  const landmark = address.landmark ? `, ${midSentence(address.landmark)}` : "";
+  return {
+    title: "Contact and Location",
+    description: `Find ${siteConfig.name} on ${address.street} in ${address.area}, ${address.town}${landmark}, and view current contact details.`,
+  };
+}
 
 // Amber marks beside facts; icons inside links and buttons keep the
 // link's own color instead.
 const factIconClass = "shrink-0 text-[var(--accent-strong)]";
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  const [content, menu] = await Promise.all([getSiteContent(), getMenuFacts()]);
+  const { address, contact, hours, social } = content;
+  const takeoutBox = takeoutBoxText(menu.takeoutBoxPrice);
+  const contactCards = [
+    {
+      label: "Call or text",
+      value: contact.phone,
+      href: phoneHref(contact.phone),
+      icon: <PhoneIcon className="size-4 shrink-0" />,
+    },
+    {
+      label: "Email",
+      value: contact.email,
+      href: emailHref(contact.email),
+      icon: <MailIcon className="size-4 shrink-0" />,
+    },
+  ];
+  const socialLinks = [
+    { href: social.facebook, label: "Facebook page", Icon: FacebookIcon },
+    { href: social.facebookPhotos, label: "Facebook photos", Icon: ImagesIcon },
+    { href: social.tiktok, label: "TikTok", Icon: TikTokIcon },
+  ].filter((link) => link.href);
+
   return (
     <>
       <PageIntro
@@ -58,8 +81,8 @@ export default function ContactPage() {
         title="Contact & location"
         description={
           <p>
-            Find Brew ni Cat on Abellera St in Poblacion, Kabacan, and get in
-            touch before your visit.
+            Find {siteConfig.shortName} on {address.street} in {address.area},{" "}
+            {address.town}, and get in touch before your visit.
           </p>
         }
       />
@@ -78,7 +101,7 @@ export default function ContactPage() {
               id="location-heading"
               className="font-display mt-3 text-4xl text-[var(--text-strong)] sm:text-5xl"
             >
-              Find us on Abellera St
+              Find us on {address.street}
             </h2>
             <address
               className="mt-6 flex gap-3 text-lg leading-8 text-[var(--text-muted)] not-italic"
@@ -90,40 +113,35 @@ export default function ContactPage() {
                   {siteConfig.name}
                 </strong>
                 <br />
-                {siteConfig.address.street}
+                {streetLine(address)}
                 <br />
-                {siteConfig.address.locality}
+                {localityLine(address)}
                 <br />
-                {siteConfig.address.country}
-                <br />
-                <strong className="mt-2 inline-block text-[var(--accent-solid)]">
-                  {siteConfig.address.landmark}
-                </strong>
+                {address.country}
+                {address.landmark ? (
+                  <>
+                    <br />
+                    <strong className="mt-2 inline-block text-[var(--accent-solid)]">
+                      {address.landmark}
+                    </strong>
+                  </>
+                ) : null}
               </span>
             </address>
             <div data-rise="">
               <p className="mt-8 flex gap-3 text-lg font-semibold text-[var(--text-strong)]">
                 <ClockIcon className={`mt-1 size-5 ${factIconClass}`} />
-                <span>
-                  Open {visitFacts.hours}, {visitFacts.days}, and{" "}
-                  {visitFacts.otherHours} on {visitFacts.otherDay}. Closed every{" "}
-                  {visitFacts.closedDay}.
-                </span>
+                <span>{hoursSentence(hours, " – ")}</span>
               </p>
-              <p className="mt-2 pl-8 text-sm leading-6 text-[var(--text-muted)]">
-                Schedule changes are posted on{" "}
-                <ExternalLink
-                  href={siteConfig.social.facebook}
-                  className="font-bold text-[var(--accent-solid)] underline underline-offset-4"
-                >
-                  Facebook
-                </ExternalLink>
-                .
-              </p>
+              {hours.note ? (
+                <p className="mt-2 pl-8 text-sm leading-6 text-[var(--text-muted)]">
+                  {hours.note}
+                </p>
+              ) : null}
             </div>
             <div className="mt-8" data-rise="">
               <ExternalLink
-                href={siteConfig.address.mapUrl}
+                href={address.mapUrl}
                 className="button-primary"
                 data-magnetic=""
               >
@@ -132,7 +150,7 @@ export default function ContactPage() {
               </ExternalLink>
             </div>
           </div>
-          <VisitStage facts={visitFacts} />
+          <VisitStage facts={visitFacts(hours, address)} />
         </Container>
       </section>
 
@@ -170,37 +188,28 @@ export default function ContactPage() {
             ))}
           </div>
 
-          <Reveal
-            delayMs={120}
-            className="mt-8 rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-6 sm:p-8"
-          >
-            <h3 className="font-display text-2xl text-[var(--text-strong)]">
-              Follow Brew ni Cat
-            </h3>
-            <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-              <ExternalLink
-                href={siteConfig.social.facebook}
-                className="button-secondary"
-              >
-                <FacebookIcon className="size-4.5 shrink-0" />
-                Facebook page
-              </ExternalLink>
-              <ExternalLink
-                href={siteConfig.social.facebookPhotos}
-                className="button-secondary"
-              >
-                <ImagesIcon className="size-4.5 shrink-0" />
-                Facebook photos
-              </ExternalLink>
-              <ExternalLink
-                href={siteConfig.social.tiktok}
-                className="button-secondary"
-              >
-                <TikTokIcon className="size-4.5 shrink-0" />
-                TikTok
-              </ExternalLink>
-            </div>
-          </Reveal>
+          {socialLinks.length > 0 ? (
+            <Reveal
+              delayMs={120}
+              className="mt-8 rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-6 sm:p-8"
+            >
+              <h3 className="font-display text-2xl text-[var(--text-strong)]">
+                Follow {siteConfig.shortName}
+              </h3>
+              <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+                {socialLinks.map(({ href, label, Icon }) => (
+                  <ExternalLink
+                    key={label}
+                    href={href}
+                    className="button-secondary"
+                  >
+                    <Icon className="size-4.5 shrink-0" />
+                    {label}
+                  </ExternalLink>
+                ))}
+              </div>
+            </Reveal>
+          ) : null}
         </Container>
       </section>
 
@@ -226,7 +235,7 @@ export default function ContactPage() {
                     Payment methods
                   </dt>
                   <dd className="mt-1 text-lg font-extrabold text-[var(--text-strong)]">
-                    Cash · GCash
+                    {content.payments.methods.join(" · ")}
                   </dd>
                 </div>
                 <div>
@@ -235,7 +244,7 @@ export default function ContactPage() {
                     Takeout packaging
                   </dt>
                   <dd className="mt-1 text-lg font-extrabold text-[var(--text-strong)]">
-                    {siteConfig.operations.takeoutFee}
+                    {sentenceStart(takeoutBox)}
                   </dd>
                 </div>
               </dl>
@@ -281,10 +290,9 @@ export default function ContactPage() {
               <p className="mt-5 leading-7 text-[var(--text-muted)]">
                 Delivery fee, timing and payment are agreed with your rider.
                 Brew ni Cat doesn&apos;t book riders or charge rider fees, and
-                the {siteConfig.operations.takeoutFee} fee doesn&apos;t include
-                any rider charge.
+                the {takeoutBox} fee doesn&apos;t include any rider charge.
               </p>
-              <RiderList className="mt-6" />
+              <RiderList className="mt-6" partners={content.riders.partners} />
             </Reveal>
           </div>
         </Container>

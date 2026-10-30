@@ -11,6 +11,15 @@ import {
   TikTokIcon,
 } from "@/components/ui/icons";
 import { siteConfig } from "@/config/site";
+import {
+  emailHref,
+  hoursNotice,
+  joinList,
+  localityLine,
+  phoneHref,
+  streetLine,
+} from "@/lib/site-content/format";
+import type { SiteContent } from "@/lib/site-content/types";
 
 import { Container } from "../ui/container";
 
@@ -21,7 +30,15 @@ const footerLinkClass =
 // 1.5rem line.
 const footerIconClass = "size-4 shrink-0";
 
-export function SiteFooter() {
+type SiteFooterProps = Readonly<{
+  content: Pick<
+    SiteContent,
+    "about" | "address" | "contact" | "hours" | "payments" | "social"
+  >;
+}>;
+
+export function SiteFooter({ content }: SiteFooterProps) {
+  const { address, contact, social } = content;
   return (
     <footer className="border-t border-[var(--border-soft)] bg-[var(--footer-surface)] text-[var(--footer-text)]">
       <Container
@@ -45,8 +62,7 @@ export function SiteFooter() {
             </span>
           </Link>
           <p className="mt-4 max-w-sm text-sm leading-6 text-[var(--footer-muted)]">
-            A local coffee shop in Kabacan serving drinks, snacks, noodles, and
-            combos with a little cat personality.
+            {content.about.footerText}
           </p>
         </div>
 
@@ -71,24 +87,26 @@ export function SiteFooter() {
             <p className="flex gap-2">
               <MapPinIcon className={`mt-1 ${footerIconClass}`} />
               <span>
-                {siteConfig.address.street}
+                {streetLine(address)}
                 <br />
-                {siteConfig.address.locality}, {siteConfig.address.country}
-                <br />
-                <span className="text-[var(--text-strong)]">
-                  {siteConfig.address.landmark}
-                </span>
+                {localityLine(address)}, {address.country}
+                {address.landmark ? (
+                  <>
+                    <br />
+                    <span className="text-[var(--text-strong)]">
+                      {address.landmark}
+                    </span>
+                  </>
+                ) : null}
               </span>
             </p>
-            <a href={siteConfig.contact.phoneHref} className={footerLinkClass}>
+            <a href={phoneHref(contact.phone)} className={footerLinkClass}>
               <PhoneIcon className={footerIconClass} />
-              {siteConfig.contact.phone}
+              {contact.phone}
             </a>
-            <a href={siteConfig.contact.emailHref} className={footerLinkClass}>
+            <a href={emailHref(contact.email)} className={footerLinkClass}>
               <MailIcon className={footerIconClass} />
-              <span className="min-w-0 break-all">
-                {siteConfig.contact.email}
-              </span>
+              <span className="min-w-0 break-all">{contact.email}</span>
             </a>
           </address>
         </section>
@@ -98,36 +116,39 @@ export function SiteFooter() {
             Follow along
           </h2>
           <ul className="mt-2 grid">
-            <li>
-              <ExternalLink
-                href={siteConfig.social.facebook}
-                className={footerLinkClass}
-              >
-                <FacebookIcon className={footerIconClass} />
-                Facebook
-              </ExternalLink>
-            </li>
-            <li>
-              <ExternalLink
-                href={siteConfig.social.tiktok}
-                className={footerLinkClass}
-              >
-                <TikTokIcon className={footerIconClass} />
-                TikTok
-              </ExternalLink>
-            </li>
+            {social.facebook ? (
+              <li>
+                <ExternalLink
+                  href={social.facebook}
+                  className={footerLinkClass}
+                >
+                  <FacebookIcon className={footerIconClass} />
+                  Facebook
+                </ExternalLink>
+              </li>
+            ) : null}
+            {social.tiktok ? (
+              <li>
+                <ExternalLink href={social.tiktok} className={footerLinkClass}>
+                  <TikTokIcon className={footerIconClass} />
+                  TikTok
+                </ExternalLink>
+              </li>
+            ) : null}
           </ul>
           <p className="mt-3 flex gap-2 text-sm leading-6 text-[var(--footer-muted)]">
             <ClockIcon className={`mt-1 ${footerIconClass}`} />
-            <span>{siteConfig.operations.hoursNotice}</span>
+            <span>{hoursNotice(content.hours)}</span>
           </p>
         </section>
       </Container>
 
       <div className="border-t border-white/10">
         <Container className="flex flex-col gap-2 py-5 text-xs leading-5 text-[var(--footer-muted)] sm:flex-row sm:items-center sm:justify-between">
-          <span>© 2026 Brew ni Cat Coffee Shop</span>
-          <span>Cash and GCash accepted</span>
+          <span>
+            © {new Date().getFullYear()} {siteConfig.name}
+          </span>
+          <span>{joinList(content.payments.methods)} accepted</span>
         </Container>
       </div>
     </footer>

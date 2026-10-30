@@ -22,9 +22,9 @@ export type VisitFacts = Readonly<{
   /** The main hours and the days they apply to. */
   hours: string;
   days: string;
-  /** A day with its own hours, like a shorter Sunday. */
-  otherDay: string;
-  otherHours: string;
+  /** Days with their own hours, like "Sunday 1 PM – 9 PM"; may be empty. */
+  others: string;
+  /** "Saturday"; empty when the shop opens every day. */
   closedDay: string;
   shopSign: string;
   neighborSign: string;
@@ -61,17 +61,20 @@ function signFace(
   g.fillStyle = "#F4F1EA";
   g.font = `800 104px ${display}`;
   g.fillText(
-    open ? facts.hours.toUpperCase() : `EVERY ${facts.closedDay.toUpperCase()}`,
+    open
+      ? facts.hours.toUpperCase()
+      : facts.closedDay
+        ? `EVERY ${facts.closedDay.toUpperCase()}`
+        : "AFTER HOURS",
     512,
     438,
     920,
   );
   g.fillStyle = "#B9B3C2";
   g.font = `800 34px ${body}`;
-  const other = `${facts.otherDay} ${facts.otherHours}`;
   const notes = open
-    ? [facts.days, other]
-    : [`Open ${facts.days} ${facts.hours}`, other];
+    ? [facts.days, facts.others]
+    : [`Open ${facts.days} ${facts.hours}`, facts.others];
   // maxWidth squeezes a long line instead of letting it run off the board
   notes.forEach((note, index) =>
     g.fillText(note.toUpperCase(), 512, 510 + index * 48, 920),

@@ -6,10 +6,11 @@ import { useEffect, useRef } from "react";
 import { EASE, gsap } from "@/components/motion/gsap";
 import { usePresence } from "@/components/motion/use-presence";
 import { StateScene } from "@/components/three/state-scene";
-import { siteConfig } from "@/config/site";
 import { useCart } from "@/context/cart-context";
+import { useShopFacts } from "@/context/shop-facts-context";
 import { useFocusTrap } from "@/lib/accessibility/focus-trap";
 import { formatPrice } from "@/lib/menu/format-price";
+import { joinList, takeoutBoxText } from "@/lib/site-content/format";
 import { usePreparedSummary } from "@/lib/ordering/prepared-summary";
 
 import { CartLineItem } from "./cart-line-item";
@@ -59,6 +60,7 @@ const drawerMotion = {
 };
 
 export function CartDrawer() {
+  const { address, payments, takeoutBoxPrice } = useShopFacts();
   const {
     lines,
     subtotal,
@@ -256,9 +258,10 @@ export function CartDrawer() {
               </div>
 
               <p className="text-xs leading-5 text-[var(--text-muted)]">
-                Pick up at Abellera St and pay Cash or GCash at the shop, or
-                have a local rider order and deliver it. The{" "}
-                {siteConfig.operations.takeoutFee} is not in the subtotal.
+                Pick up at {address.street} and pay{" "}
+                {joinList(payments.methods, "or")} at the shop, or have a local
+                rider order and deliver it. The{" "}
+                {takeoutBoxText(takeoutBoxPrice)} is not in the subtotal.
               </p>
 
               <div className="grid gap-2">

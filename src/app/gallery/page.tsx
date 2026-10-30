@@ -5,15 +5,22 @@ import { GalleryRing } from "@/components/three/gallery-ring";
 import { Container } from "@/components/ui/container";
 import { PageIntro } from "@/components/ui/page-intro";
 import { Reveal } from "@/components/ui/reveal";
-import { galleryImages, ringImages } from "@/config/gallery";
+import { siteConfig } from "@/config/site";
+import { ringPhotos } from "@/lib/site-content/format";
+import { getSiteContent } from "@/lib/site-content/load";
 
-export const metadata: Metadata = {
-  title: "Gallery",
-  description:
-    "Explore photos of Brew ni Cat Coffee Shop, its food, café cats, space, and community in Kabacan.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { address } = await getSiteContent();
+  return {
+    title: "Gallery",
+    description: `Explore photos of ${siteConfig.name}, its food, café cats, space, and community in ${address.town}.`,
+  };
+}
 
-export default function GalleryPage() {
+export default async function GalleryPage() {
+  const { gallery } = await getSiteContent();
+  const galleryImages = gallery.photos;
+
   return (
     <>
       <PageIntro
@@ -28,7 +35,7 @@ export default function GalleryPage() {
         }
       />
 
-      <GalleryRing photos={ringImages} />
+      <GalleryRing photos={ringPhotos(gallery)} />
 
       <section
         className="cinema-canvas py-12 sm:py-16 lg:py-20"

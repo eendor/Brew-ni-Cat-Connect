@@ -6,6 +6,7 @@ import { SiteHeader } from "@/components/layout/site-header";
 import { siteConfig } from "@/config/site";
 import { AuthProvider } from "@/context/auth-context";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
+import { fallbackShop } from "@/lib/site-content/fallback-shop";
 
 function createMockSupabase(user: User | null = null, signOutMock = vi.fn()) {
   return {
@@ -123,8 +124,8 @@ describe("SiteHeader", () => {
     const tiktok = within(navigation).getByRole("link", {
       name: "Brew ni Cat on TikTok",
     });
-    expect(facebook).toHaveAttribute("href", siteConfig.social.facebook);
-    expect(tiktok).toHaveAttribute("href", siteConfig.social.tiktok);
+    expect(facebook).toHaveAttribute("href", fallbackShop.social.facebook);
+    expect(tiktok).toHaveAttribute("href", fallbackShop.social.tiktok);
     for (const link of [facebook, tiktok]) {
       expect(link).toHaveAttribute("target", "_blank");
       expect(link).toHaveAttribute("rel", "noopener noreferrer");
