@@ -24,7 +24,7 @@ import type { SiteContent } from "@/lib/site-content/types";
 import { Container } from "../ui/container";
 
 const footerLinkClass =
-  "inline-flex min-h-11 min-w-11 items-center gap-2 rounded-sm text-sm leading-6 text-[var(--footer-muted)] transition-colors hover:text-[var(--text-strong)]";
+  "inline-flex min-h-11 min-w-11 items-center gap-2 rounded-sm text-sm leading-6 text-[var(--footer-muted)] transition-colors hover:text-[var(--footer-strong)]";
 
 // 1rem icons. Beside text that wraps, mt-1 centers one on the first
 // 1.5rem line.
@@ -48,7 +48,7 @@ export function SiteFooter({ content }: SiteFooterProps) {
         <div>
           <Link
             href="/"
-            className="inline-flex items-center gap-3 rounded-lg text-[var(--text-strong)]"
+            className="inline-flex items-center gap-3 rounded-lg text-[var(--footer-strong)]"
           >
             <Image
               src="/images/branding/brew-ni-cat-logo.png"
@@ -93,7 +93,7 @@ export function SiteFooter({ content }: SiteFooterProps) {
                 {address.landmark ? (
                   <>
                     <br />
-                    <span className="text-[var(--text-strong)]">
+                    <span className="text-[var(--footer-strong)]">
                       {address.landmark}
                     </span>
                   </>

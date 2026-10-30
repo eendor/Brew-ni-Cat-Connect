@@ -179,7 +179,7 @@ describe("Daylight Glass theme (TC-P4-199 – TC-P4-203)", () => {
         fill,
       ).toBeGreaterThanOrEqual(4.5);
     }
-    for (const text of ["footer-text", "footer-muted"]) {
+    for (const text of ["footer-text", "footer-muted", "footer-strong"]) {
       expect(
         contrast(color(text), color("footer-surface")),
         text,

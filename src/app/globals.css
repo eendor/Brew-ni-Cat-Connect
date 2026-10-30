@@ -39,6 +39,8 @@
   --footer-surface: #183a2a;
   --footer-text: #f6eee1;
   --footer-muted: #c6d3c8;
+  /* headings, the brand and hovered links on the deep green footer */
+  --footer-strong: #ffffff;
   /* soft window light behind the glass (body::before) */
   --wash-green: rgb(47 122 82 / 13%);
   --wash-peach: rgb(233 160 110 / 24%);
@@ -272,7 +274,7 @@ button:focus-visible,
 }
 
 .footer-heading {
-  color: var(--text-strong);
+  color: var(--footer-strong);
   font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0.14em;
