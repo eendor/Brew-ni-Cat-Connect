@@ -1108,3 +1108,19 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Testing:** TC-P4-198 failed on a production build of `main` and passed with the fix. After the fix, the measurement found no misaligned icon in 23 views. Format, the docs check, lint and typecheck passed; Vitest 320/320 in 43 files; Playwright `chromium` 21 passed and 1 skipped on a build with the CI settings.
 - **Branch / PR:** `fix/p3-button-icon-first-line`, PR #66.
 - **Next action:** Record the Phase 3 closeout.
+
+## 2026-10-30 — Phase 3 closeout
+
+- **Phase:** 3 (Menu and Ordering Experience), closeout.
+- **Task:** The last two items on the Phase 3 card: the docs closeout (test cases, Phase 3 evidence, development log, README) and the final check of `main`.
+- **Summary:** I ran the full local check on `main` at 6f09585 (after PR #65), measured MAN-P4-009 and fixed the button icons it found in PR #66, and brought the Phase 3 records up to date. The Phase 3 evidence register now lists every Phase 3 PR up to #66. I also closed the notes that waited on the owner. On 2026-10-28 the owner said no to table reservations, because customers might not show up, and yes to online pickup orders notifying the POS and to customers seeing when an order is ready for pickup. Tracking rider orders in the system is still being decided, so the business register keeps rider delivery as it is for now. Account emails have gone out through Gmail SMTP since 2026-10-27; that is now in `docs/software-and-apis.md`.
+- **Files:** `README.md`, `docs/evidence/phase-3-verification.md`, `docs/development-log.md`, `docs/functional-requirements.md`, `docs/business-content-register.md`, `docs/phase-2-website-showcase-presentation.md`, `docs/code-review.md`, `docs/software-and-apis.md`.
+- **Testing:** Final check of `main` at 6f09585:
+  - `npm ci`, `npm run audit`, `npm run format:check`, the docs validator, `npm run lint` and `npm run typecheck` passed. The audit found 0 vulnerabilities in production packages; the full audit lists 6 advisories in dev-only packages (3 moderate, 3 high), under the critical gate.
+  - Vitest 320/320 in 43 files. The build with the CI settings passed.
+  - Playwright `chromium`: 20 passed, 1 skipped. `chromium-3d`: 19 of 20 with the CI placeholder key. The one failure, TC-P4-021, came from `/cart` loading the menu with that key (two 401 errors); it passed on a production build with the real key.
+  - CI on `main` passed after a re-run; the first run failed while downloading Google Fonts.
+  - MAN-P4-009 passed after PR #66, which also passed these checks on its branch.
+- **Branch / PR:** `docs/p3-closeout`, PR #67.
+- **Known limitations:** `chromium-3d` isn't in CI, and TC-P4-021 now needs the real publishable key because `/cart` loads the menu. A steady 60 fps on integrated GPUs at desktop widths stays on my release card.
+- **Next action:** Phase 4. The owner's requests from 2026-10-30 (ratings and reviews, a lighter cream and green theme like the shop, and cat characters from the owner's photos of the shop's cats) aren't planned yet.
