@@ -103,6 +103,7 @@ No future technology should be added only to increase the tool count. Its requir
 | Messenger to server webhook        | Customer-initiated inquiries and guided actions      | Meta signature verification and server-held token    | Deferred                                                |
 | Connect integration service to POS | Controlled menu/order/status synchronization         | Machine identity with least privilege; mechanism TBD | Deferred pending POS analysis                           |
 | Deployment service to secrets      | Runtime configuration                                | Platform access controls                             | Planned; provider TBD                                   |
+| Supabase Auth to email             | Account confirmation and password reset emails       | Gmail SMTP (`smtp.gmail.com`, port 465) with an app password from a team member's Google account; the password is kept only in the Supabase Auth settings | Live since 2026-10-27; sender name "Brew ni Cat"; up to 30 emails an hour |
 
 No provider-key value, webhook secret, payment identifier, or privileged credential is defined in this document or source control. Real local configuration remains in ignored `.env.local`.
 

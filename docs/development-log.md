@@ -167,7 +167,7 @@ This log records completed work and observed evidence. Planned work is explicitl
 - ordered Menu categories alphabetically while always placing Cat Treats last, and exported a single `isCatTreatsCategory` helper so the catalog mapper and the catalog component share one rule;
 - allowed Menu item cards to stretch within each row so short categories no longer render a ragged column; and
 - added `TC-P2-022` regression coverage for the Cat Treats ordering rule.
-**Deferred to Phase 3:** swipeable menu cards, per-product images, and customer reservation handling. Reservation behavior requires owner confirmation before any design work begins.
+**Deferred to Phase 3:** swipeable menu cards, per-product images, and customer reservation handling. Reservation behavior requires owner confirmation before any design work begins. **Update (2026-10-30):** closed. On 2026-10-28 the owner said no to table reservations, because customers might not show up.
 **Files/modules affected:** `src/config/site.ts`, `src/app/gallery/page.tsx`, `src/components/menu/menu-catalog.tsx`, `src/lib/menu/map-menu-catalog.ts`, `tests/unit/menu-mapping.test.ts`, `docs/development-log.md`.
 **Testing performed:** `npm run typecheck`, `npm run lint`, and `npm run format:check` all completed with no findings. Vitest passed 6 files and 22/22 tests, including the new ordering regression. The documentation validator reported `ERRORS=0` and `PHASE0_DOC_VALIDATION=PASS`.
 **Git branch:** `feat/showcase-website`
@@ -792,7 +792,7 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Testing performed:** `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm test` (19 files / 136 tests passed), `npm run build`, `npm run test:e2e` (25/25 passed: 16 in `chromium`, 9 in `chromium-3d`), `npm run audit` (0 vulnerabilities), `python3 scripts/validate_phase0_docs.py` (PASS). Six cold `npm ci` + `npm test` runs also passed, including one with Supabase settings exported in the shell.\
 **Git branch:** `feat/social-icons`\
 **Pull request:** [#26](https://github.com/eendor/Brew-ni-Cat-Connect/pull/26) — self-reviewed and squash-merged into `main` on 2026-10-18\
-**Next action:** Lead spot-check MAN-P4-009, the GCash QR once the owner sends it, and the click-through on a physical phone (MAN-P4-007).
+**Next action:** Lead spot-check MAN-P4-009, the GCash QR once the owner sends it, and the click-through on a physical phone (MAN-P4-007). **Update (2026-10-30):** the GCash QR shipped in PR #29, MAN-P4-007 passed on 2026-10-28 (PR #60), and MAN-P4-009 passed on 2026-10-30 after the button icon fix in PR #66.
 
 ## 2026-10-19 — GCash QR on pickup checkout and Abellera St address
 
@@ -1055,7 +1055,7 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Files:** `src/lib/ordering/prepared-summary.ts`, `src/components/checkout/checkout-view.tsx`, `src/context/cart-context.tsx`, `src/components/cart/cart-drawer.tsx`, `src/components/cart/cart-page-view.tsx`, `tests/unit/checkout.test.tsx`, `tests/unit/cart-components.test.tsx`, `tests/e2e/phone.spec.ts`, `docs/evidence/phase-4/screenshots/`, documentation.
 - **Testing:** TC-P4-174 to TC-P4-179 added and TC-P4-023 updated; TC-P4-016 and TC-P4-017 superseded. Vitest 284/284 in 39 files; Playwright `chromium` 19/20 (TC-P4-173 skipped: it captures screenshots only with `CAPTURE_EVIDENCE=1`) on a production build with the switch on.
 - **Branch / PR:** `fix/p4-cart-after-summary`, PR #61.
-- **Next action:** Renier checks the flow again on the live site after the deploy.
+- **Next action:** Renier checks the flow again on the live site after the deploy. **Update (2026-10-30):** this second check was dropped on 2026-10-28. Renier's QA and phone check in PR #60 stand for Phase 3, and TC-P4-174 to TC-P4-179 cover this flow in CI.
 
 ## 2026-10-28 — Staff change online order statuses, and a completed order becomes a POS sale
 
@@ -1108,3 +1108,19 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Testing:** TC-P4-198 failed on a production build of `main` and passed with the fix. After the fix, the measurement found no misaligned icon in 23 views. Format, the docs check, lint and typecheck passed; Vitest 320/320 in 43 files; Playwright `chromium` 21 passed and 1 skipped on a build with the CI settings.
 - **Branch / PR:** `fix/p3-button-icon-first-line`, PR #66.
 - **Next action:** Record the Phase 3 closeout.
+
+## 2026-10-30 — Phase 3 closeout
+
+- **Phase:** 3 (Menu and Ordering Experience), closeout.
+- **Task:** The last two items on the Phase 3 card: the docs closeout (test cases, Phase 3 evidence, development log, README) and the final check of `main`.
+- **Summary:** I ran the full local check on `main` at 6f09585 (after PR #65), measured MAN-P4-009 and fixed the button icons it found in PR #66, and brought the Phase 3 records up to date. The Phase 3 evidence register now lists every Phase 3 PR up to #66. I also closed the notes that waited on the owner. On 2026-10-28 the owner said no to table reservations, because customers might not show up, and yes to online pickup orders notifying the POS and to customers seeing when an order is ready for pickup. Tracking rider orders in the system is still being decided, so the business register keeps rider delivery as it is for now. Account emails have gone out through Gmail SMTP since 2026-10-27; that is now in `docs/software-and-apis.md`.
+- **Files:** `README.md`, `docs/evidence/phase-3-verification.md`, `docs/development-log.md`, `docs/functional-requirements.md`, `docs/business-content-register.md`, `docs/phase-2-website-showcase-presentation.md`, `docs/code-review.md`, `docs/software-and-apis.md`.
+- **Testing:** Final check of `main` at 6f09585:
+  - `npm ci`, `npm run audit`, `npm run format:check`, the docs validator, `npm run lint` and `npm run typecheck` passed. The audit found 0 vulnerabilities in production packages; the full audit lists 6 advisories in dev-only packages (3 moderate, 3 high), under the critical gate.
+  - Vitest 320/320 in 43 files. The build with the CI settings passed.
+  - Playwright `chromium`: 20 passed, 1 skipped. `chromium-3d`: 19 of 20 with the CI placeholder key. The one failure, TC-P4-021, came from `/cart` loading the menu with that key (two 401 errors); it passed on a production build with the real key.
+  - CI on `main` passed after a re-run; the first run failed while downloading Google Fonts.
+  - MAN-P4-009 passed after PR #66, which also passed these checks on its branch.
+- **Branch / PR:** `docs/p3-closeout`, PR #67.
+- **Known limitations:** `chromium-3d` isn't in CI, and TC-P4-021 now needs the real publishable key because `/cart` loads the menu. A steady 60 fps on integrated GPUs at desktop widths stays on my release card.
+- **Next action:** Phase 4. The owner's requests from 2026-10-30 (ratings and reviews, a lighter cream and green theme like the shop, and cat characters from the owner's photos of the shop's cats) aren't planned yet.
