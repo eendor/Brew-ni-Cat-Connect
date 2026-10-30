@@ -16,6 +16,7 @@ import {
   smooth,
   type Quality,
 } from "../engine/runtime";
+import { STUDIO } from "../engine/studio";
 import {
   beanGeometry,
   contactShadowTexture,
@@ -28,13 +29,6 @@ import {
 import { makeBackdrop, titleTexture } from "./showcase";
 
 export type StateKind = "empty" | "ready" | "lost";
-/** The panel color behind the scene, so the canvas edge disappears. */
-export type StateTone = "canvas" | "card";
-
-const TONES: Record<StateTone, string> = {
-  canvas: "#0b0a0d",
-  card: "#15131a",
-};
 const CUP_SCALE = 0.8;
 /** Cup base (model space) after scaling: where the contact shadow sits. */
 const BASE_Y = -1.5 * CUP_SCALE;
@@ -64,19 +58,20 @@ export async function initState(
   canvas: HTMLCanvasElement,
   quality: Quality,
   kind: StateKind,
-  tone: StateTone,
 ) {
   const lost = kind === "lost";
   // small canvases can afford antialiasing on every device
   const renderer = makeRenderer(
     canvas,
     { ...quality, mobile: false },
-    { shadows: lost },
+    // see-through, so the scene sits on any panel without an edge; the 404
+    // stage fills its band with the cream wall instead
+    { shadows: lost, alpha: !lost },
   );
   renderer.transmissionResolutionScale = 0.75;
   const env = await studioEnvironment(renderer);
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(TONES[tone]);
+  if (lost) scene.background = new THREE.Color(STUDIO.canvas);
   scene.environment = env;
   scene.environmentIntensity = 0.65;
   const camera = new THREE.PerspectiveCamera(lost ? 32 : 28, 1, 0.1, 60);
@@ -205,29 +200,21 @@ export async function initState(
       stage.add(cube);
     });
   } else {
-    // a soft studio light on the wall behind the cup, fading to exactly the
-    // panel color at the canvas edge: clear plastic and ice need something
-    // bright behind them to read as clear
-    const edge = new THREE.Color(TONES[tone]);
+    // a soft pool of white light on the panel behind the cup, fading out
+    // before the canvas edge: clear plastic and ice read as clear against it
     backlight = new THREE.Mesh(
       new THREE.PlaneGeometry(1, 1),
       new THREE.ShaderMaterial({
-        uniforms: {
-          uEdge: { value: edge },
-          uLight: {
-            value: edge.clone().lerp(new THREE.Color("#b9b3c2"), 0.34),
-          },
-          uAspect: { value: 1 },
-        },
+        uniforms: { uAspect: { value: 1 } },
         vertexShader: /* glsl */ `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
         fragmentShader: /* glsl */ `
-          uniform vec3 uEdge, uLight; uniform float uAspect; varying vec2 vUv;
+          uniform float uAspect; varying vec2 vUv;
           void main(){
             vec2 d = (vUv - vec2(0.5, 0.56)) * vec2(uAspect, 1.0);
             float k = smoothstep(0.47, 0.0, length(d));
-            gl_FragColor = vec4(mix(uEdge, uLight, k * k), 1.0);
-            #include <colorspace_fragment>
+            gl_FragColor = vec4(1.0, 1.0, 1.0, k * k * 0.6);
           }`,
+        transparent: true,
         toneMapped: false,
         depthWrite: false,
       }),

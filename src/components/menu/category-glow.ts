@@ -1,8 +1,8 @@
 /**
- * Color pairs for menu categories, taken from the Night Shift Glow item
- * colors (drinks green and amber, bites orange and yellow, buldak pink and
- * cyan, …). The catalog uses them for each category's index number and the
- * rule under its heading; cards stay neutral.
+ * Color pairs for menu categories, taken from the item glow colors in
+ * DESIGN.md (drinks green and amber, bites orange and yellow, buldak pink and
+ * cyan, …). The catalog mixes them with ink for each category's index number
+ * and the rule under its heading, so they read on cream; cards stay neutral.
  */
 export type GlowPair = Readonly<{ a: string; b: string }>;
 

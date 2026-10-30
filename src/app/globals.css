@@ -5,40 +5,52 @@
   --shell-max: 90rem;
   --shell-pad: clamp(1rem, 4vw, 4rem);
   --shell-width: calc(var(--shell-max) + 2 * var(--shell-pad));
-  /* Night Shift Glow: a dark studio with colored rim light per item */
-  color-scheme: dark;
-  --surface-canvas: #0b0a0d;
-  --surface-canvas-translucent: rgb(11 10 13 / 72%);
-  --surface-warm: #1d1a24;
-  --surface-card: #15131a;
-  --surface-raised: #1a1720;
-  --surface-input: #0f0e12;
-  --surface-accent: #101712;
-  --text-strong: #f4f1ea;
-  --text-muted: #b9b3c2;
-  --text-subtle: #a49eae;
-  --accent-solid: #7cff6b;
-  --accent-solid-hover: #a6ff99;
-  --accent-strong: #ffb547;
-  --accent-soft: rgb(124 255 107 / 14%);
-  --on-accent: #0b0a0d;
-  --border-soft: rgb(255 255 255 / 10%);
-  --border-strong: rgb(255 255 255 / 22%);
-  --notice-surface: rgb(255 181 71 / 9%);
-  --notice-border: rgb(255 181 71 / 32%);
-  --notice-text: #ffd9a0;
-  --danger: #ff8577;
-  --ink-shadow: rgb(0 0 0 / 80%);
-  --ink-scrim: rgb(0 0 0 / 70%);
-  --footer-surface: #08070a;
-  --footer-text: #f4f1ea;
-  --footer-muted: #b9b3c2;
+  /* Daylight Glass (ADR-022): the shop's cream walls and deep green panels,
+     with frosted glass panels over soft window light */
+  color-scheme: light;
+  --surface-canvas: #f6eee1;
+  --surface-canvas-translucent: rgb(246 238 225 / 72%);
+  --surface-warm: #ecdfcb;
+  --surface-card: rgb(255 255 255 / 60%);
+  --surface-raised: rgb(255 255 255 / 78%);
+  --surface-input: rgb(255 255 255 / 82%);
+  --surface-accent: #e3ece2;
+  /* opaque panels over a scrim (dialogs), where glass would turn grey */
+  --surface-overlay: #fbf8f3;
+  --text-strong: #1d2a21;
+  --text-muted: #4b5a4f;
+  --text-subtle: #55625a;
+  --accent-solid: #1f6b45;
+  --accent-solid-hover: #185638;
+  --accent-strong: #9e451e;
+  --accent-soft: rgb(31 107 69 / 10%);
+  --on-accent: #ffffff;
+  --on-photo: #ffffff;
+  --border-soft: rgb(29 42 33 / 10%);
+  --border-strong: rgb(29 42 33 / 22%);
+  --notice-surface: rgb(214 150 52 / 12%);
+  --notice-border: rgb(176 112 20 / 38%);
+  --notice-text: #6b4710;
+  --danger: #b3261e;
+  --danger-soft: rgb(179 38 30 / 8%);
+  --ink-shadow: rgb(70 52 30 / 22%);
+  --ink-scrim: rgb(29 42 33 / 40%);
+  --photo-scrim: rgb(20 16 10 / 82%);
+  --footer-surface: #183a2a;
+  --footer-text: #f6eee1;
+  --footer-muted: #c6d3c8;
+  /* soft window light behind the glass (body::before) */
+  --wash-green: rgb(47 122 82 / 13%);
+  --wash-peach: rgb(233 160 110 / 24%);
+  --wash-sage: rgb(102 128 108 / 15%);
   --shadow-subtle:
-    0 1px 0 rgb(255 255 255 / 4%) inset, 0 12px 30px -18px var(--ink-shadow);
+    0 1px 0 rgb(255 255 255 / 70%) inset, 0 10px 28px -18px var(--ink-shadow);
   --shadow-card:
-    0 1px 0 rgb(255 255 255 / 6%) inset, 0 24px 60px -30px rgb(0 0 0 / 90%);
-  --shadow-button: 0 10px 24px -14px rgb(0 0 0 / 80%);
-  --shadow-cinema: 0 20px 50px rgb(0 0 0 / 55%), 0 48px 100px rgb(0 0 0 / 55%);
+    0 1px 0 rgb(255 255 255 / 80%) inset, 0 24px 60px -30px rgb(70 52 30 / 32%);
+  --shadow-button: 0 10px 24px -14px rgb(24 86 56 / 55%);
+  --shadow-cinema:
+    0 20px 50px -20px rgb(70 52 30 / 30%),
+    0 48px 100px -40px rgb(70 52 30 / 28%);
   --ease-cinematic: cubic-bezier(0.16, 1, 0.3, 1);
   /* Type ramp (DESIGN.md typography) */
   --type-label: 0.75rem;
@@ -60,8 +72,8 @@
   --shape-xl: 1.5rem;
   --shape-2xl: 2rem;
   --shape-full: 999px;
-  --glass-fill: rgb(21 19 26 / 68%);
-  --glass-stroke: rgb(255 255 255 / 12%);
+  --glass-fill: rgb(255 255 255 / 55%);
+  --glass-stroke: rgb(255 255 255 / 75%);
 }
 
 @theme inline {
@@ -90,17 +102,26 @@ body {
   /* keeps the page from scrolling sideways; body's overflow passes to the
      viewport, so this doesn't clip anything inside the page */
   overflow-x: clip;
-  background:
-    radial-gradient(
-      ellipse 60% 40% at 85% -10%,
-      rgb(124 255 107 / 6%),
-      transparent 70%
-    ),
-    var(--surface-canvas);
+  background: var(--surface-canvas);
   color: var(--text-strong);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+}
+
+/* Daylight Glass: soft window light fixed behind the page, so the frosted
+   panels have color to show. It never scrolls, so it's painted only once,
+   and cards over it can stay translucent without a costly blur. */
+body::before {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(42rem 32rem at 96% -4%, var(--wash-green), transparent 70%),
+    radial-gradient(38rem 30rem at -6% 58%, var(--wash-peach), transparent 70%),
+    radial-gradient(46rem 32rem at 72% 108%, var(--wash-sage), transparent 70%);
+  content: "";
+  pointer-events: none;
 }
 
 /* full-bleed bands such as the menu's category bar use 100vw, which is wider
@@ -118,7 +139,7 @@ main {
 }
 
 html {
-  scrollbar-color: #3a3542 var(--surface-canvas);
+  scrollbar-color: #c3b49c var(--surface-canvas);
 }
 
 img {
@@ -224,14 +245,14 @@ button:focus-visible,
 
 .button-secondary:hover {
   border-color: var(--accent-solid);
-  background: rgb(255 255 255 / 6%);
+  background: rgb(255 255 255 / 80%);
   color: var(--accent-solid);
   transform: translateY(-1px);
 }
 
 .button-ghost {
   border: 1px solid var(--border-strong);
-  background: rgb(255 255 255 / 4%);
+  background: rgb(255 255 255 / 35%);
   box-shadow: var(--shadow-subtle);
   color: var(--text-strong);
   backdrop-filter: blur(18px) saturate(1.35);
@@ -239,7 +260,7 @@ button:focus-visible,
 
 .button-ghost:hover {
   border-color: var(--accent-solid);
-  background: rgb(255 255 255 / 6%);
+  background: rgb(255 255 255 / 70%);
   color: var(--accent-solid);
   transform: translateY(-1px);
 }
@@ -262,14 +283,9 @@ button:focus-visible,
   position: relative;
   isolation: isolate;
   overflow: hidden;
+  /* no wash of its own: the window light behind the page already sits here,
+     and a second green layer would dim the small print */
   border-bottom: 1px solid var(--border-soft);
-  background:
-    radial-gradient(
-      ellipse 50% 70% at 85% 40%,
-      rgb(124 255 107 / 8%),
-      transparent 70%
-    ),
-    var(--surface-canvas);
 }
 
 .skip-link {
@@ -327,7 +343,7 @@ button:focus-visible,
 
 .surface-lift:hover {
   transform: translateY(-4px);
-  border-color: rgb(255 255 255 / 24%);
+  border-color: rgb(255 255 255 / 95%);
   box-shadow: var(--shadow-card);
 }
 
@@ -458,7 +474,7 @@ button:focus-visible,
 
 .cinema-canvas {
   background:
-    radial-gradient(ellipse at top, rgb(94 225 255 / 8%), transparent 55%),
+    radial-gradient(ellipse at top, rgb(255 255 255 / 40%), transparent 55%),
     var(--surface-canvas);
 }
 
@@ -481,7 +497,7 @@ button:focus-visible,
 
 .gallery-tile:hover {
   transform: translateY(-3px);
-  box-shadow: 0 32px 90px var(--ink-scrim);
+  box-shadow: 0 32px 90px -30px rgb(70 52 30 / 40%);
 }
 
 .gallery-tile img {
@@ -503,12 +519,12 @@ button:focus-visible,
   translate: 0 0.4rem;
   background: linear-gradient(
     to top,
-    rgb(11 10 13 / 88%) 0%,
-    rgb(11 10 13 / 35%) 55%,
+    var(--photo-scrim) 0%,
+    rgb(20 16 10 / 35%) 55%,
     transparent 100%
   );
   padding: 2.75rem 0.85rem 0.85rem;
-  color: var(--text-strong);
+  color: var(--on-photo);
   font-size: 0.75rem;
   font-weight: 700;
   line-height: 1.4;
@@ -603,13 +619,13 @@ button:focus-visible,
   }
 }
 
-/* Near-opaque once content scrolls under it, so warm notices and terracotta
-   buttons can't bleed through the blur as a colored glow. The header keeps
+/* Mostly opaque once content scrolls under it, so busy photos and 3D scenes
+   stay calm behind the links. The header keeps
    one height: shrinking it on scroll shifted the page under the reader. */
 html[data-scrolled] .site-header {
-  background-color: rgb(11 10 13 / 88%);
+  background-color: rgb(246 238 225 / 84%);
   box-shadow: 0 10px 30px -18px var(--ink-shadow);
-  border-bottom-color: rgb(255 255 255 / 8%);
+  border-bottom-color: var(--border-soft);
 }
 
 /* Desktop nav underline that grows from the center */
@@ -666,7 +682,7 @@ textarea {
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-  box-shadow: 0 0 0 4px rgb(124 255 107 / 18%);
+  box-shadow: 0 0 0 4px rgb(31 107 69 / 20%);
 }
 
 /* Skeleton loaders */
@@ -682,7 +698,7 @@ textarea:focus-visible {
   background: linear-gradient(
     90deg,
     var(--surface-warm) 0%,
-    rgb(255 255 255 / 8%) 50%,
+    rgb(255 255 255 / 55%) 50%,
     var(--surface-warm) 100%
   );
   background-size: 200% 100%;
@@ -769,8 +785,8 @@ textarea:focus-visible {
   height: 55%;
   background: linear-gradient(
     to top,
-    rgb(11 10 13 / 78%) 0%,
-    rgb(11 10 13 / 40%) 45%,
+    color-mix(in srgb, var(--surface-canvas) 86%, transparent) 0%,
+    color-mix(in srgb, var(--surface-canvas) 45%, transparent) 45%,
     transparent 100%
   );
   content: "";
@@ -814,7 +830,7 @@ textarea:focus-visible {
 .showcase--3d .showcase__title {
   max-width: 16ch;
   font-size: var(--type-stage);
-  text-shadow: 0 2px 24px var(--ink-scrim);
+  text-shadow: 0 1px 22px var(--surface-canvas);
 }
 
 .showcase__lede {
@@ -841,7 +857,7 @@ textarea:focus-visible {
 }
 
 .showcase__nick {
-  color: var(--glow);
+  color: color-mix(in oklab, var(--glow) 35%, var(--text-strong));
   font-size: var(--type-body-sm);
   font-weight: 800;
   letter-spacing: 0.2em;
@@ -878,7 +894,7 @@ textarea:focus-visible {
   min-width: 4.5rem;
   min-height: 2.75rem;
   border: 0;
-  border-top: 2px solid rgb(255 255 255 / 18%);
+  border-top: 2px solid var(--border-strong);
   background: none;
   padding: 0.75rem 0 0.25rem;
   color: var(--text-muted);
@@ -893,7 +909,7 @@ textarea:focus-visible {
 }
 
 .showcase__ticks button[aria-current="true"] {
-  border-color: var(--glow);
+  border-color: color-mix(in oklab, var(--glow) 35%, var(--text-strong));
   color: var(--text-strong);
 }
 
@@ -1027,7 +1043,7 @@ textarea:focus-visible {
 
 .showcase__static-price {
   margin-top: 0.35rem;
-  color: var(--c);
+  color: color-mix(in oklab, var(--c) 35%, var(--text-strong));
   font-family: var(--font-display);
   font-size: var(--type-price);
   font-weight: 800;
@@ -1058,8 +1074,8 @@ textarea:focus-visible {
   inset: 0;
   background: linear-gradient(
     90deg,
-    rgb(11 10 13 / 82%) 0%,
-    rgb(11 10 13 / 45%) 45%,
+    color-mix(in srgb, var(--surface-canvas) 82%, transparent) 0%,
+    color-mix(in srgb, var(--surface-canvas) 45%, transparent) 45%,
     transparent 75%
   );
   content: "";
@@ -1213,7 +1229,7 @@ textarea:focus-visible {
   height: 3rem;
   border: 1px solid var(--border-strong);
   border-radius: 999px;
-  background: rgb(255 255 255 / 4%);
+  background: rgb(255 255 255 / 55%);
   color: var(--text-strong);
   transition:
     border-color 250ms,
@@ -1330,7 +1346,7 @@ textarea:focus-visible {
   background: linear-gradient(
     to top,
     var(--surface-canvas) 0%,
-    rgb(11 10 13 / 55%) 40%,
+    color-mix(in srgb, var(--surface-canvas) 55%, transparent) 40%,
     transparent 100%
   );
   content: "";
@@ -1673,7 +1689,8 @@ textarea:focus-visible {
   display: flex;
   align-items: baseline;
   gap: 0.5rem;
-  color: var(--ga);
+  /* the category color mixed with ink, so the number reads on cream */
+  color: color-mix(in oklab, var(--ga) 35%, var(--text-strong));
   font-family: var(--font-display);
   font-size: var(--type-title);
   font-weight: 900;
@@ -1706,7 +1723,12 @@ textarea:focus-visible {
   display: block;
   height: 2px;
   margin-top: 1rem;
-  background: linear-gradient(90deg, var(--ga), var(--gb) 45%, transparent);
+  background: linear-gradient(
+    90deg,
+    color-mix(in oklab, var(--ga) 75%, var(--text-strong)),
+    color-mix(in oklab, var(--gb) 75%, var(--text-strong)) 45%,
+    transparent
+  );
   transform-origin: left;
   transition: transform 600ms var(--ease-cinematic);
 }
@@ -1795,7 +1817,7 @@ html[data-motion="on"]:not([data-motion-live])
   background:
     radial-gradient(
       ellipse 70% 55% at 50% 42%,
-      rgb(255 255 255 / 4%),
+      rgb(255 255 255 / 45%),
       transparent 70%
     ),
     var(--surface-canvas);

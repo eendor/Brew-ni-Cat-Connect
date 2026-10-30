@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import { useCallback, useState, type ReactNode } from "react";
 
-import type { StateKind, StateTone } from "./scenes/state";
+import type { StateKind } from "./scenes/state";
 import { useThreeEnabled } from "./use-three-enabled";
 
 const StateCanvas = dynamic(() => import("./canvas/state-canvas"), {
@@ -12,8 +12,6 @@ const StateCanvas = dynamic(() => import("./canvas/state-canvas"), {
 
 type StateSceneProps = Readonly<{
   kind: StateKind;
-  /** The panel color it sits on: the page canvas or a card. */
-  tone: StateTone;
   /** Size and spacing of the box; the scene fills it. */
   className?: string;
   /** What shows without WebGL or with reduced motion (the static icon). */
@@ -28,7 +26,6 @@ type StateSceneProps = Readonly<{
  */
 export function StateScene({
   kind,
-  tone,
   className = "",
   fallback = null,
 }: StateSceneProps) {
@@ -45,12 +42,7 @@ export function StateScene({
       aria-hidden="true"
     >
       {three ? (
-        <StateCanvas
-          kind={kind}
-          tone={tone}
-          onReady={onReady}
-          onError={onError}
-        />
+        <StateCanvas kind={kind} onReady={onReady} onError={onError} />
       ) : (
         fallback
       )}

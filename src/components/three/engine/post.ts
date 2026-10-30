@@ -63,7 +63,9 @@ export function makePost(
     new THREE.Vector2(256, 256),
     options.bloom ?? (quality.mobile ? 0.32 : 0.4),
     0.55,
-    0.9,
+    // above the cream studio wall (about 1.9 before tone mapping), so only
+    // highlights on glass and ice bloom, not the whole light background
+    2.2,
   );
   composer.addPass(bloom);
   composer.addPass(new OutputPass());

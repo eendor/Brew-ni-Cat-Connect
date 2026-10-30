@@ -14,7 +14,6 @@ export default function NotFound() {
     <section className="not-found" aria-labelledby="not-found-heading">
       <StateScene
         kind="lost"
-        tone="canvas"
         className="not-found__stage"
         fallback={<p className="not-found__code">404</p>}
       />

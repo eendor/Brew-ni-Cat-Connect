@@ -11,7 +11,7 @@ import { NavLink } from "./nav-link";
 
 export function SiteHeader() {
   return (
-    <header className="site-header sticky top-0 z-50 border-b border-white/10 bg-[var(--surface-canvas-translucent)] backdrop-blur-2xl backdrop-saturate-[1.3] transition-[background-color,border-color,box-shadow] duration-500 ease-[var(--ease-cinematic)] supports-[backdrop-filter]:bg-[rgb(11_10_13_/_62%)]">
+    <header className="site-header sticky top-0 z-50 border-b border-[var(--border-soft)] bg-[var(--surface-canvas-translucent)] backdrop-blur-2xl backdrop-saturate-[1.3] transition-[background-color,border-color,box-shadow] duration-500 ease-[var(--ease-cinematic)] supports-[backdrop-filter]:bg-[rgb(246_238_225_/_62%)]">
       <Container className="site-header__bar flex min-h-18 items-center justify-between gap-4 py-2.5 lg:min-h-20">
         <Link
           href="/"

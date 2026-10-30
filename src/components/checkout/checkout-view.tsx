@@ -498,7 +498,6 @@ export function CheckoutView({
             <div className="mx-auto max-w-lg text-center rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-8 sm:p-12 shadow-[var(--shadow-subtle)]">
               <StateScene
                 kind="empty"
-                tone="card"
                 className="mx-auto mb-4 size-44 sm:size-52"
                 fallback={
                   <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-[var(--surface-warm)] text-[var(--accent-strong)]">
@@ -1371,7 +1370,6 @@ export function CheckoutView({
               <div className="rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-5 sm:p-12 shadow-[var(--shadow-card)] text-center">
                 <StateScene
                   kind="ready"
-                  tone="card"
                   className="mx-auto mb-4 size-48 sm:size-56"
                   fallback={
                     <div className="mx-auto flex size-20 items-center justify-center rounded-full bg-[var(--surface-warm)] text-[var(--accent-strong)]">

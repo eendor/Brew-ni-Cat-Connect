@@ -122,7 +122,7 @@ export function SignInView() {
               {generalError ? (
                 <div
                   role="alert"
-                  className="rounded-xl border border-[var(--danger)] bg-[rgb(255_133_119_/_10%)] p-4 text-sm font-bold text-[var(--danger)]"
+                  className="rounded-xl border border-[var(--danger)] bg-[var(--danger-soft)] p-4 text-sm font-bold text-[var(--danger)]"
                 >
                   {generalError}
                 </div>

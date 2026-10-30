@@ -113,7 +113,7 @@ export function CartDrawer() {
     >
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/40 backdrop-blur-xs"
+        className="fixed inset-0 bg-[var(--ink-scrim)] backdrop-blur-xs"
         aria-hidden="true"
         data-overlay="backdrop"
         onClick={closeDrawer}
@@ -165,7 +165,6 @@ export function CartDrawer() {
               <div className="flex h-full flex-col items-center justify-center text-center py-12">
                 <StateScene
                   kind="empty"
-                  tone="canvas"
                   className="mb-2 size-40"
                   fallback={
                     <div className="inline-flex size-16 items-center justify-center rounded-full bg-[var(--surface-warm)] text-[var(--text-muted)]">

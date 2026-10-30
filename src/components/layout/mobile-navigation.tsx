@@ -192,7 +192,7 @@ export function MobileNavigation({ items }: MobileNavigationProps) {
                     closeNavigation();
                     await signOut();
                   }}
-                  className="rounded-lg px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-[var(--danger)] hover:bg-[rgb(255_133_119_/_10%)] transition-colors"
+                  className="rounded-lg px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-[var(--danger)] hover:bg-[var(--danger-soft)] transition-colors"
                 >
                   Sign out
                 </button>

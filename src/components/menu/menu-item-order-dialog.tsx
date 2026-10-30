@@ -321,14 +321,14 @@ export function MenuItemOrderDialog({
     >
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-xs"
+        className="fixed inset-0 bg-[var(--ink-scrim)] backdrop-blur-xs"
         aria-hidden="true"
         data-overlay="backdrop"
         onClick={requestClose}
       />
 
       <div
-        className="relative w-full max-w-lg rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-6 sm:p-8 shadow-2xl max-h-[90vh] overflow-y-auto"
+        className="relative w-full max-w-lg rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-overlay)] p-6 sm:p-8 shadow-2xl max-h-[90vh] overflow-y-auto"
         data-overlay="panel"
       >
         <div className="flex items-start justify-between gap-4 border-b border-[var(--border-soft)] pb-4">
@@ -555,7 +555,7 @@ export function MenuItemOrderDialog({
           {feedbackError ? (
             <div
               role="alert"
-              className="rounded-xl border border-[var(--danger)] bg-[rgb(255_133_119_/_10%)] p-3 text-sm font-bold text-[var(--danger)]"
+              className="rounded-xl border border-[var(--danger)] bg-[var(--danger-soft)] p-3 text-sm font-bold text-[var(--danger)]"
             >
               {feedbackError}
             </div>
