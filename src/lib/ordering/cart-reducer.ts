@@ -17,8 +17,10 @@ import type {
   CartAction,
   CartItem,
   CartItemSelection,
+  CartLineReplacementSelection,
   CartState,
   FulfillmentType,
+  ReplaceCatalogSelectionResult,
 } from "@/types/ordering";
 
 /**
@@ -395,5 +397,210 @@ export function addCatalogSelection(
     ok: true,
     state: next,
     lineKey: buildSelectionKey(selection),
+  };
+}
+
+export function replaceCatalogSelection(
+  state: CartState,
+  catalog: MenuCatalog,
+  key: string,
+  selection: CartLineReplacementSelection,
+): ReplaceCatalogSelectionResult {
+  const existingIndex = state.lines.findIndex((line) => line.key === key);
+  if (existingIndex === -1) {
+    return {
+      ok: false,
+      state,
+      reason: "unknown-item",
+      message: "The cart line to edit could not be found.",
+    };
+  }
+
+  const existing = state.lines[existingIndex];
+  if (!existing) {
+    return {
+      ok: false,
+      state,
+      reason: "unknown-item",
+      message: "The cart line to edit could not be found.",
+    };
+  }
+
+  const quantity = selection.quantity ?? existing.quantity;
+  if (!isValidCartQuantity(quantity)) {
+    return {
+      ok: false,
+      state,
+      reason: "invalid-quantity",
+      message: FAILURE_MESSAGES["invalid-quantity"],
+    };
+  }
+
+  const fullSelection: CartItemSelection = {
+    itemId: existing.itemId,
+    variantId: selection.variantId,
+    flavor: selection.flavor,
+    quantity,
+  };
+
+  const item = findCatalogItem(catalog, fullSelection.itemId);
+  if (!item) {
+    return {
+      ok: false,
+      state,
+      reason: "unknown-item",
+      message: FAILURE_MESSAGES["unknown-item"],
+    };
+  }
+
+  if (item.availability === "unavailable") {
+    return {
+      ok: false,
+      state,
+      reason: "item-unavailable",
+      message: FAILURE_MESSAGES["item-unavailable"],
+    };
+  }
+
+  if (item.availability === "unknown") {
+    return {
+      ok: false,
+      state,
+      reason: "availability-unknown",
+      message: FAILURE_MESSAGES["availability-unknown"],
+    };
+  }
+
+  const variant = findCatalogVariant(item, fullSelection.variantId);
+  if (!variant) {
+    return {
+      ok: false,
+      state,
+      reason: "unknown-variant",
+      message: FAILURE_MESSAGES["unknown-variant"],
+    };
+  }
+
+  const resolved = resolveVariantUnitPrice(item, variant, fullSelection.flavor);
+  if (!resolved.ok) {
+    const reason: AddCartItemFailureReason =
+      resolved.reason === "unknown-flavor" ? "unknown-flavor" : "missing-price";
+    return { ok: false, state, reason, message: FAILURE_MESSAGES[reason] };
+  }
+
+  if (!isSafeLineQuantity(resolved.unitPrice, quantity)) {
+    return {
+      ok: false,
+      state,
+      reason: "invalid-quantity",
+      message: FAILURE_MESSAGES["invalid-quantity"],
+    };
+  }
+
+  const newKey = buildSelectionKey(fullSelection);
+
+  if (newKey === existing.key) {
+    const updatedLine: CartItem = {
+      ...existing,
+      unitPrice: resolved.unitPrice,
+      quantity,
+      lineTotal: calculateLineTotal(resolved.unitPrice, quantity),
+    };
+    const nextLines = state.lines.map((line, index) =>
+      index === existingIndex ? updatedLine : line,
+    );
+    if (!isSafeCartSubtotal(nextLines)) {
+      return {
+        ok: false,
+        state,
+        reason: "invalid-quantity",
+        message: FAILURE_MESSAGES["invalid-quantity"],
+      };
+    }
+    return {
+      ok: true,
+      state: { ...state, lines: nextLines },
+      lineKey: newKey,
+    };
+  }
+
+  const otherExistingIndex = state.lines.findIndex(
+    (line, index) => line.key === newKey && index !== existingIndex,
+  );
+
+  let nextLines: readonly CartItem[];
+
+  if (otherExistingIndex !== -1) {
+    const otherExisting = state.lines[otherExistingIndex];
+    if (!otherExisting) {
+      return {
+        ok: false,
+        state,
+        reason: "invalid-quantity",
+        message: FAILURE_MESSAGES["invalid-quantity"],
+      };
+    }
+    const mergedQuantity = otherExisting.quantity + quantity;
+    if (
+      !Number.isSafeInteger(mergedQuantity) ||
+      !isSafeLineQuantity(resolved.unitPrice, mergedQuantity)
+    ) {
+      return {
+        ok: false,
+        state,
+        reason: "invalid-quantity",
+        message: FAILURE_MESSAGES["invalid-quantity"],
+      };
+    }
+
+    const mergedLine: CartItem = {
+      key: newKey,
+      itemId: item.id,
+      itemName: item.name,
+      variantId: variant.id,
+      variantName: variant.name,
+      flavor: normalizeFlavor(fullSelection.flavor),
+      unitPrice: resolved.unitPrice,
+      quantity: mergedQuantity,
+      lineTotal: calculateLineTotal(resolved.unitPrice, mergedQuantity),
+    };
+
+    nextLines = state.lines
+      .map((line, index) => {
+        if (index === otherExistingIndex) return mergedLine;
+        return line;
+      })
+      .filter((_, index) => index !== existingIndex);
+  } else {
+    const newLine: CartItem = {
+      key: newKey,
+      itemId: item.id,
+      itemName: item.name,
+      variantId: variant.id,
+      variantName: variant.name,
+      flavor: normalizeFlavor(fullSelection.flavor),
+      unitPrice: resolved.unitPrice,
+      quantity,
+      lineTotal: calculateLineTotal(resolved.unitPrice, quantity),
+    };
+
+    nextLines = state.lines.map((line, index) =>
+      index === existingIndex ? newLine : line,
+    );
+  }
+
+  if (!isSafeCartSubtotal(nextLines)) {
+    return {
+      ok: false,
+      state,
+      reason: "invalid-quantity",
+      message: FAILURE_MESSAGES["invalid-quantity"],
+    };
+  }
+
+  return {
+    ok: true,
+    state: { ...state, lines: nextLines },
+    lineKey: newKey,
   };
 }

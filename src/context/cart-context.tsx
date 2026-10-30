@@ -22,6 +22,7 @@ import {
   cartReducer,
   createInitialCartState,
   isFulfillmentType,
+  replaceCatalogSelection,
 } from "@/lib/ordering/cart-reducer";
 import {
   buildOrderDraft,
@@ -37,9 +38,11 @@ import type {
   CartAction,
   CartItem,
   CartItemSelection,
+  CartLineReplacementSelection,
   CartState,
   FulfillmentType,
   OrderDraft,
+  ReplaceCatalogSelectionResult,
 } from "@/types/ordering";
 
 export const CART_STORAGE_KEY = "brew_ni_cat_cart_v1";
@@ -297,6 +300,11 @@ export type CartContextValue = Readonly<{
     catalog: MenuCatalog,
     selection: CartItemSelection,
   ) => AddCatalogSelectionResult;
+  replaceLine: (
+    catalog: MenuCatalog,
+    key: string,
+    selection: CartLineReplacementSelection,
+  ) => ReplaceCatalogSelectionResult;
   revalidateWithCatalog: (catalog: MenuCatalog) => CartRevalidationResult;
   updateQuantity: (key: string, quantity: number) => void;
   removeItem: (key: string) => void;
@@ -355,6 +363,22 @@ export function CartProvider({
     ): AddCatalogSelectionResult => {
       const current = store.getSnapshot();
       const result = addCatalogSelection(current, catalog, selection);
+      if (result.ok) {
+        store.setDirectState(result.state);
+      }
+      return result;
+    },
+    [store],
+  );
+
+  const replaceLine = useCallback(
+    (
+      catalog: MenuCatalog,
+      key: string,
+      selection: CartLineReplacementSelection,
+    ): ReplaceCatalogSelectionResult => {
+      const current = store.getSnapshot();
+      const result = replaceCatalogSelection(current, catalog, key, selection);
       if (result.ok) {
         store.setDirectState(result.state);
       }
@@ -474,6 +498,7 @@ export function CartProvider({
       closeDrawer,
       toggleDrawer,
       addItem,
+      replaceLine,
       revalidateWithCatalog,
       updateQuantity,
       removeItem,
@@ -498,6 +523,7 @@ export function CartProvider({
       closeDrawer,
       toggleDrawer,
       addItem,
+      replaceLine,
       revalidateWithCatalog,
       updateQuantity,
       removeItem,
@@ -530,6 +556,12 @@ const fallbackCartValue: CartContextValue = {
   closeDrawer: () => {},
   toggleDrawer: () => {},
   addItem: () => ({
+    ok: false,
+    state: createInitialCartState(),
+    reason: "item-unavailable",
+    message: "Cart provider not available",
+  }),
+  replaceLine: () => ({
     ok: false,
     state: createInitialCartState(),
     reason: "item-unavailable",

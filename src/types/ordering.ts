@@ -20,6 +20,12 @@
 
 export type FulfillmentType = "pickup" | "external-rider";
 
+export type CartLineReplacementSelection = Readonly<{
+  variantId: string;
+  flavor: string | null;
+  quantity?: number;
+}>;
+
 export type CartItemSelection = Readonly<{
   itemId: string;
   variantId: string;
@@ -75,6 +81,8 @@ export type AddCatalogSelectionResult =
       reason: AddCartItemFailureReason;
       message: string;
     }>;
+
+export type ReplaceCatalogSelectionResult = AddCatalogSelectionResult;
 
 export type CartAction =
   | Readonly<{ type: "remove"; key: string }>
