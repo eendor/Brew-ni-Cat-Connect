@@ -6,12 +6,13 @@
   --shell-pad: clamp(1rem, 4vw, 4rem);
   --shell-width: calc(var(--shell-max) + 2 * var(--shell-pad));
   /* Daylight Glass (ADR-022): the shop's cream walls and deep green panels,
-     with frosted glass panels over soft window light */
+     with frosted glass panels over soft window light. iOS 27 Liquid Glass
+     (ADR-023) restyles the type, shapes and controls on the same colors. */
   color-scheme: light;
   --surface-canvas: #f6eee1;
   --surface-canvas-translucent: rgb(246 238 225 / 72%);
   --surface-warm: #ecdfcb;
-  --surface-card: rgb(255 255 255 / 60%);
+  --surface-card: rgb(255 255 255 / 70%);
   --surface-raised: rgb(255 255 255 / 78%);
   --surface-input: rgb(255 255 255 / 82%);
   --surface-accent: #e3ece2;
@@ -22,7 +23,13 @@
   --text-subtle: #55625a;
   --accent-solid: #1f6b45;
   --accent-solid-hover: #185638;
+  /* filled controls (primary buttons, the chosen chip or tab); the same green
+     as --accent-solid by day, a deeper one than the text green at night */
+  --accent-fill: var(--accent-solid);
+  --accent-fill-hover: var(--accent-solid-hover);
   --accent-strong: #9e451e;
+  /* a filled terracotta badge under white text */
+  --accent-strong-fill: var(--accent-strong);
   --accent-soft: rgb(31 107 69 / 10%);
   --on-accent: #ffffff;
   --on-photo: #ffffff;
@@ -54,33 +61,175 @@
     0 20px 50px -20px rgb(70 52 30 / 30%),
     0 48px 100px -40px rgb(70 52 30 / 28%);
   --ease-cinematic: cubic-bezier(0.16, 1, 0.3, 1);
-  /* Type ramp (DESIGN.md typography) */
-  --type-label: 0.75rem;
-  --type-body-sm: 0.875rem;
-  --type-body: 1rem;
-  --type-lead: 1.125rem;
+  /* Type ramp: the iOS 27 text styles (ADR-023) — footnote 13, subheadline
+     15, body 17, title 3 20, title 1 28, then the large stage titles */
+  --type-label: 0.8125rem;
+  --type-body-sm: 0.9375rem;
+  --type-body: 1.0625rem;
+  --type-lead: 1.25rem;
   --type-price: 1.25rem;
-  --type-title: 1.5rem;
-  --type-display: clamp(3rem, 6.5vw, 5.75rem);
-  --type-stage: clamp(2rem, 3.4vw, 3.25rem);
-  --type-stage-compact: clamp(1.75rem, 7.5vw, 2.25rem);
-  --type-price-hero: clamp(2.25rem, 4vw, 3.5rem);
+  --type-title: 1.75rem;
+  --type-display: clamp(2.5rem, 5.2vw, 4.5rem);
+  --type-stage: clamp(1.75rem, 2.8vw, 2.75rem);
+  --type-stage-compact: clamp(1.5rem, 6.4vw, 2rem);
+  --type-price-hero: clamp(2rem, 3.4vw, 3rem);
   --type-sign: clamp(3rem, 8vw, 5rem);
   --type-sign-sub: clamp(1.5rem, 3vw, 2rem);
-  /* Radius scale (DESIGN.md rounded) */
-  --shape-sm: 0.5rem;
-  --shape-md: 0.75rem;
-  --shape-lg: 1rem;
-  --shape-xl: 1.5rem;
-  --shape-2xl: 2rem;
+  /* Radius scale: iOS 27's larger, softer corners */
+  --shape-sm: 0.625rem;
+  --shape-md: 0.875rem;
+  --shape-lg: 1.25rem;
+  --shape-xl: 1.625rem;
+  --shape-2xl: 2.25rem;
   --shape-full: 999px;
+  /* Liquid Glass: a light fill, a bright rim on the top edge and a soft,
+     wide shadow */
   --glass-fill: rgb(255 255 255 / 55%);
+  --glass-fill-strong: rgb(255 255 255 / 72%);
   --glass-stroke: rgb(255 255 255 / 75%);
+  --glass-rim:
+    inset 0 1px 0 rgb(255 255 255 / 90%), inset 0 -1px 0 rgb(255 255 255 / 30%);
+  --glass-shadow:
+    0 1px 2px rgb(70 52 30 / 6%), 0 12px 32px -12px rgb(70 52 30 / 22%);
+  /* iOS system fills and separators, tinted with the shop's ink */
+  --fill-primary: rgb(29 42 33 / 11%);
+  --fill-secondary: rgb(29 42 33 / 7%);
+  --fill-tertiary: rgb(29 42 33 / 4%);
+  --separator: rgb(29 42 33 / 12%);
+  /* the bright edge of a glass card, and its hover and press states */
+  --card-stroke: rgb(255 255 255 / 80%);
+  --card-hover: rgb(255 255 255 / 84%);
+  --glass-hover: rgb(255 255 255 / 88%);
+  --fill-hover: rgb(255 255 255 / 75%);
+  --glass-panel-top: rgb(255 255 255 / 66%);
+  --glass-panel-bottom: rgb(255 255 255 / 46%);
+  --glass-panel-stroke: rgb(255 255 255 / 60%);
+  /* bars over the page: the header and the sticky category and cart bars */
+  --bar-fill: rgb(250 246 239 / 74%);
+  --header-fill: rgb(246 238 225 / 62%);
+  --header-fill-scrolled: rgb(246 238 225 / 84%);
+  --sheet-shadow: 0 30px 80px -24px rgb(40 30 15 / 38%);
+  --focus-ring: rgb(31 107 69 / 20%);
+  --scrollbar-thumb: #c3b49c;
+  /* a small overshoot, like iOS controls settling */
+  --ease-spring: cubic-bezier(0.34, 1.36, 0.64, 1);
 }
 
+/* Night (ADR-024, FR-094): the shop after dark. Espresso walls, cream text,
+   the sign's green for links and a deeper green for filled buttons, and dark
+   glass with a faint rim of light. Set by the theme toggle, or by the
+   device's dark mode until a visitor picks one (src/lib/theme.ts). */
+:root[data-theme="night"] {
+  color-scheme: dark;
+  --surface-canvas: #14120f;
+  --surface-canvas-translucent: rgb(20 18 15 / 72%);
+  --surface-warm: #221e19;
+  --surface-card: rgb(255 246 230 / 7%);
+  --surface-raised: rgb(255 246 230 / 10%);
+  --surface-input: rgb(255 246 230 / 8%);
+  --surface-accent: #172a20;
+  --surface-overlay: #1f1c18;
+  --text-strong: #f6eee1;
+  --text-muted: #d0c6b6;
+  --text-subtle: #b3a998;
+  --accent-solid: #7dcfa0;
+  --accent-solid-hover: #9adbb5;
+  --accent-fill: #2a7d51;
+  --accent-fill-hover: #2d8455;
+  --accent-strong: #f0a77c;
+  --accent-strong-fill: #a24a22;
+  --accent-soft: rgb(125 207 160 / 14%);
+  --on-accent: #ffffff;
+  --on-photo: #ffffff;
+  --border-soft: rgb(246 238 225 / 10%);
+  --border-strong: rgb(246 238 225 / 24%);
+  --notice-surface: rgb(240 167 124 / 10%);
+  --notice-border: rgb(240 167 124 / 34%);
+  --notice-text: #f5cba6;
+  --danger: #ff8a7a;
+  --danger-soft: rgb(255 138 122 / 12%);
+  --ink-shadow: rgb(0 0 0 / 55%);
+  --ink-scrim: rgb(0 0 0 / 60%);
+  --photo-scrim: rgb(8 6 4 / 84%);
+  --footer-surface: #0f1d16;
+  --footer-text: #f6eee1;
+  --footer-muted: #bccabf;
+  --footer-strong: #ffffff;
+  --wash-green: rgb(47 122 82 / 20%);
+  --wash-peach: rgb(233 160 110 / 9%);
+  --wash-sage: rgb(102 128 108 / 12%);
+  --shadow-subtle:
+    0 1px 0 rgb(255 255 255 / 5%) inset, 0 10px 28px -18px var(--ink-shadow);
+  --shadow-card:
+    0 1px 0 rgb(255 255 255 / 7%) inset, 0 24px 60px -30px rgb(0 0 0 / 70%);
+  --shadow-button: 0 10px 24px -14px rgb(0 0 0 / 70%);
+  --shadow-cinema:
+    0 20px 50px -20px rgb(0 0 0 / 55%), 0 48px 100px -40px rgb(0 0 0 / 50%);
+  --glass-fill: rgb(44 40 34 / 55%);
+  --glass-fill-strong: rgb(52 47 40 / 72%);
+  --glass-stroke: rgb(255 246 230 / 14%);
+  --glass-rim:
+    inset 0 1px 0 rgb(255 255 255 / 14%), inset 0 -1px 0 rgb(255 255 255 / 4%);
+  --glass-shadow:
+    0 1px 2px rgb(0 0 0 / 30%), 0 12px 32px -12px rgb(0 0 0 / 55%);
+  --fill-primary: rgb(246 238 225 / 16%);
+  --fill-secondary: rgb(246 238 225 / 11%);
+  --fill-tertiary: rgb(246 238 225 / 6%);
+  --separator: rgb(246 238 225 / 13%);
+  --card-stroke: rgb(255 246 230 / 10%);
+  --card-hover: rgb(255 246 230 / 12%);
+  --glass-hover: rgb(70 64 55 / 80%);
+  --fill-hover: rgb(246 238 225 / 14%);
+  --glass-panel-top: rgb(52 47 40 / 62%);
+  --glass-panel-bottom: rgb(36 33 28 / 52%);
+  --glass-panel-stroke: rgb(255 246 230 / 12%);
+  --bar-fill: rgb(24 22 18 / 74%);
+  --header-fill: rgb(20 18 15 / 62%);
+  --header-fill-scrolled: rgb(20 18 15 / 84%);
+  --sheet-shadow: 0 30px 80px -24px rgb(0 0 0 / 70%);
+  --focus-ring: rgb(125 207 160 / 28%);
+  --scrollbar-thumb: #4a443b;
+}
+
+/* iOS 27 type (ADR-023): SF Pro on Apple devices, Inter everywhere else */
 @theme inline {
-  --font-sans: var(--font-archivo), system-ui, sans-serif;
-  --font-display: var(--font-big-shoulders), var(--font-archivo), sans-serif;
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, "SF Pro Text", var(--font-inter),
+    system-ui, sans-serif;
+  --font-display:
+    -apple-system, BlinkMacSystemFont, "SF Pro Display", var(--font-inter),
+    system-ui, sans-serif;
+}
+
+/* Tailwind's text and corner sizes follow the iOS 27 text styles (caption 12,
+   subheadline 15, body 17, title 3 20, title 2 22, title 1 28, large title
+   34) and its rounder corners, so every page picks them up */
+@theme {
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1rem;
+  --text-xs--letter-spacing: 0em;
+  --text-sm: 0.9375rem;
+  --text-sm--line-height: 1.375rem;
+  --text-sm--letter-spacing: -0.009em;
+  --text-base: 1.0625rem;
+  --text-base--line-height: 1.5625rem;
+  --text-base--letter-spacing: -0.013em;
+  --text-lg: 1.25rem;
+  --text-lg--line-height: 1.75rem;
+  --text-lg--letter-spacing: -0.017em;
+  --text-xl: 1.375rem;
+  --text-xl--line-height: 1.75rem;
+  --text-xl--letter-spacing: -0.019em;
+  --text-2xl: 1.75rem;
+  --text-2xl--line-height: 2.125rem;
+  --text-2xl--letter-spacing: -0.021em;
+  --text-3xl: 2.125rem;
+  --text-3xl--line-height: 2.5625rem;
+  --text-3xl--letter-spacing: -0.022em;
+  --radius-lg: 0.625rem;
+  --radius-xl: 0.875rem;
+  --radius-2xl: 1.25rem;
+  --radius-3xl: 1.625rem;
 }
 
 *,
@@ -107,6 +256,9 @@ body {
   background: var(--surface-canvas);
   color: var(--text-strong);
   font-family: var(--font-sans);
+  /* iOS body text: 17px with SF's slight negative tracking */
+  font-size: var(--type-body);
+  letter-spacing: -0.013em;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
@@ -133,15 +285,16 @@ main {
   overflow-x: clip;
 }
 
+/* iOS large titles: bold SF Pro Display in sentence case, tracked in */
 .font-display {
   font-family: var(--font-display);
-  font-weight: 800;
-  letter-spacing: 0;
-  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: -0.022em;
+  text-transform: none;
 }
 
 html {
-  scrollbar-color: #c3b49c var(--surface-canvas);
+  scrollbar-color: var(--scrollbar-thumb) var(--surface-canvas);
 }
 
 img {
@@ -169,28 +322,32 @@ button:focus-visible,
 }
 
 ::selection {
-  background: var(--accent-solid);
+  background: var(--accent-fill);
   color: var(--on-accent);
+}
+
+/* the small line over a title: an iOS subheadline in the tint color, in
+   sentence case (iOS 27 has no spaced-out capitals) */
+.eyebrow,
+.eyebrow-light {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.25rem;
+  text-transform: none;
 }
 
 .eyebrow {
   color: var(--accent-strong);
-  font-size: 0.75rem;
-  font-weight: 800;
-  letter-spacing: 0.16em;
-  line-height: 1.4;
-  text-transform: uppercase;
 }
 
 .eyebrow-light {
   color: var(--accent-solid);
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  line-height: 1.4;
-  text-transform: uppercase;
 }
 
+/* iOS 27 buttons: capsules with a 17px semibold label in sentence case.
+   Primary is the tinted (prominent) glass button, secondary is clear glass
+   and ghost is the gray-filled button. */
 .button-primary,
 .button-secondary,
 .button-ghost {
@@ -199,86 +356,82 @@ button:focus-visible,
   min-height: 3rem;
   align-items: center;
   justify-content: center;
-  border-radius: 999px;
-  padding: 0.75rem 1.5rem;
-  font-size: 0.9375rem;
-  font-weight: 800;
-  line-height: 1.25;
+  border-radius: var(--shape-full);
+  padding: 0.6875rem 1.375rem;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  letter-spacing: -0.012em;
+  line-height: 1.375rem;
+  text-transform: none;
   transition:
-    background-color 320ms var(--ease-cinematic),
-    border-color 320ms var(--ease-cinematic),
-    color 320ms var(--ease-cinematic),
-    box-shadow 320ms var(--ease-cinematic),
-    transform 320ms var(--ease-cinematic);
+    background-color 240ms var(--ease-cinematic),
+    border-color 240ms var(--ease-cinematic),
+    color 240ms var(--ease-cinematic),
+    box-shadow 240ms var(--ease-cinematic),
+    transform 360ms var(--ease-spring);
 }
 
 /* A button icon sits on the label's first line, so a label that wraps keeps
    its icon at the top instead of between the lines (MAN-P4-009). The box is as
-   tall as a one-line button's content (3rem less padding and border), and the
-   icon stays centered inside it. */
+   tall as a one-line button's content (3rem less padding and border: 1.5rem),
+   and the icon stays centered inside it. */
 .button-primary > svg,
 .button-secondary > svg,
 .button-ghost > svg {
   align-self: flex-start;
-  height: 1.375rem;
+  height: 1.5rem;
 }
 
 .button-primary {
-  border: 1px solid transparent;
-  background: var(--accent-solid);
-  box-shadow: var(--shadow-button);
+  border: 1px solid rgb(255 255 255 / 14%);
+  /* a light sheen across the top, like light on tinted glass */
+  background: linear-gradient(
+      180deg,
+      rgb(255 255 255 / 14%) 0%,
+      rgb(255 255 255 / 0%) 55%
+    )
+    var(--accent-fill);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 28%),
+    inset 0 -1px 0 rgb(0 0 0 / 12%),
+    var(--shadow-button);
   color: var(--on-accent);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
 }
 
 .button-primary:hover {
-  background: var(--accent-solid-hover);
-  transform: translateY(-2px);
+  background-color: var(--accent-fill-hover);
 }
 
 .button-secondary {
   border: 1px solid var(--glass-stroke);
-  background: var(--glass-fill);
-  box-shadow: var(--shadow-subtle);
-  backdrop-filter: blur(16px) saturate(1.2);
+  background: var(--glass-fill-strong);
+  box-shadow: var(--glass-rim), var(--glass-shadow);
+  backdrop-filter: blur(16px) saturate(1.6);
   color: var(--text-strong);
 }
 
 .button-secondary:hover {
-  border-color: var(--accent-solid);
-  background: rgb(255 255 255 / 80%);
+  background-color: var(--glass-hover);
   color: var(--accent-solid);
-  transform: translateY(-1px);
 }
 
 .button-ghost {
-  border: 1px solid var(--border-strong);
-  background: rgb(255 255 255 / 35%);
-  box-shadow: var(--shadow-subtle);
-  color: var(--text-strong);
-  backdrop-filter: blur(18px) saturate(1.35);
+  border: 1px solid transparent;
+  background: var(--fill-secondary);
+  color: var(--accent-solid);
 }
 
 .button-ghost:hover {
-  border-color: var(--accent-solid);
-  background: rgb(255 255 255 / 70%);
-  color: var(--accent-solid);
-  transform: translateY(-1px);
+  background-color: var(--fill-primary);
 }
 
-.button-primary:active,
-.button-secondary:active,
-.button-ghost:active {
-  transform: translateY(1px);
-}
-
+/* footer column headings: iOS subheadline, semibold */
 .footer-heading {
   color: var(--footer-strong);
-  font-size: 0.75rem;
-  font-weight: 800;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  text-transform: none;
 }
 
 .page-hero {
@@ -296,12 +449,12 @@ button:focus-visible,
   left: 0.75rem;
   z-index: 100;
   translate: 0 -200%;
-  border-radius: 999px;
-  background: var(--accent-solid);
+  border-radius: var(--shape-full);
+  background: var(--accent-fill);
   color: var(--on-accent);
-  padding: 0.75rem 1rem;
-  font-size: 0.875rem;
-  font-weight: 700;
+  padding: 0.75rem 1.125rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
   transition: translate 150ms ease;
 }
 
@@ -311,42 +464,249 @@ button:focus-visible,
 
 /* ——— Depth / glass ——— */
 
+/* Liquid Glass panel: brighter at the top, a rim of light on its edge */
 .glass-panel {
-  border: 1px solid var(--glass-stroke);
-  background: var(--glass-fill);
-  box-shadow: var(--shadow-subtle);
-  backdrop-filter: blur(22px) saturate(1.35);
-}
-
-.depth-card {
-  border: 1px solid var(--glass-stroke);
+  border: 1px solid var(--glass-panel-stroke);
   background: linear-gradient(
     180deg,
-    var(--surface-raised) 0%,
-    var(--surface-card) 100%
+    var(--glass-panel-top) 0%,
+    var(--glass-panel-bottom) 100%
   );
-  box-shadow: var(--shadow-card);
+  box-shadow: var(--glass-rim), var(--glass-shadow);
+  backdrop-filter: blur(24px) saturate(1.8);
+}
+
+/* iOS 27 cards: white glass with a bright rim and a soft, wide shadow. No
+   blur, so a grid of them stays cheap to scroll. */
+.depth-card,
+.surface-lift {
+  border: 1px solid var(--card-stroke);
+  background: var(--surface-card);
+  box-shadow: var(--glass-rim), var(--glass-shadow);
 }
 
 .surface-lift {
-  border: 1px solid var(--glass-stroke);
-  background: linear-gradient(
-    180deg,
-    var(--surface-raised) 0%,
-    var(--surface-card) 100%
-  );
-  box-shadow: var(--shadow-subtle);
   transition:
-    transform 480ms var(--ease-cinematic),
-    box-shadow 480ms var(--ease-cinematic),
-    border-color 480ms var(--ease-cinematic),
-    background-color 480ms var(--ease-cinematic);
+    box-shadow 320ms var(--ease-cinematic),
+    border-color 320ms var(--ease-cinematic),
+    background-color 320ms var(--ease-cinematic);
 }
 
 .surface-lift:hover {
-  transform: translateY(-4px);
-  border-color: rgb(255 255 255 / 95%);
-  box-shadow: var(--shadow-card);
+  background-color: var(--card-hover);
+  box-shadow: var(--glass-rim), var(--shadow-card);
+}
+
+/* ——— iOS 27 building blocks (ADR-023) ———
+   In Tailwind's components layer, so a utility on the same element (p-6,
+   mt-2, rounded-2xl) can still adjust them. */
+@layer components {
+  /* a card: white glass, a bright rim, a soft wide shadow, 26px corners */
+  .ios-card {
+    border: 1px solid var(--card-stroke);
+    border-radius: var(--shape-xl);
+    background: var(--surface-card);
+    box-shadow: var(--glass-rim), var(--glass-shadow);
+  }
+
+  /* a grouped area inside a card, such as summary rows or a note */
+  .ios-well {
+    border-radius: var(--shape-lg);
+    background: var(--fill-tertiary);
+  }
+
+  /* an inset grouped list: rows split by hairlines inside one card */
+  .ios-list {
+    overflow: hidden;
+    border: 1px solid var(--card-stroke);
+    border-radius: var(--shape-xl);
+    background: var(--surface-card);
+    box-shadow: var(--glass-rim), var(--glass-shadow);
+  }
+
+  .ios-list > * + * {
+    border-top: 1px solid var(--separator);
+  }
+
+  /* sheets and dialogs: opaque, since glass over a scrim turns grey */
+  .ios-sheet {
+    border: 1px solid var(--card-stroke);
+    border-radius: var(--shape-2xl);
+    background: var(--surface-overlay);
+    box-shadow: var(--glass-rim), var(--sheet-shadow);
+  }
+
+  /* sticky bars over the page (header, category bar, cart bar) */
+  .ios-glass-bar {
+    background: var(--bar-fill);
+    backdrop-filter: blur(24px) saturate(1.8);
+  }
+
+  /* footnote text: replaces the small spaced-out capitals labels */
+  .ios-caption {
+    color: var(--text-subtle);
+    font-size: var(--type-label);
+    font-weight: 500;
+    letter-spacing: -0.003em;
+    line-height: 1.125rem;
+  }
+
+  /* a form field's label */
+  .ios-label {
+    color: var(--text-strong);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.25rem;
+  }
+
+  /* text fields: rounded and filled, with 17px text so iPhones don't zoom in
+     on focus */
+  .ios-field {
+    display: block;
+    width: 100%;
+    min-height: 3rem;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--shape-md);
+    background: var(--surface-input);
+    padding: 0.75rem 1rem;
+    color: var(--text-strong);
+    font-size: var(--type-body);
+    letter-spacing: -0.013em;
+    line-height: 1.375rem;
+  }
+
+  .ios-field::placeholder {
+    color: var(--text-subtle);
+  }
+
+  .ios-field:focus-visible {
+    border-color: var(--accent-solid);
+    outline: none;
+    box-shadow: 0 0 0 4px var(--focus-ring);
+  }
+
+  .ios-field[aria-invalid="true"] {
+    border-color: var(--danger);
+  }
+
+  /* a round glass icon button, 44px like iOS's smallest touch target */
+  .ios-icon-button {
+    display: inline-flex;
+    width: 2.75rem;
+    height: 2.75rem;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--glass-stroke);
+    border-radius: var(--shape-full);
+    background: var(--glass-fill-strong);
+    box-shadow: var(--glass-rim), var(--glass-shadow);
+    color: var(--text-strong);
+    transition:
+      background-color 240ms var(--ease-cinematic),
+      color 240ms var(--ease-cinematic),
+      transform 360ms var(--ease-spring);
+  }
+
+  .ios-icon-button:hover {
+    background-color: var(--glass-hover);
+  }
+
+  .ios-icon-button:active {
+    transform: scale(0.92);
+    transition-duration: 120ms;
+  }
+
+  /* a capsule chip (filters, flavors, sizes); the chosen one takes the tint */
+  .ios-chip {
+    display: inline-flex;
+    min-height: 2.25rem;
+    align-items: center;
+    gap: 0.375rem;
+    border: 1px solid transparent;
+    border-radius: var(--shape-full);
+    background: var(--fill-secondary);
+    padding: 0.375rem 0.875rem;
+    color: var(--text-strong);
+    font-size: 0.9375rem;
+    font-weight: 500;
+    letter-spacing: -0.009em;
+    line-height: 1.25rem;
+  }
+
+  .ios-chip[aria-pressed="true"],
+  .ios-chip[aria-checked="true"],
+  .ios-chip[aria-current="true"],
+  .ios-chip[data-selected="true"] {
+    background: var(--accent-fill);
+    color: var(--on-accent);
+  }
+
+  /* a stepper: minus and plus in one gray capsule */
+  .ios-stepper {
+    display: inline-flex;
+    align-items: center;
+    border-radius: var(--shape-full);
+    background: var(--fill-secondary);
+    padding: 0.25rem;
+  }
+
+  .ios-stepper > button {
+    display: inline-flex;
+    width: 2.5rem;
+    height: 2.5rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--shape-full);
+    color: var(--text-strong);
+    transition: background-color 200ms var(--ease-cinematic);
+  }
+
+  .ios-stepper > button:hover:not(:disabled) {
+    background-color: var(--fill-hover);
+  }
+
+  .ios-stepper > button:disabled {
+    cursor: not-allowed;
+    opacity: 0.4;
+  }
+
+  /* an iOS switch: a 51 x 31 capsule whose white knob slides across when it
+     is on; put it inside the element with role="switch" */
+  .ios-switch {
+    position: relative;
+    display: inline-flex;
+    width: 3.1875rem;
+    height: 1.9375rem;
+    flex: none;
+    border-radius: var(--shape-full);
+    background: var(--fill-primary);
+    transition: background-color 240ms var(--ease-cinematic);
+  }
+
+  .ios-switch::after {
+    position: absolute;
+    top: 0.125rem;
+    left: 0.125rem;
+    width: 1.6875rem;
+    height: 1.6875rem;
+    border-radius: var(--shape-full);
+    background: #ffffff;
+    box-shadow:
+      0 3px 8px rgb(0 0 0 / 15%),
+      0 1px 1px rgb(0 0 0 / 16%);
+    content: "";
+    transition: translate 360ms var(--ease-spring);
+  }
+
+  [aria-checked="true"] > .ios-switch {
+    background: var(--accent-fill);
+  }
+
+  [aria-checked="true"] > .ios-switch::after {
+    translate: 1.25rem 0;
+  }
 }
 
 .nav-link {
@@ -625,7 +985,7 @@ button:focus-visible,
    stay calm behind the links. The header keeps
    one height: shrinking it on scroll shifted the page under the reader. */
 html[data-scrolled] .site-header {
-  background-color: rgb(246 238 225 / 84%);
+  background-color: var(--header-fill-scrolled);
   box-shadow: 0 10px 30px -18px var(--ink-shadow);
   border-bottom-color: var(--border-soft);
 }
@@ -655,18 +1015,19 @@ html[data-scrolled] .site-header {
 }
 
 /* Category tabs: the scroll spy switches the active tab instantly, so it
-   never trails the page */
+   never trails the page. The current one is filled with the tint, like a
+   selected iOS 27 capsule. */
 .menu-tab[aria-current="true"] {
-  border-color: var(--text-strong);
-  background: var(--text-strong);
+  border-color: transparent;
+  background: var(--accent-fill);
   color: var(--on-accent);
 }
 
-/* Button press */
+/* Button press: a quick squeeze that springs back, as iOS controls do */
 .button-primary:active,
 .button-secondary:active,
 .button-ghost:active {
-  transform: scale(0.97);
+  transform: scale(0.96);
   transition-duration: 120ms;
 }
 
@@ -684,7 +1045,7 @@ textarea {
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-  box-shadow: 0 0 0 4px rgb(31 107 69 / 20%);
+  box-shadow: 0 0 0 4px var(--focus-ring);
 }
 
 /* Skeleton loaders */

@@ -121,7 +121,7 @@ export default async function HomePage() {
                 className="aspect-[4/5] w-full object-cover"
               />
             </div>
-            <div className="absolute bottom-0 left-0 max-w-56 rounded-2xl bg-[var(--accent-strong)] p-5 text-[var(--on-accent)] shadow-xl">
+            <div className="absolute bottom-0 left-0 max-w-56 rounded-2xl bg-[var(--accent-strong-fill)] p-5 text-[var(--on-accent)] shadow-xl">
               <p className="text-xs font-extrabold tracking-[0.13em] uppercase">
                 Opened
               </p>

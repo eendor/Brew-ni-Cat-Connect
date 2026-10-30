@@ -641,7 +641,7 @@ export function CheckoutView({
                 <span
                   className={`flex size-7 items-center justify-center rounded-full text-xs ${
                     step === "details"
-                      ? "bg-[var(--accent-solid)] text-[var(--on-accent)]"
+                      ? "bg-[var(--accent-fill)] text-[var(--on-accent)]"
                       : "bg-[var(--surface-accent)] text-[var(--accent-solid)]"
                   }`}
                 >
@@ -669,7 +669,7 @@ export function CheckoutView({
                 <span
                   className={`flex size-7 items-center justify-center rounded-full text-xs ${
                     step === "review"
-                      ? "bg-[var(--accent-solid)] text-[var(--on-accent)]"
+                      ? "bg-[var(--accent-fill)] text-[var(--on-accent)]"
                       : step === "send"
                         ? "bg-[var(--surface-accent)] text-[var(--accent-solid)]"
                         : "bg-[var(--surface-warm)] text-[var(--text-subtle)]"
@@ -695,7 +695,7 @@ export function CheckoutView({
                 <span
                   className={`flex size-7 items-center justify-center rounded-full text-xs ${
                     step === "send"
-                      ? "bg-[var(--accent-solid)] text-[var(--on-accent)]"
+                      ? "bg-[var(--accent-fill)] text-[var(--on-accent)]"
                       : "bg-[var(--surface-warm)] text-[var(--text-subtle)]"
                   }`}
                 >

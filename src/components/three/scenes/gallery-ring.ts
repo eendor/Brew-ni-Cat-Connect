@@ -8,7 +8,9 @@ import {
   warmUp,
 } from "../engine/renderer";
 import { damp, type Quality } from "../engine/runtime";
-import { STUDIO } from "../engine/studio";
+import type { Theme } from "@/lib/theme/theme";
+
+import { currentTheme, followTheme, studioCanvas } from "../engine/studio";
 
 export type RingPhoto = Readonly<{ src: string; alt: string }>;
 
@@ -31,6 +33,12 @@ export function ringFocus(index: number, rot: number, seg: number) {
 }
 
 const f = (n: number) => n.toFixed(3);
+
+/** The photo well (--surface-warm) in each theme, as RGBA bytes. */
+const WELL = {
+  day: [236, 223, 203, 255],
+  night: [34, 30, 25, 255],
+} as const;
 
 /** Each print: cover-fit photo in a rounded panel, faded by its focus. */
 export const PRINT_FRAGMENT = /* glsl */ `
@@ -58,8 +66,8 @@ export const PRINT_FRAGMENT = /* glsl */ `
 /**
  * Curved, draggable ring of the real gallery photos. The camera sits inside
  * the ring; the photo facing it is in full color, the rest recede a little
- * into the cream wall (SIDE_PRINT). Frames are only drawn while something
- * changes.
+ * into the page's wall (SIDE_PRINT), cream by day and dark at night. Frames
+ * are only drawn while something changes.
  */
 export async function initGalleryRing(
   canvas: HTMLCanvasElement,
@@ -68,7 +76,6 @@ export async function initGalleryRing(
   onFocus: (index: number) => void,
 ) {
   const renderer = makeRenderer(canvas, quality);
-  renderer.setClearColor(STUDIO.canvas, 1);
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(48, 1, 0.1, 200);
   const N = photos.length;
@@ -83,14 +90,18 @@ export async function initGalleryRing(
 
   const materials: THREE.ShaderMaterial[] = [];
   // the warm photo well (--surface-warm) until a photo loads
-  const blank = new THREE.DataTexture(
-    new Uint8Array([236, 223, 203, 255]),
-    1,
-    1,
-  );
+  const well = new Uint8Array(4);
+  const blank = new THREE.DataTexture(well, 1, 1);
   blank.colorSpace = THREE.SRGBColorSpace;
-  blank.needsUpdate = true;
-  const wall = new THREE.Color(STUDIO.canvas);
+  const wall = new THREE.Color();
+  // the page's wall behind the ring and the empty well, in the page's theme
+  const paint = (theme: Theme) => {
+    wall.set(studioCanvas(theme));
+    renderer.setClearColor(wall, 1);
+    well.set(WELL[theme]);
+    blank.needsUpdate = true;
+  };
+  paint(currentTheme());
 
   const vertexShader = /* glsl */ `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`;
 
@@ -261,11 +272,17 @@ export async function initGalleryRing(
   await renderer.compileAsync(scene, camera);
   warmUp(renderer, scene, () => renderer.render(scene, camera));
 
+  // the toggle recolors the wall in place and draws one new frame
+  const stopTheme = followTheme((theme) => {
+    paint(theme);
+    dirty = true;
+  });
   return {
     frame,
     go,
     goTo,
     dispose() {
+      stopTheme();
       disposed = true;
       observer.disconnect();
       canvas.removeEventListener("pointerdown", onDown);

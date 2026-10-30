@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 
 import { EASE, gsap } from "@/components/motion/gsap";
 import { usePresence } from "@/components/motion/use-presence";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { ExternalLink } from "@/components/ui/external-link";
 import {
   ClockIcon,
@@ -212,6 +213,12 @@ export function MobileNavigation({ items }: MobileNavigationProps) {
               </NavLink>
             </li>
           )}
+          <li className="mt-1 border-t border-[var(--border-soft)] pt-2">
+            <ThemeToggle
+              variant="switch"
+              className="rounded-xl px-4 py-3 text-base font-bold text-[var(--text-strong)]"
+            />
+          </li>
         </ul>
         <div
           className="mx-auto mt-4 flex w-full max-w-[var(--shell-width)] flex-col gap-1 border-t border-[var(--border-soft)] px-4 pt-4 text-sm text-[var(--text-muted)]"

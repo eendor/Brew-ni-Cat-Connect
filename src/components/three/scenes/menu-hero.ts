@@ -1,6 +1,7 @@
 import * as THREE from "three";
 
 import { DRINKS_GLOW } from "@/components/menu/category-glow";
+import type { Theme } from "@/lib/theme/theme";
 
 import { makePost } from "../engine/post";
 import {
@@ -20,7 +21,7 @@ import {
   smooth,
   type Quality,
 } from "../engine/runtime";
-import { studioBackground } from "../engine/studio";
+import { currentTheme, followTheme, studioBackground } from "../engine/studio";
 import {
   beanGeometry,
   contactShadowTexture,
@@ -33,6 +34,7 @@ import {
 import {
   makeBackdrop,
   makeFloaters,
+  themeBackdrop,
   titleTexture,
   type Floaters,
 } from "./showcase";
@@ -60,7 +62,6 @@ export async function initMenuHero(
   renderer.transmissionResolutionScale = quality.mobile ? 0.5 : 1;
   const env = await studioEnvironment(renderer);
   const scene = new THREE.Scene();
-  scene.background = studioBackground(!lite);
   scene.environment = env;
   scene.environmentIntensity = 0.55;
   const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 100);
@@ -68,6 +69,12 @@ export async function initMenuHero(
 
   const { display } = fontFamilies();
   const { mesh: backdrop, material: backdropMaterial } = makeBackdrop();
+  // the page color behind everything, recolored when the theme changes
+  const recolor = (theme: Theme) => {
+    scene.background = studioBackground(!lite, theme);
+    themeBackdrop(backdropMaterial, theme);
+  };
+  recolor(currentTheme());
   scene.add(backdrop);
   const title = titleTexture("THE MENU", display);
   const u = backdropMaterial.uniforms;
@@ -332,10 +339,12 @@ export async function initMenuHero(
     post ? post.render(0, 0) : renderer.render(scene, camera),
   );
 
+  const stopTheme = followTheme(recolor);
   return {
     frame,
     state,
     dispose() {
+      stopTheme();
       observer.disconnect();
       post?.dispose();
       title.dispose();

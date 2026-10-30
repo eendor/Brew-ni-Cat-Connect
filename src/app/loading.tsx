@@ -9,7 +9,7 @@ export default function Loading() {
         aria-live="polite"
       >
         <span
-          className="size-3 animate-pulse rounded-full bg-[var(--accent-solid)]"
+          className="size-3 animate-pulse rounded-full bg-[var(--accent-fill)]"
           aria-hidden="true"
         />
         Loading Brew ni Cat…

@@ -462,7 +462,7 @@ export function MenuItemOrderDialog({
                     onClick={() => chooseFlavor(null)}
                     className={`inline-flex min-h-11 items-center rounded-full px-4 py-2 text-sm font-bold transition-all ${
                       selectedFlavor === null
-                        ? "bg-[var(--accent-solid)] text-[var(--on-accent)] shadow-xs"
+                        ? "bg-[var(--accent-fill)] text-[var(--on-accent)] shadow-xs"
                         : "border border-[var(--border-soft)] bg-[var(--surface-warm)] text-[var(--text-strong)] hover:bg-[var(--accent-soft)]"
                     }`}
                   >
@@ -485,7 +485,7 @@ export function MenuItemOrderDialog({
                       onClick={() => chooseFlavor(flavor)}
                       className={`inline-flex min-h-11 items-center rounded-full px-4 py-2 text-sm font-bold transition-all ${
                         isSelected
-                          ? "bg-[var(--accent-solid)] text-[var(--on-accent)] shadow-xs"
+                          ? "bg-[var(--accent-fill)] text-[var(--on-accent)] shadow-xs"
                           : "border border-[var(--border-soft)] bg-[var(--surface-warm)] text-[var(--text-strong)] hover:bg-[var(--accent-soft)]"
                       }`}
                     >

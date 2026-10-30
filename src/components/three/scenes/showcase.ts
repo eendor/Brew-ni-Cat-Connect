@@ -22,9 +22,13 @@ import {
   smooth,
   type Quality,
 } from "../engine/runtime";
+import type { Theme } from "@/lib/theme/theme";
+
 import {
-  STUDIO,
+  currentTheme,
+  followTheme,
   studioBackground,
+  studioCanvas,
   TITLE_FACE_GLSL,
   UNTONEMAP_GLSL,
 } from "../engine/studio";
@@ -44,7 +48,6 @@ import {
   makeTakoyaki,
 } from "./models";
 
-const BG = new THREE.Color(STUDIO.canvas);
 const STICKER = "/three/cat-sticker.png";
 
 /**
@@ -106,9 +109,10 @@ function uploadTextures(
 }
 
 /**
- * Back wall: the page's cream, washed with the item's color behind the
+ * Back wall: the page's color, washed with the item's color behind the
  * product, with the product name as a large letterform in a deep shade of
- * that color. Opaque, so the clear cup refracts it.
+ * that color by day and a light one at night. Opaque, so the clear cup
+ * refracts it.
  */
 export function makeBackdrop() {
   const material = new THREE.ShaderMaterial({
@@ -118,7 +122,8 @@ export function makeBackdrop() {
       uMix: { value: 0 },
       uReveal: { value: 0 },
       uGlow: { value: new THREE.Color("#7CFF6B") },
-      uBg: { value: BG.clone() },
+      uBg: { value: new THREE.Color(studioCanvas("day")) },
+      uNight: { value: 0 },
       uCenter: { value: new THREE.Vector2(0.5, 0.45) },
       uRect: { value: new THREE.Vector4(0.07, 0.4, 0.86, 0.27) },
       uAspect: { value: 1.6 },
@@ -129,7 +134,7 @@ export function makeBackdrop() {
       void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
     fragmentShader: /* glsl */ `
       uniform sampler2D uA, uB;
-      uniform float uMix, uReveal, uAspect, uGlowStr;
+      uniform float uMix, uReveal, uAspect, uGlowStr, uNight;
       uniform vec3 uGlow, uBg;
       uniform vec2 uCenter;
       uniform vec4 uRect;
@@ -164,9 +169,11 @@ export function makeBackdrop() {
         float halo = (sampleBlur(uA, tuv + vec2(0.0, ea * 0.3)) * (1.0 - ea)
           + sampleBlur(uB, tuv - vec2(0.0, (1.0 - eb) * 0.3)) * eb) * rv;
         col = mix(col, tint, clamp(halo * 0.6 * uGlowStr * edge, 0.0, 1.0));
-        // the name in a deep shade of the item's color that reads on the
-        // cream wall (TITLE_FACE)
-        col = mix(col, titleFace(uGlow, clamp(tuv.y, 0.0, 1.0)), t);
+        // the name in a shade of the item's color that reads on the wall:
+        // deep on the cream by day, light on the dark at night (TITLE_FACE)
+        float ty = clamp(tuv.y, 0.0, 1.0);
+        vec3 face = mix(titleFace(uGlow, ty), titleFaceNight(uGlow, ty), uNight);
+        col = mix(col, face, t);
         // designed in on-screen colors; tone mapping below turns them back
         gl_FragColor = vec4(untonemap(col), 1.0);
         #include <tonemapping_fragment>
@@ -176,6 +183,12 @@ export function makeBackdrop() {
   const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), material);
   mesh.renderOrder = -10;
   return { mesh, material };
+}
+
+/** Recolors a back wall from `makeBackdrop` for the day or night theme. */
+export function themeBackdrop(material: THREE.ShaderMaterial, theme: Theme) {
+  (material.uniforms.uBg!.value as THREE.Color).set(studioCanvas(theme));
+  material.uniforms.uNight!.value = theme === "night" ? 1 : 0;
 }
 
 export type Floaters = {
@@ -258,7 +271,6 @@ export async function initShowcase(
   envReady.catch(() => {});
   loadImage(STICKER).catch(() => {});
   const scene = new THREE.Scene();
-  scene.background = studioBackground(!lite);
   scene.environmentIntensity = 0.55;
   const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 100);
   camera.position.set(0, 0.2, 11);
@@ -266,6 +278,12 @@ export async function initShowcase(
   const { display } = fontFamilies();
   const { mesh: backdrop, material: backdropMaterial } = makeBackdrop();
   scene.add(backdrop);
+  // the page color behind everything, recolored when the theme changes
+  const recolor = (theme: Theme) => {
+    scene.background = studioBackground(!lite, theme);
+    themeBackdrop(backdropMaterial, theme);
+  };
+  recolor(currentTheme());
   const titles = items.map((item) =>
     titleTexture(item.name.toUpperCase(), display, lite ? 0.5 : 1),
   );
@@ -645,10 +663,12 @@ export async function initShowcase(
     post ? post.render(0, 0) : renderer.render(scene, camera),
   );
 
+  const stopTheme = followTheme(recolor);
   return {
     frame,
     state,
     dispose() {
+      stopTheme();
       observer.disconnect();
       post?.dispose();
       titles.forEach((t) => t.dispose());

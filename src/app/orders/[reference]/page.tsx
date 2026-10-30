@@ -101,7 +101,7 @@ export default function OrderConfirmationPage() {
           </p>
           <button
             onClick={() => window.location.reload()}
-            className="mt-6 px-6 py-2.5 bg-[var(--accent-solid)] text-[var(--on-accent)] font-semibold rounded-full hover:bg-[var(--accent-solid-hover)] transition"
+            className="mt-6 px-6 py-2.5 bg-[var(--accent-fill)] text-[var(--on-accent)] font-semibold rounded-full hover:bg-[var(--accent-fill-hover)] transition"
           >
             Try Again
           </button>
