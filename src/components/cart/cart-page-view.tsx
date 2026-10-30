@@ -5,12 +5,19 @@ import Link from "next/link";
 
 import { Container } from "@/components/ui/container";
 import { PageIntro } from "@/components/ui/page-intro";
-import { siteConfig } from "@/config/site";
 import { useCart } from "@/context/cart-context";
+import { useShopFacts } from "@/context/shop-facts-context";
 import { StateScene } from "@/components/three/state-scene";
 import { fetchPublicMenu } from "@/lib/menu/fetch-public-menu";
 import { findCatalogItem } from "@/lib/ordering/cart-pricing";
 import { formatPrice } from "@/lib/menu/format-price";
+import {
+  hoursSummary,
+  joinList,
+  localityLine,
+  streetLine,
+  takeoutPriceText,
+} from "@/lib/site-content/format";
 import { usePreparedSummary } from "@/lib/ordering/prepared-summary";
 import type { MenuCatalog } from "@/types/menu";
 import type { CartItem, FulfillmentType } from "@/types/ordering";
@@ -28,6 +35,7 @@ function findItemCategoryName(catalog: MenuCatalog, itemId: string): string {
 }
 
 export function CartPageView() {
+  const { address, hours, payments, takeoutBoxPrice } = useShopFacts();
   const {
     lines,
     fulfillment,
@@ -217,9 +225,8 @@ export function CartPageView() {
                           />
                         </div>
                         <p className="mt-4 text-xs text-[var(--text-muted)] leading-relaxed">
-                          Collect directly at {siteConfig.address.street},{" "}
-                          {siteConfig.address.locality}. Open Mon–Fri 11 AM – 9
-                          PM and Sun 1 PM – 9 PM. Closed Saturday.
+                          Collect directly at {streetLine(address)},{" "}
+                          {localityLine(address)}. {hoursSummary(hours)}
                         </p>
                       </label>
 
@@ -253,9 +260,9 @@ export function CartPageView() {
                           />
                         </div>
                         <p className="mt-4 text-xs text-[var(--text-muted)] leading-relaxed">
-                          Send your order summary to a local delivery service in
-                          Kabacan. The rider orders it at the shop for you and
-                          brings it to your address.
+                          Send your order summary to a local delivery service in{" "}
+                          {address.town}. The rider orders it at the shop for
+                          you and brings it to your address.
                         </p>
                       </label>
                     </div>
@@ -313,8 +320,8 @@ export function CartPageView() {
                       <span>Takeout box</span>
                       <span className="text-right text-xs font-semibold text-[var(--text-subtle)]">
                         {fulfillment === "pickup"
-                          ? `${siteConfig.operations.takeoutBoxPrice}, paid at the shop · not in subtotal`
-                          : `${siteConfig.operations.takeoutBoxPrice} · not in subtotal`}
+                          ? `${takeoutPriceText(takeoutBoxPrice)}, paid at the shop · not in subtotal`
+                          : `${takeoutPriceText(takeoutBoxPrice)} · not in subtotal`}
                       </span>
                     </div>
 
@@ -338,7 +345,7 @@ export function CartPageView() {
                       Payment Policy
                     </strong>
                     {fulfillment === "pickup"
-                      ? "Payment is settled directly with the shop via Cash or GCash when you pick up your order."
+                      ? `Payment is settled directly with the shop via ${joinList(payments.methods, "or")} when you pick up your order.`
                       : "Payment and the delivery fee are agreed with your rider."}{" "}
                     No online payment is charged on this website.
                   </div>

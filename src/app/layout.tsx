@@ -10,9 +10,15 @@ import { MotionDirector } from "@/components/motion/motion-director";
 import { RouteCurtain } from "@/components/motion/route-curtain";
 import { ScrollMotion } from "@/components/motion/scroll-motion";
 import { CartFxLayer } from "@/components/three/layers";
+import { SiteNotice } from "@/components/layout/site-notice";
 import { siteConfig } from "@/config/site";
 import { AuthProvider } from "@/context/auth-context";
 import { CartProvider } from "@/context/cart-context";
+import { ShopFactsProvider } from "@/context/shop-facts-context";
+import { getMenuFacts } from "@/lib/menu/load-menu-facts";
+import { townLine } from "@/lib/site-content/format";
+import { getSiteContent } from "@/lib/site-content/load";
+import { SHOP_SECTIONS, type ShopFacts } from "@/lib/site-content/types";
 
 import "./globals.css";
 
@@ -33,26 +39,43 @@ const body = Archivo({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: {
-    default: "Brew ni Cat Coffee Shop | Kabacan, Cotabato",
-    template: `%s | ${siteConfig.shortName}`,
-  },
-  description: siteConfig.description,
-  applicationName: siteConfig.productName,
-  keywords: ["Brew ni Cat", "coffee shop", "Kabacan", "Cotabato", "café menu"],
-  icons: {
-    icon: "/images/branding/brew-ni-cat-logo.png",
-    apple: "/images/branding/brew-ni-cat-logo.png",
-  },
-  openGraph: {
-    type: "website",
-    locale: "en_PH",
-    title: "Brew ni Cat Coffee Shop",
-    description: siteConfig.description,
-    siteName: siteConfig.name,
-  },
-};
+/**
+ * Pages are rebuilt in the background at most once a minute, so the owner's
+ * content and price changes show without a redeploy (FR-085, FR-086).
+ */
+export const revalidate = 60;
+
+export async function generateMetadata(): Promise<Metadata> {
+  const { address } = await getSiteContent();
+  const place = townLine(address);
+  const description = `Discover ${siteConfig.name} in ${place}, browse the current menu, and find contact and visit information.`;
+  return {
+    title: {
+      default: `${siteConfig.name} | ${place}`,
+      template: `%s | ${siteConfig.shortName}`,
+    },
+    description,
+    applicationName: siteConfig.productName,
+    keywords: [
+      siteConfig.shortName,
+      "coffee shop",
+      address.town,
+      address.province,
+      "café menu",
+    ],
+    icons: {
+      icon: "/images/branding/brew-ni-cat-logo.png",
+      apple: "/images/branding/brew-ni-cat-logo.png",
+    },
+    openGraph: {
+      type: "website",
+      locale: "en_PH",
+      title: siteConfig.name,
+      description,
+      siteName: siteConfig.name,
+    },
+  };
+}
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -71,7 +94,15 @@ type RootLayoutProps = Readonly<{
  */
 const MOTION_FLAG = `try{if(new URLSearchParams(location.search).has("motion")||!matchMedia("(prefers-reduced-motion: reduce)").matches)document.documentElement.setAttribute("data-motion","on")}catch(e){}`;
 
-export default function RootLayout({ children }: RootLayoutProps) {
+export default async function RootLayout({ children }: RootLayoutProps) {
+  const [content, menu] = await Promise.all([getSiteContent(), getMenuFacts()]);
+  const facts = {
+    ...Object.fromEntries(
+      SHOP_SECTIONS.map((section) => [section, content[section]]),
+    ),
+    takeoutBoxPrice: menu.takeoutBoxPrice,
+  } as ShopFacts;
+
   return (
     <html
       lang="en"
@@ -89,23 +120,26 @@ export default function RootLayout({ children }: RootLayoutProps) {
         <a className="skip-link" href="#main-content">
           Skip to main content
         </a>
-        <AuthProvider>
-          <CartProvider>
-            <div className="flex min-h-dvh flex-col">
-              <SiteHeader />
-              <main id="main-content" className="flex-1" tabIndex={-1}>
-                {children}
-              </main>
-              <SiteFooter />
-            </div>
-            <CartDrawer />
-            <CartUndoToast />
-            <ScrollMotion />
-            <MotionDirector />
-            <RouteCurtain />
-            <CartFxLayer />
-          </CartProvider>
-        </AuthProvider>
+        <ShopFactsProvider facts={facts}>
+          <AuthProvider>
+            <CartProvider>
+              <div className="flex min-h-dvh flex-col">
+                <SiteNotice text={content.notice.text} />
+                <SiteHeader />
+                <main id="main-content" className="flex-1" tabIndex={-1}>
+                  {children}
+                </main>
+                <SiteFooter content={content} />
+              </div>
+              <CartDrawer />
+              <CartUndoToast />
+              <ScrollMotion />
+              <MotionDirector />
+              <RouteCurtain />
+              <CartFxLayer />
+            </CartProvider>
+          </AuthProvider>
+        </ShopFactsProvider>
       </body>
     </html>
   );

@@ -6,8 +6,9 @@ import Link from "next/link";
 import { useCallback, useRef, useState, type CSSProperties } from "react";
 
 import { useCurtainHold } from "@/components/motion/use-curtain-hold";
+import { formatPrice } from "@/lib/menu/format-price";
 
-import { showcaseItems } from "./showcase-data";
+import { showcaseItems, type ShowcasePrices } from "./showcase-data";
 import { useThreeEnabled } from "./use-three-enabled";
 
 const ShowcaseCanvas = dynamic(() => import("./canvas/showcase-canvas"), {
@@ -20,9 +21,26 @@ const SECTION_ID = "home-showcase";
  * Home hero. Server and first client render are the static version: the
  * real headline, CTAs and the five featured items as photo cards. With
  * WebGL and normal motion, it becomes a pinned 3D showcase that turns
- * through the same five items as you scroll.
+ * through the same five items as you scroll. The words and prices come from
+ * the shop's saved content and live menu (FR-086); a price the menu can't
+ * give is left out.
  */
-export function HomeShowcase() {
+type HomeShowcaseProps = Readonly<{
+  eyebrow: string;
+  title: string;
+  lede: string;
+  prices: ShowcasePrices;
+}>;
+
+const fromPrice = (price: number | null) =>
+  price === null ? null : `From ${formatPrice(price)}`;
+
+export function HomeShowcase({
+  eyebrow,
+  title,
+  lede,
+  prices,
+}: HomeShowcaseProps) {
   const enabled = useThreeEnabled();
   const [failed, setFailed] = useState(false);
   const [ready, setReady] = useState(false);
@@ -86,14 +104,13 @@ export function HomeShowcase() {
         <div className="showcase__hud">
           <div className="showcase__intro">
             <p className="eyebrow-light" data-rise="">
-              Kabacan, Cotabato · Est. June 2026
+              {eyebrow}
             </p>
             <h1 id="home-heading" className="showcase__title" data-split="">
-              Coffee, comfort, and a little cat energy.
+              {title}
             </h1>
             <p className="showcase__lede" data-rise="">
-              Settle in at Brew ni Cat for drinks, snacks, noodles, combos, and
-              cozy community moments in the heart of Kabacan.
+              {lede}
             </p>
             <div
               className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center"
@@ -116,10 +133,14 @@ export function HomeShowcase() {
                 aria-live="polite"
               >
                 <p className="showcase__nick">{current.nickname}</p>
-                <p className="showcase__price">
-                  <span className="sr-only">{current.name}, </span>
-                  {current.price}
-                </p>
+                {fromPrice(prices[current.id]) ? (
+                  <p className="showcase__price">
+                    <span className="sr-only">{current.name}, </span>
+                    {fromPrice(prices[current.id])}
+                  </p>
+                ) : (
+                  <p className="sr-only">{current.name}</p>
+                )}
               </div>
               <ol
                 className="showcase__ticks"
@@ -162,7 +183,11 @@ export function HomeShowcase() {
                 <div>
                   <p className="showcase__static-name">{item.name}</p>
                   <p className="showcase__static-nick">{item.nickname}</p>
-                  <p className="showcase__static-price">{item.price}</p>
+                  {fromPrice(prices[item.id]) ? (
+                    <p className="showcase__static-price">
+                      {fromPrice(prices[item.id])}
+                    </p>
+                  ) : null}
                 </div>
               </li>
             ))}

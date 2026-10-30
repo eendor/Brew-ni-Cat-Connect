@@ -9,6 +9,8 @@ import {
   setCurtainSettled,
   whenCurtainUnheld,
 } from "./curtain-state";
+import { useShopFacts } from "@/context/shop-facts-context";
+
 import { EASE, gsap, motionAllowed } from "./gsap";
 
 /** The title card shown while each page loads. */
@@ -67,6 +69,7 @@ function internalTarget(event: MouseEvent): URL | null {
  * plain navigation.
  */
 export function RouteCurtain() {
+  const { address } = useShopFacts();
   const router = useRouter();
   const pathname = usePathname();
   const curtainRef = useRef<HTMLDivElement | null>(null);
@@ -179,7 +182,9 @@ export function RouteCurtain() {
           <p ref={titleRef} className="route-curtain__title" />
         </div>
         <span ref={lineRef} className="route-curtain__line" />
-        <p className="route-curtain__place">Abellera St · Kabacan</p>
+        <p className="route-curtain__place">
+          {address.street} · {address.town}
+        </p>
       </div>
     </div>
   );

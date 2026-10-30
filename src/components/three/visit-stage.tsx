@@ -44,9 +44,7 @@ export function VisitStage({
           <b>OPEN</b>
           <span>{facts.hours}</span>
           <small>{facts.days}</small>
-          <small>
-            {facts.otherDay} {facts.otherHours}
-          </small>
+          {facts.others ? <small>{facts.others}</small> : null}
         </div>
       )}
       {three && ready ? (

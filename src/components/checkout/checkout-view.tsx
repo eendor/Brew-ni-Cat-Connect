@@ -19,6 +19,7 @@ import { RiderList } from "@/components/ui/rider-list";
 import { StateScene } from "@/components/three/state-scene";
 import { siteConfig } from "@/config/site";
 import { useCart } from "@/context/cart-context";
+import { useShopFacts } from "@/context/shop-facts-context";
 import {
   usePreparedSummary,
   type CustomerDetails,
@@ -32,6 +33,16 @@ import { getAddItemFailureMessage } from "@/lib/ordering/cart-reducer";
 import { fetchPublicMenu } from "@/lib/menu/fetch-public-menu";
 import { formatOptionName } from "@/lib/menu/format-name";
 import { formatPrice } from "@/lib/menu/format-price";
+import {
+  hoursNotice,
+  joinList,
+  localityLine,
+  phoneHref,
+  streetLine,
+  takeoutBoxText,
+  takeoutPriceText,
+} from "@/lib/site-content/format";
+import type { ShopFacts } from "@/lib/site-content/types";
 import { isOnlineOrderingEnabled } from "@/lib/orders/online-ordering";
 import { placeOrder, type PlaceOrder } from "@/lib/orders/order-client";
 import { buildOrderPath } from "@/lib/orders/order-link";
@@ -43,7 +54,7 @@ import {
   MAX_ORDER_NOTES_LENGTH,
   placeOrderFailure,
 } from "@/lib/orders/place-order";
-import type { PlaceOrderResult } from "@/lib/orders/types";
+import { PAYMENT_PREFERENCES, type PlaceOrderResult } from "@/lib/orders/types";
 import type { MenuCatalog } from "@/types/menu";
 import type { CartItem, FulfillmentType } from "@/types/ordering";
 
@@ -63,8 +74,12 @@ function orderSignature(
 
 type CopyState = "idle" | "copied" | "failed";
 
-export function formatOrderSummaryText(summary: PreparedOrderSummary): string {
-  const shop = siteConfig.address;
+export function formatOrderSummaryText(
+  summary: PreparedOrderSummary,
+  facts: Pick<ShopFacts, "address" | "takeoutBoxPrice">,
+): string {
+  const shop = facts.address;
+  const place = `${streetLine(shop)}, ${localityLine(shop)}`;
   const isRiderDelivery = summary.fulfillment === "external-rider";
   const deliverTo = summary.customer.address?.trim();
 
@@ -73,10 +88,10 @@ export function formatOrderSummaryText(summary: PreparedOrderSummary): string {
   const fulfillmentLines = isRiderDelivery
     ? [
         `Fulfillment: Rider delivery`,
-        `Order and pick up at: ${siteConfig.shortName}, ${shop.street}, ${shop.locality} (${shop.landmark})`,
+        `Order and pick up at: ${siteConfig.shortName}, ${place}${shop.landmark ? ` (${shop.landmark})` : ""}`,
         deliverTo ? `Deliver to: ${deliverTo}` : null,
       ]
-    : [`Fulfillment: Pickup at Shop (${shop.street}, ${shop.locality})`];
+    : [`Fulfillment: Pickup at Shop (${place})`];
 
   const itemsText = summary.lines
     .map(
@@ -86,7 +101,7 @@ export function formatOrderSummaryText(summary: PreparedOrderSummary): string {
     .join("\n");
 
   return [
-    `Brew ni Cat Coffee Shop — Order Summary`,
+    `${siteConfig.name} — Order Summary`,
     `Customer: ${summary.customer.name}`,
     `Phone: ${summary.customer.phone}`,
     ...fulfillmentLines,
@@ -97,7 +112,7 @@ export function formatOrderSummaryText(summary: PreparedOrderSummary): string {
     isRiderDelivery
       ? `Payment and delivery fee: agreed with the rider`
       : `Payment preference: ${summary.customer.paymentPreference} at counter`,
-    `Takeout box: ${siteConfig.operations.takeoutBoxPrice}, not included in the subtotal (the shop confirms it).`,
+    `Takeout box: ${takeoutPriceText(facts.takeoutBoxPrice)}, not included in the subtotal (the shop confirms it).`,
   ]
     .filter(Boolean)
     .join("\n");
@@ -132,6 +147,16 @@ export function CheckoutView({
   submitOrder = placeOrder,
   openOrder,
 }: CheckoutViewProps) {
+  const facts = useShopFacts();
+  const { address, contact, hours, payments, social, takeoutBoxPrice } = facts;
+  const takeoutBox = takeoutBoxText(takeoutBoxPrice);
+  const paymentList = joinList(payments.methods, "or");
+  // Online orders take the methods the order system knows (Cash, GCash)
+  // that the shop still accepts.
+  const accepted = PAYMENT_PREFERENCES.filter((method) =>
+    payments.methods.includes(method),
+  );
+  const paymentChoices = accepted.length > 0 ? accepted : PAYMENT_PREFERENCES;
   const router = useRouter();
   const {
     lines,
@@ -173,7 +198,7 @@ export function CheckoutView({
     phone: "",
     address: "",
     notes: "",
-    paymentPreference: "Cash",
+    paymentPreference: paymentChoices[0],
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [revalidationWarnings, setRevalidationWarnings] = useState<
@@ -346,7 +371,9 @@ export function CheckoutView({
       if (typeof navigator.clipboard?.writeText !== "function") {
         throw new Error("Clipboard unavailable");
       }
-      await navigator.clipboard.writeText(formatOrderSummaryText(summary));
+      await navigator.clipboard.writeText(
+        formatOrderSummaryText(summary, facts),
+      );
     } catch {
       // nothing was copied, so the text is selected for a manual copy
       selectSummaryText();
@@ -732,10 +759,11 @@ export function CheckoutView({
                         />
                       </div>
                       <p className="mt-4 text-xs text-[var(--text-muted)] leading-relaxed">
-                        Pick up directly at {siteConfig.address.street},{" "}
-                        {siteConfig.address.locality} (
-                        {siteConfig.address.landmark}).{" "}
-                        {siteConfig.operations.hoursNotice}
+                        Pick up directly at {streetLine(address)},{" "}
+                        {localityLine(address)}
+                        {address.landmark
+                          ? ` (${address.landmark})`
+                          : null}. {hoursNotice(hours)}
                       </p>
                     </label>
 
@@ -768,9 +796,9 @@ export function CheckoutView({
                         />
                       </div>
                       <p className="mt-4 text-xs text-[var(--text-muted)] leading-relaxed">
-                        Send your order summary to a local delivery service in
-                        Kabacan. The rider orders it at the shop for you and
-                        brings it to your address.
+                        Send your order summary to a local delivery service in{" "}
+                        {address.town}. The rider orders it at the shop for you
+                        and brings it to your address.
                       </p>
                     </label>
                   </div>
@@ -787,9 +815,12 @@ export function CheckoutView({
                           listed there.
                         </li>
                         <li>
-                          The rider orders at Brew ni Cat, picks it up at{" "}
-                          {siteConfig.address.street} (
-                          {siteConfig.address.landmark}) and delivers it to you.
+                          The rider orders at {siteConfig.shortName}, picks it
+                          up at {address.street}
+                          {address.landmark
+                            ? ` (${address.landmark})`
+                            : null}{" "}
+                          and delivers it to you.
                         </li>
                       </ol>
                       <p className="border-t border-[var(--notice-border)] pt-2 text-[var(--notice-text)]">
@@ -958,38 +989,29 @@ export function CheckoutView({
                             Payment Preference at Shop
                           </legend>
                           <div className="mt-1 flex flex-wrap gap-x-6">
-                            <label className="flex min-h-11 items-center gap-2 cursor-pointer text-sm font-semibold text-[var(--text-strong)]">
-                              <input
-                                type="radio"
-                                name="payment-preference"
-                                value="Cash"
-                                checked={customer.paymentPreference === "Cash"}
-                                onChange={() =>
-                                  setCustomer((prev) => ({
-                                    ...prev,
-                                    paymentPreference: "Cash",
-                                  }))
-                                }
-                                className="size-4 accent-[var(--accent-solid)]"
-                              />
-                              Cash at counter
-                            </label>
-                            <label className="flex min-h-11 items-center gap-2 cursor-pointer text-sm font-semibold text-[var(--text-strong)]">
-                              <input
-                                type="radio"
-                                name="payment-preference"
-                                value="GCash"
-                                checked={customer.paymentPreference === "GCash"}
-                                onChange={() =>
-                                  setCustomer((prev) => ({
-                                    ...prev,
-                                    paymentPreference: "GCash",
-                                  }))
-                                }
-                                className="size-4 accent-[var(--accent-solid)]"
-                              />
-                              GCash at counter
-                            </label>
+                            {paymentChoices.map((method) => (
+                              <label
+                                key={method}
+                                className="flex min-h-11 items-center gap-2 cursor-pointer text-sm font-semibold text-[var(--text-strong)]"
+                              >
+                                <input
+                                  type="radio"
+                                  name="payment-preference"
+                                  value={method}
+                                  checked={
+                                    customer.paymentPreference === method
+                                  }
+                                  onChange={() =>
+                                    setCustomer((prev) => ({
+                                      ...prev,
+                                      paymentPreference: method,
+                                    }))
+                                  }
+                                  className="size-4 accent-[var(--accent-solid)]"
+                                />
+                                {method} at counter
+                              </label>
+                            ))}
                           </div>
                         </fieldset>
                       </div>
@@ -1069,8 +1091,8 @@ export function CheckoutView({
                       <span>Takeout box</span>
                       <span className="text-right text-xs font-semibold text-[var(--text-subtle)]">
                         {isRiderDelivery
-                          ? `${siteConfig.operations.takeoutBoxPrice} · not in subtotal`
-                          : `${siteConfig.operations.takeoutBoxPrice}, paid at the shop · not in subtotal`}
+                          ? `${takeoutPriceText(takeoutBoxPrice)} · not in subtotal`
+                          : `${takeoutPriceText(takeoutBoxPrice)}, paid at the shop · not in subtotal`}
                       </span>
                     </div>
 
@@ -1095,12 +1117,11 @@ export function CheckoutView({
                     <strong className="block font-bold text-[var(--text-strong)]">
                       Shop Hours & Takeout Note
                     </strong>
-                    {siteConfig.operations.hoursNotice} The{" "}
-                    {siteConfig.operations.takeoutFee} is not included in the
+                    {hoursNotice(hours)} The {takeoutBox} is not included in the
                     subtotal.{" "}
                     {isRiderDelivery
                       ? "The shop confirms it when your rider orders. Delivery fee and payment are agreed with your rider."
-                      : "The shop confirms it when you order. Payment is settled via Cash or GCash directly with the shop."}
+                      : `The shop confirms it when you order. Payment is settled via ${paymentList} directly with the shop.`}
                   </div>
 
                   <button
@@ -1202,8 +1223,8 @@ export function CheckoutView({
                         </span>
                         <span className="mt-0.5 block text-xs text-[var(--text-muted)]">
                           {isRiderDelivery
-                            ? `A local rider orders at ${siteConfig.address.street} and delivers`
-                            : `${siteConfig.address.street}, ${siteConfig.address.locality} (${siteConfig.address.landmark})`}
+                            ? `A local rider orders at ${address.street} and delivers`
+                            : `${streetLine(address)}, ${localityLine(address)}${address.landmark ? ` (${address.landmark})` : ""}`}
                         </span>
                       </dd>
                     </div>
@@ -1279,8 +1300,8 @@ export function CheckoutView({
                       <span>Takeout box</span>
                       <span className="text-right text-xs font-semibold text-[var(--text-subtle)]">
                         {isRiderDelivery
-                          ? `${siteConfig.operations.takeoutBoxPrice} · not in subtotal`
-                          : `${siteConfig.operations.takeoutBoxPrice}, paid at the shop · not in subtotal`}
+                          ? `${takeoutPriceText(takeoutBoxPrice)} · not in subtotal`
+                          : `${takeoutPriceText(takeoutBoxPrice)}, paid at the shop · not in subtotal`}
                       </span>
                     </div>
 
@@ -1473,7 +1494,7 @@ export function CheckoutView({
                     ref={summaryTextRef}
                     className="whitespace-pre-wrap font-mono text-xs sm:text-sm text-[var(--text-strong)] leading-relaxed select-all [overflow-wrap:anywhere]"
                   >
-                    {formatOrderSummaryText(preparedSummary)}
+                    {formatOrderSummaryText(preparedSummary, facts)}
                   </pre>
                 </div>
 
@@ -1487,7 +1508,7 @@ export function CheckoutView({
                       Open a rider&apos;s Facebook page and paste your copied
                       order summary into Messenger:
                     </p>
-                    <RiderList />
+                    <RiderList partners={facts.riders.partners} />
                   </div>
                 ) : (
                   <div className="mt-6 p-4 sm:p-6 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-card)] text-left space-y-4">
@@ -1499,19 +1520,21 @@ export function CheckoutView({
                       read it over the phone:
                     </p>
                     <div className="flex flex-col sm:flex-row gap-3">
-                      <ExternalLink
-                        href={siteConfig.social.facebook}
-                        className="button-primary flex-1 text-center"
-                      >
-                        <FacebookIcon className="size-4.5 shrink-0" />
-                        Message on Facebook
-                      </ExternalLink>
+                      {social.facebook ? (
+                        <ExternalLink
+                          href={social.facebook}
+                          className="button-primary flex-1 text-center"
+                        >
+                          <FacebookIcon className="size-4.5 shrink-0" />
+                          Message on Facebook
+                        </ExternalLink>
+                      ) : null}
                       <a
-                        href={siteConfig.contact.phoneHref}
+                        href={phoneHref(contact.phone)}
                         className="button-secondary flex-1 text-center"
                       >
                         <PhoneIcon className="size-4.5 shrink-0" />
-                        Call or Text {siteConfig.contact.phone}
+                        Call or Text {contact.phone}
                       </a>
                     </div>
                   </div>
@@ -1530,15 +1553,14 @@ export function CheckoutView({
                       <ol className="list-decimal pl-5 space-y-2 text-[var(--text-muted)]">
                         <li>
                           Send your order summary to Brew ni Cat via Facebook or
-                          phone ({siteConfig.contact.phone}).
+                          phone ({contact.phone}).
                         </li>
                         <li>
-                          Head to Brew ni Cat at{" "}
+                          Head to {siteConfig.shortName} at{" "}
                           <strong className="text-[var(--text-strong)]">
-                            {siteConfig.address.street},{" "}
-                            {siteConfig.address.locality}
-                          </strong>{" "}
-                          ({siteConfig.address.landmark}).
+                            {streetLine(address)}, {localityLine(address)}
+                          </strong>
+                          {address.landmark ? ` (${address.landmark})` : null}.
                         </li>
                         <li>
                           Pay{" "}
@@ -1546,17 +1568,16 @@ export function CheckoutView({
                             {formatPrice(preparedSummary.subtotal)}
                           </strong>{" "}
                           via {preparedSummary.customer.paymentPreference} at
-                          the counter. The {siteConfig.operations.takeoutFee} is
-                          not included in that amount; the shop confirms it when
-                          you order.
+                          the counter. The {takeoutBox} is not included in that
+                          amount; the shop confirms it when you order.
                         </li>
                       </ol>
-                      {preparedSummary.customer.paymentPreference ===
-                        "GCash" && (
+                      {preparedSummary.customer.paymentPreference === "GCash" &&
+                      payments.qrCode ? (
                         <figure className="mt-4 flex flex-col items-center gap-2 rounded-2xl bg-white p-4 text-center">
                           <Image
-                            src="/images/payment/gcash-qr.svg"
-                            alt="Brew ni Cat GCash and InstaPay QR code"
+                            src={payments.qrCode.src}
+                            alt={payments.qrCode.alt}
                             width={240}
                             height={240}
                             unoptimized
@@ -1567,7 +1588,7 @@ export function CheckoutView({
                             shop confirms your order total.
                           </figcaption>
                         </figure>
-                      )}
+                      ) : null}
                     </>
                   ) : (
                     <ol className="list-decimal pl-5 space-y-2 text-[var(--text-muted)]">
@@ -1576,12 +1597,12 @@ export function CheckoutView({
                         Facebook.
                       </li>
                       <li>
-                        The rider orders it at Brew ni Cat,{" "}
+                        The rider orders it at {siteConfig.shortName},{" "}
                         <strong className="text-[var(--text-strong)]">
-                          {siteConfig.address.street},{" "}
-                          {siteConfig.address.locality}
-                        </strong>{" "}
-                        ({siteConfig.address.landmark}), and picks it up.
+                          {streetLine(address)}, {localityLine(address)}
+                        </strong>
+                        {address.landmark ? ` (${address.landmark})` : null},
+                        and picks it up.
                       </li>
                       <li>
                         The rider delivers it to{" "}
@@ -1590,8 +1611,7 @@ export function CheckoutView({
                             "your address"}
                         </strong>
                         . Delivery fee and payment are agreed with the rider;
-                        the {siteConfig.operations.takeoutFee} is not included
-                        in the{" "}
+                        the {takeoutBox} is not included in the{" "}
                         <strong className="text-[var(--text-strong)]">
                           {formatPrice(preparedSummary.subtotal)}
                         </strong>{" "}
@@ -1601,7 +1621,7 @@ export function CheckoutView({
                   )}
 
                   <p className="border-t border-[var(--border-strong)]/40 pt-3 text-xs text-[var(--text-subtle)]">
-                    {siteConfig.operations.hoursNotice}
+                    {hoursNotice(hours)}
                   </p>
                 </div>
 

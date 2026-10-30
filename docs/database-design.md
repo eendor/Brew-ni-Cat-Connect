@@ -269,3 +269,57 @@ Both are in the `private` schema with RLS on, no policies and no API grants.
 ### 9.6 Undo
 
 The undo drops the function, its two helpers and the two tables, and takes `online_orders` out of the publication. The orders, their history and the POS sales stay; each sale still names its order in `table_label`. Applying the migration again carries on after the highest `online` sale id.
+
+## 10. Live Website Content (2026-10-30)
+
+Migration `20261030120000_site_content.sql` (undo: `supabase/rollbacks/20261030120000_site_content.sql`) moves the shop's facts out of the website's code (FR-085, FR-086, FR-087, ADR-017). It is not applied to the live database yet (§8.7). Until it is, the website shows its built-in copy, which is the same content the migration saves.
+
+### 10.1 `public.site_content`
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `section` | `text`, primary key | One of the nine sections below |
+| `content` | `jsonb`, not null | The section's content, shaped as in `src/lib/site-content/types.ts` |
+| `updated_at` | `timestamptz`, not null | Set on every save |
+
+| Section | What it holds |
+| --- | --- |
+| `hours` | Each day's opening and closing time (`"HH:MM"`, 24-hour) or `null` for closed, and a note shown under the hours |
+| `contact` | Phone number and email |
+| `address` | Street, area, town, province, postal code, country, landmark and map link |
+| `payments` | The accepted payment methods (1 to 6) and an optional GCash QR picture |
+| `notice` | One line shown above every page; empty hides it |
+| `social` | Facebook, Facebook photos and TikTok links; an empty link is hidden |
+| `riders` | Up to 8 delivery partners, each with a name, a Facebook link and a logo |
+| `about` | Opening date, page titles and text, the story, photos, menu summary, footer text and cat rules |
+| `gallery` | 1 to 80 photos, each with optional `featured`, `landscape` and `people` flags |
+
+Prices are not in this table. The home showcase "From" prices and the takeout box fee come from the menu (`categories`, `items`), which the POS already edits (FR-084).
+
+### 10.2 Access
+
+- RLS is on. `anon` and `authenticated` can read every row: the website reads with the publishable key (FR-037).
+- Only staff (`private.is_staff()`) can change a row, and only its `content` column (column grant). Nobody can add or delete a section, rename one or set `updated_at` through the API; the nine rows come from the migration.
+- "Only the owner" in FR-085 means the POS store account for now, since that is the staff account. An owner flag can narrow the policy later (security and privacy §14).
+
+### 10.3 Rules
+
+`private.check_site_content()` runs before each insert and update. It refuses content the website can't show with SQLSTATE 23514: a missing or unknown key, text with control characters or spaces at either end or over its limit, a time that isn't `"HH:MM"` or closes before it opens, a phone number without 7 to 15 digits, a link that isn't https, a picture outside `/images/`, an impossible date, or a list that is too long. The rules live in `private.is_valid_site_content(section, content)`. The website checks the same rules in `src/lib/site-content/validate.ts`, and `tests/database/site-content.test.ts` runs the same values through both.
+
+### 10.4 Audit
+
+`private.site_content_audit` gets one row per change: the time, the signed-in account (`auth.uid()`, empty for a change made from the dashboard), the action, the section, and the old and new content (FR-087). A save that changes nothing adds no row, and neither does a refused save. The table has no API grants at all; read it from the Supabase dashboard. Price changes in the POS are not audited yet; that comes with the POS work (ADR-017).
+
+### 10.5 How the website reads it
+
+- The pages are built once and refresh at most once a minute (`revalidate = 60`). Server reads use the publishable key with a 4-second limit, and only successful answers are kept, so an owner's change shows within about a minute with no redeploy.
+- The website checks each section again. A missing, invalid or unreadable section shows the built-in copy (`src/lib/site-content/fallback-shop.ts` and `fallback-pages.ts`), and the server log names the section.
+- When the menu can't be read, the home showcase hides its prices and the takeout box shows without a price.
+
+### 10.6 Undo
+
+The undo drops both tables, with their triggers, and the rule functions. The website goes back to its built-in copy. The saved content and its change history are deleted, so export them first if they are needed.
+
+### 10.7 Tests
+
+TC-P4-206 to TC-P4-212 run the migration and the undo on PGlite (`tests/database/site-content.test.ts`).

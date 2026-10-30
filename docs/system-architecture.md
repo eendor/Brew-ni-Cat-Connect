@@ -434,6 +434,8 @@ The Menu component begins retrieval after browser render. `getPublicSupabaseClie
 
 Compilation, CI, and static route generation do not contact Supabase. Missing public variables throw a customer-safe configuration error consumed by the menu error state. API errors produce retry; a successful zero-row response produces the empty state. Neither path leaks raw error details.
 
+2026-10-30 (PR #69): rendering a page now reads the saved site content and the menu prices on the server with the same publishable key; see §20. When the public variables are missing, as in the CI validation job, the build makes no Supabase request and uses the fallback copy.
+
 ### 17.2 Data ownership and source of truth
 
 - Supabase is authoritative for current category, item, price, variant/flavor, optional combo-description, and availability fields.
@@ -572,3 +574,23 @@ Field map from a completed online order to its POS sale:
 - An online sale is not voided or refunded from the website. If the shop voids it on the tablet, the POS handles it like any other sale.
 - Rider and delivery orders are not in the system yet; the owner is still deciding.
 - Ingredients used for an order cancelled after Preparing are not deducted; the staff adjust the stock by hand.
+
+## 20. Live Website Content (PR #69)
+
+The shop's facts are saved data, not page code (FR-085, FR-086, ADR-017). The table and its rules are in `docs/database-design.md` §10.
+
+### 20.1 Read path
+
+1. The root layout and the Home, About, Gallery and Contact pages call `getSiteContent()` (`src/lib/site-content/load.ts`), and the layout, Home and Contact call `getMenuFacts()` (`src/lib/menu/load-menu-facts.ts`). React's `cache()` makes each a single read per render.
+2. Both use `getServerReadClient()` (`src/lib/supabase/server-read-client.ts`): the browser's publishable key, no session, a 4-second timeout, and Next.js keeps each successful answer for 60 seconds. The layout sets `revalidate = 60`, so pages stay static and an owner's change shows within about a minute with no redeploy.
+3. Each section is checked by `parseSection()` (`src/lib/site-content/validate.ts`), the same rules the database enforces. A missing, broken or unreadable section falls back on its own to the copy in `src/lib/site-content/fallback-shop.ts` and `fallback-pages.ts`, with one server log line that names the section, never the content.
+4. The layout passes the shop facts and menu prices to client components through `ShopFactsProvider` (`src/context/shop-facts-context.tsx`), so the cart, checkout, footer and 3D visit sign need no browser read of their own.
+5. Menu prices outside the Menu page (the showcase's "From" prices and the takeout box) come from the live menu. While it can't be read, they are left out or described as priced by the shop, never guessed.
+
+### 20.2 Write path
+
+Staff accounts change the content in the POS web app (Stage 3) or, until then, in the Supabase dashboard. Every change is checked by the database and recorded in a private history table with who made it and the old and new content (FR-087). The website never writes this table.
+
+### 20.3 Guard
+
+`tests/unit/site-content-source.test.ts` (TC-P4-222) scans `src/` and fails when a price, an opening time, a phone number, an email, the address, a social link or a fixed payment or hours phrase is written in code outside the two fallback files.

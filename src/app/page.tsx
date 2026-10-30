@@ -14,13 +14,34 @@ import {
   WalletIcon,
 } from "@/components/ui/icons";
 import { Reveal } from "@/components/ui/reveal";
-import { homeGalleryImages } from "@/config/gallery";
-import { siteConfig } from "@/config/site";
+import { getMenuFacts } from "@/lib/menu/load-menu-facts";
+import {
+  closedLine,
+  formatDate,
+  homePhotos,
+  joinList,
+  localityLine,
+  openHoursLines,
+  shortAddress,
+  streetLine,
+  townLine,
+} from "@/lib/site-content/format";
+import { getSiteContent } from "@/lib/site-content/load";
 
-export default function HomePage() {
+export default async function HomePage() {
+  const [content, menu] = await Promise.all([getSiteContent(), getMenuFacts()]);
+  const { about, address, hours } = content;
+  const homeGalleryImages = homePhotos(content.gallery);
+  const closed = closedLine(hours);
+
   return (
     <>
-      <HomeShowcase />
+      <HomeShowcase
+        eyebrow={`${townLine(address)} · Est. ${formatDate(about.openedOn, "month")}`}
+        title={about.heroTitle}
+        lede={about.heroText}
+        prices={menu.showcasePrices}
+      />
 
       <section
         className="relative z-10 -mt-6 pb-10 sm:-mt-8 sm:pb-12"
@@ -35,7 +56,7 @@ export default function HomePage() {
                   Find us
                 </dt>
                 <dd className="mt-2 font-bold text-[var(--text-strong)]">
-                  Abellera St, Poblacion, Kabacan
+                  {shortAddress(address)}
                 </dd>
               </div>
               <div className="border-t border-[var(--border-soft)] p-5 sm:border-t-0 lg:border-r lg:border-[var(--border-soft)] sm:p-6">
@@ -44,7 +65,7 @@ export default function HomePage() {
                   Landmark
                 </dt>
                 <dd className="mt-2 font-bold text-[var(--text-strong)]">
-                  {siteConfig.address.landmark}
+                  {address.landmark || address.area}
                 </dd>
               </div>
               <div className="border-t border-[var(--border-soft)] p-5 sm:border-r sm:border-[var(--border-soft)] lg:border-t-0 sm:p-6">
@@ -53,14 +74,21 @@ export default function HomePage() {
                   Hours
                 </dt>
                 <dd className="mt-2 font-bold text-[var(--text-strong)]">
-                  <span className="block">Mon–Fri · 11 AM – 9 PM</span>
-                  <span className="block">Sun · 1 PM – 9 PM</span>
-                  <span className="block text-sm font-semibold text-[var(--accent-strong)]">
-                    Closed every Saturday
-                  </span>
-                  <span className="block text-xs font-normal text-[var(--text-muted)]">
-                    Check Facebook for changes
-                  </span>
+                  {openHoursLines(hours).map((line) => (
+                    <span key={line} className="block">
+                      {line}
+                    </span>
+                  ))}
+                  {closed ? (
+                    <span className="block text-sm font-semibold text-[var(--accent-strong)]">
+                      {closed}
+                    </span>
+                  ) : null}
+                  {hours.note ? (
+                    <span className="block text-xs font-normal text-[var(--text-muted)]">
+                      {hours.note}
+                    </span>
+                  ) : null}
                 </dd>
               </div>
               <div className="border-t border-[var(--border-soft)] p-5 sm:border-t-0 sm:p-6">
@@ -69,7 +97,7 @@ export default function HomePage() {
                   Payment
                 </dt>
                 <dd className="mt-2 font-bold text-[var(--text-strong)]">
-                  Cash and GCash
+                  {joinList(content.payments.methods)}
                 </dd>
               </div>
             </dl>
@@ -85,10 +113,10 @@ export default function HomePage() {
           <Reveal className="relative mx-auto w-full max-w-[34rem] pb-8 pl-8">
             <div className="about-drama" data-unveil="">
               <Image
-                src="/images/shop/photo_124.jpg"
+                src={about.homePhoto.src}
                 width={900}
                 height={1125}
-                alt="Brew ni Cat seating area with a cat resting near the window"
+                alt={about.homePhoto.alt}
                 sizes="(max-width: 1023px) 90vw, 42vw"
                 className="aspect-[4/5] w-full object-cover"
               />
@@ -98,7 +126,7 @@ export default function HomePage() {
                 Opened
               </p>
               <p className="font-display mt-1 text-2xl">
-                {siteConfig.openingDate}
+                {formatDate(about.openedOn)}
               </p>
             </div>
           </Reveal>
@@ -108,42 +136,29 @@ export default function HomePage() {
               id="about-preview-heading"
               className="font-display text-4xl text-balance sm:text-5xl"
             >
-              A local café with a playful cat-inspired spirit.
+              {about.homeTitle}
             </h2>
             <p className="mt-5 max-w-2xl text-lg leading-8 text-[var(--text-muted)]">
-              Brew ni Cat Coffee Shop welcomes the Kabacan community for drinks,
-              bites, noodles, combos, and time spent together. The shop’s warm
-              spaces and cat-themed personality make every visit distinctly Brew
-              ni Cat.
+              {about.homeText}
             </p>
 
-            <div className="mt-8 glass-panel rounded-2xl p-5">
-              <h3 className="text-xs font-extrabold tracking-wider text-[var(--accent-strong)] uppercase">
-                Visiting the Cats
-              </h3>
-              <ul className="mt-3 grid gap-3 text-xs leading-5 text-[var(--text-muted)] sm:grid-cols-3">
-                <li className="flex flex-col gap-1">
-                  <strong className="font-semibold text-[var(--text-strong)]">
-                    No entrance fee
-                  </strong>
-                  <span>Cats roam freely; enjoy with any food or drink.</span>
-                </li>
-                <li className="flex flex-col gap-1">
-                  <strong className="font-semibold text-[var(--text-strong)]">
-                    Gentle paws welcome
-                  </strong>
-                  <span>Approach resting cats calmly, and pet with care.</span>
-                </li>
-                <li className="flex flex-col gap-1">
-                  <strong className="font-semibold text-[var(--text-strong)]">
-                    Clean cuddles
-                  </strong>
-                  <span>
-                    Please use our sanitizing stations before and after petting.
-                  </span>
-                </li>
-              </ul>
-            </div>
+            {about.catRules.length > 0 ? (
+              <div className="mt-8 glass-panel rounded-2xl p-5">
+                <h3 className="text-xs font-extrabold tracking-wider text-[var(--accent-strong)] uppercase">
+                  Visiting the Cats
+                </h3>
+                <ul className="mt-3 grid gap-3 text-xs leading-5 text-[var(--text-muted)] sm:grid-cols-3">
+                  {about.catRules.map((rule) => (
+                    <li key={rule.title} className="flex flex-col gap-1">
+                      <strong className="font-semibold text-[var(--text-strong)]">
+                        {rule.title}
+                      </strong>
+                      <span>{rule.text}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
 
             <div className="mt-8">
               <Link href="/about" className="button-primary" data-magnetic="">
@@ -231,7 +246,7 @@ export default function HomePage() {
               id="visit-heading"
               className="font-display text-3xl text-[var(--text-strong)] sm:text-4xl lg:text-5xl"
             >
-              Find us in Kabacan
+              Find us in {address.town}
             </h2>
             <address
               className="mt-4 flex gap-2 text-base leading-7 text-[var(--text-muted)] not-italic sm:text-lg"
@@ -239,12 +254,15 @@ export default function HomePage() {
             >
               {/* mt-1.5 centers the 1rem pin on the first 1.75rem line. */}
               <MapPinIcon className="mt-1.5 size-4 shrink-0 text-[var(--accent-strong)]" />
-              <span>{`${siteConfig.address.street}, ${siteConfig.address.locality} · ${siteConfig.address.landmark}`}</span>
+              <span>
+                {`${streetLine(address)}, ${localityLine(address)}`}
+                {address.landmark ? ` · ${address.landmark}` : null}
+              </span>
             </address>
           </div>
           <div data-rise="">
             <ExternalLink
-              href={siteConfig.address.mapUrl}
+              href={address.mapUrl}
               className="button-primary"
               data-magnetic=""
             >
@@ -253,7 +271,10 @@ export default function HomePage() {
             </ExternalLink>
           </div>
         </Container>
-        <VisitStage facts={visitFacts} className="visit-stage--bleed mt-6" />
+        <VisitStage
+          facts={visitFacts(hours, address)}
+          className="visit-stage--bleed mt-6"
+        />
       </section>
     </>
   );

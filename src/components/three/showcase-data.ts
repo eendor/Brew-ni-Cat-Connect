@@ -1,14 +1,21 @@
 /**
- * Items featured in the home 3D showcase. Names, nicknames and "from"
- * prices are the ones recorded in the live catalog review
- * (docs/evidence/phase-2-implementation.md); the Menu page stays the live
- * source of truth. Photos are the shop's own menu photos.
+ * Items featured in the home 3D showcase. Each one is a 3D model built for
+ * that product, so its label stays with the model; its "from" price comes
+ * from the live menu item it matches (`menuNames`, see
+ * src/lib/menu/load-menu-facts.ts). Photos are the shop's own menu photos.
  */
+export type ShowcaseId =
+  "matcha" | "catfeine" | "takoyaki" | "fries" | "buldak";
+
+/** Each item's lowest live menu price; null hides it. */
+export type ShowcasePrices = Readonly<Record<ShowcaseId, number | null>>;
+
 export type ShowcaseItem = Readonly<{
-  id: "matcha" | "catfeine" | "takoyaki" | "fries" | "buldak";
+  id: ShowcaseId;
   name: string;
   nickname: string;
-  price: string;
+  /** Menu item names or nicknames this model stands for, matched exactly. */
+  menuNames: readonly string[];
   /** Rim-light color for the studio set while this item is on stage. */
   glow: string;
   photo: string;
@@ -20,7 +27,7 @@ export const showcaseItems: readonly ShowcaseItem[] = [
     id: "matcha",
     name: "Matcha",
     nickname: "The Lucky Green Neko",
-    price: "From ₱49",
+    menuNames: ["matcha", "the lucky green neko"],
     glow: "#7CFF6B",
     photo: "/images/menu/items/lucky-green-neko-matcha.jpg",
     alt: "The Lucky Green Neko iced dirty matcha with an espresso layer",
@@ -29,7 +36,7 @@ export const showcaseItems: readonly ShowcaseItem[] = [
     id: "catfeine",
     name: "Cat-Feine",
     nickname: "Classic Coffee",
-    price: "From ₱49",
+    menuNames: ["cat-feine", "classic coffee"],
     glow: "#FFB547",
     photo: "/images/menu/items/cat-feine-iced-latte.jpg",
     alt: "Cat-Feine iced latte in a clear cup",
@@ -38,7 +45,7 @@ export const showcaseItems: readonly ShowcaseItem[] = [
     id: "takoyaki",
     name: "Takoyaki",
     nickname: "Pawsome Balls",
-    price: "From ₱40",
+    menuNames: ["takoyaki", "pawsome balls"],
     glow: "#FF6A3D",
     photo: "/images/menu/items/takoyaki-pawsome-balls.jpg",
     alt: "Takoyaki balls topped with sauce, mayo and bonito flakes",
@@ -47,7 +54,7 @@ export const showcaseItems: readonly ShowcaseItem[] = [
     id: "fries",
     name: "Fries",
     nickname: "Cat Claws",
-    price: "From ₱30",
+    menuNames: ["fries", "cat claws"],
     glow: "#FFD93B",
     photo: "/images/menu/items/fries-cat-claws.jpg",
     alt: "Fries served in a wire cone in front of the Brew ni Cat logo wall",
@@ -56,7 +63,7 @@ export const showcaseItems: readonly ShowcaseItem[] = [
     id: "buldak",
     name: "Buldak Carbo",
     nickname: "Buldak & Sedaap",
-    price: "From ₱119",
+    menuNames: ["buldak carbo"],
     glow: "#FF3D7F",
     photo: "/images/menu/items/buldak-carbo.jpg",
     alt: "Buldak Carbo spicy noodles with a fried egg",

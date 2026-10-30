@@ -2,9 +2,10 @@ import Image from "next/image";
 
 import { ExternalLink } from "@/components/ui/external-link";
 import { FacebookIcon } from "@/components/ui/icons";
-import { siteConfig } from "@/config/site";
+import type { RiderPartner } from "@/lib/site-content/types";
 
 type RiderListProps = Readonly<{
+  partners: readonly RiderPartner[];
   className?: string;
 }>;
 
@@ -12,16 +13,18 @@ type RiderListProps = Readonly<{
  * The local delivery services a customer can message. Each card opens the
  * service's Facebook page; the rider orders at the shop and delivers.
  * The list sizes itself to its container: compact rows in narrow panels and
- * on phones, larger rows from 20rem, and three columns from 42rem.
+ * on phones, larger rows from 20rem, and three columns from 42rem. The
+ * owner keeps the list in the shop's saved content (FR-085).
  */
-export function RiderList({ className = "" }: RiderListProps) {
+export function RiderList({ partners, className = "" }: RiderListProps) {
+  if (partners.length === 0) return null;
   return (
     <div className={`@container ${className}`}>
       <ul
         aria-label="Rider delivery services"
         className="grid gap-3 @2xl:grid-cols-3"
       >
-        {siteConfig.externalRiders.map((rider) => (
+        {partners.map((rider) => (
           <li key={rider.href}>
             <ExternalLink
               href={rider.href}

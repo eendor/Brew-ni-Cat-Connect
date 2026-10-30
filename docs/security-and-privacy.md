@@ -231,6 +231,7 @@ Evidence must include the exact command or procedure, date, commit/deployment id
 - TODO: Confirm with Brew ni Cat owner. Identify the customer profile fields that are necessary.
 - The customer-arranged rider delivery information is confirmed for public display. Checkout asks for a delivery address only when the customer picks rider delivery; it stays in the browser and goes only into the summary the customer sends to a rider. **TODO: Confirm with Brew ni Cat owner.** Decide whether any future integrated delivery feature is approved and, if so, the minimum location/contact data required.
 - Cash and GCash are confirmed for public display. **TODO: Confirm with Brew ni Cat owner.** Define any future online payment proof/provider, settlement, failure, and refund workflow.
+- Website content (hours, contact details, payment methods, notices, page text and photos) can be changed by any staff account, which today is the POS store account (FR-085, `docs/database-design.md` §10). **TODO: Confirm with Brew ni Cat owner.** Decide whether only the owner should change it; an owner flag can narrow the policy later.
 - TODO: Confirm with Brew ni Cat owner. Set retention needs for accounts, orders, loyalty, inquiries, and security logs.
 - TODO: Confirm with Brew ni Cat owner. Designate the business's accountable privacy/security contacts and escalation route.
 - TODO: Confirm with Brew ni Cat owner. Review formal privacy notices, lawful bases, vendor terms, and applicable compliance obligations before production processing.
@@ -364,4 +365,11 @@ Before commit/PR, inspect staged and unstaged diffs, verify `.env.local` is untr
 - **Session expiration and restoration (FR-036):** On ordinary page reload, `AuthProvider` restores any still-valid session. An expired or absent session clears user state to guest (`user: null`), preserving unauthenticated visitors' unrestricted public browsing access across Home, Menu, About, Gallery, Contact, and Cart pages. Route protection and redirection to `/account/sign-in` for protected pages is deferred to the account page guard.
 - **Session termination (FR-033):** Calling `signOut()` terminates the active provider session, resets the in-memory user to null, and updates desktop and mobile header navigation immediately.
 - **Email verification and recovery redirects (FR-034, FR-035):** Sign-up confirmation (`emailRedirectTo`) and password recovery (`redirectTo`) destinations are constructed from `window.location.origin`, aligning with the Supabase project redirect URL whitelist (`http://localhost:3000` and the live site) and preventing open redirect exploits.
+
+### 18.8 Live website content
+
+- The website reads its shop facts from `public.site_content` with the publishable key. Everyone can read the table; only staff can change a section's content, and every change is audited with the account, the time, and the old and new content (FR-085, FR-087, `docs/database-design.md` §10).
+- No privileged key is added to the website or the POS web app (FR-037). The server reads run with the same publishable key as the browser and can only read public data.
+- The database refuses content the website can't show, and the website checks it again, so a bad save shows the built-in copy instead of breaking a page. Links must be https and pictures must be files shipped under `/images/`, so saved content can't load a script or an outside picture.
+- The contact details in the table are the shop's public business details, already shown on the website. No customer data is stored there.
 

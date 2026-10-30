@@ -1,13 +1,53 @@
 import { render, screen, within } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import AboutPage from "@/app/about/page";
 import ContactPage from "@/app/contact/page";
 import GalleryPage from "@/app/gallery/page";
-import { siteConfig } from "@/config/site";
+import { fallbackShop } from "@/lib/site-content/fallback-shop";
+import { emailHref, phoneHref } from "@/lib/site-content/format";
+import type { SiteContent } from "@/lib/site-content/types";
+
+// Pages read the saved content and the live menu; these stand-ins let a test
+// change either one. Without a change the page shows the fallback copy.
+const live = vi.hoisted(() => ({
+  content: null as SiteContent | null,
+  takeoutBoxPrice: 10 as number | null,
+}));
+
+vi.mock("@/lib/site-content/load", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@/lib/site-content/load")>();
+  return {
+    ...actual,
+    getSiteContent: async () => live.content ?? actual.fallbackSiteContent,
+  };
+});
+
+vi.mock("@/lib/menu/load-menu-facts", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@/lib/menu/load-menu-facts")>();
+  return {
+    ...actual,
+    getMenuFacts: async () => ({
+      ...(await actual.loadMenuFacts(async () => null)),
+      takeoutBoxPrice: live.takeoutBoxPrice,
+    }),
+  };
+});
+
+afterEach(() => {
+  live.content = null;
+  live.takeoutBoxPrice = 10;
+});
+
+/** Matches text that contains `text` as written. */
+const containing = (text: string) =>
+  new RegExp(text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
 
 describe("About page", () => {
-  it("TC-P2-015 — renders the restrained, confirmed Brew ni Cat business facts", () => {
-    const { container } = render(<AboutPage />);
+  it("TC-P2-015 — renders the restrained, confirmed Brew ni Cat business facts", async () => {
+    const { container } = render(await AboutPage());
 
     expect(
       screen.getByRole("heading", { level: 1, name: "About Brew ni Cat" }),
@@ -24,8 +64,8 @@ describe("About page", () => {
 });
 
 describe("Contact and location page", () => {
-  it("TC-P2-016 — renders confirmed contact, location, payment, takeout, and variable-hours information", () => {
-    render(<ContactPage />);
+  it("TC-P2-016 — renders confirmed contact, location, payment, takeout, and variable-hours information", async () => {
+    render(await ContactPage());
 
     expect(
       screen.getByRole("heading", { level: 1, name: "Contact & location" }),
@@ -36,13 +76,13 @@ describe("Contact and location page", () => {
     expect(address).toHaveTextContent("Philippines");
     expect(address).toHaveTextContent("Beside Pulido Eatery");
 
-    expect(screen.getByRole("link", { name: /0976 630 4785/ })).toHaveAttribute(
-      "href",
-      "tel:+639766304785",
-    );
+    const { phone, email } = fallbackShop.contact;
     expect(
-      screen.getByRole("link", { name: /popotpulido06@gmail.com/ }),
-    ).toHaveAttribute("href", "mailto:popotpulido06@gmail.com");
+      screen.getByRole("link", { name: containing(phone) }),
+    ).toHaveAttribute("href", phoneHref(phone));
+    expect(
+      screen.getByRole("link", { name: containing(email) }),
+    ).toHaveAttribute("href", emailHref(email));
     expect(screen.getByText("Cash · GCash")).toBeInTheDocument();
     expect(screen.getByText("₱10 takeout box")).toBeInTheDocument();
     expect(
@@ -56,8 +96,8 @@ describe("Contact and location page", () => {
     expect(screen.queryByText(/10 PM|Closed every Sunday/i)).toBeNull();
   });
 
-  it("TC-P2-017 — explains rider delivery and lists the local riders without promising fees or ETA", () => {
-    const { container } = render(<ContactPage />);
+  it("TC-P2-017 — explains rider delivery and lists the local riders without promising fees or ETA", async () => {
+    const { container } = render(await ContactPage());
 
     expect(
       screen.getByRole("heading", {
@@ -79,30 +119,28 @@ describe("Contact and location page", () => {
       name: "Rider delivery services",
     });
     expect(within(riderList).getAllByRole("link")).toHaveLength(
-      siteConfig.externalRiders.length,
+      fallbackShop.riders.partners.length,
     );
   });
 
-  it("TC-P4-031 — keeps the contact page's link and label names, with decorative icons", () => {
-    const { container } = render(<ContactPage />);
+  it("TC-P4-031 — keeps the contact page's link and label names, with decorative icons", async () => {
+    const { container } = render(await ContactPage());
 
     expect(
       screen.getByRole("link", { name: "Get directions" }),
-    ).toHaveAttribute("href", siteConfig.address.mapUrl);
-    expect(screen.getByRole("link", { name: "Facebook" })).toHaveAttribute(
-      "href",
-      siteConfig.social.facebook,
-    );
+    ).toHaveAttribute("href", fallbackShop.address.mapUrl);
+    // the schedule note under the hours is the owner's saved text
+    expect(screen.getByText(fallbackShop.hours.note)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Facebook page" })).toHaveAttribute(
       "href",
-      siteConfig.social.facebook,
+      fallbackShop.social.facebook,
     );
     expect(
       screen.getByRole("link", { name: "Facebook photos" }),
-    ).toHaveAttribute("href", siteConfig.social.facebookPhotos);
+    ).toHaveAttribute("href", fallbackShop.social.facebookPhotos);
     expect(screen.getByRole("link", { name: "TikTok" })).toHaveAttribute(
       "href",
-      siteConfig.social.tiktok,
+      fallbackShop.social.tiktok,
     );
     expect(screen.getByText("Payment methods")).toBeInTheDocument();
     expect(screen.getByText("Takeout packaging")).toBeInTheDocument();
@@ -110,7 +148,7 @@ describe("Contact and location page", () => {
     // 13 page icons plus a Facebook mark on each rider card; the rider
     // cards' arrows are older and hidden the same way
     expect(container.querySelectorAll('svg[focusable="false"]')).toHaveLength(
-      13 + siteConfig.externalRiders.length,
+      13 + fallbackShop.riders.partners.length,
     );
     container.querySelectorAll("svg").forEach((icon) => {
       expect(icon).toHaveAttribute("aria-hidden", "true");
@@ -119,8 +157,8 @@ describe("Contact and location page", () => {
 });
 
 describe("Gallery page", () => {
-  it("TC-P2-018 — renders a curated approved-photo selection with generic alt text", () => {
-    render(<GalleryPage />);
+  it("TC-P2-018 — renders a curated approved-photo selection with generic alt text", async () => {
+    render(await GalleryPage());
 
     expect(
       screen.getByRole("heading", { level: 1, name: "Gallery" }),
@@ -146,5 +184,65 @@ describe("Gallery page", () => {
         name: "Siamese cat sitting on wooden cat furniture inside the shop",
       }),
     ).toBeInTheDocument();
+  });
+});
+
+describe("Saved content on the pages (FR-085, FR-086)", () => {
+  it("TC-P4-215 — the About and Contact pages show what the owner saved, with no code change", async () => {
+    const saved = (await import("@/lib/site-content/load")).fallbackSiteContent;
+    live.content = {
+      ...saved,
+      hours: {
+        days: {
+          ...saved.hours.days,
+          saturday: { opens: "08:00", closes: "12:00" },
+        },
+        note: "Holiday hours are posted on Facebook.",
+      },
+      contact: { phone: "+63 900 000 0000", email: "hello@example.com" },
+      address: { ...saved.address, street: "Rizal St", landmark: "" },
+      payments: { methods: ["Cash", "GCash", "Maya"], qrCode: null },
+      social: { ...saved.social, tiktok: "" },
+      riders: { partners: [] },
+      about: {
+        ...saved.about,
+        openedOn: "2026-07-01",
+        menuSummary: "Coffee, matcha and snacks",
+      },
+    };
+    live.takeoutBoxPrice = 15;
+
+    const contact = render(await ContactPage());
+    const address = document.querySelector("address");
+    expect(address).toHaveTextContent("Rizal St");
+    expect(address).not.toHaveTextContent("Beside");
+    expect(
+      screen.getByRole("link", { name: /\+63 900 000 0000/ }),
+    ).toHaveAttribute("href", "tel:+639000000000");
+    expect(screen.getByText("Cash · GCash · Maya")).toBeInTheDocument();
+    expect(screen.getByText("₱15 takeout box")).toBeInTheDocument();
+    expect(
+      screen.getAllByText(/8 AM – 12 PM on Saturday/).length,
+    ).toBeGreaterThan(0);
+    expect(
+      screen.getByText("Holiday hours are posted on Facebook."),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/Closed every Saturday/i)).toBeNull();
+    expect(screen.queryByRole("link", { name: "TikTok" })).toBeNull();
+    expect(
+      screen.queryByRole("list", { name: "Rider delivery services" }),
+    ).toBeNull();
+    contact.unmount();
+
+    render(await AboutPage());
+    expect(screen.getAllByText("July 1, 2026").length).toBeGreaterThan(0);
+    expect(screen.getByText("Coffee, matcha and snacks")).toBeInTheDocument();
+  });
+
+  it("TC-P4-216 — while the menu can't be read, the contact page names the takeout box without a price", async () => {
+    live.takeoutBoxPrice = null;
+    const { container } = render(await ContactPage());
+    expect(screen.getByText("Takeout box")).toBeInTheDocument();
+    expect(container.textContent).not.toMatch(/₱\d+ takeout box/);
   });
 });

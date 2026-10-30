@@ -1,11 +1,11 @@
 import { render, screen } from "@testing-library/react";
 
 import HomePage from "@/app/page";
-import { siteConfig } from "@/config/site";
+import { fallbackShop } from "@/lib/site-content/fallback-shop";
 
 describe("Home page", () => {
-  it("TC-P1-002 / TC-P2-001 — renders the real brand headline and customer CTAs", () => {
-    render(<HomePage />);
+  it("TC-P1-002 / TC-P2-001 — renders the real brand headline and customer CTAs", async () => {
+    render(await HomePage());
 
     expect(
       screen.getByRole("heading", {
@@ -27,8 +27,8 @@ describe("Home page", () => {
     ).toHaveAttribute("href", "/contact");
   });
 
-  it("TC-P2-002 — presents approved favorite groups and public visit details", () => {
-    render(<HomePage />);
+  it("TC-P2-002 — presents approved favorite groups and public visit details", async () => {
+    render(await HomePage());
 
     // one menu action on the page: the hero's (the favorites section that
     // repeated the hero's items and links was removed)
@@ -44,8 +44,8 @@ describe("Home page", () => {
     expect(screen.queryByText(/10 PM|Closed every Sunday/i)).toBeNull();
   });
 
-  it("TC-P2-003 — removes Phase 1 developer-facing placeholder messaging", () => {
-    const { container } = render(<HomePage />);
+  it("TC-P2-003 — removes Phase 1 developer-facing placeholder messaging", async () => {
+    const { container } = render(await HomePage());
     const pageText = container.textContent?.toLowerCase() ?? "";
 
     expect(pageText).not.toMatch(/project foundation/);
@@ -54,8 +54,8 @@ describe("Home page", () => {
     expect(pageText).not.toMatch(/ordering not yet active/);
   });
 
-  it("TC-P4-032 — keeps the visit labels and the Maps link name, with decorative icons", () => {
-    const { container } = render(<HomePage />);
+  it("TC-P4-032 — keeps the visit labels and the Maps link name, with decorative icons", async () => {
+    const { container } = render(await HomePage());
 
     const terms = Array.from(container.querySelectorAll("dt"));
     expect(terms.map((term) => term.textContent)).toEqual([
@@ -69,7 +69,7 @@ describe("Home page", () => {
     });
 
     const maps = screen.getByRole("link", { name: "Open in Maps" });
-    expect(maps).toHaveAttribute("href", siteConfig.address.mapUrl);
+    expect(maps).toHaveAttribute("href", fallbackShop.address.mapUrl);
     expect(maps).toHaveAttribute("target", "_blank");
     expect(maps).toHaveAttribute("rel", "noopener noreferrer");
 

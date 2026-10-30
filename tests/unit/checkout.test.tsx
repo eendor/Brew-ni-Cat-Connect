@@ -11,6 +11,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CheckoutView } from "@/components/checkout/checkout-view";
 import { siteConfig } from "@/config/site";
 import { CartProvider, useCart } from "@/context/cart-context";
+import { ShopFactsProvider } from "@/context/shop-facts-context";
+import { fallbackShop } from "@/lib/site-content/fallback-shop";
+import { phoneHref } from "@/lib/site-content/format";
+import type { ShopFacts } from "@/lib/site-content/types";
 import type { MenuCatalog } from "@/types/menu";
 import type { CartState } from "@/types/ordering";
 
@@ -55,16 +59,22 @@ function CartCount() {
   return <span data-testid="cart-count">{itemCount}</span>;
 }
 
+/** The shop facts the layout passes down: saved content and menu prices. */
+const SHOP_FACTS: ShopFacts = { ...fallbackShop, takeoutBoxPrice: 10 };
+
 function renderCheckout(
   initialState?: CartState,
   storageKey = "test_checkout_storage",
   loadMenu?: () => Promise<MenuCatalog>,
+  facts: ShopFacts = SHOP_FACTS,
 ) {
   return render(
-    <CartProvider initialState={initialState} storageKey={storageKey}>
-      <CheckoutView loadMenu={loadMenu} />
-      <CartCount />
-    </CartProvider>,
+    <ShopFactsProvider facts={facts}>
+      <CartProvider initialState={initialState} storageKey={storageKey}>
+        <CheckoutView loadMenu={loadMenu} />
+        <CartCount />
+      </CartProvider>
+    </ShopFactsProvider>,
   );
 }
 
@@ -470,7 +480,7 @@ describe("Checkout Flow & Step Transitions", () => {
     const summaryText = document.querySelector("pre")?.textContent ?? "";
     expect(summaryText).toContain("Fulfillment: Rider delivery");
     expect(summaryText).toContain(
-      `Order and pick up at: ${siteConfig.shortName}, ${siteConfig.address.street}`,
+      `Order and pick up at: ${siteConfig.shortName}, ${fallbackShop.address.street}`,
     );
     expect(summaryText).toContain("Deliver to: Purok 2, Poblacion, Kabacan");
     expect(summaryText).toContain(
@@ -482,7 +492,7 @@ describe("Checkout Flow & Step Transitions", () => {
     const riders = within(
       screen.getByRole("list", { name: "Rider delivery services" }),
     ).getAllByRole("link");
-    expect(riders).toHaveLength(siteConfig.externalRiders.length);
+    expect(riders).toHaveLength(fallbackShop.riders.partners.length);
     expect(
       screen.queryByRole("link", { name: "Message on Facebook" }),
     ).toBeNull();
@@ -515,10 +525,10 @@ describe("Checkout Flow & Step Transitions", () => {
 
     const facebook = screen.getByRole("link", { name: "Message on Facebook" });
     const call = screen.getByRole("link", {
-      name: `Call or Text ${siteConfig.contact.phone}`,
+      name: `Call or Text ${fallbackShop.contact.phone}`,
     });
-    expect(facebook).toHaveAttribute("href", siteConfig.social.facebook);
-    expect(call).toHaveAttribute("href", siteConfig.contact.phoneHref);
+    expect(facebook).toHaveAttribute("href", fallbackShop.social.facebook);
+    expect(call).toHaveAttribute("href", phoneHref(fallbackShop.contact.phone));
     for (const link of [facebook, call]) {
       const icons = link.querySelectorAll("svg");
       expect(icons).toHaveLength(1);
@@ -549,6 +559,53 @@ describe("Checkout Flow & Step Transitions", () => {
     expect(
       screen.queryByRole("img", { name: /GCash and InstaPay QR code/i }),
     ).not.toBeInTheDocument();
+  });
+
+  it("TC-P4-217 — payment choices, the QR code and the takeout box follow the saved shop facts", async () => {
+    const user = userEvent.setup();
+    const cashOnly: ShopFacts = {
+      ...SHOP_FACTS,
+      payments: { methods: ["Cash"], qrCode: null },
+      takeoutBoxPrice: null,
+    };
+    const { unmount } = renderCheckout(
+      testCartState,
+      "cash_only",
+      undefined,
+      cashOnly,
+    );
+
+    expect(
+      screen.getByRole("radio", { name: /Cash at counter/i }),
+    ).toBeChecked();
+    expect(
+      screen.queryByRole("radio", { name: /GCash at counter/i }),
+    ).toBeNull();
+    await reachSendStep(user);
+    expect(screen.queryByRole("img", { name: /QR code/i })).toBeNull();
+    // the menu's Take-out Box price is unknown, so none is quoted
+    expect(
+      screen.getByText(
+        /Takeout box: priced by the shop, not included in the subtotal/,
+      ),
+    ).toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(/Takeout box: ₱/);
+    unmount();
+    // the stored summary would reopen at the last step
+    window.sessionStorage.clear();
+
+    // GCash without a saved QR code: the choice stays, the QR doesn't show
+    renderCheckout(testCartState, "gcash_no_qr", undefined, {
+      ...SHOP_FACTS,
+      payments: { methods: ["Cash", "GCash"], qrCode: null },
+      takeoutBoxPrice: 12,
+    });
+    await user.click(screen.getByRole("radio", { name: /GCash at counter/i }));
+    await reachSendStep(user);
+    expect(screen.queryByRole("img", { name: /QR code/i })).toBeNull();
+    expect(
+      screen.getByText(/Takeout box: ₱12, not included in the subtotal/),
+    ).toBeInTheDocument();
   });
 
   it("TC-P4-175 — a successful copy confirms it and the summary stays", async () => {
