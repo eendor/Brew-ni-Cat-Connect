@@ -167,7 +167,7 @@ This log records completed work and observed evidence. Planned work is explicitl
 - ordered Menu categories alphabetically while always placing Cat Treats last, and exported a single `isCatTreatsCategory` helper so the catalog mapper and the catalog component share one rule;
 - allowed Menu item cards to stretch within each row so short categories no longer render a ragged column; and
 - added `TC-P2-022` regression coverage for the Cat Treats ordering rule.
-**Deferred to Phase 3:** swipeable menu cards, per-product images, and customer reservation handling. Reservation behavior requires owner confirmation before any design work begins.
+**Deferred to Phase 3:** swipeable menu cards, per-product images, and customer reservation handling. Reservation behavior requires owner confirmation before any design work begins. **Update (2026-10-30):** closed. On 2026-10-28 the owner said no to table reservations, because customers might not show up.
 **Files/modules affected:** `src/config/site.ts`, `src/app/gallery/page.tsx`, `src/components/menu/menu-catalog.tsx`, `src/lib/menu/map-menu-catalog.ts`, `tests/unit/menu-mapping.test.ts`, `docs/development-log.md`.
 **Testing performed:** `npm run typecheck`, `npm run lint`, and `npm run format:check` all completed with no findings. Vitest passed 6 files and 22/22 tests, including the new ordering regression. The documentation validator reported `ERRORS=0` and `PHASE0_DOC_VALIDATION=PASS`.
 **Git branch:** `feat/showcase-website`
@@ -792,7 +792,7 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Testing performed:** `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm test` (19 files / 136 tests passed), `npm run build`, `npm run test:e2e` (25/25 passed: 16 in `chromium`, 9 in `chromium-3d`), `npm run audit` (0 vulnerabilities), `python3 scripts/validate_phase0_docs.py` (PASS). Six cold `npm ci` + `npm test` runs also passed, including one with Supabase settings exported in the shell.\
 **Git branch:** `feat/social-icons`\
 **Pull request:** [#26](https://github.com/eendor/Brew-ni-Cat-Connect/pull/26) — self-reviewed and squash-merged into `main` on 2026-10-18\
-**Next action:** Lead spot-check MAN-P4-009, the GCash QR once the owner sends it, and the click-through on a physical phone (MAN-P4-007).
+**Next action:** Lead spot-check MAN-P4-009, the GCash QR once the owner sends it, and the click-through on a physical phone (MAN-P4-007). **Update (2026-10-30):** the GCash QR shipped in PR #29, MAN-P4-007 passed on 2026-10-28 (PR #60), and MAN-P4-009 was measured on 2026-10-30 (see the Phase 3 closeout entry).
 
 ## 2026-10-19 — GCash QR on pickup checkout and Abellera St address
 
@@ -1055,7 +1055,7 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Files:** `src/lib/ordering/prepared-summary.ts`, `src/components/checkout/checkout-view.tsx`, `src/context/cart-context.tsx`, `src/components/cart/cart-drawer.tsx`, `src/components/cart/cart-page-view.tsx`, `tests/unit/checkout.test.tsx`, `tests/unit/cart-components.test.tsx`, `tests/e2e/phone.spec.ts`, `docs/evidence/phase-4/screenshots/`, documentation.
 - **Testing:** TC-P4-174 to TC-P4-179 added and TC-P4-023 updated; TC-P4-016 and TC-P4-017 superseded. Vitest 284/284 in 39 files; Playwright `chromium` 19/20 (TC-P4-173 skipped: it captures screenshots only with `CAPTURE_EVIDENCE=1`) on a production build with the switch on.
 - **Branch / PR:** `fix/p4-cart-after-summary`, PR #61.
-- **Next action:** Renier checks the flow again on the live site after the deploy.
+- **Next action:** Renier checks the flow again on the live site after the deploy. **Update (2026-10-30):** this second check was dropped on 2026-10-28. Renier's QA and phone check in PR #60 stand for Phase 3, and TC-P4-174 to TC-P4-179 cover this flow in CI.
 
 ## 2026-10-28 — Staff change online order statuses, and a completed order becomes a POS sale
 

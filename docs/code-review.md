@@ -313,7 +313,7 @@ Teammates' commits, and Renier's PR #6 title (`QA: Phase 2 independent QA result
 4. Unit tests that load checkout without a menu loader were hitting the live catalog when `NEXT_PUBLIC_SUPABASE_*` was exported in the shell, which dropped the test cart's items. `tests/setup.ts` now deletes those two public settings so unit tests stay offline, matching CI.
 5. No runtime dependency, data access or credential handling changed.
 
-**Known limitations:** MAN-P4-009 (narrow-width icon layout) is left for a quick lead spot-check after merge. The GCash QR and the physical-phone click-through (MAN-P4-007) remain open.\
+**Known limitations:** MAN-P4-009 (narrow-width icon layout) is left for a quick lead spot-check after merge. The GCash QR and the physical-phone click-through (MAN-P4-007) remain open. **Update (2026-10-30):** the GCash QR shipped in PR #29, MAN-P4-007 passed in PR #60, and MAN-P4-009 was measured on 2026-10-30; the result is in `docs/test-cases.md`.\
 **Status:** Self-reviewed by the lead developer. Locally, Vitest passed 136/136 in 19 files and Playwright 25/25 (16 + 9), and the build, the audit and the docs validator passed. Squash-merged on 2026-10-18 after CI passed.
 
 ## 2026-10-19 — GCash QR on pickup checkout and Abellera St address (PR #29)

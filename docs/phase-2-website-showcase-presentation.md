@@ -300,7 +300,7 @@ Reviewed by Rizjie against the live Phase 2 pages.
 
 ### Needs Confirmation
 
-- Reservation feature / way to reserve — needs confirmation with Popot before deciding whether this belongs in Phase 2 scope or a later phase.
+- Reservation feature / way to reserve — needs confirmation with Popot before deciding whether this belongs in Phase 2 scope or a later phase. **Update (2026-10-30):** closed. On 2026-10-28 the owner said no to table reservations, because customers might not show up.
 
 ## 8. Presenter Readiness Checklist
 
@@ -317,4 +317,4 @@ Reviewed by Rizjie against the live Phase 2 pages.
 
 Current status:
 
-Phase 2 presentation materials are being prepared before independent QA. Live-site review is complete. Of the 8 logged observations, 4 have been resolved (Cat Treats placement, gallery layout gaps, map location, menu card alignment). Remaining open items — rider/pickup visibility on the Menu page, and mobile navigation visibility — are refinements that do not affect Phase 2 scope and do not block the presentation. Product photos and swipeable menu cards are noted as future suggestions. The reservation feature requires confirmation with Popot before scoping.
+Phase 2 presentation materials are being prepared before independent QA. Live-site review is complete. Of the 8 logged observations, 4 have been resolved (Cat Treats placement, gallery layout gaps, map location, menu card alignment). Remaining open items — rider/pickup visibility on the Menu page, and mobile navigation visibility — are refinements that do not affect Phase 2 scope and do not block the presentation. Product photos and swipeable menu cards are noted as future suggestions. The reservation feature requires confirmation with Popot before scoping. **Update (2026-10-30):** the owner said no to reservations on 2026-10-28, so there is nothing to scope.
