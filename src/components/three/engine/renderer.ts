@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { HDRLoader } from "three/addons/loaders/HDRLoader.js";
 
 import type { Quality } from "./runtime";
-import { EXPOSURE } from "./studio";
+import { EXPOSURE, TONE_MAPPING } from "./studio";
 
 export { optimizedSrc } from "./image-src";
 
@@ -34,7 +34,7 @@ export function makeRenderer(
   if (quality.lite) liteRenderers.add(renderer);
   canvas.dataset.tier = quality.lite ? "lite" : "full";
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, quality.maxDpr));
-  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMapping = TONE_MAPPING;
   renderer.toneMappingExposure = EXPOSURE;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   // each shader check is a blocking round trip to the GPU; the three.js docs

@@ -13,10 +13,53 @@ import { STUDIO } from "../engine/studio";
 export type RingPhoto = Readonly<{ src: string; alt: string }>;
 
 /**
+ * How much a print at the side of the ring keeps of its own color and of its
+ * saturation; the rest is the cream wall and grey. The front print keeps
+ * all of both.
+ */
+export const SIDE_PRINT = { color: 0.6, saturation: 0.6 } as const;
+
+/**
+ * How much a print is "in front" (1) or away (0), from the turn the visitor
+ * chose. The small turn that follows the page scroll isn't part of it, so the
+ * front photo stays sharp while the page scrolls.
+ */
+export function ringFocus(index: number, rot: number, seg: number) {
+  let angle = index * seg - rot;
+  angle = Math.atan2(Math.sin(angle), Math.cos(angle));
+  return Math.max(0, 1 - Math.abs(angle) / (seg * 1.1));
+}
+
+const f = (n: number) => n.toFixed(3);
+
+/** Each print: cover-fit photo in a rounded panel, faded by its focus. */
+export const PRINT_FRAGMENT = /* glsl */ `
+  uniform sampler2D uMap; uniform float uFocus, uAspect; uniform vec2 uSize; uniform vec3 uBg; varying vec2 vUv;
+  float sdRound(vec2 p, vec2 b, float r){ vec2 q = abs(p) - b + r; return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r; }
+  void main(){
+    vec2 uv = vec2(1.0 - vUv.x, vUv.y);
+    // cover-fit the photo into the 3:4 panel
+    float panel = uSize.x / uSize.y;
+    if (uAspect > panel) { uv.x = (uv.x - 0.5) * panel / uAspect + 0.5; }
+    else { uv.y = (uv.y - 0.5) * uAspect / panel + 0.5; }
+    vec2 p = (vUv - 0.5) * uSize;
+    float d = sdRound(p, uSize * 0.5, 0.18);
+    float mask = 1.0 - smoothstep(-0.015, 0.015, d);
+    vec3 col = texture2D(uMap, uv).rgb;
+    float l = dot(col, vec3(0.299, 0.587, 0.114));
+    col = mix(vec3(l), col, ${f(SIDE_PRINT.saturation)} + ${f(1 - SIDE_PRINT.saturation)} * uFocus);
+    // prints away from the front recede a little into the cream wall; the
+    // front print shows its own colors, with nothing added
+    col = mix(uBg, col, mix(${f(SIDE_PRINT.color)}, 1.0, uFocus));
+    gl_FragColor = vec4(col, mask);
+    #include <colorspace_fragment>
+  }`;
+
+/**
  * Curved, draggable ring of the real gallery photos. The camera sits inside
- * the ring; the photo facing it is in full color, the rest fade into the
- * cream wall like prints behind frosted glass. Frames are only drawn while
- * something changes.
+ * the ring; the photo facing it is in full color, the rest recede a little
+ * into the cream wall (SIDE_PRINT). Frames are only drawn while something
+ * changes.
  */
 export async function initGalleryRing(
   canvas: HTMLCanvasElement,
@@ -50,28 +93,6 @@ export async function initGalleryRing(
   const wall = new THREE.Color(STUDIO.canvas);
 
   const vertexShader = /* glsl */ `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`;
-  const fragmentShader = /* glsl */ `
-    uniform sampler2D uMap; uniform float uFocus, uAspect; uniform vec2 uSize; uniform vec3 uBg; varying vec2 vUv;
-    float sdRound(vec2 p, vec2 b, float r){ vec2 q = abs(p) - b + r; return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r; }
-    void main(){
-      vec2 uv = vec2(1.0 - vUv.x, vUv.y);
-      // cover-fit the photo into the 3:4 panel
-      float panel = uSize.x / uSize.y;
-      if (uAspect > panel) { uv.x = (uv.x - 0.5) * panel / uAspect + 0.5; }
-      else { uv.y = (uv.y - 0.5) * uAspect / panel + 0.5; }
-      vec2 p = (vUv - 0.5) * uSize;
-      float d = sdRound(p, uSize * 0.5, 0.18);
-      float mask = 1.0 - smoothstep(-0.015, 0.015, d);
-      vec3 col = texture2D(uMap, uv).rgb;
-      float l = dot(col, vec3(0.299, 0.587, 0.114));
-      col = mix(vec3(l), col, 0.25 + 0.75 * uFocus);
-      // prints away from the front fade into the cream wall
-      col = mix(uBg, col, mix(0.2, 1.0, uFocus * uFocus));
-      // soft studio sheen across the print
-      col += vec3(1.0) * 0.05 * uFocus * smoothstep(0.2, 0.9, vUv.y) * (1.0 - vUv.x);
-      gl_FragColor = vec4(col, mask);
-      #include <colorspace_fragment>
-    }`;
 
   const make = (i: number) => {
     const geometry = new THREE.CylinderGeometry(
@@ -96,7 +117,7 @@ export async function initGalleryRing(
         uBg: { value: wall },
       },
       vertexShader,
-      fragmentShader,
+      fragmentShader: PRINT_FRAGMENT,
     });
     ring.add(new THREE.Mesh(geometry, material));
     return material;
@@ -220,9 +241,7 @@ export async function initGalleryRing(
     let best = 0;
     let bestValue = -1;
     for (let i = 0; i < N; i++) {
-      let angle = i * seg - total;
-      angle = Math.atan2(Math.sin(angle), Math.cos(angle));
-      const focus = Math.max(0, 1 - Math.abs(angle) / (seg * 1.1));
+      const focus = ringFocus(i, st.rot, seg);
       const material = materials[i];
       if (material) material.uniforms.uFocus!.value = focus;
       if (focus > bestValue) {

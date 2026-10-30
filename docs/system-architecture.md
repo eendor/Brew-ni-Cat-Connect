@@ -479,7 +479,7 @@ flowchart LR
 
 | Path | Role |
 | --- | --- |
-| `src/components/three/engine/` | Renderer setup (ACES, sRGB, shadows) with per-canvas release, cached HDRI environment (a half-size file on phones) that retries after a failed download, procedural PBR texture generators, post-processing chain (render → bokeh → bloom → output → grain) with shader precompiling, shared frame loop, device quality (with a lighter phone tier) and reduced-motion checks, frame budget, and start gates (`whenNear`, `whenIdle`, `whenCurtainSettled`) |
+| `src/components/three/engine/` | Renderer setup (Neutral tone mapping since PR #70, before it ACES; sRGB; shadows) with per-canvas release, cached HDRI environment (a half-size file on phones) that retries after a failed download, procedural PBR texture generators, post-processing chain (render → bokeh → bloom → output → grain) with shader precompiling, shared frame loop, device quality (with a lighter phone tier) and reduced-motion checks, frame budget, and start gates (`whenNear`, `whenIdle`, `whenCurtainSettled`) |
 | `src/components/three/scenes/` | One module per scene: home showcase, menu hero, add-to-cart toss, gallery ring, visit sign and street model, ambient page backdrops, state scenes (empty cart, order ready, not found), and the shared product models |
 | `src/components/three/canvas/` | Client components that own a `<canvas>`, start and dispose a scene through `useScene`, and connect ScrollTrigger |
 | `src/components/three/*.tsx` | Page-level wrappers with the static fallback: `HomeShowcase`, `MenuHero`, `CartFxLayer`, `GalleryRing`, `VisitStage`, `AmbientBackdrop`, `StateScene` |

@@ -8,6 +8,7 @@ import {
 } from "@/components/three/engine/runtime";
 import { condensationMaps } from "@/components/three/engine/textures";
 import {
+  FLOATING_ICE,
   floaterMaterials,
   liteMaterials,
   makeBuldak,
@@ -105,15 +106,25 @@ describe("Phone and integrated GPU tier (TC-P4-124 – TC-P4-126, TC-P4-190)", (
       expect(material.sheen).toBe(0);
     }
     clear.forEach((material, index) => {
-      expect(material.blending).toBe(THREE.AdditiveBlending);
       expect(material.transparent).toBe(true);
       expect(material.depthWrite).toBe(false);
-      // dimmed once, even for the lid's two meshes and the second pass
       const before = colors[index]!;
+      if (material.name === FLOATING_ICE) {
+        // loose ice has only the cream wall behind it, where a gloss is a
+        // white blob: it stays a see-through cool tint (PR #70)
+        expect(material.blending).toBe(THREE.NormalBlending);
+        expect(material.opacity).toBeGreaterThan(0.3);
+        expect(material.opacity).toBeLessThan(1);
+        expect(material.color.getHex()).toBe(before.getHex());
+        return;
+      }
+      expect(material.blending).toBe(THREE.AdditiveBlending);
+      // dimmed once, even for the lid's two meshes and the second pass
       expect(material.color.r).toBeCloseTo(before.r * 0.12, 6);
       expect(material.color.g).toBeCloseTo(before.g * 0.12, 6);
       expect(material.color.b).toBeCloseTo(before.b * 0.12, 6);
     });
+    expect(clear.filter((m) => m.name === FLOATING_ICE)).toHaveLength(1);
     // the drink stays opaque, so it still reads through the cup
     expect(drink.blending).toBe(THREE.NormalBlending);
     expect(drink.transparent).toBe(false);
