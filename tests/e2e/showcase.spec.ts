@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Locator } from "@playwright/test";
 
 test("TC-P2-021 — homepage presents the official Brew ni Cat showcase", async ({
   page,
@@ -162,5 +162,73 @@ test("TC-P2-025 — Contact page publishes confirmed visit and rider information
         ),
       )
       .toBe(true);
+  }
+});
+
+// Where a button's icon sits against the first line of its label, in pixels.
+async function iconAndFirstLine(button: Locator) {
+  return button.evaluate((element) => {
+    const icon = element.querySelector(":scope > svg");
+    if (!icon) throw new Error("The button has no icon.");
+    const lineTops: number[] = [];
+    let firstLine: DOMRect | undefined;
+    for (const node of element.childNodes) {
+      if (node.nodeType !== Node.TEXT_NODE || !node.textContent?.trim()) {
+        continue;
+      }
+      const range = document.createRange();
+      range.selectNodeContents(node);
+      for (const rect of range.getClientRects()) {
+        if (rect.width === 0) continue;
+        if (!lineTops.some((top) => Math.abs(top - rect.top) < 2)) {
+          lineTops.push(rect.top);
+        }
+        if (!firstLine || rect.top < firstLine.top) firstLine = rect;
+      }
+    }
+    if (!firstLine) throw new Error("The button has no label.");
+    const iconBox = icon.getBoundingClientRect();
+    return {
+      iconCenter: iconBox.top + iconBox.height / 2,
+      lineCenter: firstLine.top + firstLine.height / 2,
+      lineHeight: firstLine.height,
+      lines: lineTops.length,
+      buttonHeight: element.getBoundingClientRect().height,
+    };
+  });
+}
+
+test("TC-P4-198 — a button's icon sits on the first line of its label, also when the label wraps", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  for (const [path, name] of [
+    ["/", "Open in Maps"],
+    ["/contact", "Facebook page"],
+  ] as const) {
+    await page.goto(path);
+    const button = page
+      .getByRole("main")
+      .getByRole("link", { name, exact: true });
+    await button.scrollIntoViewIfNeeded();
+
+    const oneLine = await iconAndFirstLine(button);
+    expect(oneLine.lines, `${name} fits on one line`).toBe(1);
+    expect(
+      Math.abs(oneLine.iconCenter - oneLine.lineCenter),
+      `${name}: icon centered on the label`,
+    ).toBeLessThanOrEqual(1.5);
+    expect(oneLine.buttonHeight, `${name}: one-line height`).toBeLessThan(49);
+
+    // The narrowest the button can be wraps the label whatever the font.
+    await button.evaluate((element) => {
+      (element as HTMLElement).style.width = "min-content";
+    });
+    const wrapped = await iconAndFirstLine(button);
+    expect(wrapped.lines, `${name} wraps`).toBeGreaterThan(1);
+    expect(
+      Math.abs(wrapped.iconCenter - wrapped.lineCenter),
+      `${name}: icon on the first line`,
+    ).toBeLessThanOrEqual(wrapped.lineHeight / 4);
   }
 });

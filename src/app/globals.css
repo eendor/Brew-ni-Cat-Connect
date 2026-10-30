@@ -189,6 +189,17 @@ button:focus-visible,
     transform 320ms var(--ease-cinematic);
 }
 
+/* A button icon sits on the label's first line, so a label that wraps keeps
+   its icon at the top instead of between the lines (MAN-P4-009). The box is as
+   tall as a one-line button's content (3rem less padding and border), and the
+   icon stays centered inside it. */
+.button-primary > svg,
+.button-secondary > svg,
+.button-ghost > svg {
+  align-self: flex-start;
+  height: 1.375rem;
+}
+
 .button-primary {
   border: 1px solid transparent;
   background: var(--accent-solid);

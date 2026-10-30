@@ -1098,3 +1098,13 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `feat/p3-cart-line-edit`, PR #65.
 - **Known limitations:** When an edit changes a cart line's key, the line component remounts, so focus drops to the page body rather than returning to the Edit button.
 - **Next action:** Proceed with any remaining teammate Phase 3 PRs or verification steps.
+
+## 2026-10-30 — Button icons stay on the first line of a wrapped label
+
+- **Phase:** 3 (closeout)
+- **Task:** MAN-P4-009, the icon layout check from PR #26.
+- **Summary:** I measured MAN-P4-009 with a script on production builds at 1440, 768, 390 and 320 px. Three buttons put their icon between the lines when the label wrapped: Open in Maps on home at 768 px, and Message on Facebook and Call or Text on the pickup send step. The shared button style centers its items, so a label on two lines pulled its icon down with it. An icon that is a direct child of `.button-primary`, `.button-secondary` or `.button-ghost` now sits at the top of the button, in a box as tall as a one-line button's content. It stays centered on a one-line label and on the first line of a wrapped one. The one CSS rule covers all seven buttons with icons.
+- **Files:** `src/app/globals.css`, `tests/e2e/showcase.spec.ts`, `docs/test-cases.md`, `docs/development-log.md`, `docs/evidence/phase-3/button-icons/` (4 screenshots).
+- **Testing:** TC-P4-198 failed on a production build of `main` and passed with the fix. After the fix, the measurement found no misaligned icon in 23 views. Format, the docs check, lint and typecheck passed; Vitest 320/320 in 43 files; Playwright `chromium` 21 passed and 1 skipped on a build with the CI settings.
+- **Branch / PR:** `fix/p3-button-icon-first-line`, PR #66.
+- **Next action:** Record the Phase 3 closeout.
