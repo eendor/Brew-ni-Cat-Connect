@@ -348,20 +348,20 @@ export function CartPageView() {
         </Container>
       </section>
 
-      {editingLine && catalog ? (
-        (() => {
-          const item = findCatalogItem(catalog, editingLine.itemId);
-          if (!item) return null;
-          return (
-            <MenuItemOrderDialog
-              item={item}
-              catalog={catalog}
-              editingLine={editingLine}
-              onClose={() => setEditingLine(null)}
-            />
-          );
-        })()
-      ) : null}
+      {editingLine && catalog
+        ? (() => {
+            const item = findCatalogItem(catalog, editingLine.itemId);
+            if (!item) return null;
+            return (
+              <MenuItemOrderDialog
+                item={item}
+                catalog={catalog}
+                editingLine={editingLine}
+                onClose={() => setEditingLine(null)}
+              />
+            );
+          })()
+        : null}
     </>
   );
 }

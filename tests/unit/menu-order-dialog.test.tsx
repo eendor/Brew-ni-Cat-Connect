@@ -287,6 +287,8 @@ describe("MenuItemOrderDialog & MenuItemCard ordering integration", () => {
     expect(within(dialog).getByText("3")).toBeInTheDocument();
 
     await user.click(within(dialog).getByRole("button", { name: /22 oz/i }));
-    await user.click(within(dialog).getByRole("button", { name: "Update item" }));
+    await user.click(
+      within(dialog).getByRole("button", { name: "Update item" }),
+    );
   });
 });

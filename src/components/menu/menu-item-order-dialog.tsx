@@ -72,8 +72,12 @@ export function MenuItemOrderDialog({
     "";
   const presetFlavor =
     editingLine?.flavor !== undefined
-      ? (editingLine.flavor && item.flavors.includes(editingLine.flavor) ? editingLine.flavor : null)
-      : (initialFlavor && item.flavors.includes(initialFlavor) ? initialFlavor : null);
+      ? editingLine.flavor && item.flavors.includes(editingLine.flavor)
+        ? editingLine.flavor
+        : null
+      : initialFlavor && item.flavors.includes(initialFlavor)
+        ? initialFlavor
+        : null;
   const initialQty = editingLine?.quantity ?? 1;
 
   const [selectedVariantId, setSelectedVariantId] =

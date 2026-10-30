@@ -198,7 +198,9 @@ test("TC-P4-123 — Place order sends the pickup order and opens its order page"
   expect(new URL(page.url()).hash).toBe(`#token=${request?.trackingToken}`);
 });
 
-test("TC-P3-071 — edits an existing cart item on /cart page", async ({ page }) => {
+test("TC-P3-071 — edits an existing cart item on /cart page", async ({
+  page,
+}) => {
   await mockMenu(page);
   await page.goto("/menu");
 
@@ -209,7 +211,9 @@ test("TC-P3-071 — edits an existing cart item on /cart page", async ({ page })
   await orderDialog.getByRole("button", { name: "Add to Order" }).click();
 
   await page.goto("/cart");
-  await expect(page.getByRole("heading", { name: "Shopping Cart" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Shopping Cart" }),
+  ).toBeVisible();
 
   await page.getByRole("button", { name: /Edit Takoyaki/i }).click();
 
