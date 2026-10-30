@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 
 import { Container } from "@/components/ui/container";
@@ -7,11 +8,15 @@ import { PageIntro } from "@/components/ui/page-intro";
 import { siteConfig } from "@/config/site";
 import { useCart } from "@/context/cart-context";
 import { StateScene } from "@/components/three/state-scene";
+import { fetchPublicMenu } from "@/lib/menu/fetch-public-menu";
+import { findCatalogItem } from "@/lib/ordering/cart-pricing";
 import { formatPrice } from "@/lib/menu/format-price";
 import { usePreparedSummary } from "@/lib/ordering/prepared-summary";
-import type { FulfillmentType } from "@/types/ordering";
+import type { MenuCatalog } from "@/types/menu";
+import type { CartItem, FulfillmentType } from "@/types/ordering";
 
 import { CartLineItem } from "./cart-line-item";
+import { MenuItemOrderDialog } from "../menu/menu-item-order-dialog";
 
 export function CartPageView() {
   const {
@@ -27,6 +32,35 @@ export function CartPageView() {
   } = useCart();
   // a summary made at checkout holds the order the cart gave up (ADR-020)
   const savedSummary = usePreparedSummary();
+
+  const [catalog, setCatalog] = useState<MenuCatalog | null>(null);
+  const [isLoadingMenu, setIsLoadingMenu] = useState<boolean>(true);
+  const [menuError, setMenuError] = useState<boolean>(false);
+  const [editingLine, setEditingLine] = useState<CartItem | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    fetchPublicMenu()
+      .then((result) => {
+        if (!active) return;
+        if (result) {
+          setCatalog(result);
+        } else {
+          setMenuError(true);
+        }
+      })
+      .catch(() => {
+        if (!active) return;
+        setMenuError(true);
+      })
+      .finally(() => {
+        if (!active) return;
+        setIsLoadingMenu(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   return (
     <>
@@ -123,6 +157,11 @@ export function CartPageView() {
                           updateQuantity(line.key, qty)
                         }
                         onRemove={() => removeItem(line.key)}
+                        onEdit={
+                          !isLoadingMenu && !menuError && catalog
+                            ? () => setEditingLine(line)
+                            : undefined
+                        }
                       />
                     ))}
                   </ul>
@@ -308,6 +347,21 @@ export function CartPageView() {
           )}
         </Container>
       </section>
+
+      {editingLine && catalog ? (
+        (() => {
+          const item = findCatalogItem(catalog, editingLine.itemId);
+          if (!item) return null;
+          return (
+            <MenuItemOrderDialog
+              item={item}
+              catalog={catalog}
+              editingLine={editingLine}
+              onClose={() => setEditingLine(null)}
+            />
+          );
+        })()
+      ) : null}
     </>
   );
 }

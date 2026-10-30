@@ -25,6 +25,7 @@ import {
   resolveVariantUnitPrice,
 } from "@/lib/ordering/cart-pricing";
 import type { MenuCatalog, MenuItem } from "@/types/menu";
+import type { CartItem } from "@/types/ordering";
 
 import { MenuOrderPreview } from "./menu-order-preview";
 
@@ -37,6 +38,8 @@ type MenuItemOrderDialogProps = Readonly<{
   initialVariantId?: string;
   /** Opens with this flavor picked, when the item lists it. */
   initialFlavor?: string | null;
+  /** When editing an existing cart line. */
+  editingLine?: CartItem;
   /** Used to pick a generic 3D model for items without a photo. */
   categoryName?: string;
   onClose: () => void;
@@ -47,10 +50,11 @@ export function MenuItemOrderDialog({
   catalog,
   initialVariantId,
   initialFlavor,
+  editingLine,
   categoryName = "",
   onClose,
 }: MenuItemOrderDialogProps) {
-  const { addItem, openDrawer } = useCart();
+  const { addItem, replaceLine, openDrawer } = useCart();
   const titleId = useId();
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const addButtonRef = useRef<HTMLButtonElement>(null);
@@ -62,20 +66,22 @@ export function MenuItemOrderDialog({
 
   // A preset only counts when it names one of this item's own options.
   const presetVariantId =
+    editingLine?.variantId ??
     item.variants.find((variant) => variant.id === initialVariantId)?.id ??
     item.variants[0]?.id ??
     "";
   const presetFlavor =
-    initialFlavor && item.flavors.includes(initialFlavor)
-      ? initialFlavor
-      : null;
+    editingLine?.flavor !== undefined
+      ? (editingLine.flavor && item.flavors.includes(editingLine.flavor) ? editingLine.flavor : null)
+      : (initialFlavor && item.flavors.includes(initialFlavor) ? initialFlavor : null);
+  const initialQty = editingLine?.quantity ?? 1;
 
   const [selectedVariantId, setSelectedVariantId] =
     useState<string>(presetVariantId);
   const [selectedFlavor, setSelectedFlavor] = useState<string | null>(
     presetFlavor,
   );
-  const [quantity, setQuantity] = useState<number>(1);
+  const [quantity, setQuantity] = useState<number>(initialQty);
   const [feedbackError, setFeedbackError] = useState<string | null>(null);
 
   // The latest selection, updated synchronously by every handler, so Add
@@ -84,7 +90,7 @@ export function MenuItemOrderDialog({
   const selectionRef = useRef({
     variantId: presetVariantId,
     flavor: presetFlavor,
-    quantity: 1,
+    quantity: initialQty,
   });
   const submittedRef = useRef(false);
 
@@ -252,35 +258,45 @@ export function MenuItemOrderDialog({
       return;
     }
 
-    const result = addItem(activeCatalog, {
-      itemId: item.id,
-      variantId: variant.id,
-      flavor: current.flavor,
-      quantity: current.quantity,
-    });
+    const result = editingLine
+      ? replaceLine(activeCatalog, editingLine.key, {
+          variantId: variant.id,
+          flavor: current.flavor,
+          quantity: current.quantity,
+        })
+      : addItem(activeCatalog, {
+          itemId: item.id,
+          variantId: variant.id,
+          flavor: current.flavor,
+          quantity: current.quantity,
+        });
 
     if (result.ok) {
       submittedRef.current = true;
-      const rect = addButtonRef.current?.getBoundingClientRect();
-      const photo = getMenuItemImage(item.name)?.src;
-      const delay = rect
-        ? requestCartToss({
-            from: {
-              x: rect.left,
-              y: rect.top,
-              width: rect.width,
-              height: rect.height,
-            },
-            photo: photo ? optimizedSrc(photo, 384) : null,
-            glow: glowForItem(item.name),
-            label: item.name,
-          })
-        : 0;
-      requestClose();
-      if (delay > 0) {
-        window.setTimeout(openDrawer, delay);
+      if (!editingLine) {
+        const rect = addButtonRef.current?.getBoundingClientRect();
+        const photo = getMenuItemImage(item.name)?.src;
+        const delay = rect
+          ? requestCartToss({
+              from: {
+                x: rect.left,
+                y: rect.top,
+                width: rect.width,
+                height: rect.height,
+              },
+              photo: photo ? optimizedSrc(photo, 384) : null,
+              glow: glowForItem(item.name),
+              label: item.name,
+            })
+          : 0;
+        requestClose();
+        if (delay > 0) {
+          window.setTimeout(openDrawer, delay);
+        } else {
+          openDrawer();
+        }
       } else {
-        openDrawer();
+        requestClose();
       }
     } else {
       setFeedbackError(result.message);
@@ -558,7 +574,7 @@ export function MenuItemOrderDialog({
               className="button-primary"
               onClick={handleAddToCart}
             >
-              Add to Order
+              {editingLine ? "Update item" : "Add to Order"}
             </button>
           </div>
         </div>

@@ -5,6 +5,7 @@ import {
   createInitialCartState,
   getAddItemFailureMessage,
   removeCartLine,
+  replaceCatalogSelection,
   setCartFulfillment,
   updateCartLineQuantity,
 } from "@/lib/ordering/cart-reducer";
@@ -810,5 +811,92 @@ describe("cart fulfillment and reducer boundary", () => {
       second.state,
     );
     expect(second.state.lines[1]).toMatchObject({ quantity: 1 });
+  });
+
+  describe("cart catalog replacement (FR-018)", () => {
+    it("TC-P3-067 — replaces cart line variant/flavor and preserves quantity", () => {
+      const state = addMatcha(createInitialCartState(), {
+        variantId: "matcha-16",
+        flavor: null,
+        quantity: 3,
+      });
+      const lineKey = state.lines[0]?.key ?? "";
+
+      const res = replaceCatalogSelection(state, catalog, lineKey, {
+        variantId: "matcha-22",
+        flavor: "Strawberry",
+      });
+
+      if (!res.ok) {
+        throw new Error(`expected success, got ${res.reason}`);
+      }
+
+      expect(res.state.lines).toHaveLength(1);
+      expect(res.state.lines[0]).toMatchObject({
+        variantId: "matcha-22",
+        variantName: "22 oz",
+        flavor: "Strawberry",
+        quantity: 3,
+        unitPrice: 105,
+        lineTotal: 315,
+      });
+    });
+
+    it("TC-P3-068 — merges quantities when replacement target matches an existing line", () => {
+      let state = addMatcha(createInitialCartState(), {
+        variantId: "matcha-16",
+        flavor: null,
+        quantity: 2,
+      });
+      const res2 = addCatalogSelection(state, catalog, {
+        itemId: "matcha",
+        variantId: "matcha-22",
+        flavor: "Strawberry",
+        quantity: 4,
+      });
+      if (!res2.ok) throw new Error("add failed");
+      state = res2.state;
+      expect(state.lines).toHaveLength(2);
+
+      const line1Key = state.lines[0]?.key ?? "";
+
+      const res = replaceCatalogSelection(state, catalog, line1Key, {
+        variantId: "matcha-22",
+        flavor: "Strawberry",
+      });
+
+      if (!res.ok) {
+        throw new Error(`expected success, got ${res.reason}`);
+      }
+
+      expect(res.state.lines).toHaveLength(1);
+      expect(res.state.lines[0]).toMatchObject({
+        variantId: "matcha-22",
+        flavor: "Strawberry",
+        quantity: 6,
+        unitPrice: 105,
+        lineTotal: 630,
+      });
+    });
+
+    it("TC-P3-069 — rejects invalid variant or flavor when replacing cart line", () => {
+      const state = addMatcha(createInitialCartState(), {
+        variantId: "matcha-16",
+        flavor: null,
+        quantity: 2,
+      });
+      const lineKey = state.lines[0]?.key ?? "";
+
+      const res = replaceCatalogSelection(state, catalog, lineKey, {
+        variantId: "nonexistent-variant",
+        flavor: null,
+      });
+
+      expect(res.ok).toBe(false);
+      if (!res.ok) {
+        expect(res.reason).toBe("unknown-variant");
+      }
+      expect(res.state).toBe(state);
+    });
   });
 });

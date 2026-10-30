@@ -197,3 +197,28 @@ test("TC-P4-123 — Place order sends the pickup order and opens its order page"
   });
   expect(new URL(page.url()).hash).toBe(`#token=${request?.trackingToken}`);
 });
+
+test("TC-P3-071 — edits an existing cart item on /cart page", async ({ page }) => {
+  await mockMenu(page);
+  await page.goto("/menu");
+
+  await page.getByRole("button", { name: "Order Takoyaki" }).click();
+  const orderDialog = page.getByRole("dialog");
+  await orderDialog.getByRole("button", { name: "4 pcs" }).click();
+  await orderDialog.getByRole("button", { name: "Octopus" }).click();
+  await orderDialog.getByRole("button", { name: "Add to Order" }).click();
+
+  await page.goto("/cart");
+  await expect(page.getByRole("heading", { name: "Shopping Cart" })).toBeVisible();
+
+  await page.getByRole("button", { name: /Edit Takoyaki/i }).click();
+
+  const editDialog = page.getByRole("dialog");
+  await expect(editDialog).toBeVisible();
+  await editDialog.getByRole("button", { name: "8 pcs" }).click();
+  await editDialog.getByRole("button", { name: "Cheese" }).click();
+  await editDialog.getByRole("button", { name: "Update item" }).click();
+
+  await expect(page.getByText("8 pcs")).toBeVisible();
+  await expect(page.getByText(/Flavor: Cheese/)).toBeVisible();
+});

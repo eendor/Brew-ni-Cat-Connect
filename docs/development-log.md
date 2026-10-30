@@ -1087,3 +1087,13 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Testing:** TC-P4-187 to TC-P4-189 added; TC-P4-001 back in the 3D browser suite; TC-P4-145 marked superseded. Vitest 315/315; Playwright `chromium-3d` 20/20 on a production build (9.5 min).
 - **Branch / PR:** `feat/showcase-page-scroll`, PR #64.
 - **Next action:** None for the showcase. The 60 fps check on the laptop's integrated GPU stays on my release card.
+
+## 2026-10-30 — FR-018: Cart Line Editing implementation
+
+- **Phase:** 3 (Ordering & Cart)
+- **Task:** Implement FR-018: Cart Line Editing (changing quantity, editing item configuration/size/variant or flavor, removing lines, merging quantities on duplicate match, and public menu integration on `/cart`).
+- **Summary:** Implemented `replaceCatalogSelection` in `src/lib/ordering/cart-reducer.ts` and `replaceLine` in `src/context/cart-context.tsx`. Updated `cart-line-item.tsx` to conditionally show the Edit button when `onEdit` is provided (not in drawer/checkout). Updated `MenuItemOrderDialog` to support edit mode with prepopulated options, quantity preservation, and "Update item" action. Updated `/cart` (`cart-page-view.tsx`) to load the public menu via `fetchPublicMenu` and manage cart line editing. Added focused unit and E2E tests covering reducer replacement, duplicate merging, invalid options, dialog edit mode, and `/cart` editing.
+- **Files:** `src/types/ordering.ts`, `src/lib/ordering/cart-reducer.ts`, `src/context/cart-context.tsx`, `src/components/cart/cart-line-item.tsx`, `src/components/menu/menu-item-order-dialog.tsx`, `src/components/cart/cart-page-view.tsx`, `tests/unit/cart-reducer.test.ts`, `tests/unit/menu-order-dialog.test.tsx`, `tests/e2e/ordering.spec.ts`, `docs/test-cases.md`, `docs/functional-requirements.md`, `docs/development-log.md`.
+- **Testing:** TC-P3-067 to TC-P3-071 added. Vitest 319/319 passed in 43 files; Playwright E2E tests passed. Typecheck (`npm run typecheck`) and lint (`npm run lint`) passed clean.
+- **Branch / PR:** `feat/p3-cart-line-edit`.
+- **Next action:** Proceed with any remaining teammate Phase 3 PRs or verification steps.

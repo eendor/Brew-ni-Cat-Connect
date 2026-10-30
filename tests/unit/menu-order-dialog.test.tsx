@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 import { CartDrawer } from "@/components/cart/cart-drawer";
 import { MenuItemCard } from "@/components/menu/menu-item-card";
+import { MenuItemOrderDialog } from "@/components/menu/menu-item-order-dialog";
 import { CartProvider } from "@/context/cart-context";
 import type { MenuCatalog, MenuItem } from "@/types/menu";
 
@@ -253,5 +254,39 @@ describe("MenuItemOrderDialog & MenuItemCard ordering integration", () => {
 
     expect(screen.getByText(/Flavor: Octopus/)).toBeInTheDocument();
     expect(screen.getAllByText("₱60").length).toBeGreaterThan(0);
+  });
+
+  it("TC-P3-070 — supports edit mode in MenuItemOrderDialog with prepopulated selections and 'Update item' button", async () => {
+    const user = userEvent.setup();
+    render(
+      <CartProvider storageKey="test_edit_mode_storage">
+        <MenuItemOrderDialog
+          item={sampleDrinkItem}
+          catalog={sampleCatalog}
+          editingLine={{
+            key: "iced-matcha::matcha-16::Original",
+            itemId: "iced-matcha",
+            itemName: "Iced Matcha Latte",
+            variantId: "matcha-16",
+            variantName: "16 oz",
+            flavor: "Original",
+            unitPrice: 85,
+            quantity: 3,
+            lineTotal: 255,
+          }}
+          onClose={() => {}}
+        />
+      </CartProvider>,
+    );
+
+    const dialog = screen.getByRole("dialog");
+    expect(dialog).toBeInTheDocument();
+    expect(
+      within(dialog).getByRole("button", { name: "Update item" }),
+    ).toBeInTheDocument();
+    expect(within(dialog).getByText("3")).toBeInTheDocument();
+
+    await user.click(within(dialog).getByRole("button", { name: /22 oz/i }));
+    await user.click(within(dialog).getByRole("button", { name: "Update item" }));
   });
 });
