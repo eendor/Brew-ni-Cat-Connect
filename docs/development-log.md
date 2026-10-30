@@ -792,7 +792,7 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Testing performed:** `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm test` (19 files / 136 tests passed), `npm run build`, `npm run test:e2e` (25/25 passed: 16 in `chromium`, 9 in `chromium-3d`), `npm run audit` (0 vulnerabilities), `python3 scripts/validate_phase0_docs.py` (PASS). Six cold `npm ci` + `npm test` runs also passed, including one with Supabase settings exported in the shell.\
 **Git branch:** `feat/social-icons`\
 **Pull request:** [#26](https://github.com/eendor/Brew-ni-Cat-Connect/pull/26) — self-reviewed and squash-merged into `main` on 2026-10-18\
-**Next action:** Lead spot-check MAN-P4-009, the GCash QR once the owner sends it, and the click-through on a physical phone (MAN-P4-007). **Update (2026-10-30):** the GCash QR shipped in PR #29, MAN-P4-007 passed on 2026-10-28 (PR #60), and MAN-P4-009 was measured on 2026-10-30 (see the Phase 3 closeout entry).
+**Next action:** Lead spot-check MAN-P4-009, the GCash QR once the owner sends it, and the click-through on a physical phone (MAN-P4-007). **Update (2026-10-30):** the GCash QR shipped in PR #29, MAN-P4-007 passed on 2026-10-28 (PR #60), and MAN-P4-009 passed on 2026-10-30 after the button icon fix in PR #66.
 
 ## 2026-10-19 — GCash QR on pickup checkout and Abellera St address
 
