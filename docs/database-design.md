@@ -323,3 +323,25 @@ The undo drops both tables, with their triggers, and the rule functions. The web
 ### 10.7 Tests
 
 TC-P4-206 to TC-P4-212 run the migration and the undo on PGlite (`tests/database/site-content.test.ts`).
+
+## 11. Product Icon and Image Columns (Phase 9 — 2026-10-31)
+
+File: `supabase/migrations/20261031120000_item_icon_and_image.sql`. Undo: `supabase/rollbacks/20261031120000_item_icon_and_image.sql`. Covers the database schema for FR-093.
+
+### 11.1 Columns added to `public.items`
+
+| Column | Type | Purpose |
+| --- | --- | --- |
+| `icon` | `text`, nullable | Short POS icon key (`^[a-z0-9_]{1,40}$`, e.g. `coffee`, `cup_soda`, `leaf`, `milk`); `null` uses the built-in icon for the item or category |
+| `image_url` | `text`, nullable | Product photo path under `/images/` (`.jpg`, `.jpeg`, `.png`, `.webp`, `.svg`, no `..` or `//`) or `https://` URL up to 500 characters; `null` uses the website's built-in photo mapping |
+
+### 11.2 Constraints and access
+
+- `items_icon_check` rejects empty strings, uppercase letters, spaces, hyphens and values longer than 40 characters (`SQLSTATE 23514`).
+- `items_image_url_check` rejects empty strings, `http://` links, local paths outside `/images/`, path traversal (`..`), double slashes (`//`), unsupported local extensions, control characters and strings longer than 500 characters (`SQLSTATE 23514`).
+- Table-level RLS and grants from `20261024011051_restore_rls.sql` apply unchanged: `anon` and `authenticated` can read both columns (`menu_readable_by_everyone`), and only staff (`private.is_staff()`) can insert or update them (`staff_full_access`).
+
+### 11.3 Undo and tests
+
+- `supabase/rollbacks/20261031120000_item_icon_and_image.sql` drops `items_image_url_check`, `items_icon_check`, `image_url` and `icon` from `public.items` without touching existing rows or prices.
+- TC-P4-243 to TC-P4-247 run the migration, constraint checks, access checks and rollback on PGlite (`tests/database/item-icon-and-image.test.ts`).

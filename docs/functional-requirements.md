@@ -168,7 +168,7 @@ FR-093 was added after FR-092. It belongs with the POS and owner administration 
 
 | ID | Requirement | Acceptance / verification | Priority | Target phase | Status |
 | --- | --- | --- | --- | --- | --- |
-| FR-093 | The POS (Android behind the owner PIN, and the web manager panel) shall let the owner add and edit categories and products, including product name, category, icon choice, sizes, flavors, per-size or per-flavor prices, and availability, without the built-in seeded menu overwriting or re-adding items the owner edited or deleted. | Adding or editing a category or product in the POS saves to the shared catalog with the chosen icon and prices; restarting or syncing the Android POS does not overwrite owner edits or restore deleted items. | Must | 9 | Planned |
+| FR-093 | The POS (Android behind the owner PIN, and the web manager panel) shall let the owner add and edit categories and products, including product name, category, icon choice, sizes, flavors, per-size or per-flavor prices, and availability, without the built-in seeded menu overwriting or re-adding items the owner edited or deleted. | Adding or editing a category or product in the POS saves to the shared catalog with the chosen icon and prices; restarting or syncing the Android POS does not overwrite owner edits or restore deleted items. | Must | 9 | In development (`icon` and `image_url` columns and rollback built; Android and web POS editors are next) |
 
 ## 12. Requirement dependencies and open owner decisions
 
