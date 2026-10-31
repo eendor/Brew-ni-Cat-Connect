@@ -30,7 +30,7 @@ export function MenuState({ state, onRetry }: MenuStateProps) {
 
   return (
     <div
-      className="mx-auto max-w-2xl rounded-[2rem] border border-[var(--border-soft)] bg-[var(--surface-card)] p-7 text-center shadow-[var(--shadow-subtle)] sm:p-10"
+      className="ios-card mx-auto max-w-2xl p-7 text-center sm:p-10"
       role={
         state === "loading" ? "status" : state === "error" ? "alert" : "status"
       }

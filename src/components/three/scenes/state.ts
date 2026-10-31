@@ -1,6 +1,7 @@
 import * as THREE from "three";
 
 import { DRINKS_GLOW } from "@/components/menu/category-glow";
+import type { Theme } from "@/lib/theme/theme";
 
 import {
   disposeScene,
@@ -16,7 +17,7 @@ import {
   smooth,
   type Quality,
 } from "../engine/runtime";
-import { STUDIO } from "../engine/studio";
+import { currentTheme, followTheme, studioCanvas } from "../engine/studio";
 import {
   beanGeometry,
   contactShadowTexture,
@@ -26,7 +27,7 @@ import {
   liteMaterials,
   makeCup,
 } from "./models";
-import { makeBackdrop, titleTexture } from "./showcase";
+import { makeBackdrop, themeBackdrop, titleTexture } from "./showcase";
 
 export type StateKind = "empty" | "ready" | "lost";
 const CUP_SCALE = 0.8;
@@ -71,7 +72,6 @@ export async function initState(
   renderer.transmissionResolutionScale = 0.75;
   const env = await studioEnvironment(renderer);
   const scene = new THREE.Scene();
-  if (lost) scene.background = new THREE.Color(STUDIO.canvas);
   scene.environment = env;
   scene.environmentIntensity = 0.65;
   const camera = new THREE.PerspectiveCamera(lost ? 32 : 28, 1, 0.1, 60);
@@ -126,6 +126,7 @@ export async function initState(
   let backdropMesh: THREE.Mesh | null = null;
   let backlight: THREE.Mesh | null = null;
   let backdropUniforms: Record<string, THREE.IUniform> | null = null;
+  let backdropMaterial: THREE.ShaderMaterial | null = null;
   let title: THREE.Texture | null = null;
   const roll = new THREE.Group();
   let floorY = BASE_Y;
@@ -134,6 +135,7 @@ export async function initState(
     const { display } = fontFamilies();
     const backdrop = makeBackdrop();
     title = titleTexture("404", display);
+    backdropMaterial = backdrop.material;
     backdropUniforms = backdrop.material.uniforms;
     backdropUniforms.uA!.value = title;
     backdropUniforms.uB!.value = title;
@@ -363,14 +365,25 @@ export async function initState(
   // the lite tier (ADR-014) shows clear parts as a gloss, not refraction
   if (quality.lite) liteMaterials(scene);
 
+  // the 404 stage fills its band with the page's wall, recolored when the
+  // theme changes; the other states are see-through
+  const recolor = (theme: Theme) => {
+    if (!lost) return;
+    scene.background = new THREE.Color(studioCanvas(theme));
+    if (backdropMaterial) themeBackdrop(backdropMaterial, theme);
+  };
+  recolor(currentTheme());
+
   // shaders compile off the main thread and have their first draw now,
   // before the scene is shown, not in the frames scrolled past it
   await renderer.compileAsync(scene, camera);
   warmUp(renderer, scene, () => renderer.render(scene, camera));
 
+  const stopTheme = followTheme(recolor);
   return {
     frame,
     dispose() {
+      stopTheme();
       observer.disconnect();
       title?.dispose();
       disposeScene(scene, renderer);

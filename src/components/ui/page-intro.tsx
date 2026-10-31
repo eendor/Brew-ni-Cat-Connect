@@ -32,7 +32,7 @@ export function PageIntro({
               {/* a 44 px tap target; the negative margin keeps the line height */}
               <Link
                 href="/"
-                className="-my-3 inline-flex min-h-11 min-w-11 items-center rounded-sm font-bold underline decoration-[var(--border-strong)] underline-offset-4 transition-colors hover:text-[var(--text-strong)]"
+                className="-my-3 inline-flex min-h-11 min-w-11 items-center rounded-sm font-semibold underline decoration-[var(--border-strong)] underline-offset-4 transition-colors hover:text-[var(--text-strong)]"
               >
                 Home
               </Link>

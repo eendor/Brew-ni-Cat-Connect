@@ -328,10 +328,10 @@ export function MenuItemOrderDialog({
       />
 
       <div
-        className="relative w-full max-w-lg rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-overlay)] p-6 sm:p-8 shadow-2xl max-h-[90vh] overflow-y-auto"
+        className="ios-sheet relative max-h-[90vh] w-full max-w-lg overflow-y-auto p-6 sm:p-8"
         data-overlay="panel"
       >
-        <div className="flex items-start justify-between gap-4 border-b border-[var(--border-soft)] pb-4">
+        <div className="flex items-start justify-between gap-4 border-b border-[var(--separator)] pb-4">
           <div>
             <span className="eyebrow block">Configure item</span>
             <h2
@@ -345,7 +345,7 @@ export function MenuItemOrderDialog({
           <button
             ref={closeButtonRef}
             type="button"
-            className="inline-flex size-11 items-center justify-center rounded-full text-[var(--text-muted)] hover:bg-[var(--surface-warm)] hover:text-[var(--text-strong)] transition-colors"
+            className="ios-icon-button text-[var(--text-muted)] hover:text-[var(--text-strong)]"
             aria-label="Close dialog"
             onClick={requestClose}
           >
@@ -374,7 +374,7 @@ export function MenuItemOrderDialog({
           {/* Variant Selection Fieldset */}
           {item.variants.length > 0 ? (
             <fieldset className="mx-0 min-w-0 border-0 p-0">
-              <legend className="block text-xs font-bold uppercase tracking-wider text-[var(--text-subtle)] mb-2">
+              <legend className="ios-label mb-2 block">
                 Choose Size / Option
               </legend>
               <div
@@ -395,17 +395,17 @@ export function MenuItemOrderDialog({
                       type="button"
                       aria-pressed={isSelected}
                       onClick={() => chooseVariant(variant.id)}
-                      className={`flex min-w-0 rounded-xl border p-3 text-left transition-all ${
+                      className={`flex min-w-0 rounded-[var(--shape-md)] border p-3 text-left transition-all ${
                         longOptions
                           ? "items-center justify-between gap-3"
                           : "flex-col items-start"
                       } ${
                         isSelected
-                          ? "border-[var(--accent-solid)] bg-[var(--surface-warm)] ring-2 ring-[var(--accent-solid)] font-extrabold"
-                          : "border-[var(--border-soft)] bg-[var(--surface-card)] hover:bg-[var(--surface-warm)]"
+                          ? "border-[var(--accent-solid)] bg-[var(--accent-soft)] ring-1 ring-[var(--accent-solid)]"
+                          : "border-transparent bg-[var(--fill-secondary)] hover:bg-[var(--fill-primary)]"
                       }`}
                     >
-                      <span className="min-w-0 font-bold text-sm text-[var(--text-strong)] [overflow-wrap:anywhere]">
+                      <span className="min-w-0 text-sm font-semibold [overflow-wrap:anywhere] text-[var(--text-strong)]">
                         {formatOptionName(variant.name)}
                         {isSelected ? (
                           <span className="sr-only"> (selected)</span>
@@ -417,7 +417,7 @@ export function MenuItemOrderDialog({
                         variant.flavorPrices.length > 0
                       ) ? (
                         <span
-                          className={`shrink-0 text-xs font-extrabold text-[var(--accent-strong)] ${longOptions ? "" : "mt-1"}`}
+                          className={`shrink-0 text-xs font-semibold text-[var(--accent-strong)] tabular-nums ${longOptions ? "" : "mt-1"}`}
                         >
                           {formatPrice(variant.basePrice)}
                         </span>
@@ -439,12 +439,10 @@ export function MenuItemOrderDialog({
           {item.flavors.length > 0 ? (
             <fieldset className="mx-0 min-w-0 border-0 p-0">
               <div className="flex items-center justify-between mb-2">
-                <legend className="block text-xs font-bold uppercase tracking-wider text-[var(--text-subtle)]">
-                  Choose Flavor
-                </legend>
+                <legend className="ios-label block">Choose Flavor</legend>
                 {selectedVariant?.basePrice === 0 &&
                 selectedVariant.flavorPrices.length > 0 ? (
-                  <span className="text-xs font-bold text-[var(--accent-solid)]">
+                  <span className="text-xs font-semibold text-[var(--accent-solid)]">
                     Required
                   </span>
                 ) : (
@@ -460,10 +458,10 @@ export function MenuItemOrderDialog({
                     type="button"
                     aria-pressed={selectedFlavor === null}
                     onClick={() => chooseFlavor(null)}
-                    className={`inline-flex min-h-11 items-center rounded-full px-4 py-2 text-sm font-bold transition-all ${
+                    className={`ios-chip min-h-11 px-4 transition-all ${
                       selectedFlavor === null
-                        ? "bg-[var(--accent-solid)] text-[var(--on-accent)] shadow-xs"
-                        : "border border-[var(--border-soft)] bg-[var(--surface-warm)] text-[var(--text-strong)] hover:bg-[var(--accent-soft)]"
+                        ? "shadow-xs"
+                        : "hover:bg-[var(--fill-primary)]"
                     }`}
                   >
                     No flavor / Standard
@@ -483,10 +481,10 @@ export function MenuItemOrderDialog({
                       type="button"
                       aria-pressed={isSelected}
                       onClick={() => chooseFlavor(flavor)}
-                      className={`inline-flex min-h-11 items-center rounded-full px-4 py-2 text-sm font-bold transition-all ${
+                      className={`ios-chip min-h-11 px-4 transition-all ${
                         isSelected
-                          ? "bg-[var(--accent-solid)] text-[var(--on-accent)] shadow-xs"
-                          : "border border-[var(--border-soft)] bg-[var(--surface-warm)] text-[var(--text-strong)] hover:bg-[var(--accent-soft)]"
+                          ? "shadow-xs"
+                          : "hover:bg-[var(--fill-primary)]"
                       }`}
                     >
                       {flavor}
@@ -504,13 +502,11 @@ export function MenuItemOrderDialog({
 
           {/* Quantity Controls */}
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-[var(--text-subtle)] mb-2">
-              Quantity
-            </label>
-            <div className="inline-flex items-center rounded-full border border-[var(--border-strong)] bg-[var(--surface-warm)] p-1">
+            <label className="ios-label mb-2 block">Quantity</label>
+            <div className="ios-stepper">
               <button
                 type="button"
-                className="inline-flex size-11 items-center justify-center rounded-full text-[var(--text-strong)] transition-colors hover:bg-[var(--surface-card)] disabled:opacity-40"
+                className="size-11"
                 aria-label="Decrease quantity"
                 disabled={quantity <= 1}
                 onClick={() => changeQuantity(-1)}
@@ -527,12 +523,12 @@ export function MenuItemOrderDialog({
                   <path d="M5 12h14" />
                 </svg>
               </button>
-              <span className="min-w-10 px-2 text-center text-sm font-extrabold text-[var(--text-strong)]">
+              <span className="min-w-10 px-2 text-center text-base font-semibold text-[var(--text-strong)] tabular-nums">
                 {quantity}
               </span>
               <button
                 type="button"
-                className="inline-flex size-11 items-center justify-center rounded-full text-[var(--text-strong)] transition-colors hover:bg-[var(--surface-card)]"
+                className="size-11"
                 aria-label="Increase quantity"
                 onClick={() => changeQuantity(1)}
               >
@@ -555,19 +551,19 @@ export function MenuItemOrderDialog({
           {feedbackError ? (
             <div
               role="alert"
-              className="rounded-xl border border-[var(--danger)] bg-[var(--danger-soft)] p-3 text-sm font-bold text-[var(--danger)]"
+              className="rounded-[var(--shape-md)] border border-[var(--danger)] bg-[var(--danger-soft)] p-3 text-sm font-semibold text-[var(--danger)]"
             >
               {feedbackError}
             </div>
           ) : null}
 
           {/* Total & Action */}
-          <div className="border-t border-[var(--border-soft)] pt-5 flex items-center justify-between gap-4">
+          <div className="flex items-center justify-between gap-4 border-t border-[var(--separator)] pt-5">
             <div>
               <span className="block text-xs text-[var(--text-subtle)]">
                 Selection total
               </span>
-              <span className="text-2xl font-black text-[var(--accent-strong)]">
+              <span className="text-2xl font-bold text-[var(--accent-strong)] tabular-nums">
                 {lineTotal !== null ? formatPrice(lineTotal) : "—"}
               </span>
             </div>

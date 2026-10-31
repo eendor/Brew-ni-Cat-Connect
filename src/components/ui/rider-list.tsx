@@ -38,10 +38,10 @@ export function RiderList({ partners, className = "" }: RiderListProps) {
                 className="size-10 shrink-0 rounded-full bg-[var(--surface-raised)] object-cover ring-1 ring-[var(--border-soft)] @xs:size-14"
               />
               <span className="min-w-0">
-                <span className="block font-extrabold leading-snug text-[var(--text-strong)]">
+                <span className="block leading-snug font-semibold text-[var(--text-strong)]">
                   {rider.name}
                 </span>{" "}
-                <span className="mt-1 inline-flex items-center gap-1 whitespace-nowrap text-sm font-bold text-[var(--accent-strong)]">
+                <span className="mt-1 inline-flex items-center gap-1 text-sm font-semibold whitespace-nowrap text-[var(--accent-strong)]">
                   <FacebookIcon className="size-3.5 shrink-0" />
                   Facebook page
                   <svg

@@ -136,9 +136,10 @@ describe("SiteHeader", () => {
       siteConfig.navigation.length + 3,
     );
 
-    // the address and hours icons and the brand marks are decorative
+    // the address and hours icons, the brand marks and the night mode moon
+    // are decorative
     const icons = navigation.querySelectorAll("svg");
-    expect(icons).toHaveLength(4);
+    expect(icons).toHaveLength(5);
     icons.forEach((icon) => {
       expect(icon).toHaveAttribute("aria-hidden", "true");
       expect(icon).toHaveAttribute("focusable", "false");

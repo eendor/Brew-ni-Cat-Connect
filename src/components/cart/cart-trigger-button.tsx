@@ -20,10 +20,7 @@ export function CartTriggerButton({ className }: CartTriggerButtonProps) {
       onClick={toggleDrawer}
       aria-label={label}
       data-cart-trigger=""
-      className={
-        className ??
-        "relative inline-flex size-12 items-center justify-center rounded-full border border-[var(--border-strong)] bg-[var(--surface-card)] text-[var(--text-strong)] shadow-sm transition-colors hover:border-[var(--accent-solid)]"
-      }
+      className={className ?? "ios-icon-button relative size-12"}
     >
       <svg
         className="size-5"
@@ -41,7 +38,7 @@ export function CartTriggerButton({ className }: CartTriggerButtonProps) {
       </svg>
       {itemCount > 0 ? (
         <span
-          className="absolute -top-1 -right-1 flex min-w-5 h-5 items-center justify-center rounded-full bg-[var(--accent-solid)] px-1 text-xs font-black text-[var(--on-accent)] shadow-xs"
+          className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--accent-fill)] px-1 text-xs font-semibold text-[var(--on-accent)] tabular-nums shadow-xs"
           aria-hidden="true"
         >
           {itemCount}

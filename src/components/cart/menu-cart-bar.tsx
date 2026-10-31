@@ -9,8 +9,8 @@ export function MenuCartBar() {
   if (!isHydrated || isEmpty) return null;
 
   return (
-    <div className="sticky bottom-0 z-30 flex items-center justify-between gap-3 border-t border-[var(--border-soft)] bg-[var(--surface-canvas-translucent)] p-3 backdrop-blur-xl min-[769px]:hidden">
-      <span className="text-sm font-bold text-[var(--text-strong)]">
+    <div className="sticky bottom-0 z-30 flex items-center justify-between gap-3 border-t border-[var(--separator)] bg-[var(--bar-fill)] p-3 backdrop-blur-xl backdrop-saturate-[1.8] min-[769px]:hidden">
+      <span className="text-sm font-semibold text-[var(--text-strong)]">
         {itemCount} {itemCount === 1 ? "item" : "items"} ·{" "}
         {formatPrice(subtotal)}
       </span>

@@ -54,13 +54,13 @@ export function CartUndoToast() {
       {present && shown ? (
         <div
           ref={toastRef}
-          className="pointer-events-auto flex items-center gap-3 rounded-full border border-[var(--border-strong)] bg-[var(--surface-raised)] py-1.5 pr-1.5 pl-5 text-sm font-semibold text-[var(--text-strong)] shadow-[var(--shadow-card)]"
+          className="pointer-events-auto flex items-center gap-3 rounded-full border border-[var(--glass-stroke)] bg-[var(--bar-fill)] py-1.5 pr-1.5 pl-5 text-sm font-semibold text-[var(--text-strong)] shadow-[var(--glass-rim),var(--sheet-shadow)] backdrop-blur-xl backdrop-saturate-[1.8]"
           inert={leaving}
         >
           <span>{shown.message}</span>
           <button
             type="button"
-            className="inline-flex min-h-11 items-center rounded-full px-4 font-extrabold text-[var(--accent-solid)] hover:bg-[var(--accent-soft)]"
+            className="inline-flex min-h-11 items-center rounded-full px-4 font-semibold text-[var(--accent-solid)] hover:bg-[var(--accent-soft)]"
             onClick={undoLast}
           >
             Undo

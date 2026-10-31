@@ -155,7 +155,7 @@ export function fontFamilies() {
   const display =
     style.getPropertyValue("--font-big-shoulders").trim() ||
     '"Big Shoulders Display"';
-  const body = style.getPropertyValue("--font-archivo").trim() || "Archivo";
+  const body = style.getPropertyValue("--font-inter").trim() || "Inter";
   return { display, body };
 }
 

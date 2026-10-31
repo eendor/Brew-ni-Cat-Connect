@@ -75,10 +75,7 @@ export function ResetPasswordView() {
               This link is invalid or has expired.
             </p>
             <div className="mt-8">
-              <Link
-                href="/account/forgot-password"
-                className="button-primary inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-bold shadow-sm"
-              >
+              <Link href="/account/forgot-password" className="button-primary">
                 Forgot password
               </Link>
             </div>
@@ -102,7 +99,7 @@ export function ResetPasswordView() {
             </p>
           </div>
 
-          <div className="mt-8 rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-6 sm:p-8 shadow-[var(--shadow-subtle)]">
+          <div className="ios-card mt-8 p-6 sm:p-8">
             {isSuccess ? (
               <div className="space-y-6 text-center" role="status">
                 <div className="mx-auto flex size-14 items-center justify-center rounded-full bg-[var(--accent-soft)] text-[var(--accent-solid)]">
@@ -133,7 +130,7 @@ export function ResetPasswordView() {
                 <div className="pt-2">
                   <Link
                     href="/account/sign-in"
-                    className="button-primary w-full text-center py-3.5 text-base"
+                    className="button-primary w-full"
                   >
                     Continue to Sign In
                   </Link>
@@ -144,7 +141,7 @@ export function ResetPasswordView() {
                 {generalError ? (
                   <div
                     role="alert"
-                    className="rounded-xl border border-[var(--danger)] bg-[var(--danger-soft)] p-4 text-sm font-bold text-[var(--danger)]"
+                    className="rounded-[var(--shape-md)] border border-[var(--danger)] bg-[var(--danger-soft)] p-4 text-sm font-semibold text-[var(--danger)]"
                   >
                     {generalError}
                   </div>
@@ -153,7 +150,7 @@ export function ResetPasswordView() {
                 <div>
                   <label
                     htmlFor="reset-new-password"
-                    className="block text-sm font-bold text-[var(--text-strong)]"
+                    className="ios-label block"
                   >
                     New Password{" "}
                     <span className="text-[var(--danger)]" aria-hidden="true">
@@ -177,13 +174,13 @@ export function ResetPasswordView() {
                       errors.password ? "reset-password-error" : undefined
                     }
                     placeholder="At least 6 characters"
-                    className="mt-2 block w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface-input)] min-h-12 px-4 py-3 text-base text-[var(--text-strong)] placeholder-[var(--text-subtle)] aria-[invalid=true]:border-[var(--danger)] focus:border-[var(--accent-solid)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-solid)]"
+                    className="ios-field mt-2"
                   />
                   {errors.password ? (
                     <p
                       id="reset-password-error"
                       role="alert"
-                      className="mt-1.5 text-sm font-bold text-[var(--danger)]"
+                      className="mt-1.5 text-sm font-semibold text-[var(--danger)]"
                     >
                       {errors.password}
                     </p>
@@ -193,7 +190,7 @@ export function ResetPasswordView() {
                 <div>
                   <label
                     htmlFor="reset-confirm-password"
-                    className="block text-sm font-bold text-[var(--text-strong)]"
+                    className="ios-label block"
                   >
                     Confirm New Password{" "}
                     <span className="text-[var(--danger)]" aria-hidden="true">
@@ -219,13 +216,13 @@ export function ResetPasswordView() {
                         : undefined
                     }
                     placeholder="Re-type your new password"
-                    className="mt-2 block w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface-input)] min-h-12 px-4 py-3 text-base text-[var(--text-strong)] placeholder-[var(--text-subtle)] aria-[invalid=true]:border-[var(--danger)] focus:border-[var(--accent-solid)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-solid)]"
+                    className="ios-field mt-2"
                   />
                   {errors.confirmPassword ? (
                     <p
                       id="reset-confirm-password-error"
                       role="alert"
-                      className="mt-1.5 text-sm font-bold text-[var(--danger)]"
+                      className="mt-1.5 text-sm font-semibold text-[var(--danger)]"
                     >
                       {errors.confirmPassword}
                     </p>
@@ -236,16 +233,16 @@ export function ResetPasswordView() {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="button-primary w-full text-center py-3.5 text-base disabled:opacity-50"
+                    className="button-primary w-full disabled:opacity-50"
                   >
                     {isSubmitting ? "Updating password…" : "Update Password"}
                   </button>
                 </div>
 
-                <div className="pt-4 text-center text-sm text-[var(--text-muted)] border-t border-[var(--border-soft)]">
+                <div className="border-t border-[var(--separator)] pt-4 text-center text-sm text-[var(--text-muted)]">
                   <Link
                     href="/account/sign-in"
-                    className="font-bold text-[var(--accent-solid)] hover:underline"
+                    className="font-semibold text-[var(--accent-solid)] hover:underline"
                   >
                     Back to Sign In
                   </Link>

@@ -42,7 +42,7 @@ export default async function GalleryPage() {
         aria-label="Brew ni Cat photo gallery"
       >
         <Container>
-          <Reveal className="mb-8 border-b border-[var(--border-soft)] pb-5">
+          <Reveal className="mb-8 border-b border-[var(--separator)] pb-5">
             <p className="eyebrow-light">Reel</p>
             <h2 className="mt-1 font-display text-2xl text-[var(--text-strong)] sm:text-3xl">
               Every frame from the café

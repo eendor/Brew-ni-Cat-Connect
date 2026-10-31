@@ -4,6 +4,7 @@ import Link from "next/link";
 import { siteConfig } from "@/config/site";
 
 import { CartTriggerButton } from "../cart/cart-trigger-button";
+import { ThemeToggle } from "../theme/theme-toggle";
 import { Container } from "../ui/container";
 import { AccountNav } from "./account-nav";
 import { MobileNavigation } from "./mobile-navigation";
@@ -11,7 +12,7 @@ import { NavLink } from "./nav-link";
 
 export function SiteHeader() {
   return (
-    <header className="site-header sticky top-0 z-50 border-b border-[var(--border-soft)] bg-[var(--surface-canvas-translucent)] backdrop-blur-2xl backdrop-saturate-[1.3] transition-[background-color,border-color,box-shadow] duration-500 ease-[var(--ease-cinematic)] supports-[backdrop-filter]:bg-[rgb(246_238_225_/_62%)]">
+    <header className="site-header sticky top-0 z-50 border-b border-[var(--separator)] bg-[var(--surface-canvas-translucent)] backdrop-blur-2xl backdrop-saturate-[1.3] transition-[background-color,border-color,box-shadow] duration-500 ease-[var(--ease-cinematic)] supports-[backdrop-filter]:bg-[var(--header-fill)]">
       <Container className="site-header__bar flex min-h-18 items-center justify-between gap-4 py-2.5 lg:min-h-20">
         <Link
           href="/"
@@ -30,7 +31,7 @@ export function SiteHeader() {
             <span className="font-display block text-xl leading-none text-[var(--text-strong)]">
               {siteConfig.shortName}
             </span>
-            <span className="block text-xs font-bold tracking-[0.08em] text-[var(--accent-solid)] uppercase">
+            <span className="block text-xs font-semibold text-[var(--accent-solid)]">
               Coffee Shop
             </span>
           </span>
@@ -42,7 +43,7 @@ export function SiteHeader() {
               <li key={item.href}>
                 <NavLink
                   href={item.href}
-                  className="nav-link inline-flex min-h-11 items-center rounded-full px-3 py-2 text-xs xl:px-4 font-bold tracking-[0.1em] text-[var(--text-muted)] uppercase hover:text-[var(--text-strong)] aria-[current=page]:text-[var(--text-strong)]"
+                  className="nav-link inline-flex min-h-11 items-center rounded-full px-3 py-2 text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text-strong)] aria-[current=page]:text-[var(--text-strong)] xl:px-4"
                 >
                   {item.label}
                 </NavLink>
@@ -53,10 +54,11 @@ export function SiteHeader() {
 
         <div className="hidden lg:flex lg:items-center lg:gap-4 xl:gap-5">
           <AccountNav />
+          <ThemeToggle />
           <CartTriggerButton />
           <Link
             href="/contact"
-            className="nav-link inline-flex min-h-11 items-center justify-center rounded-full bg-[var(--accent-solid)] px-5 py-2 text-xs font-extrabold tracking-[0.08em] text-[var(--on-accent)] uppercase shadow-[var(--shadow-button)] hover:bg-[var(--accent-solid-hover)]"
+            className="nav-link inline-flex min-h-11 items-center justify-center rounded-full bg-[var(--accent-fill)] px-5 py-2 text-sm font-semibold text-[var(--on-accent)] shadow-[var(--shadow-button)] hover:bg-[var(--accent-fill-hover)] active:scale-[0.97]"
           >
             Visit us
           </Link>

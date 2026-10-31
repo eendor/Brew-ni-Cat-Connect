@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 
 import { EASE, gsap } from "@/components/motion/gsap";
 import { usePresence } from "@/components/motion/use-presence";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { ExternalLink } from "@/components/ui/external-link";
 import {
   ClockIcon,
@@ -24,7 +25,7 @@ const noteIconClass = "mt-0.5 size-4 shrink-0 text-[var(--accent-strong)]";
 
 // 48px round icon links, named by their aria-label.
 const socialLinkClass =
-  "inline-flex size-12 items-center justify-center rounded-full border border-[var(--border-strong)] bg-[var(--surface-card)] text-[var(--text-strong)] transition-colors hover:border-[var(--accent-solid)] hover:text-[var(--accent-solid)]";
+  "ios-icon-button size-12 hover:text-[var(--accent-solid)]";
 
 type MobileNavigationProps = Readonly<{
   items: readonly NavigationItem[];
@@ -112,7 +113,7 @@ export function MobileNavigation({ items }: MobileNavigationProps) {
       <button
         ref={triggerRef}
         type="button"
-        className="inline-flex size-12 items-center justify-center rounded-full border border-[var(--border-strong)] bg-[var(--surface-card)] text-[var(--text-strong)] shadow-sm transition-colors hover:bg-[var(--surface-warm)]"
+        className="ios-icon-button size-12"
         aria-label={isOpen ? "Close navigation" : "Open navigation"}
         aria-expanded={isOpen}
         aria-controls="mobile-navigation"
@@ -163,7 +164,7 @@ export function MobileNavigation({ items }: MobileNavigationProps) {
       <nav
         ref={navRef}
         id="mobile-navigation"
-        className="absolute inset-x-0 top-full border-t border-[var(--border-soft)] bg-[var(--surface-canvas)] px-5 py-5 shadow-[var(--shadow-card)]"
+        className="absolute inset-x-0 top-full rounded-b-[var(--shape-2xl)] border-t border-[var(--separator)] bg-[var(--surface-canvas)] px-5 py-5 shadow-[var(--sheet-shadow)]"
         aria-label="Mobile navigation"
         hidden={!present}
         inert={present && !isOpen}
@@ -173,7 +174,7 @@ export function MobileNavigation({ items }: MobileNavigationProps) {
             <li key={item.href}>
               <NavLink
                 href={item.href}
-                className="flex min-h-12 items-center rounded-xl px-4 py-3 text-base font-bold text-[var(--text-strong)] transition-colors hover:bg-[var(--accent-soft)] aria-[current=page]:bg-[var(--accent-soft)] aria-[current=page]:text-[var(--accent-solid)]"
+                className="flex min-h-12 items-center rounded-[var(--shape-md)] px-4 py-3 text-base font-semibold text-[var(--text-strong)] transition-colors hover:bg-[var(--fill-tertiary)] aria-[current=page]:bg-[var(--accent-soft)] aria-[current=page]:text-[var(--accent-solid)]"
                 onClick={closeNavigation}
               >
                 {item.label}
@@ -181,13 +182,11 @@ export function MobileNavigation({ items }: MobileNavigationProps) {
             </li>
           ))}
           {user ? (
-            <li className="mt-1 border-t border-[var(--border-soft)] pt-2">
+            <li className="mt-1 border-t border-[var(--separator)] pt-2">
               <div className="flex items-center justify-between px-4 py-2">
-                <span className="text-xs font-bold text-[var(--text-subtle)] uppercase tracking-wider truncate">
+                <span className="ios-caption truncate">
                   Account
-                  {user.email ? (
-                    <span className="normal-case"> ({user.email})</span>
-                  ) : null}
+                  {user.email ? <span> ({user.email})</span> : null}
                 </span>
                 <button
                   type="button"
@@ -195,29 +194,35 @@ export function MobileNavigation({ items }: MobileNavigationProps) {
                     closeNavigation();
                     await signOut();
                   }}
-                  className="rounded-lg px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-[var(--danger)] hover:bg-[var(--danger-soft)] transition-colors"
+                  className="inline-flex min-h-11 items-center rounded-full px-4 text-sm font-semibold text-[var(--danger)] transition-colors hover:bg-[var(--danger-soft)]"
                 >
                   Sign out
                 </button>
               </div>
             </li>
           ) : (
-            <li className="mt-1 border-t border-[var(--border-soft)] pt-2">
+            <li className="mt-1 border-t border-[var(--separator)] pt-2">
               <NavLink
                 href="/account/sign-in"
-                className="flex min-h-12 items-center rounded-xl px-4 py-3 text-base font-bold text-[var(--text-strong)] transition-colors hover:bg-[var(--accent-soft)] aria-[current=page]:bg-[var(--accent-soft)] aria-[current=page]:text-[var(--accent-solid)]"
+                className="flex min-h-12 items-center rounded-[var(--shape-md)] px-4 py-3 text-base font-semibold text-[var(--text-strong)] transition-colors hover:bg-[var(--fill-tertiary)] aria-[current=page]:bg-[var(--accent-soft)] aria-[current=page]:text-[var(--accent-solid)]"
                 onClick={closeNavigation}
               >
                 Sign in
               </NavLink>
             </li>
           )}
+          <li className="mt-1 border-t border-[var(--separator)] pt-2">
+            <ThemeToggle
+              variant="switch"
+              className="rounded-[var(--shape-md)] px-4 py-3 text-base font-semibold text-[var(--text-strong)]"
+            />
+          </li>
         </ul>
         <div
-          className="mx-auto mt-4 flex w-full max-w-[var(--shell-width)] flex-col gap-1 border-t border-[var(--border-soft)] px-4 pt-4 text-sm text-[var(--text-muted)]"
+          className="mx-auto mt-4 flex w-full max-w-[var(--shell-width)] flex-col gap-1 border-t border-[var(--separator)] px-4 pt-4 text-sm text-[var(--text-muted)]"
           data-nav-note=""
         >
-          <span className="flex items-start gap-2 font-bold text-[var(--text-strong)]">
+          <span className="flex items-start gap-2 font-semibold text-[var(--text-strong)]">
             <MapPinIcon className={noteIconClass} />
             {shortAddress(address)}
           </span>

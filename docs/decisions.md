@@ -1,7 +1,7 @@
 # Architecture Decision Records
 
 **Document version:** 0.1 Draft\
-**Last updated:** 2026-10-28
+**Last updated:** 2026-10-30
 
 Statuses used here are `Proposed`, `Accepted`, `Superseded`, and `Deferred`. Acceptance records a direction; it does not claim implementation.
 
@@ -316,3 +316,39 @@ This manual state is a temporary functional-verification condition, not a revisi
 - The state scenes lose their `tone` option; on a transparent canvas they fit any panel.
 - ADR-014's dark look is superseded by this decision. Its three.js layer, fallbacks and performance rules stay, and so do ADR-015's motion rules and the route curtain.
 - Washed-out colors (2026-10-30, PR #70): on the cream studio, ACES filmic tone mapping bleached and greyed the drinks, leaves and ice, the product names on the 3D walls were a pale pastel, and the gallery faded its front photo while the page scrolled. The renderer now uses Khronos PBR Neutral tone mapping at an exposure of 1.1, which is made for showing products in their own colors; `untonemap()` inverts it exactly, so backdrops still end in the page cream (TC-P4-199, TC-P4-205). Product names take a deep shade of the item's color that reads at 4.5:1 or better on the cream (TC-P4-226), and the rim lights are the item's color softened toward daylight. Loose ice has a cool tint, and the phone tier draws it see-through instead of as an additive gloss (TC-P4-227). The gallery ring takes focus from the photo the visitor chose, not the small scroll turn, adds no sheen, and keeps 60% of a side photo's color (TC-P4-225). The footer's headings, brand and landmark use a new white `--footer-strong` (TC-P4-223).
+- iOS 27 and night (2026-10-30, PR #71): ADR-023 amends this decision's type and corner sizes, and ADR-024 adds a night theme with a day/night toggle. The palette, window light, glass and 3D studio stay.
+
+## ADR-023 — iOS 27 Liquid Glass: System Type, Capsule Controls And Grouped Cards
+
+**Decision:** Restyle every class, button, text style and container on the website after Apple's iOS 27 (Liquid Glass), with the Apple iOS 27 UI Kit as the reference, and keep ADR-022's cream and green palette. The look comes from shared building blocks in `src/app/globals.css` (`ios-card`, `ios-well`, `ios-list`, `ios-sheet`, `ios-glass-bar`, `ios-caption`, `ios-label`, `ios-field`, `ios-icon-button`, `ios-chip`, `ios-stepper` and `ios-switch`) inside `@layer components`, so Tailwind utilities on the same element can still adjust them.\
+**Date:** 2026-10-30\
+**Status:** Accepted\
+**Context:** The site should feel like a current iPhone app: system type in sentence case, capsule buttons, grouped cards, sheets and switches. The UI kit gives the type sizes, shapes and control styles; the shop's photos still give the colors (ADR-022).\
+**Alternatives considered:** the kit's own blue and gray palette (it would lose the shop's cream and green); a component library (a new dependency for what a few CSS classes do); a backdrop blur on every card and list (it costs frame time on phones, so blur stays on bars and sheets that float over content); keeping the condensed Big Shoulders headings and Archivo text (they read as a poster, not as iOS).\
+**Consequences:**
+
+- Type: Apple devices show SF Pro, and other devices get Inter, the closest open font, served from the site through `next/font` as before. Archivo is no longer loaded, and Big Shoulders only paints the lit signs inside the 3D scenes. Text is in sentence case without letter-spacing; titles are bold (700) and labels semibold (600). Tailwind's text sizes follow the iOS text styles: 12, 15, 17 (body), 20, 22, 28 and 34 px.
+- Shapes: cards have 26 px corners, grouped wells 20 px, fields 14 px and sheets 36 px. Anything pressable that holds text is a capsule.
+- Text buttons keep `.button-primary`, `.button-secondary` and `.button-ghost`, now a green capsule, a clear glass capsule and a gray capsule with a green label. Icon buttons are 44 px glass circles. Choices (sizes, flavors, categories and the showcase switcher) are capsules or a segmented control, and quantity is one stepper capsule.
+- Blur stays on what floats over content: the header, the category and cart bars, the phone menu and the undo toast. The order dialog and the cart drawer are opaque sheets.
+- Hover lifts are gone; a press scales a control down slightly. ADR-015's motion rules, the route curtain and reduced motion stay.
+- Every control is still at least 44 × 44 px on phones (`tests/e2e/phone.spec.ts`), and focus rings stay visible.
+- This amends ADR-022's type (Big Shoulders headings and Archivo text) and its corner sizes.
+
+## ADR-024 — A Night Theme And A Day/Night Toggle
+
+**Decision:** Add a night theme, "the shop after dark", as night values of the same color tokens under `:root[data-theme="night"]`, and a toggle: a moon or sun button in the desktop header and a "Night mode" switch in the phone menu (FR-092). A first visit follows the device's light or dark setting; the visitor's choice is saved in the browser and wins after that.\
+**Date:** 2026-10-30\
+**Status:** Accepted\
+**Context:** ADR-022 set a dark mode switch aside so only one theme had to be kept at AA for the deadline. A day/night toggle was then requested, and the contrast tests now check both themes. The old dark look (ADR-014, near-black with a bright neon green) was judged too close to a music app, so the night theme had to be warm and calm instead.\
+**Alternatives considered:** following the device setting with no toggle (a toggle was asked for); a separate dark stylesheet (two copies of every rule); near-black with neon green (the look ADR-022 replaced); saving the choice in a cookie so the server renders it (pages would stop being static, and a small script before the first paint already avoids a flash).\
+**Consequences:**
+
+- Night colors: espresso walls (`#14120F`), cream text (`#F6EEE1`), warm dark glass, a sage green (`#7DCFA0`) for green text, links and focus rings, terracotta text (`#F0A77C`), a deeper green fill (`#25764B`) under white text for filled buttons, and a darker green footer. Every day color token has a night value (TC-P4-230).
+- Green as a fill and green as text are separate tokens: `--accent-fill` sits under white text, and `--accent-solid` is the green for text, borders and rings. At night the text green is light, so it is never used as a fill (TC-P4-230).
+- Text keeps 4.5:1 on every surface in both themes, and white text keeps 4.5:1 on every filled button (TC-P4-228, TC-P4-229).
+- An inline script in the page head sets the theme and the browser bar color before the first paint, so a night visitor never sees a flash of day. The server always renders day, so pages stay static.
+- The switch crossfades with a View Transition, except with reduced motion.
+- The 3D studio wall follows the theme without a reload (TC-P4-231, TC-P4-237). At night the item glow on the wall is halved (0.16 instead of 0.32), and product names take a light tint of the item's color that reaches 4.5:1 on the dark wall (TC-P4-232).
+- The choice is stored under `bnc-theme` in the browser's local storage and holds only `day` or `night`. Nothing is sent to the server.
+- Following the device first is a default; a small change in `src/lib/theme/theme.ts` would make day the default instead.

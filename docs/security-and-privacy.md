@@ -311,7 +311,7 @@ Before commit/PR, inspect staged and unstaged diffs, verify `.env.local` is untr
 ### 17.3 Configuration, fonts and dependencies
 
 - Application code reads only `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`. No server-only or privileged variable is used at runtime.
-- Since PR #23, `next build` downloads the Big Shoulders and Archivo font files from Google Fonts through `next/font/google` and serves them from the site. A build therefore needs network access to Google Fonts, though still no production credential (compare §16.1), and visitors' browsers make no request to Google.
+- Since PR #23, `next build` downloads the site's font files (Big Shoulders and Archivo; since PR #71, Big Shoulders and Inter) from Google Fonts through `next/font/google` and serves them from the site. A build therefore needs network access to Google Fonts, though still no production credential (compare §16.1), and visitors' browsers make no request to Google.
 - `next.config.ts` turns off the `X-Powered-By` header. No Content Security Policy or other security headers are configured yet; add and test them before production deployment, together with the RLS restoration in §16.2.
 - `npm run audit` reports 0 vulnerabilities after PR #24 replaced the `fast-glob` copy inside the Next.js lint plugin (dev-only tooling) with `tinyglobby`.
 
@@ -373,3 +373,6 @@ Before commit/PR, inspect staged and unstaged diffs, verify `.env.local` is untr
 - The database refuses content the website can't show, and the website checks it again, so a bad save shows the built-in copy instead of breaking a page. Links must be https and pictures must be files shipped under `/images/`, so saved content can't load a script or an outside picture.
 - The contact details in the table are the shop's public business details, already shown on the website. No customer data is stored there.
 
+### 18.9 Theme choice
+
+- The day/night toggle (PR #71) stores only `day` or `night` under `bnc-theme` in the browser's local storage. It holds no personal data and is never sent to the server. A short inline script in the page head reads it before the first paint; it loads nothing from outside. When a Content Security Policy is added (§17.3), this script needs a hash or nonce.

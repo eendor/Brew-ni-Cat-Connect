@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Archivo, Big_Shoulders } from "next/font/google";
+import { Big_Shoulders, Inter } from "next/font/google";
 import type { ReactNode } from "react";
 
 import { CartDrawer } from "@/components/cart/cart-drawer";
@@ -9,6 +9,7 @@ import { SiteHeader } from "@/components/layout/site-header";
 import { MotionDirector } from "@/components/motion/motion-director";
 import { RouteCurtain } from "@/components/motion/route-curtain";
 import { ScrollMotion } from "@/components/motion/scroll-motion";
+import { ThemeSync } from "@/components/theme/theme-toggle";
 import { CartFxLayer } from "@/components/three/layers";
 import { SiteNotice } from "@/components/layout/site-notice";
 import { siteConfig } from "@/config/site";
@@ -19,12 +20,15 @@ import { getMenuFacts } from "@/lib/menu/load-menu-facts";
 import { townLine } from "@/lib/site-content/format";
 import { getSiteContent } from "@/lib/site-content/load";
 import { SHOP_SECTIONS, type ShopFacts } from "@/lib/site-content/types";
+import { THEME_SCRIPT } from "@/lib/theme/theme";
 
 import "./globals.css";
 
-const display = Big_Shoulders({
+/** The lit signs in the 3D scenes only; the page itself uses the system
+ * font (ADR-023). */
+const signs = Big_Shoulders({
   subsets: ["latin"],
-  weight: ["700", "800", "900"],
+  weight: ["800", "900"],
   variable: "--font-big-shoulders",
   display: "swap",
   // No metric overrides ship for this family; use a condensed system stack.
@@ -32,10 +36,11 @@ const display = Big_Shoulders({
   fallback: ["Impact", "Arial Narrow", "sans-serif"],
 });
 
-const body = Archivo({
+/** iOS 27 type: Apple devices show SF Pro, everyone else gets Inter, the
+ * closest open font (ADR-023). */
+const text = Inter({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
-  variable: "--font-archivo",
+  variable: "--font-inter",
   display: "swap",
 });
 
@@ -106,15 +111,18 @@ export default async function RootLayout({ children }: RootLayoutProps) {
   return (
     <html
       lang="en"
-      className={`${display.variable} ${body.variable}`}
+      className={`${signs.variable} ${text.variable}`}
       // lets Next turn smooth scrolling off while it resets the scroll
       // position on navigation (otherwise new pages start part-way down)
       data-scroll-behavior="smooth"
-      // the motion flag above is set before React hydrates
+      // the motion flag above and the theme (data-theme) are set before
+      // React hydrates
       suppressHydrationWarning
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: MOTION_FLAG }} />
+        {/* day or night before the first paint, so night never flashes cream */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       </head>
       <body>
         <a className="skip-link" href="#main-content">
@@ -137,6 +145,7 @@ export default async function RootLayout({ children }: RootLayoutProps) {
               <MotionDirector />
               <RouteCurtain />
               <CartFxLayer />
+              <ThemeSync />
             </CartProvider>
           </AuthProvider>
         </ShopFactsProvider>
