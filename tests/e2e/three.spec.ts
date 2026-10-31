@@ -726,6 +726,21 @@ test("TC-P4-022 — page transitions open on the new page and leave no content h
   // the title card covers the change of page...
   await expect(page.locator(".route-curtain")).toBeVisible();
   await expect(page.locator(".route-curtain__title")).toHaveText("Gallery");
+  // the clip leaves room under the title, so the tail of the "y" is not cut
+  // off (TC-P4-239)
+  const room = await page.evaluate(() => {
+    const mask = document.querySelector(".route-curtain__mask")!;
+    const title = document.querySelector(".route-curtain__title")!;
+    const size = parseFloat(getComputedStyle(title).fontSize);
+    const below =
+      mask.getBoundingClientRect().bottom -
+      (title.getBoundingClientRect().top - getTitleShift(title));
+    return below / size;
+    function getTitleShift(node: Element) {
+      return new DOMMatrixReadOnly(getComputedStyle(node).transform).m42;
+    }
+  });
+  expect(room).toBeGreaterThanOrEqual(1.2);
   await page.waitForURL("**/gallery");
   // ...and lifts once the new page is in
   await expect(page.locator(".route-curtain")).toBeHidden({ timeout: 15_000 });

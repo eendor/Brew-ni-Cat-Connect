@@ -135,7 +135,7 @@ export function RouteCurtain() {
           visibility: "visible",
           clipPath: "inset(100% 0% 0% 0%)",
         })
-        .set(title, { yPercent: 115 })
+        .set(title, { yPercent: 130 })
         .set(line, { scaleX: 0 })
         .to(curtain, {
           clipPath: "inset(0% 0% 0% 0%)",
