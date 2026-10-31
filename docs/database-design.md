@@ -272,7 +272,7 @@ The undo drops the function, its two helpers and the two tables, and takes `onli
 
 ## 10. Live Website Content (2026-10-30)
 
-Migration `20261030120000_site_content.sql` (undo: `supabase/rollbacks/20261030120000_site_content.sql`) moves the shop's facts out of the website's code (FR-085, FR-086, FR-087, ADR-017). It is not applied to the live database yet (§8.7). Until it is, the website shows its built-in copy, which is the same content the migration saves.
+Migration `20261030120000_site_content.sql` (undo: `supabase/rollbacks/20261030120000_site_content.sql`) moves the shop's facts out of the website's code (FR-085, FR-086, FR-087, ADR-017). Applied to the live database on 2026-10-31 (§8.7).
 
 ### 10.1 `public.site_content`
 
