@@ -16,7 +16,7 @@ const medium = {
   description: null,
 };
 const fries: MenuItem = {
-  id: "fries",
+  id: "bite_fries",
   name: "Fries",
   availability: "available",
   flavors: ["BBQ Scratch", "Cheesy Purr", "Sour Cream"],
@@ -33,7 +33,7 @@ const soda12 = {
   description: null,
 };
 const soda: MenuItem = {
-  id: "soda",
+  id: "bite_fries_loaded",
   name: "Soda",
   availability: "available",
   flavors: ["Yogurt Yarn", "Honey Peach Paws", "Lychee"],

@@ -1,7 +1,9 @@
 import type {
+  AddOnRow,
   CategoryRow,
   FlavorPrice,
   ItemRow,
+  MenuAddOn,
   MenuAvailability,
   MenuCatalog,
   MenuItem,
@@ -138,9 +140,30 @@ function mapItem(row: ItemRow): MenuItem | null {
   };
 }
 
+/** The available add-ons of one category, in display order. */
+function mapAddOns(rows: readonly AddOnRow[], categoryId: string): MenuAddOn[] {
+  return rows
+    .filter((row) => row.category_id === categoryId)
+    .map((row) => ({ row, label: cleanText(row.label) }))
+    .filter(
+      (entry): entry is { row: AddOnRow; label: string } =>
+        entry.label !== null &&
+        typeof entry.row.price === "number" &&
+        Number.isFinite(entry.row.price) &&
+        entry.row.price >= 0,
+    )
+    .sort(
+      (left, right) =>
+        (left.row.sort_order ?? 0) - (right.row.sort_order ?? 0) ||
+        left.label.localeCompare(right.label),
+    )
+    .map(({ row, label }) => ({ id: row.id, label, price: row.price ?? 0 }));
+}
+
 export function mapMenuCatalog(
   categoryRows: readonly CategoryRow[],
   itemRows: readonly ItemRow[],
+  addOnRows: readonly AddOnRow[] = [],
 ): MenuCatalog {
   const categories = categoryRows
     .map((category) => {
@@ -149,10 +172,12 @@ export function mapMenuCatalog(
         return null;
       }
 
+      const addOns = mapAddOns(addOnRows, category.id);
       const items = itemRows
         .filter((item) => item.category_id === category.id)
         .map(mapItem)
         .filter((item): item is MenuItem => item !== null)
+        .map((item) => (addOns.length > 0 ? { ...item, addOns } : item))
         .sort((left, right) => left.name.localeCompare(right.name));
 
       return { id: category.id, name, items };

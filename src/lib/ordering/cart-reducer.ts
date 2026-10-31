@@ -263,7 +263,8 @@ const FAILURE_MESSAGES: Record<AddCartItemFailureReason, string> = {
   "unknown-item": "That product is no longer listed in the current menu.",
   "unknown-variant":
     "That size or option is no longer listed in the current menu.",
-  "unknown-flavor": "That flavor is not available for the selected option.",
+  "unknown-flavor":
+    "That flavor or add-on is not available for the selected option.",
   "item-unavailable": "That product is temporarily unavailable.",
   "availability-unknown":
     "That product availability is not confirmed right now.",

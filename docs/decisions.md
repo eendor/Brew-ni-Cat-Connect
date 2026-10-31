@@ -365,3 +365,16 @@ This manual state is a temporary functional-verification condition, not a revisi
 - The website, the database and the Android POS check and price mixes the same way (TC-P4-252 to TC-P4-256).
 - No table changes: the website reads the flavor text, and old single-flavor orders are unchanged.
 - Each flavor deducts a full recipe portion from stock.
+
+## ADR-026 — Add-Ons In A Table, Stored In The Flavor Text
+
+**Decision:** Paid extras live in `public.menu_add_ons` per category, and an order line stores them in the existing flavor text the way the POS does. Mixing 2 flavors (ADR-025) is limited to fries.\
+**Date:** 2026-11-01\
+**Status:** Accepted\
+**Context:** The printed menu sells noodle add-ons, which the POS already supports. Prices must come from data, not code. The user asked that takoyaki, drinks and soda not mix.\
+**Alternatives considered:** hard-coding add-ons on the website (prices would not be data); a separate order column for add-ons (a change to every order reader on both POS apps); a per-item mixing switch in the POS editor (kept for later; fries only for now).\
+**Consequences:**
+
+- The website and the database price add-ons the same way (TC-P4-258, TC-P4-259).
+- Orders from the website print on the POS with the same add-on lines and prices.
+- The POS add-on list must match the table until the POS reads it.

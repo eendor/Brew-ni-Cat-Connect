@@ -123,8 +123,70 @@ function hasPurchasableBasePrice(variant: MenuVariant): boolean {
 /** Joins the flavors of a mixed order, e.g. "BBQ Scratch / Cheesy Purr" (same as the POS). */
 export const FLAVOR_MIX_SEPARATOR = " / ";
 
-/** Any item with flavors can mix up to this many, at the normal size price. */
+/** Fries can mix up to this many flavors, at the normal size price. */
 export const MAX_MIXED_FLAVORS = 2;
+
+/** Mixing is offered on fries only for now (the same rule as the POS). */
+export function allowsFlavorMix(item: Pick<MenuItem, "id" | "name">): boolean {
+  return /fries/i.test(item.id) || /fries/i.test(item.name);
+}
+
+// Add-ons ride in the flavor text the same way the POS stores them:
+// "Spicy + Egg (Boiled), Hotdog", or "+ Egg (Boiled)" when there is no flavor.
+const ADD_ON_SEPARATOR = " + ";
+const ADD_ON_PREFIX = "+ ";
+const ADD_ON_LABEL_SEPARATOR = ", ";
+
+export type LineFlavorParts = Readonly<{
+  flavor: string | null;
+  addOns: readonly string[];
+  /** True when the text has an add-on part, even an empty one. */
+  hasAddOnPart: boolean;
+}>;
+
+/** Splits stored flavor text into the flavor and the add-on labels. */
+export function splitAddOns(text: string | null | undefined): LineFlavorParts {
+  const trimmed = normalizeFlavor(text);
+  if (trimmed === null)
+    return { flavor: null, addOns: [], hasAddOnPart: false };
+  let before = trimmed;
+  let rest: string | null = null;
+  if (trimmed.startsWith(ADD_ON_PREFIX)) {
+    before = "";
+    rest = trimmed.slice(ADD_ON_PREFIX.length);
+  } else {
+    const at = trimmed.indexOf(ADD_ON_SEPARATOR);
+    if (at >= 0) {
+      before = trimmed.slice(0, at);
+      rest = trimmed.slice(at + ADD_ON_SEPARATOR.length);
+    }
+  }
+  const addOns =
+    rest === null
+      ? []
+      : rest
+          .split(",")
+          .map((label) => label.trim())
+          .filter((label) => label.length > 0);
+  return {
+    flavor: normalizeFlavor(before),
+    addOns,
+    hasAddOnPart: rest !== null,
+  };
+}
+
+/** The stored flavor text for a flavor and its add-ons. */
+export function encodeLineFlavor(
+  flavor: string | null,
+  addOns: readonly string[],
+): string | null {
+  const base = normalizeFlavor(flavor);
+  if (addOns.length === 0) return base;
+  const labels = addOns.join(ADD_ON_LABEL_SEPARATOR);
+  return base === null
+    ? `${ADD_ON_PREFIX}${labels}`
+    : `${base}${ADD_ON_SEPARATOR}${labels}`;
+}
 
 /** The flavors in a stored flavor: none, one, or each part of a mix. */
 export function splitFlavorMix(flavor: string | null | undefined): string[] {
@@ -149,6 +211,7 @@ export function isAllowedFlavor(
   const parts = splitFlavorMix(flavor);
   return (
     parts.length > 0 &&
+    (parts.length === 1 || allowsFlavorMix(item)) &&
     parts.length <= MAX_MIXED_FLAVORS &&
     new Set(parts).size === parts.length &&
     parts.every((part) => item.flavors.includes(part))
@@ -222,6 +285,35 @@ export function resolveVariantUnitPrice(
   item: MenuItem,
   variant: MenuVariant,
   flavor: string | null | undefined,
+): ResolvePriceResult {
+  const parts = splitAddOns(flavor);
+  if (!parts.hasAddOnPart)
+    return resolveFlavorPrice(item, variant, parts.flavor);
+
+  // Each add-on must be one of this item's extras, once.
+  const offered = new Map(
+    (item.addOns ?? []).map((addOn) => [addOn.label, addOn.price]),
+  );
+  if (
+    parts.addOns.length === 0 ||
+    new Set(parts.addOns).size !== parts.addOns.length ||
+    !parts.addOns.every((label) => offered.has(label))
+  ) {
+    return { ok: false, reason: "unknown-flavor" };
+  }
+  const base = resolveFlavorPrice(item, variant, parts.flavor);
+  if (!base.ok) return base;
+  const extras = parts.addOns.reduce(
+    (sum, label) => sum + (offered.get(label) ?? 0),
+    0,
+  );
+  return { ok: true, unitPrice: normalizePrice(base.unitPrice + extras) };
+}
+
+function resolveFlavorPrice(
+  item: MenuItem,
+  variant: MenuVariant,
+  flavor: string | null,
 ): ResolvePriceResult {
   const selectedFlavor = normalizeFlavor(flavor);
 

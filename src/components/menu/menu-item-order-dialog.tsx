@@ -21,11 +21,14 @@ import { useFocusTrap } from "@/lib/accessibility/focus-trap";
 import { formatOptionName } from "@/lib/menu/format-name";
 import { formatPrice } from "@/lib/menu/format-price";
 import {
+  allowsFlavorMix,
   calculateLineTotal,
+  encodeLineFlavor,
   isAllowedFlavor,
   joinFlavorMix,
   MAX_MIXED_FLAVORS,
   resolveVariantUnitPrice,
+  splitAddOns,
   splitFlavorMix,
 } from "@/lib/ordering/cart-pricing";
 import type { MenuCatalog, MenuItem } from "@/types/menu";
@@ -74,14 +77,17 @@ export function MenuItemOrderDialog({
     item.variants.find((variant) => variant.id === initialVariantId)?.id ??
     item.variants[0]?.id ??
     "";
+  const presetParts = splitAddOns(
+    editingLine?.flavor !== undefined ? editingLine.flavor : initialFlavor,
+  );
   const presetFlavor =
-    editingLine?.flavor !== undefined
-      ? editingLine.flavor && isAllowedFlavor(item, editingLine.flavor)
-        ? editingLine.flavor
-        : null
-      : initialFlavor && isAllowedFlavor(item, initialFlavor)
-        ? initialFlavor
-        : null;
+    presetParts.flavor && isAllowedFlavor(item, presetParts.flavor)
+      ? presetParts.flavor
+      : null;
+  const offeredAddOns = item.addOns ?? [];
+  const presetAddOns = presetParts.addOns.filter((label) =>
+    offeredAddOns.some((addOn) => addOn.label === label),
+  );
   const initialQty = editingLine?.quantity ?? 1;
 
   const [selectedVariantId, setSelectedVariantId] =
@@ -93,6 +99,8 @@ export function MenuItemOrderDialog({
     splitFlavorMix(presetFlavor).length > 1,
   );
   const pickedFlavors = splitFlavorMix(selectedFlavor);
+  const [selectedAddOns, setSelectedAddOns] =
+    useState<readonly string[]>(presetAddOns);
   const [quantity, setQuantity] = useState<number>(initialQty);
   const [feedbackError, setFeedbackError] = useState<string | null>(null);
 
@@ -102,6 +110,7 @@ export function MenuItemOrderDialog({
   const selectionRef = useRef({
     variantId: presetVariantId,
     flavor: presetFlavor,
+    addOns: presetAddOns as readonly string[],
     quantity: initialQty,
   });
   const submittedRef = useRef(false);
@@ -115,6 +124,20 @@ export function MenuItemOrderDialog({
   function chooseFlavor(flavor: string | null) {
     selectionRef.current = { ...selectionRef.current, flavor };
     setSelectedFlavor(flavor);
+    setFeedbackError(null);
+  }
+
+  function toggleAddOn(label: string) {
+    const current = selectionRef.current.addOns;
+    const picked = current.includes(label)
+      ? current.filter((entry) => entry !== label)
+      : [...current, label];
+    // Keep the menu's order so the same extras always make the same line.
+    const next = offeredAddOns
+      .map((addOn) => addOn.label)
+      .filter((entry) => picked.includes(entry));
+    selectionRef.current = { ...selectionRef.current, addOns: next };
+    setSelectedAddOns(next);
     setFeedbackError(null);
   }
 
@@ -235,8 +258,12 @@ export function MenuItemOrderDialog({
     if (!selectedVariant) {
       return { ok: false as const, reason: "missing-price" as const };
     }
-    return resolveVariantUnitPrice(item, selectedVariant, selectedFlavor);
-  }, [item, selectedVariant, selectedFlavor]);
+    return resolveVariantUnitPrice(
+      item,
+      selectedVariant,
+      encodeLineFlavor(selectedFlavor, selectedAddOns),
+    );
+  }, [item, selectedVariant, selectedFlavor, selectedAddOns]);
 
   const lineTotal = useMemo(() => {
     if (priceResolution.ok) {
@@ -271,7 +298,8 @@ export function MenuItemOrderDialog({
       return;
     }
 
-    const resolution = resolveVariantUnitPrice(item, variant, current.flavor);
+    const lineFlavor = encodeLineFlavor(current.flavor, current.addOns);
+    const resolution = resolveVariantUnitPrice(item, variant, lineFlavor);
     if (!resolution.ok) {
       if (
         variant.basePrice === 0 &&
@@ -290,13 +318,13 @@ export function MenuItemOrderDialog({
     const result = editingLine
       ? replaceLine(activeCatalog, editingLine.key, {
           variantId: variant.id,
-          flavor: current.flavor,
+          flavor: lineFlavor,
           quantity: current.quantity,
         })
       : addItem(activeCatalog, {
           itemId: item.id,
           variantId: variant.id,
-          flavor: current.flavor,
+          flavor: lineFlavor,
           quantity: current.quantity,
         });
 
@@ -528,7 +556,7 @@ export function MenuItemOrderDialog({
                 })}
               </div>
 
-              {item.flavors.length > 1 ? (
+              {item.flavors.length > 1 && allowsFlavorMix(item) ? (
                 <div className="mt-3 flex flex-wrap items-center gap-3">
                   <button
                     type="button"
@@ -551,6 +579,31 @@ export function MenuItemOrderDialog({
                   ) : null}
                 </div>
               ) : null}
+            </fieldset>
+          ) : null}
+
+          {offeredAddOns.length > 0 ? (
+            <fieldset className="mx-0 min-w-0 border-0 p-0">
+              <legend className="ios-label mb-2 block">Add-ons</legend>
+              <div className="flex flex-wrap gap-2">
+                {offeredAddOns.map((addOn) => {
+                  const isSelected = selectedAddOns.includes(addOn.label);
+                  return (
+                    <button
+                      key={addOn.id}
+                      type="button"
+                      aria-pressed={isSelected}
+                      onClick={() => toggleAddOn(addOn.label)}
+                      className="ios-chip min-h-11 px-4"
+                    >
+                      {addOn.label}{" "}
+                      <span className="tabular-nums">
+                        +{formatPrice(addOn.price)}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             </fieldset>
           ) : null}
 

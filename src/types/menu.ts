@@ -13,12 +13,21 @@ export type MenuVariant = Readonly<{
   description: string | null;
 }>;
 
+/** A paid extra, like an egg on noodles. Priced in pesos. */
+export type MenuAddOn = Readonly<{
+  id: string;
+  label: string;
+  price: number;
+}>;
+
 export type MenuItem = Readonly<{
   id: string;
   name: string;
   availability: MenuAvailability;
   flavors: readonly string[];
   variants: readonly MenuVariant[];
+  /** Extras offered for this item's category; empty or missing means none. */
+  addOns?: readonly MenuAddOn[];
 }>;
 
 export type MenuCategory = Readonly<{
@@ -34,6 +43,14 @@ export type MenuCatalog = Readonly<{
 export type CategoryRow = Readonly<{
   id: string;
   name: string | null;
+}>;
+
+export type AddOnRow = Readonly<{
+  id: string;
+  category_id: string | null;
+  label: string | null;
+  price: number | null;
+  sort_order: number | null;
 }>;
 
 export type ItemRow = Readonly<{
