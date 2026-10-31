@@ -266,7 +266,7 @@ export function MenuCatalog({ loadMenu = fetchPublicMenu }: MenuCatalogProps) {
     <div ref={rootRef}>
       <nav
         ref={navRef}
-        className="menu-tabs menu-tabs--bleed sticky top-[4.5rem] z-30 overflow-x-auto border-y border-[var(--border-soft)] bg-[var(--surface-canvas-translucent)] py-3 backdrop-blur-md lg:top-[5rem]"
+        className="menu-tabs menu-tabs--bleed sticky top-[4.5rem] z-30 overflow-x-auto border-y border-[var(--separator)] bg-[var(--bar-fill)] py-3 backdrop-blur-md backdrop-saturate-[1.6] lg:top-[5rem]"
         aria-label="Menu categories"
       >
         <ul className="flex w-max min-w-full gap-2">
@@ -276,7 +276,7 @@ export function MenuCatalog({ loadMenu = fetchPublicMenu }: MenuCatalogProps) {
                 href={`#menu-category-${index + 1}`}
                 data-menu-tab={index}
                 aria-current={activeCategory === index ? "true" : undefined}
-                className="menu-tab inline-flex min-h-11 items-center whitespace-nowrap rounded-full border border-[var(--border-soft)] bg-[var(--surface-card)] px-4 py-2 text-sm font-bold text-[var(--text-strong)] hover:border-[var(--accent-solid)] hover:bg-[var(--accent-soft)]"
+                className="menu-tab ios-chip min-h-11 px-4 whitespace-nowrap hover:bg-[var(--fill-primary)]"
               >
                 {getCategoryDisplayName(category.name)}
               </a>

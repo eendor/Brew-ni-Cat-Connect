@@ -49,31 +49,31 @@ export default async function HomePage() {
       >
         <Container>
           <Reveal>
-            <dl className="grid overflow-hidden rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] shadow-[var(--shadow-card)] sm:grid-cols-2 lg:grid-cols-4">
-              <div className="p-5 sm:border-r sm:border-[var(--border-soft)] sm:p-6">
+            <dl className="ios-card grid overflow-hidden sm:grid-cols-2 lg:grid-cols-4">
+              <div className="p-5 sm:border-r sm:border-[var(--separator)] sm:p-6">
                 <dt className="eyebrow flex items-center gap-2">
                   <MapPinIcon className="size-4 shrink-0" />
                   Find us
                 </dt>
-                <dd className="mt-2 font-bold text-[var(--text-strong)]">
+                <dd className="mt-2 font-semibold text-[var(--text-strong)]">
                   {shortAddress(address)}
                 </dd>
               </div>
-              <div className="border-t border-[var(--border-soft)] p-5 sm:border-t-0 lg:border-r lg:border-[var(--border-soft)] sm:p-6">
+              <div className="border-t border-[var(--separator)] p-5 sm:border-t-0 sm:p-6 lg:border-r lg:border-[var(--separator)]">
                 <dt className="eyebrow flex items-center gap-2">
                   <StoreIcon className="size-4 shrink-0" />
                   Landmark
                 </dt>
-                <dd className="mt-2 font-bold text-[var(--text-strong)]">
+                <dd className="mt-2 font-semibold text-[var(--text-strong)]">
                   {address.landmark || address.area}
                 </dd>
               </div>
-              <div className="border-t border-[var(--border-soft)] p-5 sm:border-r sm:border-[var(--border-soft)] lg:border-t-0 sm:p-6">
+              <div className="border-t border-[var(--separator)] p-5 sm:border-r sm:border-[var(--separator)] sm:p-6 lg:border-t-0">
                 <dt className="eyebrow flex items-center gap-2">
                   <ClockIcon className="size-4 shrink-0" />
                   Hours
                 </dt>
-                <dd className="mt-2 font-bold text-[var(--text-strong)]">
+                <dd className="mt-2 font-semibold text-[var(--text-strong)]">
                   {openHoursLines(hours).map((line) => (
                     <span key={line} className="block">
                       {line}
@@ -91,12 +91,12 @@ export default async function HomePage() {
                   ) : null}
                 </dd>
               </div>
-              <div className="border-t border-[var(--border-soft)] p-5 sm:border-t-0 sm:p-6">
+              <div className="border-t border-[var(--separator)] p-5 sm:border-t-0 sm:p-6">
                 <dt className="eyebrow flex items-center gap-2">
                   <WalletIcon className="size-4 shrink-0" />
                   Payment
                 </dt>
-                <dd className="mt-2 font-bold text-[var(--text-strong)]">
+                <dd className="mt-2 font-semibold text-[var(--text-strong)]">
                   {joinList(content.payments.methods)}
                 </dd>
               </div>
@@ -106,7 +106,7 @@ export default async function HomePage() {
       </section>
 
       <section
-        className="border-y border-[var(--border-soft)] bg-[var(--surface-raised)] py-16 text-[var(--text-strong)] sm:py-20 lg:py-24"
+        className="border-y border-[var(--separator)] bg-[var(--surface-raised)] py-16 text-[var(--text-strong)] sm:py-20 lg:py-24"
         aria-labelledby="about-preview-heading"
       >
         <Container className="grid gap-10 lg:grid-cols-[1fr_1.05fr] lg:items-center lg:gap-16">
@@ -121,10 +121,8 @@ export default async function HomePage() {
                 className="aspect-[4/5] w-full object-cover"
               />
             </div>
-            <div className="absolute bottom-0 left-0 max-w-56 rounded-2xl bg-[var(--accent-strong-fill)] p-5 text-[var(--on-accent)] shadow-xl">
-              <p className="text-xs font-extrabold tracking-[0.13em] uppercase">
-                Opened
-              </p>
+            <div className="absolute bottom-0 left-0 max-w-56 rounded-[var(--shape-lg)] bg-[var(--accent-strong-fill)] p-5 text-[var(--on-accent)] shadow-[var(--shadow-card)]">
+              <p className="text-sm font-semibold">Opened</p>
               <p className="font-display mt-1 text-2xl">
                 {formatDate(about.openedOn)}
               </p>
@@ -144,10 +142,10 @@ export default async function HomePage() {
 
             {about.catRules.length > 0 ? (
               <div className="mt-8 glass-panel rounded-2xl p-5">
-                <h3 className="text-xs font-extrabold tracking-wider text-[var(--accent-strong)] uppercase">
+                <h3 className="text-base font-semibold text-[var(--accent-strong)]">
                   Visiting the Cats
                 </h3>
-                <ul className="mt-3 grid gap-3 text-xs leading-5 text-[var(--text-muted)] sm:grid-cols-3">
+                <ul className="mt-3 grid gap-3 text-sm leading-5 text-[var(--text-muted)] sm:grid-cols-3">
                   {about.catRules.map((rule) => (
                     <li key={rule.title} className="flex flex-col gap-1">
                       <strong className="font-semibold text-[var(--text-strong)]">
@@ -174,7 +172,7 @@ export default async function HomePage() {
         aria-labelledby="gallery-preview-heading"
       >
         <Container>
-          <Reveal className="flex flex-col gap-6 border-b border-[var(--border-soft)] pb-8 sm:flex-row sm:items-end sm:justify-between">
+          <Reveal className="flex flex-col gap-6 border-b border-[var(--separator)] pb-8 sm:flex-row sm:items-end sm:justify-between">
             <div className="max-w-2xl">
               <h2
                 data-split=""
@@ -236,7 +234,7 @@ export default async function HomePage() {
 
       <section
         id="visit"
-        className="scroll-mt-20 border-t border-[var(--border-soft)] pt-16 sm:pt-20 lg:scroll-mt-24"
+        className="scroll-mt-20 border-t border-[var(--separator)] pt-16 sm:pt-20 lg:scroll-mt-24"
         aria-labelledby="visit-heading"
       >
         <Container className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">

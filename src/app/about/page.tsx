@@ -98,14 +98,14 @@ export default async function AboutPage() {
       </section>
 
       <section
-        className="border-y border-[var(--border-soft)] bg-[var(--surface-accent)] py-14 sm:py-16"
+        className="border-y border-[var(--separator)] bg-[var(--surface-accent)] py-14 sm:py-16"
         aria-label="Brew ni Cat facts"
       >
         <Container>
           <div className="grid gap-4 md:grid-cols-3" data-rise-group="">
             {shopDetails.map((detail) => (
               <div key={detail.label}>
-                <div className="surface-lift h-full rounded-3xl bg-[var(--surface-card)] p-6 shadow-[var(--shadow-subtle)]">
+                <div className="surface-lift h-full rounded-[var(--shape-xl)] p-6">
                   <p className="eyebrow">{detail.label}</p>
                   <p className="font-display mt-3 text-2xl text-[var(--text-strong)]">
                     {detail.value}
@@ -119,11 +119,9 @@ export default async function AboutPage() {
 
       <section className="py-16 sm:py-20" aria-labelledby="about-visit-heading">
         <Container>
-          <Reveal className="rounded-[2rem] border border-[var(--border-soft)] bg-[var(--surface-raised)] p-7 text-[var(--text-strong)] sm:p-10 lg:flex lg:items-center lg:justify-between lg:gap-10">
+          <Reveal className="ios-card p-7 text-[var(--text-strong)] sm:p-10 lg:flex lg:items-center lg:justify-between lg:gap-10">
             <div className="max-w-2xl">
-              <p className="text-xs font-extrabold tracking-[0.16em] text-[var(--accent-strong)] uppercase">
-                Come say hello
-              </p>
+              <p className="eyebrow">Come say hello</p>
               <h2
                 data-split=""
                 id="about-visit-heading"

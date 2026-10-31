@@ -12,10 +12,8 @@ type ErrorPageProps = Readonly<{
 export default function ErrorPage({ reset }: ErrorPageProps) {
   return (
     <Container className="py-16 sm:py-24">
-      <div className="mx-auto max-w-2xl rounded-[2rem] border border-[var(--border-soft)] bg-[var(--surface-card)] p-7 text-center shadow-[var(--shadow-card)] sm:p-10">
-        <p className="text-sm font-bold tracking-[0.16em] text-[var(--accent-strong)] uppercase">
-          Temporary interruption
-        </p>
+      <div className="ios-card mx-auto max-w-2xl p-7 text-center sm:p-10">
+        <p className="eyebrow">Temporary interruption</p>
         <h1 className="font-display mt-3 text-4xl text-[var(--text-strong)]">
           Something went wrong
         </h1>
@@ -24,17 +22,10 @@ export default function ErrorPage({ reset }: ErrorPageProps) {
           the homepage.
         </p>
         <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-          <button
-            type="button"
-            onClick={reset}
-            className="inline-flex min-h-11 items-center justify-center rounded-full bg-[var(--accent-fill)] px-5 py-2 text-sm font-bold text-[var(--on-accent)] transition-colors hover:bg-[var(--accent-fill-hover)]"
-          >
+          <button type="button" onClick={reset} className="button-primary">
             Try again
           </button>
-          <Link
-            href="/"
-            className="inline-flex min-h-11 items-center justify-center rounded-full border border-[var(--border-strong)] px-5 py-2 text-sm font-bold text-[var(--text-strong)] transition-colors hover:bg-[var(--surface-warm)]"
-          >
+          <Link href="/" className="button-secondary">
             Return home
           </Link>
         </div>

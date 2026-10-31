@@ -134,8 +134,8 @@
   --text-subtle: #b3a998;
   --accent-solid: #7dcfa0;
   --accent-solid-hover: #9adbb5;
-  --accent-fill: #2a7d51;
-  --accent-fill-hover: #2d8455;
+  --accent-fill: #25764b;
+  --accent-fill-hover: #277a4e;
   --accent-strong: #f0a77c;
   --accent-strong-fill: #a24a22;
   --accent-soft: rgb(125 207 160 / 14%);
@@ -836,7 +836,7 @@ button:focus-visible,
 
 .cinema-canvas {
   background:
-    radial-gradient(ellipse at top, rgb(255 255 255 / 40%), transparent 55%),
+    radial-gradient(ellipse at top, var(--glass-fill), transparent 55%),
     var(--surface-canvas);
 }
 
@@ -855,11 +855,6 @@ button:focus-visible,
   .gallery-tile {
     border-radius: var(--shape-xl);
   }
-}
-
-.gallery-tile:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 32px 90px -30px rgb(70 52 30 / 40%);
 }
 
 .gallery-tile img {
@@ -887,8 +882,8 @@ button:focus-visible,
   );
   padding: 2.75rem 0.85rem 0.85rem;
   color: var(--on-photo);
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: 0.8125rem;
+  font-weight: 600;
   line-height: 1.4;
   opacity: 0;
   pointer-events: none;
@@ -990,23 +985,14 @@ html[data-scrolled] .site-header {
   border-bottom-color: var(--border-soft);
 }
 
-/* Desktop nav underline that grows from the center */
-.site-header nav .nav-link::after {
-  content: "";
-  position: absolute;
-  inset-inline: 1rem;
-  bottom: 0.45rem;
-  height: 1.5px;
-  border-radius: var(--shape-full);
-  background: currentColor;
-  transform: scaleX(0);
-  transition: transform 420ms var(--ease-out-soft);
+/* Desktop nav: the current page sits on a soft capsule, as in an iOS tab
+   bar; hovering shows a fainter one */
+.site-header nav .nav-link:hover {
+  background-color: var(--fill-tertiary);
 }
 
-.site-header nav .nav-link:hover::after,
-.site-header nav .nav-link:focus-visible::after,
-.site-header nav .nav-link[aria-current="page"]::after {
-  transform: scaleX(1);
+.site-header nav .nav-link[aria-current="page"] {
+  background-color: var(--fill-secondary);
 }
 
 .page-hero > * {
@@ -1051,7 +1037,7 @@ textarea:focus-visible {
 /* Skeleton loaders */
 .skeleton-card {
   overflow: hidden;
-  border: 1px solid var(--border-soft);
+  border: 1px solid var(--card-stroke);
   border-radius: var(--shape-xl);
   background: var(--surface-card);
 }
@@ -1061,7 +1047,7 @@ textarea:focus-visible {
   background: linear-gradient(
     90deg,
     var(--surface-warm) 0%,
-    rgb(255 255 255 / 55%) 50%,
+    var(--glass-fill) 50%,
     var(--surface-warm) 100%
   );
   background-size: 200% 100%;
@@ -1184,9 +1170,9 @@ textarea:focus-visible {
   max-width: 14ch;
   font-family: var(--font-display);
   font-size: var(--type-display);
-  font-weight: 900;
-  line-height: 0.9;
-  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.04;
   text-wrap: balance;
 }
 
@@ -1222,18 +1208,16 @@ textarea:focus-visible {
 .showcase__nick {
   color: color-mix(in oklab, var(--glow) 35%, var(--text-strong));
   font-size: var(--type-body-sm);
-  font-weight: 800;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
+  font-weight: 600;
 }
 
 .showcase__price {
   margin-top: 0.35rem;
   font-family: var(--font-display);
   font-size: var(--type-price-hero);
-  font-weight: 900;
+  font-weight: 700;
+  letter-spacing: -0.025em;
   line-height: 1;
-  text-transform: uppercase;
   font-variant-numeric: tabular-nums;
 }
 
@@ -1245,11 +1229,17 @@ textarea:focus-visible {
   }
 }
 
+/* the product picker: an iOS segmented control, a glass capsule track with
+   the current item on a raised capsule */
 .showcase__ticks {
   display: flex;
-  gap: 0.4rem;
+  gap: 0.125rem;
   margin: 0;
-  padding: 0;
+  border: 1px solid var(--glass-stroke);
+  border-radius: var(--shape-full);
+  background: var(--glass-fill);
+  box-shadow: var(--glass-rim), var(--glass-shadow);
+  padding: 0.25rem;
   list-style: none;
 }
 
@@ -1257,23 +1247,32 @@ textarea:focus-visible {
   min-width: 4.5rem;
   min-height: 2.75rem;
   border: 0;
-  border-top: 2px solid var(--border-strong);
+  border-radius: var(--shape-full);
   background: none;
-  padding: 0.75rem 0 0.25rem;
+  padding: 0.5rem 0.875rem;
   color: var(--text-muted);
-  font-size: var(--type-label);
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  text-align: left;
-  text-transform: uppercase;
+  font-size: var(--type-body-sm);
+  font-weight: 600;
+  text-align: center;
   transition:
-    color 300ms,
-    border-color 300ms;
+    color 300ms var(--ease-cinematic),
+    background-color 300ms var(--ease-cinematic),
+    box-shadow 300ms var(--ease-cinematic);
+}
+
+.showcase__ticks button:hover {
+  color: var(--text-strong);
 }
 
 .showcase__ticks button[aria-current="true"] {
-  border-color: color-mix(in oklab, var(--glow) 35%, var(--text-strong));
+  background: var(--surface-overlay);
+  box-shadow: var(--glass-rim), var(--glass-shadow);
   color: var(--text-strong);
+}
+
+/* at night the chosen segment is the lighter one, as in iOS dark mode */
+:root[data-theme="night"] .showcase__ticks button[aria-current="true"] {
+  background: var(--fill-primary);
 }
 
 /* Below the desktop nav breakpoint the two-column HUD squeezed the CTAs into
@@ -1309,15 +1308,16 @@ textarea:focus-visible {
   }
 
   .showcase__ticks button {
-    min-width: 0;
+    min-width: 2.75rem;
     flex: 1;
+    padding-inline: 0.25rem;
     font-size: var(--type-label);
-    letter-spacing: 0.04em;
     line-height: 1.2;
   }
 
+  /* segments size to their names, so long ones only wrap on the narrowest phones */
   .showcase__ticks li {
-    flex: 1;
+    flex: 1 1 auto;
   }
 
   .showcase--3d .showcase__intro .flex {
@@ -1373,10 +1373,10 @@ textarea:focus-visible {
 
 .showcase__static-item {
   overflow: hidden;
-  border: 1px solid var(--border-soft);
+  border: 1px solid var(--card-stroke);
   border-radius: var(--shape-xl);
   background: var(--surface-card);
-  box-shadow: var(--shadow-subtle);
+  box-shadow: var(--glass-rim), var(--glass-shadow);
 }
 
 .showcase__static-item img {
@@ -1392,10 +1392,10 @@ textarea:focus-visible {
 
 .showcase__static-name {
   font-family: var(--font-display);
-  font-size: var(--type-title);
-  font-weight: 900;
-  line-height: 1;
-  text-transform: uppercase;
+  font-size: 1.375rem;
+  font-weight: 700;
+  letter-spacing: -0.019em;
+  line-height: 1.2;
 }
 
 .showcase__static-nick {
@@ -1409,8 +1409,8 @@ textarea:focus-visible {
   color: color-mix(in oklab, var(--c) 35%, var(--text-strong));
   font-family: var(--font-display);
   font-size: var(--type-price);
-  font-weight: 800;
-  text-transform: uppercase;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 
 /* Interior page header backdrop */
@@ -1498,21 +1498,21 @@ textarea:focus-visible {
   color: var(--accent-solid);
   font-family: var(--font-display);
   font-size: var(--type-sign);
-  line-height: 0.9;
+  letter-spacing: -0.03em;
+  line-height: 1;
 }
 
 .visit-stage__fallback span {
   font-family: var(--font-display);
   font-size: var(--type-sign-sub);
-  font-weight: 800;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 .visit-stage__fallback small {
   color: var(--text-muted);
-  font-size: var(--type-label);
-  font-weight: 800;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
+  font-size: var(--type-body-sm);
+  font-weight: 600;
 }
 
 /* Gallery ring */
@@ -1579,29 +1579,34 @@ textarea:focus-visible {
   color: var(--text-strong);
   font-size: var(--type-label);
   line-height: 1.5;
-  font-weight: 800;
-  letter-spacing: 0.14em;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 
+/* a round glass icon button, like .ios-icon-button but a little larger */
 .round-button {
   display: grid;
   flex: none;
   place-items: center;
   width: 3rem;
   height: 3rem;
-  border: 1px solid var(--border-strong);
-  border-radius: 999px;
-  background: rgb(255 255 255 / 55%);
+  border: 1px solid var(--glass-stroke);
+  border-radius: var(--shape-full);
+  background: var(--glass-fill-strong);
+  box-shadow: var(--glass-rim), var(--glass-shadow);
   color: var(--text-strong);
   transition:
-    border-color 250ms,
-    transform 300ms var(--ease-cinematic);
+    background-color 240ms var(--ease-cinematic),
+    transform 360ms var(--ease-spring);
 }
 
 .round-button:hover {
-  border-color: var(--text-strong);
-  transform: scale(1.06);
+  background-color: var(--glass-hover);
+}
+
+.round-button:active {
+  transform: scale(0.92);
+  transition-duration: 120ms;
 }
 
 .round-button svg {
@@ -1651,9 +1656,9 @@ textarea:focus-visible {
   margin-top: 0.75rem;
   font-family: var(--font-display);
   font-size: var(--type-display);
-  font-weight: 900;
-  line-height: 0.9;
-  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.04;
 }
 
 .menu-hero__lede {
@@ -1742,7 +1747,7 @@ textarea:focus-visible {
 }
 
 /* ------------------------------------------------------------------
- * Menu cards: plain dark cards with the shop photo on top, then the name,
+ * Menu cards: iOS 27 cards with the shop photo on top, then the name,
  * price, options and the Order button.
  * ------------------------------------------------------------------ */
 .menu-card {
@@ -1750,26 +1755,25 @@ textarea:focus-visible {
   display: flex;
   overflow: hidden;
   flex-direction: column;
-  border: 1px solid var(--border-soft);
-  border-radius: 1rem;
+  border: 1px solid var(--card-stroke);
+  border-radius: var(--shape-xl);
   background: var(--surface-card);
-  box-shadow: var(--shadow-subtle);
+  box-shadow: var(--glass-rim), var(--glass-shadow);
   transition:
     transform 240ms ease-out,
-    border-color 240ms ease-out;
+    background-color 240ms ease-out;
 }
 
 @media (hover: hover) and (pointer: fine) {
   .menu-card:hover {
-    border-color: var(--border-strong);
-    transform: translateY(-3px);
+    background-color: var(--card-hover);
   }
 }
 
 .menu-card__media {
   position: relative;
   overflow: hidden;
-  border-bottom: 1px solid var(--border-soft);
+  border-bottom: 1px solid var(--separator);
   aspect-ratio: 4 / 3;
   background: var(--surface-warm);
 }
@@ -1795,22 +1799,20 @@ textarea:focus-visible {
 
 .menu-card__nickname {
   display: block;
-  margin-bottom: 0.3rem;
+  margin-bottom: 0.2rem;
   color: var(--text-muted);
-  font-size: 0.75rem;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  line-height: 1.2;
-  text-transform: uppercase;
+  font-size: var(--type-label);
+  font-weight: 600;
+  line-height: 1.125rem;
 }
 
 .menu-card__name {
   display: block;
   font-family: var(--font-display);
-  font-size: 1.875rem;
-  font-weight: 900;
-  line-height: 0.95;
-  text-transform: uppercase;
+  font-size: 1.375rem;
+  font-weight: 700;
+  letter-spacing: -0.019em;
+  line-height: 1.2;
   text-wrap: balance;
 }
 
@@ -1821,22 +1823,21 @@ textarea:focus-visible {
 
 .menu-card__price-from {
   display: block;
-  margin-bottom: 0.2rem;
+  margin-bottom: 0.1rem;
   color: var(--text-subtle);
-  font-size: 0.6875rem;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-size: var(--type-label);
+  font-weight: 500;
 }
 
 .menu-card__price-value {
   display: block;
   color: var(--text-strong);
   font-family: var(--font-display);
-  font-size: 1.875rem;
+  font-size: 1.375rem;
   font-variant-numeric: tabular-nums;
-  font-weight: 900;
-  line-height: 0.95;
+  font-weight: 700;
+  letter-spacing: -0.019em;
+  line-height: 1.2;
 }
 
 .menu-card__status {
@@ -1844,12 +1845,12 @@ textarea:focus-visible {
   align-self: flex-start;
   margin-top: 0.75rem;
   border: 1px solid var(--notice-border);
-  border-radius: 999px;
+  border-radius: var(--shape-full);
   background: var(--notice-surface);
   padding: 0.3rem 0.75rem;
   color: var(--notice-text);
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: var(--type-label);
+  font-weight: 600;
 }
 
 .menu-card__group {
@@ -1858,10 +1859,8 @@ textarea:focus-visible {
 
 .menu-card__label {
   color: var(--text-subtle);
-  font-size: 0.6875rem;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-size: var(--type-label);
+  font-weight: 600;
 }
 
 .menu-card__chips {
@@ -1875,13 +1874,12 @@ textarea:focus-visible {
   display: inline-flex;
   min-height: 2rem;
   align-items: center;
-  border: 1px solid var(--border-soft);
-  border-radius: 999px;
-  background: var(--surface-raised);
+  border-radius: var(--shape-full);
+  background: var(--fill-secondary);
   padding: 0.3rem 0.75rem;
-  color: var(--text-muted);
-  font-size: 0.8125rem;
-  font-weight: 600;
+  color: var(--text-strong);
+  font-size: var(--type-label);
+  font-weight: 500;
 }
 
 .menu-card__sizes {
@@ -1893,47 +1891,45 @@ textarea:focus-visible {
 
 .menu-card__size {
   display: grid;
-  gap: 0.15rem;
-  border: 1px solid var(--border-soft);
-  border-radius: 0.5rem;
-  background: var(--surface-raised);
+  gap: 0.1rem;
+  border-radius: var(--shape-md);
+  background: var(--fill-tertiary);
   padding: 0.5rem 0.75rem;
 }
 
 .menu-card__size-name {
   color: var(--text-muted);
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
+  font-size: var(--type-label);
+  font-weight: 500;
 }
 
 .menu-card__size-price {
   color: var(--text-strong);
-  font-size: 1rem;
+  font-size: var(--type-body);
   font-variant-numeric: tabular-nums;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .menu-card__rows {
   display: grid;
   gap: 0.75rem;
-  border-top: 1px solid var(--border-soft);
+  border-top: 1px solid var(--separator);
   padding-top: 1rem;
-  font-size: 0.875rem;
+  font-size: var(--type-body-sm);
 }
 
 .menu-card__row-price {
   flex-shrink: 0;
   color: var(--text-strong);
   font-variant-numeric: tabular-nums;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .menu-card__flavor-prices {
   display: grid;
   gap: 0.25rem;
   margin-top: 0.5rem;
-  border-left: 1px solid var(--border-soft);
+  border-left: 1px solid var(--separator);
   padding-left: 0.75rem;
   color: var(--text-muted);
 }
@@ -1970,12 +1966,12 @@ textarea:focus-visible {
 .menu-card__cart-badge {
   justify-self: center;
   border: 1px solid var(--accent-solid);
-  border-radius: 999px;
+  border-radius: var(--shape-full);
   background: var(--accent-soft);
   padding: 0.3rem 0.75rem;
   color: var(--accent-solid);
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: var(--type-label);
+  font-weight: 600;
 }
 
 /* Add to order dialog: the product floats in 3D over a soft glow. The photo
@@ -1985,7 +1981,7 @@ textarea:focus-visible {
   margin-top: 1.25rem;
   aspect-ratio: 4 / 3;
   overflow: hidden;
-  border-radius: 1.25rem;
+  border-radius: var(--shape-lg);
   background: var(--surface-warm);
 }
 
@@ -2056,7 +2052,8 @@ textarea:focus-visible {
   color: color-mix(in oklab, var(--ga) 35%, var(--text-strong));
   font-family: var(--font-display);
   font-size: var(--type-title);
-  font-weight: 900;
+  font-weight: 700;
+  letter-spacing: -0.021em;
   line-height: 1;
 }
 
@@ -2064,8 +2061,7 @@ textarea:focus-visible {
   color: var(--text-subtle);
   font-family: var(--font-sans);
   font-size: var(--type-label);
-  font-weight: 800;
-  letter-spacing: 0.2em;
+  font-weight: 600;
 }
 
 .menu-cat-head__title {
@@ -2073,9 +2069,9 @@ textarea:focus-visible {
   color: var(--text-strong);
   font-family: var(--font-display);
   font-size: var(--type-stage);
-  font-weight: 900;
-  line-height: 0.95;
-  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.08;
   text-wrap: balance;
   transition:
     opacity 400ms ease-out,
@@ -2180,7 +2176,7 @@ html[data-motion="on"]:not([data-motion-live])
   background:
     radial-gradient(
       ellipse 70% 55% at 50% 42%,
-      rgb(255 255 255 / 45%),
+      var(--glass-fill),
       transparent 70%
     ),
     var(--surface-canvas);
@@ -2219,9 +2215,9 @@ html[data-motion="on"]:not([data-motion-live])
   color: var(--text-strong);
   font-family: var(--font-display);
   font-size: clamp(3.5rem, 12vw, 9rem);
-  font-weight: 900;
-  line-height: 0.9;
-  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1;
 }
 
 .route-curtain__line {
@@ -2235,10 +2231,8 @@ html[data-motion="on"]:not([data-motion-live])
 
 .route-curtain__place {
   color: var(--text-muted);
-  font-size: var(--type-label);
-  font-weight: 800;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
+  font-size: var(--type-body-sm);
+  font-weight: 600;
 }
 
 /* State scenes (src/components/three/state-scene.tsx): a fixed box, so the
@@ -2286,6 +2280,7 @@ html[data-motion="on"]:not([data-motion-live])
   color: var(--accent-solid);
   font-family: var(--font-display);
   font-size: clamp(6rem, 22vw, 13rem);
-  font-weight: 900;
+  font-weight: 700;
+  letter-spacing: -0.04em;
   line-height: 0.9;
 }

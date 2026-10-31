@@ -1,7 +1,7 @@
 # Development Log
 
 **Document version:** 0.1 Draft\
-**Last updated:** 2026-10-28
+**Last updated:** 2026-10-30
 
 This log records completed work and observed evidence. Planned work is explicitly identified and is not reported as implemented or tested.
 
@@ -1157,3 +1157,14 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `fix/washed-out-colors`, PR #70.
 - **Known limitations:** The screenshots were taken with SwiftShader (software WebGL), as in earlier 3D PRs. The new tone mapping applies to every scene, so the visit scene, which already looked right, shifts slightly too.
 - **Next action:** The iOS 27 restyle of the buttons, text and containers as its own PR.
+
+## 2026-10-30 — iOS 27 look and a day/night toggle
+
+- **Phase:** 4 (follow-up to Daylight Glass, ADR-022)
+- **Task:** Restyle every class, button, text and container after Apple's iOS 27 (Liquid Glass), with the Apple iOS 27 UI Kit as the reference, and add a day/night toggle.
+- **Summary:** I added shared iOS building blocks to `globals.css` (`ios-card`, `ios-well`, `ios-list`, `ios-sheet`, `ios-glass-bar`, `ios-caption`, `ios-label`, `ios-field`, `ios-icon-button`, `ios-chip`, `ios-stepper`, `ios-switch`) and moved every page and component onto them: SF Pro on Apple devices and Inter elsewhere, sentence case, capsule buttons, grouped cards, opaque sheets for the order dialog and the cart drawer, a segmented showcase switcher and one stepper for quantity (ADR-023). The night theme is "the shop after dark": espresso walls, cream text, warm dark glass and a sage green, set as night values of the same tokens (ADR-024). A moon or sun button in the desktop header and a "Night mode" switch in the phone menu switch themes (FR-092). A first visit follows the device's setting, and a small script in the page head applies the saved choice before the first paint. The 3D studio walls follow the theme live, with a softer glow and lighter product names at night. The night button green is deeper (`#25764B`) so white text keeps 4.5:1 under the button's sheen.
+- **Files:** `src/app/globals.css`, `src/app/layout.tsx`, `src/lib/theme/theme.ts`, `src/components/theme/theme-toggle.tsx`, `src/components/ui/icons.tsx`, the page and component files under `src/app/` and `src/components/` (header, phone menu, account, cart, checkout, menu, order status, gallery, about, contact, error, loading), `src/components/three/engine/studio.ts` and `runtime.ts`, the scenes `showcase.ts`, `ambient.ts`, `gallery-ring.ts`, `menu-hero.ts` and `state.ts`, `tests/unit/night-theme.test.ts`, `tests/unit/theme-toggle.test.tsx`, `tests/e2e/theme.spec.ts`, `tests/unit/site-header.test.tsx`, `scripts/validate_phase0_docs.py`, `docs/decisions.md`, `docs/functional-requirements.md`, `docs/test-cases.md` and the traceability, font and privacy notes.
+- **Testing:** Vitest 428/428 in 49 files (new TC-P4-228 – TC-P4-237). Playwright `chromium` (22 passed, 2 skipped) (new TC-P4-238) and `chromium-3d` 21/21 against a local production build. The docs validator passes. Before and after screenshots are in `docs/evidence/phase-4/ios27-restyle/`.
+- **Branch / PR:** `feat/ios27-restyle`, PR #71.
+- **Known limitations:** The server always renders day; a night visitor gets the night theme from the head script before the first paint, so there is no flash, but with JavaScript off the site stays in day. Screenshots were taken with reduced motion in headless Chromium.
+- **Next action:** Apply the live website content migration once approved, then Stage 3 in the POS (FR-093).

@@ -147,13 +147,27 @@ const CREAM = new THREE.Color(THEME_COLOR.day);
  * The product name at night: a light shade of the item's color on the dark
  * wall. Every color is brought up to the same brightness (each channel capped
  * at full), then mixed with the cream text color, so each name reads at 4.5:1
- * or better. It is brightest at the top, like a lit sign.
+ * or better on the wall and 3:1 or better on the item's glow (WALL_WASH). It
+ * is brightest at the top, like a lit sign.
  */
 export const TITLE_FACE_NIGHT = {
-  luminance: 0.45,
-  cream: 0.3,
-  shade: [0.8, 1],
+  luminance: 0.5,
+  cream: 0.35,
+  shade: [0.85, 1],
 } as const;
+
+/**
+ * How much of the item's color washes the wall behind the product. Half as
+ * much at night, where a bright glow on the dark wall would sit too close to
+ * the light names and page text in front of it.
+ */
+export const WALL_WASH = { day: 0.32, night: 0.16 } as const;
+
+/** GLSL `wallWash(night)`: the wash amount for a 0 (day) to 1 (night) blend. */
+export const WALL_WASH_GLSL = /* glsl */ `
+  float wallWash(float night){
+    return mix(${f(WALL_WASH.day)}, ${f(WALL_WASH.night)}, night);
+  }`;
 
 /** The night name's linear on-screen color at `y` (0 bottom, 1 top). */
 export function titleFaceNight(glow: THREE.ColorRepresentation, y: number) {

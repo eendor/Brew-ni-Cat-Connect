@@ -22,6 +22,7 @@ import {
   studioBackground,
   studioCanvas,
   UNTONEMAP_GLSL,
+  WALL_WASH_GLSL,
 } from "../engine/studio";
 import { rng } from "../engine/textures";
 import {
@@ -84,14 +85,16 @@ export async function initAmbient(
       uniforms: {
         uGlow: { value: new THREE.Color(config.glow) },
         uBg: { value: new THREE.Color(studioCanvas("day")) },
+        uNight: { value: 0 },
       },
       vertexShader: /* glsl */ `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
       fragmentShader: /* glsl */ `
-        uniform vec3 uGlow, uBg; varying vec2 vUv;
+        uniform vec3 uGlow, uBg; uniform float uNight; varying vec2 vUv;
         ${UNTONEMAP_GLSL}
+        ${WALL_WASH_GLSL}
         void main(){
           vec2 d = (vUv - vec2(0.72, 0.62)) * vec2(2.0, 1.0);
-          vec3 col = mix(uBg, mix(uBg, uGlow, 0.32), exp(-dot(d, d) * 5.0) * 0.75);
+          vec3 col = mix(uBg, mix(uBg, uGlow, wallWash(uNight)), exp(-dot(d, d) * 5.0) * 0.75);
           gl_FragColor = vec4(untonemap(col), 1.0);
           #include <tonemapping_fragment>
           #include <colorspace_fragment>
@@ -103,7 +106,9 @@ export async function initAmbient(
   // the page color behind everything, recolored when the theme changes
   const recolor = (theme: Theme) => {
     scene.background = studioBackground(!lite, theme);
-    (wash.material.uniforms.uBg!.value as THREE.Color).set(studioCanvas(theme));
+    const { uniforms } = wash.material;
+    (uniforms.uBg!.value as THREE.Color).set(studioCanvas(theme));
+    uniforms.uNight!.value = theme === "night" ? 1 : 0;
   };
   recolor(currentTheme());
 

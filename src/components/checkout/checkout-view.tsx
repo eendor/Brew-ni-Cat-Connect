@@ -493,7 +493,7 @@ export function CheckoutView({
           <Container>
             <div
               role="status"
-              className="mx-auto max-w-lg text-center rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-8 sm:p-12 shadow-[var(--shadow-subtle)]"
+              className="ios-card mx-auto max-w-lg p-8 text-center sm:p-12"
             >
               <p className="text-sm text-[var(--text-muted)]">
                 Opening your order…
@@ -522,12 +522,12 @@ export function CheckoutView({
         />
         <section className="py-16 sm:py-20">
           <Container>
-            <div className="mx-auto max-w-lg text-center rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-8 sm:p-12 shadow-[var(--shadow-subtle)]">
+            <div className="ios-card mx-auto max-w-lg p-8 text-center sm:p-12">
               <StateScene
                 kind="empty"
                 className="mx-auto mb-4 size-44 sm:size-52"
                 fallback={
-                  <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-[var(--surface-warm)] text-[var(--accent-strong)]">
+                  <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-[var(--fill-tertiary)] text-[var(--accent-strong)]">
                     <svg
                       className="size-8"
                       viewBox="0 0 24 24"
@@ -616,7 +616,7 @@ export function CheckoutView({
               role="alert"
               className="mb-8 rounded-2xl border border-[var(--notice-border)] bg-[var(--notice-surface)] p-5 text-sm text-[var(--notice-text)] space-y-1"
             >
-              <strong className="block font-bold">
+              <strong className="block font-semibold">
                 Cart Items Refreshed to Current Menu
               </strong>
               <ul className="list-disc pl-5 space-y-1 text-xs">
@@ -629,12 +629,12 @@ export function CheckoutView({
 
           {/* Step Progress Indicator */}
           <nav aria-label="Checkout Progress" className="mb-10">
-            <ol className="flex items-center justify-center gap-2 sm:gap-6 text-sm font-bold">
+            <ol className="flex items-center justify-center gap-2 text-sm font-medium sm:gap-6">
               <li
                 aria-current={step === "details" ? "step" : undefined}
                 className={`flex items-center gap-2 ${
                   step === "details"
-                    ? "text-[var(--accent-strong)] font-extrabold"
+                    ? "text-[var(--accent-strong)] font-semibold"
                     : "text-[var(--accent-solid)] font-semibold"
                 }`}
               >
@@ -660,7 +660,7 @@ export function CheckoutView({
                 aria-current={step === "review" ? "step" : undefined}
                 className={`flex items-center gap-2 ${
                   step === "review"
-                    ? "text-[var(--accent-strong)] font-extrabold"
+                    ? "text-[var(--accent-strong)] font-semibold"
                     : step === "send"
                       ? "text-[var(--accent-solid)] font-semibold"
                       : "text-[var(--text-subtle)] font-medium"
@@ -672,7 +672,7 @@ export function CheckoutView({
                       ? "bg-[var(--accent-fill)] text-[var(--on-accent)]"
                       : step === "send"
                         ? "bg-[var(--surface-accent)] text-[var(--accent-solid)]"
-                        : "bg-[var(--surface-warm)] text-[var(--text-subtle)]"
+                        : "bg-[var(--fill-secondary)] text-[var(--text-subtle)]"
                   }`}
                 >
                   2
@@ -688,7 +688,7 @@ export function CheckoutView({
                 aria-current={step === "send" ? "step" : undefined}
                 className={`flex items-center gap-2 ${
                   step === "send"
-                    ? "text-[var(--accent-strong)] font-extrabold"
+                    ? "text-[var(--accent-strong)] font-semibold"
                     : "text-[var(--text-subtle)] font-medium"
                 }`}
               >
@@ -696,7 +696,7 @@ export function CheckoutView({
                   className={`flex size-7 items-center justify-center rounded-full text-xs ${
                     step === "send"
                       ? "bg-[var(--accent-fill)] text-[var(--on-accent)]"
-                      : "bg-[var(--surface-warm)] text-[var(--text-subtle)]"
+                      : "bg-[var(--fill-secondary)] text-[var(--text-subtle)]"
                   }`}
                 >
                   3
@@ -717,7 +717,7 @@ export function CheckoutView({
             >
               <div className="space-y-8 min-[900px]:col-span-7 xl:col-span-8">
                 {/* Fulfillment Selection */}
-                <div className="rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-6 sm:p-8 shadow-[var(--shadow-subtle)]">
+                <div className="ios-card p-6 sm:p-8">
                   <h2
                     ref={step1HeadingRef}
                     tabIndex={-1}
@@ -740,7 +740,7 @@ export function CheckoutView({
                       <div className="flex items-start justify-between gap-3">
                         <div>
                           <StoreIcon className="mb-3 size-6 shrink-0 text-[var(--accent-strong)]" />
-                          <span className="font-extrabold text-[var(--text-strong)] text-base block">
+                          <span className="block text-base font-semibold text-[var(--text-strong)]">
                             Pickup at Shop
                           </span>
                           <span className="text-xs text-[var(--accent-solid)] font-semibold mt-1 block">
@@ -777,7 +777,7 @@ export function CheckoutView({
                       <div className="flex items-start justify-between gap-3">
                         <div>
                           <MotorbikeIcon className="mb-3 size-6 shrink-0 text-[var(--accent-strong)]" />
-                          <span className="font-extrabold text-[var(--text-strong)] text-base block">
+                          <span className="block text-base font-semibold text-[var(--text-strong)]">
                             Rider Delivery
                           </span>
                           <span className="text-xs text-[var(--accent-strong)] font-semibold mt-1 block">
@@ -805,7 +805,7 @@ export function CheckoutView({
 
                   {isRiderDelivery ? (
                     <div className="mt-6 rounded-2xl border border-[var(--notice-border)] bg-[var(--notice-surface)] p-5 text-xs leading-6 text-[var(--notice-text)]">
-                      <strong className="block text-sm font-bold mb-1">
+                      <strong className="mb-1 block text-sm font-semibold">
                         How Rider Delivery Works:
                       </strong>
                       <ol className="list-decimal pl-4 space-y-1 mb-3">
@@ -833,7 +833,7 @@ export function CheckoutView({
                 </div>
 
                 {/* Customer Contact Details */}
-                <div className="rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-6 sm:p-8 shadow-[var(--shadow-subtle)]">
+                <div className="ios-card p-6 sm:p-8">
                   <h2 className="font-display text-xl text-[var(--text-strong)]">
                     2. Customer Contact Information
                   </h2>
@@ -844,10 +844,7 @@ export function CheckoutView({
 
                   <div className="mt-6 grid gap-5 sm:grid-cols-2">
                     <div>
-                      <label
-                        htmlFor={nameInputId}
-                        className="block text-sm font-bold text-[var(--text-strong)]"
-                      >
+                      <label htmlFor={nameInputId} className="ios-label block">
                         Full Name{" "}
                         <span
                           className="text-[var(--danger)]"
@@ -877,13 +874,13 @@ export function CheckoutView({
                           errors.name ? "name-error" : undefined
                         }
                         placeholder="e.g. Maria Santos"
-                        className="mt-2 block w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface-input)] min-h-12 px-4 py-3 text-base text-[var(--text-strong)] placeholder-[var(--text-subtle)] aria-[invalid=true]:border-[var(--danger)] focus:border-[var(--accent-solid)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-solid)]"
+                        className="ios-field mt-2"
                       />
                       {errors.name ? (
                         <p
                           id="name-error"
                           role="alert"
-                          className="mt-1.5 text-sm font-bold text-[var(--danger)]"
+                          className="mt-1.5 text-sm font-semibold text-[var(--danger)]"
                         >
                           {errors.name}
                         </p>
@@ -891,10 +888,7 @@ export function CheckoutView({
                     </div>
 
                     <div>
-                      <label
-                        htmlFor={phoneInputId}
-                        className="block text-sm font-bold text-[var(--text-strong)]"
-                      >
+                      <label htmlFor={phoneInputId} className="ios-label block">
                         Contact Phone Number{" "}
                         <span
                           className="text-[var(--danger)]"
@@ -923,13 +917,13 @@ export function CheckoutView({
                           errors.phone ? "phone-error" : undefined
                         }
                         placeholder="e.g. 0912 345 6789"
-                        className="mt-2 block w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface-input)] min-h-12 px-4 py-3 text-base text-[var(--text-strong)] placeholder-[var(--text-subtle)] aria-[invalid=true]:border-[var(--danger)] focus:border-[var(--accent-solid)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-solid)]"
+                        className="ios-field mt-2"
                       />
                       {errors.phone ? (
                         <p
                           id="phone-error"
                           role="alert"
-                          className="mt-1.5 text-sm font-bold text-[var(--danger)]"
+                          className="mt-1.5 text-sm font-semibold text-[var(--danger)]"
                         >
                           {errors.phone}
                         </p>
@@ -940,7 +934,7 @@ export function CheckoutView({
                       <div className="sm:col-span-2">
                         <label
                           htmlFor={addressInputId}
-                          className="block text-sm font-bold text-[var(--text-strong)]"
+                          className="ios-label block"
                         >
                           Delivery Address{" "}
                           <span
@@ -970,13 +964,13 @@ export function CheckoutView({
                             errors.address ? "address-error" : undefined
                           }
                           placeholder="e.g. House no., street, barangay, landmark"
-                          className="mt-2 block w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface-input)] min-h-12 px-4 py-3 text-base text-[var(--text-strong)] placeholder-[var(--text-subtle)] aria-[invalid=true]:border-[var(--danger)] focus:border-[var(--accent-solid)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-solid)]"
+                          className="ios-field mt-2"
                         />
                         {errors.address ? (
                           <p
                             id="address-error"
                             role="alert"
-                            className="mt-1.5 text-sm font-bold text-[var(--danger)]"
+                            className="mt-1.5 text-sm font-semibold text-[var(--danger)]"
                           >
                             {errors.address}
                           </p>
@@ -985,7 +979,7 @@ export function CheckoutView({
                     ) : (
                       <div className="sm:col-span-2">
                         <fieldset>
-                          <legend className="block text-sm font-bold text-[var(--text-strong)]">
+                          <legend className="ios-label block">
                             Payment Preference at Shop
                           </legend>
                           <div className="mt-1 flex flex-wrap gap-x-6">
@@ -1018,10 +1012,7 @@ export function CheckoutView({
                     )}
 
                     <div className="sm:col-span-2">
-                      <label
-                        htmlFor={notesInputId}
-                        className="block text-sm font-bold text-[var(--text-strong)]"
-                      >
+                      <label htmlFor={notesInputId} className="ios-label block">
                         {isRiderDelivery
                           ? "Special Instructions or Delivery Notes (Optional)"
                           : "Special Instructions or Preferred Pickup Time (Optional)"}
@@ -1049,13 +1040,13 @@ export function CheckoutView({
                             ? "e.g. Less ice for iced latte, deliver after 3 PM, call when you arrive..."
                             : "e.g. Less ice for iced latte, preferred pickup time today, pack pastries separately..."
                         }
-                        className="mt-2 block w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface-input)] min-h-12 px-4 py-3 text-base text-[var(--text-strong)] placeholder-[var(--text-subtle)] aria-[invalid=true]:border-[var(--danger)] focus:border-[var(--accent-solid)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-solid)]"
+                        className="ios-field mt-2"
                       />
                       {errors.notes ? (
                         <p
                           id="notes-error"
                           role="alert"
-                          className="mt-1.5 text-sm font-bold text-[var(--danger)]"
+                          className="mt-1.5 text-sm font-semibold text-[var(--danger)]"
                         >
                           {errors.notes}
                         </p>
@@ -1067,7 +1058,7 @@ export function CheckoutView({
 
               {/* Order Summary Sidebar */}
               <div className="min-[900px]:col-span-5 xl:col-span-4">
-                <div className="sticky top-28 rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-6 sm:p-8 shadow-[var(--shadow-card)] space-y-6">
+                <div className="ios-card sticky top-28 space-y-6 p-6 sm:p-8">
                   <h3 className="font-display text-xl text-[var(--text-strong)] pb-4 border-b border-[var(--border-soft)]">
                     Order Summary
                   </h3>
@@ -1075,14 +1066,14 @@ export function CheckoutView({
                   <div className="space-y-3 text-sm">
                     <div className="flex justify-between text-[var(--text-muted)]">
                       <span>Total items</span>
-                      <span className="font-bold text-[var(--text-strong)]">
+                      <span className="font-semibold text-[var(--text-strong)]">
                         {itemCount}
                       </span>
                     </div>
 
                     <div className="flex justify-between text-[var(--text-muted)]">
                       <span>Fulfillment</span>
-                      <span className="font-bold text-[var(--text-strong)]">
+                      <span className="font-semibold text-[var(--text-strong)]">
                         {isRiderDelivery ? "Rider delivery" : "Pickup at shop"}
                       </span>
                     </div>
@@ -1098,7 +1089,7 @@ export function CheckoutView({
 
                     <div className="pt-3 border-t border-[var(--border-soft)] flex items-baseline justify-between">
                       <div>
-                        <span className="block text-base font-extrabold text-[var(--text-strong)]">
+                        <span className="block text-base font-semibold text-[var(--text-strong)]">
                           Subtotal
                         </span>
                         <span className="block text-xs text-[var(--text-subtle)]">
@@ -1107,14 +1098,14 @@ export function CheckoutView({
                             : "Catalog exact"}
                         </span>
                       </div>
-                      <span className="text-3xl font-black text-[var(--accent-strong)]">
+                      <span className="text-3xl font-bold text-[var(--accent-strong)] tabular-nums">
                         {formatPrice(subtotal)}
                       </span>
                     </div>
                   </div>
 
-                  <div className="rounded-2xl bg-[var(--surface-warm)] p-4 text-xs leading-5 text-[var(--text-muted)]">
-                    <strong className="block font-bold text-[var(--text-strong)]">
+                  <div className="ios-well p-4 text-xs leading-5 text-[var(--text-muted)]">
+                    <strong className="block font-semibold text-[var(--text-strong)]">
                       Shop Hours & Takeout Note
                     </strong>
                     {hoursNotice(hours)} The {takeoutBox} is not included in the
@@ -1124,17 +1115,11 @@ export function CheckoutView({
                       : `The shop confirms it when you order. Payment is settled via ${paymentList} directly with the shop.`}
                   </div>
 
-                  <button
-                    type="submit"
-                    className="button-primary w-full text-center py-3.5 text-base"
-                  >
+                  <button type="submit" className="button-primary w-full">
                     Continue to Order Review{"\u00a0"}→
                   </button>
 
-                  <Link
-                    href="/cart"
-                    className="button-secondary w-full text-center text-sm"
-                  >
+                  <Link href="/cart" className="button-secondary w-full">
                     ←{"\u00a0"}Back to Cart
                   </Link>
                 </div>
@@ -1147,7 +1132,7 @@ export function CheckoutView({
             <div className="grid gap-10 min-[900px]:grid-cols-12 min-[900px]:items-start min-[900px]:gap-8 xl:gap-12">
               <div className="space-y-8 min-[900px]:col-span-7 xl:col-span-8">
                 {/* Itemized Order Review */}
-                <div className="rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-6 sm:p-8 shadow-[var(--shadow-subtle)]">
+                <div className="ios-card p-6 sm:p-8">
                   <div className="flex items-center justify-between pb-4 border-b border-[var(--border-soft)] mb-6">
                     <div>
                       <h2
@@ -1164,7 +1149,7 @@ export function CheckoutView({
                     </div>
                     <Link
                       href="/cart"
-                      className="-my-1.5 inline-flex min-h-11 items-center text-xs font-bold text-[var(--accent-strong)] hover:underline"
+                      className="-my-1.5 inline-flex min-h-11 items-center text-sm font-semibold text-[var(--accent-solid)] hover:underline"
                     >
                       Edit items in cart
                     </Link>
@@ -1178,7 +1163,7 @@ export function CheckoutView({
                 </div>
 
                 {/* Customer and Fulfillment Details Review */}
-                <div className="rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-6 sm:p-8 shadow-[var(--shadow-subtle)]">
+                <div className="ios-card p-6 sm:p-8">
                   <div className="flex items-center justify-between pb-4 border-b border-[var(--border-soft)] mb-6">
                     <h2 className="font-display text-2xl text-[var(--text-strong)]">
                       Fulfillment & Customer Details
@@ -1186,37 +1171,31 @@ export function CheckoutView({
                     <button
                       type="button"
                       onClick={() => goToStep("details")}
-                      className="-my-1.5 inline-flex min-h-11 items-center text-xs font-bold text-[var(--accent-strong)] hover:underline"
+                      className="-my-1.5 inline-flex min-h-11 items-center text-sm font-semibold text-[var(--accent-solid)] hover:underline"
                     >
                       Edit details
                     </button>
                   </div>
 
                   <dl className="grid gap-4 sm:grid-cols-2 text-sm [overflow-wrap:anywhere]">
-                    <div className="rounded-xl bg-[var(--surface-warm)] p-4">
-                      <dt className="text-xs font-bold uppercase tracking-wider text-[var(--text-subtle)]">
-                        Customer Name
-                      </dt>
-                      <dd className="mt-1 font-bold text-[var(--text-strong)] text-base">
+                    <div className="ios-well p-4">
+                      <dt className="ios-caption">Customer Name</dt>
+                      <dd className="mt-1 text-base font-semibold text-[var(--text-strong)]">
                         {customer.name}
                       </dd>
                     </div>
 
-                    <div className="rounded-xl bg-[var(--surface-warm)] p-4">
-                      <dt className="text-xs font-bold uppercase tracking-wider text-[var(--text-subtle)]">
-                        Contact Phone
-                      </dt>
-                      <dd className="mt-1 font-bold text-[var(--text-strong)] text-base">
+                    <div className="ios-well p-4">
+                      <dt className="ios-caption">Contact Phone</dt>
+                      <dd className="mt-1 text-base font-semibold text-[var(--text-strong)]">
                         {customer.phone}
                       </dd>
                     </div>
 
-                    <div className="rounded-xl bg-[var(--surface-warm)] p-4">
-                      <dt className="text-xs font-bold uppercase tracking-wider text-[var(--text-subtle)]">
-                        Fulfillment Mode
-                      </dt>
+                    <div className="ios-well p-4">
+                      <dt className="ios-caption">Fulfillment Mode</dt>
                       <dd className="mt-1">
-                        <span className="block text-base font-bold text-[var(--text-strong)]">
+                        <span className="block text-base font-semibold text-[var(--text-strong)]">
                           {isRiderDelivery
                             ? "Rider Delivery"
                             : "Pickup at Shop"}
@@ -1229,12 +1208,12 @@ export function CheckoutView({
                       </dd>
                     </div>
 
-                    <div className="rounded-xl bg-[var(--surface-warm)] p-4">
-                      <dt className="text-xs font-bold uppercase tracking-wider text-[var(--text-subtle)]">
+                    <div className="ios-well p-4">
+                      <dt className="ios-caption">
                         {isRiderDelivery ? "Payment" : "Payment Preference"}
                       </dt>
                       <dd className="mt-1">
-                        <span className="block text-base font-bold text-[var(--text-strong)]">
+                        <span className="block text-base font-semibold text-[var(--text-strong)]">
                           {isRiderDelivery
                             ? "Agreed with your rider"
                             : `${customer.paymentPreference} at counter`}
@@ -1248,19 +1227,17 @@ export function CheckoutView({
                     </div>
 
                     {isRiderDelivery ? (
-                      <div className="sm:col-span-2 rounded-xl bg-[var(--surface-warm)] p-4">
-                        <dt className="text-xs font-bold uppercase tracking-wider text-[var(--text-subtle)]">
-                          Delivery Address
-                        </dt>
-                        <dd className="mt-1 font-bold text-[var(--text-strong)] text-base">
+                      <div className="sm:col-span-2 ios-well p-4">
+                        <dt className="ios-caption">Delivery Address</dt>
+                        <dd className="mt-1 text-base font-semibold text-[var(--text-strong)]">
                           {customer.address}
                         </dd>
                       </div>
                     ) : null}
 
                     {customer.notes ? (
-                      <div className="sm:col-span-2 rounded-xl bg-[var(--surface-warm)] p-4">
-                        <dt className="text-xs font-bold uppercase tracking-wider text-[var(--text-subtle)]">
+                      <div className="sm:col-span-2 ios-well p-4">
+                        <dt className="ios-caption">
                           {isRiderDelivery
                             ? "Special Instructions / Delivery Notes"
                             : "Special Instructions / Timing"}
@@ -1276,7 +1253,7 @@ export function CheckoutView({
 
               {/* Review Sidebar */}
               <div className="min-[900px]:col-span-5 xl:col-span-4">
-                <div className="sticky top-28 rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-6 sm:p-8 shadow-[var(--shadow-card)] space-y-6">
+                <div className="ios-card sticky top-28 space-y-6 p-6 sm:p-8">
                   <h3 className="font-display text-xl text-[var(--text-strong)] pb-4 border-b border-[var(--border-soft)]">
                     Final Review
                   </h3>
@@ -1284,14 +1261,14 @@ export function CheckoutView({
                   <div className="space-y-3 text-sm">
                     <div className="flex justify-between text-[var(--text-muted)]">
                       <span>Total items</span>
-                      <span className="font-bold text-[var(--text-strong)]">
+                      <span className="font-semibold text-[var(--text-strong)]">
                         {itemCount}
                       </span>
                     </div>
 
                     <div className="flex justify-between text-[var(--text-muted)]">
                       <span>Fulfillment</span>
-                      <span className="font-bold text-[var(--text-strong)]">
+                      <span className="font-semibold text-[var(--text-strong)]">
                         {isRiderDelivery ? "Rider delivery" : "Pickup at shop"}
                       </span>
                     </div>
@@ -1307,7 +1284,7 @@ export function CheckoutView({
 
                     <div className="pt-3 border-t border-[var(--border-soft)] flex items-baseline justify-between">
                       <div>
-                        <span className="block text-base font-extrabold text-[var(--text-strong)]">
+                        <span className="block text-base font-semibold text-[var(--text-strong)]">
                           Subtotal
                         </span>
                         <span className="block text-xs text-[var(--text-subtle)]">
@@ -1316,14 +1293,14 @@ export function CheckoutView({
                             : "Payable at counter"}
                         </span>
                       </div>
-                      <span className="text-3xl font-black text-[var(--accent-strong)]">
+                      <span className="text-3xl font-bold text-[var(--accent-strong)] tabular-nums">
                         {formatPrice(subtotal)}
                       </span>
                     </div>
                   </div>
 
                   <div className="rounded-2xl border border-[var(--notice-border)] bg-[var(--notice-surface)] p-4 text-xs leading-5 text-[var(--notice-text)]">
-                    <strong className="block font-bold">
+                    <strong className="block font-semibold">
                       Order Preparation Notice
                     </strong>
                     {isRiderDelivery
@@ -1336,9 +1313,9 @@ export function CheckoutView({
                   {placesOnline && placeNotice ? (
                     <div
                       role="alert"
-                      className="rounded-2xl border border-[var(--danger)] bg-[var(--surface-warm)] p-4 text-sm text-[var(--text-strong)]"
+                      className="rounded-2xl border border-[var(--danger)] bg-[var(--danger-soft)] p-4 text-sm text-[var(--text-strong)]"
                     >
-                      <strong className="block font-bold">
+                      <strong className="block font-semibold">
                         {placeNotice.message}
                       </strong>
                       {placeNotice.details.length > 0 ? (
@@ -1356,7 +1333,7 @@ export function CheckoutView({
                       type="button"
                       onClick={() => void handlePlaceOrder()}
                       disabled={isPlacing}
-                      className="button-primary w-full text-center py-3.5 text-base disabled:cursor-wait disabled:opacity-70"
+                      className="button-primary w-full disabled:cursor-wait disabled:opacity-70"
                     >
                       {isPlacing ? "Placing order…" : "Place order"}
                     </button>
@@ -1364,7 +1341,7 @@ export function CheckoutView({
                     <button
                       type="button"
                       onClick={handleProceedToSend}
-                      className="button-primary w-full text-center py-3.5 text-base"
+                      className="button-primary w-full"
                     >
                       {isRiderDelivery
                         ? "Proceed to Send to Rider"
@@ -1376,7 +1353,7 @@ export function CheckoutView({
                   <button
                     type="button"
                     onClick={() => goToStep("details")}
-                    className="button-secondary w-full text-center text-sm"
+                    className="button-secondary w-full"
                   >
                     ←{"\u00a0"}Back to Edit Details
                   </button>
@@ -1388,12 +1365,12 @@ export function CheckoutView({
           {/* STEP 3: The order summary to send to the shop, or to a rider */}
           {step === "send" && preparedSummary && (
             <div className="mx-auto max-w-4xl">
-              <div className="rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-5 sm:p-12 shadow-[var(--shadow-card)] text-center">
+              <div className="ios-card p-5 text-center sm:p-12">
                 <StateScene
                   kind="ready"
                   className="mx-auto mb-4 size-48 sm:size-56"
                   fallback={
-                    <div className="mx-auto flex size-20 items-center justify-center rounded-full bg-[var(--surface-warm)] text-[var(--accent-strong)]">
+                    <div className="mx-auto flex size-20 items-center justify-center rounded-full bg-[var(--fill-tertiary)] text-[var(--accent-strong)]">
                       <svg
                         className="size-10"
                         viewBox="0 0 24 24"
@@ -1424,7 +1401,7 @@ export function CheckoutView({
 
                 {/* Plain truthful explanation: no fake order placed */}
                 <div className="mt-4 rounded-2xl border border-[var(--notice-border)] bg-[var(--notice-surface)] p-4 text-sm text-[var(--notice-text)] leading-relaxed text-left">
-                  <strong className="block font-bold text-base mb-1">
+                  <strong className="mb-1 block text-base font-semibold">
                     Notice: The website does not transmit orders to the shop
                     yet.
                   </strong>
@@ -1434,17 +1411,15 @@ export function CheckoutView({
                 </div>
 
                 {/* Formatted Order Text Box with Copy Button */}
-                <div className="mt-6 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-warm)] p-4 sm:p-5 text-left">
-                  <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-[var(--border-strong)]/40 mb-3">
-                    <span className="text-xs font-bold uppercase tracking-wider text-[var(--text-subtle)]">
-                      Formatted Order Summary
-                    </span>
+                <div className="ios-well mt-6 p-4 text-left sm:p-5">
+                  <div className="flex flex-wrap items-center justify-between gap-2 mb-3 border-b border-[var(--separator)] pb-3">
+                    <span className="ios-caption">Formatted Order Summary</span>
                     <button
                       type="button"
                       onClick={() =>
                         void copySummaryToClipboard(preparedSummary)
                       }
-                      className="inline-flex min-h-11 items-center gap-1.5 whitespace-nowrap rounded-lg border border-[var(--border-strong)] bg-[var(--surface-card)] px-3 py-2 text-sm font-bold text-[var(--text-strong)] transition-colors hover:border-[var(--accent-solid)]"
+                      className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-[var(--glass-stroke)] bg-[var(--glass-fill-strong)] px-4 py-2 text-sm font-semibold whitespace-nowrap text-[var(--text-strong)] shadow-[var(--glass-rim),var(--glass-shadow)] transition-colors hover:bg-[var(--glass-hover)]"
                     >
                       <svg
                         className="size-3.5"
@@ -1500,8 +1475,8 @@ export function CheckoutView({
 
                 {/* Next step: who to send the summary to */}
                 {isRiderDelivery ? (
-                  <div className="mt-6 p-4 sm:p-6 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-card)] text-left space-y-4">
-                    <h3 className="font-bold text-[var(--text-strong)] text-base">
+                  <div className="ios-well mt-6 space-y-4 p-4 text-left sm:p-6">
+                    <h3 className="text-base font-semibold text-[var(--text-strong)]">
                       Next step: Message a rider with your order summary
                     </h3>
                     <p className="text-xs text-[var(--text-muted)] leading-relaxed">
@@ -1511,8 +1486,8 @@ export function CheckoutView({
                     <RiderList partners={facts.riders.partners} />
                   </div>
                 ) : (
-                  <div className="mt-6 p-4 sm:p-6 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-card)] text-left space-y-4">
-                    <h3 className="font-bold text-[var(--text-strong)] text-base">
+                  <div className="ios-well mt-6 space-y-4 p-4 text-left sm:p-6">
+                    <h3 className="text-base font-semibold text-[var(--text-strong)]">
                       Next step: Contact Brew ni Cat to arrange your order
                     </h3>
                     <p className="text-xs text-[var(--text-muted)] leading-relaxed">
@@ -1541,8 +1516,8 @@ export function CheckoutView({
                 )}
 
                 {/* Next Steps Guidance */}
-                <div className="mt-6 rounded-2xl bg-[var(--surface-warm)] p-4 sm:p-6 text-left text-sm leading-relaxed space-y-3">
-                  <h4 className="font-bold text-[var(--text-strong)] text-base">
+                <div className="ios-well mt-6 space-y-3 p-4 text-left text-sm leading-relaxed sm:p-6">
+                  <h4 className="text-base font-semibold text-[var(--text-strong)]">
                     {isRiderDelivery
                       ? "Rider Delivery Guide"
                       : "Fulfillment & Collection Guide"}
@@ -1620,7 +1595,7 @@ export function CheckoutView({
                     </ol>
                   )}
 
-                  <p className="border-t border-[var(--border-strong)]/40 pt-3 text-xs text-[var(--text-subtle)]">
+                  <p className="border-t border-[var(--separator)] pt-3 text-xs text-[var(--text-subtle)]">
                     {hoursNotice(hours)}
                   </p>
                 </div>

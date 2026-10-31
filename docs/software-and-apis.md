@@ -165,7 +165,7 @@ The ordering work in Phase 3 added no runtime dependencies. The 3D layer in PR #
 | --- | --- | --- | --- | --- |
 | Studio Small 09 HDRI (1K) | `public/three/hdri/studio_small_09_1k.hdr` | Poly Haven, by Sergej Majboroda | CC0 1.0 | Image-based lighting and reflections; downloaded from polyhaven.com and bundled locally (no runtime CDN) |
 | Studio Small 09 HDRI, half size (512 × 256) | `public/three/hdri/studio_small_09_512.hdr` | Made from the 1K file above with `scripts/downsample_hdr.py` (a 2 × 2 average in linear light) | CC0 1.0 | Lights every 3D scene on phones (PR #44); 413 KB instead of 1.6 MB |
-| Big Shoulders (display) and Archivo (body) | Served by `next/font/google` | Google Fonts | SIL Open Font License 1.1 | Self-hosted at build time by Next.js; Google Fonts now ships "Big Shoulders Display" as the "Big Shoulders" family |
+| Big Shoulders (3D signs) and Inter (page text) | Served by `next/font/google` | Google Fonts | SIL Open Font License 1.1 | Self-hosted at build time by Next.js; Google Fonts now ships "Big Shoulders Display" as the "Big Shoulders" family. Inter replaced Archivo in PR #71 (ADR-023); Apple devices show their own SF Pro instead |
 | Cat sticker on the 3D cup | `public/three/cat-sticker.png` | Cut from the shop's own Matcha product photo | Shop-owned, same terms as the other approved shop photos | Not a stock image |
 | Food, drink, sign and street models | Generated in code (`src/components/three/scenes/models.ts` and scene files) | Project code | Project license | Procedural geometry with generated albedo, normal and roughness maps (`engine/textures.ts`); no third-party models |
 

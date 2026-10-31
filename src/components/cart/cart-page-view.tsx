@@ -99,12 +99,12 @@ export function CartPageView() {
       >
         <Container>
           {isEmpty ? (
-            <div className="mx-auto max-w-xl text-center rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-8 sm:p-12 shadow-[var(--shadow-subtle)]">
+            <div className="ios-card mx-auto max-w-xl p-8 text-center sm:p-12">
               <StateScene
                 kind="empty"
                 className="mx-auto mb-4 size-44 sm:size-52"
                 fallback={
-                  <div className="mx-auto flex size-20 items-center justify-center rounded-full bg-[var(--surface-warm)] text-[var(--accent-strong)]">
+                  <div className="mx-auto flex size-20 items-center justify-center rounded-full bg-[var(--fill-tertiary)] text-[var(--accent-strong)]">
                     <svg
                       className="size-10"
                       viewBox="0 0 24 24"
@@ -145,8 +145,8 @@ export function CartPageView() {
               {/* Left Column: Items and Fulfillment Selection */}
               <div className="space-y-8 min-[900px]:col-span-7 xl:col-span-8">
                 {/* Cart Lines Card */}
-                <div className="rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-6 sm:p-8 shadow-[var(--shadow-subtle)]">
-                  <div className="flex items-center justify-between pb-4 border-b border-[var(--border-soft)] mb-6">
+                <div className="ios-card p-6 sm:p-8">
+                  <div className="mb-6 flex items-center justify-between border-b border-[var(--separator)] pb-4">
                     <div>
                       <h2 className="font-display text-2xl text-[var(--text-strong)]">
                         Items in Cart
@@ -157,7 +157,7 @@ export function CartPageView() {
                     </div>
                     <button
                       type="button"
-                      className="-mr-2 inline-flex min-h-11 items-center rounded-full px-2 text-sm font-bold text-[var(--text-muted)] hover:text-[var(--danger)] transition-colors"
+                      className="-mr-2 inline-flex min-h-11 items-center rounded-full px-2 text-sm font-medium text-[var(--text-muted)] transition-colors hover:text-[var(--danger)]"
                       onClick={() => clearCart()}
                     >
                       Clear cart
@@ -184,7 +184,7 @@ export function CartPageView() {
                 </div>
 
                 {/* Fulfillment Selection Section */}
-                <div className="rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-6 sm:p-8 shadow-[var(--shadow-subtle)]">
+                <div className="ios-card p-6 sm:p-8">
                   <h3 className="font-display text-xl text-[var(--text-strong)]">
                     Fulfillment Preference
                   </h3>
@@ -206,7 +206,7 @@ export function CartPageView() {
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div>
-                            <div className="font-extrabold text-[var(--text-strong)] text-base">
+                            <div className="text-base font-semibold text-[var(--text-strong)]">
                               Pickup at Shop
                             </div>
                             <div className="text-xs text-[var(--accent-solid)] font-semibold mt-1">
@@ -239,7 +239,7 @@ export function CartPageView() {
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div>
-                            <div className="font-extrabold text-[var(--text-strong)] text-base">
+                            <div className="text-base font-semibold text-[var(--text-strong)]">
                               Rider Delivery
                             </div>
                             <div className="text-xs text-[var(--accent-strong)] font-semibold mt-1">
@@ -270,7 +270,7 @@ export function CartPageView() {
 
                   {fulfillment === "external-rider" ? (
                     <div className="mt-5 rounded-2xl border border-[var(--notice-border)] bg-[var(--notice-surface)] p-4 text-xs leading-6 text-[var(--notice-text)]">
-                      <strong className="block font-bold">
+                      <strong className="block font-semibold">
                         How Rider Delivery Works
                       </strong>
                       At checkout you prepare an order summary and send it to a
@@ -285,22 +285,22 @@ export function CartPageView() {
 
               {/* Right Column: Order Summary Card */}
               <div className="min-[900px]:col-span-5 xl:col-span-4">
-                <div className="sticky top-28 rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-6 sm:p-8 shadow-[var(--shadow-card)] space-y-6">
-                  <h3 className="font-display text-xl text-[var(--text-strong)] pb-4 border-b border-[var(--border-soft)]">
+                <div className="ios-card sticky top-28 space-y-6 p-6 sm:p-8">
+                  <h3 className="font-display border-b border-[var(--separator)] pb-4 text-xl text-[var(--text-strong)]">
                     Order Summary
                   </h3>
 
                   <div className="space-y-3 text-sm">
                     <div className="flex justify-between text-[var(--text-muted)]">
                       <span>Total items</span>
-                      <span className="font-bold text-[var(--text-strong)]">
+                      <span className="font-semibold text-[var(--text-strong)]">
                         {itemCount}
                       </span>
                     </div>
 
                     <div className="flex justify-between text-[var(--text-muted)]">
                       <span>Fulfillment</span>
-                      <span className="font-bold text-[var(--text-strong)]">
+                      <span className="font-semibold text-[var(--text-strong)]">
                         {fulfillment === "pickup"
                           ? "Pickup at shop"
                           : "Rider delivery"}
@@ -325,23 +325,23 @@ export function CartPageView() {
                       </span>
                     </div>
 
-                    <div className="pt-3 border-t border-[var(--border-soft)] flex items-baseline justify-between">
+                    <div className="flex items-baseline justify-between border-t border-[var(--separator)] pt-3">
                       <div>
-                        <span className="block text-base font-extrabold text-[var(--text-strong)]">
+                        <span className="block text-base font-semibold text-[var(--text-strong)]">
                           Subtotal
                         </span>
                         <span className="block text-xs text-[var(--text-subtle)]">
                           PHP (₱)
                         </span>
                       </div>
-                      <span className="text-3xl font-black text-[var(--accent-strong)]">
+                      <span className="text-3xl font-bold text-[var(--accent-strong)] tabular-nums">
                         {formatPrice(subtotal)}
                       </span>
                     </div>
                   </div>
 
-                  <div className="rounded-2xl bg-[var(--surface-warm)] p-4 text-xs leading-5 text-[var(--text-muted)]">
-                    <strong className="block font-bold text-[var(--text-strong)]">
+                  <div className="ios-well p-4 text-xs leading-5 text-[var(--text-muted)]">
+                    <strong className="block font-semibold text-[var(--text-strong)]">
                       Payment Policy
                     </strong>
                     {fulfillment === "pickup"

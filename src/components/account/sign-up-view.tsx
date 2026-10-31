@@ -95,7 +95,7 @@ export function SignUpView() {
             </p>
           </div>
 
-          <div className="mt-8 rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-6 sm:p-8 shadow-[var(--shadow-subtle)]">
+          <div className="ios-card mt-8 p-6 sm:p-8">
             {isSubmitted ? (
               <div className="space-y-6 text-center" role="status">
                 <div className="mx-auto flex size-14 items-center justify-center rounded-full bg-[var(--accent-soft)] text-[var(--accent-solid)]">
@@ -130,7 +130,7 @@ export function SignUpView() {
                 <div className="pt-2">
                   <Link
                     href="/account/sign-in"
-                    className="button-primary w-full text-center py-3.5 text-base"
+                    className="button-primary w-full"
                   >
                     Proceed to Sign In
                   </Link>
@@ -141,17 +141,14 @@ export function SignUpView() {
                 {generalError ? (
                   <div
                     role="alert"
-                    className="rounded-xl border border-[var(--danger)] bg-[var(--danger-soft)] p-4 text-sm font-bold text-[var(--danger)]"
+                    className="rounded-[var(--shape-md)] border border-[var(--danger)] bg-[var(--danger-soft)] p-4 text-sm font-semibold text-[var(--danger)]"
                   >
                     {generalError}
                   </div>
                 ) : null}
 
                 <div>
-                  <label
-                    htmlFor="signup-email"
-                    className="block text-sm font-bold text-[var(--text-strong)]"
-                  >
+                  <label htmlFor="signup-email" className="ios-label block">
                     Email address{" "}
                     <span className="text-[var(--danger)]" aria-hidden="true">
                       *
@@ -174,13 +171,13 @@ export function SignUpView() {
                       errors.email ? "signup-email-error" : undefined
                     }
                     placeholder="e.g. maria@example.com"
-                    className="mt-2 block w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface-input)] min-h-12 px-4 py-3 text-base text-[var(--text-strong)] placeholder-[var(--text-subtle)] aria-[invalid=true]:border-[var(--danger)] focus:border-[var(--accent-solid)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-solid)]"
+                    className="ios-field mt-2"
                   />
                   {errors.email ? (
                     <p
                       id="signup-email-error"
                       role="alert"
-                      className="mt-1.5 text-sm font-bold text-[var(--danger)]"
+                      className="mt-1.5 text-sm font-semibold text-[var(--danger)]"
                     >
                       {errors.email}
                     </p>
@@ -188,10 +185,7 @@ export function SignUpView() {
                 </div>
 
                 <div>
-                  <label
-                    htmlFor="signup-password"
-                    className="block text-sm font-bold text-[var(--text-strong)]"
-                  >
+                  <label htmlFor="signup-password" className="ios-label block">
                     Password{" "}
                     <span className="text-[var(--danger)]" aria-hidden="true">
                       *
@@ -214,13 +208,13 @@ export function SignUpView() {
                       errors.password ? "signup-password-error" : undefined
                     }
                     placeholder="At least 6 characters"
-                    className="mt-2 block w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface-input)] min-h-12 px-4 py-3 text-base text-[var(--text-strong)] placeholder-[var(--text-subtle)] aria-[invalid=true]:border-[var(--danger)] focus:border-[var(--accent-solid)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-solid)]"
+                    className="ios-field mt-2"
                   />
                   {errors.password ? (
                     <p
                       id="signup-password-error"
                       role="alert"
-                      className="mt-1.5 text-sm font-bold text-[var(--danger)]"
+                      className="mt-1.5 text-sm font-semibold text-[var(--danger)]"
                     >
                       {errors.password}
                     </p>
@@ -230,7 +224,7 @@ export function SignUpView() {
                 <div>
                   <label
                     htmlFor="signup-confirm-password"
-                    className="block text-sm font-bold text-[var(--text-strong)]"
+                    className="ios-label block"
                   >
                     Confirm Password{" "}
                     <span className="text-[var(--danger)]" aria-hidden="true">
@@ -256,13 +250,13 @@ export function SignUpView() {
                         : undefined
                     }
                     placeholder="Re-type your password"
-                    className="mt-2 block w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface-input)] min-h-12 px-4 py-3 text-base text-[var(--text-strong)] placeholder-[var(--text-subtle)] aria-[invalid=true]:border-[var(--danger)] focus:border-[var(--accent-solid)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-solid)]"
+                    className="ios-field mt-2"
                   />
                   {errors.confirmPassword ? (
                     <p
                       id="signup-confirm-error"
                       role="alert"
-                      className="mt-1.5 text-sm font-bold text-[var(--danger)]"
+                      className="mt-1.5 text-sm font-semibold text-[var(--danger)]"
                     >
                       {errors.confirmPassword}
                     </p>
@@ -273,17 +267,17 @@ export function SignUpView() {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="button-primary w-full text-center py-3.5 text-base disabled:opacity-50"
+                    className="button-primary w-full disabled:opacity-50"
                   >
                     {isSubmitting ? "Creating account…" : "Create Account"}
                   </button>
                 </div>
 
-                <div className="pt-4 text-center text-sm text-[var(--text-muted)] border-t border-[var(--border-soft)]">
+                <div className="border-t border-[var(--separator)] pt-4 text-center text-sm text-[var(--text-muted)]">
                   Already have an account?{" "}
                   <Link
                     href="/account/sign-in"
-                    className="font-bold text-[var(--accent-solid)] hover:underline"
+                    className="font-semibold text-[var(--accent-solid)] hover:underline"
                   >
                     Sign in
                   </Link>

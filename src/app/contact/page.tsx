@@ -155,7 +155,7 @@ export default async function ContactPage() {
       </section>
 
       <section
-        className="border-y border-[var(--border-soft)] bg-[var(--surface-accent)] py-16 sm:py-20"
+        className="border-y border-[var(--separator)] bg-[var(--surface-accent)] py-16 sm:py-20"
         aria-labelledby="contact-heading"
       >
         <Container>
@@ -174,13 +174,13 @@ export default async function ContactPage() {
               <Reveal key={contact.label} delayMs={index * 90}>
                 <a
                   href={contact.href}
-                  className="surface-lift block h-full rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-6 shadow-[var(--shadow-subtle)]"
+                  className="surface-lift block h-full rounded-[var(--shape-xl)] p-6"
                 >
                   <span className="eyebrow flex items-center gap-2">
                     {contact.icon}
                     {contact.label}
                   </span>
-                  <span className="mt-3 block wrap-anywhere text-lg font-extrabold text-[var(--accent-solid)] sm:text-xl">
+                  <span className="mt-3 block text-lg font-semibold wrap-anywhere text-[var(--accent-solid)] sm:text-xl">
                     {contact.value}
                   </span>
                 </a>
@@ -189,10 +189,7 @@ export default async function ContactPage() {
           </div>
 
           {socialLinks.length > 0 ? (
-            <Reveal
-              delayMs={120}
-              className="mt-8 rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-6 sm:p-8"
-            >
+            <Reveal delayMs={120} className="ios-card mt-8 p-6 sm:p-8">
               <h3 className="font-display text-2xl text-[var(--text-strong)]">
                 Follow {siteConfig.shortName}
               </h3>
@@ -219,7 +216,7 @@ export default async function ContactPage() {
       >
         <Container>
           <div className="grid gap-6 lg:grid-cols-3">
-            <Reveal className="rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-7 shadow-[var(--shadow-subtle)]">
+            <Reveal className="ios-card p-7">
               <p className="eyebrow">At the shop</p>
               <h2
                 data-split=""
@@ -230,20 +227,20 @@ export default async function ContactPage() {
               </h2>
               <dl className="mt-6 grid gap-4">
                 <div>
-                  <dt className="flex items-center gap-2 text-sm font-bold text-[var(--text-subtle)]">
+                  <dt className="flex items-center gap-2 text-sm font-semibold text-[var(--text-subtle)]">
                     <WalletIcon className={`size-4 ${factIconClass}`} />
                     Payment methods
                   </dt>
-                  <dd className="mt-1 text-lg font-extrabold text-[var(--text-strong)]">
+                  <dd className="mt-1 text-lg font-semibold text-[var(--text-strong)]">
                     {content.payments.methods.join(" · ")}
                   </dd>
                 </div>
                 <div>
-                  <dt className="flex items-center gap-2 text-sm font-bold text-[var(--text-subtle)]">
+                  <dt className="flex items-center gap-2 text-sm font-semibold text-[var(--text-subtle)]">
                     <PackageIcon className={`size-4 ${factIconClass}`} />
                     Takeout packaging
                   </dt>
-                  <dd className="mt-1 text-lg font-extrabold text-[var(--text-strong)]">
+                  <dd className="mt-1 text-lg font-semibold text-[var(--text-strong)]">
                     {sentenceStart(takeoutBox)}
                   </dd>
                 </div>
@@ -252,7 +249,7 @@ export default async function ContactPage() {
 
             <Reveal
               delayMs={100}
-              className="@container rounded-3xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-7 shadow-[var(--shadow-subtle)] lg:col-span-2"
+              className="ios-card @container p-7 lg:col-span-2"
             >
               <p className="eyebrow">Rider delivery</p>
               <h2
@@ -262,7 +259,7 @@ export default async function ContactPage() {
                 Let a local rider order it for you.
               </h2>
               <ol className="mt-5 grid gap-3 text-[var(--text-muted)] @xl:grid-cols-3">
-                <li className="rounded-xl bg-[var(--surface-warm)] p-4">
+                <li className="ios-well p-4">
                   <MessageCircleIcon
                     className={`mb-3 size-6 ${factIconClass}`}
                   />
@@ -272,14 +269,14 @@ export default async function ContactPage() {
                   Send your order to one of the riders below. Checkout can
                   prepare the order summary for you.
                 </li>
-                <li className="rounded-xl bg-[var(--surface-warm)] p-4">
+                <li className="ios-well p-4">
                   <StoreIcon className={`mb-3 size-6 ${factIconClass}`} />
                   <strong className="block text-[var(--text-strong)]">
                     2. The rider orders
                   </strong>
                   The rider orders it at Brew ni Cat and picks it up.
                 </li>
-                <li className="rounded-xl bg-[var(--surface-warm)] p-4">
+                <li className="ios-well p-4">
                   <HouseIcon className={`mb-3 size-6 ${factIconClass}`} />
                   <strong className="block text-[var(--text-strong)]">
                     3. Delivered to you

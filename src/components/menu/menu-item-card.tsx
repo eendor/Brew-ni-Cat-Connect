@@ -150,7 +150,7 @@ export function MenuItemCard({
                 {item.variants.map((variant) => (
                   <li key={variant.id} className="menu-card__row">
                     <div className="flex items-baseline justify-between gap-4">
-                      <span className="min-w-0 font-bold text-[var(--text-strong)] [overflow-wrap:anywhere]">
+                      <span className="min-w-0 font-semibold text-[var(--text-strong)] [overflow-wrap:anywhere]">
                         {formatOptionName(variant.name)}
                       </span>
                       {hasBasePrice(variant) ? (

@@ -49,7 +49,7 @@ export function AccountNav() {
     return (
       <Link
         href="/account/sign-in"
-        className="nav-link inline-flex min-h-11 items-center rounded-full px-3.5 py-2 text-xs font-bold tracking-[0.1em] text-[var(--text-muted)] uppercase hover:text-[var(--text-strong)]"
+        className="nav-link inline-flex min-h-11 items-center rounded-full px-3.5 py-2 text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text-strong)]"
       >
         Sign in
       </Link>
@@ -62,7 +62,7 @@ export function AccountNav() {
         ref={buttonRef}
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
-        className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-[var(--border-strong)] bg-[var(--surface-card)] px-4 py-2 text-xs font-bold tracking-[0.08em] text-[var(--text-strong)] uppercase transition-colors hover:border-[var(--accent-solid)]"
+        className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-[var(--glass-stroke)] bg-[var(--glass-fill-strong)] px-4 py-2 text-sm font-semibold text-[var(--text-strong)] shadow-[var(--glass-rim),var(--glass-shadow)] transition-colors hover:bg-[var(--glass-hover)]"
         aria-expanded={isOpen}
         aria-label="Account menu"
       >
@@ -82,9 +82,9 @@ export function AccountNav() {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-48 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-card)] p-2 shadow-[var(--shadow-card)] z-50">
+        <div className="absolute right-0 z-50 mt-2 w-56 rounded-[var(--shape-lg)] border border-[var(--glass-stroke)] bg-[var(--surface-overlay)] p-1.5 shadow-[var(--sheet-shadow)]">
           {user.email ? (
-            <div className="px-3 py-2 text-xs text-[var(--text-muted)] truncate border-b border-[var(--border-soft)] mb-1">
+            <div className="ios-caption mb-1 truncate border-b border-[var(--separator)] px-3 py-2">
               {user.email}
             </div>
           ) : null}
@@ -96,7 +96,7 @@ export function AccountNav() {
                   setIsOpen(false);
                   await signOut();
                 }}
-                className="flex w-full items-center rounded-xl px-3 py-2 text-xs font-bold text-[var(--danger)] hover:bg-[var(--danger-soft)] transition-colors text-left uppercase tracking-[0.08em]"
+                className="flex min-h-11 w-full items-center rounded-[var(--shape-md)] px-3 py-2 text-left text-base text-[var(--danger)] transition-colors hover:bg-[var(--danger-soft)]"
               >
                 Sign out
               </button>

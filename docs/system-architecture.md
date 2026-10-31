@@ -126,7 +126,7 @@ Arrows show logical data flow, not a final deployment topology. Direct client-to
 | Next.js App Router web application | Public business content, responsive customer UI, route boundaries, later authenticated ordering screens | **Implemented through Phase 3** using Next.js 16.3.8; Phase 2 merged after Renier's independent QA (PR #6) |
 | React component layer | Accessible, reusable presentation and interaction components | **Implemented through Phase 3:** shared shell, public sections, gallery, menu catalog/cards/states, factual routes, cart and checkout, and the 3D page wrappers (§18) |
 | TypeScript types/configuration | Compile-time types for UI, configuration, catalog mapping, and later integration boundaries | **Implemented for the public UI and menu catalog boundary**; ordering/customer contracts remain later work |
-| Tailwind CSS presentation layer | Project-owned design tokens, responsive layout, focus styles, and reduced-motion baseline | **Implemented** using Tailwind CSS 4.3.3; dark Night Shift Glow tokens since PR #23 (ADR-014); light Daylight Glass tokens with frosted glass panels since PR #68 (ADR-022) |
+| Tailwind CSS presentation layer | Project-owned design tokens, responsive layout, focus styles, and reduced-motion baseline | **Implemented** using Tailwind CSS 4.3.3; dark Night Shift Glow tokens since PR #23 (ADR-014); light Daylight Glass tokens with frosted glass panels since PR #68 (ADR-022); iOS 27 building blocks and a night theme with a day/night toggle since PR #71 (ADR-023, ADR-024) |
 | Client cart and checkout (Phase 3) | Catalog-priced cart domain, persisted cart context, cart drawer/page, and checkout producing a send-to-shop order summary | **Implemented client-side** in PRs #7 and #14, with checkout field validation in `src/lib/ordering/validation.ts` (PR #20); server-side order creation and revalidation (FR-021, FR-024, FR-025) remain planned |
 | Motion layer | `ScrollMotion` scroll hook, GSAP motion director, route curtain, overlay presence and the `template.tsx` page wrapper | **Implemented** in PR #16, refined in PRs #17 and #18, moved to GSAP in PR #23 (ADR-015, §18); off under reduced motion |
 | Automated verification boundary | Component behavior, route smoke checks, representative-width overflow checks, type/lint/build gates | **Implemented:** Vitest/Testing Library, Playwright (`chromium` and `chromium-3d` projects, §18.3) and GitHub Actions; CI runs every check except Playwright |
@@ -404,6 +404,7 @@ The Phase 1 foundation is **Tested and merged**. Phase 2 showcase/catalog code i
 | Android channel adapter | FR-065–FR-070 | NFR-019, NFR-025, NFR-028, NFR-036 |
 | POS adapter, mapping, and reconciliation | FR-071–FR-081 | NFR-006, NFR-008, NFR-021–NFR-022, NFR-038 |
 | Owner changes in the POS, live website content, mini-games, advertising | FR-082–FR-091 | NFR-008, NFR-021, NFR-029–NFR-030, NFR-034 |
+| Theme script, toggle and 3D studio colors | FR-092 | NFR-029, NFR-034 |
 | Cross-cutting transport, operations, and delivery | Applicable FRs above | NFR-011–NFR-012, NFR-017, NFR-020, NFR-037–NFR-040 |
 
 ## 17. Phase 2 As-built Catalog and Media Boundary

@@ -31,6 +31,7 @@ import {
   studioCanvas,
   TITLE_FACE_GLSL,
   UNTONEMAP_GLSL,
+  WALL_WASH_GLSL,
 } from "../engine/studio";
 import type { ShowcaseItem } from "../showcase-data";
 import {
@@ -141,6 +142,7 @@ export function makeBackdrop() {
       varying vec2 vUv;
       ${UNTONEMAP_GLSL}
       ${TITLE_FACE_GLSL}
+      ${WALL_WASH_GLSL}
       float sampleT(sampler2D t, vec2 uv){
         if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) return 0.0;
         return texture2D(t, uv).a;
@@ -156,8 +158,9 @@ export function makeBackdrop() {
         // every effect fades out before the edges, which then match the page
         vec2 e = abs(suv - 0.5) * 2.0;
         float edge = 1.0 - smoothstep(0.55, 1.0, max(e.x, e.y));
-        // daylight through the item's color: a pastel wash behind the product
-        vec3 tint = mix(uBg, uGlow, 0.32);
+        // light through the item's color: a pastel wash behind the product
+        // by day, a dimmer glow at night (WALL_WASH)
+        vec3 tint = mix(uBg, uGlow, wallWash(uNight));
         float spill = (exp(-r2 * 4.0) * 0.45 + exp(-r2 * 18.0) * 0.4) * uGlowStr;
         vec3 col = mix(uBg, tint, clamp(spill * edge, 0.0, 1.0));
         vec2 tuv = (suv - uRect.xy) / uRect.zw;

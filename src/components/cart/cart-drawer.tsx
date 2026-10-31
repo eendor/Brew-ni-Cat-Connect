@@ -123,11 +123,11 @@ export function CartDrawer() {
 
       <div className="fixed inset-y-0 right-0 flex max-w-full pl-10">
         <div
-          className="relative flex w-screen max-w-md flex-col bg-[var(--surface-canvas)] shadow-2xl border-l border-[var(--border-soft)]"
+          className="relative flex w-screen max-w-md flex-col border-l border-[var(--separator)] bg-[var(--surface-overlay)] shadow-[var(--sheet-shadow)]"
           data-overlay="panel"
         >
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-[var(--border-soft)] px-5 py-4 bg-[var(--surface-card)]">
+          <div className="flex items-center justify-between border-b border-[var(--separator)] px-5 py-4">
             <div className="flex items-center gap-2.5">
               <h2
                 id="cart-drawer-title"
@@ -135,7 +135,7 @@ export function CartDrawer() {
               >
                 Your Order
               </h2>
-              <span className="inline-flex items-center rounded-full bg-[var(--accent-soft)] px-2.5 py-0.5 text-xs font-extrabold text-[var(--accent-strong)]">
+              <span className="inline-flex items-center rounded-full bg-[var(--accent-soft)] px-2.5 py-0.5 text-xs font-semibold text-[var(--accent-strong)] tabular-nums">
                 {itemCount} {itemCount === 1 ? "item" : "items"}
               </span>
             </div>
@@ -143,7 +143,7 @@ export function CartDrawer() {
             <button
               ref={closeButtonRef}
               type="button"
-              className="inline-flex size-11 items-center justify-center rounded-full text-[var(--text-muted)] hover:bg-[var(--surface-warm)] hover:text-[var(--text-strong)] transition-colors"
+              className="ios-icon-button text-[var(--text-muted)] hover:text-[var(--text-strong)]"
               aria-label="Close cart drawer"
               onClick={closeDrawer}
             >
@@ -169,7 +169,7 @@ export function CartDrawer() {
                   kind="empty"
                   className="mb-2 size-40"
                   fallback={
-                    <div className="inline-flex size-16 items-center justify-center rounded-full bg-[var(--surface-warm)] text-[var(--text-muted)]">
+                    <div className="inline-flex size-16 items-center justify-center rounded-full bg-[var(--fill-tertiary)] text-[var(--text-muted)]">
                       <svg
                         className="size-8"
                         viewBox="0 0 24 24"
@@ -196,7 +196,7 @@ export function CartDrawer() {
                 </p>
                 <Link
                   href="/menu"
-                  className="button-primary mt-6 text-sm"
+                  className="button-primary mt-6"
                   onClick={closeDrawer}
                 >
                   Browse Menu
@@ -204,7 +204,7 @@ export function CartDrawer() {
                 {savedSummary ? (
                   <Link
                     href="/checkout"
-                    className="button-secondary mt-3 text-sm"
+                    className="button-secondary mt-3"
                     onClick={closeDrawer}
                   >
                     View your order summary
@@ -213,13 +213,11 @@ export function CartDrawer() {
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="flex items-center justify-between pb-2 border-b border-[var(--border-soft)]">
-                  <span className="text-xs font-bold tracking-wider uppercase text-[var(--text-subtle)]">
-                    Selected Items
-                  </span>
+                <div className="flex items-center justify-between border-b border-[var(--separator)] pb-2">
+                  <span className="ios-caption">Selected Items</span>
                   <button
                     type="button"
-                    className="-mr-2 inline-flex min-h-11 items-center rounded-full px-2 text-sm font-bold text-[var(--text-muted)] hover:text-[var(--danger)] transition-colors"
+                    className="-mr-2 inline-flex min-h-11 items-center rounded-full px-2 text-sm font-medium text-[var(--text-muted)] transition-colors hover:text-[var(--danger)]"
                     onClick={() => clearCart()}
                   >
                     Clear all
@@ -242,17 +240,17 @@ export function CartDrawer() {
 
           {/* Drawer Footer */}
           {!isEmpty ? (
-            <div className="border-t border-[var(--border-soft)] bg-[var(--surface-card)] p-5 space-y-4">
+            <div className="space-y-4 border-t border-[var(--separator)] bg-[var(--surface-card)] p-5">
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="block text-sm font-bold text-[var(--text-strong)]">
+                  <span className="block text-sm font-semibold text-[var(--text-strong)]">
                     Subtotal
                   </span>
                   <span className="block text-xs text-[var(--text-subtle)]">
                     Exact catalog pricing
                   </span>
                 </div>
-                <span className="text-2xl font-black text-[var(--accent-strong)]">
+                <span className="text-2xl font-bold text-[var(--accent-strong)] tabular-nums">
                   {formatPrice(subtotal)}
                 </span>
               </div>
@@ -274,7 +272,7 @@ export function CartDrawer() {
                 </Link>
                 <Link
                   href="/cart"
-                  className="button-secondary w-full text-center text-sm"
+                  className="button-secondary w-full text-center"
                   onClick={closeDrawer}
                 >
                   View Full Cart Page
