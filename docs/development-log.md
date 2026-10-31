@@ -1226,3 +1226,14 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `Brew-ni-Cat-POS` `feat/android-product-editor` (POS PR #4), `feat/web-product-icon-picker` (POS PR #5), `chore/android-supabase-buildconfig` (POS PR #6), and `Brew-ni-Cat-Connect` `docs/stage3-pos-product-editor-evidence` (Connect PR #76).
 - **Known limitations:** `20261031120000_item_icon_and_image.sql` remains unapplied on the live database until approved by the user; both POS apps automatically fall back if the remote `icon` column is absent.
 - **Next action:** Ask the user before applying `20261031120000_item_icon_and_image.sql` to live Supabase or publishing a new Android POS APK release.
+
+## 2026-11-01 — Live migrations applied and Android POS build 10136 released (FR-027, FR-093)
+
+- **Phase:** Phase 9 (Stage 3 release).
+- **Task:** With the user's approval, apply the two pending migrations to the live database and send the new Android POS build to the shop tablet.
+- **Summary:** Applied `20261028153552_online_order_status.sql` and `20261031120000_item_icon_and_image.sql` to the live database; both are recorded in `supabase_migrations.schema_migrations`. Released Android POS build 10136 (version 1.1.0) with the product and category editor (`Brew-ni-Cat-POS` PR #7), uploaded the signed APK to the 1.1.0 GitHub release, and added the matching `public.app_release` row so the tablet shows an optional update prompt. Updated the POS README badge (`Brew-ni-Cat-POS` PR #8).
+- **Files:** `docs/database-design.md`, `docs/development-log.md`. In `Brew-ni-Cat-POS`: `app/build.gradle.kts`, `README.md`.
+- **Testing:** The live `items` table has the `icon` and `image_url` columns, `public.set_online_order_status` exists, and the public menu read returns 200. The update feed returns build 10136 to the publishable key, the same request the tablet makes. `gradlew :app:testDebugUnitTest :app:assembleRelease` passes. The Room 19 → 20 upgrade only adds columns with defaults and has no destructive fallback, so unsynced tablet sales are kept.
+- **Branch / PR:** `docs/live-migrations-applied`; `Brew-ni-Cat-POS` PRs #7 and #8.
+- **Known limitations:** The earlier entries' "not applied" notes are kept as history; this entry supersedes them. The update hasn't been installed on the tablet yet.
+- **Next action:** Stage 4 mini-games once the owner answers the remaining questions.

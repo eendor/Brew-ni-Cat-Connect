@@ -226,7 +226,7 @@ While it is off, pickup keeps the copy-summary flow and `POST /api/orders` answe
 
 ## 9. Phase 6 Online Order Status (2026-10-28)
 
-Migration `20261028153552_online_order_status.sql` (undo: `supabase/rollbacks/20261028153552_online_order_status.sql`) lets the POS app move online orders through their statuses (FR-027, FR-028, FR-076). It logs every staff action (FR-079), turns each completed order into one POS sale (FR-075) and streams new orders to the POS (FR-080). It is not applied to the live database yet (§8.7).
+Migration `20261028153552_online_order_status.sql` (undo: `supabase/rollbacks/20261028153552_online_order_status.sql`) lets the POS app move online orders through their statuses (FR-027, FR-028, FR-076). It logs every staff action (FR-079), turns each completed order into one POS sale (FR-075) and streams new orders to the POS (FR-080). It was applied to the live database on 2026-11-01 (§8.7).
 
 ### 9.1 Status steps
 
@@ -326,7 +326,7 @@ TC-P4-206 to TC-P4-212 run the migration and the undo on PGlite (`tests/database
 
 ## 11. Product Icon and Image Columns (Phase 9 — 2026-10-31)
 
-File: `supabase/migrations/20261031120000_item_icon_and_image.sql`. Undo: `supabase/rollbacks/20261031120000_item_icon_and_image.sql`. Covers the database schema for FR-093.
+File: `supabase/migrations/20261031120000_item_icon_and_image.sql`. Undo: `supabase/rollbacks/20261031120000_item_icon_and_image.sql`. Covers the database schema for FR-093. Applied to the live database on 2026-11-01.
 
 ### 11.1 Columns added to `public.items`
 
