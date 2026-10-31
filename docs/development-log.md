@@ -1201,3 +1201,14 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `Brew-ni-Cat-POS` `feat/shop-settings` (POS PR #3) and `Brew-ni-Cat-Connect` `docs/pos-shop-settings-evidence` (Connect PR #74).
 - **Known limitations:** Gallery photo paths must reference files shipped under `/images/` on the website. Menu price changes in `public.items` are not written to `private.site_content_audit`.
 - **Next action:** Add the `icon` and `image_url` columns migration on `public.items` (with rollback and PGlite tests), then build the Android POS product and category editor behind the owner PIN.
+
+## 2026-10-31 — Product icon and image_url columns on public.items (FR-093)
+
+- **Phase:** Phase 9 (Stage 3, POS product editor database schema).
+- **Task:** Add `icon` and `image_url` columns to `public.items` with check constraints and a rollback script so the Android and web POS product editors can save a product icon choice and optional photo path/URL.
+- **Summary:** Added `supabase/migrations/20261031120000_item_icon_and_image.sql` and `supabase/rollbacks/20261031120000_item_icon_and_image.sql`. `public.items.icon` accepts `null` or a lowercase identifier (`^[a-z0-9_]{1,40}$`), and `public.items.image_url` accepts `null`, a `/images/...` path, or an `https://` URL up to 500 characters. Added PGlite tests in `tests/database/item-icon-and-image.test.ts` (`TC-P4-243` to `TC-P4-247`) and updated `docs/database-design.md` §11, `docs/functional-requirements.md` (`FR-093`), and `docs/test-cases.md` §27.
+- **Files:** `supabase/migrations/20261031120000_item_icon_and_image.sql`, `supabase/rollbacks/20261031120000_item_icon_and_image.sql`, `tests/database/item-icon-and-image.test.ts`, `docs/database-design.md`, `docs/functional-requirements.md`, `docs/test-cases.md`, `docs/development-log.md`.
+- **Testing:** Vitest 444/444 in 50 files (`npm test`), `python3 -I scripts/validate_phase0_docs.py` (PASS), `npm run format:check` (PASS), `npm run lint` (PASS), `npm run typecheck` (PASS).
+- **Branch / PR:** `feat/pos-item-icon-columns`, PR #75.
+- **Known limitations:** The migration is not applied to the live database until approved by the user.
+- **Next action:** Build the Android POS product and category editor behind the owner PIN with the icon picker and safe menu seeding, then the web POS product editor icon picker, then the Android Supabase config cleanup.
