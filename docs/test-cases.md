@@ -579,3 +579,11 @@ Run for PR #71 on 2026-10-30: Vitest 428/428 in 49 files. Playwright `chromium` 
 | TC-P4-236 | FR-092, NFR-029 | Theme toggle | The header button and the phone menu switch flip the theme and say which way they go | Vitest; React Testing Library | Click the header button; click the phone menu switch | The button's name changes to "Switch to day theme"; the switch named "Night mode" reports its checked state and flips it | Matched in the 428/428 Vitest run | Passed | `tests/unit/theme-toggle.test.tsx` |
 | TC-P4-237 | FR-092 | 3D studio | A 3D scene recolors when the theme changes and stops when it is disposed | Vitest | Follow the theme, change it, stop following, change it again | Called with night, then day, and not after stopping | Matched in the 428/428 Vitest run | Passed | `tests/unit/night-theme.test.ts` |
 | TC-P4-238 | FR-092, NFR-034 | Theme toggle | A dark-mode device opens the night theme, and the header button switches to day and remembers it | Playwright `chromium`; local production build | Open `/` as a dark-mode device; click "Switch to day theme"; reload | Night colors and a `#14120F` browser bar, then day colors and `#F6EEE1`, still day after the reload | Matched in the Playwright `chromium` run (22 passed, 2 skipped) | Passed | `tests/e2e/theme.spec.ts` |
+
+## 25. Page Transition Title Cases
+
+Run for PR #72 on 2026-10-31: Playwright `chromium-3d` TC-P4-022 (which now includes TC-P4-239) passed against a local production build. Before and after screenshots are in `docs/evidence/phase-4/curtain-descender/`.
+
+| ID | Requirement ID(s) | Module | Scenario | Preconditions | Input / action | Expected result | Actual result | Status | Evidence |
+|---|---|---|---|---|---|---|---|---|---|
+| TC-P4-239 | NFR-029, NFR-032 | Motion layer | The page transition title is not cut off at the bottom (the tail of the "y" in "Gallery") | Playwright `chromium-3d`; production build | From `/about` click Gallery in the header and measure the title card while it covers the page | The clip under the title reaches at least 1.2 times the title's font size below its top, so descenders show in full | 1.22 em of room (it was 1.01 em before the fix, which cut off the "y") | Pass | `tests/e2e/three.spec.ts` (TC-P4-022); `docs/evidence/phase-4/curtain-descender/` |

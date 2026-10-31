@@ -2208,13 +2208,18 @@ html[data-motion="on"]:not([data-motion-live])
 
 .route-curtain__mask {
   overflow: clip;
-  padding-bottom: 0.08em;
+  /* the title's size lives here so the em values below match it */
+  font-size: clamp(3.5rem, 12vw, 9rem);
+  /* room for descenders (the "y" in Gallery) inside the clip; the negative
+     margin keeps the card's spacing the same */
+  padding-bottom: 0.22em;
+  margin-bottom: -0.22em;
 }
 
 .route-curtain__title {
   color: var(--text-strong);
   font-family: var(--font-display);
-  font-size: clamp(3.5rem, 12vw, 9rem);
+  font-size: 1em;
   font-weight: 700;
   letter-spacing: -0.035em;
   line-height: 1;

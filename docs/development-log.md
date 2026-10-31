@@ -1,7 +1,7 @@
 # Development Log
 
 **Document version:** 0.1 Draft\
-**Last updated:** 2026-10-30
+**Last updated:** 2026-10-31
 
 This log records completed work and observed evidence. Planned work is explicitly identified and is not reported as implemented or tested.
 
@@ -1168,3 +1168,14 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `feat/ios27-restyle`, PR #71.
 - **Known limitations:** The server always renders day; a night visitor gets the night theme from the head script before the first paint, so there is no flash, but with JavaScript off the site stays in day. Screenshots were taken with reduced motion in headless Chromium.
 - **Next action:** Apply the live website content migration once approved, then Stage 3 in the POS (FR-093).
+
+## 2026-10-31 — Page transition title keeps its descenders
+
+- **Phase:** Phase 4.
+- **Task:** Fix the page transition title cutting off the bottom of the letter "y".
+- **Summary:** The title card's clip ended right under the title's line box, so letters that drop below the line, like the "y" in "Gallery", lost their tails. The clip now has room under the title (0.22 em at the title's size), a matching negative margin keeps the card's spacing the same, and the title starts lower so it stays hidden before it rises.
+- **Files:** `src/app/globals.css`, `src/components/motion/route-curtain.tsx`, `tests/e2e/three.spec.ts`, `docs/test-cases.md`.
+- **Testing:** Playwright `chromium-3d` TC-P4-022 with the new TC-P4-239 check passes against a local production build. Before and after screenshots are in `docs/evidence/phase-4/curtain-descender/`.
+- **Branch / PR:** `fix/curtain-descender`, PR #72.
+- **Known limitations:** None.
+- **Next action:** Stage 3 in the POS (FR-093).
