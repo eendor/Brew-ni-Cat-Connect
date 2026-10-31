@@ -1179,3 +1179,14 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `fix/curtain-descender`, PR #72.
 - **Known limitations:** None.
 - **Next action:** Stage 3 in the POS (FR-093).
+
+## 2026-10-31 — FR-093 POS product editor requirement and live site_content migration
+
+- **Phase:** Phase 4 / Phase 9 (Stage 3 preparation).
+- **Task:** Record FR-093 for the POS product editor, create the Stage 3 POS Trello card, and apply `20261030120000_site_content.sql` to the live database.
+- **Summary:** Added FR-093 to the functional requirements (adding and editing categories and products with an icon picker, sizes, flavors, prices and availability in the Android and web POS without the seeded menu overwriting owner changes) and updated the traceability tables and validator range (`FR-001`–`FR-093`). Verified `20261030120000_site_content.sql` and its rollback file, ran a forced-rollback dry run on the live database, applied the migration and recorded `20261030120000` in `supabase_migrations.schema_migrations`, and confirmed the publishable read returns all nine sections and the live website loads with the saved content.
+- **Files:** `docs/functional-requirements.md`, `docs/srs.md`, `docs/execution-paths.md`, `docs/system-architecture.md`, `docs/database-design.md`, `docs/evidence/phase-0-verification.md`, `scripts/validate_phase0_docs.py`, `docs/development-log.md`.
+- **Testing:** `python3 -I scripts/validate_phase0_docs.py` (PASS, 93 FR IDs) and `npm run format:check` (PASS).
+- **Branch / PR:** `docs/pos-product-editor`, PR #73.
+- **Known limitations:** The POS web Shop settings screen and the POS product editor are built next in the POS repository.
+- **Next action:** Build the owner-only Shop settings screen in the POS web app to finish card `Vm8fmX7J`, then the rest of Stage 3 in order.

@@ -162,6 +162,14 @@ FR-092 was added in Phase 4, after the numbered sections were set. It belongs wi
 | --- | --- | --- | --- | --- | --- |
 | FR-092 | The website shall offer a day theme and a night theme. A first visit shall follow the device's light or dark setting, and a visible toggle shall let the visitor switch themes and keep the choice on that browser. | On a dark-mode device the site opens in the night theme without a flash of day; the toggle switches every page and the 3D scenes without a reload; the choice survives a reload; text keeps 4.5:1 contrast in both themes. | Should | 4 | Implemented (PR #71) |
 
+### POS product editor
+
+FR-093 was added after FR-092. It belongs with the POS and owner administration requirements in §11.
+
+| ID | Requirement | Acceptance / verification | Priority | Target phase | Status |
+| --- | --- | --- | --- | --- | --- |
+| FR-093 | The POS (Android behind the owner PIN, and the web manager panel) shall let the owner add and edit categories and products, including product name, category, icon choice, sizes, flavors, per-size or per-flavor prices, and availability, without the built-in seeded menu overwriting or re-adding items the owner edited or deleted. | Adding or editing a category or product in the POS saves to the shared catalog with the chosen icon and prices; restarting or syncing the Android POS does not overwrite owner edits or restore deleted items. | Must | 9 | Planned |
+
 ## 12. Requirement dependencies and open owner decisions
 
 | Decision | Affected requirements | Status |

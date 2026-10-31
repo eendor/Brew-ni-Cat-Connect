@@ -63,7 +63,7 @@ The dependency-free validator checks:
 
 - the five required repository foundation files and fourteen required Phase 0 documents;
 - Version 0.1 markers;
-- contiguous `FR-001`–`FR-092` and `NFR-001`–`NFR-040` definitions;
+- contiguous `FR-001`–`FR-093` and `NFR-001`–`NFR-040` definitions;
 - relative Markdown links, balanced code fences, table widths, and trailing whitespace;
 - canonical owner-confirmation TODO markers;
 - credential-like values and non-empty `.env.example` values.
