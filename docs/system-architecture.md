@@ -576,6 +576,12 @@ Field map from a completed online order to its POS sale:
 - Rider and delivery orders are not in the system yet; the owner is still deciding.
 - Ingredients used for an order cancelled after Preparing are not deducted; the staff adjust the stock by hand.
 
+### 19.7 Menu catalog editor and BuildConfig configuration (POS PRs #4, #5, #6)
+
+- **Android POS product and category editor (`Brew-ni-Cat-POS` PR #4):** a PIN-protected **Menu Editor** screen (`MenuEditorScreen`, `MenuEditorViewModel`) lets the owner add, edit, and delete categories and products, choose an icon from the 30-icon picker (`FluentIcons.productIconOptions`), configure sizes, flavors, per-size/per-flavor prices, and combo descriptions, and toggle `isAvailable`. Room schema v20 adds `items.isAvailable`, `items.icon`, and `app_config.catalogVersion`. `MenuContentUpdater` only seeds the built-in catalog when the table is empty (`catalogVersion < 1`), so restarting or syncing never overwrites owner edits or restores deleted products (FR-093). `SyncWorker` syncs `categories` and `items` (including `is_available` and `icon`, with automatic fallback if `icon` is not yet on the remote table) and deletes removed catalog rows in Supabase.
+- **Web POS product icon picker (`Brew-ni-Cat-POS` PR #5):** the Web POS Menu Catalog Editor (`web/src/app/page.tsx`) uses the same 30 lowercase icon keys (`web/src/lib/product-icons.ts`, `web/src/components/product-icon.tsx`) as the Android POS and `public.items.icon`, with automatic fallback if `icon` is not yet applied on the remote table.
+- **Android Supabase `BuildConfig` injection (`Brew-ni-Cat-POS` PR #6):** `DatabaseSeeder`, `AppConfigRepositoryImpl`, and `AppUpdateManager` read `BuildConfig.SUPABASE_URL` and `BuildConfig.SUPABASE_PUBLISHABLE_KEY` injected at build time by `app/build.gradle.kts` from gitignored `local.properties` or environment variables; zero hardcoded Supabase URL or key literals remain in `app/src`.
+
 ## 20. Live Website Content (PR #69)
 
 The shop's facts are saved data, not page code (FR-085, FR-086, ADR-017). The table and its rules are in `docs/database-design.md` §10.
