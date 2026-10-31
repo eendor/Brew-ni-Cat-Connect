@@ -352,3 +352,16 @@ This manual state is a temporary functional-verification condition, not a revisi
 - The 3D studio wall follows the theme without a reload (TC-P4-231, TC-P4-237). At night the item glow on the wall is halved (0.16 instead of 0.32), and product names take a light tint of the item's color that reaches 4.5:1 on the dark wall (TC-P4-232).
 - The choice is stored under `bnc-theme` in the browser's local storage and holds only `day` or `night`. Nothing is sent to the server.
 - Following the device first is a default; a small change in `src/lib/theme/theme.ts` would make day the default instead.
+
+## ADR-025 — Mixed Flavors Use The Size Price
+
+**Decision:** Any product with flavors can mix up to 2 different listed flavors on one line, stored in the existing flavor field as `"A / B"`. A mix costs the size price; when a size prices flavors differently, the dearest flavor in the mix applies.\
+**Date:** 2026-11-01\
+**Status:** Accepted\
+**Context:** The shop sells 2-flavor fries and similar mixes. The user chose all products with flavors, the size price, and the same limit for every size.\
+**Alternatives considered:** averaging the flavor prices (could undercharge and give odd centavos); a separate mix column (a schema change across both POS apps and the website); allowing more than 2 flavors (not asked for).\
+**Consequences:**
+
+- The website, the database and the Android POS check and price mixes the same way (TC-P4-252 to TC-P4-256).
+- No table changes: the website reads the flavor text, and old single-flavor orders are unchanged.
+- Each flavor deducts a full recipe portion from stock.

@@ -1237,3 +1237,14 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `docs/live-migrations-applied`; `Brew-ni-Cat-POS` PRs #7 and #8.
 - **Known limitations:** The earlier entries' "not applied" notes are kept as history; this entry supersedes them. The update hasn't been installed on the tablet yet.
 - **Next action:** Stage 4 mini-games once the owner answers the remaining questions.
+
+## 2026-11-01 — Mixed flavors on the POS and website (FR-027, FR-082, FR-093)
+
+- **Phase:** Phase 9 (Stage 3 follow-up).
+- **Task:** Let customers and staff mix 2 flavors on one item, like 2-flavor fries, on every product with flavors.
+- **Summary:** The Android POS product sheet has a "Mix 2 flavors" option (POS PR #11, build 10138). The website's Add to order dialog has the same option, and the database order pricing accepts mixes through `20261101120000_mixed_flavors.sql`, which replaces `private.find_variant` and `private.resolve_unit_price` with the same signatures. A mix is stored in the existing flavor field as `"A / B"` and costs the size price; when a size prices flavors differently, the dearest flavor in the mix applies so a mix never costs less than one of its flavors (ADR-025).
+- **Files:** `src/lib/ordering/cart-pricing.ts`, `src/components/menu/menu-item-order-dialog.tsx`, `supabase/migrations/20261101120000_mixed_flavors.sql`, `supabase/rollbacks/20261101120000_mixed_flavors.sql`, `tests/unit/mixed-flavors.test.ts`, `tests/database/mixed-flavors.test.ts`, `docs/*`. In `Brew-ni-Cat-POS`: `CartLineSelection.kt`, `MenuModels.kt`, `RecipeDeductionResolver.kt`, `DashboardScreen.kt`, `MixedFlavorTest.kt`.
+- **Testing:** TC-P4-252 to TC-P4-256 pass; the full Vitest suite, type check, lint, Prettier and the docs validator pass.
+- **Branch / PR:** `feat/mix-flavors-online`; `Brew-ni-Cat-POS` PR #11.
+- **Known limitations:** Each flavor in a mix deducts a full recipe portion from stock. The migration is applied to the live database with the user's approval after merge.
+- **Next action:** After screenshots of the POS mix option once build 10138 is on the tablet.

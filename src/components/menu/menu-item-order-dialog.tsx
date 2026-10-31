@@ -22,7 +22,11 @@ import { formatOptionName } from "@/lib/menu/format-name";
 import { formatPrice } from "@/lib/menu/format-price";
 import {
   calculateLineTotal,
+  isAllowedFlavor,
+  joinFlavorMix,
+  MAX_MIXED_FLAVORS,
   resolveVariantUnitPrice,
+  splitFlavorMix,
 } from "@/lib/ordering/cart-pricing";
 import type { MenuCatalog, MenuItem } from "@/types/menu";
 import type { CartItem } from "@/types/ordering";
@@ -72,10 +76,10 @@ export function MenuItemOrderDialog({
     "";
   const presetFlavor =
     editingLine?.flavor !== undefined
-      ? editingLine.flavor && item.flavors.includes(editingLine.flavor)
+      ? editingLine.flavor && isAllowedFlavor(item, editingLine.flavor)
         ? editingLine.flavor
         : null
-      : initialFlavor && item.flavors.includes(initialFlavor)
+      : initialFlavor && isAllowedFlavor(item, initialFlavor)
         ? initialFlavor
         : null;
   const initialQty = editingLine?.quantity ?? 1;
@@ -85,6 +89,10 @@ export function MenuItemOrderDialog({
   const [selectedFlavor, setSelectedFlavor] = useState<string | null>(
     presetFlavor,
   );
+  const [mixMode, setMixMode] = useState<boolean>(
+    splitFlavorMix(presetFlavor).length > 1,
+  );
+  const pickedFlavors = splitFlavorMix(selectedFlavor);
   const [quantity, setQuantity] = useState<number>(initialQty);
   const [feedbackError, setFeedbackError] = useState<string | null>(null);
 
@@ -108,6 +116,23 @@ export function MenuItemOrderDialog({
     selectionRef.current = { ...selectionRef.current, flavor };
     setSelectedFlavor(flavor);
     setFeedbackError(null);
+  }
+
+  // In mix mode a tap adds or removes a flavor; past the limit the oldest
+  // pick makes room for the new one.
+  function toggleMixFlavor(flavor: string) {
+    const current = splitFlavorMix(selectionRef.current.flavor);
+    const next = current.includes(flavor)
+      ? current.filter((picked) => picked !== flavor)
+      : [...current, flavor].slice(-MAX_MIXED_FLAVORS);
+    chooseFlavor(joinFlavorMix(next));
+  }
+
+  function toggleMixMode() {
+    const current = splitFlavorMix(selectionRef.current.flavor);
+    // Leaving mix mode keeps only the first flavor.
+    if (mixMode && current.length > 1) chooseFlavor(current[0] ?? null);
+    setMixMode(!mixMode);
   }
 
   function changeQuantity(delta: number) {
@@ -457,7 +482,10 @@ export function MenuItemOrderDialog({
                   <button
                     type="button"
                     aria-pressed={selectedFlavor === null}
-                    onClick={() => chooseFlavor(null)}
+                    onClick={() => {
+                      setMixMode(false);
+                      chooseFlavor(null);
+                    }}
                     className={`ios-chip min-h-11 px-4 transition-all ${
                       selectedFlavor === null
                         ? "shadow-xs"
@@ -469,7 +497,7 @@ export function MenuItemOrderDialog({
                 ) : null}
 
                 {item.flavors.map((flavor) => {
-                  const isSelected = selectedFlavor === flavor;
+                  const isSelected = pickedFlavors.includes(flavor);
                   const flavorPriceOverride =
                     selectedVariant?.flavorPrices.find(
                       (entry) => entry.flavor === flavor,
@@ -480,7 +508,9 @@ export function MenuItemOrderDialog({
                       key={flavor}
                       type="button"
                       aria-pressed={isSelected}
-                      onClick={() => chooseFlavor(flavor)}
+                      onClick={() =>
+                        mixMode ? toggleMixFlavor(flavor) : chooseFlavor(flavor)
+                      }
                       className={`ios-chip min-h-11 px-4 transition-all ${
                         isSelected
                           ? "shadow-xs"
@@ -497,6 +527,30 @@ export function MenuItemOrderDialog({
                   );
                 })}
               </div>
+
+              {item.flavors.length > 1 ? (
+                <div className="mt-3 flex flex-wrap items-center gap-3">
+                  <button
+                    type="button"
+                    aria-pressed={mixMode}
+                    onClick={toggleMixMode}
+                    className="ios-chip min-h-11 px-4"
+                  >
+                    {mixMode
+                      ? "Pick one flavor"
+                      : `Mix ${MAX_MIXED_FLAVORS} flavors`}
+                  </button>
+                  {mixMode ? (
+                    <span
+                      className="text-xs text-[var(--text-muted)]"
+                      aria-live="polite"
+                    >
+                      {pickedFlavors.length}/{MAX_MIXED_FLAVORS} picked, same
+                      price as the size
+                    </span>
+                  ) : null}
+                </div>
+              ) : null}
             </fieldset>
           ) : null}
 

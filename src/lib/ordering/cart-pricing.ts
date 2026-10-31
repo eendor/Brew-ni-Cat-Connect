@@ -120,6 +120,41 @@ function hasPurchasableBasePrice(variant: MenuVariant): boolean {
   );
 }
 
+/** Joins the flavors of a mixed order, e.g. "BBQ Scratch / Cheesy Purr" (same as the POS). */
+export const FLAVOR_MIX_SEPARATOR = " / ";
+
+/** Any item with flavors can mix up to this many, at the normal size price. */
+export const MAX_MIXED_FLAVORS = 2;
+
+/** The flavors in a stored flavor: none, one, or each part of a mix. */
+export function splitFlavorMix(flavor: string | null | undefined): string[] {
+  const normalized = normalizeFlavor(flavor);
+  if (normalized === null) return [];
+  return normalized
+    .split(FLAVOR_MIX_SEPARATOR)
+    .map((part) => part.trim())
+    .filter((part) => part.length > 0);
+}
+
+/** The stored flavor for the picked flavors, or null when none are picked. */
+export function joinFlavorMix(flavors: readonly string[]): string | null {
+  return flavors.length === 0 ? null : flavors.join(FLAVOR_MIX_SEPARATOR);
+}
+
+/** True when the flavor is one of the item's flavors or a valid mix of them. */
+export function isAllowedFlavor(
+  item: MenuItem,
+  flavor: string | null | undefined,
+): boolean {
+  const parts = splitFlavorMix(flavor);
+  return (
+    parts.length > 0 &&
+    parts.length <= MAX_MIXED_FLAVORS &&
+    new Set(parts).size === parts.length &&
+    parts.every((part) => item.flavors.includes(part))
+  );
+}
+
 function findFlavorPrice(variant: MenuVariant, flavor: string): number | null {
   const match = variant.flavorPrices.find((entry) => entry.flavor === flavor);
   if (!match || !isFiniteNonNegativePrice(match.price)) {
@@ -191,8 +226,26 @@ export function resolveVariantUnitPrice(
   const selectedFlavor = normalizeFlavor(flavor);
 
   if (selectedFlavor !== null) {
-    if (!item.flavors.includes(selectedFlavor)) {
+    if (!isAllowedFlavor(item, selectedFlavor)) {
       return { ok: false, reason: "unknown-flavor" };
+    }
+
+    const parts = splitFlavorMix(selectedFlavor);
+    if (parts.length > 1) {
+      // A mix costs the size price. When this size prices flavors
+      // differently, the dearest flavor in the mix applies, so a mix never
+      // costs less than one of its flavors alone.
+      let highest: number | null = null;
+      for (const part of parts) {
+        const partPrice =
+          findFlavorPrice(variant, part) ??
+          (hasPurchasableBasePrice(variant) ? variant.basePrice : null);
+        if (partPrice === null) {
+          return { ok: false, reason: "missing-price" };
+        }
+        highest = highest === null ? partPrice : Math.max(highest, partPrice);
+      }
+      return { ok: true, unitPrice: normalizePrice(highest ?? 0) };
     }
 
     const override = findFlavorPrice(variant, selectedFlavor);
