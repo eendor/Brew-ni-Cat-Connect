@@ -590,7 +590,7 @@ The shop's facts are saved data, not page code (FR-085, FR-086, ADR-017). The ta
 
 ### 20.2 Write path
 
-Staff accounts change the content in the POS web app (Stage 3) or, until then, in the Supabase dashboard. Every change is checked by the database and recorded in a private history table with who made it and the old and new content (FR-087). The website never writes this table.
+Staff accounts change the content in the POS web app's Shop settings screen (`Brew-ni-Cat-POS` PR #3, `web/src/components/shop-settings-tab.tsx` and `web/src/lib/site-content.ts`), which checks each section in the browser with the same rules the database enforces and also updates the `Take-out Box` price in `public.items`. Every `site_content` change is checked by the database and recorded in `private.site_content_audit` with who made it and the old and new content (FR-087). The website never writes this table.
 
 ### 20.3 Guard
 
