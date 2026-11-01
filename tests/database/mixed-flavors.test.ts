@@ -23,7 +23,7 @@ beforeAll(async () => {
     insert into public.items (id, category_id, name, flavors, variants_json, is_available) values
       ('fries', 'bites', 'Fries', 'BBQ Scratch|Cheesy Purr|Sour Cream',
        '[{"id":"fries-m","name":"Medium","basePrice":50}]', true),
-      ('soda', 'bites', 'Soda', 'Yogurt Yarn|Honey Peach Paws|Lychee',
+      ('soda', 'bites', 'Loaded Fries', 'Yogurt Yarn|Honey Peach Paws|Lychee',
        '[{"id":"soda-12","name":"12oz","basePrice":0,"priceByFlavor":{"Yogurt Yarn":39,"Honey Peach Paws":45}}]', true);
   `);
 }, 60_000);

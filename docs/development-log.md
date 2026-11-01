@@ -1248,3 +1248,14 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `feat/mix-flavors-online`; `Brew-ni-Cat-POS` PR #11.
 - **Known limitations:** Each flavor in a mix deducts a full recipe portion from stock. The migration is applied to the live database with the user's approval after merge.
 - **Next action:** After screenshots of the POS mix option once build 10138 is on the tablet.
+
+## 2026-11-01 — Noodle add-ons online and fries-only mixing (FR-027, FR-082)
+
+- **Phase:** Phase 9 (Stage 3 follow-up).
+- **Task:** Offer the noodle add-ons (Egg ₱15 in three styles, 3pcs Seaweed ₱25, Hotdog ₱20, Fries ₱30) on website orders, and limit flavor mixing to fries, so takoyaki, drinks and Sedaap don't mix.
+- **Summary:** `20261101130000_menu_add_ons.sql` adds `public.menu_add_ons` (paid extras per category, readable by everyone, editable by staff) seeded with the Buldak & Sedaap add-ons the POS already sells, and replaces `private.price_cart` to charge for add-ons and allow mixing on fries only. The website loads add-ons with the menu and shows them as chips in the Add to order dialog. A line stores add-ons the way the POS does (`2 Paws (Medium) + Egg (Boiled), Hotdog`, or `+ Egg (Boiled)` with no flavor), so the tablet prints and prices it the same. The Android POS shows the mix option on fries only (POS PR #12, build 10139).
+- **Files:** `src/types/menu.ts`, `src/lib/menu/fetch-public-menu.ts`, `src/lib/menu/map-menu-catalog.ts`, `src/lib/ordering/cart-pricing.ts`, `src/lib/ordering/cart-reducer.ts`, `src/components/menu/menu-item-order-dialog.tsx`, `supabase/migrations/20261101130000_menu_add_ons.sql`, `supabase/rollbacks/20261101130000_menu_add_ons.sql`, tests, `docs/*`.
+- **Testing:** TC-P4-257 to TC-P4-259 pass; the full Vitest suite, type check, lint, Prettier and the docs validator pass.
+- **Branch / PR:** `feat/noodle-add-ons`; `Brew-ni-Cat-POS` PR #12.
+- **Known limitations:** The POS still keeps its own add-on list; both use the same labels and prices. Add-ons are edited in the database for now, not in the POS menu editor.
+- **Next action:** Apply the migration live after merge and release POS build 10139.
