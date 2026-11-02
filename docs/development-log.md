@@ -1291,3 +1291,14 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `feat/order-rate-limit`.
 - **Known limitations:** Per instance, not a shared quota. Customers behind one shop or school network share an address and so share the five attempts.
 - **Next action:** Try a real order on the tablet, then turn on `NEXT_PUBLIC_ONLINE_ORDERING` in Vercel.
+
+## 2026-11-02 — Flavor is required on website orders (FR-013)
+
+- **Phase:** Phase 4 (menu and ordering).
+- **Task:** Stop website orders from skipping the flavor on items that have flavors.
+- **Summary:** The order dialog showed "Optional" and a "No flavor / Standard" chip whenever a size had its own price. The chip is gone, the heading always says Required, and Add to Order asks for a flavor until one is picked. The POS already asks for a flavor before adding.
+- **Files:** `src/components/menu/menu-item-order-dialog.tsx`, `tests/unit/menu-order-dialog.test.tsx`, `tests/unit/menu-stage-card.test.tsx`, `docs/test-cases.md`, `docs/development-log.md`.
+- **Testing:** TC-P4-262 passes; the full suite passes.
+- **Branch / PR:** `fix/flavor-required`.
+- **Known limitations:** The database still prices a line with no flavor when the size has a price, so a request made outside the website could skip it.
+- **Next action:** None.

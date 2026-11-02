@@ -298,6 +298,12 @@ export function MenuItemOrderDialog({
       return;
     }
 
+    // Every item with flavors needs one picked; there is no plain option.
+    if (item.flavors.length > 0 && !current.flavor) {
+      setFeedbackError("Please choose a flavor.");
+      return;
+    }
+
     const lineFlavor = encodeLineFlavor(current.flavor, current.addOns);
     const resolution = resolveVariantUnitPrice(item, variant, lineFlavor);
     if (!resolution.ok) {
@@ -493,37 +499,12 @@ export function MenuItemOrderDialog({
             <fieldset className="mx-0 min-w-0 border-0 p-0">
               <div className="flex items-center justify-between mb-2">
                 <legend className="ios-label block">Choose Flavor</legend>
-                {selectedVariant?.basePrice === 0 &&
-                selectedVariant.flavorPrices.length > 0 ? (
-                  <span className="text-xs font-semibold text-[var(--accent-solid)]">
-                    Required
-                  </span>
-                ) : (
-                  <span className="text-xs text-[var(--text-muted)]">
-                    Optional
-                  </span>
-                )}
+                <span className="text-xs font-semibold text-[var(--accent-solid)]">
+                  Required
+                </span>
               </div>
 
               <div className="flex flex-wrap gap-2" role="group">
-                {selectedVariant?.basePrice !== 0 ? (
-                  <button
-                    type="button"
-                    aria-pressed={selectedFlavor === null}
-                    onClick={() => {
-                      setMixMode(false);
-                      chooseFlavor(null);
-                    }}
-                    className={`ios-chip min-h-11 px-4 transition-all ${
-                      selectedFlavor === null
-                        ? "shadow-xs"
-                        : "hover:bg-[var(--fill-primary)]"
-                    }`}
-                  >
-                    No flavor / Standard
-                  </button>
-                ) : null}
-
                 {item.flavors.map((flavor) => {
                   const isSelected = pickedFlavors.includes(flavor);
                   const flavorPriceOverride =
