@@ -356,7 +356,7 @@ Before commit/PR, inspect staged and unstaged diffs, verify `.env.local` is untr
 - ~~`POST /api/orders` has no rate limit yet.~~ Superseded 2026-11-02: each client address may try up to five orders in ten minutes; more get a 429 with `retry-after` before the body is read (`src/lib/orders/rate-limit.ts`, TC-P4-261). The counts are kept in each server instance's memory, so they are per instance, not a shared quota across instances.
 - No Content Security Policy is configured yet (§17.3).
 - If an order's outcome is unknown after a server error and the customer then edits the cart, a retry is a new checkout attempt and can save a second order. The shop sees both, with the same name and phone number.
-- Place order is off on the live site (`NEXT_PUBLIC_ONLINE_ORDERING` is empty) until the POS order screen and the order page are ready (`docs/database-design.md` §8.8).
+- ~~Place order is off on the live site (`NEXT_PUBLIC_ONLINE_ORDERING` is empty) until the POS order screen and the order page are ready (`docs/database-design.md` §8.8).~~ Superseded: On 2026-11-02 Place order was turned on for the live site (`NEXT_PUBLIC_ONLINE_ORDERING=enabled` in Vercel Production), after the POS Online Orders screen (POS PR #13, build 10140), the order page and the rate limit (PR #83) were on `main`.
 
 ### 18.7 Customer authentication and session security
 
