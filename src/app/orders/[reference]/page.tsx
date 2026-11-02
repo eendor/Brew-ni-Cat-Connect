@@ -12,6 +12,7 @@ import {
 } from "@/lib/site-content/format";
 import { fetchOrder } from "@/lib/orders/fetch-order";
 import { readTrackingTokenFromHash } from "@/lib/orders/order-link";
+import { useOrderUpdates } from "@/lib/orders/use-order-updates";
 import { isOrderReference, OrderView } from "@/lib/orders/types";
 
 type PageState =
@@ -26,6 +27,13 @@ export default function OrderConfirmationPage() {
   const referenceParam =
     typeof params.reference === "string" ? params.reference : "";
   const [state, setState] = useState<PageState>({ status: "loading" });
+  const [trackingToken, setTrackingToken] = useState<string | null>(null);
+
+  useOrderUpdates(
+    state.status === "success" ? state.order : null,
+    trackingToken,
+    (order) => setState({ status: "success", order }),
+  );
 
   useEffect(() => {
     async function loadOrder() {
@@ -47,6 +55,7 @@ export default function OrderConfirmationPage() {
           return;
         }
 
+        setTrackingToken(token);
         setState({ status: "success", order: orderData });
       } catch {
         setState({

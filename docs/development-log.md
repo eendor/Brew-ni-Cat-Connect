@@ -1313,3 +1313,14 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `docs/place-order-live`.
 - **Known limitations:** No real order has been placed and completed on the tablet yet.
 - **Next action:** Place one test order on the live site, accept and complete it on the POS, and add the screenshots as evidence.
+
+## 2026-11-02 — Order page updates by itself (FR-046)
+
+- **Phase:** Phase 6 (POS Online orders screen and status rules).
+- **Task:** The live test order went from Pending to Completed on the POS, but the order page kept showing Pending until it was reloaded.
+- **Summary:** The order page loaded the status once. It now listens on the order's own Realtime topic for the `status-changed` broadcast the database already sends, and loads the order again when one arrives, so the history and any rejection reason come along. It also checks every 30 seconds and when the tab becomes visible, in case the connection drops. Listening stops once the order is completed, rejected or cancelled.
+- **Files:** `src/lib/orders/use-order-updates.ts`, `src/app/orders/[reference]/page.tsx`, `tests/unit/order-confirmation-page.test.tsx`, `docs/test-cases.md`, `docs/development-log.md`.
+- **Testing:** TC-P4-263 passes; the full suite passes.
+- **Branch / PR:** `feat/live-order-status`.
+- **Known limitations:** The page shows the raw status word; customer-friendly labels and the status timeline stay with the Live order tracking card.
+- **Next action:** Try another order on the live site and watch the page change while the tablet moves it.
