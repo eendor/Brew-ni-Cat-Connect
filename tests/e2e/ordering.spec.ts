@@ -25,6 +25,10 @@ async function mockMenu(page: Page) {
     route.fulfill({ json: [noodles, snacks] }),
   );
 
+  await page.route("**/rest/v1/menu_add_ons*", (route) =>
+    route.fulfill({ json: [] }),
+  );
+
   await page.route("**/rest/v1/items*", (route) =>
     route.fulfill({ json: [takoyaki] }),
   );
