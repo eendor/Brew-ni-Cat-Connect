@@ -552,6 +552,15 @@ A new POS build is published by uploading the signed APK and adding a row to `ap
 - Completing an order adds one POS sale in the same transaction (ADR-021). The tablet pulls it like a sale from another device, so it shows in the POS sales and reports.
 - The tablet that completes the order deducts its stock, once per order reference, because the cloud stock count is replaced by the tablet's next upload.
 
+The Android app's Online Orders screen (POS PR #13) works like this:
+
+- It reads `online_orders` with their lines as the signed-in store account. The existing Realtime socket also joins an `online_orders` channel. An event only tells the screen to read again, so a missed event can't leave a wrong status; a 30 second read and a read after every reconnect cover a socket that dropped.
+- A new order plays a chime once per reference, and the dashboard bell shows the count of new orders.
+- Each card offers only the steps `private.is_allowed_shop_step()` allows. A rejection asks for a reason; a cancellation may carry one.
+- A change is never assumed to have landed. It shows as saving until the database answers, then the list is read again. With no answer it stays on the card with Retry, which reuses the same correlation id, so the database answers `replayed` instead of changing the order twice.
+- On Completed the tablet takes the order's ingredients off its stock with the checkout recipe rules. It claims the order reference in its own storage first, so a retry can't deduct twice; if the tablet fails halfway, the stock stays high until the next count (ADR-021).
+- The web POS dashboard doesn't have this screen yet.
+
 Field map from a completed online order to its POS sale:
 
 | POS field | Value |
