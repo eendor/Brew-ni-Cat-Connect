@@ -1270,3 +1270,13 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `fix/night-gallery-haze-and-mobile-showcase`.
 - **Known limitations:** The phone showcase length was judged on the numbers and a desktop render, not yet on a real phone.
 - **Next action:** Check the showcase scroll on the owner's phone.
+## 2026-11-02 — POS Online Orders screen (FR-027, FR-028, FR-076, FR-077, FR-080)
+
+- **Phase:** Phase 6 (POS Online orders screen and status rules).
+- **Task:** Give the shop tablet a screen to see online orders as they come in and move them through their statuses.
+- **Summary:** The Android POS has an Online Orders screen behind a bell on the dashboard, with a count badge and a chime for each new order. Orders are read from `online_orders` and refreshed by Realtime, a 30 second read and a read after each reconnect. Each card offers Accept or Reject (with a reason the customer sees), Start preparing, Mark ready, Complete, and Cancel after accepting, matching the database's allowed steps. A change with no answer stays on the card with Retry and reuses its correlation id. Completing takes the order's ingredients off the tablet's stock once per order reference.
+- **Files:** In `Brew-ni-Cat-POS`: `ui/orders/` (screen, view model, coordinator), `domain/model/OnlineOrder.kt`, `data/remote/OnlineOrderJson.kt`, `data/repository/OnlineOrdersRepositoryImpl.kt`, `domain/usecase/DeductOnlineOrderStockUseCase.kt`, `service/SupabaseRealtimeManager.kt`, `ui/MainActivity.kt`, `ui/dashboard/DashboardScreen.kt`, `res/raw/pos_new_order.wav`, `OnlineOrdersTest.kt`, `README.md`. In Connect: `docs/test-cases.md`, `docs/functional-requirements.md`, `docs/system-architecture.md`, `docs/development-log.md`.
+- **Testing:** TC-P6-191 to TC-P6-199 pass; the full Android unit suite passes (83 tests).
+- **Branch / PR:** `docs/online-orders-screen`; `Brew-ni-Cat-POS` PR #13.
+- **Known limitations:** Not yet run on the tablet or an emulator, so the layout and the chime volume are unverified, and no real order has been completed against the live database. The web POS dashboard has no Online orders screen. Released Android POS build 10140 (version 1.1.0) to GitHub releases with the matching public.app_release row. Place order stays off on the live site until the rate limit on `POST /api/orders` is in and the screen has been tried with a real order.
+- **Next action:** Try the whole path on the tablet (place an order on the site, accept it, complete it, check the sale and the stock), then add the rate limit on `POST /api/orders`.
