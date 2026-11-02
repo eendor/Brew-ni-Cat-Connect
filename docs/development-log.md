@@ -1302,3 +1302,14 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `fix/flavor-required`.
 - **Known limitations:** The database still prices a line with no flavor when the size has a price, so a request made outside the website could skip it.
 - **Next action:** None.
+
+## 2026-11-02 — Place order is on for the live site (FR-021, FR-024)
+
+- **Phase:** Phase 6 (POS Online orders screen and status rules).
+- **Task:** Turn on Place order once the POS screen, the order page and the rate limit are on `main`.
+- **Summary:** Set `NEXT_PUBLIC_ONLINE_ORDERING=enabled` for Production in Vercel and redeployed with PR #84. The live `POST /api/orders` now answers a bad request with 400 instead of 503. The docs that said Place order is off are marked superseded.
+- **Files:** `README.md`, `docs/security-and-privacy.md`, `docs/database-design.md`, `docs/decisions.md`, `docs/development-log.md`.
+- **Testing:** Live API check (400 `invalid-request` for an empty body). A real order from the site to the tablet is next, with screenshots.
+- **Branch / PR:** `docs/place-order-live`.
+- **Known limitations:** No real order has been placed and completed on the tablet yet.
+- **Next action:** Place one test order on the live site, accept and complete it on the POS, and add the screenshots as evidence.

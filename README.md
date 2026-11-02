@@ -1,7 +1,7 @@
 # Brew ni Cat Connect
 
 **Course:** ICT05a Applications Development & Emerging Technologies\
-**Development status:** Phase 3 — Menu and Ordering Experience is complete (closed on 2026-10-30 after a final check of `main`), and Phase 4 — Cloud backend and customer accounts is in progress: the online order tables, the order API and Place order are merged, and Place order stays off on the live site until the POS order screen is ready\
+**Development status:** Phase 3 — Menu and Ordering Experience is complete (closed on 2026-10-30 after a final check of `main`), and Phase 4 — Cloud backend and customer accounts is in progress: the online order tables, the order API and Place order are merged, and Place order was turned on for the live site on 2026-11-02, after the POS order screen was ready\
 **Live site:** <https://brew-ni-cat-connect.vercel.app>\
 **Specification version:** 0.1 Draft (living specification)\
 **Last updated:** 2026-10-30
@@ -141,7 +141,7 @@ The suite builds the production application, starts it locally and runs two Play
 
 The current site does not include:
 
-- server-side order creation: the customer sends the prepared summary to the shop, and server revalidation, single order creation and order references (FR-021, FR-024, FR-025) are planned (PR #41 adds them for pickup, but Place order stays off on the live site until the POS order screen is ready);
+- server-side order creation: the customer sends the prepared summary to the shop, and server revalidation, single order creation and order references (FR-021, FR-024, FR-025) are planned (PR #41 adds them for pickup, but Place order was turned on for the live site on 2026-11-02, after the POS order screen was ready);
 - customer profiles, history, tracking, favorites, loyalty, and rewards (sign-up, sign-in and password reset arrived in PR #58);
 - online payment processing or direct rider booking;
 - Messenger, Android, and POS synchronization changes;

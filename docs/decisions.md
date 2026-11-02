@@ -221,7 +221,7 @@ This manual state is a temporary functional-verification condition, not a revisi
 
 **Decision:** Online pickup orders go into their own tables (`online_orders`, `online_order_items`, `online_order_status_history`), not the POS `orders` and `order_items`. One database function, `place_online_order()`, prices every line from the live menu, checks the details, and saves the order, its lines, the tracking token hash and the first status in one transaction. `POST /api/orders` calls it with the publishable key, and Place order stays behind the `NEXT_PUBLIC_ONLINE_ORDERING` flag until the shop can see online orders.\
 **Date:** 2026-10-24\
-**Status:** Accepted and implemented in PR #41. The flag is off on the live site until the POS order screen and the order page are on `main`.\
+**Status:** Accepted and implemented in PR #41. The flag is off on the live site until the POS order screen and the order page are on `main`. Turned on for the live site on 2026-11-02.\
 **Context:** The POS `orders` table records completed sales and feeds the shop's reports and stock. An online order is a request the shop has not accepted yet, so writing it there would count sales that may never happen. The browser can't be trusted with prices, and FR-037 rules out a privileged key on the server.\
 **Consequences:**
 - The POS keeps its tables and sync unchanged. How an accepted online order is counted as a POS sale is decided with the POS order screen.

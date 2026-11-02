@@ -220,6 +220,8 @@ Place order is off until the shop can see online orders. To turn it on, set `NEX
 
 While it is off, pickup keeps the copy-summary flow and `POST /api/orders` answers 503. Set it back to empty and redeploy to turn it off again; placed orders stay.
 
+**Status:** On 2026-11-02 Place order was turned on for the live site (`NEXT_PUBLIC_ONLINE_ORDERING=enabled` in Vercel Production), after the POS Online Orders screen (POS PR #13, build 10140), the order page and the rate limit (PR #83) were on `main`.
+
 ### 8.9 Tests
 
 `tests/database/` runs the migrations on PGlite, a WebAssembly build of Postgres, with a copy of the live POS tables (`tests/database/support/baseline.sql`), stand-ins for Supabase's roles, `auth.uid()`, `auth.users` and `realtime.send()`, and sample POS rows. They need no live database, so they run in CI with the unit tests (TC-P4-067 to TC-P4-093). The baseline also has the live `supabase_realtime` publication, and the Phase 6 status migration adds TC-P6-180 to TC-P6-190.
