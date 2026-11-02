@@ -1280,3 +1280,14 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `docs/online-orders-screen`; `Brew-ni-Cat-POS` PR #13.
 - **Known limitations:** Not yet run on the tablet or an emulator, so the layout and the chime volume are unverified, and no real order has been completed against the live database. The web POS dashboard has no Online orders screen. Released Android POS build 10140 (version 1.1.0) to GitHub releases with the matching public.app_release row. Place order stays off on the live site until the rate limit on `POST /api/orders` is in and the screen has been tried with a real order.
 - **Next action:** Try the whole path on the tablet (place an order on the site, accept it, complete it, check the sale and the stock), then add the rate limit on `POST /api/orders`.
+
+## 2026-11-02 — Rate limit on Place order (FR-024)
+
+- **Phase:** Phase 6 (POS Online orders screen and status rules).
+- **Task:** Add the rate limit on `POST /api/orders` that has to be in before Place order is turned on for the public.
+- **Summary:** Each client address may try up to five orders in ten minutes. A sixth attempt gets a 429 with `retry-after`, `no-store` and a fixed message, and the database is never called. The address is the first `x-forwarded-for` entry. Counts live in the server's memory, so each Vercel instance counts on its own.
+- **Files:** `src/lib/orders/rate-limit.ts`, `src/app/api/orders/route.ts`, `tests/unit/order-rate-limit.test.ts`, `tests/unit/orders-route.test.ts`, `docs/security-and-privacy.md`, `docs/test-cases.md`, `docs/development-log.md`.
+- **Testing:** TC-P4-261 passes; the full suite passes (464 tests), with type check, lint and format checks.
+- **Branch / PR:** `feat/order-rate-limit`.
+- **Known limitations:** Per instance, not a shared quota. Customers behind one shop or school network share an address and so share the five attempts.
+- **Next action:** Try a real order on the tablet, then turn on `NEXT_PUBLIC_ONLINE_ORDERING` in Vercel.

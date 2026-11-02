@@ -353,7 +353,7 @@ Before commit/PR, inspect staged and unstaged diffs, verify `.env.local` is untr
 
 ### 18.6 Known limits
 
-- `POST /api/orders` has no rate limit yet. Add one, or check the hosting provider's limits, before the flag is turned on for the public.
+- ~~`POST /api/orders` has no rate limit yet.~~ Superseded 2026-11-02: each client address may try up to five orders in ten minutes; more get a 429 with `retry-after` before the body is read (`src/lib/orders/rate-limit.ts`, TC-P4-261). The counts are kept in each server instance's memory, so they are per instance, not a shared quota across instances.
 - No Content Security Policy is configured yet (§17.3).
 - If an order's outcome is unknown after a server error and the customer then edits the cart, a retry is a new checkout attempt and can save a second order. The shop sees both, with the same name and phone number.
 - Place order is off on the live site (`NEXT_PUBLIC_ONLINE_ORDERING` is empty) until the POS order screen and the order page are ready (`docs/database-design.md` §8.8).
