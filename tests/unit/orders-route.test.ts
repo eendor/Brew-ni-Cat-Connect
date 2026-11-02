@@ -20,6 +20,7 @@ import {
   ORDERING_UNAVAILABLE_MESSAGE,
   PLACE_ORDER_MESSAGES,
 } from "@/lib/orders/place-order";
+import { orderRateLimiter } from "@/lib/orders/rate-limit";
 import { PublicSupabaseConfigurationError } from "@/lib/supabase/public-client";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
@@ -61,6 +62,7 @@ let rpc: ReturnType<typeof vi.fn>;
 let logged: MockInstance<typeof console.error>;
 
 beforeEach(() => {
+  orderRateLimiter.reset();
   vi.stubEnv("NEXT_PUBLIC_ONLINE_ORDERING", "enabled");
   rpc = vi.fn();
   getPublicSupabaseClient.mockReset();
@@ -181,6 +183,7 @@ describe("POST /api/orders", () => {
       ],
     ];
     for (const [data, status, reason] of answers) {
+      orderRateLimiter.reset();
       rpc.mockResolvedValueOnce({ data, error: null });
       const response = await POST(post());
       expect(response.status).toBe(status);
