@@ -19,6 +19,8 @@ import {
   PRINT_FRAGMENT,
   ringFocus,
   SIDE_PRINT,
+  SIDE_PRINT_NIGHT,
+  sidePrint,
 } from "@/components/three/scenes/gallery-ring";
 import { DRINKS_GLOW } from "@/components/menu/category-glow";
 import { showcaseItems } from "@/components/three/showcase-data";
@@ -243,6 +245,27 @@ describe("Washed-out colors fix (TC-P4-223 – TC-P4-227)", () => {
     // a side photo keeps most of its color
     expect(SIDE_PRINT.color).toBeGreaterThanOrEqual(0.5);
     expect(SIDE_PRINT.saturation).toBeGreaterThanOrEqual(0.5);
+  });
+
+  it("TC-P4-260 — at night the side photos haze into the dark wall, and the showcase is shorter on a phone", () => {
+    // the dark page keeps less of a side photo than the cream page does, so
+    // the haze shows against the dark wall as well
+    expect(sidePrint("day")).toBe(SIDE_PRINT);
+    expect(sidePrint("night")).toBe(SIDE_PRINT_NIGHT);
+    expect(SIDE_PRINT_NIGHT.color).toBeLessThan(SIDE_PRINT.color);
+    expect(SIDE_PRINT_NIGHT.saturation).toBeLessThanOrEqual(
+      SIDE_PRINT.saturation,
+    );
+    // the keep comes from a uniform the theme sets, not a number fixed in the shader
+    expect(PRINT_FRAGMENT).toContain("uSide");
+    const ring = read("src/components/three/scenes/gallery-ring.ts");
+    expect(ring).toContain("side.set(keep.color, keep.saturation)");
+    // a phone scrolls 200vh through the five items, not 420vh
+    const phone = css.match(
+      /@media \(max-width: 760px\) \{\s*\/\*[^]*?\*\/\s*\.showcase--3d \{\s*height: (\d+)vh;/,
+    );
+    expect(phone).not.toBeNull();
+    expect(Number(phone?.[1])).toBeLessThanOrEqual(320);
   });
 
   it("TC-P4-226 — every product name on a 3D wall reads on the cream at 4.5:1 or better", () => {

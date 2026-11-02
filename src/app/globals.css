@@ -1303,6 +1303,12 @@ textarea:focus-visible {
 }
 
 @media (max-width: 760px) {
+  /* Five items in 520vh took a long thumb-scroll on a phone; 300vh leaves
+     200vh of pinned scroll, about 40vh per item. */
+  .showcase--3d {
+    height: 300vh;
+  }
+
   .showcase--3d .showcase__title {
     font-size: var(--type-stage-compact);
   }

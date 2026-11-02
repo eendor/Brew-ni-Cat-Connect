@@ -1259,3 +1259,14 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `feat/noodle-add-ons`; `Brew-ni-Cat-POS` PR #12.
 - **Known limitations:** The POS still keeps its own add-on list; both use the same labels and prices. Add-ons are edited in the database for now, not in the POS menu editor.
 - **Next action:** Apply the migration live after merge and release POS build 10139.
+
+## 2026-11-02 — Night gallery haze and a shorter phone showcase (FR-092)
+
+- **Phase:** Phase 9 (website polish).
+- **Task:** At night the gallery ring's side photos did not haze into the wall, and the home showcase took too long to scroll through on a phone.
+- **Summary:** The ring mixes each side photo toward the page's wall in linear light. By day the cream wall makes that a clear haze, but at night a 60% keep of the dark wall still looks like about 80% of the photo, so the photos barely receded. The dark theme now keeps 20% of color and 45% of saturation (day stays 60% and 60%), read from a shader uniform that the theme toggle updates in place. On phones (up to 760px) the home showcase is 300vh tall instead of 520vh, which is about 40vh of scroll per item instead of 84vh. Wider screens are unchanged.
+- **Files:** `src/components/three/scenes/gallery-ring.ts`, `src/app/globals.css`, `tests/unit/daylight-glass.test.ts`, `docs/test-cases.md`, `docs/development-log.md`.
+- **Testing:** TC-P4-260 passes. A software-GL render of `/gallery` in both themes shows the side photos receding into the wall. The full Vitest suite, type check, lint, Prettier and the docs validator pass.
+- **Branch / PR:** `fix/night-gallery-haze-and-mobile-showcase`.
+- **Known limitations:** The phone showcase length was judged on the numbers and a desktop render, not yet on a real phone.
+- **Next action:** Check the showcase scroll on the owner's phone.
