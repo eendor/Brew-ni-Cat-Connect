@@ -129,7 +129,7 @@ describe("MenuItemOrderDialog & MenuItemCard ordering integration", () => {
     expect(within(dialog).getAllByText("₱110").length).toBeGreaterThan(0);
   });
 
-  it("enforces flavor choice when variant base price is 0 placeholder", async () => {
+  it("TC-P4-262 — enforces a flavor choice for every item with flavors", async () => {
     const user = userEvent.setup();
     renderMenuItem(sampleSnackItem);
 
@@ -143,9 +143,7 @@ describe("MenuItemOrderDialog & MenuItemCard ordering integration", () => {
     // Try adding without selecting flavor
     await user.click(addBtn);
     expect(
-      within(dialog).getByText(
-        "Please choose a flavor to complete this selection.",
-      ),
+      within(dialog).getByText("Please choose a flavor."),
     ).toBeInTheDocument();
 
     // Select Veggie flavor (₱40)
@@ -181,6 +179,9 @@ describe("MenuItemOrderDialog & MenuItemCard ordering integration", () => {
 
     // 85 * 3 = 255
     expect(within(dialog).getByText("₱255")).toBeInTheDocument();
+
+    // A flavor is required before adding
+    await user.click(within(dialog).getByRole("button", { name: /Original/ }));
 
     // Add to order
     await user.click(
@@ -222,6 +223,7 @@ describe("MenuItemOrderDialog & MenuItemCard ordering integration", () => {
       name: "Increase quantity",
     });
     const add = within(dialog).getByRole("button", { name: "Add to Order" });
+    await user.click(within(dialog).getByRole("button", { name: /Original/ }));
 
     // All clicks land in one batch, before React re-renders the dialog, so
     // the Add handler from the first render would still see 16 oz × 1.

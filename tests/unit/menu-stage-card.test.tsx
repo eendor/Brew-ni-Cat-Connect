@@ -242,8 +242,9 @@ describe("3D lives in the Add to order dialog (TC-P4-138 – TC-P4-143)", () => 
     expect(
       within(order).getByRole("button", { name: /^12oz/ }),
     ).toHaveAttribute("aria-pressed", "true");
+    // Flavor is required: there is no plain option to fall back on.
     expect(
-      within(order).getByRole("button", { name: "No flavor / Standard" }),
-    ).toHaveAttribute("aria-pressed", "true");
+      within(order).queryByRole("button", { name: "No flavor / Standard" }),
+    ).not.toBeInTheDocument();
   });
 });
