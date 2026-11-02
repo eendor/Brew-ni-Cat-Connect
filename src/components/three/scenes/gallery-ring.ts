@@ -22,6 +22,18 @@ export type RingPhoto = Readonly<{ src: string; alt: string }>;
 export const SIDE_PRINT = { color: 0.6, saturation: 0.6 } as const;
 
 /**
+ * The same for the dark page. The mix is made in linear light, where a
+ * 60% keep of a dark wall still reads as about 80% of the photo, so the
+ * prints barely receded at night. Keeping less of the photo makes the
+ * same visible haze into the dark wall that the cream gives by day.
+ */
+export const SIDE_PRINT_NIGHT = { color: 0.2, saturation: 0.45 } as const;
+
+/** The side print's keep of color and saturation in a theme. */
+export const sidePrint = (theme: Theme) =>
+  theme === "night" ? SIDE_PRINT_NIGHT : SIDE_PRINT;
+
+/**
  * How much a print is "in front" (1) or away (0), from the turn the visitor
  * chose. The small turn that follows the page scroll isn't part of it, so the
  * front photo stays sharp while the page scrolls.
@@ -32,8 +44,6 @@ export function ringFocus(index: number, rot: number, seg: number) {
   return Math.max(0, 1 - Math.abs(angle) / (seg * 1.1));
 }
 
-const f = (n: number) => n.toFixed(3);
-
 /** The photo well (--surface-warm) in each theme, as RGBA bytes. */
 const WELL = {
   day: [236, 223, 203, 255],
@@ -42,7 +52,7 @@ const WELL = {
 
 /** Each print: cover-fit photo in a rounded panel, faded by its focus. */
 export const PRINT_FRAGMENT = /* glsl */ `
-  uniform sampler2D uMap; uniform float uFocus, uAspect; uniform vec2 uSize; uniform vec3 uBg; varying vec2 vUv;
+  uniform sampler2D uMap; uniform float uFocus, uAspect; uniform vec2 uSize; uniform vec3 uBg; uniform vec2 uSide; varying vec2 vUv;
   float sdRound(vec2 p, vec2 b, float r){ vec2 q = abs(p) - b + r; return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r; }
   void main(){
     vec2 uv = vec2(1.0 - vUv.x, vUv.y);
@@ -55,10 +65,10 @@ export const PRINT_FRAGMENT = /* glsl */ `
     float mask = 1.0 - smoothstep(-0.015, 0.015, d);
     vec3 col = texture2D(uMap, uv).rgb;
     float l = dot(col, vec3(0.299, 0.587, 0.114));
-    col = mix(vec3(l), col, ${f(SIDE_PRINT.saturation)} + ${f(1 - SIDE_PRINT.saturation)} * uFocus);
+    col = mix(vec3(l), col, uSide.y + (1.0 - uSide.y) * uFocus);
     // prints away from the front recede a little into the cream wall; the
     // front print shows its own colors, with nothing added
-    col = mix(uBg, col, mix(${f(SIDE_PRINT.color)}, 1.0, uFocus));
+    col = mix(uBg, col, mix(uSide.x, 1.0, uFocus));
     gl_FragColor = vec4(col, mask);
     #include <colorspace_fragment>
   }`;
@@ -94,10 +104,14 @@ export async function initGalleryRing(
   const blank = new THREE.DataTexture(well, 1, 1);
   blank.colorSpace = THREE.SRGBColorSpace;
   const wall = new THREE.Color();
+  // how much of its own color a side print keeps, in the page's theme
+  const side = new THREE.Vector2();
   // the page's wall behind the ring and the empty well, in the page's theme
   const paint = (theme: Theme) => {
     wall.set(studioCanvas(theme));
     renderer.setClearColor(wall, 1);
+    const keep = sidePrint(theme);
+    side.set(keep.color, keep.saturation);
     well.set(WELL[theme]);
     blank.needsUpdate = true;
   };
@@ -126,6 +140,7 @@ export async function initGalleryRing(
         uAspect: { value: 0.75 },
         uSize: { value: new THREE.Vector2(W, H) },
         uBg: { value: wall },
+        uSide: { value: side },
       },
       vertexShader,
       fragmentShader: PRINT_FRAGMENT,
