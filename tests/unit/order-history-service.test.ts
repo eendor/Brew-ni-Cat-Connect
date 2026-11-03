@@ -14,9 +14,7 @@ function createMockDbClient({
 } = {}) {
   const rangeMock = vi.fn().mockResolvedValue({ data, count, error });
   const eqMock = vi.fn().mockReturnValue({ range: rangeMock });
-  const orderMock = vi
-    .fn()
-    .mockReturnValue({ range: rangeMock, eq: eqMock });
+  const orderMock = vi.fn().mockReturnValue({ range: rangeMock, eq: eqMock });
   const selectMock = vi.fn().mockReturnValue({ order: orderMock });
   const fromMock = vi.fn().mockReturnValue({ select: selectMock });
 
