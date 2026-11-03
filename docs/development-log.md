@@ -1313,3 +1313,16 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `docs/place-order-live`.
 - **Known limitations:** No real order has been placed and completed on the tablet yet.
 - **Next action:** Place one test order on the live site, accept and complete it on the POS, and add the screenshots as evidence.
+
+## 2026-11-03 — Order history and reorder (FR-039, FR-041)
+
+- **Phase:** Phase 5 (customer account features).
+- **Task:** Give authenticated customers a paginated order history page and a Reorder button that rechecks current prices and availability instead of adding items silently.
+- **Summary:** `/account/orders` shows the signed-in customer's orders newest-first at 10 per page, using the authenticated Supabase client (RLS scopes results to `auth.uid()` automatically). Each order card shows reference, status badge, date, items, and subtotal. Clicking Reorder calls `reorderItems()`, which resolves each item against the live menu catalog: available items are added via `addItem` from `useCart()` at their current price; items whose prices have changed are added but an explicit "Price changed" notice is shown listing the old and new prices; items not found in the catalog are excluded and listed in a "Not available" notice. The same Reorder button and notice section were added to the existing `/orders/[reference]` order detail page. "Order History" links were added to the desktop account dropdown (`account-nav.tsx`) and the mobile navigation (`mobile-navigation.tsx`). `fetchOrder` in `fetch-order.ts` was made backward compatible with an optional `trackingToken`: when omitted, the authenticated client is used so customers can load their own orders without a hash token.
+- **Files created:** `src/lib/orders/order-history.ts`, `src/lib/orders/reorder.ts`, `src/app/account/orders/page.tsx`, `src/components/account/order-history-view.tsx`, `tests/unit/reorder.test.ts`, `tests/unit/order-history.test.tsx`, `tests/unit/order-history-service.test.ts`.
+- **Files modified:** `src/lib/orders/fetch-order.ts` (optional trackingToken), `src/components/layout/account-nav.tsx` (Order History link), `src/components/layout/mobile-navigation.tsx` (Order History link), `src/app/orders/[reference]/page.tsx` (Reorder button and notices), `tests/unit/order-history.test.tsx` (added `SupabaseClient` import).
+- **Testing:** `npx vitest run tests/unit` — 50 test files, 331 tests, all passed. New tests: TC-P5-001 to TC-P5-006 (order history view), TC-P5-010 to TC-P5-013 (reorder logic), TC-P5-020 to TC-P5-022 (fetch service). All pre-existing tests continue to pass (fetch-order ×4, order-confirmation-page ×4, site-header ×7).
+- **Checks:** `npm run typecheck` — exit 0. `npm run lint` — exit 0. `npm run format:check` — exit 0. `npm run build` — succeeded; `/account/orders` appears as a static route.
+- **Branch / PR:** `feat/p5-order-history`.
+- **Known limitations:** The order history page relies on the authenticated Supabase client; guests are shown a sign-in prompt. Reorder price comparison uses the current live menu, so items deleted entirely from the menu (not just marked unavailable) are reported as unavailable. Pagination is client-side (all pages fetched on demand from Supabase, 10 per page).
+- **Next action:** Renier's QA on the live site.
