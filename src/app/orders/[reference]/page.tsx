@@ -36,6 +36,7 @@ export default function OrderConfirmationPage() {
   const [reorderResult, setReorderResult] = useState<ReorderSummary | null>(
     null,
   );
+  const [reorderError, setReorderError] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadOrder() {
@@ -77,6 +78,8 @@ export default function OrderConfirmationPage() {
   const handleReorder = async () => {
     if (state.status !== "success" || !state.order.items.length) return;
     setIsReordering(true);
+    setReorderResult(null);
+    setReorderError(null);
     try {
       const catalog = await fetchPublicMenu();
       const result = reorderItems(state.order.items, catalog, addItem);
@@ -85,7 +88,7 @@ export default function OrderConfirmationPage() {
         openDrawer();
       }
     } catch {
-      // Menu load failure
+      setReorderError("We couldn't load the menu. Try again.");
     } finally {
       setIsReordering(false);
     }
@@ -213,6 +216,16 @@ export default function OrderConfirmationPage() {
               </ul>
             </div>
           )}
+        </div>
+      )}
+
+      {reorderError && (
+        <div
+          role="region"
+          aria-label="Reorder notices"
+          className="mb-6 rounded-[var(--shape-md)] border border-[var(--danger)] bg-[var(--danger-soft)] p-4 text-sm text-[var(--danger)]"
+        >
+          {reorderError}
         </div>
       )}
 

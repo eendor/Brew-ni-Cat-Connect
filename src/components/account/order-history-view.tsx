@@ -70,7 +70,7 @@ export function OrderHistoryView({ initialPage = 1 }: OrderHistoryViewProps) {
   const handleRetry = () => {
     setIsLoadingOrders(true);
     setError(null);
-    fetchCustomerOrders({ page, pageSize: DEFAULT_PAGE_SIZE })
+    fetchCustomerOrders({ page, pageSize: DEFAULT_PAGE_SIZE, userId: user?.id })
       .then(setHistoryPage)
       .catch(() =>
         setError("Unable to load order history. Please try again later."),
@@ -85,6 +85,7 @@ export function OrderHistoryView({ initialPage = 1 }: OrderHistoryViewProps) {
     fetchCustomerOrders({
       page,
       pageSize: DEFAULT_PAGE_SIZE,
+      userId: user.id,
     })
       .then((data) => {
         if (!active) return;

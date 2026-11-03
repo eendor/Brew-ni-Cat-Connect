@@ -3,8 +3,10 @@
  *
  * Retrieves the signed-in customer's past orders from `public.online_orders`
  * and `public.online_order_items` with pagination, newest first.
- * Row Level Security restricts queries strictly to the authenticated customer's
- * orders (`customer_id = auth.uid()`).
+ * Row Level Security restricts queries to the authenticated customer's orders
+ * (`customer_id = auth.uid()`). The query also adds an explicit
+ * `.eq("customer_id", userId)` filter as defence-in-depth so that misconfigured
+ * RLS or a future public client swap never leaks another customer's orders.
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -46,6 +48,8 @@ export type CustomerOrderHistoryPage = Readonly<{
 export type FetchCustomerOrdersOptions = Readonly<{
   page?: number;
   pageSize?: number;
+  /** Supabase auth user ID. When provided, adds an explicit `.eq("customer_id", userId)` filter as defence-in-depth alongside RLS. */
+  userId?: string;
   client?: SupabaseClient;
 }>;
 
@@ -79,6 +83,7 @@ type RawOrderRow = {
 export async function fetchCustomerOrders({
   page = 1,
   pageSize = DEFAULT_PAGE_SIZE,
+  userId,
   client,
 }: FetchCustomerOrdersOptions = {}): Promise<CustomerOrderHistoryPage> {
   const safePage = Math.max(1, Math.floor(page));
@@ -89,7 +94,7 @@ export async function fetchCustomerOrders({
 
   const supabase = client ?? getAuthSupabaseClient();
 
-  const { data, count, error } = await supabase
+  let query = supabase
     .from("online_orders")
     .select(
       `
@@ -118,8 +123,13 @@ export async function fetchCustomerOrders({
     `,
       { count: "exact" },
     )
-    .order("created_at", { ascending: false })
-    .range(from, to);
+    .order("created_at", { ascending: false });
+
+  if (userId) {
+    query = query.eq("customer_id", userId);
+  }
+
+  const { data, count, error } = await query.range(from, to);
 
   if (error) {
     throw new Error(`Failed to load order history: ${error.message}`);

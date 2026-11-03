@@ -261,12 +261,9 @@ describe("OrderHistoryView (FR-039, FR-041)", () => {
     await user.click(nextBtn);
 
     await waitFor(() => {
-      expect(fetchCustomerOrders).toHaveBeenCalledWith({
-        page: 2,
-        pageSize: 10,
-      });
+  expect(fetchCustomerOrders).toHaveBeenCalledWith({ page: 2, pageSize: 10, userId: "customer-123" });
     });
-  });
+    });
 
   it("TC-P5-005 — reorders items and displays explicit notices for changed prices", async () => {
     const user = userEvent.setup();

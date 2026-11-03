@@ -13,7 +13,10 @@ function createMockDbClient({
   error?: { message: string } | null;
 } = {}) {
   const rangeMock = vi.fn().mockResolvedValue({ data, count, error });
-  const orderMock = vi.fn().mockReturnValue({ range: rangeMock });
+  const eqMock = vi.fn().mockReturnValue({ range: rangeMock });
+  const orderMock = vi
+    .fn()
+    .mockReturnValue({ range: rangeMock, eq: eqMock });
   const selectMock = vi.fn().mockReturnValue({ order: orderMock });
   const fromMock = vi.fn().mockReturnValue({ select: selectMock });
 
@@ -21,7 +24,7 @@ function createMockDbClient({
     from: fromMock,
   } as unknown as SupabaseClient;
 
-  return { client, fromMock, selectMock, orderMock, rangeMock };
+  return { client, fromMock, selectMock, orderMock, eqMock, rangeMock };
 }
 
 describe("fetchCustomerOrders service helper (FR-039)", () => {
@@ -55,11 +58,12 @@ describe("fetchCustomerOrders service helper (FR-039)", () => {
       },
     ];
 
-    const { client, fromMock, orderMock, rangeMock } = createMockDbClient({
-      data: rawData,
-      count: 25,
-      error: null,
-    });
+    const { client, fromMock, orderMock, eqMock, rangeMock } =
+      createMockDbClient({
+        data: rawData,
+        count: 25,
+        error: null,
+      });
 
     const result = await fetchCustomerOrders({
       page: 2,
@@ -69,6 +73,7 @@ describe("fetchCustomerOrders service helper (FR-039)", () => {
 
     expect(fromMock).toHaveBeenCalledWith("online_orders");
     expect(orderMock).toHaveBeenCalledWith("created_at", { ascending: false });
+    expect(eqMock).not.toHaveBeenCalled(); // no userId passed → no explicit filter
     expect(rangeMock).toHaveBeenCalledWith(10, 19); // Page 2 of 10 -> indices 10 to 19
 
     expect(result.page).toBe(2);
@@ -114,5 +119,23 @@ describe("fetchCustomerOrders service helper (FR-039)", () => {
     await expect(fetchCustomerOrders({ client })).rejects.toThrow(
       "Failed to load order history: connection timeout",
     );
+  });
+
+  it("TC-P5-023 — sends eq(customer_id, userId) filter when userId is provided", async () => {
+    const { client, eqMock, rangeMock } = createMockDbClient({
+      data: [],
+      count: 0,
+      error: null,
+    });
+
+    await fetchCustomerOrders({
+      page: 1,
+      pageSize: 10,
+      userId: "user-uuid-abc",
+      client,
+    });
+
+    expect(eqMock).toHaveBeenCalledWith("customer_id", "user-uuid-abc");
+    expect(rangeMock).toHaveBeenCalledWith(0, 9);
   });
 });
