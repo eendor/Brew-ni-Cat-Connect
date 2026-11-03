@@ -1324,3 +1324,14 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `feat/undo-online-order-status` (Connect and POS).
 - **Known limitations:** The 5-minute window uses the database clock; a tablet whose clock is far off may show or hide Undo a little early or late, and the database decides.
 - **Next action:** Apply the migration to the live database and release the POS build.
+
+## 2026-11-03 — Split payment between cash and GCash (FR-096)
+
+- **Phase:** Phase 6 (POS).
+- **Task:** Let a customer pay one order partly in cash and partly by GCash, as the owner asked.
+- **Summary:** The POS payment dialog has a Split tab. The cashier enters the GCash part; the cash part, cash tendered and change follow. The sale is saved once as `SPLIT` with both parts in its payment reference, the receipt shows both, and the day's cash and GCash totals count each part under its method. No database change: the cloud `payment_method` column has no fixed list and the website doesn't read it.
+- **Files:** `docs/functional-requirements.md`, `docs/test-cases.md`, `docs/development-log.md`, `scripts/validate_phase0_docs.py`; POS split payment PR.
+- **Testing:** TC-P6-208 to TC-P6-210 pass; the full POS suite passes.
+- **Branch / PR:** `feat/split-payment` (POS), `docs/split-payment` (Connect).
+- **Known limitations:** A split is one cash part and one GCash part; three or more parts aren't supported.
+- **Next action:** Release the POS build and add the daily cash balance (FR-097).
