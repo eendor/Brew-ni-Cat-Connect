@@ -170,6 +170,15 @@ FR-093 was added after FR-092. It belongs with the POS and owner administration 
 | --- | --- | --- | --- | --- | --- |
 | FR-093 | The POS (Android behind the owner PIN, and the web manager panel) shall let the owner add and edit categories and products, including product name, category, icon choice, sizes, flavors, per-size or per-flavor prices, and availability, without the built-in seeded menu overwriting or re-adding items the owner edited or deleted. | Adding or editing a category or product in the POS saves to the shared catalog with the chosen icon and prices; restarting or syncing the Android POS does not overwrite owner edits or restore deleted items. | Must | 9 | Implemented (PR #73, PR #75, POS PR #4, POS PR #5, POS PR #6) |
 
+### Undo an online order status change
+
+FR-094 and FR-095 were added after FR-093. FR-094 records the day and night themes already on the site (ADR-024). FR-095 belongs with the online order status rules (FR-075 to FR-080).
+
+| ID | Requirement | Acceptance / verification | Priority | Target phase | Status |
+| --- | --- | --- | --- | --- | --- |
+| FR-094 | The website shall offer a day theme and a night theme. A first visit follows the device's light or dark setting, and the customer's choice from the theme toggle is remembered on that device. | The toggle switches every page between the two themes with readable contrast; the choice survives a reload; with no choice saved, the device setting is used (ADR-024). | Should | 2 | Implemented |
+| FR-095 | The POS shall let staff undo an online order's last status change within 5 minutes, so a mistaken tap (for example Complete) can be taken back. Undoing a Complete shall void its POS sale and put the stock back. A rejection, a new order and an undo can't be undone. | The database moves the order back one step only when the last change was a forward step by the shop less than 5 minutes ago, records the history and an audit row, and refuses everything else (`too_late`, `not_allowed`, `stale`); undoing Complete voids the sale and removes its link; a retry with the same correlation id doesn't step back twice; customers and anonymous users can't call it; the tablet shows Undo only within the window and restores stock once (TC-P6-200 to TC-P6-207). | Should | 6 | Implemented |
+
 ## 12. Requirement dependencies and open owner decisions
 
 | Decision | Affected requirements | Status |

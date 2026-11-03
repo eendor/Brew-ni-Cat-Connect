@@ -1326,3 +1326,14 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `feat/p5-order-history`.
 - **Known limitations:** The order history page relies on the authenticated Supabase client; guests are shown a sign-in prompt. Reorder price comparison uses the current live menu, so items deleted entirely from the menu (not just marked unavailable) are reported as unavailable. Pagination is client-side (all pages fetched on demand from Supabase, 10 per page).
 - **Next action:** Renier's QA on the live site.
+
+## 2026-11-03 — Undo an online order status change (FR-095)
+
+- **Phase:** Phase 6 (POS Online orders screen and status rules).
+- **Task:** Let staff take back a mistaken tap on the tablet, such as an accidental Complete.
+- **Summary:** Added `public.undo_online_order_status()`. Staff can undo the last forward step within 5 minutes; undoing Complete voids the sale. The POS shows an Undo button on the card for 5 minutes, puts the stock back once, and marks its copy of the sale voided so the next sync doesn't restock again. Rejections, new orders and undos can't be undone.
+- **Files:** `supabase/migrations/20261103120000_undo_online_order_status.sql`, `supabase/rollbacks/20261103120000_undo_online_order_status.sql`, `tests/database/online-order-undo.test.ts`, `docs/functional-requirements.md`, `docs/test-cases.md`, `docs/database-design.md`, `docs/development-log.md`; POS undo PR.
+- **Testing:** TC-P6-200 to TC-P6-207 pass; the full web and POS suites pass.
+- **Branch / PR:** `feat/undo-online-order-status` (Connect and POS).
+- **Known limitations:** The 5-minute window uses the database clock; a tablet whose clock is far off may show or hide Undo a little early or late, and the database decides.
+- **Next action:** Apply the migration to the live database and release the POS build.
