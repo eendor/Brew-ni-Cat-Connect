@@ -347,3 +347,21 @@ File: `supabase/migrations/20261031120000_item_icon_and_image.sql`. Undo: `supab
 
 - `supabase/rollbacks/20261031120000_item_icon_and_image.sql` drops `items_image_url_check`, `items_icon_check`, `image_url` and `icon` from `public.items` without touching existing rows or prices.
 - TC-P4-243 to TC-P4-247 run the migration, constraint checks, access checks and rollback on PGlite (`tests/database/item-icon-and-image.test.ts`).
+
+## 12. Undo an Online Order Status Change (Phase 6 — 2026-11-03)
+
+File: `supabase/migrations/20261103120000_undo_online_order_status.sql`. Undo: `supabase/rollbacks/20261103120000_undo_online_order_status.sql`. Covers FR-095.
+
+### 12.1 `public.undo_online_order_status(p_reference, p_from_status, p_correlation_id)`
+
+- `security definer`, empty `search_path`; staff only (`private.is_staff()`, otherwise SQLSTATE 42501). Execute is granted to `authenticated` only.
+- Locks the order and reads its latest history row. It moves the order back to that row's `from_status` only when the row is a forward step by the shop (`private.is_allowed_shop_step`), its `to_status` is the current status, it is under 5 minutes old, and the current status is not `pending` or `rejected`. An undo row is not a forward step, so an undo can't be undone.
+- Answers `invalid`, `not_found`, `stale` (with the current status), `not_allowed` or `too_late`; each refusal adds a `refused` row to `private.staff_audit_log`.
+- Undoing `completed` deletes the `private.online_order_sales` link and voids the POS sale in `public.orders` (`is_voided`, `void_reason`, `last_synced_at`). The tablet puts the stock back (ADR-021); the answer carries `voidedSaleId`.
+- Adds a history row (actor `shop`, with the correlation id) and a `done` audit row. The same correlation id answers `replayed` without stepping back again.
+- `staff_audit_log_action_check` now accepts `online-order-undo` as well as `online-order-status`.
+
+### 12.2 Undo and tests
+
+- The rollback drops the function. Orders, history and voided sales stay as they are, and the audit log keeps accepting `online-order-undo` so rows already written stay valid.
+- TC-P6-200 to TC-P6-204 run on PGlite (`tests/database/online-order-undo.test.ts`).
