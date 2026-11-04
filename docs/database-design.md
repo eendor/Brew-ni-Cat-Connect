@@ -350,7 +350,7 @@ File: `supabase/migrations/20261031120000_item_icon_and_image.sql`. Undo: `supab
 
 ## 12. Undo an Online Order Status Change (Phase 6 — 2026-11-03)
 
-File: `supabase/migrations/20261103120000_undo_online_order_status.sql`. Undo: `supabase/rollbacks/20261103120000_undo_online_order_status.sql`. Covers FR-095.
+File: `supabase/migrations/20261103120000_undo_online_order_status.sql`. Undo: `supabase/rollbacks/20261103120000_undo_online_order_status.sql`. Covers FR-095. Applied to the live database on 2026-11-03 (§8.7).
 
 ### 12.1 `public.undo_online_order_status(p_reference, p_from_status, p_correlation_id)`
 
@@ -368,7 +368,7 @@ File: `supabase/migrations/20261103120000_undo_online_order_status.sql`. Undo: `
 
 ## 13. More Rider Services (Phase 4 — 2026-11-04)
 
-File: `supabase/migrations/20261104120000_more_rider_partners.sql`. Undo: `supabase/rollbacks/20261104120000_more_rider_partners.sql`. Covers FR-085.
+File: `supabase/migrations/20261104120000_more_rider_partners.sql`. Undo: `supabase/rollbacks/20261104120000_more_rider_partners.sql`. Covers FR-085. Applied to the live database on 2026-11-04 (§8.7), after the production deploy served the three new logos.
 
 ### 13.1 Change to `public.site_content`
 
