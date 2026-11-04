@@ -341,4 +341,35 @@ describe("OrderHistoryView (FR-039, FR-041)", () => {
       ),
     ).toBeInTheDocument();
   });
+
+  it("TC-P5-024 — shows a reorder notice when the menu cannot be loaded", async () => {
+    const user = userEvent.setup();
+    const client = createMockAuthClient(mockCustomer);
+    fetchCustomerOrders.mockResolvedValue({
+      orders: [mockOrder1],
+      totalCount: 1,
+      page: 1,
+      pageSize: 10,
+      totalPages: 1,
+    });
+    fetchPublicMenu.mockRejectedValue(new Error("menu unavailable"));
+
+    render(
+      <AuthProvider client={client}>
+        <CartProvider>
+          <OrderHistoryView />
+        </CartProvider>
+      </AuthProvider>,
+    );
+
+    expect(await screen.findByText("BNC-7K2Q9F")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Reorder" }));
+
+    expect(
+      await screen.findByRole("region", { name: "Reorder notices" }),
+    ).toHaveTextContent("We couldn't load the menu. Try again.");
+    // The failure belongs to the reorder, not the page-level history error.
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
 });

@@ -66,12 +66,13 @@ describe("fetchCustomerOrders service helper (FR-039)", () => {
     const result = await fetchCustomerOrders({
       page: 2,
       pageSize: 10,
+      userId: "user-uuid-abc",
       client,
     });
 
     expect(fromMock).toHaveBeenCalledWith("online_orders");
     expect(orderMock).toHaveBeenCalledWith("created_at", { ascending: false });
-    expect(eqMock).not.toHaveBeenCalled(); // no userId passed → no explicit filter
+    expect(eqMock).toHaveBeenCalledWith("customer_id", "user-uuid-abc");
     expect(rangeMock).toHaveBeenCalledWith(10, 19); // Page 2 of 10 -> indices 10 to 19
 
     expect(result.page).toBe(2);
@@ -98,6 +99,7 @@ describe("fetchCustomerOrders service helper (FR-039)", () => {
     const result = await fetchCustomerOrders({
       page: 1,
       pageSize: 10,
+      userId: "user-uuid-abc",
       client,
     });
 
@@ -114,9 +116,9 @@ describe("fetchCustomerOrders service helper (FR-039)", () => {
       error: { message: "connection timeout" },
     });
 
-    await expect(fetchCustomerOrders({ client })).rejects.toThrow(
-      "Failed to load order history: connection timeout",
-    );
+    await expect(
+      fetchCustomerOrders({ userId: "user-uuid-abc", client }),
+    ).rejects.toThrow("Failed to load order history: connection timeout");
   });
 
   it("TC-P5-023 — sends eq(customer_id, userId) filter when userId is provided", async () => {

@@ -48,8 +48,11 @@ export type CustomerOrderHistoryPage = Readonly<{
 export type FetchCustomerOrdersOptions = Readonly<{
   page?: number;
   pageSize?: number;
-  /** Supabase auth user ID. When provided, adds an explicit `.eq("customer_id", userId)` filter as defence-in-depth alongside RLS. */
-  userId?: string;
+  /**
+   * Supabase auth user ID. Always sent as `.eq("customer_id", userId)`, so even
+   * a staff account (RLS lets staff read every order) sees only its own orders.
+   */
+  userId: string;
   client?: SupabaseClient;
 }>;
 
@@ -85,7 +88,7 @@ export async function fetchCustomerOrders({
   pageSize = DEFAULT_PAGE_SIZE,
   userId,
   client,
-}: FetchCustomerOrdersOptions = {}): Promise<CustomerOrderHistoryPage> {
+}: FetchCustomerOrdersOptions): Promise<CustomerOrderHistoryPage> {
   const safePage = Math.max(1, Math.floor(page));
   const safePageSize = Math.max(1, Math.floor(pageSize));
 
@@ -94,7 +97,7 @@ export async function fetchCustomerOrders({
 
   const supabase = client ?? getAuthSupabaseClient();
 
-  let query = supabase
+  const query = supabase
     .from("online_orders")
     .select(
       `
@@ -123,11 +126,8 @@ export async function fetchCustomerOrders({
     `,
       { count: "exact" },
     )
-    .order("created_at", { ascending: false });
-
-  if (userId) {
-    query = query.eq("customer_id", userId);
-  }
+    .order("created_at", { ascending: false })
+    .eq("customer_id", userId);
 
   const { data, count, error } = await query.range(from, to);
 

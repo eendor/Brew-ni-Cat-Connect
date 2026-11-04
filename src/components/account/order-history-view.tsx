@@ -66,16 +66,27 @@ export function OrderHistoryView({ initialPage = 1 }: OrderHistoryViewProps) {
   const [reorderResult, setReorderResult] = useState<ReorderSummary | null>(
     null,
   );
+  const [reorderError, setReorderError] = useState<string | null>(null);
 
   const handleRetry = () => {
+    if (!user) return;
     setIsLoadingOrders(true);
     setError(null);
-    fetchCustomerOrders({ page, pageSize: DEFAULT_PAGE_SIZE, userId: user?.id })
-      .then(setHistoryPage)
+    fetchCustomerOrders({ page, pageSize: DEFAULT_PAGE_SIZE, userId: user.id })
+      .then((data) => {
+        setHistoryPage(data);
+        setError(null);
+      })
       .catch(() =>
         setError("Unable to load order history. Please try again later."),
       )
       .finally(() => setIsLoadingOrders(false));
+  };
+
+  const goToPage = (next: number) => {
+    if (next === page) return; // the effect doesn't run again for the same page
+    setIsLoadingOrders(true);
+    setPage(next);
   };
 
   useEffect(() => {
@@ -90,6 +101,7 @@ export function OrderHistoryView({ initialPage = 1 }: OrderHistoryViewProps) {
       .then((data) => {
         if (!active) return;
         setHistoryPage(data);
+        setError(null);
         setIsLoadingOrders(false);
       })
       .catch(() => {
@@ -104,8 +116,10 @@ export function OrderHistoryView({ initialPage = 1 }: OrderHistoryViewProps) {
   }, [user, isAuthLoading, page]);
 
   const handleReorder = async (order: CustomerOrderHistoryEntry) => {
-    if (!order.items.length) return;
+    if (!order.items.length || reorderingRef !== null) return;
     setReorderingRef(order.reference);
+    setReorderResult(null);
+    setReorderError(null);
     try {
       const catalog = await fetchPublicMenu();
       const result = reorderItems(order.items, catalog, addItem);
@@ -114,7 +128,7 @@ export function OrderHistoryView({ initialPage = 1 }: OrderHistoryViewProps) {
         openDrawer();
       }
     } catch {
-      setError("Failed to fetch menu for reordering. Please try again.");
+      setReorderError("We couldn't load the menu. Try again.");
     } finally {
       setReorderingRef(null);
     }
@@ -231,6 +245,16 @@ export function OrderHistoryView({ initialPage = 1 }: OrderHistoryViewProps) {
               </ul>
             </div>
           )}
+        </div>
+      )}
+
+      {reorderError && (
+        <div
+          role="region"
+          aria-label="Reorder notices"
+          className="mb-6 rounded-[var(--shape-md)] border border-[var(--danger)] bg-[var(--danger-soft)] p-4 text-sm text-[var(--danger)]"
+        >
+          {reorderError}
         </div>
       )}
 
@@ -363,7 +387,7 @@ export function OrderHistoryView({ initialPage = 1 }: OrderHistoryViewProps) {
                       <button
                         type="button"
                         onClick={() => handleReorder(order)}
-                        disabled={isReorderingThis}
+                        disabled={reorderingRef !== null}
                         className="inline-flex min-h-9 items-center justify-center rounded-full border border-[var(--accent-solid)] bg-transparent px-4 text-xs font-semibold text-[var(--accent-solid)] hover:bg-[var(--accent-soft)] transition-colors disabled:opacity-50"
                       >
                         {isReorderingThis ? "Reordering..." : "Reorder"}
@@ -389,7 +413,7 @@ export function OrderHistoryView({ initialPage = 1 }: OrderHistoryViewProps) {
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  onClick={() => goToPage(Math.max(1, page - 1))}
                   disabled={historyPage.page <= 1}
                   className="inline-flex min-h-9 items-center justify-center rounded-full border border-[var(--separator)] px-3 text-xs font-medium text-[var(--text-strong)] hover:bg-[var(--glass-hover)] disabled:opacity-40 disabled:pointer-events-none transition-colors"
                   aria-label="Previous page"
@@ -405,7 +429,7 @@ export function OrderHistoryView({ initialPage = 1 }: OrderHistoryViewProps) {
                     <button
                       key={pageNum}
                       type="button"
-                      onClick={() => setPage(pageNum)}
+                      onClick={() => goToPage(pageNum)}
                       className={`inline-flex size-8 items-center justify-center rounded-full text-xs font-semibold transition-colors ${
                         pageNum === historyPage.page
                           ? "bg-[var(--accent-fill)] text-white"
@@ -424,7 +448,7 @@ export function OrderHistoryView({ initialPage = 1 }: OrderHistoryViewProps) {
                 <button
                   type="button"
                   onClick={() =>
-                    setPage((p) => Math.min(historyPage.totalPages, p + 1))
+                    goToPage(Math.min(historyPage.totalPages, page + 1))
                   }
                   disabled={historyPage.page >= historyPage.totalPages}
                   className="inline-flex min-h-9 items-center justify-center rounded-full border border-[var(--separator)] px-3 text-xs font-medium text-[var(--text-strong)] hover:bg-[var(--glass-hover)] disabled:opacity-40 disabled:pointer-events-none transition-colors"
