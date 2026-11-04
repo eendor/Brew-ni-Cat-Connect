@@ -141,10 +141,16 @@ test("TC-P2-025 — Contact page publishes confirmed visit and rider information
   ).toBeVisible();
 
   const riders = main.getByRole("list", { name: "Rider delivery services" });
+  await expect(riders.getByRole("link").first()).toHaveAccessibleName(
+    "GutomKa Express Kabacan Facebook page",
+  );
   for (const name of [
+    "GutomKa Express Kabacan",
     "Papa's Delivery",
     "Momshie's Pamalengke and Delivery Kabacan",
     "M&S Delivery Express Kabacan",
+    "OZMO Delivery Kabacan 2.0",
+    "Minute Delivery Kabacan",
   ]) {
     await expect(
       riders.getByRole("link", { name: `${name} Facebook page` }),
@@ -153,7 +159,7 @@ test("TC-P2-025 — Contact page publishes confirmed visit and rider information
 
   // every rider logo loads (they are lazy, so bring each into view)
   const logos = riders.locator("img");
-  await expect(logos).toHaveCount(3);
+  await expect(logos).toHaveCount(6);
   for (const logo of await logos.all()) {
     await logo.scrollIntoViewIfNeeded();
     await expect

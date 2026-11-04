@@ -203,7 +203,7 @@ test("TC-P4-023 — a phone can tap through the whole order flow", async ({
     main
       .getByRole("list", { name: "Rider delivery services" })
       .getByRole("link"),
-  ).toHaveCount(3);
+  ).toHaveCount(6);
   await checkTargets("summary");
 
   // the summary holds the order now, so the cart is empty and links back

@@ -95,7 +95,7 @@ Development fixtures, if later needed, will be stored separately from production
 ## 6. Explicit exclusions and constraints
 
 - No existing POS recreation.
-- No in-app delivery, rider booking, fee calculation, or ETA guarantee. The site explains the customer-arranged rider workflow (the customer messages a local rider, who orders at the shop and delivers) and lists the three local rider services; any integrated delivery feature still requires approval and testable requirements.
+- No in-app delivery, rider booking, fee calculation, or ETA guarantee. The site explains the customer-arranged rider workflow (the customer messages a local rider, who orders at the shop and delivers) and lists the six local rider services; any integrated delivery feature still requires approval and testable requirements.
 - No real payment integration until provider, workflow, security, and business policy decisions exist.
 - No AI feature without a defined customer purpose, bounded data access, evaluation criteria, and human-manageable fallback behavior.
 - No production customer or POS data during unapproved development/testing.
