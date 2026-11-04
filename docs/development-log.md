@@ -1359,3 +1359,14 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `feat/more-rider-partners`, PR #90.
 - **Known limitations:** The saved list holds at most 8 services, so two more fit. Until the migration is applied, the live site keeps showing the three saved riders.
 - **Next action:** After the deploy that ships the new logos, apply the migration to the live database and record it.
+
+## 2026-11-04 — Live migrations applied for undo and rider services (FR-085, FR-095)
+
+- **Phase:** Phase 4 (live website content) and Phase 6 (online order status).
+- **Task:** Record two migrations that are now on the live database.
+- **Summary:** `20261103120000_undo_online_order_status.sql` (PR #88) was applied on 2026-11-03. `20261104120000_more_rider_partners.sql` (PR #90) was applied on 2026-11-04, after the production deploy served the three new logos, so no rider card showed a missing image. It followed §8.7 of the database design: PGlite tests, a live try that was rolled back, then one all-or-nothing request with its record. Both are recorded in `supabase_migrations.schema_migrations`.
+- **Files:** `docs/database-design.md` (§12 and §13 say when each was applied), `docs/development-log.md`.
+- **Testing:** Read back from the live database: the `riders` row lists six services with GutomKa Express Kabacan first, `private.site_content_audit` has the change (3 to 6 riders, no account), `anon` can't run `public.undo_online_order_status` and `authenticated` can, and both versions are in `supabase_migrations.schema_migrations`. The live Contact page shows the six riders with their logos and Facebook pages.
+- **Branch / PR:** `docs/live-migrations-undo-riders`, PR #91.
+- **Known limitations:** The "Next action" notes in the 2026-11-03 undo entry and the 2026-11-04 rider entry are kept as history; this entry supersedes them for the two migrations.
+- **Next action:** None for these two migrations.
