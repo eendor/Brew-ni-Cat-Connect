@@ -215,3 +215,77 @@ test("TC-P4-019 — the active category tab follows the page and a clicked tab i
     timeout: 2000,
   });
 });
+
+test("TC-P6-216 — a short menu card is as tall as its content, and the take-out box and cat treats are not listed", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  const row = (
+    id: string,
+    categoryId: string,
+    name: string,
+    options: ReadonlyArray<readonly [string, number]>,
+  ) => ({
+    id,
+    category_id: categoryId,
+    name,
+    flavors: null,
+    variants_json: options.map(([option, price], index) => ({
+      id: `${id}-${index}`,
+      name: option,
+      basePrice: price,
+    })),
+    is_available: true,
+  });
+  await mockMenuResponses(
+    page,
+    [
+      { id: "bites", name: "Cat-Tastic Bites" },
+      { id: "box", name: "Take-out Box" },
+      { id: "treats", name: "Cat Treats" },
+    ],
+    [
+      // a long card and a short one share a row, like Takoyaki and Nachos
+      row(
+        "long",
+        "bites",
+        "Long Bite",
+        Array.from({ length: 16 }, (_, i) => [`Long option ${i + 1}`, 40 + i]),
+      ),
+      row("short", "bites", "Short Bite", [["Nachos + Veggies + Meat", 99]]),
+      row("box", "box", "Take-out Box", [["Regular", 10]]),
+      row("treats", "treats", "Cat Treats", [["Regular", 5]]),
+    ],
+  );
+  await page.goto("/menu");
+
+  // both are sold only at the shop
+  const nav = page.getByRole("navigation", { name: "Menu categories" });
+  await expect(nav.getByRole("link")).toHaveCount(1);
+  await expect(
+    nav.getByRole("link", { name: "Cat-Tastic Bites" }),
+  ).toBeVisible();
+  for (const name of ["Take-out Box", "Cat Treats"]) {
+    await expect(page.getByRole("heading", { name })).toHaveCount(0);
+  }
+
+  const card = (name: string) =>
+    page
+      .locator("article.menu-card")
+      .filter({ has: page.getByRole("heading", { level: 3, name }) });
+  await expect(card("Short Bite")).toBeVisible();
+  const long = await card("Long Bite").boundingBox();
+  const short = await card("Short Bite").boundingBox();
+  expect(long && short).toBeTruthy();
+  expect(short!.height).toBeLessThan(long!.height / 2);
+  // the Add to order button sits right under the options, with no stretched gap
+  const gap = await card("Short Bite").evaluate((article) => {
+    const footer = article.querySelector(".menu-card__footer");
+    const options = footer?.previousElementSibling;
+    return footer && options
+      ? footer.getBoundingClientRect().top -
+          options.getBoundingClientRect().bottom
+      : Number.NaN;
+  });
+  expect(gap).toBeLessThan(2);
+});

@@ -114,6 +114,8 @@ Menu page
 
 Queries are centralized under `src/lib/menu` and `src/lib/supabase`. JSX does not perform ad hoc table reads. CI and production builds do not need a live connection because retrieval begins at browser runtime; missing configuration produces a controlled public error state.
 
+**Update (2026-11-04, PR #92):** after the mapping, `websiteMenu()` leaves out the Take-out Box and Cat Treats, which are sold only at the shop. Both stay in `categories` and `items` for the POS, and the menu facts (the take-out box fee) still read the full menu.
+
 ## 7. Deferred Design Work
 
 Before Phase 3 or Phase 4 database work:

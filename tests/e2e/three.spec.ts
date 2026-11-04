@@ -883,7 +883,8 @@ test("TC-P4-144 — a product the owner adds later floats as a generic 3D model 
   const problems = collectProblems(page);
   const extra = [
     row("live-drinks", "Brown Sugar Boba", [option("boba", "16oz", 85)]),
-    row("live-treats", "Cat Ear Headband", [option("band", "Regular", 120)]),
+    // a bite, since the website no longer lists Cat Treats (TC-P6-214)
+    row("live-bites", "Cheese Sticks", [option("sticks", "Regular", 60)]),
   ];
   await openLiveMenu(page, extra);
   const catalog = mapMenuCatalog(liveCategories, [...liveRows, ...extra]);
@@ -895,7 +896,7 @@ test("TC-P4-144 — a product the owner adds later floats as a generic 3D model 
     throw new Error(`${name} is not on the menu`);
   };
   const drink = find("Brown Sugar Boba");
-  const other = find("Cat Ear Headband");
+  const other = find("Cheese Sticks");
   // neither has a hand-built model: a drink gets a cup, anything else a box
   expect(menuModelSpec(drink.item, drink.category)).toMatchObject({
     kind: "cup",
@@ -952,15 +953,25 @@ test("TC-P4-055 — every drink dialog floats its model", async ({ page }) => {
   expect(problems).toEqual([]);
 });
 
-test("TC-P4-056 — every combo, the take-out box and the cat treats dialog floats its model", async ({
+test("TC-P4-056 — every combo dialog floats its model, and the take-out box and cat treats are not on the website menu", async ({
   page,
 }) => {
   test.setTimeout(600_000);
   const problems = collectProblems(page);
   await openLiveMenu(page);
-  for (const item of liveItems("live-combos", "live-box", "live-treats")) {
-    await showCard(page, item);
+  // both are sold only at the shop (TC-P6-214); TC-P4-040 still checks
+  // their models
+  const nav = page.getByRole("navigation", { name: "Menu categories" });
+  await expect(nav.getByRole("link")).toHaveCount(4);
+  for (const name of ["Take-out Box", "Cat Treats"]) {
+    await expect(nav.getByRole("link", { name: new RegExp(name) })).toHaveCount(
+      0,
+    );
+    await expect(
+      page.getByRole("button", { name: `Order ${name}`, exact: true }),
+    ).toHaveCount(0);
   }
+  for (const item of liveItems("live-combos")) await showCard(page, item);
   expect(problems).toEqual([]);
 });
 

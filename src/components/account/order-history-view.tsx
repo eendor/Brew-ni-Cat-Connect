@@ -285,8 +285,7 @@ export function OrderHistoryView({ initialPage = 1 }: OrderHistoryViewProps) {
             No Orders Yet
           </h2>
           <p className="mt-2 text-sm text-[var(--text-muted)]">
-            You haven’t placed any orders yet. Discover our drinks, snacks, and
-            cat treats!
+            You haven’t placed any orders yet. Discover our drinks and snacks!
           </p>
           <div className="mt-6">
             <Link
