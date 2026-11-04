@@ -87,8 +87,8 @@ export function CartPageView() {
         title="Shopping Cart"
         description={
           <p>
-            Review your selected drinks, snacks, and cat treats. Choose pickup
-            at our shop or have a local rider order and deliver it.
+            Review your selected drinks and snacks. Choose pickup at our shop or
+            have a local rider order and deliver it.
           </p>
         }
       />

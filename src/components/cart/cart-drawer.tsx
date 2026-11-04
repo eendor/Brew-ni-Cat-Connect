@@ -191,8 +191,7 @@ export function CartDrawer() {
                   Your cart is empty
                 </h3>
                 <p className="mt-2 text-sm text-[var(--text-muted)] max-w-xs leading-relaxed">
-                  Explore our drinks, snacks, and cat treats to begin your Brew
-                  ni Cat order.
+                  Explore our drinks and snacks to begin your Brew ni Cat order.
                 </p>
                 <Link
                   href="/menu"

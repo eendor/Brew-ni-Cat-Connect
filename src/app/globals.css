@@ -1756,6 +1756,13 @@ textarea:focus-visible {
  * Menu cards: iOS 27 cards with the shop photo on top, then the name,
  * price, options and the Order button.
  * ------------------------------------------------------------------ */
+/* Each card is as tall as its own content, so a card with no photo or few
+   options doesn't stretch to the tallest card in its row and leave a big gap
+   above its button. */
+.menu-grid {
+  align-items: start;
+}
+
 .menu-card {
   position: relative;
   display: flex;
