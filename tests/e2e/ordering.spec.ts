@@ -113,18 +113,18 @@ test("TC-P3-060 — adds two Takoyaki and validates Rider Delivery checkout", as
   const riderList = main.getByRole("list", {
     name: "Rider delivery services",
   });
-  await expect(riderList.getByRole("link")).toHaveCount(3);
-  await expect(
-    riderList.getByRole("link", { name: /Papa's Delivery/ }),
-  ).toBeVisible();
-  await expect(
-    riderList.getByRole("link", {
-      name: /Momshie's Pamalengke and Delivery Kabacan/,
-    }),
-  ).toBeVisible();
-  await expect(
-    riderList.getByRole("link", { name: /M&S Delivery Express Kabacan/ }),
-  ).toBeVisible();
+  // GutomKa Express Kabacan is listed first
+  await expect(riderList.getByRole("link")).toHaveText([
+    /^GutomKa Express Kabacan/,
+    /^Papa's Delivery/,
+    /^Momshie's Pamalengke and Delivery Kabacan/,
+    /^M&S Delivery Express Kabacan/,
+    /^OZMO Delivery Kabacan 2\.0/,
+    /^Minute Delivery Kabacan/,
+  ]);
+  for (const link of await riderList.getByRole("link").all()) {
+    await expect(link).toBeVisible();
+  }
   await expect(
     main.getByRole("link", { name: "Message on Facebook" }),
   ).toHaveCount(0);
