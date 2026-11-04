@@ -365,3 +365,18 @@ File: `supabase/migrations/20261103120000_undo_online_order_status.sql`. Undo: `
 
 - The rollback drops the function. Orders, history and voided sales stay as they are, and the audit log keeps accepting `online-order-undo` so rows already written stay valid.
 - TC-P6-200 to TC-P6-204 run on PGlite (`tests/database/online-order-undo.test.ts`).
+
+## 13. More Rider Services (Phase 4 — 2026-11-04)
+
+File: `supabase/migrations/20261104120000_more_rider_partners.sql`. Undo: `supabase/rollbacks/20261104120000_more_rider_partners.sql`. Covers FR-085.
+
+### 13.1 Change to `public.site_content`
+
+- Updates the `riders` row only. GutomKa Express Kabacan goes before the saved riders, and OZMO Delivery Kabacan 2.0 and Minute Delivery Kabacan go after them, so the six match `src/lib/site-content/fallback-shop.ts`.
+- It adds to the saved list instead of replacing it, so the owner's changes from the POS web app stay. A service whose Facebook page is already listed isn't added again.
+- `private.check_site_content()` still checks the result (at most 8 riders, each with an https link and an `/images/...` logo), and `private.site_content_audit` records the change with no account. No table, function, grant or policy changes.
+
+### 13.2 Undo and tests
+
+- The rollback removes only those three services, matched by Facebook page; every other rider stays in its order.
+- TC-P6-211 to TC-P6-213 run on PGlite (`tests/database/more-rider-partners.test.ts`).
