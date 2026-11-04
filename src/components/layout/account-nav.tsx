@@ -90,6 +90,15 @@ export function AccountNav() {
           ) : null}
           <ul className="space-y-1">
             <li>
+              <Link
+                href="/account/orders"
+                onClick={() => setIsOpen(false)}
+                className="flex min-h-11 w-full items-center rounded-[var(--shape-md)] px-3 py-2 text-left text-sm font-medium text-[var(--text-strong)] transition-colors hover:bg-[var(--glass-hover)]"
+              >
+                Order History
+              </Link>
+            </li>
+            <li>
               <button
                 type="button"
                 onClick={async () => {
