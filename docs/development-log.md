@@ -1335,3 +1335,14 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `feat/split-payment` (POS), `docs/split-payment` (Connect).
 - **Known limitations:** A split is one cash part and one GCash part; three or more parts aren't supported.
 - **Next action:** Release the POS build and add the daily cash balance (FR-097).
+
+## 2026-11-04 — Implement live order tracking (FR-044 to FR-049)
+
+- **Phase:** Phase 5 (Live Order Tracking & History, Week 2).
+- **Task:** Implement live order tracking, status progression, Realtime subscription with fallback, server-side ownership validation, and customer-safe rejected order handling.
+- **Summary:** Built `OrderStatusTracker` and the `useOrderStatus` hook to support live updates via Supabase Realtime broadcast channels on the order's topic (`order:*`). Integrated server-side customer ownership checks for authenticated tracking (FR-044) and URL-hash possession token validation for guest tracking (FR-045). Visualized 5 pipeline stages (`pending`, `accepted`, `preparing`, `ready`, `completed`) with formatted timestamps and history (FR-046). Added Realtime listeners on `status-changed` (FR-047) with unmount cleanup and auto-termination on final statuses (`isFinalOrderStatus`). Implemented 30s background polling and a manual Refresh button when Realtime is unavailable or disconnected (FR-048). Designed a customer-safe rejected order alert with shop rejection reason and actionable next steps linking back to the menu (FR-049).
+- **Files:** `src/lib/orders/use-order-status.ts`, `src/lib/orders/use-order-updates.ts`, `src/lib/orders/fetch-order.ts`, `src/components/orders/order-status-tracker.tsx`, `src/app/orders/[reference]/page.tsx`, `tests/unit/use-order-status.test.ts`, `tests/unit/order-status-tracker.test.tsx`, `tests/unit/order-confirmation-page.test.tsx`, `tests/unit/fetch-order.test.ts`, `tests/e2e/order-tracking.spec.ts`, `docs/functional-requirements.md`, `docs/test-cases.md`, `docs/execution-paths.md`, `docs/development-log.md`.
+- **Testing:** 49 order unit tests passed (`npm run test`), 2 Playwright E2E tests passed (`npx playwright test tests/e2e/order-tracking.spec.ts`), ESLint passed with 0 warnings (`npm run lint`), TypeScript passed (`npm run typecheck`), Prettier passed (`npm run format:check`), and Next.js production build succeeded (`npm run build`). Full visual evidence captured in `docs/evidence/phase-5/order-tracking/`.
+- **Branch / PR:** `feat/p5-order-tracking`.
+- **Known limitations:** WebSocket Realtime channels require an active network; if Realtime drops, the 30-second polling fallback and manual Refresh button ensure current order status is always retrievable.
+- **Next action:** Submit PR for review by Rodnee or Van.

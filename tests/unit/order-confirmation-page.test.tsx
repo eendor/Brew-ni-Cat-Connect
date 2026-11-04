@@ -1,8 +1,49 @@
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const fetchOrder = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/orders/fetch-order", () => ({ fetchOrder }));
+
+const mockAuth = vi.hoisted(() => ({
+  user: null as null | { id: string; email: string },
+  isLoading: false,
+}));
+vi.mock("@/context/auth-context", () => ({
+  useAuth: () => mockAuth,
+}));
+
+// A fake Realtime channel for simulating status changes
+const realtime = vi.hoisted(() => {
+  const state = {
+    handler: null as null | (() => void),
+    topic: "",
+    removed: 0,
+  };
+  const channel = {
+    on: (_type: string, _filter: unknown, handler: () => void) => {
+      state.handler = handler;
+      return channel;
+    },
+    subscribe: (callback?: (status: string) => void) => {
+      if (callback) callback("SUBSCRIBED");
+      return channel;
+    },
+  };
+  const client = {
+    channel: (topic: string) => {
+      state.topic = topic;
+      return channel;
+    },
+    removeChannel: async () => {
+      state.removed += 1;
+    },
+  };
+  return { state, client };
+});
+vi.mock("@/lib/supabase/public-client", () => ({
+  getPublicSupabaseClient: () => realtime.client,
+}));
+
 vi.mock("next/navigation", () => ({
   useParams: () => ({ reference: "BNC-7K2Q9F" }),
 }));
@@ -42,6 +83,11 @@ const ORDER: OrderView = {
 describe("Order confirmation page", () => {
   beforeEach(() => {
     fetchOrder.mockReset();
+    mockAuth.user = null;
+    mockAuth.isLoading = false;
+    realtime.state.handler = null;
+    realtime.state.topic = "";
+    realtime.state.removed = 0;
     window.location.hash = `#token=${TOKEN}`;
   });
 
@@ -71,8 +117,10 @@ describe("Order confirmation page", () => {
     ).toBeInTheDocument();
   });
 
-  it("TC-P4-135 — shows not found without a request when the link has no token", async () => {
+  it("TC-P4-135 — shows not found without a request when a guest link has no token", async () => {
     window.location.hash = "";
+    mockAuth.user = null;
+    mockAuth.isLoading = false;
     render(<OrderConfirmationPage />);
 
     expect(
@@ -91,5 +139,60 @@ describe("Order confirmation page", () => {
     expect(
       screen.getByRole("button", { name: "Try Again" }),
     ).toBeInTheDocument();
+  });
+
+  it("TC-P4-263 — shows the shop's status change without a reload, then stops listening (FR-046, FR-047)", async () => {
+    fetchOrder
+      .mockResolvedValueOnce(ORDER)
+      .mockResolvedValueOnce({ ...ORDER, status: "ready" })
+      .mockResolvedValueOnce({ ...ORDER, status: "completed" });
+
+    render(<OrderConfirmationPage />);
+    expect((await screen.findAllByText("pending")).length).toBeGreaterThan(0);
+    expect(realtime.state.topic).toBe(ORDER.realtimeTopic);
+
+    await act(async () => {
+      realtime.state.handler?.();
+    });
+    expect((await screen.findAllByText("ready")).length).toBeGreaterThan(0);
+    expect(fetchOrder).toHaveBeenLastCalledWith("BNC-7K2Q9F", TOKEN);
+
+    await act(async () => {
+      realtime.state.handler?.();
+    });
+    expect((await screen.findAllByText("completed")).length).toBeGreaterThan(0);
+    // Terminal status stops listening
+    expect(realtime.state.removed).toBeGreaterThan(0);
+  });
+
+  it("TC-P5-019 — lets authenticated customer view their own order without a hash token (FR-044)", async () => {
+    window.location.hash = "";
+    mockAuth.user = { id: "user-123", email: "customer@example.com" };
+    mockAuth.isLoading = false;
+
+    fetchOrder.mockResolvedValueOnce(ORDER);
+
+    render(<OrderConfirmationPage />);
+
+    expect(
+      await screen.findByRole("heading", { name: "Order Placed" }),
+    ).toBeInTheDocument();
+    expect(fetchOrder).toHaveBeenCalledWith("BNC-7K2Q9F", null);
+  });
+
+  it("TC-P5-020 — fails cross-account tracking attempts when order does not belong to authenticated user (FR-044)", async () => {
+    window.location.hash = "";
+    mockAuth.user = { id: "user-456", email: "other@example.com" };
+    mockAuth.isLoading = false;
+
+    // Server-side ownership validation returns null for unauthorized user
+    fetchOrder.mockResolvedValueOnce(null);
+
+    render(<OrderConfirmationPage />);
+
+    expect(
+      await screen.findByRole("heading", { name: "Order Not Found" }),
+    ).toBeInTheDocument();
+    expect(fetchOrder).toHaveBeenCalledWith("BNC-7K2Q9F", null);
   });
 });

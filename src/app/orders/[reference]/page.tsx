@@ -2,17 +2,19 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import { OrderStatusTracker } from "@/components/orders/order-status-tracker";
 import { siteConfig } from "@/config/site";
+import { useAuth } from "@/context/auth-context";
 import { useShopFacts } from "@/context/shop-facts-context";
 import { formatPrice } from "@/lib/menu/format-price";
+import { fetchOrder } from "@/lib/orders/fetch-order";
+import { readTrackingTokenFromHash } from "@/lib/orders/order-link";
+import { isOrderReference, type OrderView } from "@/lib/orders/types";
 import {
   localityLine,
   streetLine,
   takeoutBoxText,
 } from "@/lib/site-content/format";
-import { fetchOrder } from "@/lib/orders/fetch-order";
-import { readTrackingTokenFromHash } from "@/lib/orders/order-link";
-import { isOrderReference, OrderView } from "@/lib/orders/types";
 
 type PageState =
   | { status: "loading" }
@@ -22,10 +24,12 @@ type PageState =
 
 export default function OrderConfirmationPage() {
   const { address, takeoutBoxPrice } = useShopFacts();
+  const { user, isLoading: isAuthLoading } = useAuth();
   const params = useParams();
   const referenceParam =
     typeof params.reference === "string" ? params.reference : "";
   const [state, setState] = useState<PageState>({ status: "loading" });
+  const [trackingToken, setTrackingToken] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadOrder() {
@@ -34,11 +38,20 @@ export default function OrderConfirmationPage() {
         return;
       }
 
+      // Guest access requires tracking token from hash (FR-045)
       const token = readTrackingTokenFromHash(window.location.hash);
       if (!token) {
-        setState({ status: "not-found" });
-        return;
+        // Authenticated customer access (FR-044)
+        if (isAuthLoading) {
+          return; // Wait for auth session restoration
+        }
+        if (!user) {
+          setState({ status: "not-found" });
+          return;
+        }
       }
+
+      setTrackingToken(token);
 
       try {
         const orderData = await fetchOrder(referenceParam, token);
@@ -56,8 +69,8 @@ export default function OrderConfirmationPage() {
       }
     }
 
-    loadOrder();
-  }, [referenceParam]);
+    void loadOrder();
+  }, [referenceParam, isAuthLoading, user]);
 
   if (state.status === "loading") {
     return (
@@ -134,7 +147,14 @@ export default function OrderConfirmationPage() {
       </header>
 
       <section className="space-y-6">
-        {/* Renier's live order tracker goes here in week 2. */}
+        {/* Live order status tracker (FR-044 to FR-049) */}
+        <OrderStatusTracker
+          order={order}
+          trackingToken={trackingToken}
+          onOrderUpdate={(updated) =>
+            setState({ status: "success", order: updated })
+          }
+        />
 
         {/* Customer Details Card */}
         <div className="ios-card p-6">

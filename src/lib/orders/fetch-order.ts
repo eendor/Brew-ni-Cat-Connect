@@ -1,8 +1,10 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { getAuthSupabaseClient } from "@/lib/supabase/auth-client";
 import { getPublicSupabaseClient } from "@/lib/supabase/public-client";
 import {
   isOrderReference,
   isTrackingToken,
-  OrderView,
+  type OrderView,
 } from "@/lib/orders/types";
 
 // MOCK DATA — FOR DEVELOPMENT ONLY. While Place order is off on the live
@@ -54,9 +56,18 @@ const MOCK_ORDER: OrderView = {
 
 export async function fetchOrder(
   reference: string,
-  trackingToken: string,
+  trackingToken?: string | null,
+  client?: SupabaseClient,
 ): Promise<OrderView | null> {
-  if (!isOrderReference(reference) || !isTrackingToken(trackingToken)) {
+  if (!isOrderReference(reference)) {
+    return null;
+  }
+
+  if (
+    trackingToken !== undefined &&
+    trackingToken !== null &&
+    !isTrackingToken(trackingToken)
+  ) {
     return null;
   }
 
@@ -64,10 +75,18 @@ export async function fetchOrder(
     return MOCK_ORDER;
   }
 
-  const supabase = getPublicSupabaseClient();
+  let supabase = client;
+  if (!supabase) {
+    try {
+      supabase = getAuthSupabaseClient();
+    } catch {
+      supabase = getPublicSupabaseClient();
+    }
+  }
+
   const { data, error } = await supabase.rpc("get_online_order", {
     p_reference: reference,
-    p_tracking_token: trackingToken,
+    p_tracking_token: trackingToken ?? null,
   });
 
   // A failed request throws, so the page shows its error state. No data

@@ -46,4 +46,30 @@ describe("fetchOrder", () => {
     await expect(fetchOrder(REFERENCE, "short_token")).resolves.toBeNull();
     expect(rpc).not.toHaveBeenCalled();
   });
+
+  it("TC-P5-001 — allows authenticated customer without token to fetch order (FR-044)", async () => {
+    rpc.mockResolvedValue({ data: ORDER, error: null });
+
+    await expect(fetchOrder(REFERENCE, null)).resolves.toBe(ORDER);
+    expect(rpc).toHaveBeenCalledWith("get_online_order", {
+      p_reference: REFERENCE,
+      p_tracking_token: null,
+    });
+  });
+
+  it("TC-P5-002 — passes explicit client if supplied", async () => {
+    const customRpc = vi.fn().mockResolvedValue({ data: ORDER, error: null });
+    const customClient = {
+      rpc: customRpc,
+    } as unknown as import("@supabase/supabase-js").SupabaseClient;
+
+    await expect(fetchOrder(REFERENCE, TOKEN, customClient)).resolves.toBe(
+      ORDER,
+    );
+    expect(customRpc).toHaveBeenCalledWith("get_online_order", {
+      p_reference: REFERENCE,
+      p_tracking_token: TOKEN,
+    });
+    expect(rpc).not.toHaveBeenCalled();
+  });
 });
