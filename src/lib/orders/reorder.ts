@@ -160,9 +160,13 @@ export function reorderItems(
   }
 
   const notices = [...unavailableItems, ...priceChangedItems];
+  const addedQuantity = addedItems.reduce(
+    (total, item) => total + item.quantity,
+    0,
+  );
   const successMessage =
-    addedItems.length > 0
-      ? `Added ${addedItems.length} item${addedItems.length === 1 ? "" : "s"} to your cart.`
+    addedQuantity > 0
+      ? `Added ${addedQuantity} item${addedQuantity === 1 ? "" : "s"} to your cart.`
       : null;
 
   return {

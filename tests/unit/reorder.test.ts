@@ -92,7 +92,7 @@ describe("Reorder logic (FR-041)", () => {
     expect(result.addedCount).toBe(1);
     expect(result.unavailableItems).toHaveLength(0);
     expect(result.priceChangedItems).toHaveLength(0);
-    expect(result.successMessage).toBe("Added 1 item to your cart.");
+    expect(result.successMessage).toBe("Added 2 items to your cart.");
     expect(addItemMock).toHaveBeenCalledWith(sampleCatalog, {
       itemId: "special-brew",
       variantId: "large-16",

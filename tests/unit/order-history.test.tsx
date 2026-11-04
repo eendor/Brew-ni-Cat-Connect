@@ -297,7 +297,7 @@ describe("OrderHistoryView (FR-039, FR-041)", () => {
     expect(
       await screen.findByRole("region", { name: "Reorder notices" }),
     ).toBeInTheDocument();
-    expect(screen.getByText(/Added 1 item to your cart/i)).toBeInTheDocument();
+    expect(screen.getByText(/Added 2 items to your cart/i)).toBeInTheDocument();
     expect(screen.getByText(/Price updates:/i)).toBeInTheDocument();
     expect(
       screen.getByText(

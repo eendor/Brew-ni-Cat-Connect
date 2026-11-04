@@ -243,6 +243,9 @@ async function capture(page: Page, filename: string) {
   await page.screenshot({
     path: `${EVIDENCE_DIR}/${filename}`,
     fullPage: true,
+    // Cover the footer's "Find us" column so the shop's phone number and
+    // email address stay out of committed evidence.
+    mask: [page.getByRole("region", { name: "Find us" })],
   });
 }
 
@@ -338,7 +341,7 @@ test.describe("Customer order history and reorder", () => {
 
     const notices = page.getByRole("region", { name: "Reorder notices" });
     await expect(notices).toBeVisible();
-    await expect(notices).toContainText("Added 1 item to your cart.");
+    await expect(notices).toContainText("Added 2 items to your cart.");
     await expect(notices).toContainText("Price updates:");
     await expect(notices).toContainText(
       "Price for Brew Special Coffee (16 oz) has changed from ₱140 to ₱150.",
