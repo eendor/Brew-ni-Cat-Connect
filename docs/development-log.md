@@ -1403,3 +1403,14 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `test/evidence-footer-unmasked`, PR #96.
 - **Known limitations:** None.
 - **Next action:** None.
+
+## 2026-11-05 — Planned: daily cash count, ratings and reviews, cat characters (FR-097–FR-099)
+
+- **Phase:** Planning (Phases 5, 6 and 9).
+- **Task:** Record the owner's requests for ratings and reviews and for cat characters, and the daily cash count, as planned requirements.
+- **Summary:** Added FR-097 (the cash counted at closing, over or short of the Z-Reading's expected drawer), FR-098 (customer ratings and reviews on the website) and FR-099 (cat characters made from the owner's photos, walking across the website). All three are Planned, and their open questions are in §12 of `docs/functional-requirements.md`. The docs validator now expects FR-001 to FR-099. Two Backlog cards on Trello cover FR-098 and FR-099. This plans two of the owner's 2026-10-30 requests that earlier entries listed as not planned yet.
+- **Files:** `docs/functional-requirements.md`, `scripts/validate_phase0_docs.py`, `docs/development-log.md`.
+- **Testing:** `python3 scripts/validate_phase0_docs.py`: `FR_IDS=99 (001-099)`, `NFR_IDS=40 (001-040)`, `ERRORS=0`, `PHASE0_DOC_VALIDATION=PASS`. `npx prettier --check .` passes. No application code or test changed, so the Vitest and Playwright runs are left to CI.
+- **Branch / PR:** `docs/plan-reviews-cat-characters`, PR #97.
+- **Known limitations:** Nothing is built yet. FR-098 waits on the owner's answers to its four questions, and FR-099 on the photos of the shop's cats.
+- **Next action:** Start FR-098 once the owner answers, and FR-099 once the photos arrive.
