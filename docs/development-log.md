@@ -1392,3 +1392,14 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `feat/website-hide-bottled-water`, PR #95.
 - **Known limitations:** The same as for the Take-out Box and Cat Treats: the database still takes an order line for Bottled Water if an order is sent to it directly instead of through the website, and the server prices it from the saved price. It is matched by name, so if the owner renames it in the POS, the website lists it again until the new name is added to `isShopOnlyName()`.
 - **Next action:** None.
+
+## 2026-11-05 — Evidence screenshots show the footer (FR-039, FR-041)
+
+- **Phase:** Phase 5 (order history evidence).
+- **Task:** Stop masking the footer's "Find us" column in evidence screenshots.
+- **Summary:** `capture()` in `tests/e2e/order-history.spec.ts` no longer masks the footer's "Find us" column. I asked for that mask in the #87 review, but the column shows the shop's public phone number and email address, the same on every page, so the mask only left a pink box. The four order history screenshots (TC-P5-030 to TC-P5-033) were retaken without it; the masked versions are in PR #87.
+- **Files:** `tests/e2e/order-history.spec.ts`, `docs/test-cases.md`, `docs/development-log.md`, `docs/evidence/phase-5/screenshots/` (four PNGs).
+- **Testing:** `NODE_OPTIONS=--no-experimental-webstorage npx vitest run`: Test Files 61 passed (61), Tests 490 passed (490). `npx tsc --noEmit -p .`, `npx eslint . --max-warnings=0`, `npx prettier --check .` and `python3 scripts/validate_phase0_docs.py` pass. `npm run build`, then `CI=1 npx playwright test --project=chromium`: 28 passed, 1 skipped. `CAPTURE_EVIDENCE=1 CI=1 npx playwright test tests/e2e/order-history.spec.ts --project=chromium`: 4 passed, and the four screenshots show the footer with no mask.
+- **Branch / PR:** `test/evidence-footer-unmasked`, PR #96.
+- **Known limitations:** None.
+- **Next action:** None.
