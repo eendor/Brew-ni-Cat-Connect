@@ -102,7 +102,7 @@ describe("Place order from the browser", () => {
     ).toEqual(serverError);
   });
 
-  it("passes session token in Authorization header and returns session-expired error", async () => {
+  it("TC-P4-277 — passes session token in Authorization header and returns session-expired error", async () => {
     const expiredFailure = {
       ok: false,
       reason: "session-expired",

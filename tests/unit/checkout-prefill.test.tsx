@@ -162,7 +162,7 @@ describe("Checkout Prefill for Signed-in Customers vs Guest Checkout (FR-023)", 
     expect(phoneInput).toHaveValue("");
   });
 
-  it("clears prefilled name and phone when customer signs out while checkout is open (FR-033)", async () => {
+  it("TC-P4-276 — clears prefilled name and phone when customer signs out while checkout is open (FR-033)", async () => {
     let authCallback: ((event: string, session: unknown) => void) | null = null;
     const testProfile: CustomerProfile = {
       userId: "customer-123",

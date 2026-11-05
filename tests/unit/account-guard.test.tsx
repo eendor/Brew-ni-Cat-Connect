@@ -125,17 +125,17 @@ describe("Account Page Guard (FR-036)", () => {
 });
 
 describe("safeReturnTo open redirect protection", () => {
-  it("rejects protocol-relative and backslash bypass URLs", () => {
+  it("TC-P4-274 — rejects protocol-relative, backslash, and tab bypass URLs", () => {
     expect(safeReturnTo("//evil.example")).toBe("/");
     expect(safeReturnTo("/\\evil.example")).toBe("/");
-    expect(safeReturnTo("/\\t/evil.example")).toBe("/");
+    expect(safeReturnTo("/\t/evil.example")).toBe("/");
     expect(safeReturnTo("https://evil.example")).toBe("/");
     expect(safeReturnTo("javascript:alert(1)")).toBe("/");
     expect(safeReturnTo(null)).toBe("/");
     expect(safeReturnTo("")).toBe("/");
   });
 
-  it("permits safe local relative paths", () => {
+  it("TC-P4-275 — permits safe local relative paths", () => {
     expect(safeReturnTo("/account/profile")).toBe("/account/profile");
     expect(safeReturnTo("/account/orders?page=2#heading")).toBe(
       "/account/orders?page=2#heading",
