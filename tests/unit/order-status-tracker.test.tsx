@@ -65,7 +65,7 @@ describe("OrderStatusTracker component", () => {
   ];
 
   for (const status of statuses) {
-    it(`TC-P5-012.${status} — correctly renders and marks stage '${status}' as current (FR-046)`, () => {
+    it(`TC-P5-051.${status} — correctly renders and marks stage '${status}' as current (FR-046)`, () => {
       const orderForStatus: OrderView = {
         ...BASE_ORDER,
         status,
@@ -95,7 +95,7 @@ describe("OrderStatusTracker component", () => {
     });
   }
 
-  it("TC-P5-013 — visually distinguishes completed, current, and upcoming stages (FR-046)", () => {
+  it("TC-P5-052 — visually distinguishes completed, current, and upcoming stages (FR-046)", () => {
     const preparingOrder: OrderView = {
       ...BASE_ORDER,
       status: "preparing",
@@ -132,7 +132,7 @@ describe("OrderStatusTracker component", () => {
     expect(readyStage).not.toHaveAttribute("aria-current");
   });
 
-  it("TC-P5-014 — displays timestamps on stages and status history (FR-046)", () => {
+  it("TC-P5-053 — displays timestamps on stages and status history (FR-046)", () => {
     const orderWithHistory: OrderView = {
       ...BASE_ORDER,
       status: "accepted",
@@ -162,7 +162,7 @@ describe("OrderStatusTracker component", () => {
     ).toBeInTheDocument();
   });
 
-  it("TC-P5-015 — renders rejected order with reason and recommended next action (FR-049)", () => {
+  it("TC-P5-054 — renders rejected order with reason and recommended next action (FR-049)", () => {
     const rejectedOrder: OrderView = {
       ...BASE_ORDER,
       status: "rejected",
@@ -197,7 +197,7 @@ describe("OrderStatusTracker component", () => {
     ).toBeInTheDocument();
   });
 
-  it("TC-P5-016 — shows manual refresh button and offline indicator when Realtime disconnected (FR-048)", async () => {
+  it("TC-P5-055 — shows manual refresh button and offline indicator when Realtime disconnected (FR-048)", async () => {
     const mockRefresh = vi.fn();
     mockUseOrderStatus.mockReturnValue({
       order: BASE_ORDER,
@@ -220,7 +220,7 @@ describe("OrderStatusTracker component", () => {
     expect(mockRefresh).toHaveBeenCalledTimes(1);
   });
 
-  it("TC-P5-017 — renders loading state cleanly", () => {
+  it("TC-P5-056 — renders loading state cleanly", () => {
     mockUseOrderStatus.mockReturnValue({
       order: null,
       isRealtimeConnected: false,
@@ -234,7 +234,7 @@ describe("OrderStatusTracker component", () => {
     expect(screen.getByTestId("order-tracker-loading")).toBeInTheDocument();
   });
 
-  it("TC-P5-018 — renders error state cleanly with retry option", async () => {
+  it("TC-P5-057 — renders error state cleanly with retry option", async () => {
     const mockRefresh = vi.fn();
     mockUseOrderStatus.mockReturnValue({
       order: null,

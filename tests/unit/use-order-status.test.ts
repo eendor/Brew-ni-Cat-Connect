@@ -87,7 +87,7 @@ describe("useOrderStatus hook", () => {
     vi.useRealTimers();
   });
 
-  it("TC-P5-004 — successfully subscribes to the order's Realtime topic (FR-047)", () => {
+  it("TC-P5-043 — successfully subscribes to the order's Realtime topic (FR-047)", () => {
     const { result } = renderHook(() =>
       useOrderStatus(BASE_ORDER, TOKEN, undefined, mockClient),
     );
@@ -102,7 +102,7 @@ describe("useOrderStatus hook", () => {
     expect(result.current.isRealtimeConnected).toBe(true);
   });
 
-  it("TC-P5-005 — refetches and updates order when status-changed broadcast arrives (FR-046, FR-047)", async () => {
+  it("TC-P5-044 — refetches and updates order when status-changed broadcast arrives (FR-046, FR-047)", async () => {
     const updatedOrder: OrderView = {
       ...BASE_ORDER,
       status: "preparing",
@@ -132,7 +132,7 @@ describe("useOrderStatus hook", () => {
     expect(onOrder).toHaveBeenCalledWith(updatedOrder);
   });
 
-  it("TC-P5-006 — stops Realtime listening and cleans up on final order status (completed/rejected/cancelled)", async () => {
+  it("TC-P5-045 — stops Realtime listening and cleans up on final order status (completed/rejected/cancelled)", async () => {
     const completedOrder: OrderView = {
       ...BASE_ORDER,
       status: "completed",
@@ -146,7 +146,7 @@ describe("useOrderStatus hook", () => {
     expect(result.current.isRealtimeConnected).toBe(false);
   });
 
-  it("TC-P5-007 — handles Realtime unavailable and connection failure gracefully (FR-048)", () => {
+  it("TC-P5-046 — handles Realtime unavailable and connection failure gracefully (FR-048)", () => {
     mockChannel.subscribe.mockImplementationOnce(
       (callback?: (status: string) => void) => {
         if (callback) {
@@ -163,7 +163,7 @@ describe("useOrderStatus hook", () => {
     expect(result.current.isRealtimeConnected).toBe(false);
   });
 
-  it("TC-P5-008 — manual refresh refetches order status and handles refreshing state (FR-048)", async () => {
+  it("TC-P5-047 — manual refresh refetches order status and handles refreshing state (FR-048)", async () => {
     const updatedOrder: OrderView = {
       ...BASE_ORDER,
       status: "ready",
@@ -183,7 +183,7 @@ describe("useOrderStatus hook", () => {
     expect(result.current.isRefreshing).toBe(false);
   });
 
-  it("TC-P5-009 — automatically refreshes order every 30 seconds when active (FR-048)", async () => {
+  it("TC-P5-048 — automatically refreshes order every 30 seconds when active (FR-048)", async () => {
     fetchOrder.mockResolvedValue(BASE_ORDER);
 
     renderHook(() => useOrderStatus(BASE_ORDER, TOKEN, undefined, mockClient));
@@ -203,7 +203,7 @@ describe("useOrderStatus hook", () => {
     expect(fetchOrder).toHaveBeenCalledTimes(2);
   });
 
-  it("TC-P5-010 — unmount properly cleans up channel subscription and timers", () => {
+  it("TC-P5-049 — unmount properly cleans up channel subscription and timers", () => {
     const { unmount } = renderHook(() =>
       useOrderStatus(BASE_ORDER, TOKEN, undefined, mockClient),
     );
@@ -213,7 +213,7 @@ describe("useOrderStatus hook", () => {
     expect(mockClient.removeChannel).toHaveBeenCalledWith(mockChannel);
   });
 
-  it("TC-P5-011 — ignores subscription for invalid realtimeTopic", () => {
+  it("TC-P5-050 — ignores subscription for invalid realtimeTopic", () => {
     const invalidTopicOrder = {
       ...BASE_ORDER,
       realtimeTopic: "invalid_topic",

@@ -165,7 +165,7 @@ describe("Order confirmation page", () => {
     expect(realtime.state.removed).toBeGreaterThan(0);
   });
 
-  it("TC-P5-019 — lets authenticated customer view their own order without a hash token (FR-044)", async () => {
+  it("TC-P5-058 — lets authenticated customer view their own order without a hash token (FR-044)", async () => {
     window.location.hash = "";
     mockAuth.user = { id: "user-123", email: "customer@example.com" };
     mockAuth.isLoading = false;
@@ -180,7 +180,7 @@ describe("Order confirmation page", () => {
     expect(fetchOrder).toHaveBeenCalledWith("BNC-7K2Q9F", null);
   });
 
-  it("TC-P5-020 — fails cross-account tracking attempts when order does not belong to authenticated user (FR-044)", async () => {
+  it("TC-P5-059 — fails cross-account tracking attempts when order does not belong to authenticated user (FR-044)", async () => {
     window.location.hash = "";
     mockAuth.user = { id: "user-456", email: "other@example.com" };
     mockAuth.isLoading = false;

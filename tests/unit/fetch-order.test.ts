@@ -50,7 +50,7 @@ describe("fetchOrder", () => {
     expect(rpc).not.toHaveBeenCalled();
   });
 
-  it("TC-P5-001 — allows authenticated customer without token to fetch order (FR-044)", async () => {
+  it("TC-P5-040 — allows authenticated customer without token to fetch order (FR-044)", async () => {
     const authRpc = vi.fn().mockResolvedValue({ data: ORDER, error: null });
     getAuthSupabaseClient.mockReturnValue({ rpc: authRpc });
 
@@ -63,7 +63,7 @@ describe("fetchOrder", () => {
     expect(rpc).not.toHaveBeenCalled();
   });
 
-  it("TC-P5-002 — passes explicit client if supplied", async () => {
+  it("TC-P5-041 — passes explicit client if supplied", async () => {
     const customRpc = vi.fn().mockResolvedValue({ data: ORDER, error: null });
     const customClient = {
       rpc: customRpc,

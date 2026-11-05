@@ -38,7 +38,7 @@ function makeOrder(status: string, rejectionReason: string | null = null) {
 }
 
 test.describe("Live Order Tracking E2E", () => {
-  test("TC-P5-022 — verifies live order progresses across statuses without full reload (FR-046, FR-047, FR-048)", async ({
+  test("TC-P5-061 — verifies live order progresses across statuses without full reload (FR-046, FR-047, FR-048)", async ({
     page,
   }) => {
     let currentStatus = "pending";
@@ -110,7 +110,7 @@ test.describe("Live Order Tracking E2E", () => {
     await expect(historyList).toContainText("Completed");
   });
 
-  test("TC-P5-023 — displays customer-safe rejected order banner with reason and next steps (FR-049)", async ({
+  test("TC-P5-062 — displays customer-safe rejected order banner with reason and next steps (FR-049)", async ({
     page,
   }) => {
     const rejectionReason = "Matcha powder temporarily out of stock.";
