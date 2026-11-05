@@ -1414,3 +1414,14 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `docs/plan-reviews-cat-characters`, PR #97.
 - **Known limitations:** Nothing is built yet. FR-098 waits on the owner's answers to its four questions, and FR-099 on the photos of the shop's cats.
 - **Next action:** Start FR-098 once the owner answers, and FR-099 once the photos arrive.
+
+## 2026-11-05 — Fries mixes of up to 3 flavors (FR-027, FR-082)
+
+- **Phase:** Phase 4 (online ordering).
+- **Task:** Let fries mix up to 3 flavors instead of 2 on the website, in the database and on the Android POS.
+- **Summary:** The shop sells fries with 2 or 3 flavors. `MAX_MIXED_FLAVORS` is now 3, the order dialog's chip reads "Mix up to 3 flavors", and `20261105120000_three_flavor_mixes.sql` replaces `private.resolve_unit_price` so the database accepts a 3-flavor mix. A mix still costs the size price, or the dearest flavor in it when the size prices flavors differently, and mixing stays fries only. A 4-flavor mix is refused as `unknown-flavor`. POS PR #24 makes the same change on the tablet, whose price and stock code already handled a mix of any length. ADR-027 records the decision and supersedes ADR-025's 2-flavor limit. The migration goes on the live database before the website change merges, since it only widens what the database accepts.
+- **Files:** `src/lib/ordering/cart-pricing.ts`, `src/components/menu/menu-item-order-dialog.tsx`, `supabase/migrations/20261105120000_three_flavor_mixes.sql`, `supabase/rollbacks/20261105120000_three_flavor_mixes.sql`, `tests/unit/mixed-flavors.test.ts`, `tests/unit/menu-order-dialog.test.tsx`, `tests/database/mixed-flavors.test.ts`, `tests/e2e/menu.spec.ts`, `docs/evidence/phase-4/three-flavor-mixes/fries-mix-dialog.png`, `docs/database-design.md`, `docs/decisions.md`, `docs/functional-requirements.md`, `docs/test-cases.md`, `docs/development-log.md`.
+- **Testing:** `npx vitest run`: 61 files, 494 tests passed. `npx playwright test --project=chromium` on a production build: 29 passed, 1 skipped. `python3 scripts/validate_phase0_docs.py` (`PHASE0_DOC_VALIDATION=PASS`), `npx tsc --noEmit`, `npx eslint .` and `npx prettier --check .` pass. POS: `sh gradlew :app:testDebugUnitTest :app:compileReleaseKotlin`, 90 tests, 0 failures (TC-P6-221).
+- **Branch / PR:** `feat/three-flavor-mixes`, PR #98; POS PR #24.
+- **Known limitations:** Until the tablet installs the POS update, its product sheet allows only 2 picks. It already prices 3-flavor website orders and deducts their stock correctly.
+- **Next action:** Release POS build 10145 with this change.

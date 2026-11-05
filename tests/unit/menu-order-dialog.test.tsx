@@ -67,12 +67,33 @@ const sampleUnavailableItem: MenuItem = {
   ],
 };
 
+const sampleFriesItem: MenuItem = {
+  id: "bite_fries",
+  name: "Fries",
+  availability: "available",
+  flavors: ["BBQ Scratch", "Cheesy Purr", "Sour Cream", "Spicy Claw"],
+  variants: [
+    {
+      id: "fries-m",
+      name: "Medium",
+      basePrice: 50,
+      flavorPrices: [],
+      description: null,
+    },
+  ],
+};
+
 const sampleCatalog: MenuCatalog = {
   categories: [
     {
       id: "cat-1",
       name: "Featured",
-      items: [sampleDrinkItem, sampleSnackItem, sampleUnavailableItem],
+      items: [
+        sampleDrinkItem,
+        sampleSnackItem,
+        sampleUnavailableItem,
+        sampleFriesItem,
+      ],
     },
   ],
 };
@@ -322,5 +343,40 @@ describe("MenuItemOrderDialog & MenuItemCard ordering integration", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(screen.getByTestId("variant-name")).toHaveTextContent("22 oz");
     expect(screen.getByTestId("qty")).toHaveTextContent("3");
+  });
+
+  it("TC-P6-219 — fries can mix up to 3 flavors, and a 4th pick replaces the oldest", async () => {
+    const user = userEvent.setup();
+    renderMenuItem(sampleFriesItem);
+    await user.click(screen.getByRole("button", { name: "Order Fries" }));
+    const dialog = screen.getByRole("dialog");
+
+    await user.click(
+      within(dialog).getByRole("button", { name: "Mix up to 3 flavors" }),
+    );
+    for (const flavor of ["BBQ Scratch", "Cheesy Purr", "Sour Cream"]) {
+      await user.click(within(dialog).getByRole("button", { name: flavor }));
+    }
+    expect(within(dialog).getByText(/3\/3 picked/)).toBeInTheDocument();
+
+    await user.click(
+      within(dialog).getByRole("button", { name: "Spicy Claw" }),
+    );
+    expect(
+      within(dialog).getByRole("button", { name: "BBQ Scratch" }),
+    ).toHaveAttribute("aria-pressed", "false");
+    for (const flavor of ["Cheesy Purr", "Sour Cream", "Spicy Claw"]) {
+      expect(
+        within(dialog).getByRole("button", { name: flavor }),
+      ).toHaveAttribute("aria-pressed", "true");
+    }
+
+    await user.click(
+      within(dialog).getByRole("button", { name: "Add to Order" }),
+    );
+    expect(
+      screen.getByText(/Flavor: Cheesy Purr \/ Sour Cream \/ Spicy Claw/),
+    ).toBeInTheDocument();
+    expect(screen.getAllByText("₱50").length).toBeGreaterThan(0);
   });
 });
