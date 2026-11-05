@@ -702,7 +702,7 @@ Run on 2026-11-04. `npx vitest run tests/unit/order-history-service.test.ts test
 
 ### 30d. Order history browser evidence (TC-P5-030 to TC-P5-033)
 
-These run against the production build with Supabase Auth seeded in localStorage and PostgREST responses mocked, so no live account or real order is used. `content-range` is returned by the mocked `online_orders` endpoint to drive pagination. The footer's "Find us" column is masked in the captures so the shop's phone number and email address stay out of committed evidence.
+These run against the production build with Supabase Auth seeded in localStorage and PostgREST responses mocked, so no live account or real order is used. `content-range` is returned by the mocked `online_orders` endpoint to drive pagination. The footer's "Find us" column is masked in the captures so the shop's phone number and email address stay out of committed evidence. Changed on 2026-11-05 (PR #96): the footer is no longer masked. The phone number and email address in the "Find us" column are the shop's public contact details, shown on every page, so the four screenshots were retaken with the whole page; the masked versions are in PR #87.
 
 | ID | Requirement ID(s) | Module | Scenario | Preconditions | Input / action | Expected result | Actual result | Status | Evidence |
 |---|---|---|---|---|---|---|---|---|---|
