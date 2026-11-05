@@ -1381,3 +1381,14 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `fix/menu-card-height-shop-only-items`, PR #92.
 - **Known limitations:** The database still takes an order line for either item if an order is sent to it directly instead of through the website. That is the same as before, and the server still prices the line from the saved price. The two items are matched by name, so if the owner renames them in the POS (for example to "Packaging Fee"), the website lists them again until the new name is added to `isShopOnlyName()`.
 - **Next action:** None.
+
+## 2026-11-05 — Bottled Water off the website menu (FR-010, FR-011)
+
+- **Phase:** Phase 4 (live website menu).
+- **Task:** Take Bottled Water off the website menu only.
+- **Summary:** `isShopOnlyName()` now also matches Bottled Water, however the name is spelled, so `websiteMenu()` leaves it out of the Menu, cart and reorder the same way as the Take-out Box and Cat Treats (PR #92). Cat-Tastic Drinks still has its other drinks, so its tab and section stay. Bottled Water stays on the POS and in `public.items`, and its 3D model stays in the code (TC-P4-040 still checks it). The 3D test spec now maps its mocked live menu through `websiteMenu()`, like the page does, so TC-P4-055 opens every drink the website lists and checks that Bottled Water has no card.
+- **Files:** `src/lib/menu/map-menu-catalog.ts`, `tests/unit/website-menu.test.ts`, `tests/e2e/three.spec.ts`, `docs/functional-requirements.md`, `docs/test-cases.md`, `docs/database-design.md`, `docs/system-architecture.md`, `docs/development-log.md`, `docs/evidence/phase-4/menu-cards/`.
+- **Testing:** `NODE_OPTIONS=--no-experimental-webstorage npx vitest run`: Test Files 61 passed (61), Tests 490 passed (490), including TC-P6-217. `npx tsc --noEmit -p .`, `npx eslint . --max-warnings=0`, `npx prettier --check .` and `python3 scripts/validate_phase0_docs.py` pass. `npm run build`, then `CI=1 npx playwright test --project=chromium`: 28 passed, 1 skipped. `CI=1 npx playwright test tests/e2e/three.spec.ts --project=chromium-3d -g "TC-P4-05[56] "`: 2 passed (TC-P4-055 and TC-P4-056). Cat-Tastic Drinks at 1280 px on the live site lists five items with Bottled Water, and a production build of this branch reading the live menu lists four without it.
+- **Branch / PR:** `feat/website-hide-bottled-water`, PR #95.
+- **Known limitations:** The same as for the Take-out Box and Cat Treats: the database still takes an order line for Bottled Water if an order is sent to it directly instead of through the website, and the server prices it from the saved price. It is matched by name, so if the owner renames it in the POS, the website lists it again until the new name is added to `isShopOnlyName()`.
+- **Next action:** None.
