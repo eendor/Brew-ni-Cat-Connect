@@ -1425,3 +1425,14 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `feat/three-flavor-mixes`, PR #98; POS PR #24.
 - **Known limitations:** Until the tablet installs the POS update, its product sheet allows only 2 picks. It already prices 3-flavor website orders and deducts their stock correctly.
 - **Next action:** Release POS build 10145 with this change.
+
+## 2026-11-05 — Daily cash count not planned (FR-097); POS build 10145
+
+- **Phase:** Planning (Phase 6) and release.
+- **Task:** Record that the daily cash count is no longer needed, and record the POS build 10145 release.
+- **Summary:** FR-097 (the cash counted at closing) was taken out of scope and is now Not planned. Its row, acceptance text and §12 questions stay for traceability, with the §12 questions marked superseded. No code was written for it, so nothing else changes. POS build 10145 (still 1.1.0) was released through the in-app update. It brings the 3-flavor fries mixes (POS PR #24) and removes the local copy of the November 2 test sale (POS PR #25). Its update note is in English, and update notes are written in English from now on (`docs/system-architecture.md` §19.4). A test online order placed earlier on 2026-11-05 was also deleted from the live database. It had no POS sale.
+- **Files:** `docs/functional-requirements.md`, `docs/system-architecture.md`, `docs/development-log.md`.
+- **Testing:** `python3 scripts/validate_phase0_docs.py`: `FR_IDS=99 (001-099)`, `NFR_IDS=40 (001-040)`, `ERRORS=0`, `PHASE0_DOC_VALIDATION=PASS`. `npx prettier --check .` passes. No application code or test changed. POS build 10145: `sh gradlew :app:testDebugUnitTest :app:compileReleaseKotlin`, 90 tests, 0 failures; the release APK is signed with the same key as build 10144.
+- **Branch / PR:** `docs/drop-daily-cash-count`, PR #99; POS PR #24 and POS PR #25.
+- **Known limitations:** The Z-Reading still shows only the expected cash drawer, not a counted amount. The test sale's copy is removed only on devices that install build 10145.
+- **Next action:** None for FR-097. FR-098 and FR-099 are unchanged.
