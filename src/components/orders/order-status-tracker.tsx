@@ -219,8 +219,8 @@ export function OrderStatusTracker({
                   className="inline-flex items-center gap-1.5 rounded-full bg-[var(--surface-accent)] px-3 py-1 text-xs font-medium text-[var(--accent-solid)]"
                 >
                   <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--accent-solid)] opacity-75" />
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-[var(--accent-solid)]" />
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--accent-fill)] opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-[var(--accent-fill)]" />
                   </span>
                   Live updates
                 </span>
@@ -397,7 +397,7 @@ export function OrderStatusTracker({
                     data-testid={`stage-icon-${stage.status}`}
                     className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
                       isCompleted
-                        ? "bg-[var(--accent-solid)] text-white"
+                        ? "bg-[var(--accent-fill)] text-white"
                         : isCurrent
                           ? "border-2 border-[var(--accent-solid)] bg-[var(--surface-canvas)] text-[var(--accent-solid)] ring-4 ring-[var(--accent-soft)]"
                           : "border border-[var(--separator)] bg-[var(--fill-secondary)] text-[var(--text-muted)]"
@@ -474,7 +474,7 @@ export function OrderStatusTracker({
                     historyItem.status === "rejected"
                       ? "bg-[var(--danger)]"
                       : historyItem.status === "completed"
-                        ? "bg-[var(--accent-solid)]"
+                        ? "bg-[var(--accent-fill)]"
                         : "bg-[var(--text-muted)]"
                   }`}
                 />
