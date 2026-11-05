@@ -22,6 +22,7 @@ import { getAuthSupabaseClient } from "@/lib/supabase/auth-client";
 
 export type AuthContextValue = Readonly<{
   user: User | null;
+  session: Session | null;
   isLoading: boolean;
   isPasswordRecovery: boolean;
   signUp: (
@@ -53,6 +54,7 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 const fallbackAuthValue: AuthContextValue = {
   user: null,
+  session: null,
   isLoading: false,
   isPasswordRecovery: false,
   signUp: async () => ({
@@ -84,6 +86,7 @@ export function AuthProvider({
   client: clientProp,
 }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
 
@@ -115,14 +118,17 @@ export function AuthProvider({
         if (!isMounted) return;
         if (error || !session) {
           setUser(null);
+          setSession(null);
         } else {
           const isExpired =
             session.expires_at !== undefined &&
             session.expires_at * 1000 <= Date.now();
           if (isExpired) {
             setUser(null);
+            setSession(null);
           } else {
             setUser(session.user);
+            setSession(session);
           }
         }
         setIsLoading(false);
@@ -130,6 +136,7 @@ export function AuthProvider({
       .catch(() => {
         if (!isMounted) return;
         setUser(null);
+        setSession(null);
         setIsLoading(false);
       });
 
@@ -141,18 +148,23 @@ export function AuthProvider({
       if (event === "PASSWORD_RECOVERY") {
         setIsPasswordRecovery(true);
         setUser(session?.user ?? null);
+        setSession(session ?? null);
       } else if (event === "SIGNED_OUT") {
         setIsPasswordRecovery(false);
         setUser(null);
+        setSession(null);
       } else if (!session) {
         setUser(null);
+        setSession(null);
       } else if (
         session.expires_at !== undefined &&
         session.expires_at * 1000 <= Date.now()
       ) {
         setUser(null);
+        setSession(null);
       } else {
         setUser(session.user);
+        setSession(session);
       }
       setIsLoading(false);
     });
@@ -203,6 +215,7 @@ export function AuthProvider({
       });
       if (res.data?.user) {
         setUser(res.data.user);
+        setSession(res.data.session);
       }
       return res as AuthResponse;
     },
@@ -214,10 +227,12 @@ export function AuthProvider({
     setIsPasswordRecovery(false);
     if (!client) {
       setUser(null);
+      setSession(null);
       return { error: null };
     }
     const res = await client.auth.signOut();
     setUser(null);
+    setSession(null);
     return res;
   }, [getClient]);
 
@@ -264,6 +279,7 @@ export function AuthProvider({
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
+      session,
       isLoading,
       isPasswordRecovery,
       signUp,
@@ -274,6 +290,7 @@ export function AuthProvider({
     }),
     [
       user,
+      session,
       isLoading,
       isPasswordRecovery,
       signUp,

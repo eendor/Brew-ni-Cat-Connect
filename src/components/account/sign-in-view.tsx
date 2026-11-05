@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
 import { Container } from "@/components/ui/container";
@@ -10,6 +10,13 @@ import { useAuth } from "@/context/auth-context";
 export function SignInView() {
   const { signIn, user, isLoading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const rawReturnTo = searchParams?.get("returnTo") ?? null;
+  const returnTo =
+    rawReturnTo && rawReturnTo.startsWith("/") && !rawReturnTo.startsWith("//")
+      ? rawReturnTo
+      : "/";
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -64,7 +71,7 @@ export function SignInView() {
           setGeneralError("Something went wrong. Please try again.");
         }
       } else {
-        router.push("/");
+        router.push(returnTo);
       }
     } catch {
       setGeneralError("An unexpected error occurred. Please try again.");

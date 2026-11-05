@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 
 import { SignInView } from "@/components/account/sign-in-view";
 
@@ -8,5 +9,9 @@ export const metadata: Metadata = {
 };
 
 export default function SignInPage() {
-  return <SignInView />;
+  return (
+    <Suspense fallback={null}>
+      <SignInView />
+    </Suspense>
+  );
 }

@@ -15,19 +15,47 @@ import {
 } from "@/lib/orders/place-order";
 import type { PlaceOrderRequest, PlaceOrderResult } from "@/lib/orders/types";
 
+export type PlaceOrderOptions = Readonly<{
+  fetchImpl?: typeof fetch;
+  sessionToken?: string | null;
+}>;
+
 export type PlaceOrder = (
   request: PlaceOrderRequest,
+  fetchImplOrOptions?: typeof fetch | PlaceOrderOptions,
+  sessionToken?: string | null,
 ) => Promise<PlaceOrderResult>;
 
 export async function placeOrder(
   request: PlaceOrderRequest,
-  fetchImpl: typeof fetch = fetch,
+  fetchImplOrOptions?: typeof fetch | PlaceOrderOptions,
+  sessionToken?: string | null,
 ): Promise<PlaceOrderResult> {
+  let fetchImpl: typeof fetch | undefined =
+    typeof fetch !== "undefined" ? fetch : undefined;
+  let token = sessionToken;
+
+  if (typeof fetchImplOrOptions === "function") {
+    fetchImpl = fetchImplOrOptions;
+  } else if (fetchImplOrOptions && typeof fetchImplOrOptions === "object") {
+    if (fetchImplOrOptions.fetchImpl) fetchImpl = fetchImplOrOptions.fetchImpl;
+    if (fetchImplOrOptions.sessionToken !== undefined) {
+      token = fetchImplOrOptions.sessionToken;
+    }
+  }
+
+  const headers: Record<string, string> = {
+    "content-type": "application/json",
+  };
+  if (token) {
+    headers.authorization = `Bearer ${token}`;
+  }
+
   let body: unknown;
   try {
-    const response = await fetchImpl(PLACE_ORDER_PATH, {
+    const response = await (fetchImpl ?? fetch)(PLACE_ORDER_PATH, {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers,
       body: JSON.stringify(request),
       cache: "no-store",
       credentials: "same-origin",

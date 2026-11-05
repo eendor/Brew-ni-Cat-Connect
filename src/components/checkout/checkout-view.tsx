@@ -18,8 +18,13 @@ import { PageIntro } from "@/components/ui/page-intro";
 import { RiderList } from "@/components/ui/rider-list";
 import { StateScene } from "@/components/three/state-scene";
 import { siteConfig } from "@/config/site";
+import { useAuth } from "@/context/auth-context";
 import { useCart } from "@/context/cart-context";
 import { useShopFacts } from "@/context/shop-facts-context";
+import {
+  fetchCustomerProfile,
+  type CustomerProfile,
+} from "@/lib/account/profile";
 import {
   usePreparedSummary,
   type CustomerDetails,
@@ -128,6 +133,7 @@ type CheckoutViewProps = Readonly<{
   submitOrder?: PlaceOrder;
   /** Opens a placed order's page. Defaults to client-side navigation. */
   openOrder?: (path: string) => void;
+  initialProfile?: CustomerProfile | null;
 }>;
 
 /** What a failed Place order tells the customer. */
@@ -146,7 +152,9 @@ export function CheckoutView({
   onlineOrdering = isOnlineOrderingEnabled(),
   submitOrder = placeOrder,
   openOrder,
+  initialProfile,
 }: CheckoutViewProps) {
+  const { user, session } = useAuth();
   const facts = useShopFacts();
   const { address, contact, hours, payments, social, takeoutBoxPrice } = facts;
   const takeoutBox = takeoutBoxText(takeoutBoxPrice);
@@ -193,13 +201,13 @@ export function CheckoutView({
   const isRiderDelivery =
     (preparedSummary?.fulfillment ?? fulfillment) === "external-rider";
   const flowRef = useRef<HTMLElement>(null);
-  const [customer, setCustomer] = useState<CustomerDetails>({
-    name: "",
-    phone: "",
+  const [customer, setCustomer] = useState<CustomerDetails>(() => ({
+    name: initialProfile?.fullName ?? "",
+    phone: initialProfile?.phone ?? "",
     address: "",
     notes: "",
     paymentPreference: paymentChoices[0],
-  });
+  }));
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [revalidationWarnings, setRevalidationWarnings] = useState<
     readonly string[]
@@ -247,6 +255,29 @@ export function CheckoutView({
 
   useEffect(() => () => window.clearTimeout(copyTimerRef.current), []);
   useEffect(() => () => window.clearTimeout(stepTimerRef.current), []);
+
+  // Prefill name and phone when customer is signed in (FR-023)
+  useEffect(() => {
+    if (!user || initialProfile !== undefined) return;
+
+    let active = true;
+    void fetchCustomerProfile({ userId: user.id })
+      .then((profile) => {
+        if (!active || !profile) return;
+        setCustomer((prev) => ({
+          ...prev,
+          name: prev.name || profile.fullName,
+          phone: prev.phone || profile.phone || "",
+        }));
+      })
+      .catch(() => {
+        // silent fallback: guest inputs remain
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [user, initialProfile]);
 
   // Revalidate cart prices against authoritative menu on mount
   useEffect(() => {
@@ -419,10 +450,14 @@ export function CheckoutView({
       };
     }
     const { idempotencyKey, trackingToken } = attemptRef.current;
+    const sessionToken = session?.access_token ?? null;
 
     let result: PlaceOrderResult;
     try {
-      result = await submitOrder({ ...draft, idempotencyKey, trackingToken });
+      result = await submitOrder(
+        { ...draft, idempotencyKey, trackingToken },
+        { sessionToken },
+      );
     } catch {
       result = placeOrderFailure("server-error");
     }

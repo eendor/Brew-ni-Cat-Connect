@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   validatePhoneNumber,
+  normalizePhoneNumber,
   validateDetails,
 } from "@/lib/ordering/validation";
 
@@ -17,6 +18,20 @@ describe("Checkout Validation Utilities", () => {
       expect(validatePhoneNumber("12345")).toBe(false);
       expect(validatePhoneNumber("abcdefghij")).toBe(false);
       expect(validatePhoneNumber("08123456789")).toBe(false);
+    });
+  });
+
+  describe("normalizePhoneNumber", () => {
+    it("should convert 09XXXXXXXXX numbers to +639XXXXXXXXX", () => {
+      expect(normalizePhoneNumber("09123456789")).toBe("+639123456789");
+      expect(normalizePhoneNumber("0912 345 6789")).toBe("+639123456789");
+      expect(normalizePhoneNumber("0912-345-6789")).toBe("+639123456789");
+      expect(normalizePhoneNumber("(0912) 345 6789")).toBe("+639123456789");
+    });
+
+    it("should keep already formatted +639XXXXXXXXX numbers", () => {
+      expect(normalizePhoneNumber("+639123456789")).toBe("+639123456789");
+      expect(normalizePhoneNumber("+63 912 345 6789")).toBe("+639123456789");
     });
   });
 

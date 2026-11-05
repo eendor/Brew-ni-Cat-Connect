@@ -1,7 +1,7 @@
 # Development Log
 
 **Document version:** 0.1 Draft\
-**Last updated:** 2026-10-31
+**Last updated:** 2026-11-05
 
 This log records completed work and observed evidence. Planned work is explicitly identified and is not reported as implemented or tested.
 
@@ -1381,3 +1381,14 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `fix/menu-card-height-shop-only-items`, PR #92.
 - **Known limitations:** The database still takes an order line for either item if an order is sent to it directly instead of through the website. That is the same as before, and the server still prices the line from the saved price. The two items are matched by name, so if the owner renames them in the POS (for example to "Packaging Fee"), the website lists them again until the new name is added to `isShopOnlyName()`.
 - **Next action:** None.
+
+## 2026-11-05 — Customer profiles, checkout prefill, linked orders, and account page guard (FR-023, FR-033, FR-036, FR-038)
+
+- **Phase:** Phase 4 (customer profiles, checkout prefill, order linkage, and route protection).
+- **Task:** Implement Week 2 deliverables: customer profiles (`/account/profile`), checkout prefill, linked orders, and account page guard.
+- **Summary:** Authenticated customers can view and update their profile fields (full name and Philippine phone number) at `/account/profile` using `public.customer_profiles`, strictly normalized to `+639XXXXXXXXX` format prior to upserting (FR-038). Added desktop and mobile navigation links to Profile. Checkout automatically prefills the customer's name and phone when signed in, while guest checkout remains untouched and completely operational without prefill (FR-023). When a signed-in customer places an order, their active session token is passed in the Authorization header to `POST /api/orders`, verified with Supabase Auth (`getUser(token)`), and executed via an authenticated client so Postgres `place_online_order()` records `customer_id = auth.uid()` on the order; malformed or expired tokens return HTTP 502 Bad Gateway (FR-023). Protected `/account/*` pages (`/account`, `/account/profile`, `/account/orders`) are guarded by `AccountGuard`, redirecting unauthenticated visitors to `/account/sign-in?returnTo=<path>` and restoring them back upon login, while public auth routes remain accessible (FR-033, FR-036).
+- **Files:** `src/lib/ordering/validation.ts`, `src/lib/account/profile.ts`, `src/components/account/profile-view.tsx`, `src/app/account/profile/page.tsx`, `src/app/account/page.tsx`, `src/app/account/layout.tsx`, `src/components/account/account-guard.tsx`, `src/components/account/sign-in-view.tsx`, `src/app/account/sign-in/page.tsx`, `src/components/layout/account-nav.tsx`, `src/components/layout/mobile-navigation.tsx`, `src/context/auth-context.tsx`, `src/lib/orders/order-client.ts`, `src/components/checkout/checkout-view.tsx`, `src/lib/supabase/public-client.ts`, `src/app/api/orders/route.ts`, `tests/unit/checkout-validation.test.ts`, `tests/unit/account-profile.test.tsx`, `tests/unit/checkout-prefill.test.tsx`, `tests/unit/orders-route.test.ts`, `tests/unit/account-guard.test.tsx`, `tests/e2e/account-guard.spec.ts`, `docs/evidence/phase-4/screenshots/profile.png`, `docs/evidence/phase-4/screenshots/checkout-prefill.png`, `docs/functional-requirements.md`, `docs/test-cases.md`, `docs/development-log.md`, `docs/security-and-privacy.md`.
+- **Testing:** TC-P4-263 to TC-P4-273 all pass. Unit test suites for checkout validation, account profile, checkout prefill, orders route, account guard, auth context, account forms, and order history passed (77/77 tests). Playwright E2E account-guard and auth specs passed (7/7 tests). `npm run typecheck`, `npm run lint`, and `npm run format:check` all passed with 0 errors. `npm run build` compiled and statically generated all pages including `/account/profile`. Visual evidence recorded in `docs/evidence/phase-4/screenshots/profile.png` and `docs/evidence/phase-4/screenshots/checkout-prefill.png`.
+- **Branch / PR:** `feat/p4-account-profile`.
+- **Known limitations:** Phone numbers are restricted to Philippine mobile formats (`+639XXXXXXXXX`); international formats are not accepted per database constraint.
+- **Next action:** Peer review by Rodnee; merge PR into `main`.
