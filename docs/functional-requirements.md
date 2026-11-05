@@ -180,6 +180,16 @@ FR-094 to FR-096 were added after FR-093. FR-094 records the day and night theme
 | FR-095 | The POS shall let staff undo an online order's last status change within 5 minutes, so a mistaken tap (for example Complete) can be taken back. Undoing a Complete shall void its POS sale and put the stock back. A rejection, a new order and an undo can't be undone. | The database moves the order back one step only when the last change was a forward step by the shop less than 5 minutes ago, records the history and an audit row, and refuses everything else (`too_late`, `not_allowed`, `stale`); undoing Complete voids the sale and removes its link; a retry with the same correlation id doesn't step back twice; customers and anonymous users can't call it; the tablet shows Undo only within the window and restores stock once (TC-P6-200 to TC-P6-207). | Should | 6 | Implemented |
 | FR-096 | The POS checkout shall accept one sale paid partly in cash and partly by GCash, and the daily sales totals shall count each part under its own method. | The Split tab takes a GCash part, works out the cash part and its change, and only confirms when both parts are above zero and add up to the total; the receipt shows both parts; the day's cash and GCash totals include each part (TC-P6-208 to TC-P6-210). | Should | 6 | Implemented |
 
+### Daily cash count, ratings and reviews, and cat characters
+
+FR-097 to FR-099 were added after FR-096. FR-097 belongs with the POS checkout requirements in §11 and adds a cash count to the end-of-day Z-Reading. FR-098 and FR-099 record two requests the owner made on 2026-10-30. Ratings and reviews on the website belong with the customer account requirements in §6. Cat characters made from photos of the shop's cats belong with the website appearance requirements (FR-092). All three are Planned, and their open questions are in §12.
+
+| ID | Requirement | Acceptance / verification | Priority | Target phase | Status |
+| --- | --- | --- | --- | --- | --- |
+| FR-097 | At closing, the POS shall let staff enter the cash counted in the drawer and show how much it is over or short of the Z-Reading's expected cash drawer. It shall keep one saved count per business day. | The Z-Reading shows the expected drawer, the counted cash and the difference; a saved day's count can be viewed later and doesn't change with later sales. Whether the count is required and who may correct it are **TODO: Confirm with Brew ni Cat owner.** | Should | 6 | Planned |
+| FR-098 | The website shall let customers leave a star rating and a short review, and shall show the reviews publicly. | A posted review shows its rating, text and date, but never the customer's email address or phone number; a customer can't post as someone else; the shop can hide a review. Shop-wide or per item, who may post, approval before a review shows, and owner replies are **TODO: Confirm with Brew ni Cat owner.** | Should | 5 | Planned |
+| FR-099 | The website shall show cat characters made from the owner's photos of the shop's cats, walking across the page now and then. | The cats never cover buttons, links or text and can't be clicked by mistake. With `prefers-reduced-motion: reduce` they stay still (NFR-032), they pause while the tab is hidden, and the page works the same without them (NFR-035). Which pages show them is **TODO: Confirm with Brew ni Cat owner.** | Could | 9 | Planned |
+
 ## 12. Requirement dependencies and open owner decisions
 
 | Decision | Affected requirements | Status |
@@ -193,6 +203,9 @@ FR-094 to FR-096 were added after FR-093. FR-094 records the day and night theme
 | Messenger handoff, transactional scope, and recommendation purpose | FR-061–FR-064 | **TODO: Confirm with Brew ni Cat owner.** |
 | Notifications | FR-070 | Deferred; **TODO: Confirm with Brew ni Cat owner.** |
 | Existing POS contract/source of truth | FR-071–FR-081 | Phase 2 inspected catalog source structures only; full synchronization contract, mutation authority, and Phase 6 approval remain pending. |
+| Daily cash count at closing | FR-097 | **TODO: Confirm with Brew ni Cat owner.** Whether staff count the drawer at every closing, and who may correct a saved count. |
+| Ratings and reviews | FR-098 | The owner asked for ratings and reviews on the website on 2026-10-30. **TODO: Confirm with Brew ni Cat owner.** Still to confirm: reviews of the whole shop or of each item; whether only signed-in customers may post; whether the owner approves a review before it shows; and whether the owner can reply. |
+| Cat characters | FR-099 | The owner asked for cat characters on the website on 2026-10-30. He will take photos of the shop's cats, and they will be edited into cutouts. Waiting on the photos. **TODO: Confirm with Brew ni Cat owner.** Which pages show them. |
 
 ## 13. Traceability rule
 
