@@ -116,6 +116,8 @@ Queries are centralized under `src/lib/menu` and `src/lib/supabase`. JSX does no
 
 **Update (2026-11-04, PR #92):** after the mapping, `websiteMenu()` leaves out the Take-out Box and Cat Treats, which are sold only at the shop. Both stay in `categories` and `items` for the POS, and the menu facts (the take-out box fee) still read the full menu.
 
+**Update (2026-11-05, PR #95):** `websiteMenu()` also leaves out Bottled Water. It stays in `items` for the POS.
+
 ## 7. Deferred Design Work
 
 Before Phase 3 or Phase 4 database work:
@@ -382,3 +384,18 @@ File: `supabase/migrations/20261104120000_more_rider_partners.sql`. Undo: `supab
 
 - The rollback removes only those three services, matched by Facebook page; every other rider stays in its order.
 - TC-P6-211 to TC-P6-213 run on PGlite (`tests/database/more-rider-partners.test.ts`).
+
+## 14. Fries Mixes Of Up To 3 Flavors (Phase 4 — 2026-11-05)
+
+File: `supabase/migrations/20261105120000_three_flavor_mixes.sql`. Undo: `supabase/rollbacks/20261105120000_three_flavor_mixes.sql`. Covers FR-027 and FR-082 (ADR-027). Applied to the live database on 2026-11-05 (§8.7), before the website change was deployed.
+
+### 14.1 Change to `private.resolve_unit_price`
+
+- A selected flavor can be 1 to 3 different listed flavors joined by `" / "`, instead of 1 or 2. This function is the only place in the database that limits how many flavors a mix has.
+- Pricing is unchanged. `private.find_variant` charges the size price, or the dearest flavor when the size prices flavors differently, and `private.price_cart` still allows a mix on fries only.
+- The signature is the same, so its grants stay. No table, policy or other function changes.
+
+### 14.2 Undo and tests
+
+- The rollback puts back the 2-flavor limit from `20261101120000_mixed_flavors.sql`. Orders already placed keep their flavor text.
+- TC-P6-220 runs on PGlite (`tests/database/mixed-flavors.test.ts`).

@@ -357,7 +357,7 @@ This manual state is a temporary functional-verification condition, not a revisi
 
 **Decision:** Any product with flavors can mix up to 2 different listed flavors on one line, stored in the existing flavor field as `"A / B"`. A mix costs the size price; when a size prices flavors differently, the dearest flavor in the mix applies.\
 **Date:** 2026-11-01\
-**Status:** Accepted\
+**Status:** Accepted. Its 2-flavor limit is superseded by ADR-027; the size price rule stays.\
 **Context:** The shop sells 2-flavor fries and similar mixes. The user chose all products with flavors, the size price, and the same limit for every size.\
 **Alternatives considered:** averaging the flavor prices (could undercharge and give odd centavos); a separate mix column (a schema change across both POS apps and the website); allowing more than 2 flavors (not asked for).\
 **Consequences:**
@@ -378,3 +378,17 @@ This manual state is a temporary functional-verification condition, not a revisi
 - The website and the database price add-ons the same way (TC-P4-258, TC-P4-259).
 - Orders from the website print on the POS with the same add-on lines and prices.
 - The POS add-on list must match the table until the POS reads it.
+
+## ADR-027 — Fries Mixes Of Up To 3 Flavors
+
+**Decision:** A fries line can mix up to 3 different listed flavors instead of 2, stored as `"A / B / C"`. A mix still costs the size price, or the dearest flavor in the mix when the size prices flavors differently. Mixing stays limited to fries (ADR-026).\
+**Date:** 2026-11-05\
+**Status:** Accepted and implemented (PR #98, POS PR #24)\
+**Context:** The shop sells fries with 2 or 3 flavors, and the user asked to allow 3. ADR-025 limited a mix to 2.\
+**Alternatives considered:** keeping 2 flavors (does not match how the shop sells fries); charging more for a third flavor (not asked for); letting drinks and other items mix too (the user asked that only fries mix).\
+**Consequences:**
+
+- ADR-025's 2-flavor limit is superseded. Its size price and dearest-flavor rules stay.
+- The website (`MAX_MIXED_FLAVORS`), the database (`private.resolve_unit_price` in `20261105120000_three_flavor_mixes.sql`) and the Android POS (POS PR #24) allow 3 flavors, and a 4-flavor mix is refused as `unknown-flavor` (TC-P6-218 to TC-P6-222).
+- The POS already prices a mix by its dearest flavor and deducts each flavor's recipe for a mix of any length, so the tablet handles 3-flavor website orders even before its update.
+- Each flavor in a mix still deducts a full recipe portion from stock.

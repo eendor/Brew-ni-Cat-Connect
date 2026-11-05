@@ -123,8 +123,8 @@ function hasPurchasableBasePrice(variant: MenuVariant): boolean {
 /** Joins the flavors of a mixed order, e.g. "BBQ Scratch / Cheesy Purr" (same as the POS). */
 export const FLAVOR_MIX_SEPARATOR = " / ";
 
-/** Fries can mix up to this many flavors, at the normal size price. */
-export const MAX_MIXED_FLAVORS = 2;
+/** Fries can mix up to this many flavors, at the normal size price (ADR-027). */
+export const MAX_MIXED_FLAVORS = 3;
 
 /** Mixing is offered on fries only for now (the same rule as the POS). */
 export function allowsFlavorMix(item: Pick<MenuItem, "id" | "name">): boolean {

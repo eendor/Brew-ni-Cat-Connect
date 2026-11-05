@@ -1382,6 +1382,61 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Known limitations:** The database still takes an order line for either item if an order is sent to it directly instead of through the website. That is the same as before, and the server still prices the line from the saved price. The two items are matched by name, so if the owner renames them in the POS (for example to "Packaging Fee"), the website lists them again until the new name is added to `isShopOnlyName()`.
 - **Next action:** None.
 
+## 2026-11-05 — Bottled Water off the website menu (FR-010, FR-011)
+
+- **Phase:** Phase 4 (live website menu).
+- **Task:** Take Bottled Water off the website menu only.
+- **Summary:** `isShopOnlyName()` now also matches Bottled Water, however the name is spelled, so `websiteMenu()` leaves it out of the Menu, cart and reorder the same way as the Take-out Box and Cat Treats (PR #92). Cat-Tastic Drinks still has its other drinks, so its tab and section stay. Bottled Water stays on the POS and in `public.items`, and its 3D model stays in the code (TC-P4-040 still checks it). The 3D test spec now maps its mocked live menu through `websiteMenu()`, like the page does, so TC-P4-055 opens every drink the website lists and checks that Bottled Water has no card.
+- **Files:** `src/lib/menu/map-menu-catalog.ts`, `tests/unit/website-menu.test.ts`, `tests/e2e/three.spec.ts`, `docs/functional-requirements.md`, `docs/test-cases.md`, `docs/database-design.md`, `docs/system-architecture.md`, `docs/development-log.md`, `docs/evidence/phase-4/menu-cards/`.
+- **Testing:** `NODE_OPTIONS=--no-experimental-webstorage npx vitest run`: Test Files 61 passed (61), Tests 490 passed (490), including TC-P6-217. `npx tsc --noEmit -p .`, `npx eslint . --max-warnings=0`, `npx prettier --check .` and `python3 scripts/validate_phase0_docs.py` pass. `npm run build`, then `CI=1 npx playwright test --project=chromium`: 28 passed, 1 skipped. `CI=1 npx playwright test tests/e2e/three.spec.ts --project=chromium-3d -g "TC-P4-05[56] "`: 2 passed (TC-P4-055 and TC-P4-056). Cat-Tastic Drinks at 1280 px on the live site lists five items with Bottled Water, and a production build of this branch reading the live menu lists four without it.
+- **Branch / PR:** `feat/website-hide-bottled-water`, PR #95.
+- **Known limitations:** The same as for the Take-out Box and Cat Treats: the database still takes an order line for Bottled Water if an order is sent to it directly instead of through the website, and the server prices it from the saved price. It is matched by name, so if the owner renames it in the POS, the website lists it again until the new name is added to `isShopOnlyName()`.
+- **Next action:** None.
+
+## 2026-11-05 — Evidence screenshots show the footer (FR-039, FR-041)
+
+- **Phase:** Phase 5 (order history evidence).
+- **Task:** Stop masking the footer's "Find us" column in evidence screenshots.
+- **Summary:** `capture()` in `tests/e2e/order-history.spec.ts` no longer masks the footer's "Find us" column. I asked for that mask in the #87 review, but the column shows the shop's public phone number and email address, the same on every page, so the mask only left a pink box. The four order history screenshots (TC-P5-030 to TC-P5-033) were retaken without it; the masked versions are in PR #87.
+- **Files:** `tests/e2e/order-history.spec.ts`, `docs/test-cases.md`, `docs/development-log.md`, `docs/evidence/phase-5/screenshots/` (four PNGs).
+- **Testing:** `NODE_OPTIONS=--no-experimental-webstorage npx vitest run`: Test Files 61 passed (61), Tests 490 passed (490). `npx tsc --noEmit -p .`, `npx eslint . --max-warnings=0`, `npx prettier --check .` and `python3 scripts/validate_phase0_docs.py` pass. `npm run build`, then `CI=1 npx playwright test --project=chromium`: 28 passed, 1 skipped. `CAPTURE_EVIDENCE=1 CI=1 npx playwright test tests/e2e/order-history.spec.ts --project=chromium`: 4 passed, and the four screenshots show the footer with no mask.
+- **Branch / PR:** `test/evidence-footer-unmasked`, PR #96.
+- **Known limitations:** None.
+- **Next action:** None.
+
+## 2026-11-05 — Planned: daily cash count, ratings and reviews, cat characters (FR-097–FR-099)
+
+- **Phase:** Planning (Phases 5, 6 and 9).
+- **Task:** Record the owner's requests for ratings and reviews and for cat characters, and the daily cash count, as planned requirements.
+- **Summary:** Added FR-097 (the cash counted at closing, over or short of the Z-Reading's expected drawer), FR-098 (customer ratings and reviews on the website) and FR-099 (cat characters made from the owner's photos, walking across the website). All three are Planned, and their open questions are in §12 of `docs/functional-requirements.md`. The docs validator now expects FR-001 to FR-099. Two Backlog cards on Trello cover FR-098 and FR-099. This plans two of the owner's 2026-10-30 requests that earlier entries listed as not planned yet.
+- **Files:** `docs/functional-requirements.md`, `scripts/validate_phase0_docs.py`, `docs/development-log.md`.
+- **Testing:** `python3 scripts/validate_phase0_docs.py`: `FR_IDS=99 (001-099)`, `NFR_IDS=40 (001-040)`, `ERRORS=0`, `PHASE0_DOC_VALIDATION=PASS`. `npx prettier --check .` passes. No application code or test changed, so the Vitest and Playwright runs are left to CI.
+- **Branch / PR:** `docs/plan-reviews-cat-characters`, PR #97.
+- **Known limitations:** Nothing is built yet. FR-098 waits on the owner's answers to its four questions, and FR-099 on the photos of the shop's cats.
+- **Next action:** Start FR-098 once the owner answers, and FR-099 once the photos arrive.
+
+## 2026-11-05 — Fries mixes of up to 3 flavors (FR-027, FR-082)
+
+- **Phase:** Phase 4 (online ordering).
+- **Task:** Let fries mix up to 3 flavors instead of 2 on the website, in the database and on the Android POS.
+- **Summary:** The shop sells fries with 2 or 3 flavors. `MAX_MIXED_FLAVORS` is now 3, the order dialog's chip reads "Mix up to 3 flavors", and `20261105120000_three_flavor_mixes.sql` replaces `private.resolve_unit_price` so the database accepts a 3-flavor mix. A mix still costs the size price, or the dearest flavor in it when the size prices flavors differently, and mixing stays fries only. A 4-flavor mix is refused as `unknown-flavor`. POS PR #24 makes the same change on the tablet, whose price and stock code already handled a mix of any length. ADR-027 records the decision and supersedes ADR-025's 2-flavor limit. The migration goes on the live database before the website change merges, since it only widens what the database accepts.
+- **Files:** `src/lib/ordering/cart-pricing.ts`, `src/components/menu/menu-item-order-dialog.tsx`, `supabase/migrations/20261105120000_three_flavor_mixes.sql`, `supabase/rollbacks/20261105120000_three_flavor_mixes.sql`, `tests/unit/mixed-flavors.test.ts`, `tests/unit/menu-order-dialog.test.tsx`, `tests/database/mixed-flavors.test.ts`, `tests/e2e/menu.spec.ts`, `docs/evidence/phase-4/three-flavor-mixes/fries-mix-dialog.png`, `docs/database-design.md`, `docs/decisions.md`, `docs/functional-requirements.md`, `docs/test-cases.md`, `docs/development-log.md`.
+- **Testing:** `npx vitest run`: 61 files, 494 tests passed. `npx playwright test --project=chromium` on a production build: 29 passed, 1 skipped. `python3 scripts/validate_phase0_docs.py` (`PHASE0_DOC_VALIDATION=PASS`), `npx tsc --noEmit`, `npx eslint .` and `npx prettier --check .` pass. POS: `sh gradlew :app:testDebugUnitTest :app:compileReleaseKotlin`, 90 tests, 0 failures (TC-P6-221).
+- **Branch / PR:** `feat/three-flavor-mixes`, PR #98; POS PR #24.
+- **Known limitations:** Until the tablet installs the POS update, its product sheet allows only 2 picks. It already prices 3-flavor website orders and deducts their stock correctly.
+- **Next action:** Release POS build 10145 with this change.
+
+## 2026-11-05 — Daily cash count not planned (FR-097); POS build 10145
+
+- **Phase:** Planning (Phase 6) and release.
+- **Task:** Record that the daily cash count is no longer needed, and record the POS build 10145 release.
+- **Summary:** FR-097 (the cash counted at closing) was taken out of scope and is now Not planned. Its row, acceptance text and §12 questions stay for traceability, with the §12 questions marked superseded. No code was written for it, so nothing else changes. POS build 10145 (still 1.1.0) was released through the in-app update. It brings the 3-flavor fries mixes (POS PR #24) and removes the local copy of the November 2 test sale (POS PR #25). Its update note is in English, and update notes are written in English from now on (`docs/system-architecture.md` §19.4). A test online order placed earlier on 2026-11-05 was also deleted from the live database. It had no POS sale.
+- **Files:** `docs/functional-requirements.md`, `docs/system-architecture.md`, `docs/development-log.md`.
+- **Testing:** `python3 scripts/validate_phase0_docs.py`: `FR_IDS=99 (001-099)`, `NFR_IDS=40 (001-040)`, `ERRORS=0`, `PHASE0_DOC_VALIDATION=PASS`. `npx prettier --check .` passes. No application code or test changed. POS build 10145: `sh gradlew :app:testDebugUnitTest :app:compileReleaseKotlin`, 90 tests, 0 failures; the release APK is signed with the same key as build 10144.
+- **Branch / PR:** `docs/drop-daily-cash-count`, PR #99; POS PR #24 and POS PR #25.
+- **Known limitations:** The Z-Reading still shows only the expected cash drawer, not a counted amount. The test sale's copy is removed only on devices that install build 10145.
+- **Next action:** None for FR-097. FR-098 and FR-099 are unchanged.
+
 ## 2026-11-05 — Customer profiles, checkout prefill, linked orders, and account page guard (FR-023, FR-033, FR-036, FR-038)
 
 - **Phase:** Phase 4 (customer profiles, checkout prefill, order linkage, and route protection).

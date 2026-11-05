@@ -435,6 +435,8 @@ The Menu component begins retrieval after browser render. `getPublicSupabaseClie
 
 **Update (2026-11-04, PR #92):** `fetchPublicMenu()` returns `websiteMenu(mapMenuCatalog(...))`, which leaves out the Take-out Box and Cat Treats categories and items because both are sold only at the shop. The Menu, cart and reorder use this list. `loadMenuFacts()` still maps the full menu, so the take-out box fee keeps its POS price.
 
+**Update (2026-11-05, PR #95):** `websiteMenu()` also leaves out Bottled Water, so the Menu, cart and reorder no longer list it. Cat-Tastic Drinks keeps its other drinks, and the POS keeps selling Bottled Water.
+
 Compilation, CI, and static route generation do not contact Supabase. Missing public variables throw a customer-safe configuration error consumed by the menu error state. API errors produce retry; a successful zero-row response produces the empty state. Neither path leaks raw error details.
 
 2026-10-30 (PR #69): rendering a page now reads the saved site content and the menu prices on the server with the same publishable key; see §20. When the public variables are missing, as in the CI validation job, the build makes no Supabase request and uses the fallback copy.
@@ -545,7 +547,7 @@ The app signs in once with the POS staff account (Supabase Auth password sign-in
 
 ### 19.4 Releases
 
-A new POS build is published by uploading the signed APK and adding a row to `app_release` (version code, version name, APK link, notes, mandatory). The tablet reads the newest row and, when its version code is higher than its own, downloads the APK and opens the Android installer. The steps are in the POS repository's `RELEASE_INSTRUCTIONS.md`.
+A new POS build is published by uploading the signed APK and adding a row to `app_release` (version code, version name, APK link, notes, mandatory). The tablet reads the newest row and, when its version code is higher than its own, downloads the APK and opens the Android installer. The steps are in the POS repository's `RELEASE_INSTRUCTIONS.md`. The update prompt shows the newest row's notes. From build 10145 the notes are written in English, in full sentences.
 
 ### 19.5 Online orders in the POS (Phase 6)
 
