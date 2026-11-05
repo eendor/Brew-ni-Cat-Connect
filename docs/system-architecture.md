@@ -547,7 +547,7 @@ The app signs in once with the POS staff account (Supabase Auth password sign-in
 
 ### 19.4 Releases
 
-A new POS build is published by uploading the signed APK and adding a row to `app_release` (version code, version name, APK link, notes, mandatory). The tablet reads the newest row and, when its version code is higher than its own, downloads the APK and opens the Android installer. The steps are in the POS repository's `RELEASE_INSTRUCTIONS.md`.
+A new POS build is published by uploading the signed APK and adding a row to `app_release` (version code, version name, APK link, notes, mandatory). The tablet reads the newest row and, when its version code is higher than its own, downloads the APK and opens the Android installer. The steps are in the POS repository's `RELEASE_INSTRUCTIONS.md`. The update prompt shows the newest row's notes. From build 10145 the notes are written in English, in full sentences.
 
 ### 19.5 Online orders in the POS (Phase 6)
 
