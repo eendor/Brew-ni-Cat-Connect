@@ -82,9 +82,16 @@ export async function POST(request: Request): Promise<Response> {
     return respond(placeOrderFailure("invalid-request"), body.status);
   }
 
+  const authHeader = request.headers.get("authorization");
+  const token = authHeader
+    ? authHeader.startsWith("Bearer ")
+      ? authHeader.slice(7).trim()
+      : ""
+    : null;
+
   let supabase: ReturnType<typeof getPublicSupabaseClient>;
   try {
-    supabase = getPublicSupabaseClient();
+    supabase = getPublicSupabaseClient(token);
   } catch (error) {
     if (!(error instanceof PublicSupabaseConfigurationError)) throw error;
     logFailure(correlationId, "not-configured");
@@ -92,6 +99,24 @@ export async function POST(request: Request): Promise<Response> {
       placeOrderFailure("server-error", ORDERING_UNAVAILABLE_MESSAGE),
       503,
     );
+  }
+
+  if (token !== null) {
+    if (!token) {
+      logFailure(correlationId, "invalid-token");
+      return respond(placeOrderFailure("session-expired"), 401);
+    }
+    try {
+      const { data: authData, error: authError } =
+        await supabase.auth.getUser(token);
+      if (authError || !authData?.user) {
+        logFailure(correlationId, authError?.code || "invalid-token");
+        return respond(placeOrderFailure("session-expired"), 401);
+      }
+    } catch {
+      logFailure(correlationId, "auth-unreachable");
+      return respond(placeOrderFailure("server-error"), 502);
+    }
   }
 
   let data: unknown;

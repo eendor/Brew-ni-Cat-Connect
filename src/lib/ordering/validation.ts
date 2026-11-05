@@ -9,6 +9,18 @@ export function validatePhoneNumber(phone: string): boolean {
   return /^(09\d{9}|\+639\d{9})$/.test(cleanPhone);
 }
 
+/**
+ * Normalizes a Philippine mobile number to E.164 (+639XXXXXXXXX) format.
+ * Converts 09XXXXXXXXX to +639XXXXXXXXX, stripping spaces, hyphens, and parentheses.
+ */
+export function normalizePhoneNumber(phone: string): string {
+  const cleanPhone = phone.replace(/[\s\-()]/g, "");
+  if (/^09\d{9}$/.test(cleanPhone)) {
+    return "+63" + cleanPhone.slice(1);
+  }
+  return cleanPhone;
+}
+
 /** Checkout form messages. The order API uses the same ones. */
 export const DETAILS_ERROR_MESSAGES = {
   nameRequired: "Please enter your full name.",

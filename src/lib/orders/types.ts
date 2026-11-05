@@ -331,7 +331,9 @@ type PlaceOrderFailureOf<TReason extends string> = Readonly<{
  * the order if it was saved.
  */
 export type PlaceOrderFailure =
-  | PlaceOrderFailureOf<"invalid-request" | "empty-cart" | "server-error">
+  | PlaceOrderFailureOf<
+      "invalid-request" | "empty-cart" | "server-error" | "session-expired"
+    >
   | (PlaceOrderFailureOf<"invalid-details"> &
       Readonly<{ fieldErrors: OrderFieldErrors }>)
   | (PlaceOrderFailureOf<"line-unavailable"> &

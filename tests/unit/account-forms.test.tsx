@@ -14,6 +14,8 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({
     push: routerPush,
   }),
+  useSearchParams: () => new URLSearchParams(),
+  usePathname: () => "/account/sign-in",
 }));
 
 describe("Account Forms Component Tests", () => {

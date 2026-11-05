@@ -1,7 +1,7 @@
 # Development Log
 
 **Document version:** 0.1 Draft\
-**Last updated:** 2026-10-31
+**Last updated:** 2026-11-05
 
 This log records completed work and observed evidence. Planned work is explicitly identified and is not reported as implemented or tested.
 
@@ -1436,3 +1436,14 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `docs/drop-daily-cash-count`, PR #99; POS PR #24 and POS PR #25.
 - **Known limitations:** The Z-Reading still shows only the expected cash drawer, not a counted amount. The test sale's copy is removed only on devices that install build 10145.
 - **Next action:** None for FR-097. FR-098 and FR-099 are unchanged.
+
+## 2026-11-05 — Customer profiles, checkout prefill, linked orders, and account page guard (FR-023, FR-033, FR-036, FR-038)
+
+- **Phase:** Phase 4 (customer profiles, checkout prefill, order linkage, and route protection).
+- **Task:** Implement Week 2 deliverables: customer profiles (`/account/profile`), checkout prefill, linked orders, and account page guard.
+- **Summary:** Authenticated customers can view and update their profile fields (full name and Philippine phone number) at `/account/profile` using `public.customer_profiles`, strictly normalized to `+639XXXXXXXXX` format prior to upserting (FR-038). Updated profile form styling to standard `ios-field mt-2` and `ios-label block`. Added desktop and mobile navigation links to Profile. Checkout automatically prefills the customer's name and phone when signed in, and clears prefilled data when the customer signs out with checkout open (FR-033), while guest checkout remains untouched and completely operational without prefill (FR-023). When a signed-in customer places an order, their active session token is refreshed via `getSession()` and passed in the Authorization header to `POST /api/orders`, verified with Supabase Auth (`getUser(token)`), and executed via an authenticated client so Postgres `place_online_order()` records `customer_id = auth.uid()` on the order; expired or invalid tokens return HTTP 401 `session-expired` with customer-safe guidance, and auth service failure returns HTTP 502 (FR-023). Protected `/account/*` pages (`/account`, `/account/profile`, `/account/orders`) are guarded by `AccountGuard`, redirecting unauthenticated visitors to `/account/sign-in?returnTo=<path>`. `safeReturnTo()` prevents open redirects by verifying same-origin, rejecting `//evil.example`, `/\evil.example`, and `/\t/evil.example` bypasses, and restoring customers back upon login (FR-033, FR-036).
+- **Files:** `src/lib/ordering/validation.ts`, `src/lib/account/profile.ts`, `src/components/account/profile-view.tsx`, `src/app/account/profile/page.tsx`, `src/app/account/page.tsx`, `src/app/account/layout.tsx`, `src/components/account/account-guard.tsx`, `src/components/account/sign-in-view.tsx`, `src/app/account/sign-in/page.tsx`, `src/components/layout/account-nav.tsx`, `src/components/layout/mobile-navigation.tsx`, `src/context/auth-context.tsx`, `src/lib/orders/order-client.ts`, `src/lib/orders/types.ts`, `src/lib/orders/place-order.ts`, `src/components/checkout/checkout-view.tsx`, `src/lib/supabase/public-client.ts`, `src/app/api/orders/route.ts`, `tests/unit/checkout-validation.test.ts`, `tests/unit/account-profile.test.tsx`, `tests/unit/checkout-prefill.test.tsx`, `tests/unit/orders-route.test.ts`, `tests/unit/order-client.test.ts`, `tests/unit/account-guard.test.tsx`, `tests/e2e/account-guard.spec.ts`, `docs/evidence/phase-4/screenshots/profile.png`, `docs/evidence/phase-4/screenshots/checkout-prefill.png`, `docs/functional-requirements.md`, `docs/test-cases.md`, `docs/development-log.md`, `docs/security-and-privacy.md`.
+- **Testing:** TC-P4-263 to TC-P4-277 all pass. Full test suite: `npx vitest run` — 64 test files passed (64), 508 passed (508); `CI=1 npx playwright test --project=chromium` — 29 passed, 3 skipped. `npm run typecheck`, `npm run lint`, and `npm run format:check` all passed with 0 errors. `npm run build` compiled and statically generated all pages including `/account/profile`. Visual evidence recorded in `docs/evidence/phase-4/screenshots/profile.png` and `docs/evidence/phase-4/screenshots/checkout-prefill.png`.
+- **Branch / PR:** `feat/p4-account-profile`.
+- **Known limitations:** Phone numbers are restricted to Philippine mobile formats (`+639XXXXXXXXX`); international formats are not accepted per database constraint.
+- **Next action:** Peer review by Rodnee; merge PR into `main`.
