@@ -306,7 +306,7 @@ describe("POST /api/orders", () => {
     });
   });
 
-  it("TC-P4-269 — rejects bad or expired session token with 502", async () => {
+  it("TC-P4-269 — rejects bad or expired session token with 401 session-expired, and auth failure with 502", async () => {
     const getUser = vi.fn().mockResolvedValue({
       data: { user: null },
       error: { code: "invalid_jwt", message: "JWT expired" },
@@ -326,12 +326,31 @@ describe("POST /api/orders", () => {
     });
 
     const response = await POST(request);
-    expect(response.status).toBe(502);
+    expect(response.status).toBe(401);
     expect(await response.json()).toEqual({
+      ok: false,
+      reason: "session-expired",
+      message: PLACE_ORDER_MESSAGES["session-expired"],
+    });
+    expect(rpc).not.toHaveBeenCalled();
+
+    // When auth service throws (unreachable), returns 502 server-error
+    orderRateLimiter.reset();
+    getUser.mockRejectedValueOnce(new Error("Supabase auth unreachable"));
+    const unreachableReq = new Request("http://localhost/api/orders", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: "Bearer token-123",
+      },
+      body: JSON.stringify(orderRequest),
+    });
+    const unreachableRes = await POST(unreachableReq);
+    expect(unreachableRes.status).toBe(502);
+    expect(await unreachableRes.json()).toEqual({
       ok: false,
       reason: "server-error",
       message: PLACE_ORDER_MESSAGES["server-error"],
     });
-    expect(rpc).not.toHaveBeenCalled();
   });
 });

@@ -55,7 +55,7 @@ const serverError = {
 describe("Place order from the browser", () => {
   it("TC-P4-121 — posts the order as JSON, uncached, and returns the API's answer", async () => {
     const fetchImpl = answering(JSON.stringify(placed), 201);
-    expect(await placeOrder(request, fetchImpl)).toEqual(placed);
+    expect(await placeOrder(request, { fetchImpl })).toEqual(placed);
 
     expect(fetchImpl).toHaveBeenCalledTimes(1);
     const [url, init] = fetchImpl.mock.calls[0] ?? [];
@@ -100,5 +100,25 @@ describe("Place order from the browser", () => {
     expect(
       await placeOrder(request, answering(JSON.stringify(otherToken), 201)),
     ).toEqual(serverError);
+  });
+
+  it("passes session token in Authorization header and returns session-expired error", async () => {
+    const expiredFailure = {
+      ok: false,
+      reason: "session-expired",
+      message: PLACE_ORDER_MESSAGES["session-expired"],
+    };
+    const fetchImpl = answering(JSON.stringify(expiredFailure), 401);
+    const result = await placeOrder(request, {
+      fetchImpl,
+      sessionToken: "expired-jwt",
+    });
+
+    expect(result).toEqual(expiredFailure);
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    const [, init] = fetchImpl.mock.calls[0] ?? [];
+    expect(init?.headers).toMatchObject({
+      authorization: "Bearer expired-jwt",
+    });
   });
 });

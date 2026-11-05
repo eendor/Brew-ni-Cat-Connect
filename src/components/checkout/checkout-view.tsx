@@ -51,6 +51,7 @@ import type { ShopFacts } from "@/lib/site-content/types";
 import { isOnlineOrderingEnabled } from "@/lib/orders/online-ordering";
 import { placeOrder, type PlaceOrder } from "@/lib/orders/order-client";
 import { buildOrderPath } from "@/lib/orders/order-link";
+import { getAuthSupabaseClient } from "@/lib/supabase/auth-client";
 import {
   buildOrderDraft,
   createIdempotencyKey,
@@ -256,6 +257,15 @@ export function CheckoutView({
   useEffect(() => () => window.clearTimeout(copyTimerRef.current), []);
   useEffect(() => () => window.clearTimeout(stepTimerRef.current), []);
 
+  const loadedProfileRef = useRef<{ name: string; phone: string } | null>(
+    initialProfile
+      ? {
+          name: initialProfile.fullName,
+          phone: initialProfile.phone ?? "",
+        }
+      : null,
+  );
+
   // Prefill name and phone when customer is signed in (FR-023)
   useEffect(() => {
     if (!user || initialProfile !== undefined) return;
@@ -264,6 +274,10 @@ export function CheckoutView({
     void fetchCustomerProfile({ userId: user.id })
       .then((profile) => {
         if (!active || !profile) return;
+        loadedProfileRef.current = {
+          name: profile.fullName,
+          phone: profile.phone ?? "",
+        };
         setCustomer((prev) => ({
           ...prev,
           name: prev.name || profile.fullName,
@@ -278,6 +292,23 @@ export function CheckoutView({
       active = false;
     };
   }, [user, initialProfile]);
+
+  // Remove prefilled account profile data when customer signs out (FR-033)
+  const wasSignedInRef = useRef(Boolean(user));
+  useEffect(() => {
+    if (user) {
+      wasSignedInRef.current = true;
+    } else if (wasSignedInRef.current && loadedProfileRef.current) {
+      const prefilled = loadedProfileRef.current;
+      setCustomer((prev) => ({
+        ...prev,
+        name: prev.name === prefilled.name ? "" : prev.name,
+        phone: prev.phone === prefilled.phone ? "" : prev.phone,
+      }));
+      loadedProfileRef.current = null;
+      wasSignedInRef.current = false;
+    }
+  }, [user]);
 
   // Revalidate cart prices against authoritative menu on mount
   useEffect(() => {
@@ -450,7 +481,16 @@ export function CheckoutView({
       };
     }
     const { idempotencyKey, trackingToken } = attemptRef.current;
-    const sessionToken = session?.access_token ?? null;
+    let sessionToken = session?.access_token ?? null;
+    try {
+      const authClient = getAuthSupabaseClient();
+      const { data: sessionData } = await authClient.auth.getSession();
+      if (sessionData?.session?.access_token) {
+        sessionToken = sessionData.session.access_token;
+      }
+    } catch {
+      // Fallback to active context token if client lookup throws
+    }
 
     let result: PlaceOrderResult;
     try {

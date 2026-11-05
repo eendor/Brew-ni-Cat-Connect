@@ -161,4 +161,77 @@ describe("Checkout Prefill for Signed-in Customers vs Guest Checkout (FR-023)", 
     const phoneInput = screen.getByLabelText(/phone number/i);
     expect(phoneInput).toHaveValue("");
   });
+
+  it("clears prefilled name and phone when customer signs out while checkout is open (FR-033)", async () => {
+    let authCallback: ((event: string, session: unknown) => void) | null = null;
+    const testProfile: CustomerProfile = {
+      userId: "customer-123",
+      fullName: "Juan Dela Cruz",
+      phone: "+639123456789",
+    };
+    const client = {
+      auth: {
+        getSession: vi.fn().mockResolvedValue({
+          data: { session: { user: mockCustomer, access_token: "token-123" } },
+          error: null,
+        }),
+        onAuthStateChange: vi
+          .fn()
+          .mockImplementation(
+            (cb: (event: string, session: unknown) => void) => {
+              authCallback = cb;
+              return { data: { subscription: { unsubscribe: vi.fn() } } };
+            },
+          ),
+        getUser: vi.fn().mockResolvedValue({
+          data: { user: mockCustomer },
+          error: null,
+        }),
+        signOut: vi.fn().mockResolvedValue({ error: null }),
+      },
+    } as unknown as SupabaseClient;
+
+    render(
+      <AuthProvider client={client}>
+        <ShopFactsProvider facts={mockFacts}>
+          <CartProvider
+            initialState={{
+              lines: [
+                {
+                  key: "americano::regular-12::",
+                  itemId: "americano",
+                  itemName: "Americano",
+                  variantId: "regular-12",
+                  variantName: "12 oz",
+                  flavor: null,
+                  unitPrice: 90,
+                  quantity: 1,
+                  lineTotal: 90,
+                },
+              ],
+              fulfillment: "pickup",
+            }}
+          >
+            <CheckoutView
+              loadMenu={async () => mockCatalog}
+              initialProfile={testProfile}
+            />
+          </CartProvider>
+        </ShopFactsProvider>
+      </AuthProvider>,
+    );
+
+    const nameInput = await screen.findByLabelText(/name/i);
+    expect(nameInput).toHaveValue("Juan Dela Cruz");
+
+    // Simulate signing out
+    const triggerSignOut = authCallback as
+      ((event: string, session: unknown) => void) | null;
+    triggerSignOut?.("SIGNED_OUT", null);
+
+    await vi.waitFor(() => {
+      expect(nameInput).toHaveValue("");
+      expect(screen.getByLabelText(/phone number/i)).toHaveValue("");
+    });
+  });
 });

@@ -1,21 +1,37 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
 import { Container } from "@/components/ui/container";
 import { useAuth } from "@/context/auth-context";
 
+/**
+ * Validates a return destination URL to protect against open redirects.
+ * Only relative paths under the same origin are permitted; external URLs,
+ * protocol-relative URLs (`//evil.example`), backslashes (`/\evil.example`),
+ * and whitespace bypasses (`/\t/evil.example`) fall back to `/`.
+ */
+export function safeReturnTo(raw: string | null): string {
+  if (!raw) return "/";
+  try {
+    const origin =
+      typeof window !== "undefined"
+        ? window.location.origin
+        : "http://localhost:3000";
+    const url = new URL(raw, origin);
+    return url.origin === origin
+      ? `${url.pathname}${url.search}${url.hash}`
+      : "/";
+  } catch {
+    return "/";
+  }
+}
+
 export function SignInView() {
   const { signIn, user, isLoading } = useAuth();
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const rawReturnTo = searchParams?.get("returnTo") ?? null;
-  const returnTo =
-    rawReturnTo && rawReturnTo.startsWith("/") && !rawReturnTo.startsWith("//")
-      ? rawReturnTo
-      : "/";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -71,7 +87,11 @@ export function SignInView() {
           setGeneralError("Something went wrong. Please try again.");
         }
       } else {
-        router.push(returnTo);
+        const rawParam =
+          typeof window !== "undefined"
+            ? new URLSearchParams(window.location.search).get("returnTo")
+            : null;
+        router.push(safeReturnTo(rawParam));
       }
     } catch {
       setGeneralError("An unexpected error occurred. Please try again.");

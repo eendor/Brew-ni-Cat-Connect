@@ -180,7 +180,7 @@ export function ProfileView({
             ) : null}
 
             <div>
-              <label htmlFor="account-email" className="ios-label">
+              <label htmlFor="account-email" className="ios-label block">
                 Email address
               </label>
               <input
@@ -189,7 +189,7 @@ export function ProfileView({
                 value={user.email ?? ""}
                 disabled
                 aria-disabled="true"
-                className="ios-input mt-1 opacity-70 cursor-not-allowed bg-[var(--fill-tertiary)]"
+                className="ios-field mt-2 opacity-70 cursor-not-allowed bg-[var(--fill-tertiary)]"
               />
               <p className="mt-1 text-xs text-[var(--text-muted)]">
                 Email is managed through your login credentials.
@@ -197,7 +197,7 @@ export function ProfileView({
             </div>
 
             <div>
-              <label htmlFor={nameInputId} className="ios-label">
+              <label htmlFor={nameInputId} className="ios-label block">
                 Full Name
               </label>
               <input
@@ -212,7 +212,7 @@ export function ProfileView({
                     setErrors((prev) => ({ ...prev, fullName: "" }));
                   }
                 }}
-                className={`ios-input mt-1 ${errors.fullName ? "border-[var(--danger)]" : ""}`}
+                className={`ios-field mt-2 ${errors.fullName ? "border-[var(--danger)]" : ""}`}
                 aria-invalid={Boolean(errors.fullName)}
                 aria-describedby={errors.fullName ? "name-error" : undefined}
                 placeholder="Juan Dela Cruz"
@@ -228,7 +228,7 @@ export function ProfileView({
             </div>
 
             <div>
-              <label htmlFor={phoneInputId} className="ios-label">
+              <label htmlFor={phoneInputId} className="ios-label block">
                 Phone Number
               </label>
               <input
@@ -243,10 +243,10 @@ export function ProfileView({
                     setErrors((prev) => ({ ...prev, phone: "" }));
                   }
                 }}
-                className={`ios-input mt-1 ${errors.phone ? "border-[var(--danger)]" : ""}`}
+                className={`ios-field mt-2 ${errors.phone ? "border-[var(--danger)]" : ""}`}
                 aria-invalid={Boolean(errors.phone)}
                 aria-describedby={errors.phone ? "phone-error" : "phone-help"}
-                placeholder="0912 345 6789 or +63 912 345 6789"
+                placeholder="e.g. 0912 345 6789"
               />
               {errors.phone ? (
                 <p
@@ -260,8 +260,7 @@ export function ProfileView({
                   id="phone-help"
                   className="mt-1 text-xs text-[var(--text-muted)]"
                 >
-                  Philippine mobile number (e.g. 0912 345 6789 or +63 912 345
-                  6789).
+                  {"Philippine mobile number (e.g. 0912 345 6789)."}
                 </p>
               )}
             </div>

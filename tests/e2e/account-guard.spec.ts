@@ -133,6 +133,7 @@ test.describe("Account Page Guard E2E (FR-036)", () => {
     await page.screenshot({
       path: "docs/evidence/phase-4/screenshots/profile.png",
       fullPage: true,
+      mask: [page.getByRole("region", { name: "Find us" })],
     });
   });
 
@@ -217,6 +218,7 @@ test.describe("Account Page Guard E2E (FR-036)", () => {
     await page.screenshot({
       path: "docs/evidence/phase-4/screenshots/checkout-prefill.png",
       fullPage: true,
+      mask: [page.getByRole("region", { name: "Find us" })],
     });
   });
 });

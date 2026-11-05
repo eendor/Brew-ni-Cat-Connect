@@ -104,14 +104,14 @@ export async function POST(request: Request): Promise<Response> {
   if (token !== null) {
     if (!token) {
       logFailure(correlationId, "invalid-token");
-      return respond(placeOrderFailure("server-error"), 502);
+      return respond(placeOrderFailure("session-expired"), 401);
     }
     try {
       const { data: authData, error: authError } =
         await supabase.auth.getUser(token);
       if (authError || !authData?.user) {
         logFailure(correlationId, authError?.code || "invalid-token");
-        return respond(placeOrderFailure("server-error"), 502);
+        return respond(placeOrderFailure("session-expired"), 401);
       }
     } catch {
       logFailure(correlationId, "auth-unreachable");

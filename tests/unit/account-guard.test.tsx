@@ -4,7 +4,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const routerReplace = vi.fn();
 let currentPathname = "/account/profile";
-let currentSearchParams = new URLSearchParams();
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
@@ -12,10 +11,10 @@ vi.mock("next/navigation", () => ({
     push: vi.fn(),
   }),
   usePathname: () => currentPathname,
-  useSearchParams: () => currentSearchParams,
 }));
 
 import { AccountGuard } from "@/components/account/account-guard";
+import { safeReturnTo } from "@/components/account/sign-in-view";
 import { AuthProvider } from "@/context/auth-context";
 
 const mockCustomer: User = {
@@ -49,7 +48,7 @@ describe("Account Page Guard (FR-036)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     currentPathname = "/account/profile";
-    currentSearchParams = new URLSearchParams();
+    window.history.replaceState({}, "", "/account/profile");
   });
 
   it("TC-P4-270 — redirects signed-out visitors from /account/profile to /account/sign-in with returnTo", async () => {
@@ -76,7 +75,7 @@ describe("Account Page Guard (FR-036)", () => {
   it("redirects signed-out visitors from /account/orders preserving query params", async () => {
     const client = createMockAuthClient(null);
     currentPathname = "/account/orders";
-    currentSearchParams = new URLSearchParams("page=2");
+    window.history.replaceState({}, "", "/account/orders?page=2");
 
     render(
       <AuthProvider client={client}>
@@ -122,5 +121,24 @@ describe("Account Page Guard (FR-036)", () => {
 
     expect(screen.getByTestId("public-content")).toBeInTheDocument();
     expect(routerReplace).not.toHaveBeenCalled();
+  });
+});
+
+describe("safeReturnTo open redirect protection", () => {
+  it("rejects protocol-relative and backslash bypass URLs", () => {
+    expect(safeReturnTo("//evil.example")).toBe("/");
+    expect(safeReturnTo("/\\evil.example")).toBe("/");
+    expect(safeReturnTo("/\\t/evil.example")).toBe("/");
+    expect(safeReturnTo("https://evil.example")).toBe("/");
+    expect(safeReturnTo("javascript:alert(1)")).toBe("/");
+    expect(safeReturnTo(null)).toBe("/");
+    expect(safeReturnTo("")).toBe("/");
+  });
+
+  it("permits safe local relative paths", () => {
+    expect(safeReturnTo("/account/profile")).toBe("/account/profile");
+    expect(safeReturnTo("/account/orders?page=2#heading")).toBe(
+      "/account/orders?page=2#heading",
+    );
   });
 });

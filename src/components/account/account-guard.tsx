@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, type ReactNode } from "react";
 
 import { useAuth } from "@/context/auth-context";
@@ -21,20 +21,20 @@ export function AccountGuard({ children }: { children: ReactNode }) {
   const { user, isLoading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
 
   const normalizedPath = pathname?.replace(/\/$/, "") || "";
   const isPublicAccountRoute = PUBLIC_ACCOUNT_PATHS.has(normalizedPath);
 
   useEffect(() => {
     if (!isLoading && !user && !isPublicAccountRoute && pathname) {
-      const qs = searchParams?.toString();
-      const returnUrl = qs ? `${pathname}?${qs}` : pathname;
+      const search =
+        typeof window !== "undefined" ? window.location.search : "";
+      const returnUrl = search ? `${pathname}${search}` : pathname;
       router.replace(
         `/account/sign-in?returnTo=${encodeURIComponent(returnUrl)}`,
       );
     }
-  }, [isLoading, user, isPublicAccountRoute, pathname, searchParams, router]);
+  }, [isLoading, user, isPublicAccountRoute, pathname, router]);
 
   if (isPublicAccountRoute) {
     return <>{children}</>;
