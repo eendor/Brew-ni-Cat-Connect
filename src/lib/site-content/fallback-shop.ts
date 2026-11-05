@@ -75,6 +75,11 @@ export const fallbackShop: ShopContent = {
   riders: {
     partners: [
       {
+        name: "GutomKa Express Kabacan",
+        href: "https://www.facebook.com/GutomKaExpressKabacan",
+        logo: "/images/riders/gutomka-express.jpg",
+      },
+      {
         name: "Papa's Delivery",
         href: "https://www.facebook.com/papa.s.delivery.2025",
         logo: "/images/riders/papas-delivery.jpg",
@@ -88,6 +93,16 @@ export const fallbackShop: ShopContent = {
         name: "M&S Delivery Express Kabacan",
         href: "https://www.facebook.com/profile.php?id=100065168154381",
         logo: "/images/riders/ms-delivery-express.jpg",
+      },
+      {
+        name: "OZMO Delivery Kabacan 2.0",
+        href: "https://www.facebook.com/profile.php?id=61595537931810",
+        logo: "/images/riders/ozmo-delivery.jpg",
+      },
+      {
+        name: "Minute Delivery Kabacan",
+        href: "https://www.facebook.com/MinuteDeliveryKabacan2",
+        logo: "/images/riders/minute-delivery.jpg",
       },
     ],
   },

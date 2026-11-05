@@ -288,7 +288,7 @@ The client approved the local shop/customer imagery for website use. Phase 2 lim
 
 ### 16.4 Public delivery and contact information
 
-The contact page publishes only the confirmed business address, phone, email, payments, takeout fee, social links, and the three local rider services (name, public Facebook page and public profile photo). It collects no address/contact form data. Rider links are external; the copy states that the rider orders at the shop for the customer, that the delivery fee, timing and payment are agreed with the rider, and that Brew ni Cat does not book riders or charge rider fees. External links use appropriate browser separation (`target="_blank"` with `rel="noopener noreferrer"`). The rider logos are stored locally, resized to 256 × 256 px with metadata removed, so the page loads nothing from Facebook.
+The contact page publishes only the confirmed business address, phone, email, payments, takeout fee, social links, and the six local rider services (three before PR #90), each with its name, public Facebook page and public profile photo. It collects no address/contact form data. Rider links are external; the copy states that the rider orders at the shop for the customer, that the delivery fee, timing and payment are agreed with the rider, and that Brew ni Cat does not book riders or charge rider fees. External links use appropriate browser separation (`target="_blank"` with `rel="noopener noreferrer"`). The rider logos are stored locally, resized to 256 × 256 px with metadata removed, so the page loads nothing from Facebook.
 
 ### 16.5 Pre-PR checks
 

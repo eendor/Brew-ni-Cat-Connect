@@ -12,7 +12,15 @@ describe("Rider list", () => {
 
     const list = screen.getByRole("list", { name: "Rider delivery services" });
     const links = within(list).getAllByRole("link");
-    expect(partners).toHaveLength(3);
+    // GutomKa Express Kabacan is listed first
+    expect(partners.map((rider) => rider.name)).toEqual([
+      "GutomKa Express Kabacan",
+      "Papa's Delivery",
+      "Momshie's Pamalengke and Delivery Kabacan",
+      "M&S Delivery Express Kabacan",
+      "OZMO Delivery Kabacan 2.0",
+      "Minute Delivery Kabacan",
+    ]);
     expect(links).toHaveLength(partners.length);
 
     partners.forEach((rider, index) => {

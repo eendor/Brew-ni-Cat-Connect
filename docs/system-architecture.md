@@ -433,6 +433,8 @@ flowchart LR
 
 The Menu component begins retrieval after browser render. `getPublicSupabaseClient()` validates only the public URL and publishable-key variables, disables authentication persistence/refresh, and issues explicit `SELECT` projections for `categories` and `items`. `fetchPublicMenu()` centralizes the two reads; `mapMenuCatalog()` converts nullable/untrusted row shapes into immutable application types and rejects malformed names/prices/options.
 
+**Update (2026-11-04, PR #92):** `fetchPublicMenu()` returns `websiteMenu(mapMenuCatalog(...))`, which leaves out the Take-out Box and Cat Treats categories and items because both are sold only at the shop. The Menu, cart and reorder use this list. `loadMenuFacts()` still maps the full menu, so the take-out box fee keeps its POS price.
+
 Compilation, CI, and static route generation do not contact Supabase. Missing public variables throw a customer-safe configuration error consumed by the menu error state. API errors produce retry; a successful zero-row response produces the empty state. Neither path leaks raw error details.
 
 2026-10-30 (PR #69): rendering a page now reads the saved site content and the menu prices on the server with the same publishable key; see §20. When the public variables are missing, as in the CI validation job, the build makes no Supabase request and uses the fallback copy.

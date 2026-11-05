@@ -5,16 +5,19 @@ import { useParams } from "next/navigation";
 import { OrderStatusTracker } from "@/components/orders/order-status-tracker";
 import { siteConfig } from "@/config/site";
 import { useAuth } from "@/context/auth-context";
+import { useCart } from "@/context/cart-context";
 import { useShopFacts } from "@/context/shop-facts-context";
+import { fetchPublicMenu } from "@/lib/menu/fetch-public-menu";
 import { formatPrice } from "@/lib/menu/format-price";
-import { fetchOrder } from "@/lib/orders/fetch-order";
-import { readTrackingTokenFromHash } from "@/lib/orders/order-link";
-import { isOrderReference, type OrderView } from "@/lib/orders/types";
 import {
   localityLine,
   streetLine,
   takeoutBoxText,
 } from "@/lib/site-content/format";
+import { fetchOrder } from "@/lib/orders/fetch-order";
+import { readTrackingTokenFromHash } from "@/lib/orders/order-link";
+import { reorderItems, type ReorderSummary } from "@/lib/orders/reorder";
+import { isOrderReference, OrderView } from "@/lib/orders/types";
 
 type PageState =
   | { status: "loading" }
@@ -23,13 +26,19 @@ type PageState =
   | { status: "success"; order: OrderView };
 
 export default function OrderConfirmationPage() {
-  const { address, takeoutBoxPrice } = useShopFacts();
   const { user, isLoading: isAuthLoading } = useAuth();
+  const { addItem, openDrawer } = useCart();
+  const { address, takeoutBoxPrice } = useShopFacts();
   const params = useParams();
   const referenceParam =
     typeof params.reference === "string" ? params.reference : "";
   const [state, setState] = useState<PageState>({ status: "loading" });
   const [trackingToken, setTrackingToken] = useState<string | null>(null);
+  const [isReordering, setIsReordering] = useState(false);
+  const [reorderResult, setReorderResult] = useState<ReorderSummary | null>(
+    null,
+  );
+  const [reorderError, setReorderError] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadOrder() {
@@ -71,6 +80,25 @@ export default function OrderConfirmationPage() {
 
     void loadOrder();
   }, [referenceParam, isAuthLoading, user]);
+
+  const handleReorder = async () => {
+    if (state.status !== "success" || !state.order.items.length) return;
+    setIsReordering(true);
+    setReorderResult(null);
+    setReorderError(null);
+    try {
+      const catalog = await fetchPublicMenu();
+      const result = reorderItems(state.order.items, catalog, addItem);
+      setReorderResult(result);
+      if (result.addedCount > 0) {
+        openDrawer();
+      }
+    } catch {
+      setReorderError("We couldn't load the menu. Try again.");
+    } finally {
+      setIsReordering(false);
+    }
+  };
 
   if (state.status === "loading") {
     return (
@@ -140,11 +168,72 @@ export default function OrderConfirmationPage() {
               </span>
             </p>
           </div>
-          <span className="self-start rounded-full border border-[var(--notice-border)] bg-[var(--notice-surface)] px-4 py-1.5 text-sm font-semibold text-[var(--notice-text)] capitalize sm:self-auto">
-            {order.status}
-          </span>
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="rounded-full border border-[var(--notice-border)] bg-[var(--notice-surface)] px-4 py-1.5 text-sm font-semibold text-[var(--notice-text)] capitalize">
+              {order.status}
+            </span>
+            <button
+              type="button"
+              onClick={handleReorder}
+              disabled={isReordering}
+              className="inline-flex min-h-10 items-center justify-center rounded-full border border-[var(--accent-solid)] bg-transparent px-4 text-sm font-semibold text-[var(--accent-solid)] transition-colors hover:bg-[var(--accent-soft)] disabled:opacity-50"
+            >
+              {isReordering ? "Reordering..." : "Reorder"}
+            </button>
+          </div>
         </div>
       </header>
+
+      {reorderResult && (
+        <div
+          role="region"
+          aria-label="Reorder notices"
+          className="mb-6 space-y-3 rounded-[var(--shape-md)] border border-[var(--separator)] bg-[var(--surface-overlay)] p-4 shadow-sm"
+        >
+          {reorderResult.successMessage && (
+            <div className="flex items-center justify-between gap-2 text-sm text-[var(--accent-solid)] font-medium">
+              <span>{reorderResult.successMessage}</span>
+              <button
+                type="button"
+                onClick={openDrawer}
+                className="text-xs font-semibold underline underline-offset-2 hover:opacity-80"
+              >
+                View Cart
+              </button>
+            </div>
+          )}
+          {reorderResult.unavailableItems.length > 0 && (
+            <div className="rounded-[var(--shape-sm)] bg-[var(--danger-soft)] p-3 text-sm text-[var(--danger)]">
+              <p className="font-semibold">Unavailable items:</p>
+              <ul className="mt-1 list-disc pl-5 space-y-0.5">
+                {reorderResult.unavailableItems.map((notice, idx) => (
+                  <li key={idx}>{notice.message}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {reorderResult.priceChangedItems.length > 0 && (
+            <div className="rounded-[var(--shape-sm)] bg-[var(--notice-surface)] p-3 text-sm text-[var(--notice-text)] border border-[var(--notice-border)]">
+              <p className="font-semibold">Price updates:</p>
+              <ul className="mt-1 list-disc pl-5 space-y-0.5">
+                {reorderResult.priceChangedItems.map((notice, idx) => (
+                  <li key={idx}>{notice.message}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
+
+      {reorderError && (
+        <div
+          role="region"
+          aria-label="Reorder notices"
+          className="mb-6 rounded-[var(--shape-md)] border border-[var(--danger)] bg-[var(--danger-soft)] p-4 text-sm text-[var(--danger)]"
+        >
+          {reorderError}
+        </div>
+      )}
 
       <section className="space-y-6">
         {/* Live order status tracker (FR-044 to FR-049) */}

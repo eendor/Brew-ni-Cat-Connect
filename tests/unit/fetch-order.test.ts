@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const getPublicSupabaseClient = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/supabase/public-client", () => ({ getPublicSupabaseClient }));
+const getAuthSupabaseClient = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/supabase/auth-client", () => ({ getAuthSupabaseClient }));
 
 import { fetchOrder } from "@/lib/orders/fetch-order";
 import type { OrderView } from "@/lib/orders/types";
@@ -15,6 +17,7 @@ describe("fetchOrder", () => {
   beforeEach(() => {
     rpc.mockReset();
     getPublicSupabaseClient.mockReturnValue({ rpc });
+    getAuthSupabaseClient.mockReset();
   });
 
   it("TC-P4-129 — returns the order for a matching reference and token", async () => {
@@ -48,13 +51,16 @@ describe("fetchOrder", () => {
   });
 
   it("TC-P5-001 — allows authenticated customer without token to fetch order (FR-044)", async () => {
-    rpc.mockResolvedValue({ data: ORDER, error: null });
+    const authRpc = vi.fn().mockResolvedValue({ data: ORDER, error: null });
+    getAuthSupabaseClient.mockReturnValue({ rpc: authRpc });
 
     await expect(fetchOrder(REFERENCE, null)).resolves.toBe(ORDER);
-    expect(rpc).toHaveBeenCalledWith("get_online_order", {
+    expect(authRpc).toHaveBeenCalledWith("get_online_order", {
       p_reference: REFERENCE,
       p_tracking_token: null,
     });
+    // the signed-in client, not the guest one
+    expect(rpc).not.toHaveBeenCalled();
   });
 
   it("TC-P5-002 — passes explicit client if supplied", async () => {

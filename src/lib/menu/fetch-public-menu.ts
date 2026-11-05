@@ -1,4 +1,4 @@
-import { mapMenuCatalog } from "@/lib/menu/map-menu-catalog";
+import { mapMenuCatalog, websiteMenu } from "@/lib/menu/map-menu-catalog";
 import { getPublicSupabaseClient } from "@/lib/supabase/public-client";
 import type { AddOnRow, CategoryRow, ItemRow, MenuCatalog } from "@/types/menu";
 
@@ -45,9 +45,13 @@ export async function fetchPublicMenu(
   }
 
   // Add-ons are extras: if they can't load, the menu still shows without them.
-  return mapMenuCatalog(
-    categoriesResult.data ?? [],
-    itemsResult.data ?? [],
-    addOnsResult.error ? [] : (addOnsResult.data ?? []),
+  // The website doesn't list the shop-only take-out box and cat treats, so the
+  // menu, cart and reorder all work from the same list.
+  return websiteMenu(
+    mapMenuCatalog(
+      categoriesResult.data ?? [],
+      itemsResult.data ?? [],
+      addOnsResult.error ? [] : (addOnsResult.data ?? []),
+    ),
   );
 }
