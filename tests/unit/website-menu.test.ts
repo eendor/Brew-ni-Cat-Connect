@@ -110,6 +110,31 @@ describe("The website menu leaves out what is sold only at the shop", () => {
     expect(names(catalog)).toContainEqual(["CAT TREATS", ["Salmon Bites"]]);
   });
 
+  it("TC-P6-217 — bottled water is left out however it is spelled, and the other drinks stay", () => {
+    for (const name of ["Bottled Water", "bottled water", " BOTTLED-WATER "]) {
+      expect(isShopOnlyName(name), name).toBe(true);
+    }
+    for (const name of ["Water", "Sparkling Water", "Bottled Iced Coffee"]) {
+      expect(isShopOnlyName(name), name).toBe(false);
+    }
+
+    const catalog = mapMenuCatalog(
+      [{ id: "drinks", name: "Cat-Tastic Drinks" }],
+      [
+        item("matcha", "drinks", "Matcha (The Lucky Green Neko)", 59),
+        item("water", "drinks", "Bottled Water", 15),
+      ],
+    );
+
+    expect(names(websiteMenu(catalog))).toEqual([
+      ["Cat-Tastic Drinks", ["Matcha (The Lucky Green Neko)"]],
+    ]);
+    // the POS menu still sells it
+    expect(names(catalog)).toEqual([
+      ["Cat-Tastic Drinks", ["Bottled Water", "Matcha (The Lucky Green Neko)"]],
+    ]);
+  });
+
   it("TC-P6-215 — the Menu, cart and reorder read leaves both out, while the takeout box fee still comes from the POS item", async () => {
     getPublicSupabaseClient.mockReturnValue(menuClient());
     getServerReadClient.mockReturnValue(menuClient());

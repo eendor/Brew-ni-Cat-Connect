@@ -18,20 +18,27 @@ export function isCatTreatsCategory(name: string): boolean {
   return name.trim().toLowerCase() === "cat treats";
 }
 
+/** The shop-only names with everything but letters taken out. */
+const SHOP_ONLY_NAMES: ReadonlySet<string> = new Set([
+  "takeoutbox",
+  "cattreats",
+  "bottledwater",
+]);
+
 /**
- * Two things on the POS menu are sold only at the shop: the Take-out Box, the
- * packaging fee that the cart and checkout already show (paid at the shop),
- * and Cat Treats, which customers buy there to feed the café cats. Matched
- * however the name is spelled ("Take-out Box", "takeout box").
+ * Three things on the POS menu are sold only at the shop: the Take-out Box,
+ * the packaging fee that the cart and checkout already show (paid at the
+ * shop), Cat Treats, which customers buy there to feed the café cats, and
+ * Bottled Water. Matched however the name is spelled ("Take-out Box",
+ * "takeout box", "bottled-water").
  */
 export function isShopOnlyName(name: string): boolean {
-  const compact = name.toLowerCase().replace(/[^a-z]/g, "");
-  return compact === "takeoutbox" || compact === "cattreats";
+  return SHOP_ONLY_NAMES.has(name.toLowerCase().replace(/[^a-z]/g, ""));
 }
 
 /**
  * The menu as the website lists it: without the shop-only categories and
- * items. The POS keeps selling both, and the menu facts still read the
+ * items. The POS keeps selling all three, and the menu facts still read the
  * takeout box price from the full catalog (FR-084).
  */
 export function websiteMenu(catalog: MenuCatalog): MenuCatalog {
