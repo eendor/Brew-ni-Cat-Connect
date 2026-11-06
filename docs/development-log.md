@@ -1458,3 +1458,14 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `feat/p4-account-profile`.
 - **Known limitations:** Phone numbers are restricted to Philippine mobile formats (`+639XXXXXXXXX`); international formats are not accepted per database constraint.
 - **Next action:** Peer review by Rodnee; merge PR into `main`.
+
+## 2026-11-06 — Review fixes for live order tracking (FR-044 to FR-049)
+
+- **Phase:** Phase 5 (Live Order Tracking & History, Week 2).
+- **Task:** Finish the review fixes on PR #93 and retake its evidence before merge.
+- **Summary:** In `docs/execution-paths.md` I restored the original section 6 diagram above its five rules and moved the detailed diagram under the 2026-11-04 update, so section 6 matches `main` up to that update. In `docs/test-cases.md` the customer profile cases from PR #94 stay section 31, as on `main`, and live order tracking is now section 32. I added TC-P5-063 (the Next Steps card is hidden once an order is final) and TC-P5-064 (the shop's status change shows without a reload) to the table. TC-P5-064 was first titled TC-P4-263, which PR #94 uses. `tests/e2e/order-tracking.spec.ts` now saves the five screenshots when `CAPTURE_EVIDENCE=1`. I retook them from a fresh build, so the rejected and completed screenshots no longer show the Next Steps card.
+- **Files:** `docs/execution-paths.md`, `docs/test-cases.md`, `docs/functional-requirements.md`, `docs/development-log.md`, `tests/e2e/order-tracking.spec.ts`, `tests/unit/order-confirmation-page.test.tsx`, `docs/evidence/phase-5/order-tracking/` (five PNGs).
+- **Testing:** `python3 scripts/validate_phase0_docs.py`: PHASE0_DOC_VALIDATION=PASS. `NODE_OPTIONS=--no-experimental-webstorage npx vitest run`: Test Files 66 passed (66), Tests 538 passed (538). `npx tsc --noEmit -p .`, `npx eslint . --max-warnings=0` and `npx prettier --check .` pass. `npm run build`, then `CI=1 npx playwright test --project=chromium`: 32 passed, 3 skipped. `CAPTURE_EVIDENCE=1 npx playwright test tests/e2e/order-tracking.spec.ts --project=chromium`: 2 passed.
+- **Branch / PR:** `feat/p5-order-tracking`, PR #93.
+- **Known limitations:** The non-blocking suggestions from my 2026-11-05 review are still open: the unused `useOrderUpdates` adapter, `activeOrder`, a refresh dropped during a poll, stage times after an undo, the badge while connecting, and the fallback rejection reason.
+- **Next action:** Renier handles those suggestions in a follow-up PR.

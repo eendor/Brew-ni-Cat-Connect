@@ -184,6 +184,37 @@ Expired, reused, malformed, or rate-limited requests have no credential effect a
 ```mermaid
 sequenceDiagram
     actor Customer
+    participant Client as Web/Android client
+    participant Backend as Shared backend
+    participant Store as Order data store
+    participant Realtime as Realtime channel
+
+    Customer->>Client: Open authorized order tracking
+    Client->>Backend: Request order by authorized reference
+    Backend->>Store: Read current state under access policy
+    Store-->>Backend: Current state or no authorized match
+    Backend-->>Client: Current state
+    Client->>Realtime: Subscribe to authorized order changes
+    Realtime-->>Client: New state event
+    Client->>Backend: Re-fetch canonical state
+    Backend-->>Client: Latest canonical state
+```
+
+- A realtime message is a refresh signal, not the sole source of truth; the client re-fetches canonical state.
+- If the realtime connection drops, the client indicates that updates may be delayed, reconnects with backoff, and may use bounded polling.
+- If the authenticated customer does not own the order, the backend returns no order data.
+- Events received out of order must not regress the displayed state.
+- Notification channels and timing remain `TODO: Confirm with Brew ni Cat owner.`
+
+### Update (2026-11-04, PR [#93](https://github.com/eendor/Brew-ni-Cat-Connect/pull/93))
+
+The following subsections document the implemented live order-tracking flows.
+
+The sequence below shows the implemented flow in detail.
+
+```mermaid
+sequenceDiagram
+    actor Customer
     participant Client as Web Client (/orders/[reference])
     participant Backend as Supabase RPC (get_online_order)
     participant Store as PostgreSQL (online_orders)
@@ -214,16 +245,6 @@ sequenceDiagram
         Backend-->>Client: Render generic "Order Not Found" state (zero internal error leakage)
     end
 ```
-
-- A realtime message is a refresh signal, not the sole source of truth; the client re-fetches canonical state.
-- If the realtime connection drops, the client indicates that updates may be delayed, reconnects with backoff, and may use bounded polling.
-- If the authenticated customer does not own the order, the backend returns no order data.
-- Events received out of order must not regress the displayed state.
-- Notification channels and timing remain `TODO: Confirm with Brew ni Cat owner.`
-
-### Update (2026-11-04, PR [#93](https://github.com/eendor/Brew-ni-Cat-Connect/pull/93))
-
-The following subsections document the implemented live order-tracking flows.
 
 ### 6.1 Guest tracking flow (FR-045)
 

@@ -245,7 +245,7 @@ FR-012–FR-014 remain Planned for Phase 3 because browse cards are not a purcha
 
 ## 17. Phase 5 Implementation Status Note (Week 2 — Live Order Tracking)
 
-- **Live order tracking (feat/p5-order-tracking):** FR-044, FR-045, FR-046, FR-047, FR-048, and FR-049 are Implemented and verified with unit, component, and Playwright end-to-end tests (TC-P5-040 through TC-P5-062).
+- **Live order tracking (feat/p5-order-tracking):** FR-044, FR-045, FR-046, FR-047, FR-048, and FR-049 are Implemented and verified with unit, component, and Playwright end-to-end tests (TC-P5-040 through TC-P5-064).
 - **FR-044 (Authenticated tracking):** Authenticated customers can view their own orders via server-side validation in `public.get_online_order(reference, null)` where `customer_id = auth.uid()`. Cross-account tracking attempts fail server-side and render a generic "Order Not Found" state without exposing order details.
 - **FR-045 (Guest tracking credential):** Guests access tracking using a 43-character base64url possession token stored in the URL fragment (`#token=...`). The token is validated against `private.online_order_tokens` via SHA-256 hash. Fragments are never transmitted in HTTP headers or logged by servers.
 - **FR-046 (Current status and timeline):** The order tracking component (`src/components/orders/order-status-tracker.tsx`) presents the five forward pipeline stages (`pending`, `accepted`, `preparing`, `ready`, `completed`), clearly distinguishing completed, active (`aria-current="step"`), and upcoming steps. Formatted timestamps and a chronological status history list present all recorded transitions.

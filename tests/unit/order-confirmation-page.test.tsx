@@ -141,7 +141,7 @@ describe("Order confirmation page", () => {
     ).toBeInTheDocument();
   });
 
-  it("TC-P4-263 — shows the shop's status change without a reload, then stops listening (FR-046, FR-047)", async () => {
+  it("TC-P5-064 — shows the shop's status change without a reload, then stops listening (FR-046, FR-047)", async () => {
     fetchOrder
       .mockResolvedValueOnce(ORDER)
       .mockResolvedValueOnce({ ...ORDER, status: "ready" })

@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 const REFERENCE = "BNC-7K2Q9F";
 const TOKEN = "Zm9yLXRlc3RzLW9ubHktbm90LWEtcmVhbC10b2tlbg8";
@@ -37,6 +37,15 @@ function makeOrder(status: string, rejectionReason: string | null = null) {
   };
 }
 
+// With CAPTURE_EVIDENCE=1, saves the page as review evidence.
+async function captureEvidence(page: Page, state: string) {
+  if (process.env.CAPTURE_EVIDENCE !== "1") return;
+  await page.screenshot({
+    path: `docs/evidence/phase-5/order-tracking/order-tracking-${state}.png`,
+    fullPage: true,
+  });
+}
+
 test.describe("Live Order Tracking E2E", () => {
   test("TC-P5-061 — verifies live order progresses across statuses without full reload (FR-046, FR-047, FR-048)", async ({
     page,
@@ -62,6 +71,7 @@ test.describe("Live Order Tracking E2E", () => {
     // Verify initial "pending" status
     const pendingStage = page.getByTestId("tracker-stage-pending");
     await expect(pendingStage).toHaveAttribute("aria-current", "step");
+    await captureEvidence(page, "pending");
 
     // 2. Progress order to "preparing"
     currentStatus = "preparing";
@@ -82,6 +92,7 @@ test.describe("Live Order Tracking E2E", () => {
     // Stage 1 (pending) should now show completed icon
     const pendingIcon = page.getByTestId("stage-icon-pending");
     await expect(pendingIcon.locator("svg")).toBeVisible();
+    await captureEvidence(page, "preparing");
 
     // 3. Progress order to "ready"
     currentStatus = "ready";
@@ -93,6 +104,7 @@ test.describe("Live Order Tracking E2E", () => {
     await expect(readyStage).toHaveAttribute("aria-current", "step", {
       timeout: 10_000,
     });
+    await captureEvidence(page, "ready");
 
     // 4. Progress order to "completed"
     currentStatus = "completed";
@@ -108,6 +120,7 @@ test.describe("Live Order Tracking E2E", () => {
     // Status history list should contain the completed transition
     const historyList = page.getByTestId("status-history-list");
     await expect(historyList).toContainText("Completed");
+    await captureEvidence(page, "completed");
   });
 
   test("TC-P5-062 — displays customer-safe rejected order banner with reason and next steps (FR-049)", async ({
@@ -141,5 +154,6 @@ test.describe("Live Order Tracking E2E", () => {
     // Back to Menu link should navigate correctly
     const backToMenuLink = page.getByRole("link", { name: "Back to Menu" });
     await expect(backToMenuLink).toBeVisible();
+    await captureEvidence(page, "rejected");
   });
 });
