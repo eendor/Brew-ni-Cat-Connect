@@ -17,7 +17,11 @@ import {
 import { fetchOrder } from "@/lib/orders/fetch-order";
 import { readTrackingTokenFromHash } from "@/lib/orders/order-link";
 import { reorderItems, type ReorderSummary } from "@/lib/orders/reorder";
-import { isOrderReference, OrderView } from "@/lib/orders/types";
+import {
+  isFinalOrderStatus,
+  isOrderReference,
+  OrderView,
+} from "@/lib/orders/types";
 
 type PageState =
   | { status: "loading" }
@@ -322,24 +326,26 @@ export default function OrderConfirmationPage() {
         </div>
 
         {/* Next steps (FR-026), from the shop facts the checkout uses */}
-        <div className="ios-card p-6">
-          <h2 className="mb-4 text-lg font-semibold text-[var(--text-strong)]">
-            Next Steps
-          </h2>
-          <ul className="list-disc space-y-2 pl-5 text-sm text-[var(--text-muted)]">
-            <li>Bookmark this page to check your order later.</li>
-            <li>
-              When your order is ready, pick it up at {siteConfig.shortName},{" "}
-              {streetLine(address)}, {localityLine(address)}
-              {address.landmark ? ` (${address.landmark})` : null}.
-            </li>
-            <li>
-              Pay {formatPrice(order.subtotal)} via {order.paymentPreference} at
-              the counter. The {takeoutBoxText(takeoutBoxPrice)} is not included
-              in that amount.
-            </li>
-          </ul>
-        </div>
+        {!isFinalOrderStatus(order.status) && (
+          <div className="ios-card p-6">
+            <h2 className="mb-4 text-lg font-semibold text-[var(--text-strong)]">
+              Next Steps
+            </h2>
+            <ul className="list-disc space-y-2 pl-5 text-sm text-[var(--text-muted)]">
+              <li>Bookmark this page to check your order later.</li>
+              <li>
+                When your order is ready, pick it up at {siteConfig.shortName},{" "}
+                {streetLine(address)}, {localityLine(address)}
+                {address.landmark ? ` (${address.landmark})` : null}.
+              </li>
+              <li>
+                Pay {formatPrice(order.subtotal)} via {order.paymentPreference} at
+                the counter. The {takeoutBoxText(takeoutBoxPrice)} is not included
+                in that amount.
+              </li>
+            </ul>
+          </div>
+        )}
       </section>
     </div>
   );

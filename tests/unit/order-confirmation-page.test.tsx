@@ -195,4 +195,26 @@ describe("Order confirmation page", () => {
     ).toBeInTheDocument();
     expect(fetchOrder).toHaveBeenCalledWith("BNC-7K2Q9F", null);
   });
+
+  it("TC-P5-063 — hides the Next Steps card when order status is final (rejected, cancelled, completed), but shows it for non-final statuses", async () => {
+    fetchOrder.mockResolvedValueOnce({ ...ORDER, status: "pending" });
+    const { unmount } = render(<OrderConfirmationPage />);
+    expect(
+      await screen.findByRole("heading", { name: "Next Steps" }),
+    ).toBeInTheDocument();
+    unmount();
+
+    fetchOrder.mockResolvedValueOnce({
+      ...ORDER,
+      status: "rejected",
+      rejectionReason: "Out of stock",
+    });
+    render(<OrderConfirmationPage />);
+    expect(
+      await screen.findByRole("heading", { name: "Order Placed" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: "Next Steps" }),
+    ).not.toBeInTheDocument();
+  });
 });

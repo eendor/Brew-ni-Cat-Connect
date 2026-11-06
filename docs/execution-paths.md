@@ -215,6 +215,16 @@ sequenceDiagram
     end
 ```
 
+- A realtime message is a refresh signal, not the sole source of truth; the client re-fetches canonical state.
+- If the realtime connection drops, the client indicates that updates may be delayed, reconnects with backoff, and may use bounded polling.
+- If the authenticated customer does not own the order, the backend returns no order data.
+- Events received out of order must not regress the displayed state.
+- Notification channels and timing remain `TODO: Confirm with Brew ni Cat owner.`
+
+### Update (2026-11-04, PR [#93](https://github.com/eendor/Brew-ni-Cat-Connect/pull/93))
+
+The following subsections document the implemented live order-tracking flows.
+
 ### 6.1 Guest tracking flow (FR-045)
 
 1. **Token generation and link creation:** When a guest checks out, `place_online_order()` stores the SHA-256 hash of a 43-character base64url random token into `private.online_order_tokens`.
