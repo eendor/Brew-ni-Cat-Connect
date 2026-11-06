@@ -42,14 +42,18 @@ Evidence for merged Phase 4 pull requests, in merge order. Test counts come from
 | [#98](https://github.com/eendor/Brew-ni-Cat-Connect/pull/98) | 2026-11-05 | Fries can mix up to 3 flavors | `tests/database/mixed-flavors.test.ts`, `tests/e2e/menu.spec.ts`, `tests/unit/menu-order-dialog.test.tsx` and 1 more test file (`TC-P6-218`–`TC-P6-222`) | Vitest 494/494, Playwright `chromium` 29 passed, 1 skipped, CI passed |
 | [#94](https://github.com/eendor/Brew-ni-Cat-Connect/pull/94) | 2026-11-05 | Customer profiles, checkout prefill, linked orders and the account page guard (FR-023, FR-033, FR-036, FR-038) | `tests/e2e/account-guard.spec.ts`, `tests/unit/account-forms.test.tsx`, `tests/unit/account-guard.test.tsx` and 5 more test files (`TC-P4-263`–`TC-P4-277`) | Vitest 508/508, Playwright `chromium` 29 passed, 3 skipped, CI passed |
 | [#100](https://github.com/eendor/Brew-ni-Cat-Connect/pull/100) | 2026-11-06 | Phase 4 documentation closeout: this register, requirement status, the development log and the README | `docs/evidence/phase-4-verification.md`, `docs/functional-requirements.md`, `docs/development-log.md`, `README.md` | Docs validator, format check and the full local checks passed |
+| [#101](https://github.com/eendor/Brew-ni-Cat-Connect/pull/101) | 2026-11-06 | Integrated Phase 4 QA on `main` (`05a29ad`) | `docs/test-cases.md` (section 33) | Vitest 538/538 in 66 files, typecheck, lint and build passed. TC-P5-030 to TC-P5-033 failed on the Windows run because of its local Supabase settings and passed with CI's settings (Playwright `chromium` 32 passed, 3 skipped). MAN-P4-007 is referenced to #60. CI passed |
+| [#102](https://github.com/eendor/Brew-ni-Cat-Connect/pull/102) | 2026-11-06 | Phase 4 closeout: final check of `main` (`e2e15ae`) and the Phase 4 records | This register, `docs/development-log.md` (Phase 4 final check entry), `docs/functional-requirements.md`, `README.md` | npm ci, audit (0 production vulnerabilities), format, docs validator, lint, typecheck, Vitest 538/538 in 66 files and build passed; Playwright `chromium` 32 passed, 3 skipped; `chromium-3d` 21 passed; CI on `main` passed |
 
 ## Related POS pull requests
 
 The Android POS changes that Phase 4 depends on are in the POS repository, and section 16 and the requirement table of `docs/functional-requirements.md` describe them: POS PR #3 (Shop settings), POS PR #4 to #6 (product and category editor), POS PR #11 (mixed flavors), POS PR #12 (noodle add-ons), POS PR #13 (Online orders screen) and POS PR #24 (fries mixes of up to 3 flavors). The POS repository runs its tests locally, so their results are in each POS pull request.
 
-## Still open
+## Closeout
 
-- The integrated QA on `main` (Renier), recorded in `docs/test-cases.md`.
-- The final check of `main`: CI green and the full local checks.
+Phase 4 closed on 2026-11-06. The two items that were still open when #100 merged are done:
 
-Their rows are added here when they merge.
+- The integrated QA on `main` (Renier), recorded in `docs/test-cases.md`, section 33: #101.
+- The final check of `main` (CI green and the full local checks): #102.
+
+Their rows are in the table above.
