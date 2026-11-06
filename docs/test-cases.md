@@ -789,3 +789,22 @@ Run on 2026-11-04 by Renier P. Apal. Covers unit tests for `useOrderStatus` hook
 | TC-P5-064 | FR-046, FR-047 | Order Page Realtime | The shop's status change shows without a reload, then the page stops listening | Guest order page open with a valid token; the order is pending | Fire the order's `status-changed` broadcast twice while the shop moves the order to ready, then completed | The page refetches the order with the token and shows ready, then completed, without a reload; the channel is removed once the order is completed | Matches expected. | Pass | 2026-11-06 |
 
 TC-P5-063 and TC-P5-064 were added to this table on 2026-11-06 during review. TC-P5-064 was first titled TC-P4-263, which PR #94 now uses. With `CAPTURE_EVIDENCE=1`, TC-P5-061 and TC-P5-062 also save the five screenshots in `docs/evidence/phase-5/order-tracking/`.
+
+## 33. Phase 4 Integrated QA Execution Summary
+
+Run on 2026-11-06 by Renier P. Apal, the integrated QA engineer, on `main` at `05a29ad` (branch `test/p4-integrated-qa-main`). Environment: Windows (win32), Node.js, a Next.js production build, Vitest for the unit and database tests, and Playwright for the browser tests. No live orders were placed, and no production database or POS data changed during the run.
+
+| Check | Command | Result |
+| --- | --- | --- |
+| Unit and database tests | `npm run test` | 538/538 passed in 66 test files |
+| Typecheck | `npm run typecheck` | Passed |
+| Lint | `npm run lint` | Passed with 0 errors and 0 warnings |
+| Production build | `npm run build` | Passed |
+| Browser tests | `npm run test:e2e` | The Phase 1–4 tests, including auth, ordering, profile and checkout, passed. Four Phase 5 tests failed: TC-P5-030 to TC-P5-033 in `tests/e2e/order-history.spec.ts` (see below). |
+| Physical phone check (MAN-P4-007) | Manual | Not repeated. It passed on the live site on 2026-10-28 (PR #60). |
+
+**The four order-history failures.** These tests depend on the Supabase settings in the environment. `signIn()` writes a test session to local storage under a key made from `NEXT_PUBLIC_SUPABASE_URL` as the Playwright process sees it, or from CI's placeholder URL when it is unset. `next build` also reads `.env.local` and the Playwright process doesn't, so when the local settings differ from CI's, the app looks under another key and finds no session. With CI's settings (the placeholder Supabase values and `NEXT_PUBLIC_ONLINE_ORDERING=enabled` from `.github/workflows/ci.yml`), all four pass, so run the browser tests locally with those settings.
+
+**Rerun with CI's settings (2026-11-06, Rodnee, during review of PR #101).** On Linux, on the same code: `CI=1 npx playwright test --project=chromium` → 32 passed, 3 skipped, 0 failed. TC-P5-030 to TC-P5-033 passed. The 3 skipped tests, TC-P4-173, TC-P4-272 and TC-P4-273, only save evidence screenshots and run with `CAPTURE_EVIDENCE=1`. CI's "Browser tests (chromium)" job on PR #101 gave the same counts. The docs validator, Vitest (538/538 in 66 files), typecheck, lint, Prettier and the build also passed.
+
+No blocking defects were found within Phase 4 scope.
