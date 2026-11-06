@@ -790,17 +790,21 @@ Run on 2026-11-04 by Renier P. Apal. Covers unit tests for `useOrderStatus` hook
 
 TC-P5-063 and TC-P5-064 were added to this table on 2026-11-06 during review. TC-P5-064 was first titled TC-P4-263, which PR #94 now uses. With `CAPTURE_EVIDENCE=1`, TC-P5-061 and TC-P5-062 also save the five screenshots in `docs/evidence/phase-5/order-tracking/`.
 
-## 33. Phase 4 Integrated QA Execution Summary (Renier)
+## 33. Phase 4 Integrated QA Execution Summary
 
-**Execution Date:** November 6, 2026
-**QA Engineer:** Renier (Integrated QA Engineer)
-**Branch:** `test/p4-integrated-qa-main` (Base commit: `05a29ad`)
-**Environment:** Node.js (win32), Next.js production build, Vitest unit/database test runner, Playwright E2E browser runner.
+Run on 2026-11-06 by Renier P. Apal, the integrated QA engineer, on `main` at `05a29ad` (branch `test/p4-integrated-qa-main`). Environment: Windows (win32), Node.js, a Next.js production build, Vitest for the unit and database tests, and Playwright for the browser tests. No live orders were placed, and no production database or POS data changed during the run.
 
-### Execution Summary & Scope Verification
-- **Unit & Database Tests:** 538 / 538 tests passed across 66 test files (`npm run test`).
-- **Static Analysis & Linting:** TypeScript typecheck (`npm run typecheck`) and ESLint (`npm run lint`) passed with 0 errors / 0 warnings.
-- **E2E Browser Tests:** Playwright suite executed against production build (`npm run test:e2e`). Core Phase 1–4 and auth/ordering/profile/checkout E2E test scenarios passed successfully.
-- **Physical Phone Check (MAN-P4-007):** Not repeated per instructions, as Renier previously completed and verified it on the live site on October 28, 2026 (PR #60).
-- **Production Safety:** Verified that no live production database or POS orders were modified or placed during test execution.
+| Check | Command | Result |
+| --- | --- | --- |
+| Unit and database tests | `npm run test` | 538/538 passed in 66 test files |
+| Typecheck | `npm run typecheck` | Passed |
+| Lint | `npm run lint` | Passed with 0 errors and 0 warnings |
+| Production build | `npm run build` | Passed |
+| Browser tests | `npm run test:e2e` | The Phase 1–4 tests, including auth, ordering, profile and checkout, passed. Four Phase 5 tests failed: TC-P5-030 to TC-P5-033 in `tests/e2e/order-history.spec.ts` (see below). |
+| Physical phone check (MAN-P4-007) | Manual | Not repeated. It passed on the live site on 2026-10-28 (PR #60). |
 
+**The four order-history failures.** These tests depend on the Supabase settings in the environment. `signIn()` writes a test session to local storage under a key made from `NEXT_PUBLIC_SUPABASE_URL` as the Playwright process sees it, or from CI's placeholder URL when it is unset. `next build` also reads `.env.local` and the Playwright process doesn't, so when the local settings differ from CI's, the app looks under another key and finds no session. With CI's settings (the placeholder Supabase values and `NEXT_PUBLIC_ONLINE_ORDERING=enabled` from `.github/workflows/ci.yml`), all four pass, so run the browser tests locally with those settings.
+
+**Rerun with CI's settings (2026-11-06, Rodnee, during review of PR #101).** On Linux, on the same code: `CI=1 npx playwright test --project=chromium` → 32 passed, 3 skipped, 0 failed. TC-P5-030 to TC-P5-033 passed. The 3 skipped tests, TC-P4-173, TC-P4-272 and TC-P4-273, only save evidence screenshots and run with `CAPTURE_EVIDENCE=1`. CI's "Browser tests (chromium)" job on PR #101 gave the same counts. The docs validator, Vitest (538/538 in 66 files), typecheck, lint, Prettier and the build also passed.
+
+No blocking defects were found within Phase 4 scope.
