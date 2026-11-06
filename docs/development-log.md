@@ -1469,3 +1469,14 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `feat/p5-order-tracking`, PR #93.
 - **Known limitations:** The non-blocking suggestions from my 2026-11-05 review are still open: the unused `useOrderUpdates` adapter, `activeOrder`, a refresh dropped during a poll, stage times after an undo, the badge while connecting, and the fallback rejection reason.
 - **Next action:** Renier handles those suggestions in a follow-up PR.
+
+## 2026-11-06 — Phase 4 documentation closeout
+
+- **Phase:** Phase 4 (Cloud backend and customer accounts).
+- **Task:** The Phase 4 documentation closeout: requirement status, Phase 4 evidence, development log and README. It was Shan's checklist item; Shan could not work on it today, so I did it.
+- **Summary:** I added `docs/evidence/phase-4-verification.md`, which lists the 37 Phase 4 pull requests from #38 to #98, plus this one, with their dates, test files, case IDs and results, and names the related POS pull requests. In `docs/functional-requirements.md` I moved the PR #95, PR #98 and PR #94 notes back into section 16 without changing them (the PR #93 merge had put them under section 17), added a closeout note to section 16, moved FR-013, FR-014 and FR-072 from Planned to In development with the pull requests behind them, and added the 2026-11-02 Place order switch to FR-021, FR-024 and FR-025, plus PR #83's rate limit to FR-024. In `README.md` the status line, a new Phase 4 row, two older rows and the evidence links are up to date.
+- **Files:** `docs/evidence/phase-4-verification.md`, `docs/functional-requirements.md`, `docs/development-log.md`, `README.md`.
+- **Testing:** `python3 scripts/validate_phase0_docs.py`: PHASE0_DOC_VALIDATION=PASS. `NODE_OPTIONS=--no-experimental-webstorage npx vitest run`: Test Files 66 passed (66), Tests 538 passed (538). `npx tsc --noEmit -p .`, `npx eslint . --max-warnings=0` and `npx prettier --check .`: exit 0. `npm run build`: exit 0. `CI=1 npx playwright test --project=chromium`: 32 passed, 3 skipped.
+- **Branch / PR:** `docs/p4-closeout`, PR #100.
+- **Known limitations:** The integrated QA on `main` (Renier) and the final check of `main` are still open, so Phase 4 isn't closed yet. Pull requests whose descriptions give no test counts show only their CI result in the register.
+- **Next action:** Renier records the integrated QA in `docs/test-cases.md`; then I run the final check of `main` and close the Phase 4 card.
