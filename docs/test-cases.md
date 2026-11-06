@@ -789,3 +789,18 @@ Run on 2026-11-04 by Renier P. Apal. Covers unit tests for `useOrderStatus` hook
 | TC-P5-064 | FR-046, FR-047 | Order Page Realtime | The shop's status change shows without a reload, then the page stops listening | Guest order page open with a valid token; the order is pending | Fire the order's `status-changed` broadcast twice while the shop moves the order to ready, then completed | The page refetches the order with the token and shows ready, then completed, without a reload; the channel is removed once the order is completed | Matches expected. | Pass | 2026-11-06 |
 
 TC-P5-063 and TC-P5-064 were added to this table on 2026-11-06 during review. TC-P5-064 was first titled TC-P4-263, which PR #94 now uses. With `CAPTURE_EVIDENCE=1`, TC-P5-061 and TC-P5-062 also save the five screenshots in `docs/evidence/phase-5/order-tracking/`.
+
+## 33. Phase 4 Integrated QA Execution Summary (Renier)
+
+**Execution Date:** November 6, 2026
+**QA Engineer:** Renier (Integrated QA Engineer)
+**Branch:** `test/p4-integrated-qa-main` (Base commit: `05a29ad`)
+**Environment:** Node.js (win32), Next.js production build, Vitest unit/database test runner, Playwright E2E browser runner.
+
+### Execution Summary & Scope Verification
+- **Unit & Database Tests:** 538 / 538 tests passed across 66 test files (`npm run test`).
+- **Static Analysis & Linting:** TypeScript typecheck (`npm run typecheck`) and ESLint (`npm run lint`) passed with 0 errors / 0 warnings.
+- **E2E Browser Tests:** Playwright suite executed against production build (`npm run test:e2e`). Core Phase 1–4 and auth/ordering/profile/checkout E2E test scenarios passed successfully.
+- **Physical Phone Check (MAN-P4-007):** Not repeated per instructions, as Renier previously completed and verified it on the live site on October 28, 2026 (PR #60).
+- **Production Safety:** Verified that no live production database or POS orders were modified or placed during test execution.
+
