@@ -1480,3 +1480,18 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `docs/p4-closeout`, PR #100.
 - **Known limitations:** The integrated QA on `main` (Renier) and the final check of `main` are still open, so Phase 4 isn't closed yet. Pull requests whose descriptions give no test counts show only their CI result in the register.
 - **Next action:** Renier records the integrated QA in `docs/test-cases.md`; then I run the final check of `main` and close the Phase 4 card.
+
+## 2026-11-06 — Phase 4 final check and closeout
+
+- **Phase:** Phase 4 (Cloud backend and customer accounts), closeout.
+- **Task:** The last item on the Phase 4 card: the final check of `main`, with CI green and the full local checks passing.
+- **Summary:** I ran the full local check on `main` at e2e15ae, after Renier's integrated QA merged in PR #101, and closed Phase 4 in the records. The Phase 4 evidence register has rows for PR #101 and this PR, and its two open items are marked done. The README and the Phase 4 closeout note in `docs/functional-requirements.md` now say Phase 4 is complete.
+- **Files:** `docs/evidence/phase-4-verification.md`, `docs/functional-requirements.md`, `docs/development-log.md`, `README.md`.
+- **Testing:** Final check of `main` at e2e15ae:
+  - `npm ci`, `npm run audit`, `npm run format:check`, the docs validator, `npm run lint` and `npm run typecheck` passed. The audit found 0 vulnerabilities in production packages; the full audit lists 14 in dev-only packages (11 moderate, 3 high), under the critical gate.
+  - Vitest 538/538 in 66 files. The build with the CI settings passed.
+  - Playwright `chromium`: 32 passed, 3 skipped (TC-P4-173, TC-P4-272 and TC-P4-273 run only with `CAPTURE_EVIDENCE=1`). `chromium-3d`: 21 passed with the CI settings.
+  - CI on `main` at e2e15ae passed, and its production deploy succeeded.
+- **Branch / PR:** `docs/p4-final-check`, PR #102.
+- **Known limitations:** The order-history browser tests (TC-P5-030 to TC-P5-033) need CI's Supabase settings when run locally, as section 33 of `docs/test-cases.md` explains.
+- **Next action:** Phase 5 continues with the remaining items on its card.
