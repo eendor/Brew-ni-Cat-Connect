@@ -15,19 +15,36 @@ import {
 } from "@/lib/orders/place-order";
 import type { PlaceOrderRequest, PlaceOrderResult } from "@/lib/orders/types";
 
+export type PlaceOrderOptions = Readonly<{
+  fetchImpl?: typeof fetch;
+  sessionToken?: string | null;
+}>;
+
 export type PlaceOrder = (
   request: PlaceOrderRequest,
+  options?: PlaceOrderOptions | typeof fetch,
 ) => Promise<PlaceOrderResult>;
 
 export async function placeOrder(
   request: PlaceOrderRequest,
-  fetchImpl: typeof fetch = fetch,
+  options?: PlaceOrderOptions | typeof fetch,
 ): Promise<PlaceOrderResult> {
+  const opts: PlaceOrderOptions =
+    typeof options === "function" ? { fetchImpl: options } : (options ?? {});
+  const fetchFn = opts.fetchImpl ?? fetch;
+
+  const headers: Record<string, string> = {
+    "content-type": "application/json",
+  };
+  if (opts.sessionToken) {
+    headers.authorization = `Bearer ${opts.sessionToken}`;
+  }
+
   let body: unknown;
   try {
-    const response = await fetchImpl(PLACE_ORDER_PATH, {
+    const response = await fetchFn(PLACE_ORDER_PATH, {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers,
       body: JSON.stringify(request),
       cache: "no-store",
       credentials: "same-origin",

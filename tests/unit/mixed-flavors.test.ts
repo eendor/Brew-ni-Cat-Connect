@@ -19,7 +19,7 @@ const fries: MenuItem = {
   id: "bite_fries",
   name: "Fries",
   availability: "available",
-  flavors: ["BBQ Scratch", "Cheesy Purr", "Sour Cream"],
+  flavors: ["BBQ Scratch", "Cheesy Purr", "Sour Cream", "Spicy Claw"],
   variants: [medium],
 };
 const soda12 = {
@@ -52,11 +52,14 @@ describe("mixed flavors", () => {
     expect(joinFlavorMix([])).toBeNull();
   });
 
-  it("allows up to 2 different listed flavors only (TC-P4-255)", () => {
+  it("allows different listed flavors only, at most 3 (TC-P4-255)", () => {
     expect(isAllowedFlavor(fries, "BBQ Scratch / Cheesy Purr")).toBe(true);
     expect(isAllowedFlavor(fries, "BBQ Scratch / BBQ Scratch")).toBe(false);
     expect(
-      isAllowedFlavor(fries, "BBQ Scratch / Cheesy Purr / Sour Cream"),
+      isAllowedFlavor(
+        fries,
+        "BBQ Scratch / Cheesy Purr / Sour Cream / Spicy Claw",
+      ),
     ).toBe(false);
     expect(isAllowedFlavor(fries, "BBQ Scratch / Truffle")).toBe(false);
     expect(
@@ -87,5 +90,40 @@ describe("mixed flavors", () => {
       ok: false,
       reason: "missing-price",
     });
+  });
+
+  it("TC-P6-218 — a fries mix can hold 3 flavors at the size price, not 4", () => {
+    const three = "BBQ Scratch / Cheesy Purr / Sour Cream";
+    expect(joinFlavorMix(["BBQ Scratch", "Cheesy Purr", "Sour Cream"])).toBe(
+      three,
+    );
+    expect(splitFlavorMix(three)).toEqual([
+      "BBQ Scratch",
+      "Cheesy Purr",
+      "Sour Cream",
+    ]);
+    expect(isAllowedFlavor(fries, three)).toBe(true);
+    expect(resolveVariantUnitPrice(fries, medium, three)).toEqual({
+      ok: true,
+      unitPrice: 50,
+    });
+    expect(
+      resolveVariantUnitPrice(
+        fries,
+        medium,
+        "BBQ Scratch / Cheesy Purr / Sour Cream / Spicy Claw",
+      ),
+    ).toEqual({ ok: false, reason: "unknown-flavor" });
+    expect(
+      isAllowedFlavor(fries, "BBQ Scratch / Cheesy Purr / BBQ Scratch"),
+    ).toBe(false);
+    // The dearest flavor still applies, and every part still needs a price.
+    expect(
+      resolveVariantUnitPrice(
+        soda,
+        soda12,
+        "Yogurt Yarn / Honey Peach Paws / Lychee",
+      ),
+    ).toEqual({ ok: false, reason: "missing-price" });
   });
 });

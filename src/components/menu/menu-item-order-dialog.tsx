@@ -547,7 +547,7 @@ export function MenuItemOrderDialog({
                   >
                     {mixMode
                       ? "Pick one flavor"
-                      : `Mix ${MAX_MIXED_FLAVORS} flavors`}
+                      : `Mix up to ${MAX_MIXED_FLAVORS} flavors`}
                   </button>
                   {mixMode ? (
                     <span

@@ -9,7 +9,7 @@ import {
 } from "@playwright/test";
 
 import { menuModelSpec } from "@/components/three/menu-models";
-import { mapMenuCatalog } from "@/lib/menu/map-menu-catalog";
+import { mapMenuCatalog, websiteMenu } from "@/lib/menu/map-menu-catalog";
 import type { MenuItem } from "@/types/menu";
 
 /**
@@ -432,8 +432,11 @@ const liveRows = [
   ]),
 ];
 
-/** The same rows mapped the way the page maps them, in page order. */
-const liveCatalog = mapMenuCatalog(liveCategories, liveRows);
+/**
+ * The same rows mapped the way the page maps them, in page order, without
+ * the items sold only at the shop (TC-P6-214, TC-P6-217).
+ */
+const liveCatalog = websiteMenu(mapMenuCatalog(liveCategories, liveRows));
 const liveItems = (...categoryIds: string[]) =>
   categoryIds.flatMap(
     (id) =>
@@ -945,11 +948,20 @@ test("TC-P4-054 — every bite dialog floats its model", async ({ page }) => {
   expect(problems).toEqual([]);
 });
 
-test("TC-P4-055 — every drink dialog floats its model", async ({ page }) => {
+test("TC-P4-055 — every drink dialog floats its model, and bottled water is not on the website menu", async ({
+  page,
+}) => {
   test.setTimeout(600_000);
   const problems = collectProblems(page);
   await openLiveMenu(page);
   for (const item of liveItems("live-drinks")) await showCard(page, item);
+  // sold only at the shop (TC-P6-217); TC-P4-040 still checks its model
+  await expect(
+    page.getByRole("heading", { level: 3, name: "Bottled Water" }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "Order Bottled Water", exact: true }),
+  ).toHaveCount(0);
   expect(problems).toEqual([]);
 });
 

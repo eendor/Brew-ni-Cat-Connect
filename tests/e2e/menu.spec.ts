@@ -289,3 +289,58 @@ test("TC-P6-216 — a short menu card is as tall as its content, and the take-ou
   });
   expect(gap).toBeLessThan(2);
 });
+
+test("TC-P6-222 — fries mix up to 3 flavors in the order dialog, at the size price", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await mockMenuResponses(
+    page,
+    [{ id: "bites", name: "Cat-Tastic Bites" }],
+    [
+      {
+        id: "bite_fries",
+        category_id: "bites",
+        name: "Fries (Cat Claws)",
+        flavors: "BBQ Scratch|Cheesy Purr|Sour Cream|Spicy Claw",
+        variants_json: [
+          { id: "fries-small", name: "Small", basePrice: 30 },
+          { id: "fries-medium", name: "Medium", basePrice: 50 },
+        ],
+        is_available: true,
+      },
+    ],
+  );
+  await page.goto("/menu");
+  await page.getByRole("button", { name: "Order Fries (Cat Claws)" }).click();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog).toBeVisible();
+
+  await dialog.getByRole("button", { name: "Medium" }).click();
+  await dialog.getByRole("button", { name: "Mix up to 3 flavors" }).click();
+  const three = ["BBQ Scratch", "Cheesy Purr", "Sour Cream"];
+  for (const flavor of three) {
+    await dialog.getByRole("button", { name: flavor, exact: true }).click();
+  }
+  await expect(
+    dialog.getByText("3/3 picked, same price as the size"),
+  ).toBeVisible();
+  for (const flavor of three) {
+    await expect(
+      dialog.getByRole("button", { name: flavor, exact: true }),
+    ).toHaveAttribute("aria-pressed", "true");
+  }
+  if (process.env.CAPTURE_EVIDENCE === "1") {
+    await page.screenshot({
+      path: "docs/evidence/phase-4/three-flavor-mixes/fries-mix-dialog.png",
+    });
+  }
+
+  await dialog.getByRole("button", { name: "Add to Order" }).click();
+  const cart = page.getByRole("dialog", { name: "Your Order" });
+  await expect(cart).toBeVisible();
+  await expect(
+    cart.getByText("Flavor: BBQ Scratch / Cheesy Purr / Sour Cream"),
+  ).toBeVisible();
+  await expect(cart.getByText("₱50").first()).toBeVisible();
+});

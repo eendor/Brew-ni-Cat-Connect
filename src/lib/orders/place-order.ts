@@ -43,6 +43,8 @@ export const PLACE_ORDER_MESSAGES: Readonly<
   "price-changed":
     "Prices changed since you added these items. Check the new subtotal, then place your order again.",
   "server-error": "We couldn't place your order. Please try again.",
+  "session-expired":
+    "Your sign-in has expired. Please sign in again, or sign out to order as a guest.",
 };
 
 /** When online ordering is off or the order service is not set up. */
@@ -88,7 +90,7 @@ export function isRecord(value: unknown): value is Record<string, unknown> {
 
 /** A failure with its customer-safe message. */
 export function placeOrderFailure(
-  reason: "invalid-request" | "empty-cart" | "server-error",
+  reason: "invalid-request" | "empty-cart" | "server-error" | "session-expired",
   message: string = PLACE_ORDER_MESSAGES[reason],
 ): PlaceOrderFailure {
   return { ok: false, reason, message };

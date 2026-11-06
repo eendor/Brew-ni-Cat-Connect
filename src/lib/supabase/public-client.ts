@@ -9,16 +9,31 @@ export class PublicSupabaseConfigurationError extends Error {
   }
 }
 
-export function getPublicSupabaseClient(): SupabaseClient {
-  if (publicClient !== null) {
-    return publicClient;
-  }
-
+export function getPublicSupabaseClient(token?: string | null): SupabaseClient {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
   if (!url || !publishableKey) {
     throw new PublicSupabaseConfigurationError();
+  }
+
+  if (token) {
+    return createClient(url, publishableKey, {
+      auth: {
+        autoRefreshToken: false,
+        detectSessionInUrl: false,
+        persistSession: false,
+      },
+      global: {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    });
+  }
+
+  if (publicClient !== null) {
+    return publicClient;
   }
 
   publicClient = createClient(url, publishableKey, {
