@@ -339,9 +339,9 @@ export default function OrderConfirmationPage() {
                 {address.landmark ? ` (${address.landmark})` : null}.
               </li>
               <li>
-                Pay {formatPrice(order.subtotal)} via {order.paymentPreference} at
-                the counter. The {takeoutBoxText(takeoutBoxPrice)} is not included
-                in that amount.
+                Pay {formatPrice(order.subtotal)} via {order.paymentPreference}{" "}
+                at the counter. The {takeoutBoxText(takeoutBoxPrice)} is not
+                included in that amount.
               </li>
             </ul>
           </div>
