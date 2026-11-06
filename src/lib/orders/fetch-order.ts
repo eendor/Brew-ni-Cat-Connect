@@ -5,7 +5,7 @@ import { getPublicSupabaseClient } from "@/lib/supabase/public-client";
 import {
   isOrderReference,
   isTrackingToken,
-  OrderView,
+  type OrderView,
 } from "@/lib/orders/types";
 
 // MOCK DATA — FOR DEVELOPMENT ONLY. While Place order is off on the live

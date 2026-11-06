@@ -206,6 +206,83 @@ sequenceDiagram
 - Events received out of order must not regress the displayed state.
 - Notification channels and timing remain `TODO: Confirm with Brew ni Cat owner.`
 
+### Update (2026-11-04, PR [#93](https://github.com/eendor/Brew-ni-Cat-Connect/pull/93))
+
+The following subsections document the implemented live order-tracking flows.
+
+The sequence below shows the implemented flow in detail.
+
+```mermaid
+sequenceDiagram
+    actor Customer
+    participant Client as Web Client (/orders/[reference])
+    participant Backend as Supabase RPC (get_online_order)
+    participant Store as PostgreSQL (online_orders)
+    participant Realtime as Supabase Realtime (order:topic)
+
+    alt Guest Customer
+        Customer->>Client: Open tracking link /orders/BNC-XXXXXX#token=43charToken
+        Client->>Client: Parse reference and read token from URL hash (never sent in headers)
+        Client->>Backend: rpc("get_online_order", { p_reference, p_tracking_token })
+        Backend->>Store: Verify SHA-256(token) against private.online_order_tokens
+    else Authenticated Customer
+        Customer->>Client: Open order page /orders/BNC-XXXXXX (no hash token)
+        Client->>Backend: rpc("get_online_order", { p_reference, p_tracking_token: null }) [with auth JWT]
+        Backend->>Store: Verify o.customer_id = auth.uid() (server-side ownership check)
+    end
+
+    alt Authorized Match Found
+        Store-->>Backend: Return OrderView (reference, status, items, statusHistory, realtimeTopic)
+        Backend-->>Client: Render OrderStatusTracker with 5 stages (Pending, Accepted, Preparing, Ready, Completed)
+        Client->>Realtime: channel(realtimeTopic).on("broadcast", "status-changed").subscribe()
+        Realtime-->>Client: Broadcast event { status, changedAt }
+        Client->>Backend: Re-fetch canonical state via fetchOrder()
+        Backend-->>Client: Updated OrderView (e.g. status: "ready")
+        Client->>Client: Update stepper, timestamps, and header status without page reload
+        Note over Client,Realtime: Terminal status (completed/rejected/cancelled) triggers channel cleanup and stops polling
+    else Unauthorized / Missing Match
+        Store-->>Backend: NULL
+        Backend-->>Client: Render generic "Order Not Found" state (zero internal error leakage)
+    end
+```
+
+### 6.1 Guest tracking flow (FR-045)
+
+1. **Token generation and link creation:** When a guest checks out, `place_online_order()` stores the SHA-256 hash of a 43-character base64url random token into `private.online_order_tokens`.
+2. **Possession-based link:** The client navigates the guest to `/orders/{reference}#token={trackingToken}`. The token resides entirely in the URL hash fragment (`window.location.hash`), ensuring it is never transmitted over HTTP request headers, server access logs, or the `Referer` header.
+3. **Validation and loading:** The order confirmation page invokes `readTrackingTokenFromHash(window.location.hash)`. If absent or malformed, the page renders `Order Not Found` without initiating database queries. If valid, `fetchOrder(reference, token)` invokes `public.get_online_order(p_reference, p_tracking_token)`.
+4. **Access control:** PostgreSQL checks that the provided token's SHA-256 hash matches the order's stored token hash. If invalid, `NULL` is returned, rendering `Order Not Found`.
+
+### 6.2 Authenticated customer tracking flow (FR-044)
+
+1. **Direct navigation:** A signed-in customer visits `/orders/{reference}` directly (from their order history or account bookmark without a URL fragment).
+2. **Auth session detection:** The page uses `useAuth()` to verify the authenticated session. If the user session is active, `fetchOrder(reference, null)` is called.
+3. **Server-side ownership verification:** Supabase sends the user's JWT to PostgreSQL. The database function `get_online_order` checks:
+   `o.customer_id = (select auth.uid())`
+4. **Cross-account protection:** If customer A attempts to access customer B's order reference, `o.customer_id = auth.uid()` evaluates to `false`. PostgreSQL returns `NULL`, and the page presents `Order Not Found` without disclosing customer names, items, or status.
+
+### 6.3 Realtime subscription and fallback flow (FR-046, FR-047, FR-048)
+
+1. **Channel subscription:** Upon loading an active order, `useOrderStatus` validates `order.realtimeTopic` with `isOrderRealtimeTopic`. It subscribes to the channel and listens for the `ORDER_STATUS_CHANGED_EVENT` (`"status-changed"`).
+2. **Signal handling:** When POS or database triggers broadcast a status change, the hook treats the broadcast payload as a signal to refetch canonical data via `fetchOrder()`. It updates the tracker stages, active step (`aria-current="step"`), timestamps, and history list.
+3. **Terminal status handling:** Once the order enters a terminal status (`completed`, `rejected`, or `cancelled`), `isFinalOrderStatus` evaluates to `true`. The hook unsubscribes from the Realtime channel, unregisters listeners, and stops background polling.
+4. **Connection fallback & 30s polling:** If Realtime connectivity drops, encounters `CHANNEL_ERROR`, or fails to initialize:
+   - The UI surfaces an offline status indicator (`Offline (polling)`).
+   - A manual `Refresh` button appears, allowing on-demand status checks with visual loading state.
+   - A background interval automatically polls `fetchOrder()` every 30 seconds (`ORDER_REFRESH_INTERVAL_MS = 30_000`).
+   - A `visibilitychange` event listener refreshes the order when the customer switches back to the tab.
+5. **Deduplication guard:** In-flight network requests are guarded with `isFetchingRef` to avoid duplicate concurrent RPC calls.
+
+### 6.4 Exceptional and rejected order flow (FR-049)
+
+1. **Rejection event:** When the shop rejects an order on the POS, the order's status transitions to `rejected` with an optional `rejectionReason`.
+2. **Visual presentation:** `OrderStatusTracker` renders a high-contrast danger alert (`rejected-order-banner`) displaying:
+   - "Order Rejected" heading and clear explanation that the shop could not accept the order.
+   - The specific reason provided by the shop (`order.rejectionReason`) or a customer-safe fallback message.
+   - Reassurance that no customer charge occurred.
+   - Recommended next actions: selecting alternative items, in-person assistance at the counter, or contacting shop staff.
+   - An actionable "Back to Menu" button navigating to `/menu`.
+
 ## 7. Loyalty and rewards
 
 ### 7.1 Earning path

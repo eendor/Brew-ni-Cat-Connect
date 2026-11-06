@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import { OrderStatusTracker } from "@/components/orders/order-status-tracker";
 import { siteConfig } from "@/config/site";
 import { useAuth } from "@/context/auth-context";
 import { useCart } from "@/context/cart-context";
@@ -16,7 +17,11 @@ import {
 import { fetchOrder } from "@/lib/orders/fetch-order";
 import { readTrackingTokenFromHash } from "@/lib/orders/order-link";
 import { reorderItems, type ReorderSummary } from "@/lib/orders/reorder";
-import { isOrderReference, OrderView } from "@/lib/orders/types";
+import {
+  isFinalOrderStatus,
+  isOrderReference,
+  OrderView,
+} from "@/lib/orders/types";
 
 type PageState =
   | { status: "loading" }
@@ -32,6 +37,7 @@ export default function OrderConfirmationPage() {
   const referenceParam =
     typeof params.reference === "string" ? params.reference : "";
   const [state, setState] = useState<PageState>({ status: "loading" });
+  const [trackingToken, setTrackingToken] = useState<string | null>(null);
   const [isReordering, setIsReordering] = useState(false);
   const [reorderResult, setReorderResult] = useState<ReorderSummary | null>(
     null,
@@ -45,16 +51,20 @@ export default function OrderConfirmationPage() {
         return;
       }
 
+      // Guest access requires tracking token from hash (FR-045)
       const token = readTrackingTokenFromHash(window.location.hash);
       if (!token) {
+        // Authenticated customer access (FR-044)
         if (isAuthLoading) {
-          return;
+          return; // Wait for auth session restoration
         }
         if (!user) {
           setState({ status: "not-found" });
           return;
         }
       }
+
+      setTrackingToken(token);
 
       try {
         const orderData = await fetchOrder(referenceParam, token);
@@ -72,7 +82,7 @@ export default function OrderConfirmationPage() {
       }
     }
 
-    loadOrder();
+    void loadOrder();
   }, [referenceParam, isAuthLoading, user]);
 
   const handleReorder = async () => {
@@ -230,7 +240,14 @@ export default function OrderConfirmationPage() {
       )}
 
       <section className="space-y-6">
-        {/* Renier's live order tracker goes here in week 2. */}
+        {/* Live order status tracker (FR-044 to FR-049) */}
+        <OrderStatusTracker
+          order={order}
+          trackingToken={trackingToken}
+          onOrderUpdate={(updated) =>
+            setState({ status: "success", order: updated })
+          }
+        />
 
         {/* Customer Details Card */}
         <div className="ios-card p-6">
@@ -309,24 +326,26 @@ export default function OrderConfirmationPage() {
         </div>
 
         {/* Next steps (FR-026), from the shop facts the checkout uses */}
-        <div className="ios-card p-6">
-          <h2 className="mb-4 text-lg font-semibold text-[var(--text-strong)]">
-            Next Steps
-          </h2>
-          <ul className="list-disc space-y-2 pl-5 text-sm text-[var(--text-muted)]">
-            <li>Bookmark this page to check your order later.</li>
-            <li>
-              When your order is ready, pick it up at {siteConfig.shortName},{" "}
-              {streetLine(address)}, {localityLine(address)}
-              {address.landmark ? ` (${address.landmark})` : null}.
-            </li>
-            <li>
-              Pay {formatPrice(order.subtotal)} via {order.paymentPreference} at
-              the counter. The {takeoutBoxText(takeoutBoxPrice)} is not included
-              in that amount.
-            </li>
-          </ul>
-        </div>
+        {!isFinalOrderStatus(order.status) && (
+          <div className="ios-card p-6">
+            <h2 className="mb-4 text-lg font-semibold text-[var(--text-strong)]">
+              Next Steps
+            </h2>
+            <ul className="list-disc space-y-2 pl-5 text-sm text-[var(--text-muted)]">
+              <li>Bookmark this page to check your order later.</li>
+              <li>
+                When your order is ready, pick it up at {siteConfig.shortName},{" "}
+                {streetLine(address)}, {localityLine(address)}
+                {address.landmark ? ` (${address.landmark})` : null}.
+              </li>
+              <li>
+                Pay {formatPrice(order.subtotal)} via {order.paymentPreference}{" "}
+                at the counter. The {takeoutBoxText(takeoutBoxPrice)} is not
+                included in that amount.
+              </li>
+            </ul>
+          </div>
+        )}
       </section>
     </div>
   );
