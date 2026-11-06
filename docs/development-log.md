@@ -1488,7 +1488,7 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Summary:** I ran the full local check on `main` at e2e15ae, after Renier's integrated QA merged in PR #101, and closed Phase 4 in the records. The Phase 4 evidence register has rows for PR #101 and this PR, and its two open items are marked done. The README and the Phase 4 closeout note in `docs/functional-requirements.md` now say Phase 4 is complete.
 - **Files:** `docs/evidence/phase-4-verification.md`, `docs/functional-requirements.md`, `docs/development-log.md`, `README.md`.
 - **Testing:** Final check of `main` at e2e15ae:
-  - `npm ci`, `npm run audit`, `npm run format:check`, the docs validator, `npm run lint` and `npm run typecheck` passed. The audit found 0 vulnerabilities in production packages; the full audit lists 14 in dev-only packages (11 moderate, 3 high), under the critical gate.
+  - `npm ci`, `npm run audit`, `npm run format:check`, the docs validator, `npx eslint . --max-warnings=0` and `npx tsc --noEmit -p .` passed. The audit found 0 vulnerabilities in production packages; the full audit lists 14 in dev-only packages (11 moderate, 3 high), under the critical gate.
   - Vitest 538/538 in 66 files. The build with the CI settings passed.
   - Playwright `chromium`: 32 passed, 3 skipped (TC-P4-173, TC-P4-272 and TC-P4-273 run only with `CAPTURE_EVIDENCE=1`). `chromium-3d`: 21 passed with the CI settings.
   - CI on `main` at e2e15ae passed, and its production deploy succeeded.
