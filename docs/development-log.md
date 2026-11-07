@@ -1495,3 +1495,19 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `docs/p4-final-check`, PR #102.
 - **Known limitations:** The order-history browser tests (TC-P5-030 to TC-P5-033) need CI's Supabase settings when run locally, as section 33 of `docs/test-cases.md` explains.
 - **Next action:** Phase 5 continues with the remaining items on its card.
+
+## 2026-11-07 — Phase 6 integrated QA, closeout and final check
+
+- **Phase:** Phase 6 (Existing POS integration), closeout.
+- **Task:** The three open items on the Phase 6 card: the integrated QA on `main`, the docs closeout, and the final check, with CI green on Connect and the POS build passing. The card had the QA under Renier and the docs closeout under Shan; I did all three so Phase 6 could close.
+- **Summary:** I ran the full local checks on Connect `main` at a3c4584 and POS `main` at ba11805 and recorded them in section 34 of `docs/test-cases.md`. A read-only query showed that all 11 migrations in `supabase/migrations` are on the live database. I added the Phase 6 evidence register and the Phase 6 note in section 18 of `docs/functional-requirements.md`, where FR-027, FR-028, FR-075, FR-076 and FR-080 are now Implemented, and marked Phase 6 complete in the README.
+- **Files:** `docs/test-cases.md`, `docs/evidence/phase-6-verification.md`, `docs/functional-requirements.md`, `docs/development-log.md`, `README.md`.
+- **Testing:** Final check on Connect `main` at a3c4584 and POS `main` at ba11805:
+  - `npm ci`, `npm run audit`, `npm run format:check`, the docs validator, `npx eslint . --max-warnings=0` and `npx tsc --noEmit -p .` passed. The audit found 0 vulnerabilities in production packages. The full audit lists 14 in dev-only packages (11 moderate, 3 high), under the critical gate.
+  - Vitest 538/538 in 66 files. The build with the CI settings passed.
+  - Playwright `chromium`: 32 passed, 3 skipped (TC-P4-173, TC-P4-272 and TC-P4-273 run only with `CAPTURE_EVIDENCE=1`). `chromium-3d` with the CI settings, run twice: 19 passed, 1 failed and 1 flaky, then 20 passed and 1 failed. TC-P4-021 failed both times because the placeholder Supabase host, `example.supabase.co`, doesn't resolve on this machine (`net::ERR_NAME_NOT_RESOLVED` in the console), and the test allows only 404 errors. It passed with the CI settings on 2026-11-06 (PR #102) and passed again with the real settings. TC-P4-026 passed on retry in the first run.
+  - POS `sh gradlew :app:testDebugUnitTest :app:lintDebug :app:assembleRelease`: 90/90 unit tests passed, lint 0 errors and 102 warnings, and the release build passed, with no version change.
+  - CI on `main` at a3c4584 passed, and its production deploy succeeded.
+- **Branch / PR:** `docs/p6-closeout`, PR #104.
+- **Known limitations:** FR-077's outage case isn't tested end to end, and the audit log covers only online order status changes and undos, so FR-077 and FR-079 carry over with FR-072. FR-073, FR-074, FR-078 and FR-081 stay Planned. The live tablet check wasn't repeated.
+- **Next action:** Phase 5 continues with the remaining items on its card, and Phase 7 (Messenger) follows.

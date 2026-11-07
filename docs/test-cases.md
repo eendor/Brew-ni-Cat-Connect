@@ -808,3 +808,27 @@ Run on 2026-11-06 by Renier P. Apal, the integrated QA engineer, on `main` at `0
 **Rerun with CI's settings (2026-11-06, Rodnee, during review of PR #101).** On Linux, on the same code: `CI=1 npx playwright test --project=chromium` → 32 passed, 3 skipped, 0 failed. TC-P5-030 to TC-P5-033 passed. The 3 skipped tests, TC-P4-173, TC-P4-272 and TC-P4-273, only save evidence screenshots and run with `CAPTURE_EVIDENCE=1`. CI's "Browser tests (chromium)" job on PR #101 gave the same counts. The docs validator, Vitest (538/538 in 66 files), typecheck, lint, Prettier and the build also passed.
 
 No blocking defects were found within Phase 4 scope.
+
+## 34. Phase 6 Integrated QA Execution Summary
+
+Run on 2026-11-07 by Rodnee Glen Martin, the lead developer, on Connect `main` at `a3c4584` and POS `main` at `ba11805`, for the Phase 6 closeout (branch `docs/p6-closeout`, PR #104). Environment: Linux, Node.js, a Next.js production build, Vitest for the unit and database tests, Playwright for the browser tests, and Gradle for the Android POS. The Connect checks ran with CI's settings (the placeholder Supabase values and `NEXT_PUBLIC_ONLINE_ORDERING=enabled`), as section 33 advises for the browser tests. The three POS checks ran as one `sh gradlew :app:testDebugUnitTest :app:lintDebug :app:assembleRelease` run. No orders were placed, and no production database or POS data changed during the run.
+
+| Check | Command | Result |
+| --- | --- | --- |
+| Clean install | `npm ci` | Passed |
+| Dependency audit | `npm run audit` | Passed: 0 vulnerabilities in production packages. The full audit lists 14 in dev-only packages (11 moderate, 3 high), under the critical gate. |
+| Docs validator | `python3 scripts/validate_phase0_docs.py` | `PHASE0_DOC_VALIDATION=PASS` |
+| Unit and database tests | `NODE_OPTIONS=--no-experimental-webstorage npx vitest run` | 538/538 passed in 66 test files, including the Phase 6 order status, POS sale and undo cases that run on PGlite (TC-P6-180 to TC-P6-190 and TC-P6-200 to TC-P6-204) |
+| Typecheck | `npx tsc --noEmit -p .` | Passed |
+| Lint | `npx eslint . --max-warnings=0` | Passed with 0 errors and 0 warnings |
+| Format | `npm run format:check` | Passed |
+| Production build | `npm run build` | Passed |
+| Browser tests | `CI=1 npx playwright test --project=chromium` | 32 passed, 3 skipped. The skipped tests, TC-P4-173, TC-P4-272 and TC-P4-273, only save evidence screenshots and run with `CAPTURE_EVIDENCE=1`. |
+| 3D browser tests | `CI=1 npx playwright test --project=chromium-3d` | Two runs: 19 passed, 1 failed and 1 flaky, then 20 passed and 1 failed. TC-P4-021 failed both times because CI's placeholder Supabase host, `example.supabase.co`, doesn't resolve on this machine, so the browser logged `net::ERR_NAME_NOT_RESOLVED`, and the test allows only 404 errors. It passed with the real settings (`npm run build`, then `npx playwright test --project=chromium-3d -g "TC-P4-021"`). TC-P4-026 passed on retry in the first run and passed in the second. This project runs only locally, not in CI. |
+| POS unit tests | `:app:testDebugUnitTest` | 90/90 passed, including the Online orders, undo and split payment cases (TC-P6-191 to TC-P6-199 and TC-P6-205 to TC-P6-210) |
+| POS lint | `:app:lintDebug` | Passed with 0 errors and 102 warnings |
+| POS release build | `:app:assembleRelease` | Passed. The APK was only built: build 10145 stays the released version, with no version change. |
+| Live migrations | A read-only query of `supabase_migrations.schema_migrations` | All 11 migrations in `supabase/migrations` are applied, including both Phase 6 migrations (`20261028153552_online_order_status.sql` and `20261103120000_undo_online_order_status.sql`). The 8 older versions there, from June and July 2026, came with the POS and aren't managed by this repository. |
+| Live tablet check | Manual | Not repeated. Online orders have reached the POS tablet live since Place order went on on 2026-11-02 (PR #85), and the completed ones became POS sales (POS PR #23 and #25). |
+
+No blocking defects were found within Phase 6 scope. FR-077's outage case is still not tested end to end; section 18 of `docs/functional-requirements.md` lists what carries over.
