@@ -221,6 +221,41 @@ describe("SiteHeader", () => {
     expect(signOutMock).toHaveBeenCalled();
   });
 
+  it("TC-P5-084 — the account menus link to Favorites when signed in", async () => {
+    const user = userEvent.setup();
+    const mockUser: User = {
+      id: "cust-3",
+      email: "favorites@example.com",
+      app_metadata: {},
+      user_metadata: {},
+      aud: "authenticated",
+      created_at: new Date().toISOString(),
+    };
+
+    render(
+      <AuthProvider client={createMockSupabase(mockUser)}>
+        <SiteHeader />
+      </AuthProvider>,
+    );
+
+    await user.click(
+      await screen.findByRole("button", { name: "Account menu" }),
+    );
+    expect(screen.getByRole("link", { name: "Favorites" })).toHaveAttribute(
+      "href",
+      "/account/favorites",
+    );
+    await user.keyboard("{Escape}");
+
+    await user.click(screen.getByRole("button", { name: "Open navigation" }));
+    const mobileNav = screen.getByRole("navigation", {
+      name: "Mobile navigation",
+    });
+    expect(
+      within(mobileNav).getByRole("link", { name: "Favorites" }),
+    ).toHaveAttribute("href", "/account/favorites");
+  });
+
   it("TC-P4-160 — displays Sign out in mobile navigation when signed in", async () => {
     const user = userEvent.setup();
     const signOutMock = vi.fn();

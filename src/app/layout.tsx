@@ -14,6 +14,7 @@ import { CartFxLayer } from "@/components/three/layers";
 import { SiteNotice } from "@/components/layout/site-notice";
 import { siteConfig } from "@/config/site";
 import { AuthProvider } from "@/context/auth-context";
+import { FavoritesProvider } from "@/context/favorites-context";
 import { CartProvider } from "@/context/cart-context";
 import { ShopFactsProvider } from "@/context/shop-facts-context";
 import { getMenuFacts } from "@/lib/menu/load-menu-facts";
@@ -130,23 +131,25 @@ export default async function RootLayout({ children }: RootLayoutProps) {
         </a>
         <ShopFactsProvider facts={facts}>
           <AuthProvider>
-            <CartProvider>
-              <div className="flex min-h-dvh flex-col">
-                <SiteNotice text={content.notice.text} />
-                <SiteHeader />
-                <main id="main-content" className="flex-1" tabIndex={-1}>
-                  {children}
-                </main>
-                <SiteFooter content={content} />
-              </div>
-              <CartDrawer />
-              <CartUndoToast />
-              <ScrollMotion />
-              <MotionDirector />
-              <RouteCurtain />
-              <CartFxLayer />
-              <ThemeSync />
-            </CartProvider>
+            <FavoritesProvider>
+              <CartProvider>
+                <div className="flex min-h-dvh flex-col">
+                  <SiteNotice text={content.notice.text} />
+                  <SiteHeader />
+                  <main id="main-content" className="flex-1" tabIndex={-1}>
+                    {children}
+                  </main>
+                  <SiteFooter content={content} />
+                </div>
+                <CartDrawer />
+                <CartUndoToast />
+                <ScrollMotion />
+                <MotionDirector />
+                <RouteCurtain />
+                <CartFxLayer />
+                <ThemeSync />
+              </CartProvider>
+            </FavoritesProvider>
           </AuthProvider>
         </ShopFactsProvider>
       </body>
