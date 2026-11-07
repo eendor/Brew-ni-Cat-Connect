@@ -832,3 +832,55 @@ Run on 2026-11-07 by Rodnee Glen Martin, the lead developer, on Connect `main` a
 | Live tablet check | Manual | Not repeated. Online orders have reached the POS tablet live since Place order went on on 2026-11-02 (PR #85), and the completed ones became POS sales (POS PR #23 and #25). |
 
 No blocking defects were found within Phase 6 scope. FR-077's outage case is still not tested end to end; section 18 of `docs/functional-requirements.md` lists what carries over.
+
+## 35. Favorites Cases (Phase 5, Week 2 — FR-040)
+
+Run on 2026-11-07 by Rodnee Glen Martin on branch `feat/p5-favorites` (PR #103). Rizjie wrote the favorites helper, the heart button and the favorites page, and Rodnee finished them in review with a shared favorites list, the heart beside Add to order, the account menu links and these cases. `NODE_OPTIONS=--no-experimental-webstorage npx vitest run tests/unit/favorites-helper.test.ts tests/unit/favorite-button.test.tsx tests/unit/favorites-page.test.tsx tests/unit/site-header.test.tsx` — 28 passed (28). Full suite (`NODE_OPTIONS=--no-experimental-webstorage npx vitest run`): 69 test files, 559 tests, all passed. `CI=1 npx playwright test --project=chromium` — 36 passed and 3 skipped, including the four tests in `tests/e2e/favorites.spec.ts`. The skipped cases, TC-P4-173, TC-P4-272 and TC-P4-273, only save evidence screenshots. The favorites screenshots were saved with `CAPTURE_EVIDENCE=1`. Supabase is mocked in every case, so no live account or live data was used. Row-level security on the `favorites` table is covered by TC-P4-079.
+
+### 35a. Favorites helper (TC-P5-065 to TC-P5-070)
+
+| ID | Requirement ID(s) | Module | Scenario | Preconditions | Input / action | Expected result | Actual result | Status | Evidence |
+|---|---|---|---|---|---|---|---|---|---|
+| TC-P5-065 | FR-040 | `fetchFavorites` | Lists only that customer's favorites, newest first | Stubbed Supabase client passed as `client` | Call `fetchFavorites({ userId: "customer-123", client })` | Queries `favorites` with `.eq("customer_id", "customer-123")`, orders by `created_at` descending and returns `{ itemId, createdAt }` | Matched. | Passed | `tests/unit/favorites-helper.test.ts` |
+| TC-P5-066 | FR-040 | `addFavorite` | Adds a favorite | Stubbed client | Call `addFavorite({ userId: "customer-123", itemId: "takoyaki", client })` | Inserts `{ customer_id: "customer-123", item_id: "takoyaki" }` | Matched. | Passed | `tests/unit/favorites-helper.test.ts` |
+| TC-P5-067 | FR-040 | `addFavorite` | Adding a saved item again counts as success | Insert returns error code `23505` (duplicate key) | Call `addFavorite` for the same item | Resolves without an error, so adding is idempotent; the `(customer_id, item_id)` primary key prevents a second row | Matched. | Passed | `tests/unit/favorites-helper.test.ts` |
+| TC-P5-068 | FR-040 | `addFavorite` | Other insert errors are thrown | Insert returns code `42501` "permission denied" | Call `addFavorite` | The promise rejects with "permission denied" | Matched. | Passed | `tests/unit/favorites-helper.test.ts` |
+| TC-P5-069 | FR-040 | `removeFavorite` | Removes only that customer's item | Stubbed client | Call `removeFavorite({ userId: "customer-123", itemId: "takoyaki", client })` | Deletes with `.eq("customer_id", "customer-123")` and `.eq("item_id", "takoyaki")` | Matched. | Passed | `tests/unit/favorites-helper.test.ts` |
+| TC-P5-070 | FR-040 | `fetchFavorites`, `removeFavorite` | Listing and removing errors are thrown | The select returns "JWT expired" and the delete returns "permission denied" | Call both | Both promises reject with the error message | Matched. | Passed | `tests/unit/favorites-helper.test.ts` |
+
+### 35b. Heart button and shared favorites (TC-P5-071 to TC-P5-076, TC-P5-085)
+
+| ID | Requirement ID(s) | Module | Scenario | Preconditions | Input / action | Expected result | Actual result | Status | Evidence |
+|---|---|---|---|---|---|---|---|---|---|
+| TC-P5-071 | FR-040 | `FavoriteButton` | Hidden when signed out | `useAuth` returns no user | Render the heart inside `FavoritesProvider` | No button renders and favorites aren't requested | Matched. | Passed | `tests/unit/favorite-button.test.tsx` |
+| TC-P5-072 | FR-040 | `FavoriteButton` | Toggles on and off | Signed in as `customer-123` with nothing saved | Tap the heart twice | The first tap saves (`aria-pressed="true"`, `addFavorite` called for that customer and item); the second removes it (`aria-pressed="false"`, `removeFavorite` called) | Matched. | Passed | `tests/unit/favorite-button.test.tsx` |
+| TC-P5-073 | FR-040 | `FavoritesProvider` | One request for every heart, and the same item stays in sync | Signed in; Latte saved | Render a Latte heart and two Takoyaki hearts, then tap one Takoyaki heart | `fetchFavorites` is called once, with `{ userId: "customer-123" }`; Latte shows as saved; both Takoyaki hearts show as saved | Matched. | Passed | `tests/unit/favorite-button.test.tsx` |
+| TC-P5-074 | FR-040 | `FavoritesProvider` | The heart goes back when saving fails | `addFavorite` rejects | Tap the heart | `addFavorite` is called once and the heart returns to `aria-pressed="false"` | Matched. | Passed | `tests/unit/favorite-button.test.tsx` |
+| TC-P5-075 | FR-040 | `FavoritesProvider` | A second tap while saving is ignored | `addFavorite` stays pending | Tap the heart twice | `addFavorite` is called once, `removeFavorite` isn't called, and the heart stays saved | Matched. | Passed | `tests/unit/favorite-button.test.tsx` |
+| TC-P5-076 | FR-040 | `FavoritesProvider` | Waits for the list and never shows the last customer's hearts | Customer A has Takoyaki saved; customer B's list never finishes loading | Render as customer A, then rerender as customer B | The heart is disabled while loading; as customer B it's disabled and not pressed, and the list is requested for customer B | Matched. | Passed | `tests/unit/favorite-button.test.tsx` |
+| TC-P5-085 | FR-040 | `MenuItemCard` | The heart sits beside Add to order, only when signed in | `CartProvider` and `FavoritesProvider` | Render signed out, then signed in with an available item and a sold-out item | Signed out, the Order button shows and no heart does. Signed in, the heart is in the card footer, outside the Order button; the sold-out card has no Order button but can still be saved | Matched. | Passed | `tests/unit/favorite-button.test.tsx` |
+
+### 35c. Favorites page (TC-P5-077 to TC-P5-083)
+
+| ID | Requirement ID(s) | Module | Scenario | Preconditions | Input / action | Expected result | Actual result | Status | Evidence |
+|---|---|---|---|---|---|---|---|---|---|
+| TC-P5-077 | FR-040 | `FavoritesView` | Lists favorites with the current price and an Order button | Signed in; Takoyaki saved; the menu lists it at ₱99 | Render the page | Takoyaki shows with ₱99 and an "Order Takoyaki" button | Matched. | Passed | `tests/unit/favorites-page.test.tsx` |
+| TC-P5-078 | FR-040 | `FavoritesView` | Empty state | Nothing saved | Render the page | "No Favorites Yet" with a Browse Menu link to `/menu` | Matched. | Passed | `tests/unit/favorites-page.test.tsx` |
+| TC-P5-079 | FR-040 | `FavoritesView` | Leaves out saved items the website doesn't list | Saved `take-out-box` (sold only at the shop) and `old-item` (no longer on the POS menu) | Render the page | The empty state shows and no rows are listed | Matched. | Passed | `tests/unit/favorites-page.test.tsx` |
+| TC-P5-080 | FR-040 | `FavoritesView` | An unavailable item shows without an Order button | Saved Nachos (unavailable, newest) and Takoyaki | Render the page | Rows are Nachos, then Takoyaki; Nachos shows "Not available to order right now" and no Order button | Matched. | Passed | `tests/unit/favorites-page.test.tsx` |
+| TC-P5-081 | FR-040 | `FavoritesView` | An item with several sizes shows a From price, and Order opens the order dialog | Saved Latte with ₱89 and ₱109 sizes | Render the page and tap "Order Latte" | Shows "From ₱89" and opens the order dialog for Latte | Matched. | Passed | `tests/unit/favorites-page.test.tsx` |
+| TC-P5-082 | FR-040 | `FavoritesView` | Error when the favorites can't load | `fetchFavorites` rejects | Render the page | Alert "Unable to load your favorites. Please try again later." and no empty state | Matched. | Passed | `tests/unit/favorites-page.test.tsx` |
+| TC-P5-083 | FR-040 | `FavoritesView` | A heart removed on the page stays so it can be saved again | Takoyaki saved | Tap its pressed heart | `removeFavorite` is called for that customer and item; the heart shows as not saved and the row stays | Matched. | Passed | `tests/unit/favorites-page.test.tsx` |
+
+### 35d. Account navigation (TC-P5-084)
+
+| ID | Requirement ID(s) | Module | Scenario | Preconditions | Input / action | Expected result | Actual result | Status | Evidence |
+|---|---|---|---|---|---|---|---|---|---|
+| TC-P5-084 | FR-040 | `SiteHeader` | The account menus link to Favorites | Signed in through `AuthProvider` with a mock client | Open the Account menu, then the mobile navigation | Both have a "Favorites" link to `/account/favorites` | Matched. | Passed | `tests/unit/site-header.test.tsx` |
+
+### 35e. Browser tests (TC-P5-086, TC-P5-087)
+
+| ID | Requirement ID(s) | Module | Scenario | Preconditions | Input / action | Expected result | Actual result | Status | Evidence |
+|---|---|---|---|---|---|---|---|---|---|
+| TC-P5-086 | FR-040 | `/menu` | Save and remove a favorite from a menu card | Chromium; Supabase Auth and PostgREST mocked; signed in as `customer-123` | Open `/menu`, tap the Iced Latte heart, then tap it again; separately, open `/menu` signed out | One favorites request, filtered to `customer_id=eq.customer-123`, loads every heart; saving sends `{ customer_id, item_id }`; removing filters by `customer_id` and `item_id`; the heart turns on, then off. Signed out, no hearts show | Matched. | Passed | `tests/e2e/favorites.spec.ts`, `docs/evidence/phase-5/favorites/menu-card-heart.png` |
+| TC-P5-087 | FR-040 | `/account/favorites` | Saved list and empty state | Same mocks; saved Brew Special Coffee, Take-out Box, Takoyaki (unavailable) and Iced Latte | Open `/account/favorites`, then open it again with nothing saved | Three rows, newest first, with current prices ("From ₱120", "₱180"); Takoyaki shows "Not available to order right now" with no Order button; Take-out Box is left out; Order opens the order dialog. With nothing saved, "No Favorites Yet" and Browse Menu show | Matched. | Passed | `tests/e2e/favorites.spec.ts`, `docs/evidence/phase-5/favorites/favorites-list.png`, `docs/evidence/phase-5/favorites/favorites-empty.png` |
