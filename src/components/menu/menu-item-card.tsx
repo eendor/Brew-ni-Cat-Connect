@@ -14,7 +14,7 @@ import type { MenuCatalog, MenuItem, MenuVariant } from "@/types/menu";
 
 import { MenuItemOrderDialog } from "./menu-item-order-dialog";
 import { MenuItemMedia } from "./menu-item-media";
-
+import { FavoriteButton } from "./favorite-button";
 type MenuItemCardProps = Readonly<{
   item: MenuItem;
   catalog?: MenuCatalog;
@@ -211,6 +211,10 @@ export function MenuItemCard({
             </div>
           </div>
         ) : null}
+
+        <div className="mt-3 flex justify-end">
+          <FavoriteButton itemId={item.id} itemName={item.name} />
+        </div>
       </div>
 
       {isOrderOpen ? (
