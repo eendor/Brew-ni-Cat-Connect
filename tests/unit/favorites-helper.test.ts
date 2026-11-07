@@ -7,36 +7,49 @@ import {
   removeFavorite,
 } from "@/lib/account/favorites";
 
+type QueryError = { code: string; message: string } | null;
+
 function createClient(overrides: {
-  insertError?: { code: string; message: string } | null;
+  insertError?: QueryError;
+  selectError?: QueryError;
+  deleteError?: QueryError;
 }) {
   const order = vi.fn().mockResolvedValue({
-    data: [{ item_id: "takoyaki", created_at: "2026-11-05T00:00:00Z" }],
-    error: null,
+    data: overrides.selectError
+      ? null
+      : [{ item_id: "takoyaki", created_at: "2026-11-05T00:00:00Z" }],
+    error: overrides.selectError ?? null,
   });
+  const eqSelect = vi.fn(() => ({ order }));
   const insert = vi
     .fn()
     .mockResolvedValue({ error: overrides.insertError ?? null });
-  const eqItem = vi.fn().mockResolvedValue({ error: null });
+  const eqItem = vi
+    .fn()
+    .mockResolvedValue({ error: overrides.deleteError ?? null });
+  const eqCustomer = vi.fn(() => ({ eq: eqItem }));
   const client = {
     from: vi.fn(() => ({
-      select: () => ({ eq: () => ({ order }) }),
+      select: () => ({ eq: eqSelect }),
       insert,
-      delete: () => ({ eq: () => ({ eq: eqItem }) }),
+      delete: () => ({ eq: eqCustomer }),
     })),
   } as unknown as SupabaseClient;
-  return { client, insert, eqItem };
+  return { client, insert, eqItem, eqSelect, eqCustomer, order };
 }
 
 describe("Favorites helper (FR-040)", () => {
-  it("lists a customer's favorites", async () => {
-    const { client } = createClient({});
+  it("TC-P5-065 — lists a customer's favorites, newest first", async () => {
+    const { client, eqSelect, order } = createClient({});
     expect(await fetchFavorites({ userId: "customer-123", client })).toEqual([
       { itemId: "takoyaki", createdAt: "2026-11-05T00:00:00Z" },
     ]);
+    expect(client.from).toHaveBeenCalledWith("favorites");
+    expect(eqSelect).toHaveBeenCalledWith("customer_id", "customer-123");
+    expect(order).toHaveBeenCalledWith("created_at", { ascending: false });
   });
 
-  it("adds a favorite", async () => {
+  it("TC-P5-066 — adds a favorite", async () => {
     const { client, insert } = createClient({});
     await addFavorite({ userId: "customer-123", itemId: "takoyaki", client });
     expect(insert).toHaveBeenCalledWith({
@@ -45,7 +58,7 @@ describe("Favorites helper (FR-040)", () => {
     });
   });
 
-  it("treats adding a duplicate as success (idempotent)", async () => {
+  it("TC-P5-067 — treats adding a duplicate as success (idempotent)", async () => {
     const { client } = createClient({
       insertError: { code: "23505", message: "duplicate key" },
     });
@@ -54,7 +67,7 @@ describe("Favorites helper (FR-040)", () => {
     ).resolves.toBeUndefined();
   });
 
-  it("throws on other add errors", async () => {
+  it("TC-P5-068 — throws on other add errors", async () => {
     const { client } = createClient({
       insertError: { code: "42501", message: "permission denied" },
     });
@@ -63,13 +76,31 @@ describe("Favorites helper (FR-040)", () => {
     ).rejects.toThrow("permission denied");
   });
 
-  it("removes only the given item for that customer", async () => {
-    const { client, eqItem } = createClient({});
+  it("TC-P5-069 — removes only the given item for that customer", async () => {
+    const { client, eqItem, eqCustomer } = createClient({});
     await removeFavorite({
       userId: "customer-123",
       itemId: "takoyaki",
       client,
     });
+    expect(eqCustomer).toHaveBeenCalledWith("customer_id", "customer-123");
     expect(eqItem).toHaveBeenCalledWith("item_id", "takoyaki");
+  });
+
+  it("TC-P5-070 — throws when listing or removing fails", async () => {
+    const failing = createClient({
+      selectError: { code: "PGRST301", message: "JWT expired" },
+      deleteError: { code: "42501", message: "permission denied" },
+    });
+    await expect(
+      fetchFavorites({ userId: "customer-123", client: failing.client }),
+    ).rejects.toThrow("JWT expired");
+    await expect(
+      removeFavorite({
+        userId: "customer-123",
+        itemId: "takoyaki",
+        client: failing.client,
+      }),
+    ).rejects.toThrow("permission denied");
   });
 });

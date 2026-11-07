@@ -1,68 +1,47 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
 import { useAuth } from "@/context/auth-context";
-import {
-  addFavorite,
-  fetchFavorites,
-  removeFavorite,
-} from "@/lib/account/favorites";
+import { useFavorites } from "@/context/favorites-context";
 
 type FavoriteButtonProps = Readonly<{
   itemId: string;
   itemName: string;
+  className?: string;
 }>;
 
 /** Heart toggle for signed-in customers (FR-040). Hidden when signed out. */
-export function FavoriteButton({ itemId, itemName }: FavoriteButtonProps) {
+export function FavoriteButton({
+  itemId,
+  itemName,
+  className,
+}: FavoriteButtonProps) {
   const { user } = useAuth();
-  const [isFavorite, setIsFavorite] = useState(false);
-
-  useEffect(() => {
-    if (!user) return;
-    let active = true;
-
-    fetchFavorites({ userId: user.id })
-      .then((favorites) => {
-        if (active) {
-          setIsFavorite(favorites.some((f) => f.itemId === itemId));
-        }
-      })
-      .catch(() => {
-        // Keep the heart unsaved if favorites can't load.
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [user, itemId]);
+  const { isLoaded, isFavorite, toggleFavorite } = useFavorites();
 
   if (!user) return null;
 
-  const toggle = async () => {
-    const next = !isFavorite;
-    setIsFavorite(next);
-    try {
-      if (next) {
-        await addFavorite({ userId: user.id, itemId });
-      } else {
-        await removeFavorite({ userId: user.id, itemId });
-      }
-    } catch {
-      setIsFavorite(!next);
-    }
-  };
+  const saved = isFavorite(itemId);
 
   return (
     <button
       type="button"
-      onClick={toggle}
-      aria-pressed={isFavorite}
+      onClick={() => void toggleFavorite(itemId)}
+      disabled={!isLoaded}
+      aria-pressed={saved}
       aria-label={`Save ${itemName} to favorites`}
-      className="inline-flex size-10 items-center justify-center rounded-full border border-[var(--separator)] text-lg text-[var(--accent-solid)] transition-colors hover:bg-[var(--glass-hover)]"
+      className={`favorite-button${className ? ` ${className}` : ""}`}
     >
-      <span aria-hidden="true">{isFavorite ? "♥" : "♡"}</span>
+      <svg
+        aria-hidden="true"
+        viewBox="0 0 24 24"
+        className="size-6"
+        fill={saved ? "currentColor" : "none"}
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      >
+        <path d="M12 21s-7-4.35-9.5-8.5C.9 9.6 2.3 5.5 6.1 5.1 8.4 4.9 10.6 6.2 12 8.2c1.4-2 3.6-3.3 5.9-3.1 3.8.4 5.2 4.5 3.6 7.4C19 16.65 12 21 12 21Z" />
+      </svg>
     </button>
   );
 }

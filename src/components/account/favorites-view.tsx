@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { FavoriteButton } from "@/components/menu/favorite-button";
 import { MenuItemOrderDialog } from "@/components/menu/menu-item-order-dialog";
 import { Container } from "@/components/ui/container";
 import { useAuth } from "@/context/auth-context";
@@ -17,9 +18,15 @@ import type { MenuCatalog, MenuItem } from "@/types/menu";
 
 type FavoriteEntry = Readonly<{ item: MenuItem; categoryName: string }>;
 
-/** Saved items with their current price from the live menu (FR-040). */
+/**
+ * Saved items with their current price from the live menu (FR-040). Items the
+ * website doesn't list (hidden or no longer on the POS menu) are left out, and
+ * items marked unavailable show without an Order button. A heart removed here
+ * stays on the page until the next visit, so it can be saved again.
+ */
 export function FavoritesView() {
   const { user, isLoading: isAuthLoading } = useAuth();
+  const userId = user?.id ?? null;
   const [catalog, setCatalog] = useState<MenuCatalog | null>(null);
   const [entries, setEntries] = useState<FavoriteEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -27,10 +34,10 @@ export function FavoritesView() {
   const [ordering, setOrdering] = useState<FavoriteEntry | null>(null);
 
   useEffect(() => {
-    if (isAuthLoading || !user) return;
+    if (isAuthLoading || !userId) return;
     let active = true;
 
-    Promise.all([fetchFavorites({ userId: user.id }), fetchPublicMenu()])
+    Promise.all([fetchFavorites({ userId }), fetchPublicMenu()])
       .then(([favorites, menu]) => {
         if (!active) return;
         const all: FavoriteEntry[] = menu.categories.flatMap((category) =>
@@ -57,7 +64,7 @@ export function FavoritesView() {
     return () => {
       active = false;
     };
-  }, [user, isAuthLoading]);
+  }, [userId, isAuthLoading]);
 
   return (
     <Container className="py-8 md:py-12 max-w-4xl">
@@ -105,6 +112,7 @@ export function FavoritesView() {
               (price): price is number => price !== null,
             );
             const lowest = getLowestItemPrice(prices);
+            const singlePrice = new Set(prices).size === 1;
             const canOrder =
               entry.item.availability === "available" &&
               entry.item.variants.length > 0;
@@ -120,6 +128,7 @@ export function FavoritesView() {
                   </h2>
                   {lowest !== null ? (
                     <p className="text-sm text-[var(--text-muted)]">
+                      {singlePrice ? null : "From "}
                       {formatPrice(lowest)}
                     </p>
                   ) : null}
@@ -129,16 +138,22 @@ export function FavoritesView() {
                     </p>
                   ) : null}
                 </div>
-                {canOrder ? (
-                  <button
-                    type="button"
-                    onClick={() => setOrdering(entry)}
-                    aria-label={`Order ${entry.item.name}`}
-                    className="button-primary inline-flex min-h-10 items-center justify-center rounded-full px-5 font-semibold"
-                  >
-                    Order
-                  </button>
-                ) : null}
+                <div className="flex shrink-0 items-center gap-3">
+                  {canOrder ? (
+                    <button
+                      type="button"
+                      onClick={() => setOrdering(entry)}
+                      aria-label={`Order ${entry.item.name}`}
+                      className="button-primary inline-flex min-h-12 items-center justify-center rounded-full px-5 font-semibold"
+                    >
+                      Order
+                    </button>
+                  ) : null}
+                  <FavoriteButton
+                    itemId={entry.item.id}
+                    itemName={entry.item.name}
+                  />
+                </div>
               </li>
             );
           })}

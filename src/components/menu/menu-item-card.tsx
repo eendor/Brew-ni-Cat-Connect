@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import { useAuth } from "@/context/auth-context";
 import { useCart } from "@/context/cart-context";
 import { getItemQuantityInCart } from "@/lib/ordering/cart-selectors";
 import { formatOptionName } from "@/lib/menu/format-name";
@@ -12,9 +13,10 @@ import {
 } from "@/lib/menu/format-price";
 import type { MenuCatalog, MenuItem, MenuVariant } from "@/types/menu";
 
+import { FavoriteButton } from "./favorite-button";
 import { MenuItemOrderDialog } from "./menu-item-order-dialog";
 import { MenuItemMedia } from "./menu-item-media";
-import { FavoriteButton } from "./favorite-button";
+
 type MenuItemCardProps = Readonly<{
   item: MenuItem;
   catalog?: MenuCatalog;
@@ -52,6 +54,7 @@ export function MenuItemCard({
   categoryName = "",
 }: MenuItemCardProps) {
   const [isOrderOpen, setIsOrderOpen] = useState(false);
+  const { user } = useAuth();
   const { state: cartState } = useCart();
   const cartQuantity = getItemQuantityInCart(cartState, item.id);
   const prices = getItemPrices(item).filter(
@@ -190,31 +193,35 @@ export function MenuItemCard({
           </p>
         )}
 
-        {canOrder ? (
+        {canOrder || user ? (
           <div className="menu-card__footer">
-            <div className="menu-card__order-group">
-              <button
-                type="button"
-                data-order-trigger=""
-                onClick={() => setIsOrderOpen(true)}
-                className="button-primary menu-card__order"
-                aria-label={`Order ${item.name}`}
-              >
-                Add to order
-              </button>
+            {canOrder ? (
+              <div className="menu-card__order-group">
+                <button
+                  type="button"
+                  data-order-trigger=""
+                  onClick={() => setIsOrderOpen(true)}
+                  className="button-primary menu-card__order"
+                  aria-label={`Order ${item.name}`}
+                >
+                  Add to order
+                </button>
 
-              {cartQuantity > 0 ? (
-                <span className="menu-card__cart-badge">
-                  {cartQuantity} in cart
-                </span>
-              ) : null}
-            </div>
+                {cartQuantity > 0 ? (
+                  <span className="menu-card__cart-badge">
+                    {cartQuantity} in cart
+                  </span>
+                ) : null}
+              </div>
+            ) : null}
+
+            <FavoriteButton
+              itemId={item.id}
+              itemName={item.name}
+              className="menu-card__favorite"
+            />
           </div>
         ) : null}
-
-        <div className="mt-3 flex justify-end">
-          <FavoriteButton itemId={item.id} itemName={item.name} />
-        </div>
       </div>
 
       {isOrderOpen ? (
