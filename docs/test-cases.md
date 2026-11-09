@@ -1060,3 +1060,15 @@ The page is the privacy policy URL and the data deletion instructions URL in the
 | MAN-P5-001 | FR-042, NFR-026 | After the merge, open `https://brew-ni-cat-connect.vercel.app/privacy` and `…/privacy#delete-your-data` | Both answer 200 and show the policy with the saved contact details | Not run yet |
 | MAN-P5-002 | FR-042 | Save both URLs in the Meta app's Basic settings | Meta accepts them, and the app can be published | Not run yet |
 | MAN-P5-003 | FR-042, NFR-026 | The owner reads the policy | The owner confirms the wording, the order retention and the deletion steps, or asks for changes | Not run yet |
+
+## 42. Messenger Reply Buttons and Sign-up Screen Cases (2026-11-10)
+
+Run on 2026-11-10 by Rodnee on `feat/messenger-reply-buttons` (PR #109) with the CI settings: 80 test files, 730 tests, all passed.
+
+| ID        | Requirement    | Case                                                                                                                                              | Result |
+| --------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| TC-P7-050 | FR-059, FR-062 | A reply of up to 640 characters puts its first three choices as postback buttons inside the message and keeps the rest as quick replies under it. | Passed |
+| TC-P5-096 | FR-031, FR-032 | After sign-up, the check-email screen fits both a new email and one that already has an account, and links to the password reset.                  | Passed |
+
+- ~~TC-P7-034 expected the reply as text with quick replies.~~ Superseded 2026-11-10: TC-P7-034 now expects the same body as TC-P7-050, and TC-P7-035 checks the text fallback with a reply over 640 characters.
+- ~~TC-P4-164 and TC-P4-165 looked for the heading "Confirm your email".~~ Superseded 2026-11-10: they look for "Check your email", the new heading from TC-P5-096.

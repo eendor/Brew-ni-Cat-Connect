@@ -16,17 +16,43 @@ export const GRAPH_API_VERSION = "v26.0";
 
 const SEND_TIMEOUT_MS = 8000;
 
-/** The Send API body for one reply to one customer. */
+/** Meta's limits for a button message: its text and its buttons. */
+export const MAX_BUTTON_TEXT = 640;
+export const MAX_BUTTONS = 3;
+
+/**
+ * The Send API body for one reply to one customer.
+ *
+ * The first three choices are buttons inside the reply, and the rest stay as
+ * quick replies under it. A reply too long for a button message is sent as
+ * text with all its choices as quick replies.
+ */
 export function sendApiBody(recipient: string, answer: Reply) {
-  const quickReplies = answer.quickReplies.slice(0, MAX_QUICK_REPLIES);
-  return {
-    recipient: { id: recipient },
-    messaging_type: "RESPONSE",
-    message: {
-      text: answer.text,
-      ...(quickReplies.length > 0 ? { quick_replies: quickReplies } : {}),
-    },
-  };
+  const choices = answer.quickReplies;
+  const asButtons = choices.length > 0 && answer.text.length <= MAX_BUTTON_TEXT;
+  const buttons = asButtons ? choices.slice(0, MAX_BUTTONS) : [];
+  const quickReplies = choices
+    .slice(buttons.length)
+    .slice(0, MAX_QUICK_REPLIES);
+  const quick = quickReplies.length > 0 ? { quick_replies: quickReplies } : {};
+  const message = asButtons
+    ? {
+        attachment: {
+          type: "template" as const,
+          payload: {
+            template_type: "button" as const,
+            text: answer.text,
+            buttons: buttons.map(({ title, payload }) => ({
+              type: "postback" as const,
+              title,
+              payload,
+            })),
+          },
+        },
+        ...quick,
+      }
+    : { text: answer.text, ...quick };
+  return { recipient: { id: recipient }, messaging_type: "RESPONSE", message };
 }
 
 export type GraphClient = Readonly<{
