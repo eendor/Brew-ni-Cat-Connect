@@ -89,4 +89,12 @@ describe("Site footer", () => {
       screen.getByRole("button", { name: "Install app" }),
     ).toBeInTheDocument();
   });
+
+  it("TC-P5-091 — links to the Privacy Policy from every page's footer", () => {
+    render(<SiteFooter content={content} />);
+    const link = screen.getByRole("link", { name: "Privacy Policy" });
+    expect(link).toHaveAttribute("href", "/privacy");
+    // a full 44 px tap target, as the footer's other links
+    expect(link.className).toContain("min-h-11");
+  });
 });
