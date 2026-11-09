@@ -41,6 +41,9 @@ test("TC-P5-094 — the footer opens the Privacy Policy, and the data deletion l
 
   // the URL given to Meta for data deletion instructions, opened fresh (a
   // hash change on the same page would not load it again)
+  // the site scrolls smoothly; reduced motion makes the jump instant so the
+  // check does not race the animation on slower machines
+  await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("about:blank");
   const response = await page.goto("/privacy#delete-your-data");
   expect(response?.ok()).toBe(true);

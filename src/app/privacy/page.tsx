@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { Container } from "@/components/ui/container";
 import { ExternalLink } from "@/components/ui/external-link";
 import { FacebookIcon, MailIcon, PhoneIcon } from "@/components/ui/icons";
+import { ScrollToHash } from "@/components/privacy/scroll-to-hash";
 import { PageIntro } from "@/components/ui/page-intro";
 import { PRIVACY_POLICY_UPDATED } from "@/config/privacy";
 import { siteConfig } from "@/config/site";
@@ -329,6 +330,7 @@ export default async function PrivacyPage() {
           </div>
         </div>
       </Container>
+      <ScrollToHash />
     </>
   );
 }
