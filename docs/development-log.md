@@ -1572,3 +1572,14 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `feat/privacy-policy`, PR #107.
 - **Known limitations:** The owner has not confirmed the wording, how long orders are kept or the deletion steps (MAN-P5-003). Deletion is a request to the shop; there is no self-service delete button or request form yet. The policy is in English only.
 - **Next action:** After the merge, check `/privacy` on production (MAN-P5-001), save the two URLs in the Meta app and publish it (MAN-P5-002), then rerun the Messenger live checks TC-P7-044 to TC-P7-049.
+
+## 2026-11-10 — Buttons inside Messenger replies and a clearer sign-up screen
+
+- **Phase:** Phase 7 (Messenger) and Phase 4 (accounts).
+- **Task:** The user found the Messenger buttons showing only as quick replies under the latest reply, and asked for them inside the replies. The user also found that signing up with an email that already has an account showed "Confirm your email", as if the account were new.
+- **Summary:** `sendApiBody` now sends a reply of up to 640 characters as Meta's button message, with its first three choices as postback buttons and the rest as quick replies. Longer replies stay as text with quick replies. The sign-up screen still doesn't say whether an account exists (FR-031, FR-032), but its wording now covers both cases and links to the password reset.
+- **Files:** `src/lib/messenger/send.ts`, `src/components/account/sign-up-view.tsx`, `tests/unit/messenger-send.test.ts`, `tests/unit/account-forms.test.tsx`, `docs/test-cases.md` (section 42).
+- **Testing:** `NODE_OPTIONS=--no-experimental-webstorage npx vitest run`: 80 test files, 730 tests, all passed. `npx eslint . --max-warnings=0`, `npx tsc --noEmit -p .` and `npx prettier --check .` passed.
+- **Branch / PR:** `feat/messenger-reply-buttons`, PR #109.
+- **Known limitations:** Meta allows three buttons per message, so each reply shows three of its choices inside it. The email Supabase sends when an existing email signs up again comes from Supabase's email settings, not from this code.
+- **Next action:** Check the buttons in Messenger after the deploy.
