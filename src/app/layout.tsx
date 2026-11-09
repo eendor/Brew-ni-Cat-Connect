@@ -9,6 +9,7 @@ import { SiteHeader } from "@/components/layout/site-header";
 import { MotionDirector } from "@/components/motion/motion-director";
 import { RouteCurtain } from "@/components/motion/route-curtain";
 import { ScrollMotion } from "@/components/motion/scroll-motion";
+import { ServiceWorkerRegistration } from "@/components/pwa/service-worker-registration";
 import { ThemeSync } from "@/components/theme/theme-toggle";
 import { CartFxLayer } from "@/components/three/layers";
 import { SiteNotice } from "@/components/layout/site-notice";
@@ -71,7 +72,12 @@ export async function generateMetadata(): Promise<Metadata> {
     ],
     icons: {
       icon: "/images/branding/brew-ni-cat-logo.png",
-      apple: "/images/branding/brew-ni-cat-logo.png",
+      apple: "/icons/apple-touch-icon.png",
+    },
+    appleWebApp: {
+      capable: true,
+      title: siteConfig.shortName,
+      statusBarStyle: "default",
     },
     openGraph: {
       type: "website",
@@ -148,6 +154,7 @@ export default async function RootLayout({ children }: RootLayoutProps) {
                 <RouteCurtain />
                 <CartFxLayer />
                 <ThemeSync />
+                <ServiceWorkerRegistration />
               </CartProvider>
             </FavoritesProvider>
           </AuthProvider>
