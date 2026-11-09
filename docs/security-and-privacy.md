@@ -418,7 +418,7 @@ Before commit/PR, inspect staged and unstaged diffs, verify `.env.local` is untr
 
 ### 19.6 Meta app mode and chat profile
 
-- The Meta app stays in Development mode, so only people with a role on the app get automated replies. Everyone else's messages reach the staff exactly as before.
+- ~~The Meta app stays in Development mode, so only people with a role on the app get automated replies.~~ Superseded 2026-11-09: Meta sends no production webhooks to an app in Development mode, not even for people with a role on it, so a team member's test messages got no reply. The app is being published with Standard Access, which needs no App Review and still sends only the messages of people with a role on the app, so only they get automated replies. Publishing needs a privacy policy URL, which is now `/privacy` (§20). Everyone else's messages reach the staff exactly as before.
 - Reaching every customer needs Meta App Review for Advanced Access to `pages_messaging` and the app switched to Live. Submitting it is **TODO: Confirm with Brew ni Cat owner.**
 - A team member applies the chat profile (Get Started, the greeting and the ☰ menu) to the Page once with the Page token. The greeting says the chat has an automated assistant, and the profile has no ice breakers.
 
@@ -427,3 +427,31 @@ Before commit/PR, inspect staged and unstaged diffs, verify `.env.local` is untr
 - The limits and the duplicate check are kept per server instance, so they are best effort across instances.
 - The assistant replies in English only and checks orders by their link only; there is no phone-number check.
 - Meta keeps the conversation under its own terms, and the staff see the whole chat in the Page inbox as before.
+
+## 20. Privacy Policy Addendum (PR #107)
+
+### 20.1 The published policy
+
+- `/privacy` is the customer-facing privacy notice (NFR-026, FR-042). It is a static page that reads only the saved public contact details (§18.8) and is refreshed every minute like the other pages. Its version is `PRIVACY_POLICY_UPDATED` in `src/config/privacy.ts` (2026-11-09), shown at the top as "Last updated"; it changes whenever the wording changes.
+- It says in plain English what this document records: the account email and the password that only Supabase Auth handles (§18.7), the profile name and phone (§18.10), favorites, what a pickup order keeps (§18.2), the order link's token (§18.3), the rider delivery summary the site never sends (§17.1), the Messenger assistant (§19.3 to §19.5), the order limit's in-memory address counts (§18.6), what stays in the browser (§17.1, §18.9, the 3D lite key, the sign-in session and the offline cache), the service providers (Supabase, Vercel, Meta, and Google for the shop's account emails), how long data is kept, the RA 10173 rights and the National Privacy Commission.
+- It makes no claim the code does not back. There are no analytics or tracking cookies because none are installed, the fonts are served by the site through `next/font`, and pictures come only from `/images/` (§18.8). TC-P5-090 fails if the page claims "never share", "guarantee" or "encrypted at rest".
+- The page names no customer, and the shop's email address and phone number come from the saved content, not from code.
+
+### 20.2 Notices where details are asked
+
+- Every page's footer links the policy.
+- Sign-up says the email is used to sign in and to reach the customer about the account, and checkout's details step says the name and number are used to prepare the order and to reach the customer about it. Each links the policy, before anything is sent.
+- No acknowledgment checkbox was added: the policy asks for no optional consent, and whether one is needed is for the owner (NFR-026).
+
+### 20.3 Asking for correction or deletion (FR-042)
+
+- Customers correct their name and number on the profile page. For anything else, and for deletion, they contact the shop by its saved phone, email or Facebook Page; the shop may ask them to confirm from the account's email address first, so no one can delete someone else's data.
+- `/privacy#delete-your-data` is the data deletion instructions URL in the Meta app's settings.
+- A team member with access to the Supabase dashboard deletes the account in Supabase Auth. The profile, favorites, loyalty rows and data requests go with it, and orders stay as guest orders with no `customer_id` (FR-043, TC-P4-082). The orders keep the name and number given at checkout, as the policy says.
+- The `data_requests` table (FR-042) has no customer form yet, so requests come by phone, email or Messenger for now.
+
+### 20.4 Known limits
+
+- The owner has not confirmed the wording, how long orders are kept, or the deletion steps (MAN-P5-003). **TODO: Confirm with Brew ni Cat owner.**
+- There is no self-service delete button or in-app request form yet.
+- The policy is in English only.

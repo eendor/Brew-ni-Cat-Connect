@@ -203,6 +203,25 @@ describe("Account Forms Component Tests", () => {
         screen.getByRole("link", { name: /proceed to sign in/i }),
       ).toHaveAttribute("href", "/account/sign-in");
     });
+
+    it("TC-P5-092 — tells the customer how their email is used, with the Privacy Policy, before the account is made (NFR-026)", () => {
+      render(
+        <AuthProvider client={createMockSupabase()}>
+          <SignUpView />
+        </AuthProvider>,
+      );
+
+      const link = screen.getByRole("link", { name: "Privacy Policy" });
+      expect(link).toHaveAttribute("href", "/privacy");
+      expect(link.parentElement).toHaveTextContent(
+        "We use your email to sign you in and to reach you about your account.",
+      );
+      // the notice comes before any data is sent: it sits with the button
+      const button = screen.getByRole("button", { name: /create account/i });
+      expect(
+        button.compareDocumentPosition(link) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+    });
   });
 
   describe("SignInView (FR-032)", () => {

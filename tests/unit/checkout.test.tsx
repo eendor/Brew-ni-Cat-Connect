@@ -210,6 +210,20 @@ describe("Checkout Flow & Step Transitions", () => {
     expect(screen.getAllByText("3").length).toBeGreaterThan(0); // total items: 2 + 1
   });
 
+  it("TC-P5-093 — the details step says how the name and number are used and links the Privacy Policy (NFR-026)", () => {
+    renderCheckout(testCartState);
+
+    const link = screen.getByRole("link", { name: "Privacy Policy" });
+    expect(link).toHaveAttribute("href", "/privacy");
+    expect(link.parentElement).toHaveTextContent(
+      "The shop uses your name and number to prepare this order and to reach you about it.",
+    );
+    // shown on the step that asks for them, before review and sending
+    expect(
+      screen.getByRole("button", { name: /Continue to Order Review/i }),
+    ).toBeInTheDocument();
+  });
+
   it("TC-P3-CHK-003 — switches between Pickup at Shop and Rider Delivery with the rider wording", async () => {
     const user = userEvent.setup();
     renderCheckout(testCartState);

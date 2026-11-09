@@ -1026,3 +1026,37 @@ These run on the production site with the shop's Page, from a team member's acco
 | TC-P7-047 | FR-059, FR-061 | Messenger chat | Hours, location and how to order match the website | As TC-P7-044 | Tap Hours & location, then How to order | The same facts as `/contact` | — | Not run yet | — |
 | TC-P7-048 | FR-063 | Messenger chat | Order status needs the full link | As TC-P7-044 | Tap Order status; send a made-up bare reference; send a made-up order link | The prompt; the privacy reply; "I couldn't find an order for that link." | — | Not run yet | — |
 | TC-P7-049 | FR-062 | Messenger chat and the Page inbox | Typed questions stay for the staff | As TC-P7-044 | Tap Talk to staff, then type a question | Only the staff reply; the typed question gets no automated reply, stays unread in the Page inbox, and the staff's phone gets the message alert | — | Not run yet | — |
+
+## 41. Privacy Policy Cases (Phase 5 — FR-042, NFR-026)
+
+Run on 2026-11-09 by Rodnee on branch `feat/privacy-policy` (PR #107). The page shows the saved contact details and fixed policy text, so the tests use the fallback content and made-up contact details; no live account, live order or live data was used. The checks ran with the CI settings (`NEXT_PUBLIC_SUPABASE_URL=https://example.supabase.co`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=placeholder-publishable-key`, `NEXT_PUBLIC_ONLINE_ORDERING=enabled`).
+
+`NODE_OPTIONS=--no-experimental-webstorage npx vitest run` — 80 test files, 728 tests, all passed. `CAPTURE_EVIDENCE=1 npx playwright test tests/e2e/privacy.spec.ts --project=chromium` — 2 passed; the screenshots are in `docs/evidence/phase-5/privacy-policy/`.
+
+The page is the privacy policy URL and the data deletion instructions URL in the Meta app's settings (`https://brew-ni-cat-connect.vercel.app/privacy` and `…/privacy#delete-your-data`), which Meta needs before the app can be published (§40f, `docs/security-and-privacy.md` §20).
+
+### 41a. Page, footer and notices (TC-P5-088 to TC-P5-093)
+
+| ID | Requirement ID(s) | Module | Scenario | Preconditions | Input / action | Expected result | Actual result | Status | Evidence |
+|---|---|---|---|---|---|---|---|---|---|
+| TC-P5-088 | FR-042, NFR-026 | `/privacy` | Shows the policy, its version date and a linkable section per topic | Fallback content | Render `PrivacyPage` | The "Privacy Policy" heading; a `<time datetime="2026-11-09">` reading "November 9, 2026"; nine sections with ids and headings (who we are, what we collect, on your device, service providers, how long, your rights, `delete-your-data`, contact, changes); the deletion section has three steps, says the account, profile and favorites are deleted and past orders keep no link to the account | Matched. | Passed | `tests/unit/privacy-page.test.tsx` |
+| TC-P5-089 | FR-042 | `/privacy` | Gives the contact details the owner saved | Saved content with a made-up phone, email and Facebook link, then an empty Facebook link | Render the page twice | The phone is a `tel:` link and the email a `mailto:` link; the Facebook Page link opens in a new tab with `noopener noreferrer`; with an empty link it is hidden | Matched. | Passed | `tests/unit/privacy-page.test.tsx` |
+| TC-P5-090 | NFR-026 | `/privacy` | States what the site keeps the way the code keeps it | Fallback content | Render and read the text | Says there is no analytics, advertising or tracking cookies; passwords are hashed by Supabase; the order link's token isn't sent to the server and the order page never shows the phone (§18.3); the Messenger assistant saves nothing and remembers chats for at most 24 hours (§19.3); rider delivery is never sent by the site (§17.1); names RA 10173 and the National Privacy Commission; links the profile page; makes no "never share", "guarantee" or "encrypted at rest" claim | Matched. | Passed | `tests/unit/privacy-page.test.tsx` |
+| TC-P5-091 | NFR-026 | `SiteFooter` | Every page's footer links the policy | None | Render the footer | A "Privacy Policy" link to `/privacy` with the 44 px `min-h-11` tap target | Matched. | Passed | `tests/unit/site-footer.test.tsx` |
+| TC-P5-092 | NFR-026 | `SignUpView` | Sign-up says how the email is used before the account is made | No session | Render the sign-up form | "We use your email to sign you in and to reach you about your account." with a "Privacy Policy" link to `/privacy`, right after the Create Account button | Matched. | Passed | `tests/unit/account-forms.test.tsx` |
+| TC-P5-093 | NFR-026 | `CheckoutView` | The details step says how the name and number are used | A cart with two lines | Render checkout | "The shop uses your name and number to prepare this order and to reach you about it." with a "Privacy Policy" link to `/privacy`, on the step that asks for them | Matched. | Passed | `tests/unit/checkout.test.tsx` |
+
+### 41b. Browser tests (TC-P5-094, TC-P5-095)
+
+| ID | Requirement ID(s) | Module | Scenario | Preconditions | Input / action | Expected result | Actual result | Status | Evidence |
+|---|---|---|---|---|---|---|---|---|---|
+| TC-P5-094 | FR-042, NFR-026 | Footer and `/privacy` | The footer opens the policy, and the data deletion link lands on its section | Production build, 1440×900 | Click the footer's Privacy Policy link; then open `/privacy#delete-your-data` fresh | `/privacy` loads with the heading and the "Privacy Policy" title; the deletion URL answers 200 and its heading is in view, below the sticky header | Matched. | Passed | `tests/e2e/privacy.spec.ts`, `docs/evidence/phase-5/privacy-policy/privacy-page-1440x900.png` |
+| TC-P5-095 | NFR-026 | `/privacy` | Reads on a phone | Production build, 390×844 | Open `/privacy`, then `/privacy#delete-your-data` | No sideways scroll; every contact link is at least 44 px tall; the deletion heading is in view | Matched. | Passed | `tests/e2e/privacy.spec.ts`, `docs/evidence/phase-5/privacy-policy/privacy-page-390x844.png`, `docs/evidence/phase-5/privacy-policy/delete-your-data-390x844.png` |
+
+### 41c. Manual checks (MAN-P5-001 to MAN-P5-003)
+
+| ID | Requirement ID(s) | Scenario | Expected result | Status |
+|---|---|---|---|---|
+| MAN-P5-001 | FR-042, NFR-026 | After the merge, open `https://brew-ni-cat-connect.vercel.app/privacy` and `…/privacy#delete-your-data` | Both answer 200 and show the policy with the saved contact details | Not run yet |
+| MAN-P5-002 | FR-042 | Save both URLs in the Meta app's Basic settings | Meta accepts them, and the app can be published | Not run yet |
+| MAN-P5-003 | FR-042, NFR-026 | The owner reads the policy | The owner confirms the wording, the order retention and the deletion steps, or asks for changes | Not run yet |

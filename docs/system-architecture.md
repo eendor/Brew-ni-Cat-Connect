@@ -699,8 +699,29 @@ The shop's Facebook Page gets an automated assistant through a server-side webho
 
 - The webhook needs three server-only environment variables in Vercel: `MESSENGER_APP_SECRET`, `MESSENGER_VERIFY_TOKEN` and `MESSENGER_PAGE_ACCESS_TOKEN`. None has a `NEXT_PUBLIC_` prefix, and `.env.example` lists them without values.
 - The Meta app stays in Development mode (Standard Access), so only people with a role on the app get replies; everyone else's messages reach the staff exactly as before. Reaching every customer needs Meta App Review for Advanced Access to `pages_messaging` and the app switched to Live, which needs the owner's approval.
+- Update 2026-11-09: Meta sends no production webhooks to an app in Development mode, not even for people with a role on it, so the app is being published with Standard Access (no App Review). Only people with a role on the app still get replies. Publishing needs the privacy policy URL that §23 adds.
 
 ### 22.6 Tests
 
 - `tests/unit/messenger-signature.test.ts`, `tests/unit/messenger-intents.test.ts`, `tests/unit/messenger-replies.test.ts`, `tests/unit/messenger-events.test.ts`, `tests/unit/messenger-send.test.ts` and `tests/unit/messenger-route.test.ts` cover TC-P7-001 to TC-P7-041. Meta's requests, the content, the menu and the order lookup are mocked, and `tests/unit/messenger-fixtures.ts` uses made-up Page and customer IDs.
 - The live checks TC-P7-042 to TC-P7-049 run on the production site after the merge (test cases §40f).
+
+## 23. Privacy Policy Page (PR #107)
+
+The customer website publishes its privacy notice at `/privacy` (NFR-026) with the steps to ask for correction or deletion (FR-042). The same page is the privacy policy URL and, with `#delete-your-data`, the data deletion instructions URL in the Meta app's settings.
+
+### 23.1 Route and content
+
+- `src/app/privacy/page.tsx` is a server page that reads `getSiteContent()` for the area, town, phone, email and Facebook link, so the policy always shows the contact details staff saved (§20). Like the other content pages it is static and refreshed every minute.
+- The policy text is fixed in the page. Each topic is a `section` with an id (`who-we-are`, `what-we-collect`, `on-your-device`, `service-providers`, `how-long`, `your-rights`, `delete-your-data`, `contact-us`, `changes`) and `scroll-mt-28`, so a link to a section is not hidden under the sticky header.
+- `src/config/privacy.ts` holds `PRIVACY_POLICY_PATH` and the version date `PRIVACY_POLICY_UPDATED`. Next.js pages may only export page fields, so the constants live outside the page.
+
+### 23.2 Links to the policy
+
+- `SiteFooter` adds a "Privacy Policy" link with a 44 px tap target beside the copyright line on every page.
+- `SignUpView` and the details step of `CheckoutView` add a one-line notice with the link, next to the button that sends the details.
+
+### 23.3 Tests
+
+- `tests/unit/privacy-page.test.tsx`, `tests/unit/site-footer.test.tsx`, `tests/unit/account-forms.test.tsx` and `tests/unit/checkout.test.tsx` cover TC-P5-088 to TC-P5-093.
+- `tests/e2e/privacy.spec.ts` covers TC-P5-094 and TC-P5-095 against the production build and saves the screenshots in `docs/evidence/phase-5/privacy-policy/` with `CAPTURE_EVIDENCE=1`.

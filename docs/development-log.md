@@ -1558,3 +1558,17 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `feat/p7-messenger`, PR #106.
 - **Known limitations:** The replies are in English only. An order's status needs its full order link; there is no phone-number check. The limits and the duplicate check are kept per server instance. The Meta app is in Development mode, so only people with a role on the app get replies until Meta App Review and the owner's approval. The live checks TC-P7-042 to TC-P7-049 are Not run yet.
 - **Next action:** Set the three `MESSENGER_*` settings in Vercel, merge, connect the webhook in the Meta app, apply the Messenger Profile, then run TC-P7-042 to TC-P7-049 on the production site.
+
+## 2026-11-09 — Privacy Policy page (FR-042, NFR-026)
+
+- **Phase:** Phase 5 (customer account), needed by Phase 7.
+- **Task:** Publish a privacy policy with data deletion steps. Meta sends no production webhooks to an app in Development mode, so the Messenger assistant got no events; publishing the Meta app with Standard Access needs a privacy policy URL and data deletion instructions.
+- **Summary:** Added the `/privacy` page. It explains what the site and the Messenger assistant collect and why, what stays in the browser, the service providers, how long data is kept, the RA 10173 rights and how to ask for correction or deletion (`#delete-your-data`), with the contact details from the saved content. The footer links it on every page, and sign-up and checkout's details step say how the details are used, with the link. The policy's version date is in `src/config/privacy.ts`.
+- **Files:** `src/app/privacy/page.tsx`, `src/config/privacy.ts`, `src/components/layout/site-footer.tsx`, `src/components/account/sign-up-view.tsx`, `src/components/checkout/checkout-view.tsx`, `tests/unit/privacy-page.test.tsx`, `tests/unit/site-footer.test.tsx`, `tests/unit/account-forms.test.tsx`, `tests/unit/checkout.test.tsx`, `tests/e2e/privacy.spec.ts`, `docs/evidence/phase-5/privacy-policy/`, `docs/security-and-privacy.md` (§19.6 note, §20), `docs/system-architecture.md` (§22.5 note, §23), `docs/functional-requirements.md`, `docs/non-functional-requirements.md`, `docs/decisions.md`, `docs/srs.md`, `docs/test-cases.md` (section 41).
+- **Testing:**
+  - `python3 scripts/validate_phase0_docs.py`: `PHASE0_DOC_VALIDATION=PASS`, 0 errors in 229 Markdown files.
+  - `NODE_OPTIONS=--no-experimental-webstorage npx vitest run`: 80 test files, 728 tests, all passed.
+  - `CAPTURE_EVIDENCE=1 npx playwright test tests/e2e/privacy.spec.ts --project=chromium`: 2 passed; the three screenshots are in `docs/evidence/phase-5/privacy-policy/`.
+- **Branch / PR:** `feat/privacy-policy`, PR #107.
+- **Known limitations:** The owner has not confirmed the wording, how long orders are kept or the deletion steps (MAN-P5-003). Deletion is a request to the shop; there is no self-service delete button or request form yet. The policy is in English only.
+- **Next action:** After the merge, check `/privacy` on production (MAN-P5-001), save the two URLs in the Meta app and publish it (MAN-P5-002), then rerun the Messenger live checks TC-P7-044 to TC-P7-049.
