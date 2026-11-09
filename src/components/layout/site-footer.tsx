@@ -10,6 +10,7 @@ import {
   PhoneIcon,
   TikTokIcon,
 } from "@/components/ui/icons";
+import { InstallAppButton } from "@/components/pwa/install-app-button";
 import { siteConfig } from "@/config/site";
 import {
   emailHref,
@@ -148,7 +149,10 @@ export function SiteFooter({ content }: SiteFooterProps) {
           <span>
             © {new Date().getFullYear()} {siteConfig.name}
           </span>
-          <span>{joinList(content.payments.methods)} accepted</span>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+            <InstallAppButton />
+            <span>{joinList(content.payments.methods)} accepted</span>
+          </div>
         </Container>
       </div>
     </footer>

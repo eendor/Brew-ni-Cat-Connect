@@ -15,6 +15,9 @@ export default defineConfig({
     baseURL: "http://127.0.0.1:3000",
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
+    // A service worker must never bypass the page.route Supabase mocks in the
+    // other tests. tests/e2e/pwa.spec.ts allows it for its own cases.
+    serviceWorkers: "block",
   },
   projects: [
     {

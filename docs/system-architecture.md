@@ -614,3 +614,38 @@ Staff accounts change the content in the POS web app's Shop settings screen (`Br
 ### 20.3 Guard
 
 `tests/unit/site-content-source.test.ts` (TC-P4-222) scans `src/` and fails when a price, an opening time, a phone number, an email, the address, a social link or a fixed payment or hours phrase is written in code outside the two fallback files.
+
+## 21. Installable Web App and Offline Page (PR #105)
+
+The customer website can be installed on a phone and shows a clear offline page when the connection drops (FR-068, web part). The Android app Rodnee builds wraps this same site in a Trusted Web Activity.
+
+### 21.1 Manifest and icons
+
+- `src/app/manifest.ts` is the Next.js metadata route at `/manifest.webmanifest`. It sets the full and short names, a one-line description, `id`, `start_url` and `scope` `/`, `display: "standalone"`, the cream `background_color`/`theme_color` (`#f6eee1`), and the 192 and 512 `any` icons plus the 512 `maskable` icon.
+- The icons in `public/icons/` were generated once from `public/images/branding/brew-ni-cat-logo.png` with sharp, composited on the cream background; the maskable icon keeps the logo inside 80% of the width so the phone's mask doesn't clip it. The generation script was a one-off and is not committed.
+- `src/app/layout.tsx` adds the manifest link, the `appleWebApp` metadata and the apple touch icon.
+
+### 21.2 Service worker
+
+`public/sw.js` is served at `/sw.js`. `next.config.ts` sends it `Cache-Control: no-cache, no-store, must-revalidate` and `Content-Type: application/javascript; charset=utf-8`, so the browser checks for a new worker on every visit.
+
+- **Install:** opens the `bnc-shell-v1` cache, caches `/offline` and the four icons, then calls `skipWaiting()`.
+- **Activate:** deletes every cache whose name isn't `bnc-shell-v1`, then calls `clients.claim()`.
+- **Navigations:** always go to the network with `cache: "no-store"`. Only a failed navigation falls back to the cached `/offline` page; no other page HTML is ever cached, so a stale price or order state can't be shown.
+- **Assets:** cache-first only for same-origin `/_next/static/` and `/icons/`, whose file names change with their content.
+- **Left alone:** non-GET requests, other origins (Supabase), `/api/` and Next.js data requests (`RSC: 1` or `_rsc`), so nothing that can change is cached.
+
+### 21.3 Why the offline fallback moves the page into place
+
+A statically generated Next.js page is sent as a loading shell plus a hidden copy of the page that the framework's script moves into place. Offline that script's runtime cannot load, so the hidden copy never appears. When the service worker answers with the cached `/offline` page, it appends a small inline script that moves the hidden content into `<main id="main-content">` and drops the shell, and it sends `Content-Security-Policy: script-src 'unsafe-inline'` so only that inline script runs. External chunks are blocked, so the fallback cannot re-render the requested route or read menu data, prices or API responses.
+
+### 21.4 Registration and install button
+
+- `ServiceWorkerRegistration` is rendered once in the root layout. It registers `/sw.js` only in production, after the window `load` event, and only when `navigator.serviceWorker` exists.
+- `InstallAppButton` in the footer listens for `beforeinstallprompt`, cancels the browser's own banner, shows "Install app", calls `prompt()` and hides itself after the choice or after `appinstalled`. It stays hidden when the app already runs installed (`display-mode: standalone` or `navigator.standalone`).
+
+### 21.5 Tests
+
+- `tests/unit/manifest.test.ts`, `tests/unit/install-app-button.test.tsx`, `tests/unit/offline-page.test.tsx`, `tests/unit/service-worker-registration.test.tsx` and `tests/unit/site-footer.test.tsx` cover TC-P8-001 to TC-P8-013.
+- `tests/e2e/pwa.spec.ts` covers TC-P8-014 to TC-P8-021 against the production build, including a real offline navigation, the cache contents and a failed Place order retry.
+- The top-level Playwright `use` block sets `serviceWorkers: "block"` so a worker can't bypass the Supabase mocks in the other tests; `pwa.spec.ts` sets `serviceWorkers: "allow"` for its own cases.

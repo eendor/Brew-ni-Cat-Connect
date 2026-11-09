@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import { SiteFooter } from "@/components/layout/site-footer";
@@ -73,5 +73,20 @@ describe("Site footer", () => {
     // an empty link hides that button
     expect(screen.queryByRole("link", { name: "TikTok" })).toBeNull();
     expect(screen.getByRole("link", { name: "Facebook" })).toBeInTheDocument();
+  });
+
+  it("TC-P8-013 — shows the Install app button in the footer when the browser offers it", () => {
+    render(<SiteFooter content={content} />);
+    expect(screen.queryByRole("button", { name: "Install app" })).toBeNull();
+
+    act(() => {
+      window.dispatchEvent(
+        new Event("beforeinstallprompt", { cancelable: true }),
+      );
+    });
+
+    expect(
+      screen.getByRole("button", { name: "Install app" }),
+    ).toBeInTheDocument();
   });
 });

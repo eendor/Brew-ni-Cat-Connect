@@ -884,3 +884,58 @@ Run on 2026-11-07 by Rodnee Glen Martin on branch `feat/p5-favorites` (PR #103).
 |---|---|---|---|---|---|---|---|---|---|
 | TC-P5-086 | FR-040 | `/menu` | Save and remove a favorite from a menu card | Chromium; Supabase Auth and PostgREST mocked; signed in as `customer-123` | Open `/menu`, tap the Iced Latte heart, then tap it again; separately, open `/menu` signed out | One favorites request, filtered to `customer_id=eq.customer-123`, loads every heart; saving sends `{ customer_id, item_id }`; removing filters by `customer_id` and `item_id`; the heart turns on, then off. Signed out, no hearts show | Matched. | Passed | `tests/e2e/favorites.spec.ts`, `docs/evidence/phase-5/favorites/menu-card-heart.png` |
 | TC-P5-087 | FR-040 | `/account/favorites` | Saved list and empty state | Same mocks; saved Brew Special Coffee, Take-out Box, Takoyaki (unavailable) and Iced Latte | Open `/account/favorites`, then open it again with nothing saved | Three rows, newest first, with current prices ("From ₱120", "₱180"); Takoyaki shows "Not available to order right now" with no Order button; Take-out Box is left out; Order opens the order dialog. With nothing saved, "No Favorites Yet" and Browse Menu show | Matched. | Passed | `tests/e2e/favorites.spec.ts`, `docs/evidence/phase-5/favorites/favorites-list.png`, `docs/evidence/phase-5/favorites/favorites-empty.png` |
+
+## 36. Installable Web App and Offline Page Cases (Phase 8 — FR-068 web part)
+
+Run on 2026-11-09 by Shan on branch `feat/p8-installable-web-app` (PR #105). The manifest, icons, service worker and offline page are tested with Vitest and Playwright against a Next.js production build. Supabase is mocked in the checkout safety case, so no live account, live order or live data was used. The browser tests ran with the CI settings (`NEXT_PUBLIC_SUPABASE_URL=https://example.supabase.co`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=placeholder-publishable-key`, `NEXT_PUBLIC_ONLINE_ORDERING=enabled`).
+
+`npm run test` — 73 test files, 572 tests, all passed. `npx playwright test --project=chromium` — 44 passed and 3 skipped (TC-P4-173, TC-P4-272 and TC-P4-273 only save evidence screenshots). `CAPTURE_EVIDENCE=1 npx playwright test tests/e2e/pwa.spec.ts --project=chromium` — 8 passed; the screenshots are in `docs/evidence/phase-8/installable-web-app/`.
+
+### 36a. Manifest, install button and footer (TC-P8-001 to TC-P8-007, TC-P8-013)
+
+| ID | Requirement ID(s) | Module | Scenario | Preconditions | Input / action | Expected result | Actual result | Status | Evidence |
+|---|---|---|---|---|---|---|---|---|---|
+| TC-P8-001 | FR-068 | `src/app/manifest.ts` | The manifest describes a standalone installable app | None | Call `manifest()` | The name, short name, single-line description, `id`/`start_url`/`scope` `/`, `display: "standalone"`, and the cream `#f6eee1` background and theme colours are set | Matched. | Passed | `tests/unit/manifest.test.ts` |
+| TC-P8-002 | FR-068 | `src/app/manifest.ts` | The manifest lists the any and maskable icons | None | Call `manifest()` | A 192 and a 512 `any` icon plus a 512 `maskable` icon | Matched. | Passed | `tests/unit/manifest.test.ts` |
+| TC-P8-003 | FR-068 | `InstallAppButton` | No button before the browser offers install | No `beforeinstallprompt` event | Render the button | No "Install app" button renders | Matched. | Passed | `tests/unit/install-app-button.test.tsx` |
+| TC-P8-004 | FR-068 | `InstallAppButton` | The button appears when the browser offers install | None | Dispatch `beforeinstallprompt` | The button is visible and the event's default action is cancelled, so the browser's own banner doesn't also show | Matched. | Passed | `tests/unit/install-app-button.test.tsx` |
+| TC-P8-005 | FR-068 | `InstallAppButton` | Tapping Install asks the browser, then hides the button | `beforeinstallprompt` received | Click "Install app" | `prompt()` is called once and the button is removed after the customer's choice | Matched. | Passed | `tests/unit/install-app-button.test.tsx` |
+| TC-P8-006 | FR-068 | `InstallAppButton` | The button hides after the app is installed | `beforeinstallprompt` received | Dispatch `appinstalled` | The button is removed | Matched. | Passed | `tests/unit/install-app-button.test.tsx` |
+| TC-P8-007 | FR-068 | `InstallAppButton` | No button when the app already runs installed | `display-mode: standalone` matches, or `navigator.standalone` is true | Render and dispatch `beforeinstallprompt` | No "Install app" button renders | Matched. | Passed | `tests/unit/install-app-button.test.tsx` |
+| TC-P8-013 | FR-068 | `SiteFooter` | The footer shows Install app only when the browser offers it | None | Render the footer, then dispatch `beforeinstallprompt` | No button first; after the event the footer shows "Install app" | Matched. | Passed | `tests/unit/site-footer.test.tsx` |
+
+### 36b. Offline page and service worker registration (TC-P8-008 to TC-P8-012)
+
+| ID | Requirement ID(s) | Module | Scenario | Preconditions | Input / action | Expected result | Actual result | Status | Evidence |
+|---|---|---|---|---|---|---|---|---|---|
+| TC-P8-008 | FR-068 | `/offline` | Tells the customer they are offline | None | Render `OfflinePage` | The heading "You're offline" and "Check your internet connection, then try again." are visible | Matched. | Passed | `tests/unit/offline-page.test.tsx` |
+| TC-P8-009 | FR-068 | `/offline` | Try again reloads without client JavaScript | None | Render and inspect the button | "Try again" is a submit button inside a `method="get"` form, so it reloads without a client component that may not be cached | Matched. | Passed | `tests/unit/offline-page.test.tsx` |
+| TC-P8-010 | FR-068 | `/offline` | Offers a way back home | None | Render and inspect the link | "Return home" links to `/` | Matched. | Passed | `tests/unit/offline-page.test.tsx` |
+| TC-P8-011 | FR-068 | `ServiceWorkerRegistration` | Registers in production after the page loads | `NODE_ENV=production`, `navigator.serviceWorker` present, the document is still loading | Render and dispatch `load` | `navigator.serviceWorker.register("/sw.js")` is called | Matched. | Passed | `tests/unit/service-worker-registration.test.tsx` |
+| TC-P8-012 | FR-068 | `ServiceWorkerRegistration` | Never registers in development | `NODE_ENV=development` | Render and dispatch `load` | `register` is not called | Matched. | Passed | `tests/unit/service-worker-registration.test.tsx` |
+
+### 36c. Browser tests (TC-P8-014 to TC-P8-021)
+
+| ID | Requirement ID(s) | Module | Scenario | Preconditions | Input / action | Expected result | Actual result | Status | Evidence |
+|---|---|---|---|---|---|---|---|---|---|
+| TC-P8-014 | FR-068 | `/` | The page links the web app manifest | Production build | Open `/` | `link[rel="manifest"]` has `href="/manifest.webmanifest"` | Matched. | Passed | `tests/e2e/pwa.spec.ts` |
+| TC-P8-015 | FR-068 | `/manifest.webmanifest` | The manifest returns the installable values | Production build | Request the manifest | 200, a manifest content type, and the exact name, short name, description, `id`, `start_url`, `scope`, `display`, colours and icons | Matched. | Passed | `tests/e2e/pwa.spec.ts` |
+| TC-P8-016 | FR-068 | `/` | The service worker registers and becomes ready | Production build; service workers allowed | Open `/` | `navigator.serviceWorker.ready` has scope `http://127.0.0.1:3000/` and an active worker | Matched. | Passed | `tests/e2e/pwa.spec.ts` |
+| TC-P8-017 | FR-068 | `/menu` | An offline navigation shows the offline page | A service worker controls the page | Go offline, then open `/menu` | The cached offline page is served (`fromServiceWorker: true`) with the "You're offline" heading and retry guidance visible, and no loading state | Matched. | Passed | `tests/e2e/pwa.spec.ts`, `docs/evidence/phase-8/installable-web-app/offline-fallback-390x844.png` |
+| TC-P8-018 | FR-068 | Cache Storage | The cache never holds API responses or page HTML | A service worker controls the page; open `/` then `/menu` | Read every cache entry | Every entry is `/_next/static/…`, `/icons/…` or `/offline`; no `/api/`, `_rsc` or other page HTML | Matched. | Passed | `tests/e2e/pwa.spec.ts` |
+| TC-P8-019 | FR-068 | `/checkout` | A failed Place order never shows as placed, and the retry reuses its idempotency key | A build with `NEXT_PUBLIC_ONLINE_ORDERING=enabled`; the menu and order lookup are mocked | Place an order while the API aborts, then place it again | The first attempt shows the error alert and stays on `/checkout` with no "Order Placed"; the retry opens the order page; both requests carry the same `idempotencyKey` and `trackingToken` | Matched. | Passed | `tests/e2e/pwa.spec.ts` |
+| TC-P8-020 | FR-068 | `/offline` | Captures the offline page at phone and desktop sizes | `CAPTURE_EVIDENCE=1` | Open `/offline` at 390×844 and 1440×900 | The offline heading is visible and both screenshots are saved | Matched. | Passed | `docs/evidence/phase-8/installable-web-app/offline-page-390x844.png`, `docs/evidence/phase-8/installable-web-app/offline-page-1440x900.png` |
+| TC-P8-021 | FR-068 | Footer | Captures the footer with the Install app button | `CAPTURE_EVIDENCE=1` | Open `/`, dispatch `beforeinstallprompt`, scroll to the footer | No button first; after the event the footer button is visible and its screenshot is saved | Matched. | Passed | `docs/evidence/phase-8/installable-web-app/footer-install-button.png` |
+
+### 36d. Manual checks (MAN-P8-001 to MAN-P8-006)
+
+These need a real browser or phone and were not run in this environment.
+
+| ID | Requirement ID(s) | Scenario | Expected result | Status |
+|---|---|---|---|---|
+| MAN-P8-001 | FR-068 | Desktop Chrome shows the install icon in the address bar and opens the installed app in a standalone window | The install icon appears; after install the app opens without browser tabs or the address bar | Not run yet |
+| MAN-P8-002 | FR-068 | Android Chrome shows the install prompt and the installed app opens without browser UI (the Trusted Web Activity Rodnee builds) | The prompt appears; the installed app opens standalone | Not run yet |
+| MAN-P8-003 | FR-068 | iOS Safari Add to Home Screen uses the apple touch icon and opens standalone | The icon is the Brew ni Cat logo and the app opens without Safari chrome | Not run yet |
+| MAN-P8-004 | FR-068 | With the phone in airplane mode, the installed app opens `/menu` | The offline page shows the heading and retry guidance instead of the browser error | Not run yet |
+| MAN-P8-005 | FR-068 | Turn the network back on and press Try again | The requested page loads from the network | Not run yet |
+| MAN-P8-006 | FR-068 | Run a Lighthouse installability/PWA audit on the production site | The manifest, service worker, icons and start URL pass the installability checks | Not run yet |
