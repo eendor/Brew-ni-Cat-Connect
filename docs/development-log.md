@@ -1542,3 +1542,19 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `feat/p8-installable-web-app`, PR #105.
 - **Known limitations:** The manual install and offline checks on real desktop, Android and iOS browsers (MAN-P8-001 to MAN-P8-006) are Not run yet; they need a physical device and Rodnee's Android build. The offline fallback relies on Next.js's static streaming shell (`#S:0` and `#main-content`); TC-P8-017 fails if a future Next.js version changes that markup. The Android app itself is Rodnee's Phase 8 work.
 - **Next action:** Rodnee builds the Android Trusted Web Activity on this manifest and service worker, then runs the manual install and offline checks on a phone.
+
+## 2026-11-09 — Messenger assistant webhook (FR-058 to FR-063)
+
+- **Phase:** Phase 7 (Messenger assistant).
+- **Task:** Build the secured Messenger webhook for the shop's Facebook Page: a button-first assistant that answers the menu, prices, hours, location, how to order and order status, says it is automated, and leaves every other message unread for the staff. Rodnee owns this task (swapped with Van on 2026-11-07).
+- **Summary:** Added the `/api/messenger` route. It answers Meta's subscription check, checks `X-Hub-Signature-256` on the raw body, answers 200 at once and replies after the response with `after()`. `src/lib/messenger/` reads the events, skipping echoes, receipts, old, future and repeated events and keeping per-customer limits; maps button taps, typed button names and order links to replies built from the saved website content, the public menu and the order page's lookup; and sends them with the Send API (Graph API v26.0). `profile.ts` builds the Get Started button, the greeting and the ☰ menu for the Messenger Profile API. Docs: test cases §40, system architecture §22, security and privacy §19, ADR-028, the FR and NFR statuses, the software and emerging-technology rows and the README.
+- **Files:** `src/app/api/messenger/route.ts`; `src/lib/messenger/` (`deps.ts`, `events.ts`, `intents.ts`, `profile.ts`, `replies.ts`, `send.ts`, `signature.ts`); `tests/unit/messenger-events.test.ts`, `messenger-intents.test.ts`, `messenger-replies.test.ts`, `messenger-route.test.ts`, `messenger-send.test.ts`, `messenger-signature.test.ts` and `messenger-fixtures.ts`; `.env.example`; and the docs above.
+- **Testing:**
+  - `python3 scripts/validate_phase0_docs.py`: `PHASE0_DOC_VALIDATION=PASS`, 0 errors in 229 Markdown files.
+  - `npx eslint . --max-warnings=0`, `npx tsc --noEmit -p .` and `npx prettier --check .` passed.
+  - `NODE_OPTIONS=--no-experimental-webstorage npx vitest run`: 79 test files, 722 tests, all passed.
+  - `npm run build` with the CI placeholder Supabase settings passed; `/api/messenger` is a dynamic route.
+  - `CI=1 npx playwright test --project=chromium` with `NEXT_PUBLIC_ONLINE_ORDERING=enabled`: 44 passed and 3 skipped (TC-P4-173, TC-P4-272 and TC-P4-273 run only with `CAPTURE_EVIDENCE=1`). In the run before, TC-P8-016 failed once when the headless Chromium crashed (SIGSEGV) and passed on its retry; the webhook has no page, so no browser test touches it.
+- **Branch / PR:** `feat/p7-messenger`, PR #106.
+- **Known limitations:** The replies are in English only. An order's status needs its full order link; there is no phone-number check. The limits and the duplicate check are kept per server instance. The Meta app is in Development mode, so only people with a role on the app get replies until Meta App Review and the owner's approval. The live checks TC-P7-042 to TC-P7-049 are Not run yet.
+- **Next action:** Set the three `MESSENGER_*` settings in Vercel, merge, connect the webhook in the Meta app, apply the Messenger Profile, then run TC-P7-042 to TC-P7-049 on the production site.

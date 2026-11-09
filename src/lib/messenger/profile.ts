@@ -2,7 +2,7 @@
  * The chat's Get Started button, greeting and menu (the Messenger Profile).
  *
  * They are applied once, by a team member, with Meta's Messenger Profile API
- * and the Page access token (security-and-privacy §21); the website never
+ * and the Page access token (security-and-privacy §19); the website never
  * calls that API. While the Meta app is in Development mode, Meta shows them
  * only to people with a role on the app.
  *

@@ -392,3 +392,18 @@ This manual state is a temporary functional-verification condition, not a revisi
 - The website (`MAX_MIXED_FLAVORS`), the database (`private.resolve_unit_price` in `20261105120000_three_flavor_mixes.sql`) and the Android POS (POS PR #24) allow 3 flavors, and a 4-flavor mix is refused as `unknown-flavor` (TC-P6-218 to TC-P6-222).
 - The POS already prices a mix by its dearest flavor and deducts each flavor's recipe for a mix of any length, so the tablet handles 3-flavor website orders even before its update.
 - Each flavor in a mix still deducts a full recipe portion from stock.
+
+## ADR-028 — A Button-First Messenger Assistant That Leaves Other Messages To The Staff
+
+**Decision:** The Messenger assistant answers only its five main buttons (Menu & prices, Hours & location, How to order, Order status and Talk to staff), the menu's category buttons, typed button names and full order links. Every other message gets no automated reply and is never marked as seen, so the staff answer it in the same chat. It shows an order's status only from the order's tracking link, sets no ice breakers, and replies in English.\
+**Date:** 2026-11-09\
+**Status:** Accepted and implemented (PR #106). The Meta app stays in Development mode until the owner approves Meta App Review.\
+**Context:** FR-058 to FR-063 ask for a secured webhook that answers common questions, helps with the menu, explains ordering, says it is automated, hands off to people and shows order status without exposing orders. The staff already answer the shop's Messenger by hand and rely on its unread-message alerts. Customers write in Taglish, so guessing what a typed message means would give wrong answers to orders and questions, and an order reference alone is not a secret (security and privacy §18.3). The user chose buttons and asked that the staff still get notified.\
+**Alternatives considered:** reading every message and guessing its meaning from keywords (wrong answers to orders and questions; rider and order-summary detection was dropped); an AI model (FR-064 needs a value and risk review first and stays Deferred); marking answered chats as seen (the staff could miss a customer's next message); looking up an order by its reference or the customer's phone number (anyone who knows or guesses it could see another customer's order); ice breakers set through the API (Get Started and the ☰ menu already offer the buttons); replies in English and Tagalog (the Messenger card asks for both; the first version keeps one set of replies to review).\
+**Consequences:**
+
+- Customers get instant answers about the menu, prices, hours, location, ordering and order status, read from the same sources as the website, and every other message reaches the staff as before (FR-059, FR-060, FR-062).
+- The assistant never takes an order and never guesses a price (FR-060, FR-061).
+- An order's status needs the full order link with its tracking token. A short message with only a reference gets a privacy reply asking for the link (FR-063).
+- The replies are English only and there is no phone-number check, although the Messenger card asked for English and Tagalog replies and a tracking-token or phone check. Both are known limitations of PR #106.
+- While the Meta app is in Development mode, only people with a role on the app get replies. Reaching every customer needs Meta App Review and the owner's approval.
