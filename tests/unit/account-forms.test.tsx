@@ -122,6 +122,41 @@ describe("Account Forms Component Tests", () => {
       expect(client.auth.signUp).not.toHaveBeenCalled();
     });
 
+    it("TC-P5-096 — the check-email screen fits both a new email and one that already has an account", async () => {
+      const user = userEvent.setup();
+      const client = createMockSupabase({
+        signUp: vi.fn().mockResolvedValue({
+          data: { user: null, session: null },
+          error: {
+            code: "user_already_exists",
+            message: "User already registered",
+            status: 422,
+          },
+        }),
+      });
+      render(
+        <AuthProvider client={client}>
+          <SignUpView />
+        </AuthProvider>,
+      );
+      await user.type(screen.getByLabelText(/email address/i), "a@example.com");
+      await user.type(screen.getByLabelText(/^password/i), "Password123!");
+      await user.type(
+        screen.getByLabelText(/confirm password/i),
+        "Password123!",
+      );
+      await user.click(screen.getByRole("button", { name: /create account/i }));
+
+      const status = await screen.findByRole("status");
+      expect(status).toHaveTextContent(/is new to us, we sent it a link/);
+      expect(status).toHaveTextContent(
+        /Already have an account with this email/,
+      );
+      expect(
+        screen.getByRole("link", { name: "reset your password" }),
+      ).toHaveAttribute("href", "/account/forgot-password");
+    });
+
     it("TC-P4-164 — does not reveal whether email is already registered and shows confirmation notice (FR-031, FR-032)", async () => {
       const user = userEvent.setup();
       const client = createMockSupabase({
@@ -155,7 +190,7 @@ describe("Account Forms Component Tests", () => {
 
       await waitFor(() => {
         expect(
-          screen.getByRole("heading", { name: /confirm your email/i }),
+          screen.getByRole("heading", { name: /check your email/i }),
         ).toBeInTheDocument();
       });
       expect(
@@ -195,7 +230,7 @@ describe("Account Forms Component Tests", () => {
 
       await waitFor(() => {
         expect(
-          screen.getByRole("heading", { name: /confirm your email/i }),
+          screen.getByRole("heading", { name: /check your email/i }),
         ).toBeInTheDocument();
       });
       expect(screen.getByText(/newuser@example\.com/i)).toBeInTheDocument();

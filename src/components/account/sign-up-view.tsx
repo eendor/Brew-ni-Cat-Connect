@@ -117,15 +117,25 @@ export function SignUpView() {
                 </div>
                 <div>
                   <h2 className="font-display text-2xl text-[var(--text-strong)]">
-                    Confirm your email
+                    Check your email
                   </h2>
                   <p className="mt-2 text-sm text-[var(--text-muted)]">
-                    We have sent a confirmation email to{" "}
+                    If{" "}
                     <strong className="text-[var(--text-strong)] font-semibold">
                       {email}
-                    </strong>
-                    . Please click the link inside to verify your account before
-                    signing in.
+                    </strong>{" "}
+                    is new to us, we sent it a link to confirm your account.
+                    Click it before signing in.
+                  </p>
+                  <p className="mt-2 text-sm text-[var(--text-muted)]">
+                    Already have an account with this email? Sign in, or{" "}
+                    <Link
+                      href="/account/forgot-password"
+                      className="font-semibold text-[var(--accent-solid)] underline underline-offset-4"
+                    >
+                      reset your password
+                    </Link>{" "}
+                    if you forgot it.
                   </p>
                 </div>
                 <div className="pt-2">
