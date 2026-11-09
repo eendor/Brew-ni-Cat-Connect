@@ -714,6 +714,7 @@ The customer website publishes its privacy notice at `/privacy` (NFR-026) with t
 
 - `src/app/privacy/page.tsx` is a server page that reads `getSiteContent()` for the area, town, phone, email and Facebook link, so the policy always shows the contact details staff saved (§20). Like the other content pages it is static and refreshed every minute.
 - The policy text is fixed in the page. Each topic is a `section` with an id (`who-we-are`, `what-we-collect`, `on-your-device`, `service-providers`, `how-long`, `your-rights`, `delete-your-data`, `contact-us`, `changes`) and `scroll-mt-28`, so a link to a section is not hidden under the sticky header.
+- Update 2026-11-10 (PR #108): `ScrollToHash` (`src/components/privacy/scroll-to-hash.tsx`) scrolls to the hash's section once the page has loaded. The browser's own jump could happen before the layout settled, so `/privacy#delete-your-data` sometimes stopped short of its section, and TC-P5-094 failed in CI.
 - `src/config/privacy.ts` holds `PRIVACY_POLICY_PATH` and the version date `PRIVACY_POLICY_UPDATED`. Next.js pages may only export page fields, so the constants live outside the page.
 
 ### 23.2 Links to the policy
