@@ -77,7 +77,7 @@ The following is a planning inventory, not evidence that the data is already col
 | Order | Line items, totals, timestamps, fulfillment status, customer reference, optional customer_id; pickup details only when necessary | Submit, fulfill, track, reconcile, and support orders | Personal when linked to a customer | TODO: Confirm with Brew ni Cat owner. Determine operational and accounting retention requirements. Implemented with linked customer_id via auth.uid() or null for guest orders (FR-023). | Implemented |
 | Loyalty | Customer reference, balance, transaction history | Earn, audit, and redeem rewards | Personal | TODO: Confirm with Brew ni Cat owner. Define expiration and retention rules. | Planned |
 | Delivery | Deferred pending owner approval and requirements | No collection until the feature is approved | Potentially sensitive in context because it may reveal a location | Not applicable while deferred | Deferred |
-| Messenger | Platform-scoped identifier and minimum request context | Respond to customer-initiated interactions | Personal | Define before integration; do not retain entire conversations by default | Deferred |
+| Messenger | Platform-scoped identifier and minimum request context | Respond to customer-initiated interactions | Personal | Define before integration; do not retain entire conversations by default | Deferred; built in Phase 7 (PR #106), which stores no Messenger data (§19) |
 | Android device | Push token only if notifications are justified and enabled | Deliver approved transactional notifications | Personal/unique identifier | Remove on sign-out, invalidation, or documented expiry | Deferred |
 | Security telemetry | Timestamp, request/correlation ID, event type, coarse technical context | Detect abuse, investigate errors, and audit privileged changes | Operational; may contain personal data | Short, documented retention with restricted access | Planned |
 | Payment | TODO: Confirm with Brew ni Cat owner. Define the approved payment flow. | Complete an approved payment method | Potentially high risk | The application must not store card credentials or payment account secrets | Proposed |
@@ -382,3 +382,48 @@ Before commit/PR, inspect staged and unstaged diffs, verify `.env.local` is untr
 - **Customer profile privacy and data isolation (FR-038):** Customer profile data is stored in `public.customer_profiles`, keyed by the customer's Supabase Auth user ID (`user_id`). Row Level Security (RLS) policies enforce that authenticated users can only view and update their own record (`user_id = (select auth.uid())`). Email address is read directly from Supabase Auth (`user.email`) and rendered read-only in the UI. Phone numbers are strictly validated against Philippine mobile format and normalized to `+639XXXXXXXXX` format prior to upserting, satisfying database constraints.
 - **Account-linked order authorization and verification (FR-023):** When a signed-in customer places an online order, the client passes their session access token in the `Authorization: Bearer <token>` header to `POST /api/orders`. The API route verifies the token with Supabase Auth (`supabase.auth.getUser(token)`). If the token is invalid or expired, the route logs the failure without sensitive customer data and returns an HTTP 401 Unauthorized with a `session-expired` error code (and 502 Bad Gateway if the auth service is unreachable), rejecting unauthorized or corrupted state while providing actionable guidance to the customer. When valid, the database function `place_online_order()` is invoked with a client bearing the authenticated session token, causing Postgres `auth.uid()` to link the customer ID to the order record.
 - **Guest checkout privacy boundary (FR-023):** Guest checkout remains fully operational and privacy-isolated. Unauthenticated visitors submitting an order pass no authorization header; the API route executes `place_online_order()` with the unauthenticated public client, saving `customer_id = null`. Unauthenticated checkout fields are never prefilled from stored profiles or other customer sessions.
+
+## 19. Phase 7 Security and Privacy Addendum
+
+### 19.1 Messenger webhook secrets
+
+- The Meta app secret, the verify token and the Page access token are server-only environment variables in Vercel: `MESSENGER_APP_SECRET`, `MESSENGER_VERIFY_TOKEN` and `MESSENGER_PAGE_ACCESS_TOKEN`. None is in the repository, the tests, the browser bundle or a log, and `.env.example` lists the names without values.
+- The Page access token goes only in the `Authorization` header of the Send API call, never in a URL, a reply or a log line.
+- The tests use made-up secrets and made-up Page and customer IDs.
+
+### 19.2 Signature and replay checks (NFR-022)
+
+- Every POST must carry `X-Hub-Signature-256`, the HMAC-SHA256 of the raw body with the app secret. It is compared in constant time before the body is parsed, and the old SHA-1 header is refused. Without the app secret the route accepts nothing (503).
+- Bodies over 1 MB are refused, and a body whose declared size is too large is never read.
+- Events more than an hour old or more than 5 minutes ahead are skipped, and a repeated message ID is answered once.
+- The subscription check answers only the right verify token and echoes only a plain challenge of at most 128 characters.
+
+### 19.3 What the webhook reads, sends and keeps
+
+- It reads only customer-initiated events: the Page-scoped customer ID, the event time, the message ID, and the text or button payload. It reads at most the first 1,000 characters of a message.
+- It writes nothing to the database. The seen message IDs (1 hour), the customers already shown the notice (24 hours) and the per-customer limit counters (10-minute windows) live only in each server instance's memory and are lost when it restarts.
+- It never sends `mark_seen` or another sender action, so a message it doesn't answer stays unread for the staff.
+- Its replies carry public facts only: the saved website content, the public menu, and an order's reference and status.
+
+### 19.4 Order privacy (FR-063)
+
+- An order's status is shown only for a full order link with its 43-character tracking token, through `get_online_order()` with the publishable key, the same check as the order page (§18.3). A wrong token and a missing order get the same reply.
+- A reference alone opens nothing. A short message with only a reference gets a reply asking for the link, and no lookup runs.
+- The reply holds only the reference and the status, never the customer's name, phone, notes, items or prices.
+- Each customer gets at most 5 order checks in 10 minutes.
+
+### 19.5 Logs
+
+- The webhook logs event names and counts only: `messenger-webhook-processed` with the replied, skipped and failed counts, `messenger-graph-failed` with the HTTP status, and the route's `messenger-not-configured`, `messenger-bad-signature`, `messenger-no-page-token` and `messenger-processing-failed`. No customer ID, message text, token or secret is logged (TC-P7-033, TC-P7-036, TC-P7-041).
+
+### 19.6 Meta app mode and chat profile
+
+- The Meta app stays in Development mode, so only people with a role on the app get automated replies. Everyone else's messages reach the staff exactly as before.
+- Reaching every customer needs Meta App Review for Advanced Access to `pages_messaging` and the app switched to Live. Submitting it is **TODO: Confirm with Brew ni Cat owner.**
+- A team member applies the chat profile (Get Started, the greeting and the ☰ menu) to the Page once with the Page token. The greeting says the chat has an automated assistant, and the profile has no ice breakers.
+
+### 19.7 Known limits
+
+- The limits and the duplicate check are kept per server instance, so they are best effort across instances.
+- The assistant replies in English only and checks orders by their link only; there is no phone-number check.
+- Meta keeps the conversation under its own terms, and the staff see the whole chat in the Page inbox as before.

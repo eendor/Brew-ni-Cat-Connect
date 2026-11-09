@@ -136,7 +136,7 @@ Arrows show logical data flow, not a final deployment topology. Direct client-to
 | PostgreSQL | Canonical customer-facing data, constraints, order snapshots/history, loyalty ledger | Planned for Phase 4; schema not yet approved |
 | Row Level Security | Enforce least-privilege database access | **Current blocker:** RLS manually disabled; public table grants expose catalog and unrelated business relations. Restore/test intended-catalog-only policies before production |
 | Realtime | Authorized order-status refresh notifications | Planned after canonical states exist |
-| Messenger webhook | Verify Meta requests, normalize messages, invoke shared services, return policy-compliant responses | Deferred to Phase 7 |
+| Messenger webhook | Verify Meta requests, normalize messages, invoke shared services, return policy-compliant responses | Deferred to Phase 7; built in Phase 7 (PR #106, §22) |
 | Conversational assistant | Grounded interpretation/discovery; never transaction authority | Candidate within Phase 7 subject to evaluation |
 | Native Android client | Mobile UI consuming the same versioned backend contracts | Deferred to Phase 8 |
 | POS integration adapter | Isolate legacy details, map versioned contracts, deduplicate, retry, and reconcile | Deferred to Phase 6 pending POS assessment |
@@ -649,3 +649,58 @@ A statically generated Next.js page is sent as a loading shell plus a hidden cop
 - `tests/unit/manifest.test.ts`, `tests/unit/install-app-button.test.tsx`, `tests/unit/offline-page.test.tsx`, `tests/unit/service-worker-registration.test.tsx` and `tests/unit/site-footer.test.tsx` cover TC-P8-001 to TC-P8-013.
 - `tests/e2e/pwa.spec.ts` covers TC-P8-014 to TC-P8-021 against the production build, including a real offline navigation, the cache contents and a failed Place order retry.
 - The top-level Playwright `use` block sets `serviceWorkers: "block"` so a worker can't bypass the Supabase mocks in the other tests; `pwa.spec.ts` sets `serviceWorkers: "allow"` for its own cases.
+
+## 22. Messenger Assistant Webhook (PR #106)
+
+The shop's Facebook Page gets an automated assistant through a server-side webhook (FR-058 to FR-063). It answers button taps, typed button names and order links, and leaves every other message for the staff, who answer in the same chat. It reads the same saved content, menu and order lookup as the website and stores nothing of its own.
+
+### 22.1 Route and signature
+
+`src/app/api/messenger/route.ts` serves `/api/messenger`.
+
+- **GET** answers Meta's subscription check. `checkSubscription` returns `hub.challenge` only for `hub.mode=subscribe` with the matching `MESSENGER_VERIFY_TOKEN`, and only when the challenge is plain text of at most 128 characters; anything else gets 403.
+- **POST** takes Meta's signed events, in this order:
+  1. No `MESSENGER_APP_SECRET`: 503, and nothing is accepted.
+  2. A declared or actual body over 1 MB: 413. A body whose declared size is too large is never read.
+  3. `X-Hub-Signature-256` must be `sha256=` and the HMAC-SHA256 of the raw bytes with the app secret, compared with `timingSafeEqual` in `src/lib/messenger/signature.ts`. Otherwise 401.
+  4. A body that isn't JSON: 400. A body that isn't `object: "page"`: 404.
+  5. No `MESSENGER_PAGE_ACCESS_TOKEN`: 200 so Meta keeps the webhook on, and no replies.
+  6. Otherwise 200 `EVENT_RECEIVED` at once. The replies run in Next.js `after()`, so Meta never waits on the database or the Send API.
+- Every answer is plain text with `Cache-Control: no-store` and `nosniff`. The route's logs carry an event name only: `messenger-not-configured`, `messenger-bad-signature`, `messenger-no-page-token` or `messenger-processing-failed`.
+
+### 22.2 Events and limits
+
+`src/lib/messenger/events.ts` handles each delivery in order.
+
+- It reads only a customer's message, quick reply or button tap in `entry[].messaging`. It skips the Page's own echoes, delivery and read receipts, handovers, `user_ref` senders and sender IDs that aren't numbers, and it leaves standby events, which belong to another app's conversation.
+- It skips events more than an hour old or more than 5 minutes ahead, and answers a repeated message ID once.
+- At most 100 events per delivery are handled, and each customer gets at most 20 replies and 5 order checks in 10 minutes.
+- The seen events, the notice times and the limits live in each server instance's memory. They are best effort: a retry that reaches another instance can get a second reply.
+- Each delivery logs one `messenger-webhook-processed` line with the replied, skipped and failed counts, and no customer ID or message text.
+
+### 22.3 Replies and content sources
+
+- The assistant is button-first. Its five main buttons are Menu & prices, Hours & location, How to order, Order status and Talk to staff. They come as quick replies under each reply and in the ☰ menu, and they also work when typed: a message of at most 60 characters whose words are a button's name, with a greeting or "po" allowed (`src/lib/messenger/intents.ts`).
+- Every other message, photo or sticker gets no reply and is never marked as seen, so it stays unread in the Page inbox and the staff's Messenger and Meta Business Suite apps notify them as before (FR-062).
+- The first reply to a customer in 24 hours starts with "I'm Brew ni Cat's automated assistant, not a person." (FR-062).
+- The assistant takes no orders. How to order links the website, and when Place order is off it asks for the checkout summary in the chat, as the website does (FR-061).
+- `src/lib/messenger/deps.ts` connects the replies to the website's own reads. Each is read once per delivery and only when a reply needs it:
+  - **Hours, notice, address, landmark, map link, payment methods and riders:** the saved website content from `loadSiteContent` (§20), which falls back to the default copy section by section.
+  - **Categories, items, prices and flavors:** `fetchPublicMenu`, the same query, mapping and shop-only filter as the Menu page, with prices in the website's peso format. It has a 5-second limit. When the menu can't be read, the reply says so and links `/menu`; it never guesses a price.
+  - **Order status:** `fetchOrder`, the `get_online_order` lookup the order page uses, with a 5-second limit. It runs only with the reference and the 43-character tracking token from a full order link. A short message with only a reference gets a privacy reply asking for the link. The reply shows the reference and the status in the order page's words, never the customer's name, phone, notes, items or prices.
+- These reads use the website's publishable key and public access; the webhook uses no privileged Supabase key.
+
+### 22.4 Send API and chat profile
+
+- `src/lib/messenger/send.ts` posts each reply to `https://graph.facebook.com/v26.0/me/messages` as `messaging_type: "RESPONSE"`, with the Page access token in the `Authorization` header only, `no-store` and an 8-second timeout. A reply has at most 13 quick replies. A refused or failed send returns false and logs `messenger-graph-failed` with the HTTP status only.
+- `src/lib/messenger/profile.ts` builds the Messenger Profile: Get Started, a default greeting that mentions the automated assistant, and the ☰ menu with the five main buttons, with typing still on. It has no ice breakers. A team member applies it to the Page once with the Messenger Profile API after the merge; the website never sends it.
+
+### 22.5 Settings and the Meta app
+
+- The webhook needs three server-only environment variables in Vercel: `MESSENGER_APP_SECRET`, `MESSENGER_VERIFY_TOKEN` and `MESSENGER_PAGE_ACCESS_TOKEN`. None has a `NEXT_PUBLIC_` prefix, and `.env.example` lists them without values.
+- The Meta app stays in Development mode (Standard Access), so only people with a role on the app get replies; everyone else's messages reach the staff exactly as before. Reaching every customer needs Meta App Review for Advanced Access to `pages_messaging` and the app switched to Live, which needs the owner's approval.
+
+### 22.6 Tests
+
+- `tests/unit/messenger-signature.test.ts`, `tests/unit/messenger-intents.test.ts`, `tests/unit/messenger-replies.test.ts`, `tests/unit/messenger-events.test.ts`, `tests/unit/messenger-send.test.ts` and `tests/unit/messenger-route.test.ts` cover TC-P7-001 to TC-P7-041. Meta's requests, the content, the menu and the order lookup are mocked, and `tests/unit/messenger-fixtures.ts` uses made-up Page and customer IDs.
+- The live checks TC-P7-042 to TC-P7-049 run on the production site after the merge (test cases §40f).
