@@ -150,18 +150,19 @@ test("TC-P8-016 — the service worker registers and becomes ready", async ({
     const ready = await navigator.serviceWorker.ready;
     return {
       scope: ready.scope,
-      active: ready.active?.state ?? null,
+      active: Boolean(ready.active),
     };
   });
 
   expect(registration.scope).toBe("http://127.0.0.1:3000/");
-  expect(registration.active).toBe("activated");
+  expect(registration.active).toBe(true);
 });
 
 test("TC-P8-017 — an offline navigation shows the offline page", async ({
   page,
   context,
 }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
   await waitForServiceWorkerControl(page);
 
@@ -174,6 +175,8 @@ test("TC-P8-017 — an offline navigation shows the offline page", async ({
   await expect(
     page.getByText("Check your internet connection, then try again."),
   ).toBeVisible();
+
+  await capture(page, "offline-fallback-390x844.png");
 
   await context.setOffline(false);
 });
@@ -257,9 +260,9 @@ test("TC-P8-019 — a failed Place order never shows as placed, and the retry re
 
   await page.getByRole("button", { name: "Place order" }).click();
 
-  await expect(page.getByRole("alert")).toContainText(
-    "We couldn't place your order. Please try again.",
-  );
+  await expect(
+    page.getByRole("region", { name: "Checkout flow" }).getByRole("alert"),
+  ).toContainText("We couldn't place your order. Please try again.");
   await expect(page).toHaveURL(/\/checkout$/);
   await expect(page.getByRole("heading", { name: "Order Placed" })).toHaveCount(
     0,

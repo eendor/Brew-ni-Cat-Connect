@@ -1,12 +1,17 @@
-"use client";
-
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { Container } from "@/components/ui/container";
 
+export const metadata: Metadata = {
+  title: "Offline",
+  robots: { index: false },
+};
+
 /**
- * The cached offline page (FR-068). It has no prices, menu data or Supabase
- * calls, so it can be shown from the service worker's cache.
+ * The cached offline page (FR-068). It has no prices, menu data, Supabase
+ * calls or client JavaScript, so it can be shown from the service worker's
+ * cache even when the page's own scripts were never downloaded.
  */
 export default function OfflinePage() {
   return (
@@ -20,13 +25,13 @@ export default function OfflinePage() {
           Check your internet connection, then try again.
         </p>
         <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-          <button
-            type="button"
-            onClick={() => window.location.reload()}
-            className="button-primary"
-          >
-            Try again
-          </button>
+          {/* A plain form submit reloads the current page without needing a
+              client component that may not be cached yet. */}
+          <form method="get" className="contents">
+            <button type="submit" className="button-primary">
+              Try again
+            </button>
+          </form>
           <Link href="/" className="button-secondary">
             Return home
           </Link>
