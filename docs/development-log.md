@@ -1593,6 +1593,6 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Testing:**
   - `python scripts/validate_phase0_docs.py`: `PHASE0_DOC_VALIDATION=PASS`, 0 errors in 33 Markdown files.
   - `npm run format:check`: "All matched files use Prettier code style!"
-- **Branch / PR:** `docs/p5-closeout`, the docs closeout pull request (draft).
+- **Branch / PR:** `docs/p5-closeout`, PR #110 (draft).
 - **Known limitations:** Loyalty points and rewards (FR-050 to FR-055), the account home and data requests (FR-042), ratings and reviews on the website (FR-098) and the POS screen that hides reviews (FR-098), and the Phase 5 integrated QA are Not merged yet. FR-043, FR-056 and FR-057 are not built.
 - **Next action:** Run this closeout again after the waiting pull requests merge, then mark the PR ready for review.
