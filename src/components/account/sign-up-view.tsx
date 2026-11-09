@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, type FormEvent } from "react";
 
 import { Container } from "@/components/ui/container";
+import { PRIVACY_POLICY_PATH } from "@/config/privacy";
 import { useAuth } from "@/context/auth-context";
 
 export function SignUpView() {
@@ -271,6 +272,17 @@ export function SignUpView() {
                   >
                     {isSubmitting ? "Creating account…" : "Create Account"}
                   </button>
+                  <p className="mt-3 text-center text-xs leading-5 text-[var(--text-muted)]">
+                    We use your email to sign you in and to reach you about your
+                    account. Read our{" "}
+                    <Link
+                      href={PRIVACY_POLICY_PATH}
+                      className="font-semibold text-[var(--accent-solid)] underline underline-offset-4"
+                    >
+                      Privacy Policy
+                    </Link>
+                    .
+                  </p>
                 </div>
 
                 <div className="border-t border-[var(--separator)] pt-4 text-center text-sm text-[var(--text-muted)]">

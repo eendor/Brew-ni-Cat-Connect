@@ -17,6 +17,7 @@ import {
 import { PageIntro } from "@/components/ui/page-intro";
 import { RiderList } from "@/components/ui/rider-list";
 import { StateScene } from "@/components/three/state-scene";
+import { PRIVACY_POLICY_PATH } from "@/config/privacy";
 import { siteConfig } from "@/config/site";
 import { useAuth } from "@/context/auth-context";
 import { useCart } from "@/context/cart-context";
@@ -1197,6 +1198,18 @@ export function CheckoutView({
                   <Link href="/cart" className="button-secondary w-full">
                     ←{"\u00a0"}Back to Cart
                   </Link>
+
+                  <p className="text-center text-xs leading-5 text-[var(--text-muted)]">
+                    The shop uses your name and number to prepare this order and
+                    to reach you about it. Read our{" "}
+                    <Link
+                      href={PRIVACY_POLICY_PATH}
+                      className="font-semibold text-[var(--accent-solid)] underline underline-offset-4"
+                    >
+                      Privacy Policy
+                    </Link>
+                    .
+                  </p>
                 </div>
               </div>
             </form>

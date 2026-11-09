@@ -11,6 +11,7 @@ import {
   TikTokIcon,
 } from "@/components/ui/icons";
 import { InstallAppButton } from "@/components/pwa/install-app-button";
+import { PRIVACY_POLICY_PATH } from "@/config/privacy";
 import { siteConfig } from "@/config/site";
 import {
   emailHref,
@@ -146,9 +147,17 @@ export function SiteFooter({ content }: SiteFooterProps) {
 
       <div className="border-t border-white/10">
         <Container className="flex flex-col gap-2 py-5 text-xs leading-5 text-[var(--footer-muted)] sm:flex-row sm:items-center sm:justify-between">
-          <span>
-            © {new Date().getFullYear()} {siteConfig.name}
-          </span>
+          <div className="flex flex-wrap items-center gap-x-4">
+            <span>
+              © {new Date().getFullYear()} {siteConfig.name}
+            </span>
+            <Link
+              href={PRIVACY_POLICY_PATH}
+              className="inline-flex min-h-11 items-center rounded-sm underline-offset-4 transition-colors hover:text-[var(--footer-strong)] hover:underline"
+            >
+              Privacy Policy
+            </Link>
+          </div>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
             <InstallAppButton />
             <span>{joinList(content.payments.methods)} accepted</span>
