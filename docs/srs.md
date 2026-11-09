@@ -210,7 +210,7 @@ Only requirements-justified domains will be designed. Candidate domains include 
 - The public experience is mobile-first and must remain usable on desktop.
 - The project uses Git/GitHub and evidence-producing reviews/tests.
 - Real credentials belong only in approved secret stores or local ignored environment files.
-- Philippine Data Privacy Act of 2012 (RA 10173) considerations must be reflected in design and operations; formal business privacy policy input remains **TODO: Confirm with Brew ni Cat owner.**
+- Philippine Data Privacy Act of 2012 (RA 10173) considerations must be reflected in design and operations; formal business privacy policy input remains **TODO: Confirm with Brew ni Cat owner.** A customer privacy policy based on what the system keeps is published at `/privacy` (PR #107) for the owner to confirm.
 
 ## 11. Requirement summary and traceability
 
