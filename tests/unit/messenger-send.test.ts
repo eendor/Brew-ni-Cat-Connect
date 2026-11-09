@@ -17,6 +17,8 @@ import {
 import {
   createGraphClient,
   GRAPH_API_VERSION,
+  MAX_BUTTON_TEXT,
+  MAX_BUTTONS,
   sendApiBody,
 } from "@/lib/messenger/send";
 
@@ -64,11 +66,9 @@ describe("Messenger Send API (FR-059)", () => {
     expect(headers.get("content-type")).toBe("application/json");
 
     const body = JSON.parse(String(init?.body));
-    expect(body).toEqual({
-      recipient: { id: CUSTOMER },
-      messaging_type: "RESPONSE",
-      message: { text: answer.text, quick_replies: answer.quickReplies },
-    });
+    // the same body TC-P7-050 checks: buttons inside the reply
+    expect(body).toEqual(sendApiBody(CUSTOMER, answer));
+    expect(body.message.attachment.payload.text).toBe(answer.text);
     // Never marks the chat as seen, so the staff still get the alert.
     expect(String(init?.body)).not.toContain("sender_action");
     expect(String(init?.body)).not.toContain("mark_seen");
@@ -91,9 +91,45 @@ describe("Messenger Send API (FR-059)", () => {
         payload: "MENU",
       })),
     };
-    const body = sendApiBody(CUSTOMER, many);
+    const body = sendApiBody(CUSTOMER, { ...many, text: "x".repeat(641) });
     expect(body.message.quick_replies).toHaveLength(MAX_QUICK_REPLIES);
     expect(body.message.quick_replies?.at(-1)?.title).toBe("Option 13");
+  });
+
+  it("TC-P7-050 — puts the first three choices as buttons inside the reply and keeps the rest as quick replies", () => {
+    const choices = Array.from({ length: 5 }, (_, i) => ({
+      content_type: "text" as const,
+      title: `Option ${i + 1}`,
+      payload: `P${i + 1}`,
+    }));
+    expect(
+      sendApiBody(CUSTOMER, { text: "Pick one.", quickReplies: choices }),
+    ).toEqual({
+      recipient: { id: CUSTOMER },
+      messaging_type: "RESPONSE",
+      message: {
+        attachment: {
+          type: "template",
+          payload: {
+            template_type: "button",
+            text: "Pick one.",
+            buttons: choices.slice(0, MAX_BUTTONS).map((c) => ({
+              type: "postback",
+              title: c.title,
+              payload: c.payload,
+            })),
+          },
+        },
+        quick_replies: choices.slice(MAX_BUTTONS),
+      },
+    });
+
+    const three = sendApiBody(CUSTOMER, {
+      text: "x".repeat(MAX_BUTTON_TEXT),
+      quickReplies: choices.slice(0, 3),
+    });
+    expect(three.message).not.toHaveProperty("quick_replies");
+    expect(three.message).toHaveProperty("attachment");
   });
 
   it.each([
