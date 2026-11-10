@@ -501,3 +501,29 @@ Before commit/PR, inspect staged and unstaged diffs, verify `.env.local` is untr
 - Rotating the app secret hides older Messenger orders from Order status (§21.2).
 - While the Meta app has Standard Access, only people with a role on the app get replies (§19.6).
 - The migration for Order status is not applied to the live database yet (database design §15), and the owner's decisions on orders outside shop hours and closure days are open (functional requirements §12). **TODO: Confirm with Brew ni Cat owner.**
+
+## 22. Ratings And Reviews Security And Privacy Addendum (Phase 5 — FR-098)
+
+### 22.1 Public read boundary and privacy preservation
+
+- Column-level grants strictly limit public visibility: `grant select (id, display_name, rating, body, hidden, created_at, updated_at) on public.reviews to anon, authenticated`. The `customer_id` column is excluded from public SELECT grants.
+- No personal identifiable information (PII)—including Supabase user UUIDs, email addresses, or phone numbers—is ever returned to or readable by website visitors or signed-in customers.
+- Display names are generated entirely in the database via `public.post_review`: signed-in customers are assigned the first word of `customer_profiles.full_name` (or "Customer" if missing), while anonymous users are assigned "Guest". Reviewers cannot supply, tamper with, or forge arbitrary display names.
+- RLS policy `reviews_public_read` ensures public users view only non-hidden reviews (`hidden = false`). Only staff accounts (`private.is_staff()`) can view hidden reviews and toggle `hidden` status for moderation in the POS app. Staff cannot edit customer review ratings or text.
+
+### 22.2 Abuse prevention and multi-tier rate limiting
+
+- API rate limiting: `POST /api/reviews` applies a per-IP rate limit with `createRateLimiter` (3 posts per IP in 10 minutes). Exceeded requests return HTTP 429 with a friendly error message before reaching the database.
+- Database backstop: `public.post_review` checks total guest review volume across the table, rejecting guest submissions if more than 10 guest reviews have been created in the preceding 10 minutes.
+- Uniqueness invariant: signed-in customer reviews are constrained by a partial unique index on `customer_id`. A customer's second post updates their existing review instead of adding duplicate records.
+- Input validation: review ratings must be integers between 1 and 5. Review body text must be between 1 and 500 characters after whitespace trimming.
+
+### 22.3 Secrets, tokens, and sanitization
+
+- Client and server routes use only `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`. Privileged service-role keys are never used anywhere in the codebase.
+- When signed in, the client's bearer session token is forwarded to Supabase so `auth.uid()` can be verified in `post_review` and `my_review`.
+- No sensitive data or review content is logged: `POST /api/reviews` records only outcome codes and operational metrics (`rate-limited`, `invalid-input`, `database-error`, `success`), never logging review body text, star counts, IP addresses, or customer details.
+
+### 22.4 Open decisions
+
+- Moderation screen is built in the POS app (`eendor/Brew-ni-Cat-POS`) using the staff permission. **TODO: Confirm with Brew ni Cat owner.**
