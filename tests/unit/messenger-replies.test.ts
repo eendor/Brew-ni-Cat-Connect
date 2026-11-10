@@ -204,6 +204,8 @@ describe("Messenger shop facts (FR-059, FR-086)", () => {
 describe("Messenger menu (FR-060)", () => {
   it("TC-P7-011 — the menu shows each category with items as a button", () => {
     const answer = menuReply(catalog, ORIGIN);
+    // Only Order here sits inside the message with Full menu.
+    expect(answer.inlineChoices).toBe(1);
     expect(answer.text).toBe(
       "😋 What are you craving? Tap a category to see its items, prices and menu board, or tap Order here to order in this chat.",
     );

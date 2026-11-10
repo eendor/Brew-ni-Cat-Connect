@@ -272,7 +272,52 @@ describe("Browsing the menu in the chat (FR-102, FR-103, FR-105)", () => {
 
     const flavor = await press(drinks, "Matcha › 🛒 Order", ctx);
     expect(flavor.text).toContain("Pick a flavor:");
-    expect(titles(flavor)).toEqual(["Strawberry", "Mango", "No flavor"]);
+    expect(titles(flavor)).toEqual(["Strawberry", "Mango", "🔙 Back"]);
+  });
+
+  it("TC-P7-065 — numbers long flavor names instead of cutting them off, with no No flavor choice", async () => {
+    const long: Record<string, string> = {
+      Strawberry: "Strawberry Whiskers Swirl",
+      Mango: "Mango Meow Paradise Cream",
+    };
+    const rename = (flavor: string) => long[flavor] ?? flavor;
+    const longMenu: MenuCatalog = {
+      categories: menu.categories.map((category) => ({
+        ...category,
+        items: category.items.map((entry) =>
+          entry.name === "Matcha"
+            ? {
+                ...entry,
+                flavors: entry.flavors.map(rename),
+                variants: entry.variants.map((size) => ({
+                  ...size,
+                  flavorPrices: size.flavorPrices.map((row) => ({
+                    ...row,
+                    flavor: rename(row.flavor),
+                  })),
+                })),
+              }
+            : entry,
+        ),
+      })),
+    };
+    const ctx = setup({}, longMenu);
+    const categories = await beginOrder(PHONE, ctx.deps, ctx.facts);
+    const drinks = await press(
+      categories,
+      "🥤 Cat-Tastic Drinks › 👀 See items",
+      ctx,
+    );
+    const flavor = await press(drinks, "Matcha › 🛒 Order", ctx);
+    expect(flavor.text).toContain("1. Strawberry Whiskers Swirl");
+    expect(flavor.text).toContain("2. Mango Meow Paradise Cream");
+    expect(flavor.text).toContain("Tap its number below.");
+    expect(titles(flavor)).toEqual(["1", "2", "🔙 Back"]);
+    for (const title of titles(flavor)) expect(title).not.toContain("…");
+
+    const picked = await press(flavor, "2", ctx);
+    expect(picked.text).toContain("Flavor: Mango Meow Paradise Cream");
+    expect(titles(picked)).toContain("🔙 Back");
   });
 
   it("TC-P7-065 — spells out a combo's contents on its card, with its price", async () => {
@@ -363,12 +408,12 @@ describe("Choosing flavors and extras (FR-102)", () => {
   it("TC-P7-066 — fries offer up to three flavors with their prices, then extras, then how many", async () => {
     const { ctx, flavors } = await friesChoices();
     expect(flavors.text).toContain("Pick a flavor:");
-    expect(titles(flavors)).toEqual(["Cheese ₱45", "Barbecue ₱49"]);
+    expect(titles(flavors)).toEqual(["Cheese ₱45", "Barbecue ₱49", "🔙 Back"]);
 
     const more = await press(flavors, "Cheese ₱45", ctx);
     expect(more.text).toContain("Flavor: Cheese");
     expect(more.text).toContain("Add another flavor (up to 3), or continue.");
-    expect(titles(more)).toEqual(["Barbecue ₱49", "✅ Continue"]);
+    expect(titles(more)).toEqual(["Barbecue ₱49", "✅ Continue", "🔙 Back"]);
 
     const extras = await press(more, "✅ Continue", ctx);
     expect(extras.text).toContain("Want any extras?");
@@ -376,11 +421,12 @@ describe("Choosing flavors and extras (FR-102)", () => {
       "Egg ₱15",
       "Extra Cheese ₱10",
       "No extras",
+      "🔙 Back",
     ]);
 
     const withEgg = await press(extras, "Egg ₱15", ctx);
     expect(withEgg.text).toContain("Add-ons: Egg");
-    expect(titles(withEgg)).toEqual(["Extra Cheese ₱10", "✅ Done"]);
+    expect(titles(withEgg)).toEqual(["Extra Cheese ₱10", "✅ Done", "🔙 Back"]);
 
     const quantity = await press(withEgg, "✅ Done", ctx);
     expect(quantity.text).toContain("Flavor: Cheese\nAdd-ons: Egg");
