@@ -49,8 +49,8 @@ export const PLACE_ORDER_MESSAGES: Readonly<
 
 /** When online ordering is off or the order service is not set up. */
 /** The owner turned on "Closed today" in the POS (FR-111). */
-export const SHOP_CLOSED_MESSAGE =
-  "We're closed today, so the shop can't take online orders. Please come back when we're open.";
+// Moved to site-content/open-now.ts (FR-112); kept here for older imports.
+export { SHOP_CLOSED_TODAY_MESSAGE as SHOP_CLOSED_MESSAGE } from "@/lib/site-content/open-now";
 
 export const ORDERING_UNAVAILABLE_MESSAGE =
   "Online ordering isn't available right now. Please message the shop on Facebook or call to order.";
