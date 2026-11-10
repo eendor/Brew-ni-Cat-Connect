@@ -6,6 +6,7 @@ import {
   afterRest,
   CAT_SHEETS,
   catCount,
+  MAX_CATS,
   catSheetUrl,
   nextRest,
   nextTarget,
@@ -59,11 +60,13 @@ afterEach(() => {
 describe("cat characters (FR-099)", () => {
   // Update 2026-11-10: the drawn poster cats were replaced by the six pixel
   // cats of the CC0 "Pet Cats Pack"; this case now covers their behavior.
-  it("TC-P9-001 six pixel cat coats, 3 cats on a phone and 12 on a desktop, rest in turn and nap after lying down", () => {
+  // Update 2026-11-10: one cat per coat, so at most six cats.
+  it("TC-P9-001 six pixel cat coats, 3 cats on a phone and 6 on a desktop, rest in turn and nap after lying down", () => {
     expect(PIXEL_CATS).toHaveLength(6);
     expect(catCount(390)).toBe(3);
-    expect(catCount(1440)).toBe(12);
-    expect(catCount(4000)).toBe(16);
+    expect(catCount(1440)).toBe(6);
+    expect(catCount(4000)).toBe(6);
+    expect(MAX_CATS).toBe(PIXEL_CATS.length);
     expect(catSheetUrl("cat-2", "walk")).toBe("/cats/cat-2/walk.png");
     expect(CAT_SHEETS.walk.frames).toBe(8);
     for (let i = 0; i < 20; i += 1) {

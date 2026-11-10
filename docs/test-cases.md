@@ -1279,7 +1279,7 @@ Update 2026-11-10: the drawn poster cats were replaced by the six pixel cats of 
 
 | ID | Requirement | Area | Updated check | Expected result |
 |---|---|---|---|---|
-| TC-P9-001 | FR-099 | `src/lib/cats/cats.ts` | `catCount`, `nextRest`, `afterRest`, `nextTarget` | 3 cats at 390 px and 12 at 1440 px (up to 16; the six coats repeat); cat 3 never scratches; a cat that lies down goes to sleep; every walk goes one to three cat sizes and stays in the strip |
+| TC-P9-001 | FR-099 | `src/lib/cats/cats.ts` | `catCount`, `nextRest`, `afterRest`, `nextTarget` | ~~3 cats at 390 px and 12 at 1440 px (up to 16; the six coats repeat)~~ Superseded 2026-11-10: 3 cats at 390 px and 6 at 1440 px, one cat per coat, so no coat shows twice; cat 3 never scratches; a cat that lies down goes to sleep; every walk goes one to three cat sizes and stays in the strip |
 | TC-P9-002 | FR-099, NFR-035 | `CatStrip` | Render with reduced motion off and step animation frames by hand | The strip is aria-hidden, and after the frames at least one cat has moved or changed what it does |
 | TC-P9-003 | FR-099 | `CatStrip` | `document.hidden` true, step 30 frames | No cat moves or changes |
 | TC-P9-004 | FR-099, NFR-032 | `CatStrip` | `prefers-reduced-motion: reduce` | Every shown cat sits, and no animation frame is requested |
