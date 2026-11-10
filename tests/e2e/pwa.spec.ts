@@ -221,6 +221,8 @@ test("TC-P8-019 — a failed Place order never shows as placed, and the retry re
     "needs a build with NEXT_PUBLIC_ONLINE_ORDERING=enabled",
   );
 
+  // the checkout follows the opening hours: pin the clock to 2 PM in Manila
+  await page.clock.setFixedTime(new Date("2026-11-10T06:00:00Z"));
   await mockMenu(page);
   await mockOrderLookup(page);
   const sent: Array<Record<string, unknown>> = [];

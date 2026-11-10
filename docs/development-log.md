@@ -1681,3 +1681,11 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `feat/p5-reviews`.
 - **Next action:** Rodnee reviews the PR and applies the migration to the live database; Van runs manual test cases MAN-P5-001 to MAN-P5-009 on phone and desktop.
 
+## 2026-11-10 — Browser tests no longer fail after closing time (FR-112)
+
+- **Phase:** Testing.
+- **Task:** Two Place order browser tests (TC-P4-123, TC-P8-019) failed in CI after 9 PM Manila time.
+- **Summary:** Since the website follows the opening hours (PR #119), the checkout reads the browser clock and blocks orders after closing. The tests used the real clock, so they passed in the day and failed at night. They now fix the clock at 2 PM Manila time.
+- **Files:** `tests/e2e/ordering.spec.ts`, `tests/e2e/pwa.spec.ts`, `docs/test-cases.md`.
+- **Testing:** Playwright TC-P4-123 and TC-P8-019 after 10 PM Manila time: 2 passed.
+- **Branch / PR:** `fix/e2e-clock-hours`.
