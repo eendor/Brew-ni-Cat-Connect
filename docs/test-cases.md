@@ -940,6 +940,59 @@ These need a real browser or phone and were not run in this environment.
 | MAN-P8-005 | FR-068 | Turn the network back on and press Try again | The requested page loads from the network | Not run yet |
 | MAN-P8-006 | FR-068 | Run a Lighthouse installability/PWA audit on the production site | The manifest, service worker, icons and start URL pass the installability checks | Not run yet |
 
+## 37. Loyalty Points And Rewards Cases (Phase 5, Week 3 — FR-050 to FR-055)
+
+Run on 2026-11-10 by Renier (GitHub: Apal-RP) on branch `feat/p5-loyalty` (PR #117). The database migration, earning trigger, settings, active rewards query, and atomic redemption are tested on PGlite. Formatting utilities and component views are tested with Vitest and React Testing Library. Browser tests with mocked Supabase sessions and PostgREST/RPC endpoints verify desktop (1440x900) and mobile (390x844) rendering. Evidence screenshots were captured with `CAPTURE_EVIDENCE=1` in `docs/evidence/phase-5/loyalty/`. Supabase is mocked in all tests; no live customer data or live credentials were used.
+
+`npx vitest run tests/database/loyalty.test.ts tests/unit/loyalty-format.test.ts tests/unit/loyalty-view.test.tsx` — 3 test files, 30 tests, all passed. Full suite (`npm run test`): 88 test files, 958 tests, all passed. `CI=1 npx playwright test tests/e2e/loyalty.spec.ts --project=chromium` — 3 passed.
+
+### 37a. Database triggers, earning rules, and redemption (TC-P5-098 to TC-P5-109)
+
+| ID | Requirement ID(s) | Module | Scenario | Preconditions | Input / action | Expected result | Actual result | Status | Evidence |
+|---|---|---|---|---|---|---|---|---|---|
+| TC-P5-098 | FR-051 | `private.sync_online_order_loyalty` | Earned points match formula for known subtotals | Signed-in customer order placed with known subtotal | Staff completes orders of ₱120 and ₱255 | ₱120 awards 12 points; ₱255 awards 25 points with reason `order-completed` | Matched. | Passed | `tests/database/loyalty.test.ts` |
+| TC-P5-099 | FR-051, FR-052 | `private.sync_online_order_loyalty` | One award per order even when completion is retried | Completed order with `order-completed` transaction | Staff re-sends completion with same correlation ID | No duplicate row inserted; total points stay at 12 | Matched. | Passed | `tests/database/loyalty.test.ts` |
+| TC-P5-100 | FR-051, FR-052 | `private.sync_online_order_loyalty` | Complete then undo leaves zero net points | Completed order with 12 points | Staff undoes completion back to ready status | Inserts `adjustment` row of -12 points with note "Order completion undone"; sum is 0 | Matched. | Passed | `tests/database/loyalty.test.ts` |
+| TC-P5-101 | FR-051, FR-052 | `private.sync_online_order_loyalty` | Complete, undo, complete leaves points awarded once | Undone order with net 0 points | Staff moves order back to completed | Inserts `adjustment` row of +12 points; sum reconciles to 12 points | Matched. | Passed | `tests/database/loyalty.test.ts` |
+| TC-P5-102 | FR-051 | `private.sync_online_order_loyalty` | Rejected and cancelled orders earn nothing | Placed online order | Staff moves order to rejected or cancelled | Zero loyalty transactions created | Matched. | Passed | `tests/database/loyalty.test.ts` |
+| TC-P5-103 | FR-051 | `private.sync_online_order_loyalty` | Guest orders earn nothing | Guest order placed without customer_id | Staff completes order | Zero loyalty transactions created | Matched. | Passed | `tests/database/loyalty.test.ts` |
+| TC-P5-104 | FR-051 | `private.sync_online_order_loyalty` | Subtotal under ₱10 adds no row and does not block | Order placed with subtotal ₱5 | Staff completes order | Zero loyalty transactions added; order status moves to completed | Matched. | Passed | `tests/database/loyalty.test.ts` |
+| TC-P5-105 | FR-052, FR-053 | `public.loyalty_transactions` | Customer reads only own rows; direct mutation fails | Transactions for customer A and B | Select and direct insert/update/delete as customer A | Reads only customer A rows; insert, update, delete fail with 42501 | Matched. | Passed | `tests/database/loyalty.test.ts` |
+| TC-P5-106 | FR-054 | `public.loyalty_rewards` | Returns only active rewards | Settings catalog with active and inactive rewards | Anonymous or authenticated user calls `loyalty_rewards()` | Returns only active rewards; inactive seasonal pastry omitted | Matched. | Passed | `tests/database/loyalty.test.ts` |
+| TC-P5-107 | FR-055 | `public.redeem_reward` | Balance cannot go below zero | Customer with 0 loyalty points | Customer calls `redeem_reward('reward-takoyaki-6')` | Returns `{ ok: false, error: 'insufficient_points' }`; balance stays 0 | Matched. | Passed | `tests/database/loyalty.test.ts` |
+| TC-P5-108 | FR-055 | `public.redeem_reward` | Enforces weekly redemption limit | Customer with 180 points; weekly limit is 2 | Customer redeems 3 rewards in same week | First 2 redemptions succeed with codes; 3rd fails with `weekly_limit_reached` | Matched. | Passed | `tests/database/loyalty.test.ts` |
+| TC-P5-109 | FR-050–FR-055 | `supabase/rollbacks/` | Rollback drops triggers and functions cleanly | Database with migration applied | Run rollback SQL | Triggers and functions dropped; prior orders and customer data preserved | Matched. | Passed | `tests/database/loyalty.test.ts` |
+
+### 37b. Loyalty formatters and client service (TC-P5-113 to TC-P5-117)
+
+| ID | Requirement ID(s) | Module | Scenario | Preconditions | Input / action | Expected result | Actual result | Status | Evidence |
+|---|---|---|---|---|---|---|---|---|---|
+| TC-P5-113 | FR-052, FR-053 | `src/lib/loyalty/format.ts` | Formats point deltas with explicit signs | Numeric delta | Call `formatPointsDelta` with positive, negative, and zero | Positive numbers format with `+`, negative with `−`, zero as `"0"` | Matched. | Passed | `tests/unit/loyalty-format.test.ts` |
+| TC-P5-114 | FR-053 | `src/lib/loyalty/format.ts` | Formats reason in plain words | Reason code and note | Call `formatReason` for each reason type | `order-completed` returns "Order completed"; `reward-redeemed` returns "Reward redeemed"; `adjustment` returns note | Matched. | Passed | `tests/unit/loyalty-format.test.ts` |
+| TC-P5-115 | FR-053 | `src/lib/loyalty/format.ts` | Formats ISO dates into readable date | ISO timestamp | Call `formatLoyaltyDate` | Formats to friendly Philippine date (e.g., "Nov 10, 2026") | Matched. | Passed | `tests/unit/loyalty-format.test.ts` |
+| TC-P5-116 | FR-054 | `src/lib/loyalty/format.ts` | Formats points earning rule with formatPrice | Currency step amount | Call `formatEarningRule(10, 1)` | Returns "Earn 1 point for every ₱10 spent on completed orders." | Matched. | Passed | `tests/unit/loyalty-format.test.ts` |
+| TC-P5-117 | FR-054 | `src/lib/loyalty/format.ts` | Formats weekly redemption limit in plain words | Weekly limit number | Call `formatWeeklyLimit(2)` | Returns "Redeem up to 2 rewards per week." | Matched. | Passed | `tests/unit/loyalty-format.test.ts` |
+
+### 37c. Rewards and points view component (TC-P5-118 to TC-P5-124)
+
+| ID | Requirement ID(s) | Module | Scenario | Preconditions | Input / action | Expected result | Actual result | Status | Evidence |
+|---|---|---|---|---|---|---|---|---|---|
+| TC-P5-118 | FR-053 | `RewardsView` | Shows loading skeleton while data loads | Pending API promises | Render `<RewardsView />` | Displays skeleton container with `data-testid="loyalty-loading"` | Matched. | Passed | `tests/unit/loyalty-view.test.tsx` |
+| TC-P5-119 | FR-053, FR-054 | `RewardsView` | Displays balance and plain-word rules | Loaded balance of 60 | Render `<RewardsView />` | Displays 60 points, earning rule with formatPrice, and weekly limit | Matched. | Passed | `tests/unit/loyalty-view.test.tsx` |
+| TC-P5-120 | FR-054 | `RewardsView` | Displays rewards with enough and not enough points | Balance of 60; rewards at 50, 80, 100 pts | Render `<RewardsView />` | 50 pts shows "Balance is enough" with enabled Redeem button; 80 pts shows "Need 20 more pts" with disabled button | Matched. | Passed | `tests/unit/loyalty-view.test.tsx` |
+| TC-P5-121 | FR-053 | `RewardsView` | Displays points history with formatted signs and reasons | Transactions with positive and negative points | Render `<RewardsView />` | Renders rows with "+12 pts", "−50 pts", order references, and plain reasons | Matched. | Passed | `tests/unit/loyalty-view.test.tsx` |
+| TC-P5-122 | FR-053 | `RewardsView` | Displays empty state when customer has no points | Empty history list | Render `<RewardsView />` | Displays "No points yet. You earn points when a pickup order is completed." | Matched. | Passed | `tests/unit/loyalty-view.test.tsx` |
+| TC-P5-123 | FR-053 | `RewardsView` | Displays error banner when loading fails | Rejected fetch promise | Render `<RewardsView />` | Renders error banner with `role="alert"` and retry messaging | Matched. | Passed | `tests/unit/loyalty-view.test.tsx` |
+| TC-P5-124 | FR-055 | `RewardsView` | Supports redemption confirmation and displays counter code | Eligible reward selected | Click Redeem, confirm in dialog | Calls `redeemReward`, displays counter verification code "RWD-999888", and updates balance | Matched. | Passed | `tests/unit/loyalty-view.test.tsx` |
+
+### 37d. Browser end-to-end inspection (TC-P5-125 to TC-P5-127)
+
+| ID | Requirement ID(s) | Module | Scenario | Preconditions | Input / action | Expected result | Actual result | Status | Evidence |
+|---|---|---|---|---|---|---|---|---|---|
+| TC-P5-125 | FR-050, FR-053, FR-054 | `/account/rewards` | Customer sees balance, rules, rewards, and history at 1440x900 | Authenticated mock session, mocked PostgREST/RPC | Open `/account/rewards` at 1440x900 | Heading, balance, earning rules, rewards catalog, and transaction history are visible | Matched. | Passed | `tests/e2e/loyalty.spec.ts`, `docs/evidence/phase-5/loyalty/rewards-page-1440x900.png` |
+| TC-P5-126 | FR-053, FR-054 | `/account/rewards` | Mobile customer views responsive layout at 390x844 | Authenticated mock session | Open `/account/rewards` at 390x844 | No horizontal scroll, card and action tap targets meet touch standards | Matched. | Passed | `tests/e2e/loyalty.spec.ts`, `docs/evidence/phase-5/loyalty/rewards-page-390x844.png` |
+| TC-P5-127 | FR-053 | `/account/rewards` | Shows empty points history when customer has no transactions | Authenticated mock session with 0 points and empty history | Open `/account/rewards` at 1440x900 | Displays "No points yet. You earn points when a pickup order is completed." and View Menu link | Matched. | Passed | `tests/e2e/loyalty.spec.ts`, `docs/evidence/phase-5/loyalty/rewards-empty-1440x900.png` |
+
 ## 40. Messenger Assistant Webhook Cases (Phase 7 — FR-058 to FR-063)
 
 Run on 2026-11-09 by Rodnee on branch `feat/p7-messenger` (PR #106). The webhook route, the signature and subscription checks, the event handling, the replies and the Send API client are tested with Vitest. Meta's requests, the website content, the menu and the order lookup are mocked, and the tests use made-up Page and customer IDs, so no live message, account, order or data was used. The checks ran with the CI settings (`NEXT_PUBLIC_SUPABASE_URL=https://example.supabase.co`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=placeholder-publishable-key`, `NEXT_PUBLIC_ONLINE_ORDERING=enabled`).
