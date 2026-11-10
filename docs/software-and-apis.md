@@ -92,6 +92,8 @@ This table distinguishes the installed Phase 2 catalog boundary from capabilitie
 | Android SDK, Kotlin, and Jetpack Compose | Future native Android client                                  | TBD during Phase 8 architecture gate       | Mixed; verify per component | Deferred                                                             |
 | POS integration adapter                  | Controlled menu/order/status synchronization                  | TBD after POS analysis                     | TBD                         | Deferred to Phase 6; direct public POS database access is prohibited |
 
+Update 2026-11-10 (PR #113): the Meta Messenger Platform row also covers ordering inside Messenger (FR-100 to FR-110). Graph API v26.0 is now also used for the Send API's pictures, button and generic templates and Messenger's phone-number quick reply, and for the conversations lookup that reads a customer's name with the Page token. Nothing new is bought or installed.
+
 No future technology should be added only to increase the tool count. Its requirement, system role, maintenance impact, license, privacy/security implications, and test approach must be documented before installation.
 
 ## 6. External API boundaries
@@ -104,6 +106,8 @@ No future technology should be added only to increase the tool count. Its requir
 | Connect integration service to POS | Controlled menu/order/status synchronization         | Machine identity with least privilege; mechanism TBD | Deferred pending POS analysis                           |
 | Deployment service to secrets      | Runtime configuration                                | Platform access controls                             | Planned; provider TBD                                   |
 | Supabase Auth to email             | Account confirmation and password reset emails       | Gmail SMTP (`smtp.gmail.com`, port 465) with an app password from a team member's Google account; the password is kept only in the Supabase Auth settings | Live since 2026-10-27; sender name "Brew ni Cat"; up to 30 emails an hour |
+
+Update 2026-11-10 (PR #113): the Messenger webhook now also places orders. It calls the website's `place_online_order` database function with the publishable key, as a guest, and reads a customer's own orders through the new `list_online_orders_by_token` function. The Facebook ID is not stored; only the hash of a token made from it and the app secret is (security-and-privacy §21).
 
 No provider-key value, webhook secret, payment identifier, or privileged credential is defined in this document or source control. Real local configuration remains in ignored `.env.local`.
 

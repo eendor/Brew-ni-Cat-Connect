@@ -400,7 +400,7 @@ The Phase 1 foundation is **Tested and merged**. Phase 2 showcase/catalog code i
 | Shared cart, ordering, and tracking services | FR-017–FR-030, FR-044–FR-049 | NFR-002–NFR-010, NFR-015, NFR-038 |
 | Supabase authentication, customer data, and RLS | FR-031–FR-043 | NFR-013–NFR-019, NFR-023–NFR-027 |
 | Loyalty domain and transaction boundary | FR-050–FR-057 | NFR-006, NFR-014–NFR-015, NFR-021, NFR-025, NFR-038 |
-| Messenger webhook/assistant adapter | FR-058–FR-064 | NFR-018, NFR-022–NFR-028 |
+| Messenger webhook/assistant adapter | FR-058–FR-064, FR-100–FR-110 | NFR-018, NFR-022–NFR-028 |
 | Android channel adapter | FR-065–FR-070 | NFR-019, NFR-025, NFR-028, NFR-036 |
 | POS adapter, mapping, and reconciliation | FR-071–FR-081 | NFR-006, NFR-008, NFR-021–NFR-022, NFR-038 |
 | Owner changes in the POS, live website content, mini-games, advertising | FR-082–FR-091, FR-093 | NFR-008, NFR-021, NFR-029–NFR-030, NFR-034 |
@@ -652,7 +652,7 @@ A statically generated Next.js page is sent as a loading shell plus a hidden cop
 
 ## 22. Messenger Assistant Webhook (PR #106)
 
-The shop's Facebook Page gets an automated assistant through a server-side webhook (FR-058 to FR-063). It answers button taps, typed button names and order links, and leaves every other message for the staff, who answer in the same chat. It reads the same saved content, menu and order lookup as the website and stores nothing of its own.
+The shop's Facebook Page gets an automated assistant through a server-side webhook (FR-058 to FR-063). It answers button taps, typed button names and order links, and leaves every other message for the staff, who answer in the same chat. It reads the same saved content, menu and order lookup as the website and stores nothing of its own. Update 2026-11-10 (PR #113): it also takes orders and shows their status inside the chat (§24).
 
 ### 22.1 Route and signature
 
@@ -674,26 +674,26 @@ The shop's Facebook Page gets an automated assistant through a server-side webho
 
 - It reads only a customer's message, quick reply or button tap in `entry[].messaging`. It skips the Page's own echoes, delivery and read receipts, handovers, `user_ref` senders and sender IDs that aren't numbers, and it leaves standby events, which belong to another app's conversation.
 - It skips events more than an hour old or more than 5 minutes ahead, and answers a repeated message ID once.
-- At most 100 events per delivery are handled, and each customer gets at most 20 replies and 5 order checks in 10 minutes.
+- At most 100 events per delivery are handled, and each customer gets at most 20 replies and 5 order checks in 10 minutes. Update 2026-11-10 (PR #113): the steps of an order and placed orders have their own limits (§24.6).
 - The seen events, the notice times and the limits live in each server instance's memory. They are best effort: a retry that reaches another instance can get a second reply.
 - Each delivery logs one `messenger-webhook-processed` line with the replied, skipped and failed counts, and no customer ID or message text.
 
 ### 22.3 Replies and content sources
 
-- The assistant is button-first. Its five main buttons are Menu & prices, Hours & location, How to order, Order status and Talk to staff. They come as quick replies under each reply and in the ☰ menu, and they also work when typed: a message of at most 60 characters whose words are a button's name, with a greeting or "po" allowed (`src/lib/messenger/intents.ts`).
+- The assistant is button-first. Its five main buttons are Menu & prices, Hours & location, How to order, Order status and Talk to staff (Update 2026-11-10, PR #113: there are now six, and "🛒 Order here" comes first, §24). They come as quick replies under each reply and in the ☰ menu, and they also work when typed: a message of at most 60 characters whose words are a button's name, with a greeting or "po" allowed (`src/lib/messenger/intents.ts`).
 - Every other message, photo or sticker gets no reply and is never marked as seen, so it stays unread in the Page inbox and the staff's Messenger and Meta Business Suite apps notify them as before (FR-062).
 - The first reply to a customer in 24 hours starts with "I'm Brew ni Cat's automated assistant, not a person." (FR-062).
-- The assistant takes no orders. How to order links the website, and when Place order is off it asks for the checkout summary in the chat, as the website does (FR-061).
+- ~~The assistant takes no orders. How to order links the website, and when Place order is off it asks for the checkout summary in the chat, as the website does (FR-061).~~ Superseded 2026-11-10 (PR #113): the assistant takes orders inside Messenger (§24, FR-100 to FR-110). When Place order is off it says that ordering is paused and takes no order.
 - `src/lib/messenger/deps.ts` connects the replies to the website's own reads. Each is read once per delivery and only when a reply needs it:
   - **Hours, notice, address, landmark, map link, payment methods and riders:** the saved website content from `loadSiteContent` (§20), which falls back to the default copy section by section.
   - **Categories, items, prices and flavors:** `fetchPublicMenu`, the same query, mapping and shop-only filter as the Menu page, with prices in the website's peso format. It has a 5-second limit. When the menu can't be read, the reply says so and links `/menu`; it never guesses a price.
-  - **Order status:** `fetchOrder`, the `get_online_order` lookup the order page uses, with a 5-second limit. It runs only with the reference and the 43-character tracking token from a full order link. A short message with only a reference gets a privacy reply asking for the link. The reply shows the reference and the status in the order page's words, never the customer's name, phone, notes, items or prices.
+  - **Order status:** `fetchOrder`, the `get_online_order` lookup the order page uses, with a 5-second limit. It runs only with the reference and the 43-character tracking token from a full order link. A short message with only a reference gets a privacy reply asking for the link. The reply shows the reference and the status in the order page's words, never the customer's name, phone, notes, items or prices. Update 2026-11-10 (PR #113): this is the path for website orders. Messenger orders are listed by who is asking (§24.4).
 - These reads use the website's publishable key and public access; the webhook uses no privileged Supabase key.
 
 ### 22.4 Send API and chat profile
 
 - `src/lib/messenger/send.ts` posts each reply to `https://graph.facebook.com/v26.0/me/messages` as `messaging_type: "RESPONSE"`, with the Page access token in the `Authorization` header only, `no-store` and an 8-second timeout. A reply has at most 13 quick replies. A refused or failed send returns false and logs `messenger-graph-failed` with the HTTP status only.
-- `src/lib/messenger/profile.ts` builds the Messenger Profile: Get Started, a default greeting that mentions the automated assistant, and the ☰ menu with the five main buttons, with typing still on. It has no ice breakers. A team member applies it to the Page once with the Messenger Profile API after the merge; the website never sends it.
+- `src/lib/messenger/profile.ts` builds the Messenger Profile: Get Started, a default greeting that mentions the automated assistant, and the ☰ menu with the five main buttons, with typing still on. Update 2026-11-10 (PR #113): the menu has six buttons with emoji titles, starting with "🛒 Order here", and the greeting says how to order (§24.5). It has no ice breakers. A team member applies it to the Page once with the Messenger Profile API after the merge; the website never sends it.
 
 ### 22.5 Settings and the Meta app
 
@@ -726,3 +726,55 @@ The customer website publishes its privacy notice at `/privacy` (NFR-026) with t
 
 - `tests/unit/privacy-page.test.tsx`, `tests/unit/site-footer.test.tsx`, `tests/unit/account-forms.test.tsx` and `tests/unit/checkout.test.tsx` cover TC-P5-088 to TC-P5-093.
 - `tests/e2e/privacy.spec.ts` covers TC-P5-094 and TC-P5-095 against the production build and saves the screenshots in `docs/evidence/phase-5/privacy-policy/` with `CAPTURE_EVIDENCE=1`.
+
+## 24. Ordering Inside Messenger (PR #113)
+
+A customer orders and tracks pickup orders inside the Messenger chat (FR-100 to FR-110, ADR-029). Nothing needs the website: the chat shows the menu with photos, builds the order with buttons, places it, and later lists the customer's own orders. The assistant keeps no state between taps and has no table of its own. A placed order is a normal online order.
+
+### 24.1 Files
+
+- `src/lib/messenger/order-state.ts` holds the order so far and the button payloads that carry it (`ORD:<step>:{"s":[...],"a":[...]}`): the codec, the cart changes (add, remove, clear, payment, pickup) and the mobile number check. A state is at most 560 characters and a payload at most 1,000, which is Meta's limit.
+- `src/lib/messenger/order-flow.ts` decides what each tap does: categories, items, sizes, flavors, add-ons, quantity, cart, payment, pickup, summary, Place order and the failure paths. It reads the live menu once per delivery.
+- `src/lib/messenger/ordering.ts` builds the reply for each step.
+- `src/lib/messenger/order-ids.ts` makes the idempotency key and the tracking token, both with HMAC-SHA256 from the app secret.
+- `src/lib/messenger/send.ts` builds the Send API bodies (text, button templates, pictures, cards, quick replies and Messenger's phone-number button) and reads the customer's name from the conversation.
+- `src/lib/messenger/deps.ts` places the order with `place_online_order` and lists orders with `list_online_orders_by_token`, both through the website's publishable Supabase client.
+- `src/config/menu-boards.ts` says which of the five menu board pictures in `public/images/menu` go with which category, and `public/images/messenger/no-photo.jpg` is the picture for an item without a photo.
+
+### 24.2 The order so far lives in the buttons
+
+- Every button of an order step carries the whole order in its payload, so the server remembers nothing between taps, and another server instance or a restart loses nothing. The cart holds at most 12 lines and 99 of one item. When a state wouldn't fit in a payload, the step says so and offers to start again.
+- The codec refuses a payload with a wrong shape, an unknown step or an ID with unexpected characters. A tapped item, size or add-on is checked against the live menu again at every step, so an old button can't order something that was removed or is unavailable.
+- The summary carries the time it was shown. Place order works only on a summary no older than 60 minutes, and not more than 5 minutes ahead of the server's clock.
+
+### 24.3 Placing an order
+
+- `placeMessengerOrder` builds the same request as the website's checkout (`PlaceOrderRequest`): a guest pickup order with the customer's name (from Messenger, or "Messenger customer"), mobile number, payment preference, lines and the subtotal the customer saw. It calls `place_online_order` (database design §8.5) with the publishable key. The order's note reads "Messenger order. Pickup: ..." so the staff can see where it came from and when the customer plans to pick it up.
+- The idempotency key is a UUID-shaped HMAC of the app secret, the sender's ID and a one-time code that the Place order button carries, so a double tap or a Meta retry returns the saved order instead of a second one. A refusal (price changed, item unavailable, invalid details) is explained and nothing is saved. A server error offers the same button again, which is safe because of the key.
+- The order lands in `online_orders` like a website order, so the Android POS, which listens to that table, is notified with no POS change (Phase 6 notification). A live check on the POS app is Not run yet.
+
+### 24.4 Order status in the chat
+
+- The customer's tracking token is the base64url HMAC-SHA256 of the sender's ID with the app secret (43 characters). It is the same for all of a customer's Messenger orders. `place_online_order` saves only its hash, and the Facebook ID is never saved. If the app secret is rotated, orders placed before the change no longer show here (security and privacy §21).
+- "📦 Order status", or the typed words, calls `list_online_orders_by_token` (database design §15) with the sender's token and shows up to 3 orders, newest first: the number, a status line in the order page's words, the items, the total, the shop's reason for a rejected order and a Refresh button. Nobody can ask for another person's orders, because the token comes from the sender ID in Meta's signed event.
+- An order link pasted in the chat still works for website orders (§22.3).
+- When the database function isn't there or the lookup fails, the assistant says it can't check orders. It never says "no orders" for a failed lookup.
+- No message is sent when the staff change a status. The customer taps Order status or Refresh.
+
+### 24.5 Pictures, cards and buttons
+
+- Menu items are sent as cards (Meta's generic template, up to 10 per message) with the item's photo from `getMenuItemImage` and `getMenuFlavorImage`, or `no-photo.jpg`, and a button to choose the item. The picture URLs use the website's address, because Meta fetches them.
+- A category also shows its menu board pictures, with a note that their prices may be older than the chat's (FR-104, FR-105). No price is read from a picture. A combo or Cat Association option lists everything it comes with (FR-103).
+- A link to the website is a button, never part of the text. A text with buttons is sent as a button template (three buttons at most: the website links first, then the first choices), and the other choices stay as quick replies (up to 13 titles of up to 20 characters) on the last message. A picture Meta refuses doesn't stop the rest of the reply.
+- Messenger's phone-number button asks for the mobile number. A customer who can't tap it types "order" and the number.
+- The chat profile (§22.4) gets the "🛒 Order here" entry and a greeting that says how to order. It is applied to the real Page only with the team's go-ahead.
+
+### 24.6 Limits, logs and settings
+
+- Per customer in 10 minutes: 20 replies, 5 order checks, 150 order steps and 5 placed orders. They are technical limits, not shop policy, and like the other limits they live in each server instance's memory.
+- Logs carry codes only. A refused or failed order logs the reason code, the name lookup logs the path and Meta's status, and the order list logs an error code. No sender ID, token, name or phone number is logged.
+- There are no new environment variables. The name lookup uses the existing Page access token (`pages_messaging`) in the `Authorization` header, the app secret also makes the order IDs, and `NEXT_PUBLIC_ONLINE_ORDERING` switches ordering on and off, as it does on the website.
+
+### 24.7 Tests
+
+- `tests/unit/messenger-order-state.test.ts`, `tests/unit/messenger-order-flow.test.ts`, `tests/unit/messenger-deps.test.ts`, `tests/unit/messenger-replies.test.ts`, `tests/unit/messenger-events.test.ts` and `tests/unit/messenger-send.test.ts` cover TC-P7-052 to TC-P7-074, and `tests/database/messenger-order-status.test.ts` covers TC-P7-051 on PGlite against the real migrations. `tests/unit/privacy-page.test.tsx` covers TC-P5-097. Meta's requests, the content, the menu and the database are mocked, and the tests use made-up Page and customer IDs.
