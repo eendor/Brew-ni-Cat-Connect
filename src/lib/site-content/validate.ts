@@ -176,6 +176,11 @@ const CHECKS: Readonly<
     hasKeys(value, ["text"]) &&
     isText(value.text, LIMITS.medium, { allowEmpty: true }),
 
+  closure: (value) =>
+    hasKeys(value, ["closed", "note"]) &&
+    typeof value.closed === "boolean" &&
+    isText(value.note, LIMITS.medium, { allowEmpty: true }),
+
   social: (value) =>
     hasKeys(value, ["facebook", "facebookPhotos", "tiktok"]) &&
     isOptionalUrl(value.facebook) &&

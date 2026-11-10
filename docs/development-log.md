@@ -1620,3 +1620,14 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Testing:** `NODE_OPTIONS=--no-experimental-webstorage npx vitest run` with the CI settings: 84 test files, 921 tests, all passed. `npx tsc --noEmit` reported nothing.
 - **Branch / PR:** `fix/messenger-phone-missing`, PR #115.
 - **Next action:** The closure switch on the POS app.
+
+## 2026-11-11 — Closed today switch (FR-111)
+
+- **Phase:** Phase 7 (Messenger) and the website.
+- **Task:** The owner wanted to close the shop for the day from the POS app, so the website and Messenger stop taking orders.
+- **Summary:** A new `closure` site content section holds the switch and an optional note (database design §16). The website shows "We're closed today" above every page, checkout disables Place order and the order API refuses. In Messenger, Order here, a phone number and every order step get a closed reply, and Hours & location starts with the closed line. The POS toggle is a separate PR in `eendor/Brew-ni-Cat-POS`. The migration is not applied to the live database yet.
+- **Files:** `supabase/migrations/20261111120000_closed_today.sql`, `supabase/rollbacks/20261111120000_closed_today.sql`, `src/lib/site-content/` (`types.ts`, `validate.ts`, `fallback-shop.ts`, `format.ts`), `src/lib/messenger/` (`order-flow.ts`, `ordering.ts`, `replies.ts`, `events.ts`), `src/app/layout.tsx`, `src/app/api/orders/route.ts`, `src/components/checkout/checkout-view.tsx`, `src/lib/orders/place-order.ts`, tests, `docs/functional-requirements.md` (FR-111), `docs/database-design.md` §16, `docs/test-cases.md` §47, `scripts/validate_phase0_docs.py` (FR count 111).
+- **Testing:** `NODE_OPTIONS=--no-experimental-webstorage npx vitest run` with the CI settings: 85 test files, 928 tests, all passed. `npx tsc --noEmit` and ESLint reported nothing.
+- **Branch / PR:** `feat/closed-today`.
+- **Next action:** Apply the migration with the team's OK, then release the POS toggle.
+

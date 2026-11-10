@@ -297,6 +297,7 @@ Migration `20261030120000_site_content.sql` (undo: `supabase/rollbacks/202610301
 | `address` | Street, area, town, province, postal code, country, landmark and map link |
 | `payments` | The accepted payment methods (1 to 6) and an optional GCash QR picture |
 | `notice` | One line shown above every page; empty hides it |
+| `closure` | Added 2026-11-11 (§16): `closed` (true or false) and an optional `note`, the owner's "Closed today" switch |
 | `social` | Facebook, Facebook photos and TikTok links; an empty link is hidden |
 | `riders` | Up to 8 delivery partners, each with a name, a Facebook link and a logo |
 | `about` | Opening date, page titles and text, the story, photos, menu summary, footer text and cat rules |
@@ -404,7 +405,7 @@ File: `supabase/migrations/20261105120000_three_flavor_mixes.sql`. Undo: `supaba
 
 ## 15. Order Status By Tracking Token (Phase 7 — 2026-11-10)
 
-File: `supabase/migrations/20261110120000_messenger_order_status.sql`. Undo: `supabase/rollbacks/20261110120000_messenger_order_status.sql`. Covers FR-110 (ADR-029). **Not applied to the live database yet.** It is applied by the process in §8.7, and only with the team's OK. Until then the Messenger assistant's Order status says it can't check orders, and ordering is not affected.
+File: `supabase/migrations/20261110120000_messenger_order_status.sql`. Undo: `supabase/rollbacks/20261110120000_messenger_order_status.sql`. Covers FR-110 (ADR-029). **Not applied to the live database yet.** It is applied by the process in §8.7, and only with the team's OK. Until then the Messenger assistant's Order status says it can't check orders, and ordering is not affected. Update 2026-11-10: applied to the live database with the team's OK, and recorded in `supabase_migrations.schema_migrations` (version 20261110120000).
 
 ### 15.1 `public.list_online_orders_by_token(p_tracking_token, p_limit)`
 
@@ -419,3 +420,25 @@ File: `supabase/migrations/20261110120000_messenger_order_status.sql`. Undo: `su
 
 - The rollback drops the function. Orders and tokens are not touched.
 - TC-P7-051 runs on PGlite against the real migrations (`tests/database/messenger-order-status.test.ts`): only that customer's orders, newest first; the status the shop sets on the POS; an empty list for an unknown or malformed token; the limit of 1 to 10; callable by the website's roles only, changing nothing; and the rollback keeps the orders.
+
+## 16. Closed Today Switch (Phase 7 — 2026-11-11)
+
+File: `supabase/migrations/20261111120000_closed_today.sql`. Undo: `supabase/rollbacks/20261111120000_closed_today.sql`. Covers FR-111. **Not applied to the live database yet.** It is applied by the process in §8.7, and only with the team's OK. Until then the website and Messenger read the built-in copy, which is open.
+
+### 16.1 What it changes
+
+- `public.site_content` accepts a tenth section, `closure`, with `{ "closed": boolean, "note": text up to 300 characters }`. The row is added open, with no note, because staff can only update rows.
+- The earlier section checks are kept as `private.is_valid_site_content_before_closure()`. The new `private.is_valid_site_content()` checks `closure` and hands every other section to it, so no earlier rule changes.
+- Access is the same as every section (§10.2): everyone reads it, only staff update it, and the change history (§10.4) records each change.
+
+### 16.2 Who reads it
+
+- Website: the line above every page says "We're closed today" with the note, before the owner's notice. Checkout disables Place order, and `POST /api/orders` answers 503 with the closed message before reaching the database.
+- Messenger: Order here, a phone number and every order step answer with the closed reply; the Hours & location reply starts with the closed line.
+- POS: the owner turns it on and off (`eendor/Brew-ni-Cat-POS`).
+
+### 16.3 Undo and tests
+
+- The rollback deletes the `closure` row, puts back the earlier check function and the nine-section list.
+- TC-P7-077 runs on PGlite (`tests/database/closed-today.test.ts`).
+

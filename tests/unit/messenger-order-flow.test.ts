@@ -20,6 +20,7 @@ import {
   expiredLead,
   FALLBACK_NAME,
   fullLead,
+  orderClosedReply,
   orderPausedReply,
   phoneAskReply,
   phoneRetryReply,
@@ -187,12 +188,16 @@ beforeEach(() => {
 });
 
 describe("Starting an order in Messenger (FR-100, FR-101)", () => {
-  it("TC-P7-064 — Order here asks for the phone number, or says ordering is paused", () => {
-    expect(orderIntentReply(setup().deps)).toEqual(phoneAskReply());
-    expect(orderIntentReply(setup().deps).askPhone).toBe(true);
-    expect(
-      orderIntentReply(setup({ onlineOrdering: () => false }).deps),
-    ).toEqual(orderPausedReply());
+  it("TC-P7-064 — Order here asks for the phone number, or says ordering is paused", async () => {
+    const ctx = setup();
+    await expect(orderIntentReply(ctx.deps, ctx.facts)).resolves.toEqual(
+      phoneAskReply(),
+    );
+    expect((await orderIntentReply(ctx.deps, ctx.facts)).askPhone).toBe(true);
+    const paused = setup({ onlineOrdering: () => false });
+    await expect(orderIntentReply(paused.deps, paused.facts)).resolves.toEqual(
+      orderPausedReply(),
+    );
   });
 
   it("TC-P7-064 — a number we can't use asks again; a paused shop and an unreadable menu are told so", async () => {
@@ -1071,5 +1076,50 @@ describe("Placing the order (FR-100, FR-107, FR-108)", () => {
     const payload = encodeOrderPayload("place", state);
     // Too long to carry is a null, never a payload Meta would refuse.
     expect(payload === null || payload.length <= MAX_PAYLOAD_LENGTH).toBe(true);
+  });
+});
+
+describe("The owner's Closed today switch (FR-111)", () => {
+  const closure = { closed: true, note: "Back tomorrow at 1 PM." };
+  const closedSetup = () => {
+    const ctx = setup();
+    const facts: OrderFacts = {
+      ...ctx.facts,
+      content: async () => ({ ...content, closure }),
+    };
+    return { ...ctx, facts };
+  };
+
+  it("TC-P7-076 — Order here, a phone number and order taps all say the shop is closed", async () => {
+    const ctx = closedSetup();
+    const closed = orderClosedReply(closure);
+    expect(closed.text).toContain("We're closed today. Back tomorrow at 1 PM.");
+    expect(closed.askPhone).toBeUndefined();
+    await expect(orderIntentReply(ctx.deps, ctx.facts)).resolves.toEqual(
+      closed,
+    );
+    await expect(beginOrder(PHONE, ctx.deps, ctx.facts)).resolves.toEqual(
+      closed,
+    );
+    await expect(
+      answerOrderTap(
+        CUSTOMER,
+        { op: "place", state: { phone: PHONE, cart: [] }, args: [] } as never,
+        ctx.deps,
+        ctx.facts,
+      ),
+    ).resolves.toEqual(closed);
+    expect(ctx.deps.placeOrder).not.toHaveBeenCalled();
+  });
+
+  it("TC-P7-076 — with the switch off, or content that can't be read, ordering carries on", async () => {
+    const ctx = setup();
+    const unreadable: OrderFacts = {
+      ...ctx.facts,
+      content: async () => Promise.reject(new Error("down")),
+    };
+    await expect(orderIntentReply(ctx.deps, unreadable)).resolves.toEqual(
+      phoneAskReply(),
+    );
   });
 });

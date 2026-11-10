@@ -26,6 +26,7 @@ import {
   hoursSummary,
   joinList,
   midSentence,
+  closedTodayText,
 } from "@/lib/site-content/format";
 import type { SiteContent } from "@/lib/site-content/types";
 import type {
@@ -231,11 +232,12 @@ export function staffReply(content: SiteContent): Reply {
 // Shop facts ----------------------------------------------------------------
 
 export function hoursLocationReply(content: SiteContent): Reply {
-  const { address, hours, notice } = content;
+  const { address, closure, hours, notice } = content;
   const landmark = address.landmark.trim()
     ? `, ${midSentence(address.landmark.trim())}`
     : "";
   const parts = [
+    closedTodayText(closure),
     `🕒 ${hoursNotice(hours)}`,
     notice.text.trim() ? `📢 Notice: ${notice.text.trim()}` : null,
     `📍 We're at ${fullAddress(address)}${landmark}.`,

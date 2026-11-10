@@ -28,8 +28,12 @@ import {
   splitAddOns,
 } from "@/lib/ordering/cart-pricing";
 import type { PlaceOrderSuccess } from "@/lib/orders/types";
-import { hoursSummary, takeoutBoxText } from "@/lib/site-content/format";
-import type { SiteContent } from "@/lib/site-content/types";
+import {
+  closedTodayText,
+  hoursSummary,
+  takeoutBoxText,
+} from "@/lib/site-content/format";
+import type { ClosureContent, SiteContent } from "@/lib/site-content/types";
 import type {
   MenuCatalog,
   MenuCategory,
@@ -273,6 +277,13 @@ export const phoneRetryReply = () =>
 export function orderPausedReply(): Reply {
   return buildReply(
     "🙏 Ordering is paused right now, so I can't take orders in this chat. You can still look at the menu 📋 or message our staff 💬.",
+    mainQuickReplies("order"),
+  );
+}
+
+export function orderClosedReply(closure: ClosureContent): Reply {
+  return buildReply(
+    `${closedTodayText(closure)}\n\n🙏 I can't take orders while the shop is closed. You can still look at the menu 📋 or message our staff 💬.`,
     mainQuickReplies("order"),
   );
 }
