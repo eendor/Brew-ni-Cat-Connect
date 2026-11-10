@@ -53,6 +53,7 @@ import {
   card,
   categoryEmoji,
   mainQuickReplies,
+  MAX_QUICK_REPLIES,
   MAX_QUICK_REPLY_TITLE,
   optionLine,
   orderChoice,
@@ -247,7 +248,7 @@ export function phoneAskReply(note?: string): Reply {
 
 export const phoneRetryReply = () =>
   phoneAskReply(
-    "🤔 I can only take a Philippine mobile number, like 09XXXXXXXXX.",
+    "🤔 I couldn't get a Philippine mobile number from that. I can only take one like 09XXXXXXXXX.",
   );
 
 /** Ordering is switched off (the same switch as the website's). */
@@ -342,13 +343,35 @@ export function itemsReply(
 
 // Choosing an option, flavors and add-ons -----------------------------------
 
-function optionTitle(variant: MenuVariant): string {
-  const name = formatOptionName(variant.name);
-  const price = variantPriceText(variant);
-  const withPrice =
-    price && !price.startsWith("from") ? `${name} ${price}` : name;
-  return withPrice.length <= MAX_QUICK_REPLY_TITLE ? withPrice : name;
+/**
+ * Button titles for a list of choices. When a name is too long for a button,
+ * every choice is numbered instead and the full names go in the message, so
+ * nothing is cut off.
+ */
+function choiceTitles<T>(
+  entries: readonly T[],
+  label: (entry: T) => string,
+  price: (entry: T) => string | null,
+): Readonly<{ numbered: boolean; titles: string[]; list: string }> {
+  const numbered = entries.some(
+    (entry) => label(entry).length > MAX_QUICK_REPLY_TITLE,
+  );
+  const titles = entries.map((entry, index) => {
+    const cost = price(entry);
+    if (numbered) return cost ? `${index + 1} · ${cost}` : `${index + 1}`;
+    const withPrice = cost ? `${label(entry)} ${cost}` : label(entry);
+    return withPrice.length <= MAX_QUICK_REPLY_TITLE ? withPrice : label(entry);
+  });
+  const list = entries
+    .map((entry, index) => {
+      const cost = price(entry);
+      return `${index + 1}. ${label(entry)}${cost ? ` — ${cost}` : ""}`;
+    })
+    .join("\n");
+  return { numbered, titles, list };
 }
+
+const NUMBER_HINT = "Tap its number below. 👇";
 
 /** An item's sizes or combo options, each spelled out with what it comes with. */
 export function optionsReply(
@@ -356,14 +379,28 @@ export function optionsReply(
   state: OrderState,
   categoryId: string | null,
 ): Reply {
+  const { numbered, titles } = choiceTitles(
+    item.variants,
+    (variant) => formatOptionName(variant.name),
+    (variant) => {
+      const price = variantPriceText(variant);
+      return price && !price.startsWith("from") ? price : null;
+    },
+  );
   return buildReply(
     join(
       `${item.name}\nWhich one would you like?`,
-      item.variants.map((variant) => `• ${optionLine(variant)}`).join("\n"),
+      item.variants
+        .map(
+          (variant, index) =>
+            `${numbered ? `${index + 1}.` : "•"} ${optionLine(variant)}`,
+        )
+        .join("\n"),
+      numbered && NUMBER_HINT,
     ),
     [
-      ...item.variants.flatMap((variant) =>
-        step(optionTitle(variant), "pick", state, [
+      ...item.variants.flatMap((variant, index) =>
+        step(titles[index] ?? String(index + 1), "pick", state, [
           item.id,
           variant.id,
           [],
@@ -377,13 +414,11 @@ export function optionsReply(
   );
 }
 
-const flavorTitle = (variant: MenuVariant, flavor: string) => {
+const flavorPrice = (variant: MenuVariant, flavor: string) => {
   const price = variant.flavorPrices.find(
     (entry) => entry.flavor === flavor,
   )?.price;
-  const withPrice =
-    price === undefined ? flavor : `${flavor} ${formatPrice(price)}`;
-  return withPrice.length <= MAX_QUICK_REPLY_TITLE ? withPrice : flavor;
+  return price === undefined ? null : formatPrice(price);
 };
 
 /** The next thing to ask for one item: flavors, add-ons, then how many. */
@@ -394,7 +429,15 @@ export function pickReply(
   addOns: readonly string[],
   done: number,
   state: OrderState,
+  categoryId: string | null = null,
 ): Reply {
+  // Back goes to the sizes, or to the category when there is only one size.
+  const back =
+    item.variants.length > 1
+      ? step("🔙 Back", "item", state, [item.id])
+      : categoryId
+        ? step("🔙 Back", "cat", state, [categoryId])
+        : [];
   const mixable = allowsFlavorMix(item);
   const flavorsDone =
     done % 2 === 1 ||
@@ -421,57 +464,74 @@ export function pickReply(
 
   if (!flavorsDone) {
     const first = flavors.length === 0;
-    const noFlavor = first && resolveVariantUnitPrice(item, variant, null).ok;
+    const left = item.flavors
+      .filter((flavor) => !flavors.includes(flavor))
+      .slice(0, MAX_QUICK_REPLIES - 2);
+    const { numbered, titles, list } = choiceTitles(
+      left,
+      (flavor) => flavor,
+      (flavor) => flavorPrice(variant, flavor),
+    );
     return buildReply(
-      first
-        ? `${header}\n\nPick a flavor: 🍬`
-        : `${header}\n\nAdd another flavor (up to ${MAX_MIXED_FLAVORS}), or continue. 🍬`,
+      join(
+        first
+          ? `${header}\n\nPick a flavor: 🍬`
+          : `${header}\n\nAdd another flavor (up to ${MAX_MIXED_FLAVORS}), or continue. 🍬`,
+        numbered && `${list}\n\n${NUMBER_HINT}`,
+      ),
       [
-        ...item.flavors
-          .filter((flavor) => !flavors.includes(flavor))
-          .flatMap((flavor) =>
-            step(
-              flavorTitle(variant, flavor),
-              "pick",
-              state,
-              again([...flavors, flavor], addOns, mixable ? base : base | 1),
-            ),
+        ...left.flatMap((flavor, index) =>
+          step(
+            titles[index] ?? flavor,
+            "pick",
+            state,
+            again([...flavors, flavor], addOns, mixable ? base : base | 1),
           ),
+        ),
         ...(first
-          ? noFlavor
-            ? step("No flavor", "pick", state, again([], addOns, base | 1))
-            : []
+          ? []
           : step(
               "✅ Continue",
               "pick",
               state,
               again(flavors, addOns, base | 1),
             )),
+        ...back,
       ],
       { listChoices: true },
     );
   }
 
   if (!addOnsDone) {
+    const left = offered
+      .filter((addOn) => !addOns.includes(addOn.label))
+      .slice(0, MAX_QUICK_REPLIES - 2);
+    const { numbered, titles, list } = choiceTitles(
+      left,
+      (addOn) => addOn.label,
+      (addOn) => formatPrice(addOn.price),
+    );
     return buildReply(
-      `${header}\n\nWant any extras? Tap one to add it, or Done. ➕`,
+      join(
+        `${header}\n\nWant any extras? Tap one to add it, or Done. ➕`,
+        numbered && `${list}\n\n${NUMBER_HINT}`,
+      ),
       [
-        ...offered
-          .filter((addOn) => !addOns.includes(addOn.label))
-          .flatMap((addOn) =>
-            step(
-              `${addOn.label} ${formatPrice(addOn.price)}`,
-              "pick",
-              state,
-              again(flavors, [...addOns, addOn.label], base),
-            ),
+        ...left.flatMap((addOn, index) =>
+          step(
+            titles[index] ?? addOn.label,
+            "pick",
+            state,
+            again(flavors, [...addOns, addOn.label], base),
           ),
+        ),
         ...step(
           addOns.length > 0 ? "✅ Done" : "No extras",
           "pick",
           state,
           again(flavors, addOns, base | 3),
         ),
+        ...back,
       ],
       { listChoices: true },
     );
@@ -485,7 +545,7 @@ export function pickReply(
   if (!price.ok) {
     return buildReply(
       `${header}\n\n😿 That combination isn't available. Please choose again.`,
-      step("🔙 Back", "item", state, [item.id]),
+      back,
     );
   }
   return buildReply(
@@ -500,7 +560,7 @@ export function pickReply(
           count,
         ]),
       ),
-      ...step("🔙 Back", "item", state, [item.id]),
+      ...back,
     ],
     { listChoices: true },
   );

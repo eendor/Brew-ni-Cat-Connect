@@ -106,8 +106,13 @@ export function readPayload(payload: unknown): ButtonTap | null {
   const intent = INTENTS.find((name) => PAYLOADS[name] === payload);
   if (intent) return { kind: "intent", intent };
   // Messenger's "mobile number" button sends the number as its payload.
-  return PHONE_PAYLOAD_PATTERN.test(payload)
-    ? { kind: "phone", phone: parsePhone(payload, true) }
+  if (PHONE_PAYLOAD_PATTERN.test(payload)) {
+    return { kind: "phone", phone: parsePhone(payload, true) };
+  }
+  // The phone button sent something we can't use as a number (empty, or
+  // its label), so ask for the number again.
+  return payload.trim() === "" || /\d|phone|number/i.test(payload)
+    ? { kind: "phone", phone: null }
     : null;
 }
 

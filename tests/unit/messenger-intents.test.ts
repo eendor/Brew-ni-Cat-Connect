@@ -27,6 +27,12 @@ describe("Messenger button payloads (FR-059)", () => {
     expect(new Set(Object.values(PAYLOADS)).size).toBe(INTENTS.length);
   });
 
+  it("TC-P7-004 — a phone button tap without a usable number asks for it again", () => {
+    expect(readPayload("")).toEqual({ kind: "phone", phone: null });
+    expect(readPayload("Phone number")).toEqual({ kind: "phone", phone: null });
+    expect(readPayload("menu")).toBeNull();
+  });
+
   it("TC-P7-004 — a category button carries the category id", () => {
     expect(categoryPayload("cat_drinks")).toBe("MENU_CATEGORY:cat_drinks");
     expect(readPayload("MENU_CATEGORY:cat_drinks")).toEqual({

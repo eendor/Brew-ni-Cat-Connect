@@ -1130,3 +1130,19 @@ These need the real Page, the POS app and the live database. A live test order r
 | MAN-P7-003 | FR-107 | With the shop's staff told beforehand, place one order from Messenger and watch the POS app | The POS app shows a new online order whose note starts "Messenger order."; the staff cancel it afterwards | Not run yet |
 | MAN-P7-004 | FR-110 | After the migration `20261110120000_messenger_order_status.sql` is applied to the live database, tap Order status | The order from MAN-P7-003 is listed with its status, and the status changes after the staff change it on the POS app | Not run yet |
 | MAN-P7-005 | FR-109 | On a summary, tap Place order twice quickly | One order only; the second tap shows the same order number | Not run yet |
+
+## 45. Messenger Order Choice Fixes (2026-11-10)
+
+The user tried the order steps on a phone and reported cut-off choice names, a "No flavor" choice, missing Back buttons, Buldak & Sedaap inside the Menu reply, and a phone-number tap that showed the welcome again. PR #114 fixes them.
+
+Run on 2026-11-10: `NODE_OPTIONS=--no-experimental-webstorage npx vitest run` with the CI settings: 84 test files, 920 tests, all passed.
+
+| ID | Requirement | Scenario | Expected result | Status |
+| --- | --- | --- | --- | --- |
+| TC-P7-065 | FR-102 | A flavor name is longer than a button allows (20 characters) | Every choice is numbered in the message with its full name and price; the buttons show the numbers ("1", "2"); nothing ends in "…"; there is no "No flavor" button, and Back is offered | Passed |
+| TC-P7-066 | FR-102 | Flavors, extras and how many for fries | Each step ends with "🔙 Back"; Back goes to the sizes, or to the category when the item has one size | Passed |
+| TC-P7-053 | FR-104 | A reply sets how many choices sit inside the message | Only that many go inside the message; the rest stay under it | Passed |
+| TC-P7-004 | FR-101 | The phone-number button sends nothing usable (empty, or its label) | The chat asks for the number again instead of showing the welcome; an unknown word such as "menu" is still no button | Passed |
+| TC-P7-011 | FR-104 | The Menu reply | Only "🌐 Full menu" and "🛒 Order here" sit inside the message; the categories stay under it | Passed |
+
+- Update 2026-11-10: TC-P7-065 and TC-P7-066 in section 44a expected "No flavor" and no Back button on the flavor and extras steps. They now expect "🔙 Back" and no "No flavor" (PR #114).

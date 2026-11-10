@@ -227,7 +227,15 @@ export async function answerOrderTap(
       if (!item || !isOrderable(item)) return browse(gone);
       const [only] = item.variants;
       return item.variants.length === 1 && only
-        ? pickReply(item, only, [], [], 0, state)
+        ? pickReply(
+            item,
+            only,
+            [],
+            [],
+            0,
+            state,
+            categoryOf(catalog, item.id)?.id ?? null,
+          )
         : optionsReply(item, state, categoryOf(catalog, item.id)?.id ?? null);
     }
     case "pick": {
@@ -241,6 +249,7 @@ export async function answerOrderTap(
         choice.addOns,
         done,
         state,
+        categoryOf(catalog, choice.item.id)?.id ?? null,
       );
     }
     case "qty": {

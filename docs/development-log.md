@@ -1598,3 +1598,15 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `feat/messenger-ordering`, PR #113.
 - **Known limitations:** The migration is NOT applied to the live database yet, so Order status says it can't check orders until it is; ordering is unaffected. Order status answers only when asked; the customer is not messaged when the status changes. Messenger orders share the website's order queue (no separate table) and show in the POS app as online orders whose note starts "Messenger order." Nothing checks that the phone number belongs to the customer. The per-person limits are kept per server instance. The live Messenger and POS checks (MAN-P7-001 to MAN-P7-005) are Not run yet. The Meta app has Standard Access, so only people with a role on the app get replies until Meta App Review. The owner has not confirmed the new privacy wording (MAN-P5-003), the closure-day behaviour or whether orders outside shop hours should be allowed.
 - **Next action:** Get the team's OK to apply the migration (database design §8.7), then run MAN-P7-001 to MAN-P7-005 with the shop's staff told beforehand.
+
+## 2026-11-10 — Messenger order choice fixes
+
+- **Phase:** Phase 7 (Messenger).
+- **Task:** The user tried the order steps on a phone and reported cut-off choice names, a "No flavor" choice on drinks that need one, no Back button on the flavor step, and Buldak & Sedaap inside the Menu reply next to Full menu and Order here. A tap on the phone-number button also showed the welcome again.
+- **Summary:** When any choice name is longer than a Messenger button (20 characters), the choices are numbered in the message with their full names and prices, and the buttons show the numbers. "No flavor" is gone. The flavor, extras and how-many steps all have "🔙 Back" (to the sizes, or to the category when there is one size). The Menu and category replies keep only Full menu and Order here inside the message. A phone-number tap without a usable number now asks for the number again.
+- **Files:** `src/lib/messenger/` (`ordering.ts`, `order-flow.ts`, `intents.ts`, `replies.ts`, `send.ts`), `tests/unit/messenger-{order-flow,send,intents,replies}.test.ts`, `docs/test-cases.md` §45.
+- **Testing:**
+  - `NODE_OPTIONS=--no-experimental-webstorage npx vitest run` with the CI settings: 84 test files, 920 tests, all passed.
+  - `npx tsc --noEmit` and ESLint on the changed files reported nothing; Prettier and the docs validator passed.
+- **Branch / PR:** `fix/messenger-order-choices`, PR #114.
+- **Next action:** Re-apply the Page's menu and greeting, apply the order status migration, and check the steps again on a phone.
