@@ -742,12 +742,22 @@ describe("Messenger ordering entry points (FR-100)", () => {
     expect(sent[0]?.answer.cards).toHaveLength(2);
   });
 
-  it("TC-P7-057 — a bare number is left to the staff, not taken as an order", async () => {
+  // Update 2026-11-11 (TC-P7-086): a bare mobile number now starts the
+  // order; any other bare number is still left to the staff.
+  it("TC-P7-057 — a bare number that isn't a mobile is left to the staff, not taken as an order", async () => {
     const { deps, sent } = setup();
-    await expect(
-      processWebhook(delivery(typed("09171234567")), deps),
-    ).resolves.toEqual({ replied: 0, skipped: 1, failed: 0 });
+    for (const text of ["(082) 123 4567", "1234"]) {
+      await expect(
+        processWebhook(delivery(typed(text)), deps),
+      ).resolves.toEqual({ replied: 0, skipped: 1, failed: 0 });
+    }
     expect(sent).toHaveLength(0);
+  });
+
+  it("TC-P7-086 — a message that is only a mobile number starts the order", async () => {
+    const { deps, sent } = setup();
+    await processWebhook(delivery(typed("0917 123 4567")), deps);
+    expect(sent[0]?.answer.cards).toHaveLength(2);
   });
 
   it("TC-P7-057 — says ordering is paused while Place order is off", async () => {

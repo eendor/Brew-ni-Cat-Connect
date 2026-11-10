@@ -37,6 +37,9 @@ import {
 } from "@/lib/orders/place-order";
 import { orderRateLimiter } from "@/lib/orders/rate-limit";
 import { PublicSupabaseConfigurationError } from "@/lib/supabase/public-client";
+import { pinOpenShopClock } from "./shop-clock";
+
+pinOpenShopClock();
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const TOKEN = "Zm9yLXRlc3RzLW9ubHktbm90LWEtcmVhbC10b2tlbg8";
@@ -126,6 +129,16 @@ describe("POST /api/orders", () => {
     } finally {
       shopClosure.closed = false;
     }
+  });
+
+  it("TC-P7-084 — outside the opening hours, nothing reaches the database (FR-112)", async () => {
+    // Saturday 14 November 2026, 2 PM in Manila: a closed day.
+    vi.setSystemTime(Date.UTC(2026, 10, 14, 6, 0, 0));
+    const response = await POST(post());
+    expect(response.status).toBe(503);
+    const body = await response.json();
+    expect(body.message).toContain("We're closed for the day");
+    expect(getPublicSupabaseClient).not.toHaveBeenCalled();
   });
 
   it("TC-P4-116 — without the database settings it says ordering is unavailable", async () => {

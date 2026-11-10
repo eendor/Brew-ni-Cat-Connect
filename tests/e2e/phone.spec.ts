@@ -44,6 +44,10 @@ async function mockMenu(page: Page) {
   await page.route("**/rest/v1/items*", (route) =>
     route.fulfill({ json: [buldak, takoyaki] }),
   );
+  // The About page lists reviews (FR-098); CI has no Supabase to answer.
+  await page.route("**/rest/v1/reviews*", (route) =>
+    route.fulfill({ json: [] }),
+  );
 }
 
 function collectErrors(page: Page) {

@@ -186,4 +186,6 @@ export type LoadedSiteContent = Readonly<{
 export type SiteContentRow = Readonly<{
   section: string | null;
   content: unknown;
+  /** When the row was last saved; the closure switch uses it (FR-112). */
+  updated_at?: string | null;
 }>;
