@@ -27,29 +27,77 @@ vi.mock("@/lib/loyalty/loyalty-client", () => ({
 }));
 
 const mockSettings: LoyaltyProgramSettings = {
-  currencyStep: 10,
+  currencyStep: 50,
   pointsPerStep: 1,
   weeklyLimit: 2,
 };
 
 const mockRewards: RewardItem[] = [
   {
-    id: "reward-takoyaki-6",
-    name: "Takoyaki (6 pcs)",
-    description: "6 pieces of freshly cooked savory Takoyaki.",
+    id: "reward-kiwi-soda",
+    name: "Kiwi soda",
+    description: "Refreshing kiwi soda.",
+    points: 40,
+  },
+  {
+    id: "reward-passion-fruit-soda",
+    name: "Passion fruit soda",
+    description: "Refreshing passion fruit soda.",
+    points: 40,
+  },
+  {
+    id: "reward-spanish-latte",
+    name: "Spanish latte",
+    description: "Rich espresso with sweetened milk.",
     points: 50,
   },
   {
-    id: "reward-iced-latte-16",
-    name: "Iced Latte (16 oz)",
-    description: "A refreshing 16 oz cup of iced espresso latte.",
+    id: "reward-hazelnut-latte",
+    name: "Hazelnut latte",
+    description: "Espresso with hazelnut flavor and milk.",
+    points: 50,
+  },
+  {
+    id: "reward-takoyaki-veggie-4",
+    name: "Takoyaki veggie (4 pcs)",
+    description: "4 pieces of vegetable Takoyaki.",
+    points: 60,
+  },
+  {
+    id: "reward-takoyaki-cheese-4",
+    name: "Takoyaki cheese (4 pcs)",
+    description: "4 pieces of cheese-filled Takoyaki.",
+    points: 70,
+  },
+  {
+    id: "reward-takoyaki-squid-4",
+    name: "Takoyaki squid (4 pcs)",
+    description: "4 pieces of squid Takoyaki.",
     points: 80,
   },
   {
-    id: "reward-brew-special-16",
-    name: "Brew Special Coffee (16 oz)",
-    description: "Our signature 16 oz house blend with caramel or vanilla.",
+    id: "reward-takoyaki-shrimp-4",
+    name: "Takoyaki shrimp (4 pcs)",
+    description: "4 pieces of shrimp Takoyaki.",
+    points: 90,
+  },
+  {
+    id: "reward-buldak-carbonara",
+    name: "Buldak carbonara",
+    description: "Spicy Buldak carbonara noodles.",
     points: 100,
+  },
+  {
+    id: "reward-classy-cat-combo",
+    name: "Classy Cat combo",
+    description: "Signature combo meal.",
+    points: 120,
+  },
+  {
+    id: "reward-nachos-fries-meat-veggies",
+    name: "Nachos with fries, meat and veggies",
+    description: "Loaded nachos and fries with meat and vegetables.",
+    points: 150,
   },
 ];
 
@@ -71,7 +119,7 @@ const mockHistory: LoyaltyTransaction[] = [
     reason: "reward-redeemed",
     orderId: null,
     orderReference: null,
-    note: "Redeemed: Takoyaki (6 pcs) (RWD-123456)",
+    note: "Redeemed: Spanish latte (RWD-123456)",
     createdAt: "2026-11-09T14:30:00Z",
   },
 ];
@@ -102,7 +150,7 @@ describe("RewardsView component", () => {
     });
 
     expect(
-      screen.getByText("Earn 1 point for every ₱10 spent on completed orders."),
+      screen.getByText("Earn 1 point for every ₱50 spent on completed orders."),
     ).toBeInTheDocument();
     expect(
       screen.getByText("Redeem up to 2 rewards per week."),
@@ -111,26 +159,28 @@ describe("RewardsView component", () => {
 
   it("displays rewards with enough and not enough points indicators", async () => {
     // Balance is 60:
-    // Takoyaki (50 pts) -> balance is enough
-    // Iced Latte (80 pts) -> need 20 more pts
-    // Brew Special (100 pts) -> need 40 more pts
+    // Spanish latte (50 pts) -> balance is enough
+    // Takoyaki cheese (4 pcs) (70 pts) -> need 10 more pts
+    // Buldak carbonara (100 pts) -> need 40 more pts
     render(<RewardsView />);
     await waitFor(() => {
-      expect(screen.getByText("Takoyaki (6 pcs)")).toBeInTheDocument();
+      expect(screen.getAllByText("Spanish latte").length).toBeGreaterThan(0);
     });
 
-    expect(screen.getByText("Balance is enough")).toBeInTheDocument();
-    expect(screen.getByText("Need 20 more pts")).toBeInTheDocument();
+    expect(screen.getAllByText("Balance is enough").length).toBeGreaterThan(0);
+    expect(screen.getByText("Need 10 more pts")).toBeInTheDocument();
     expect(screen.getByText("Need 40 more pts")).toBeInTheDocument();
 
-    const takoyakiCard = screen.getByTestId("reward-card-reward-takoyaki-6");
-    const latteCard = screen.getByTestId("reward-card-reward-iced-latte-16");
+    const latteCard = screen.getByTestId("reward-card-reward-spanish-latte");
+    const buldakCard = screen.getByTestId(
+      "reward-card-reward-buldak-carbonara",
+    );
 
     expect(
-      takoyakiCard.querySelector("button[aria-label*='Takoyaki']"),
+      latteCard.querySelector("button[aria-label*='Spanish latte']"),
     ).toBeEnabled();
     expect(
-      latteCard.querySelector("button[aria-label*='Iced Latte']"),
+      buldakCard.querySelector("button[aria-label*='Buldak carbonara']"),
     ).toBeDisabled();
   });
 
@@ -146,7 +196,7 @@ describe("RewardsView component", () => {
     expect(row1).toHaveTextContent("+12 pts");
 
     const row2 = screen.getByTestId("history-row-2");
-    expect(row2).toHaveTextContent("Redeemed: Takoyaki (6 pcs) (RWD-123456)");
+    expect(row2).toHaveTextContent("Redeemed: Spanish latte (RWD-123456)");
     expect(row2).toHaveTextContent("−50 pts");
   });
 
@@ -183,19 +233,19 @@ describe("RewardsView component", () => {
     vi.mocked(redeemReward).mockResolvedValue({
       ok: true,
       code: "RWD-999888",
-      rewardName: "Takoyaki (6 pcs)",
+      rewardName: "Spanish latte",
       pointsSpent: 50,
       newBalance: 10,
     });
 
     render(<RewardsView />);
     await waitFor(() => {
-      expect(screen.getByText("Takoyaki (6 pcs)")).toBeInTheDocument();
+      expect(screen.getAllByText("Spanish latte").length).toBeGreaterThan(0);
     });
 
-    const takoyakiCard = screen.getByTestId("reward-card-reward-takoyaki-6");
-    const redeemBtn = takoyakiCard.querySelector(
-      "button[aria-label*='Takoyaki']",
+    const latteCard = screen.getByTestId("reward-card-reward-spanish-latte");
+    const redeemBtn = latteCard.querySelector(
+      "button[aria-label*='Spanish latte']",
     );
     expect(redeemBtn).toBeInTheDocument();
     await user.click(redeemBtn!);
@@ -205,16 +255,24 @@ describe("RewardsView component", () => {
     expect(
       screen.getByText(/Are you sure you want to redeem/i),
     ).toBeInTheDocument();
+    expect(screen.getAllByText("Spanish latte").length).toBeGreaterThan(0);
+    expect(screen.getByText("50 points")).toBeInTheDocument();
 
-    // Confirm
     const confirmBtn = screen.getByRole("button", { name: "Confirm Redeem" });
     await user.click(confirmBtn);
 
-    // Success code appears
     await waitFor(() => {
       expect(screen.getByText("Reward Redeemed!")).toBeInTheDocument();
     });
+
     expect(screen.getByText("RWD-999888")).toBeInTheDocument();
-    expect(screen.getByText(/New balance:/i)).toBeInTheDocument();
+    expect(screen.getByText(/10 pts/i)).toBeInTheDocument(); // new balance
+
+    const closeBtn = screen.getByRole("button", { name: "Done" });
+    await user.click(closeBtn);
+
+    expect(
+      screen.queryByText("Redemption Successful!"),
+    ).not.toBeInTheDocument();
   });
 });

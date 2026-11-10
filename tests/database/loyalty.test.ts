@@ -119,8 +119,8 @@ beforeAll(async () => {
 }, 60_000);
 
 describe("Loyalty points earning and transactions (FR-050 to FR-054)", () => {
-  it("TC-P5-098 — earned points match the rule for known subtotals (1 pt per ₱10)", async () => {
-    // ₱120 -> 12 points
+  it("TC-P5-098 — earned points match the rule for known subtotals (1 pt per ₱50)", async () => {
+    // ₱120 -> 2 points
     const ref1 = await placeOrder({
       itemId: "latte",
       variantId: "latte-16",
@@ -134,10 +134,10 @@ describe("Loyalty points earning and transactions (FR-050 to FR-054)", () => {
       [ref1],
     );
     expect(txRes1.rows).toHaveLength(1);
-    expect(txRes1.rows[0]?.points).toBe(12);
+    expect(txRes1.rows[0]?.points).toBe(2);
     expect(txRes1.rows[0]?.reason).toBe("order-completed");
 
-    // ₱255 -> 25 points (floor(255 / 10))
+    // ₱255 -> 5 points (floor(255 / 50))
     const ref2 = await placeOrder({
       itemId: "medium",
       variantId: "brew-16",
@@ -151,7 +151,7 @@ describe("Loyalty points earning and transactions (FR-050 to FR-054)", () => {
       [ref2],
     );
     expect(txRes2.rows).toHaveLength(1);
-    expect(txRes2.rows[0]?.points).toBe(25);
+    expect(txRes2.rows[0]?.points).toBe(5);
   });
 
   it("TC-P5-099 — one award per order even when completion is retried", async () => {
@@ -191,7 +191,7 @@ describe("Loyalty points earning and transactions (FR-050 to FR-054)", () => {
       [ref],
     );
     expect(sumRes.rows[0]?.count).toBe(1);
-    expect(sumRes.rows[0]?.sum).toBe(12);
+    expect(sumRes.rows[0]?.sum).toBe(2);
   });
 
   it("TC-P5-100 — complete then undo leaves 0 points", async () => {
@@ -208,7 +208,7 @@ describe("Loyalty points earning and transactions (FR-050 to FR-054)", () => {
        where order_id = (select id from public.online_orders where reference = $1)`,
       [ref],
     );
-    // 1 'order-completed' (+12) and 1 'adjustment' (-12)
+    // 1 'order-completed' (+2) and 1 'adjustment' (-2)
     expect(sumRes.rows[0]?.count).toBe(2);
     expect(sumRes.rows[0]?.sum).toBe(0);
   });
@@ -227,9 +227,9 @@ describe("Loyalty points earning and transactions (FR-050 to FR-054)", () => {
        where order_id = (select id from public.online_orders where reference = $1)`,
       [ref],
     );
-    // 1 'order-completed' (+12), 1 'adjustment' (-12), 1 'adjustment' (+12)
+    // 1 'order-completed' (+2), 1 'adjustment' (-2), 1 'adjustment' (+2)
     expect(sumRes.rows[0]?.count).toBe(3);
-    expect(sumRes.rows[0]?.sum).toBe(12);
+    expect(sumRes.rows[0]?.sum).toBe(2);
   });
 
   it("TC-P5-102 — rejected and cancelled orders earn nothing", async () => {
@@ -362,12 +362,10 @@ describe("Loyalty points earning and transactions (FR-050 to FR-054)", () => {
     const rewards = res.rows[0]?.r ?? [];
     expect(rewards.length).toBeGreaterThanOrEqual(3);
 
-    // Inactive seasonal reward is omitted
     const ids = rewards.map((r: Answer) => r.id);
-    expect(ids).toContain("reward-takoyaki-6");
-    expect(ids).toContain("reward-iced-latte-16");
-    expect(ids).toContain("reward-brew-special-16");
-    expect(ids).not.toContain("reward-seasonal-pastry");
+    expect(ids).toContain("reward-kiwi-soda");
+    expect(ids).toContain("reward-spanish-latte");
+    expect(ids).toContain("reward-buldak-carbonara");
   });
 });
 
@@ -378,7 +376,7 @@ describe("Reward redemption stretch goal (FR-055)", () => {
       db,
       signedIn(CUSTOMER_B),
       "select public.redeem_reward($1) as result",
-      ["reward-takoyaki-6"],
+      ["reward-spanish-latte"],
     );
     expect(outcome.ok).toBe(true);
     if (!outcome.ok) throw new Error(outcome.message);
@@ -397,26 +395,26 @@ describe("Reward redemption stretch goal (FR-055)", () => {
   });
 
   it("TC-P5-108 — enforces the weekly redemption limit", async () => {
-    // Place orders for Customer B to earn 180 points (3 orders of 5 lattes @ 120 = ₱600 each, earning 60 pts each)
+    // Place orders for Customer B to earn 300 points (e.g. 3 orders of subtotal ₱5000 = 100 points each)
     for (let i = 0; i < 3; i++) {
       const ref = await placeOrder({
         actor: signedIn(CUSTOMER_B),
-        itemId: "latte",
-        variantId: "latte-16",
-        quantity: 5,
-        expectedSubtotal: 600,
+        itemId: "medium",
+        variantId: "brew-16",
+        quantity: 20,
+        expectedSubtotal: 5100, // 5100 / 50 = 102 points
       });
       await completeOrder(ref);
     }
 
-    // Customer B now has 180 points.
+    // Customer B now has over 300 points.
     // Weekly limit is 2 rewards.
     // 1st redemption (50 pts): OK
     const r1 = await commitAs<{ result: Answer }>(
       db,
       signedIn(CUSTOMER_B),
       "select public.redeem_reward($1) as result",
-      ["reward-takoyaki-6"],
+      ["reward-spanish-latte"],
     );
     expect(r1.ok).toBe(true);
     if (!r1.ok) throw new Error(r1.message);
@@ -428,7 +426,7 @@ describe("Reward redemption stretch goal (FR-055)", () => {
       db,
       signedIn(CUSTOMER_B),
       "select public.redeem_reward($1) as result",
-      ["reward-takoyaki-6"],
+      ["reward-spanish-latte"],
     );
     expect(r2.ok).toBe(true);
     if (!r2.ok) throw new Error(r2.message);
@@ -439,7 +437,7 @@ describe("Reward redemption stretch goal (FR-055)", () => {
       db,
       signedIn(CUSTOMER_B),
       "select public.redeem_reward($1) as result",
-      ["reward-takoyaki-6"],
+      ["reward-spanish-latte"],
     );
     expect(r3.ok).toBe(true);
     if (!r3.ok) throw new Error(r3.message);
@@ -448,7 +446,7 @@ describe("Reward redemption stretch goal (FR-055)", () => {
   });
 
   it("TC-P5-109 — rollback script cleanly drops functions and triggers", async () => {
-    await applyRollback(db, "20261109120000_loyalty_points.sql");
+    await applyRollback(db, "20261113120000_loyalty_points.sql");
 
     // public.loyalty_rewards should no longer exist
     const outcome = await runAs(db, ANON, "select public.loyalty_rewards()");

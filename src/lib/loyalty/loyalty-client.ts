@@ -137,7 +137,7 @@ export async function fetchLoyaltySettings(
   };
 
   return {
-    currencyStep: Number(result?.currencyStep ?? 10),
+    currencyStep: Number(result?.currencyStep ?? 50),
     pointsPerStep: Number(result?.pointsPerStep ?? 1),
     weeklyLimit: Number(result?.weeklyLimit ?? 2),
   };

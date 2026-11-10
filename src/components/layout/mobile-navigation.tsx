@@ -204,6 +204,13 @@ export function MobileNavigation({ items }: MobileNavigationProps) {
               >
                 Favorites
               </NavLink>
+              <NavLink
+                href="/account/rewards"
+                className="flex min-h-12 items-center rounded-[var(--shape-md)] px-4 py-3 text-base font-semibold text-[var(--text-strong)] transition-colors hover:bg-[var(--fill-tertiary)] aria-[current=page]:bg-[var(--accent-soft)] aria-[current=page]:text-[var(--accent-solid)]"
+                onClick={closeNavigation}
+              >
+                Loyalty & Rewards
+              </NavLink>
               <div className="flex items-center justify-between px-4 py-2">
                 <span className="ios-caption truncate">
                   Account

@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
 /**
- * Customer loyalty points and rewards (FR-050 to FR-055).
+ * Customer loyalty and rewards (FR-050 to FR-055).
  *
  * Supabase Auth, PostgREST, and RPC endpoints are mocked in the browser,
  * ensuring no live account or live database is contacted.
@@ -35,33 +35,75 @@ const mockSession = {
 
 const mockRewards = [
   {
-    id: "reward-takoyaki-6",
-    name: "Takoyaki (6 pcs)",
-    description: "6 pieces of freshly cooked savory Takoyaki.",
+    id: "reward-kiwi-soda",
+    name: "Kiwi soda",
+    description: "Refreshing kiwi soda.",
+    points: 40,
+  },
+  {
+    id: "reward-passion-fruit-soda",
+    name: "Passion fruit soda",
+    description: "Refreshing passion fruit soda.",
+    points: 40,
+  },
+  {
+    id: "reward-spanish-latte",
+    name: "Spanish latte",
+    description: "Rich espresso with sweetened milk.",
     points: 50,
   },
   {
-    id: "reward-iced-latte-16",
-    name: "Iced Latte (16 oz)",
-    description: "A refreshing 16 oz cup of iced espresso latte.",
+    id: "reward-hazelnut-latte",
+    name: "Hazelnut latte",
+    description: "Espresso with hazelnut flavor and milk.",
+    points: 50,
+  },
+  {
+    id: "reward-takoyaki-veggie-4",
+    name: "Takoyaki veggie (4 pcs)",
+    description: "4 pieces of vegetable Takoyaki.",
+    points: 60,
+  },
+  {
+    id: "reward-takoyaki-cheese-4",
+    name: "Takoyaki cheese (4 pcs)",
+    description: "4 pieces of cheese-filled Takoyaki.",
+    points: 70,
+  },
+  {
+    id: "reward-takoyaki-squid-4",
+    name: "Takoyaki squid (4 pcs)",
+    description: "4 pieces of squid Takoyaki.",
     points: 80,
   },
   {
-    id: "reward-brew-special-16",
-    name: "Brew Special Coffee (16 oz)",
-    description: "Our signature 16 oz house blend with caramel or vanilla.",
+    id: "reward-takoyaki-shrimp-4",
+    name: "Takoyaki shrimp (4 pcs)",
+    description: "4 pieces of shrimp Takoyaki.",
+    points: 90,
+  },
+  {
+    id: "reward-buldak-carbonara",
+    name: "Buldak carbonara",
+    description: "Spicy Buldak carbonara noodles.",
     points: 100,
   },
   {
-    id: "reward-snack-combo",
-    name: "Takoyaki & Latte Combo",
-    description: "16 oz Iced Latte paired with 6 pcs Takoyaki.",
+    id: "reward-classy-cat-combo",
+    name: "Classy Cat combo",
+    description: "Signature combo meal.",
     points: 120,
+  },
+  {
+    id: "reward-nachos-fries-meat-veggies",
+    name: "Nachos with fries, meat and veggies",
+    description: "Loaded nachos and fries with meat and vegetables.",
+    points: 150,
   },
 ];
 
 const mockSettings = {
-  currencyStep: 10,
+  currencyStep: 50,
   pointsPerStep: 1,
   weeklyLimit: 2,
 };
@@ -138,7 +180,7 @@ async function mockLoyaltyBackend(
       json: {
         ok: true,
         code: "RWD-872619",
-        rewardName: "Takoyaki (6 pcs)",
+        rewardName: "Spanish latte",
         pointsSpent: 50,
         newBalance: 10,
       },
@@ -174,7 +216,7 @@ test.describe("Customer loyalty and rewards", () => {
 
     // Check plain-word program rules
     await expect(
-      page.getByText("Earn 1 point for every ₱10 spent on completed orders."),
+      page.getByText("Earn 1 point for every ₱50 spent on completed orders."),
     ).toBeVisible();
     await expect(
       page.getByText("Redeem up to 2 rewards per week."),
@@ -184,9 +226,9 @@ test.describe("Customer loyalty and rewards", () => {
     await expect(
       page.getByRole("heading", { level: 2, name: "Rewards Catalog" }),
     ).toBeVisible();
-    await expect(page.getByText("Takoyaki (6 pcs)")).toBeVisible();
-    await expect(page.getByText("Balance is enough")).toBeVisible();
-    await expect(page.getByText("Need 20 more pts")).toBeVisible();
+    await expect(page.getByText("Spanish latte")).toBeVisible();
+    await expect(page.getByText("Balance is enough").first()).toBeVisible();
+    await expect(page.getByText("Need 10 more pts")).toBeVisible();
 
     // Check history rows
     await expect(
@@ -211,7 +253,7 @@ test.describe("Customer loyalty and rewards", () => {
       page.getByRole("heading", { level: 1, name: "Loyalty & Rewards" }),
     ).toBeVisible();
     await expect(page.getByTestId("loyalty-balance")).toHaveText("60");
-    await expect(page.getByText("Takoyaki (6 pcs)")).toBeVisible();
+    await expect(page.getByText("Spanish latte")).toBeVisible();
 
     await capture(page, "rewards-page-390x844.png");
   });

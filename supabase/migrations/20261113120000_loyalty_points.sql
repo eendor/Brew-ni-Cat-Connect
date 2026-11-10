@@ -6,17 +6,17 @@
 --
 -- FR-051, FR-052: An AFTER UPDATE OF status trigger on public.online_orders
 -- awards points when an order is completed, and takes them back if completion
--- is undone (FR-095). Guests earn nothing. If subtotal is under ₱10, 0 points
+-- is undone (FR-095). Guests earn nothing. If subtotal is under ₱50, 0 points
 -- are awarded and no row is added. Transactions are immutable.
 --
 -- FR-054: public.loyalty_rewards() returns the active rewards catalog from
 -- private.loyalty_settings(), the single source of truth.
 --
--- FR-055 (Stretch): public.redeem_reward() allows an authenticated customer
+-- FR-055 (Partial): public.redeem_reward() allows an authenticated customer
 -- to redeem points for an active reward atomically, enforcing balance and
--- weekly redemption limits.
+-- weekly redemption limits. (Note: Redemption is not yet tied directly to a checkout order.)
 --
--- Undo: supabase/rollbacks/20261109120000_loyalty_points.sql
+-- Undo: supabase/rollbacks/20261113120000_loyalty_points.sql
 
 -- ---------------------------------------------------------------------------
 -- 1. Program settings (single source of truth)
@@ -28,50 +28,92 @@ immutable
 set search_path = ''
 as $$
   select jsonb_build_object(
-    -- Earning rule: 1 point for every ₱10 of the order subtotal, rounded down.
-    -- TODO: Confirm with Brew ni Cat owner.
-    'currency_step', 10,
+    -- Earning rule: 1 point for every ₱50 of the order subtotal, rounded down.
+    -- Confirmed by owner on 2026-11-10.
+    'currency_step', 50,
     'points_per_currency_unit', 1,
     -- Weekly redemption limit per customer.
-    -- TODO: Confirm with Brew ni Cat owner.
+    -- Confirmed by owner on 2026-11-10.
     'weekly_limit', 2,
-    -- Rewards catalog.
-    -- TODO: Confirm with Brew ni Cat owner.
+    -- Rewards catalog (11 confirmed items).
+    -- Confirmed by owner on 2026-11-10.
     'rewards', jsonb_build_array(
       jsonb_build_object(
-        'id', 'reward-takoyaki-6',
-        'name', 'Takoyaki (6 pcs)',
-        'description', '6 pieces of freshly cooked savory Takoyaki.',
+        'id', 'reward-kiwi-soda',
+        'name', 'Kiwi soda',
+        'description', 'Refreshing kiwi soda.',
+        'points', 40,
+        'active', true
+      ),
+      jsonb_build_object(
+        'id', 'reward-passion-fruit-soda',
+        'name', 'Passion fruit soda',
+        'description', 'Refreshing passion fruit soda.',
+        'points', 40,
+        'active', true
+      ),
+      jsonb_build_object(
+        'id', 'reward-spanish-latte',
+        'name', 'Spanish latte',
+        'description', 'Rich espresso with sweetened milk.',
         'points', 50,
         'active', true
       ),
       jsonb_build_object(
-        'id', 'reward-iced-latte-16',
-        'name', 'Iced Latte (16 oz)',
-        'description', 'A refreshing 16 oz cup of iced espresso latte.',
+        'id', 'reward-hazelnut-latte',
+        'name', 'Hazelnut latte',
+        'description', 'Espresso with hazelnut flavor and milk.',
+        'points', 50,
+        'active', true
+      ),
+      jsonb_build_object(
+        'id', 'reward-takoyaki-veggie-4',
+        'name', 'Takoyaki veggie (4 pcs)',
+        'description', '4 pieces of vegetable Takoyaki.',
+        'points', 60,
+        'active', true
+      ),
+      jsonb_build_object(
+        'id', 'reward-takoyaki-cheese-4',
+        'name', 'Takoyaki cheese (4 pcs)',
+        'description', '4 pieces of cheese-filled Takoyaki.',
+        'points', 70,
+        'active', true
+      ),
+      jsonb_build_object(
+        'id', 'reward-takoyaki-squid-4',
+        'name', 'Takoyaki squid (4 pcs)',
+        'description', '4 pieces of squid Takoyaki.',
         'points', 80,
         'active', true
       ),
       jsonb_build_object(
-        'id', 'reward-brew-special-16',
-        'name', 'Brew Special Coffee (16 oz)',
-        'description', 'Our signature 16 oz house blend with caramel or vanilla.',
+        'id', 'reward-takoyaki-shrimp-4',
+        'name', 'Takoyaki shrimp (4 pcs)',
+        'description', '4 pieces of shrimp Takoyaki.',
+        'points', 90,
+        'active', true
+      ),
+      jsonb_build_object(
+        'id', 'reward-buldak-carbonara',
+        'name', 'Buldak carbonara',
+        'description', 'Spicy Buldak carbonara noodles.',
         'points', 100,
         'active', true
       ),
       jsonb_build_object(
-        'id', 'reward-snack-combo',
-        'name', 'Takoyaki & Latte Combo',
-        'description', '16 oz Iced Latte paired with 6 pcs Takoyaki.',
+        'id', 'reward-classy-cat-combo',
+        'name', 'Classy Cat combo',
+        'description', 'Signature combo meal.',
         'points', 120,
         'active', true
       ),
       jsonb_build_object(
-        'id', 'reward-seasonal-pastry',
-        'name', 'Seasonal Special Pastry',
-        'description', 'Exclusive seasonal bakery item.',
-        'points', 30,
-        'active', false
+        'id', 'reward-nachos-fries-meat-veggies',
+        'name', 'Nachos with fries, meat and veggies',
+        'description', 'Loaded nachos and fries with meat and vegetables.',
+        'points', 150,
+        'active', true
       )
     )
   );
@@ -102,7 +144,7 @@ begin
     return new;
   end if;
 
-  v_step := coalesce((v_settings->>'currency_step')::numeric, 10);
+  v_step := coalesce((v_settings->>'currency_step')::numeric, 50);
   v_pts_per_step := coalesce((v_settings->>'points_per_currency_unit')::int, 1);
 
   if new.status = 'completed' and v_step > 0 then
@@ -148,9 +190,8 @@ begin
           end
         );
     end if;
-  exception when others then
-    -- The trigger must never make a status change fail.
-    null;
+  exception when unique_violation then
+    raise warning 'Loyalty transaction already exists for order %: %', new.id, sqlerrm;
   end;
 
   return new;
@@ -201,7 +242,7 @@ stable
 set search_path = ''
 as $$
   select jsonb_build_object(
-    'currencyStep', coalesce((private.loyalty_settings()->>'currency_step')::numeric, 10),
+    'currencyStep', coalesce((private.loyalty_settings()->>'currency_step')::numeric, 50),
     'pointsPerStep', coalesce((private.loyalty_settings()->>'points_per_currency_unit')::int, 1),
     'weeklyLimit', coalesce((private.loyalty_settings()->>'weekly_limit')::int, 2)
   );
