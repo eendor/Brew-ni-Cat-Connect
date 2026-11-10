@@ -2347,7 +2347,7 @@ html[data-motion="on"]:not([data-motion-live])
    taps, so nothing under it is ever covered. Each sheet is one row of square
    frames; the cat stands on row 32 of 50, so the strip shows rows 14 to 32. */
 .cat-strip {
-  --cat-size: 100px;
+  --cat-size: 160px;
   position: relative;
   height: calc(var(--cat-size) * 0.38);
   overflow: hidden;
@@ -2356,7 +2356,7 @@ html[data-motion="on"]:not([data-motion-live])
 }
 @media (min-width: 640px) {
   .cat-strip {
-    --cat-size: 150px;
+    --cat-size: 260px;
   }
 }
 .pixel-cat {

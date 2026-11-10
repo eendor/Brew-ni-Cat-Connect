@@ -50,21 +50,21 @@ const clamp01 = (r: number) => Math.min(Math.max(r, 0), 0.999_999);
 /** The most cats in the strip at once; the six coats repeat. */
 export const MAX_CATS = 16;
 
-/** One cat for about every 100 pixels of width: 4 on a phone, 14 on a desktop. */
+/** One cat for about every 120 pixels of width: 3 on a phone, 12 on a desktop. */
 export function catCount(width: number): number {
-  return Math.min(MAX_CATS, Math.max(4, Math.round(width / 100)));
+  return Math.min(MAX_CATS, Math.max(3, Math.round(width / 120)));
 }
 
 export type CatRest = Readonly<{ action: CatAction; ms: number }>;
 
 const RESTS: readonly (readonly [CatAction, number, number])[] = [
-  ["idle", 3_000, 6_000],
-  ["sitting", 4_000, 9_000],
-  ["licking", 2_700, 4_500],
-  ["meow", 1_400, 1_400],
+  ["idle", 4_000, 8_000],
+  ["sitting", 6_000, 14_000],
+  ["licking", 3_600, 7_200],
+  ["meow", 1_400, 2_800],
   ["stretching", 1_700, 1_700],
   ["laying", 1_100, 1_100],
-  ["itch", 1_200, 2_000],
+  ["itch", 1_200, 2_400],
 ];
 
 /** What a cat does after a walk, and for how long, from two random numbers. */
@@ -89,8 +89,9 @@ export function afterRest(action: CatAction, length: number): CatRest | null {
 }
 
 /**
- * Where the next walk ends: somewhere in the strip at least two cat sizes
- * away, so every walk is worth watching. `size` is the cat's frame in pixels.
+ * Where the next walk ends: one to three cat sizes away, left or right, and
+ * inside the strip. Short walks leave the cats more time to sit, wash, meow
+ * or nap. `size` is the cat's frame in pixels.
  */
 export function nextTarget(
   random: number,
@@ -100,10 +101,10 @@ export function nextTarget(
 ): number {
   const min = -0.2 * size;
   const max = Math.max(min, width - 0.8 * size);
-  let target = min + clamp01(random) * (max - min);
-  if (Math.abs(target - x) < 2 * size) {
-    target = x + (target >= x ? 2 : -2) * size;
-    if (target > max || target < min) target = x - (target - x);
-  }
+  const r = clamp01(random);
+  const dir = r < 0.5 ? -1 : 1;
+  const steps = 1 + (r < 0.5 ? r * 2 : (r - 0.5) * 2) * 2;
+  let target = x + dir * steps * size;
+  if (target > max || target < min) target = x - dir * steps * size;
   return Math.min(max, Math.max(min, target));
 }

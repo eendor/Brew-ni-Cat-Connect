@@ -47,7 +47,7 @@ export function SiteFooter({ content }: SiteFooterProps) {
       <CatStrip />
       <Container
         data-rise-group=""
-        className="grid gap-10 py-12 sm:grid-cols-2 lg:grid-cols-[1.25fr_0.7fr_1.1fr_0.8fr] lg:gap-12 lg:py-16"
+        className="grid gap-10 pt-3 pb-12 sm:grid-cols-2 lg:grid-cols-[1.25fr_0.7fr_1.1fr_0.8fr] lg:gap-12 lg:pt-4 lg:pb-16"
       >
         <div>
           <Link

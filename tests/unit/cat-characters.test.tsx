@@ -59,10 +59,10 @@ afterEach(() => {
 describe("cat characters (FR-099)", () => {
   // Update 2026-11-10: the drawn poster cats were replaced by the six pixel
   // cats of the CC0 "Pet Cats Pack"; this case now covers their behavior.
-  it("TC-P9-001 six pixel cat coats, 4 cats on a phone and 14 on a desktop, rest in turn and nap after lying down", () => {
+  it("TC-P9-001 six pixel cat coats, 3 cats on a phone and 12 on a desktop, rest in turn and nap after lying down", () => {
     expect(PIXEL_CATS).toHaveLength(6);
-    expect(catCount(390)).toBe(4);
-    expect(catCount(1440)).toBe(14);
+    expect(catCount(390)).toBe(3);
+    expect(catCount(1440)).toBe(12);
     expect(catCount(4000)).toBe(16);
     expect(catSheetUrl("cat-2", "walk")).toBe("/cats/cat-2/walk.png");
     expect(CAT_SHEETS.walk.frames).toBe(8);
@@ -74,10 +74,11 @@ describe("cat characters (FR-099)", () => {
     expect(nextRest(0.999, 0, true).action).toBe("itch");
     expect(afterRest("laying", 0)?.action).toBe("sleeping");
     expect(afterRest("idle", 0)).toBeNull();
-    // every walk goes at least two cat sizes and stays in the strip
+    // every walk goes one to three cat sizes and stays in the strip
     for (const r of [0, 0.3, 0.5, 0.99]) {
       const target = nextTarget(r, 500, 1440, 150);
-      expect(Math.abs(target - 500)).toBeGreaterThanOrEqual(300);
+      expect(Math.abs(target - 500)).toBeGreaterThanOrEqual(150);
+      expect(Math.abs(target - 500)).toBeLessThanOrEqual(450);
       expect(target).toBeGreaterThanOrEqual(-30);
       expect(target).toBeLessThanOrEqual(1440 - 120);
     }
