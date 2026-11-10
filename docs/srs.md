@@ -223,7 +223,7 @@ Only requirements-justified domains will be designed. Candidate domains include 
 | Customer account | FR-038–FR-043 | Phase 5 | Planned |
 | Order tracking | FR-044–FR-049 | Phases 4–5 | Planned |
 | Loyalty | FR-050–FR-057 | Phase 5 | Planned |
-| Messenger | FR-058–FR-064 | Phase 7 | Planned; transactional/AI portions conditional |
+| Messenger | FR-058–FR-064, FR-100–FR-110 | Phase 7 | ~~Planned; transactional/AI portions conditional~~ Superseded 2026-11-10: FR-058–FR-064 are implemented (PRs #106 and #109) and FR-100–FR-110, the ordering and order status inside Messenger, in PR #113; the AI portion is still conditional |
 | Android | FR-065–FR-070 | Phase 8 | Planned; notifications conditional |
 | Administration / POS integration | FR-071–FR-081 | Phases 4 and 6 | Planned |
 | Owner changes in the POS, live website content, loyalty mini-games | FR-082–FR-091, FR-093 | Phase 9 | Planned; prizes and advertising conditional |

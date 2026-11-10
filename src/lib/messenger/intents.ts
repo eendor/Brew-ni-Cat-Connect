@@ -3,10 +3,11 @@
  *
  * The assistant works with buttons (emerging technologies §7.2: buttons
  * before free text). A tapped button sends a fixed payload. Typed text is
- * read in only two cases: an order link, for the order's status, and a
+ * read in only three cases: an order link, for the order's status; a
  * button's name typed on its own ("menu po", "hi"), which works like the
- * button. Anything else is left for the shop's staff, so the assistant never
- * guesses what a customer or a rider means.
+ * button; and "order" with a mobile number, to start an order. Anything
+ * else is left for the shop's staff, so the assistant never guesses what a
+ * customer or a rider means.
  */
 
 import {
@@ -18,8 +19,17 @@ import {
   TRACKING_TOKEN_LENGTH,
 } from "@/lib/orders/types";
 
+import {
+  decodeOrderPayload,
+  ORDER_PAYLOAD_PREFIX,
+  parsePhone,
+  PHONE_PAYLOAD_PATTERN,
+  type OrderTap,
+} from "./order-state";
+
 export const INTENTS = [
   "welcome",
+  "order",
   "menu",
   "hours-location",
   "how-to-order",
@@ -32,6 +42,7 @@ export type Intent = (typeof INTENTS)[number];
 /** Button payloads. Meta sends one back when a customer taps its button. */
 export const PAYLOADS: Readonly<Record<Intent, string>> = {
   welcome: "GET_STARTED",
+  order: "ORDER_HERE",
   menu: "MENU",
   "hours-location": "HOURS_LOCATION",
   "how-to-order": "HOW_TO_ORDER",
@@ -44,9 +55,24 @@ export const CATEGORY_PAYLOAD_PREFIX = "MENU_CATEGORY:";
 
 const CATEGORY_ID_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;
 
+/** A status button's payload carries the order's reference and token. */
+export const STATUS_PAYLOAD_PREFIX = "STATUS:";
+
 export type ButtonTap =
   | Readonly<{ kind: "intent"; intent: Intent }>
-  | Readonly<{ kind: "category"; categoryId: string }>;
+  | Readonly<{ kind: "category"; categoryId: string }>
+  /** A step of an order in the chat (`order-state.ts`). */
+  | Readonly<{ kind: "order"; tap: OrderTap }>
+  | Readonly<{ kind: "status"; reference: string; token: string }>
+  /** The mobile number from Messenger's button; null when it isn't a PH one. */
+  | Readonly<{ kind: "phone"; phone: string | null }>;
+
+/** The payload of a "check status" button, or null for an invalid link. */
+export function statusPayload(reference: string, token: string): string | null {
+  return isOrderReference(reference) && isTrackingToken(token)
+    ? `${STATUS_PAYLOAD_PREFIX}${reference}:${token}`
+    : null;
+}
 
 export function categoryPayload(categoryId: string): string | null {
   return CATEGORY_ID_PATTERN.test(categoryId)
@@ -63,8 +89,26 @@ export function readPayload(payload: unknown): ButtonTap | null {
       ? { kind: "category", categoryId }
       : null;
   }
+  if (payload.startsWith(ORDER_PAYLOAD_PREFIX)) {
+    const tap = decodeOrderPayload(payload);
+    return tap ? { kind: "order", tap } : null;
+  }
+  if (payload.startsWith(STATUS_PAYLOAD_PREFIX)) {
+    const [reference, token, ...extra] = payload
+      .slice(STATUS_PAYLOAD_PREFIX.length)
+      .split(":");
+    return extra.length === 0 &&
+      isOrderReference(reference) &&
+      isTrackingToken(token)
+      ? { kind: "status", reference, token }
+      : null;
+  }
   const intent = INTENTS.find((name) => PAYLOADS[name] === payload);
-  return intent ? { kind: "intent", intent } : null;
+  if (intent) return { kind: "intent", intent };
+  // Messenger's "mobile number" button sends the number as its payload.
+  return PHONE_PAYLOAD_PATTERN.test(payload)
+    ? { kind: "phone", phone: parsePhone(payload, true) }
+    : null;
 }
 
 /** Lowercase words, without accents or punctuation: "Menu?" → "menu". */
@@ -125,6 +169,14 @@ const GREETINGS = [
  */
 const TYPED_BUTTONS: ReadonlyMap<string, Intent> = new Map<string, Intent>([
   ...GREETINGS.map((greeting) => [greeting, "welcome"] as const),
+  ["order", "order"],
+  ["order here", "order"],
+  ["order now", "order"],
+  ["new order", "order"],
+  ["start order", "order"],
+  ["place order", "order"],
+  ["magorder", "order"],
+  ["mag order", "order"],
   ["start", "welcome"],
   ["get started", "welcome"],
   ["help", "welcome"],
@@ -167,6 +219,17 @@ export function typedButton(text: string): Intent | null {
     TYPED_BUTTONS.get(afterGreeting(words).join(" ")) ??
     null
   );
+}
+
+/** "order 09171234567": starts an order with the number typed after it. */
+const TYPED_ORDER_PATTERN =
+  /^\s*(?:order|mag\s?order)\b[\s:,-]*(\+?[\d][\d\s().-]*)$/i;
+
+/** The mobile number in a short "order <number>" message, or null. */
+export function typedOrderPhone(text: string): string | null {
+  if (text.length > MAX_SHORT_MESSAGE_LENGTH) return null;
+  const number = TYPED_ORDER_PATTERN.exec(text)?.[1];
+  return number ? parsePhone(number) : null;
 }
 
 // Order links ---------------------------------------------------------------

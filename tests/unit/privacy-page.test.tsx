@@ -46,7 +46,7 @@ describe("Privacy Policy page", () => {
     ).toBeInTheDocument();
     const updated = container.querySelector("time");
     expect(updated).toHaveAttribute("datetime", PRIVACY_POLICY_UPDATED);
-    expect(updated).toHaveTextContent("November 9, 2026");
+    expect(updated).toHaveTextContent("November 10, 2026");
 
     for (const [id, title] of SECTIONS) {
       const section = container.querySelector(`section#${id}`);
@@ -110,8 +110,9 @@ describe("Privacy Policy page", () => {
     // the order link's token stays out of the server (security §18.3)
     expect(text).toMatch(/Browsers don't send that part to our server/);
     expect(text).toMatch(/never shows your phone number/);
-    // the Messenger assistant writes nothing (security §19.3, §19.5)
-    expect(text).toMatch(/It saves nothing to our database/);
+    // asking the Messenger assistant questions writes nothing (security §19.3,
+    // §19.5); an order placed in the chat does (TC-P5-097)
+    expect(text).toMatch(/saves nothing to our database/);
     expect(text).toMatch(/at most 24 hours/);
     // rider delivery is never sent by the site (security §17.1)
     expect(text).toMatch(/The website doesn't send it anywhere/);
@@ -123,6 +124,26 @@ describe("Privacy Policy page", () => {
       "/account/profile",
     );
     // no claims the shop has not made
+    expect(text).not.toMatch(/never share|100%|guarantee|encrypted at rest/i);
+  });
+
+  it("TC-P5-097 — says what an order placed in Messenger keeps, and what it doesn't", async () => {
+    const { container } = render(await PrivacyPage());
+    const text = container.textContent ?? "";
+
+    expect(text).toMatch(/Orders placed in Messenger/);
+    // the same details as a website order, read from the chat and the profile
+    expect(text).toMatch(/asks for your mobile number/);
+    expect(text).toMatch(/name on your Messenger profile/);
+    expect(text).toMatch(/the items, the total and each change/);
+    // the Facebook ID itself is not stored, only a scrambled code (security §21.3)
+    expect(text).toMatch(/We don't save your Facebook ID/);
+    expect(text).toMatch(/scrambled code made from it/);
+    // it is a sales record like a website order, and staff see it on the POS
+    expect(text).toMatch(
+      /stays in the shop's sales records, like a website order/,
+    );
+    expect(text).toMatch(/on its POS like any other online order/);
     expect(text).not.toMatch(/never share|100%|guarantee|encrypted at rest/i);
   });
 });

@@ -3,7 +3,12 @@ import path from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import { PAYLOADS, readPayload, typedButton } from "@/lib/messenger/intents";
+import {
+  PAYLOADS,
+  readPayload,
+  statusPayload,
+  typedButton,
+} from "@/lib/messenger/intents";
 import {
   MAX_GREETING_LENGTH,
   MAX_MENU_TITLE_LENGTH,
@@ -11,6 +16,7 @@ import {
 } from "@/lib/messenger/profile";
 import {
   ASSISTANT_NOTICE,
+  BOARD_NOTE,
   categoryReply,
   clip,
   hoursLocationReply,
@@ -21,10 +27,11 @@ import {
   MAX_TEXT_LENGTH,
   menuReply,
   menuUnavailableReply,
+  myOrdersReply,
   orderLimitReply,
   orderLinkNeededReply,
   orderNotFoundReply,
-  orderStatusPromptReply,
+  noOrdersReply,
   orderStatusReply,
   orderUnavailableReply,
   priceText,
@@ -35,6 +42,7 @@ import {
   type Reply,
 } from "@/lib/messenger/replies";
 import { formatPrice } from "@/lib/menu/format-price";
+import { buildOrderPath } from "@/lib/orders/order-link";
 import { ORDER_STATUSES, type OrderStatus } from "@/lib/orders/types";
 import { hoursNotice, hoursSummary } from "@/lib/site-content/format";
 import type { MenuCatalog } from "@/types/menu";
@@ -46,34 +54,38 @@ import {
   order,
   ORIGIN,
   REFERENCE,
+  TOKEN,
   variant,
 } from "./messenger-fixtures";
 
 const titles = (answer: Reply) => answer.quickReplies.map((q) => q.title);
 const payloads = (answer: Reply) => answer.quickReplies.map((q) => q.payload);
-const mainTitlesExcept = (intent?: string) =>
-  MAIN_BUTTONS.filter((button) => button.intent !== intent).map(
+const mainTitlesExcept = (...intents: string[]) =>
+  MAIN_BUTTONS.filter((button) => !intents.includes(button.intent)).map(
     (button) => button.title,
   );
+const linkTitles = (answer: Reply) => (answer.links ?? []).map((l) => l.title);
 const characters = (text: string) => Array.from(text).length;
 
 describe("Messenger welcome (FR-059, FR-062)", () => {
-  it("TC-P7-008 — the welcome says it's automated and shows the five main buttons", () => {
+  it("TC-P7-008 — the welcome says it's automated and shows the six main buttons", () => {
     const answer = welcomeReply();
     expect(ASSISTANT_NOTICE).toBe(
       "I'm Brew ni Cat's automated assistant, not a person.",
     );
     expect(answer.text).toBe(
-      `Hi! ${ASSISTANT_NOTICE} Tap a button below for our menu and prices, our hours and location, how to order, or your order status.\n\nOur staff read this chat too, so you can also type your message.`,
+      `Hi! 👋 ${ASSISTANT_NOTICE} 🐱\n\nTap a button below to order right here in the chat 🛒, see our menu and prices 📋, our hours and location 🕒, or your order status 📦.\n\nOur staff read this chat too, so you can also type your message. 💬`,
     );
     expect(titles(answer)).toEqual([
-      "Menu & prices",
-      "Hours & location",
-      "How to order",
-      "Order status",
-      "Talk to staff",
+      "🛒 Order here",
+      "📋 Menu & prices",
+      "🕒 Hours & location",
+      "❓ How to order",
+      "📦 Order status",
+      "💬 Talk to staff",
     ]);
     expect(payloads(answer)).toEqual([
+      "ORDER_HERE",
       "MENU",
       "HOURS_LOCATION",
       "HOW_TO_ORDER",
@@ -94,12 +106,16 @@ describe("Messenger shop facts (FR-059, FR-086)", () => {
     const answer = hoursLocationReply(content);
     expect(answer.text).toBe(
       [
-        hoursNotice(content.hours),
-        "Notice: Closed on June 12 for a holiday.",
-        "We're at 1 Sample St, Sample Area, Sample Town, Sample Province 1000, beside the sample park.",
-        "Map: https://maps.example/shop",
+        `🕒 ${hoursNotice(content.hours)}`,
+        "📢 Notice: Closed on June 12 for a holiday.",
+        "📍 We're at 1 Sample St, Sample Area, Sample Town, Sample Province 1000, beside the sample park.",
       ].join("\n\n"),
     );
+    // The map is a button, not a pasted link (FR-104).
+    expect(answer.links).toEqual([
+      { title: "📍 Open map", url: "https://maps.example/shop" },
+    ]);
+    expect(answer.text).not.toContain("https://");
     expect(titles(answer)).toEqual(mainTitlesExcept("hours-location"));
   });
 
@@ -111,24 +127,34 @@ describe("Messenger shop facts (FR-059, FR-086)", () => {
     });
     expect(answer.text).toBe(
       [
-        hoursNotice(content.hours),
-        "We're at 1 Sample St, Sample Area, Sample Town, Sample Province 1000.",
+        `🕒 ${hoursNotice(content.hours)}`,
+        "📍 We're at 1 Sample St, Sample Area, Sample Town, Sample Province 1000.",
       ].join("\n\n"),
     );
+    expect(answer.links ?? []).toEqual([]);
   });
 
   it("TC-P7-010 — how to order while Place order is on", () => {
     const answer = howToOrderReply(content, ORIGIN, true);
     expect(answer.text).toBe(
       [
-        "How to order from Brew ni Cat:",
-        "1. Pick your drinks and food on our website: https://brew.example/menu",
-        "2. At checkout, tap Place order. It goes straight to the shop.",
-        "3. Your order page shows its status. You pay at the counter when you pick it up (Cash or Maya).",
+        "How to order from Brew ni Cat: 🐱☕",
         "",
-        "For delivery, a local rider such as Rider One or Rider Two can order it for you at the shop. Brew ni Cat doesn't book riders or charge rider fees: https://brew.example/contact",
+        '1. Tap "🛒 Order here" and share your mobile number 📱',
+        "2. Pick your drinks and food with photos 📸, then sizes, flavors and add-ons",
+        "3. Choose how you'll pay and when you'll pick up ⏰",
+        "4. Check your order and tap Place order. It goes straight to the shop 🎉",
+        "5. Check its status here anytime 📦. You pay at the counter when you pick it up (Cash or Maya).",
+        "",
+        "🏍 For delivery, a local rider such as Rider One or Rider Two can order it for you at the shop. Brew ni Cat doesn't book riders or charge rider fees.",
       ].join("\n"),
     );
+    // The website and delivery pages are buttons, never pasted links (FR-104).
+    expect(answer.links).toEqual([
+      { title: "🌐 Order on website", url: "https://brew.example/menu" },
+      { title: "🏍 Delivery info", url: "https://brew.example/contact" },
+    ]);
+    expect(answer.text).not.toContain("https://");
     expect(titles(answer)).toEqual(mainTitlesExcept("how-to-order"));
   });
 
@@ -138,6 +164,10 @@ describe("Messenger shop facts (FR-059, FR-086)", () => {
       "\n2. At checkout, prepare your order summary.\n3. Send the summary to the shop here in this chat, and the shop confirms your order. You pay at the counter when you pick it up (Cash or Maya).\n",
     );
     expect(answer.text).not.toContain("Place order");
+    expect(linkTitles(answer)).toEqual([
+      "🌐 Order on website",
+      "🏍 Delivery info",
+    ]);
   });
 
   it("TC-P7-010 — leaves out empty payment methods and riders", () => {
@@ -164,7 +194,7 @@ describe("Messenger shop facts (FR-059, FR-086)", () => {
     );
     const answer = staffReply(content);
     expect(answer.text).toBe(
-      `Okay! Our staff will reply here in this chat during shop hours. ${hoursSummary(content.hours)}\n\nType your message below. Send "hi" anytime to see the buttons again.`,
+      `Okay! 😊 Our staff will reply here in this chat during shop hours. ${hoursSummary(content.hours)}\n\nType your message below. Send "hi" anytime to see the buttons again.`,
     );
     expect(answer.quickReplies).toEqual([]);
     expect(typedButton("hi")).toBe("welcome");
@@ -175,14 +205,20 @@ describe("Messenger menu (FR-060)", () => {
   it("TC-P7-011 — the menu shows each category with items as a button", () => {
     const answer = menuReply(catalog, ORIGIN);
     expect(answer.text).toBe(
-      "What are you craving? Tap a category to see its items and prices.\n\nFull menu with flavors and add-ons: https://brew.example/menu",
+      "😋 What are you craving? Tap a category to see its items, prices and menu board, or tap Order here to order in this chat.",
     );
-    expect(titles(answer)).toEqual([
-      "Cat-Tastic Drinks",
-      "Cat-Tastic Bites",
-      ...mainTitlesExcept("menu"),
+    expect(answer.links).toEqual([
+      { title: "🌐 Full menu", url: "https://brew.example/menu" },
     ]);
-    expect(payloads(answer).slice(0, 2)).toEqual([
+    expect(answer.text).not.toContain("https://");
+    expect(titles(answer)).toEqual([
+      "🛒 Order here",
+      "🥤 Cat-Tastic Drinks",
+      "🍟 Cat-Tastic Bites",
+      ...mainTitlesExcept("menu", "order"),
+    ]);
+    expect(payloads(answer).slice(0, 3)).toEqual([
+      "ORDER_HERE",
       "MENU_CATEGORY:cat_drinks",
       "MENU_CATEGORY:cat_bites",
     ]);
@@ -198,11 +234,12 @@ describe("Messenger menu (FR-060)", () => {
     };
     const answer = menuReply(many, ORIGIN);
     expect(answer.quickReplies).toHaveLength(MAX_QUICK_REPLIES);
-    expect(payloads(answer).slice(0, 9)).toEqual(
-      Array.from({ length: 9 }, (_, i) => `MENU_CATEGORY:cat_${i}`),
-    );
-    expect(titles(answer).slice(9)).toEqual(mainTitlesExcept("menu"));
-    expect(titles(answer)[0]).toBe("Category number 0 w…");
+    expect(payloads(answer).slice(0, 9)).toEqual([
+      "ORDER_HERE",
+      ...Array.from({ length: 8 }, (_, i) => `MENU_CATEGORY:cat_${i}`),
+    ]);
+    expect(titles(answer).slice(9)).toEqual(mainTitlesExcept("menu", "order"));
+    expect(titles(answer)[1]).toBe("🍴 Category number…");
     for (const title of titles(answer)) {
       expect(characters(title)).toBeLessThanOrEqual(MAX_QUICK_REPLY_TITLE);
     }
@@ -235,8 +272,11 @@ describe("Messenger menu (FR-060)", () => {
     const answer = menuReply(menu, ORIGIN);
     expect(answer).toEqual(menuUnavailableReply(ORIGIN));
     expect(answer.text).toBe(
-      "I can't load the menu right now, so I won't guess any prices. See the menu on our website: https://brew.example/menu",
+      "😿 I can't load the menu right now, so I won't guess any prices. You can see it on our website.",
     );
+    expect(answer.links).toEqual([
+      { title: "🌐 Menu page", url: "https://brew.example/menu" },
+    ]);
     expect(answer.text).not.toContain("₱");
     expect(titles(answer)).toEqual(mainTitlesExcept("menu"));
   });
@@ -245,21 +285,35 @@ describe("Messenger menu (FR-060)", () => {
     const answer = categoryReply(catalog, "cat_bites", ORIGIN);
     expect(answer.text).toBe(
       [
-        "Cat-Tastic Bites",
+        "🍟 Cat-Tastic Bites",
         "• Fries — from ₱45",
         "   Flavors: Cheese and Barbecue",
         `• Snack Combo — Fries + Drink ₱99 · Nachos + Drink ${formatPrice(129.5)} (temporarily unavailable)`,
         "",
-        "Order these on our website: https://brew.example/menu",
+        BOARD_NOTE,
+        "Ready to order? Tap Order here 🛒",
       ].join("\n"),
     );
-    expect(titles(answer)).toEqual([
-      "Cat-Tastic Drinks",
-      ...mainTitlesExcept("menu"),
+    // The shop's menu board comes as a picture, and the website as a button.
+    expect(answer.images).toEqual([
+      "https://brew.example/images/menu/bites.jpg",
     ]);
-    expect(categoryReply(catalog, "cat_drinks", ORIGIN).text).toContain(
+    expect(answer.links).toEqual([
+      { title: "🌐 Full menu", url: "https://brew.example/menu" },
+    ]);
+    expect(titles(answer)).toEqual([
+      "🛒 Order here",
+      "🥤 Cat-Tastic Drinks",
+      ...mainTitlesExcept("menu", "order"),
+    ]);
+    const drinks = categoryReply(catalog, "cat_drinks", ORIGIN);
+    expect(drinks.text).toContain(
       "• Iced Latte — 16oz ₱49 · 22oz ₱59\n• Matcha — ₱65\n   Flavors: Strawberry and Mango\n",
     );
+    expect(drinks.images).toEqual([
+      "https://brew.example/images/menu/drinks.jpg",
+      "https://brew.example/images/menu/soda.jpg",
+    ]);
   });
 
   it.each([
@@ -364,11 +418,9 @@ describe("Messenger menu (FR-060)", () => {
     const answer = categoryReply(menu, "cat_long", ORIGIN);
     expect(answer.text).not.toContain("Flavors:");
     expect(answer.text).toContain("\n• Item 30 — ₱129\n\n");
-    expect(
-      answer.text.endsWith(
-        "Order these on our website: https://brew.example/menu",
-      ),
-    ).toBe(true);
+    expect(answer.text.endsWith("Ready to order? Tap Order here 🛒")).toBe(
+      true,
+    );
     expect(characters(answer.text)).toBeLessThanOrEqual(MAX_TEXT_LENGTH);
   });
 
@@ -390,17 +442,14 @@ describe("Messenger menu (FR-060)", () => {
     expect(characters(answer.text)).toBe(MAX_TEXT_LENGTH);
     expect(
       answer.text.startsWith(
-        "Huge Category\n• A long menu item name number 1 — ₱100\n",
+        "🍴 Huge Category\n• A long menu item name number 1 — ₱100\n",
       ),
     ).toBe(true);
-    expect(answer.text).toContain(
-      "…\n\nOrder these on our website: https://brew.example/menu",
+    expect(answer.text).toContain("…\n\nReady to order? Tap Order here 🛒");
+    expect(answer.text.endsWith("Ready to order? Tap Order here 🛒")).toBe(
+      true,
     );
-    expect(
-      answer.text.endsWith(
-        "Order these on our website: https://brew.example/menu",
-      ),
-    ).toBe(true);
+    expect(linkTitles(answer)).toEqual(["🌐 Full menu"]);
   });
 });
 
@@ -421,22 +470,36 @@ describe("Messenger order status (FR-063)", () => {
   it.each([
     {
       status: "preparing" as OrderStatus,
-      text: "Order BNC-7K2Q9F: Preparing\nYour drinks and food are being prepared.\n\nYour order link shows live updates.",
+      text: "🍳 Order BNC-7K2Q9F: Preparing\nYour drinks and food are being prepared.",
     },
     {
       status: "cancelled" as OrderStatus,
-      text: "Order BNC-7K2Q9F: Cancelled\nThis order has been cancelled. If this was unexpected, please contact the shop counter.\n\nYour order link shows live updates.",
+      text: "🚫 Order BNC-7K2Q9F: Cancelled\nThis order has been cancelled. If this was unexpected, please contact the shop counter.",
     },
   ])("TC-P7-014 — shows the $status status", ({ status, text }) => {
-    expect(orderStatusReply(order(status)).text).toBe(text);
+    const answer = orderStatusReply(order(status), ORIGIN, TOKEN);
+    expect(answer.text).toBe(text);
+    // The order page is a button, and Check status asks again in the chat.
+    expect(answer.links).toEqual([
+      {
+        title: "📍 Track order",
+        url: `${ORIGIN}${buildOrderPath(REFERENCE, TOKEN)}`,
+      },
+    ]);
+    expect(answer.text).not.toContain("#token=");
+    expect(answer.quickReplies[0]).toEqual({
+      content_type: "text",
+      title: "🔄 Check status",
+      payload: statusPayload(REFERENCE, TOKEN),
+    });
   });
 
   it("TC-P7-014 — shows the status only, never the customer's order details", () => {
     for (const status of ORDER_STATUSES) {
-      const answer = orderStatusReply(order(status));
+      const answer = orderStatusReply(order(status), ORIGIN, TOKEN);
       expect(
-        answer.text.startsWith(
-          `Order ${REFERENCE}: ${STATUS_TEXT[status].label}\n`,
+        answer.text.includes(
+          ` Order ${REFERENCE}: ${STATUS_TEXT[status].label}\n`,
         ),
       ).toBe(true);
       for (const detail of [
@@ -447,31 +510,38 @@ describe("Messenger order status (FR-063)", () => {
       ]) {
         expect(answer.text).not.toContain(detail);
       }
-      expect(titles(answer)).toEqual(mainTitlesExcept("order-status"));
+      expect(titles(answer)).toEqual([
+        "🔄 Check status",
+        ...mainTitlesExcept("order-status"),
+      ]);
     }
     expect(
-      orderStatusReply({ ...order("pending"), status: "lost" as OrderStatus }),
+      orderStatusReply(
+        { ...order("pending"), status: "lost" as OrderStatus },
+        ORIGIN,
+        TOKEN,
+      ),
     ).toEqual(orderUnavailableReply());
   });
 
   it("TC-P7-015 — order replies ask for the full link, never the reference alone", () => {
-    expect(orderStatusPromptReply().text).toBe(
-      "To check your order, paste your order link here. It's the link of your order page, the one that ends with #token=…\n\nFor your privacy, I can't look up an order from its reference alone.",
+    expect(noOrdersReply().text).toBe(
+      "📦 I can't see any orders from this chat yet. Tap Order here to place one 🛒\n\nOrdered on our website instead? Paste its order link here, the one that ends with #token=…",
     );
     expect(orderLinkNeededReply(REFERENCE).text).toBe(
-      "For your privacy, I can only check an order from its full order link, the one that ends with #token=… Paste the link of order BNC-7K2Q9F here, or tap Talk to staff.",
+      "🔒 For your privacy, I can only check an order from its full order link, the one that ends with #token=… Paste the link of order BNC-7K2Q9F here, tap Order status to see the orders you placed in this chat, or tap Talk to staff.",
     );
     expect(orderNotFoundReply().text).toBe(
-      "I couldn't find an order for that link. Check that you pasted the whole link, or tap Talk to staff.",
+      "🤔 I couldn't find an order for that link. Check that you pasted the whole link, or tap Talk to staff.",
     );
     expect(orderUnavailableReply().text).toBe(
-      "I can't check orders right now. Open your order link for its latest status, or tap Talk to staff.",
+      "😿 I can't check orders right now. Please try again in a few minutes, or tap Talk to staff.",
     );
     expect(orderLimitReply().text).toBe(
-      "That's a lot of order checks. Please wait a few minutes, then try again.",
+      "⏳ That's a lot of order checks. Please wait a few minutes, then try again.",
     );
     for (const answer of [
-      orderStatusPromptReply(),
+      noOrdersReply(),
       orderLinkNeededReply(REFERENCE),
       orderNotFoundReply(),
       orderUnavailableReply(),
@@ -512,8 +582,8 @@ describe("Messenger notice and limits (FR-062)", () => {
       menuUnavailableReply(ORIGIN),
       categoryReply(catalog, "cat_drinks", ORIGIN),
       categoryReply(catalog, "cat_bites", ORIGIN),
-      orderStatusReply(order("ready")),
-      orderStatusPromptReply(),
+      orderStatusReply(order("ready"), ORIGIN, TOKEN),
+      noOrdersReply(),
       orderLinkNeededReply(REFERENCE),
       orderNotFoundReply(),
       orderUnavailableReply(),
@@ -559,5 +629,119 @@ describe("Messenger notice and limits (FR-062)", () => {
       });
     }
     expect(profile).not.toHaveProperty("ice_breakers");
+  });
+});
+
+describe("Order status in the chat (FR-110)", () => {
+  const placed = (reference: string, status: OrderStatus) => ({
+    ...order(status),
+    reference,
+  });
+
+  it("TC-P7-074 — lists each order with its number, status, items and total, and a Refresh button", () => {
+    const reply = myOrdersReply([
+      placed("BNC-AAAAAA", "preparing"),
+      placed("BNC-BBBBBB", "completed"),
+    ]);
+    expect(reply.text).toBe(
+      [
+        "📦 Your orders from this chat",
+        "🍳 Order BNC-AAAAAA: Preparing\nYour drinks and food are being prepared.\n🧾 2 × Iced Latte · ₱98",
+        "✅ Order BNC-BBBBBB: Completed\nOrder picked up and completed.\n🧾 2 × Iced Latte · ₱98",
+        "Tap Refresh to see the latest status. 🔄",
+      ].join("\n\n"),
+    );
+    expect(titles(reply)).toEqual([
+      "🔄 Refresh",
+      "🛒 Order here",
+      ...mainTitlesExcept("order", "order-status"),
+    ]);
+    expect(payloads(reply)[0]).toBe(PAYLOADS["order-status"]);
+    // Everything is answered in the chat: no order page, number or link.
+    expect(reply.links ?? []).toEqual([]);
+    expect(reply.text).not.toContain("http");
+    expect(reply.text).not.toContain("#token");
+    expect(payloads(reply).join(" ")).not.toContain("BNC-");
+  });
+
+  it("TC-P7-074 — every status has its own wording and picture", () => {
+    const text = myOrdersReply(
+      ORDER_STATUSES.map((status, index) =>
+        placed(`BNC-AAAAA${index + 2}`, status),
+      ),
+    ).text;
+    for (const status of ORDER_STATUSES) {
+      expect(text).toContain(STATUS_TEXT[status].label);
+    }
+    expect(text).toContain("Ready for Pickup");
+    expect(text).toContain("Ready for pickup at the counter.");
+  });
+
+  it("TC-P7-074 — a rejected order shows the shop's reason, or the order page's usual one", () => {
+    const withReason = myOrdersReply([
+      {
+        ...placed("BNC-AAAAAA", "rejected"),
+        rejectionReason: "  We are out of\n matcha today.  ",
+      },
+    ]).text;
+    expect(withReason).toContain(
+      "💬 Reason from the shop: We are out of matcha today.",
+    );
+    const noReason = myOrdersReply([placed("BNC-AAAAAA", "rejected")]).text;
+    expect(noReason).toContain(
+      "💬 Reason from the shop: Item temporarily out of stock or store at capacity.",
+    );
+    const long = myOrdersReply([
+      { ...placed("BNC-AAAAAA", "rejected"), rejectionReason: "x".repeat(400) },
+    ]).text;
+    expect(long).toContain(`${"x".repeat(199)}…`);
+    // Only a rejected order has a reason.
+    expect(
+      myOrdersReply([
+        {
+          ...placed("BNC-AAAAAA", "cancelled"),
+          rejectionReason: "Not this one",
+        },
+      ]).text,
+    ).not.toContain("Reason from the shop");
+  });
+
+  it("TC-P7-074 — a long order is shortened so the reply stays within Meta's limit", () => {
+    const many = {
+      ...placed("BNC-AAAAAA", "pending"),
+      items: Array.from({ length: 12 }, (_, index) => ({
+        ...order("pending").items[0]!,
+        itemName: `Specialty Drink Number ${index + 1}`,
+        quantity: 3,
+      })),
+    };
+    const reply = myOrdersReply([many, many, many]);
+    const line = reply.text.split("\n").find((entry) => entry.startsWith("🧾"));
+    expect(line).toMatch(/…( ·|$)/);
+    expect(characters(reply.text)).toBeLessThanOrEqual(MAX_TEXT_LENGTH);
+  });
+
+  it("TC-P7-074 — leaves out an order whose status it doesn't know, and says it can't check if none is left", () => {
+    const reply = myOrdersReply([
+      { ...placed("BNC-AAAAAA", "pending"), status: "lost" as OrderStatus },
+      placed("BNC-BBBBBB", "ready"),
+    ]);
+    expect(reply.text).not.toContain("BNC-AAAAAA");
+    expect(reply.text).toContain("BNC-BBBBBB");
+    expect(
+      myOrdersReply([
+        { ...placed("BNC-AAAAAA", "pending"), status: "lost" as OrderStatus },
+      ]),
+    ).toEqual(orderUnavailableReply());
+    expect(myOrdersReply([])).toEqual(orderUnavailableReply());
+  });
+
+  it("TC-P7-074 — a customer with no orders is told how to place one, and where website orders go", () => {
+    const reply = noOrdersReply();
+    expect(reply.text).toContain("I can't see any orders from this chat yet.");
+    expect(reply.text).toContain("Tap Order here to place one");
+    expect(titles(reply)[0]).toBe("🛒 Order here");
+    expect(payloads(reply)).toContain(PAYLOADS.order);
+    expect(titles(reply)).not.toContain("📦 Order status");
   });
 });

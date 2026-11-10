@@ -17,14 +17,18 @@ import {
   MAX_EVENTS_PER_DELIVERY,
   NOTICE_INTERVAL_MS,
   ORDER_LOOKUP_LIMIT,
+  ORDER_STEP_LIMIT,
   processWebhook,
   resetMessengerState,
   SENDER_REPLY_LIMIT,
   type MessengerDeps,
 } from "@/lib/messenger/events";
 import { CATEGORY_PAYLOAD_PREFIX, PAYLOADS } from "@/lib/messenger/intents";
+import { encodeOrderPayload, newOrder } from "@/lib/messenger/order-state";
+import { orderPausedReply } from "@/lib/messenger/ordering";
 import {
   ASSISTANT_NOTICE,
+  noOrdersReply,
   orderLimitReply,
   orderNotFoundReply,
   orderUnavailableReply,
@@ -101,6 +105,15 @@ function setup(overrides: Partial<MessengerDeps> = {}) {
     readContent: vi.fn<MessengerDeps["readContent"]>(async () => content),
     readMenu: vi.fn<MessengerDeps["readMenu"]>(async () => catalog),
     lookupOrder: vi.fn<MessengerDeps["lookupOrder"]>(async () => null),
+    lookupMyOrders: vi.fn<MessengerDeps["lookupMyOrders"]>(async () => []),
+    readCustomerName: vi.fn<MessengerDeps["readCustomerName"]>(
+      async () => "Test Customer",
+    ),
+    readTakeoutBoxPrice: vi.fn<MessengerDeps["readTakeoutBoxPrice"]>(
+      async () => 10,
+    ),
+    newNonce: () => "nonce0000000000a",
+    placeOrder: vi.fn<MessengerDeps["placeOrder"]>(async () => null),
     send: vi.fn<MessengerDeps["send"]>(async (recipient, answer) => {
       sent.push({ recipient, answer });
       return true;
@@ -139,11 +152,15 @@ describe("Messenger buttons (FR-059, FR-062)", () => {
     ).resolves.toEqual({ replied: 1, skipped: 0, failed: 0 });
     expect(sent[0]?.recipient).toBe(CUSTOMER);
     expect(texts()[0]).toBe(
-      `${ASSISTANT_NOTICE}\n\n${hoursNotice(content.hours)}\n\nNotice: Closed on June 12 for a holiday.\n\nWe're at 1 Sample St, Sample Area, Sample Town, Sample Province 1000, beside the sample park.\n\nMap: https://maps.example/shop`,
+      `${ASSISTANT_NOTICE}\n\n🕒 ${hoursNotice(content.hours)}\n\n📢 Notice: Closed on June 12 for a holiday.\n\n📍 We're at 1 Sample St, Sample Area, Sample Town, Sample Province 1000, beside the sample park.`,
     );
+    // The map comes as a button (FR-104).
+    expect(sent[0]?.answer.links).toEqual([
+      { title: "📍 Open map", url: "https://maps.example/shop" },
+    ]);
 
     await processWebhook(delivery(postback(PAYLOADS["how-to-order"])), deps);
-    expect(texts()[1]).toMatch(/^How to order from Brew ni Cat:\n/);
+    expect(texts()[1]).toMatch(/^How to order from Brew ni Cat: 🐱☕\n/);
     expect(count(texts()[1], ASSISTANT_NOTICE)).toBe(0);
   });
 
@@ -153,9 +170,7 @@ describe("Messenger buttons (FR-059, FR-062)", () => {
       delivery(quickReplyTap(PAYLOADS["order-status"], "Menu & prices")),
       deps,
     );
-    expect(texts()[0]).toContain(
-      "To check your order, paste your order link here.",
-    );
+    expect(texts()[0]).toContain("I can't see any orders from this chat yet.");
     expect(texts()[0]).not.toContain("What are you craving?");
   });
 
@@ -166,9 +181,10 @@ describe("Messenger buttons (FR-059, FR-062)", () => {
       deps,
     );
     expect(texts()[0]).toContain(
-      "Cat-Tastic Drinks\n• Iced Latte — 16oz ₱49 · 22oz ₱59\n",
+      "🥤 Cat-Tastic Drinks\n• Iced Latte — 16oz ₱49 · 22oz ₱59\n",
     );
-    expect(sent[0]?.answer.quickReplies[0]?.payload).toBe(
+    expect(sent[0]?.answer.quickReplies[0]?.payload).toBe(PAYLOADS.order);
+    expect(sent[0]?.answer.quickReplies[1]?.payload).toBe(
       `${CATEGORY_PAYLOAD_PREFIX}cat_bites`,
     );
   });
@@ -423,15 +439,17 @@ describe("Messenger order status (FR-063)", () => {
     const lookupOrder = vi.fn<MessengerDeps["lookupOrder"]>(async () =>
       order("preparing"),
     );
-    const { deps, texts } = setup({ lookupOrder });
+    const { deps, sent, texts } = setup({ lookupOrder });
     await processWebhook(
       delivery(typed(`Hi po, status ng order ko ${ORDER_LINK} salamat po`)),
       deps,
     );
     expect(lookupOrder).toHaveBeenCalledWith(REFERENCE, TOKEN);
     expect(texts()[0]).toBe(
-      `${ASSISTANT_NOTICE}\n\nOrder BNC-7K2Q9F: Preparing\nYour drinks and food are being prepared.\n\nYour order link shows live updates.`,
+      `${ASSISTANT_NOTICE}\n\n🍳 Order BNC-7K2Q9F: Preparing\nYour drinks and food are being prepared.`,
     );
+    // An order from the website keeps its page, as a button.
+    expect(sent[0]?.answer.links?.[0]?.title).toBe("📍 Track order");
   });
 
   it.each([
@@ -619,5 +637,137 @@ describe("Messenger notice and delivery (FR-062)", () => {
       skipped: 1,
       failed: 0,
     });
+  });
+});
+
+describe("Messenger order status in the chat (FR-110)", () => {
+  it("TC-P7-052 — Order status lists this customer's own orders, with no order number or link", async () => {
+    const lookupMyOrders = vi.fn<MessengerDeps["lookupMyOrders"]>(async () => [
+      order("preparing"),
+    ]);
+    const lookupOrder = vi.fn<MessengerDeps["lookupOrder"]>(async () => null);
+    const { deps, sent, texts } = setup({ lookupMyOrders, lookupOrder });
+    await processWebhook(delivery(postback(PAYLOADS["order-status"])), deps);
+
+    expect(lookupMyOrders).toHaveBeenCalledTimes(1);
+    expect(lookupMyOrders).toHaveBeenCalledWith(CUSTOMER);
+    expect(lookupOrder).not.toHaveBeenCalled();
+    expect(texts()[0]).toBe(
+      `${ASSISTANT_NOTICE}\n\n📦 Your orders from this chat\n\n🍳 Order BNC-7K2Q9F: Preparing\nYour drinks and food are being prepared.\n🧾 2 × Iced Latte · ₱98\n\nTap Refresh to see the latest status. 🔄`,
+    );
+    expect(texts()[0]).not.toContain("https://");
+    expect(texts()[0]).not.toContain("#token");
+    expect(sent[0]?.answer.links ?? []).toEqual([]);
+    expect(sent[0]?.answer.quickReplies[0]).toMatchObject({
+      title: "🔄 Refresh",
+      payload: PAYLOADS["order-status"],
+    });
+  });
+
+  it("TC-P7-052 — typing 'order status' does the same, for the person who typed", async () => {
+    const lookupMyOrders = vi.fn<MessengerDeps["lookupMyOrders"]>(async () => [
+      order("ready"),
+    ]);
+    const { deps, texts } = setup({ lookupMyOrders });
+    await processWebhook(
+      delivery(typed("order status", { sender: OTHER_CUSTOMER })),
+      deps,
+    );
+    expect(lookupMyOrders).toHaveBeenCalledWith(OTHER_CUSTOMER);
+    expect(texts()[0]).toContain("🎉 Order BNC-7K2Q9F: Ready for Pickup");
+  });
+
+  it("TC-P7-052 — tells a customer with no order so, and offers Order here", async () => {
+    const { deps, sent, texts } = setup();
+    await processWebhook(delivery(postback(PAYLOADS["order-status"])), deps);
+    expect(texts()[0]).toContain(noOrdersReply().text);
+    expect(sent[0]?.answer.quickReplies[0]?.payload).toBe(PAYLOADS.order);
+  });
+
+  it.each([
+    { name: "returns nothing", lookup: async () => null },
+    {
+      name: "fails",
+      lookup: async () => {
+        throw new Error("down");
+      },
+    },
+  ])(
+    "TC-P7-052 — says it can't check, never 'no orders', when the lookup $name",
+    async ({ lookup }) => {
+      const { deps, texts } = setup({
+        lookupMyOrders: vi.fn<MessengerDeps["lookupMyOrders"]>(lookup),
+      });
+      await processWebhook(delivery(postback(PAYLOADS["order-status"])), deps);
+      expect(texts()[0]).toContain(orderUnavailableReply().text);
+      expect(texts()[0]).not.toContain("I can't see any orders");
+    },
+  );
+
+  it("TC-P7-052 — limits order checks per customer, and a status tap counts", async () => {
+    const { deps, texts } = setup();
+    for (let i = 0; i <= ORDER_LOOKUP_LIMIT; i += 1) {
+      await processWebhook(delivery(postback(PAYLOADS["order-status"])), deps);
+    }
+    expect(texts()).toHaveLength(ORDER_LOOKUP_LIMIT + 1);
+    expect(texts().at(-1)).toBe(orderLimitReply().text);
+    expect(deps.lookupMyOrders).toHaveBeenCalledTimes(ORDER_LOOKUP_LIMIT);
+  });
+});
+
+describe("Messenger ordering entry points (FR-100)", () => {
+  it("TC-P7-057 — Order here asks for the phone number with Messenger's phone button", async () => {
+    const { deps, sent } = setup();
+    await processWebhook(delivery(postback(PAYLOADS.order)), deps);
+    expect(sent[0]?.answer.askPhone).toBe(true);
+    expect(sent[0]?.answer.text).toContain("mobile number");
+  });
+
+  it("TC-P7-057 — the phone button's number starts the order and shows the categories", async () => {
+    const { deps, sent } = setup();
+    await processWebhook(
+      delivery(quickReplyTap("+639171234567", "09171234567")),
+      deps,
+    );
+    expect(deps.readMenu).toHaveBeenCalled();
+    expect(sent[0]?.answer.cards?.map((card) => card.title)).toEqual([
+      "🥤 Cat-Tastic Drinks",
+      "🍟 Cat-Tastic Bites",
+    ]);
+  });
+
+  it("TC-P7-057 — 'order 09XXXXXXXXX' works for someone who can't tap the button", async () => {
+    const { deps, sent } = setup();
+    await processWebhook(delivery(typed("Order 0917 123 4567")), deps);
+    expect(sent[0]?.answer.cards).toHaveLength(2);
+  });
+
+  it("TC-P7-057 — a bare number is left to the staff, not taken as an order", async () => {
+    const { deps, sent } = setup();
+    await expect(
+      processWebhook(delivery(typed("09171234567")), deps),
+    ).resolves.toEqual({ replied: 0, skipped: 1, failed: 0 });
+    expect(sent).toHaveLength(0);
+  });
+
+  it("TC-P7-057 — says ordering is paused while Place order is off", async () => {
+    const { deps, sent } = setup({ onlineOrdering: () => false });
+    await processWebhook(delivery(postback(PAYLOADS.order)), deps);
+    expect(sent[0]?.answer.text).toContain(orderPausedReply().text);
+    expect(sent[0]?.answer.askPhone).toBeFalsy();
+  });
+
+  it("TC-P7-058 — an order's own steps have their own limit, so a long order isn't cut off", async () => {
+    const { deps, sent } = setup();
+    const tap = encodeOrderPayload("cats", newOrder("09171234567"));
+    for (let i = 0; i < SENDER_REPLY_LIMIT + 5; i += 1) {
+      await processWebhook(delivery(postback(String(tap))), deps);
+    }
+    expect(sent).toHaveLength(SENDER_REPLY_LIMIT + 5);
+    for (let i = 0; i < ORDER_STEP_LIMIT; i += 1) {
+      await processWebhook(delivery(postback(String(tap))), deps);
+    }
+    // Past the limit it stops answering rather than looping forever.
+    expect(sent.length).toBeLessThan(SENDER_REPLY_LIMIT + 5 + ORDER_STEP_LIMIT);
   });
 });
