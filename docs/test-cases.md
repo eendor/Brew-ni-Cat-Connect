@@ -1287,3 +1287,17 @@ Update 2026-11-10: the drawn poster cats were replaced by the six pixel cats of 
 | TC-P9-006 | FR-099, NFR-032 | Footer strip (Playwright) | `/about`, reduced motion on, 1440 wide | 12 cats, none walking, and nothing changes in 3 seconds; evidence `pixel-cats-sitting-reduced-motion-1440.png` |
 
 The first screenshots of the drawn cats stay in `docs/evidence/phase-9/cat-characters/` as the record of the first version.
+
+
+## 49. Reviews On The Home Page Cases (2026-11-10)
+
+Customers could not find the reviews, because they were only near the bottom of the About page. The home page now shows the newest reviews, and the menu has a Reviews link that opens the reviews on the About page (FR-098).
+
+| ID | Requirement | Scenario | Expected result | Status |
+| --- | --- | --- | --- | --- |
+| TC-P5-204 | FR-098 | The home page loads with seven reviews | Shows the average rating 4.6, "7 reviews", the newest three reviews, and the links Leave a review and Read all reviews | Passed (automated) |
+| TC-P5-205 | FR-098 | The home page loads with no reviews | Shows "No reviews yet. Be the first." and Leave a review, without Read all reviews | Passed (automated) |
+| TC-P5-206 | FR-098 | The reviews can't be loaded | The home page still shows Leave a review, with no error and no empty message | Passed (automated) |
+| TC-P5-207 | FR-098 | The site navigation | Has a Reviews link to `/about#reviews`, used by the header, the phone menu and the footer | Passed (automated) |
+| TC-P5-208 | FR-098 | Browser test at 390 and 1440 pixels wide | The home block shows the average, the count and three reviews without sideways scrolling; Read all reviews opens `/about#reviews` with the reviews in view | Passed (automated) |
+| TC-P5-209 | FR-098 | Browser test of the Reviews link in the desktop menu (1024 and 1440) and the phone menu (390) | The link fits without sideways scrolling and opens `/about#reviews` with the reviews in view | Passed (automated) |

@@ -27,6 +27,7 @@ import {
   townLine,
 } from "@/lib/site-content/format";
 import { getSiteContent } from "@/lib/site-content/load";
+import { ReviewsPreview } from "@/components/reviews/reviews-preview";
 
 export default async function HomePage() {
   const [content, menu] = await Promise.all([getSiteContent(), getMenuFacts()]);
@@ -166,6 +167,8 @@ export default async function HomePage() {
           </Reveal>
         </Container>
       </section>
+
+      <ReviewsPreview />
 
       <section
         className="py-16 text-[var(--text-strong)] sm:py-20 lg:py-24"

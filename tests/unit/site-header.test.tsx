@@ -35,7 +35,14 @@ describe("SiteHeader", () => {
       name: "Desktop navigation",
     });
 
-    for (const linkName of ["Home", "Menu", "About", "Gallery", "Contact"]) {
+    for (const linkName of [
+      "Home",
+      "Menu",
+      "About",
+      "Reviews",
+      "Gallery",
+      "Contact",
+    ]) {
       expect(
         within(navigation).getByRole("link", { name: linkName }),
       ).toBeInTheDocument();
@@ -131,7 +138,7 @@ describe("SiteHeader", () => {
       expect(link).toHaveAttribute("rel", "noopener noreferrer");
     }
 
-    // five page links, the sign-in link, and the two social links
+    // six page links, the sign-in link, and the two social links
     expect(within(navigation).getAllByRole("link")).toHaveLength(
       siteConfig.navigation.length + 3,
     );
