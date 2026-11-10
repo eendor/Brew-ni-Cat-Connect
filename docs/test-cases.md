@@ -1258,3 +1258,32 @@ Update 2026-11-11 (FR-112): run again with the opening hours cases: 86 test file
 | MAN-P7-007 | FR-112 | The owner checks the POS top bar during and outside the hours, and turns Closed today on | The bar shows Open, Outside hours or Closed today; the next morning it shows Open again | Not run (needs the live app) |
 | TC-P7-086 | FR-101 | The customer replies with only their mobile number, without "order" | Update 2026-11-11: the order starts as with "order 09XXXXXXXXX"; a landline or short number on its own is still left to the staff (TC-P7-057 updated) | Passed (automated) |
 
+## 48. Cat Characters Cases (2026-11-10)
+
+The owner asked for the shop's cats on the website (FR-099). The cats come from the shop's "With Main Characters" poster: Kasper, Latte, Luna and Kulas. They walk across an empty strip at the top of the footer on every page.
+
+Run on 2026-11-10: `NODE_OPTIONS=--no-experimental-webstorage npx vitest run` with the CI settings: 87 test files, 939 tests, all passed. `npx playwright test tests/e2e/cats.spec.ts --project=chromium`: 3 passed.
+
+| ID | Requirement | Area | Case | Setup | Steps | Expected | Result |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| TC-P9-001 | FR-099 | `src/lib/cats/cats.ts` | The four poster cats walk now and then, never the same cat twice in a row | None | Call `nextCatWait` and `nextCatIndex` with edge random values | Waits stay between 6 and 18 seconds; the next cat is never the last one | Pass |
+| TC-P9-002 | FR-099, NFR-035 | `CatStrip` | The strip is hidden from screen readers, ignores taps and walks one cat after a wait | Fake timers, no reduced motion | Render, advance 6 seconds | `aria-hidden="true"`, no links or buttons inside; one walking cat appears | Pass |
+| TC-P9-003 | FR-099 | `CatStrip` | No cat walks while the tab is hidden, and a hidden tab stops the walk | Fake timers, `document.hidden` true | Advance 36 seconds; show the tab; hide it again | No walk while hidden; a walk after it shows; hiding removes it | Pass |
+| TC-P9-004 | FR-099, NFR-032 | `CatStrip` | With reduced motion no cat walks; the four cats sit still | `prefers-reduced-motion: reduce` | Render, advance 54 seconds | No walking cat; four sitting cats | Pass |
+| TC-P9-005 | FR-099 | Footer strip (Playwright, 390 and 1440 wide) | The cats walk in their own strip and cover nothing | `/about`, reduced motion off, test clock | Scroll to the footer; check the strip; run the clock 19 seconds | `pointer-events: none`; no link, button, form field or text overlaps the strip; one cat walking | Pass |
+| TC-P9-006 | FR-099, NFR-032 | Footer strip (Playwright) | With reduced motion the four cats sit still | `/about`, reduced motion on | Run the clock 40 seconds | Four sitting cats, no walking cat | Pass |
+
+TC-P4-030 was updated: the footer icon count leaves out the cat drawings (marked "Update 2026-11-10").
+
+Update 2026-11-10: the drawn poster cats were replaced by the six pixel cats of the CC0 "Pet Cats Pack" (`public/cats`). The case IDs stay; what they check now:
+
+| ID | Requirement | Area | Updated check | Expected result |
+|---|---|---|---|---|
+| TC-P9-001 | FR-099 | `src/lib/cats/cats.ts` | `catCount`, `nextRest`, `afterRest`, `nextTarget` | 3 cats at 390 px and 12 at 1440 px (up to 16; the six coats repeat); cat 3 never scratches; a cat that lies down goes to sleep; every walk goes one to three cat sizes and stays in the strip |
+| TC-P9-002 | FR-099, NFR-035 | `CatStrip` | Render with reduced motion off and step animation frames by hand | The strip is aria-hidden, and after the frames at least one cat has moved or changed what it does |
+| TC-P9-003 | FR-099 | `CatStrip` | `document.hidden` true, step 30 frames | No cat moves or changes |
+| TC-P9-004 | FR-099, NFR-032 | `CatStrip` | `prefers-reduced-motion: reduce` | Every shown cat sits, and no animation frame is requested |
+| TC-P9-005 | FR-099 | Footer strip (Playwright, 390 and 1440 wide) | `/about`, reduced motion off | 3 or 12 cats; the sprite sheet loads (200); a cat moves within 15 seconds; no link, button or text overlaps the strip; evidence `pixel-cats-{phone-390,desktop-1440}.png` |
+| TC-P9-006 | FR-099, NFR-032 | Footer strip (Playwright) | `/about`, reduced motion on, 1440 wide | 12 cats, none walking, and nothing changes in 3 seconds; evidence `pixel-cats-sitting-reduced-motion-1440.png` |
+
+The first screenshots of the drawn cats stay in `docs/evidence/phase-9/cat-characters/` as the record of the first version.

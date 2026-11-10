@@ -1661,6 +1661,25 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `feat/shop-open-schedule`.
 - **Next action:** MAN-P7-007 on the POS after build 10147.
 
+## 2026-11-10 — The shop's cats walk across the footer (FR-099)
+
+- **Phase:** Phase 9.
+- **Task:** The owner asked for the shop's cats on the website. He didn't send photos, so the cats come from the shop's poster.
+- **Summary:** Kasper, Latte, Luna and Kulas are drawn as SVG cats with a walk cycle. Now and then one walks across an empty strip at the top of the footer, so they never cover buttons, links or text, and the strip ignores taps. With reduced motion the four cats sit still; no walk starts while the tab is hidden or the strip is off screen. CSS transforms only, no WebGL.
+- **Files:** `src/lib/cats/cats.ts`, `src/components/cats/{cat-figure,cat-strip}.tsx`, `src/components/layout/site-footer.tsx`, `src/app/globals.css`, `tests/unit/cat-characters.test.tsx`, `tests/e2e/cats.spec.ts`, `tests/unit/site-footer.test.tsx`, `docs/test-cases.md` §48, `docs/evidence/phase-9/cat-characters/`.
+- **Testing:** the full Vitest suite with the CI settings: 87 test files, 939 tests, all passed. Playwright `cats.spec.ts`: 3 passed.
+- **Branch / PR:** `feat/cat-characters`.
+- **Next action:** Show the owner and ask which pages should have the cats (the TODO in FR-099).
+
+## 2026-11-10 — Pixel cats replace the drawn cats (FR-099)
+
+- **Phase:** Phase 9.
+- **Task:** The drawn cats did not look real enough, and we wanted many cats, like the walking pets in VS Code Pets.
+- **Summary:** The footer strip now has the six pixel cats of the CC0 "Pet Cats Pack". Three cats show on a phone and twelve on a desktop (up to 16; the six coats repeat). The cats are big enough that the strip reaches down to the footer text, and the walks are short so the cats spend most of their time sitting, washing, meowing, stretching or napping. Each one walks or runs somewhere, then sits, washes, meows, stretches, scratches, or lies down and sleeps, and walks on. The frames are a CSS sprite animation; one animation-frame loop moves the cats, and it stops while the tab is hidden or the strip is off screen. With reduced motion the cats sit still. The VS Code Pets art and two other downloaded packs were left out: their licenses don't let us put them in a public repo.
+- **Files:** `public/cats/**` (sprites and `LICENSE.txt`), `src/lib/cats/cats.ts`, `src/components/cats/cat-strip.tsx` (the SVG `cat-figure.tsx` is removed), `src/app/globals.css`, `tests/unit/cat-characters.test.tsx`, `tests/e2e/cats.spec.ts`, docs.
+- **Testing:** the full Vitest suite and Playwright `cats.spec.ts` (3 passed); see the PR.
+- **Branch / PR:** `feat/cat-characters`.
+
 ## 2026-11-11 — A mobile number on its own starts a Messenger order
 
 - **Phase:** Phase 7 (Messenger).
