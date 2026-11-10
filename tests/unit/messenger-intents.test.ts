@@ -41,6 +41,24 @@ describe("Messenger button payloads (FR-059)", () => {
     expect(readPayload("menu")).toBeNull();
   });
 
+  it("TC-P7-080 — a phone button number that isn't a Philippine mobile is not offered again", () => {
+    for (const payload of [
+      "+1 415 555 0100",
+      "(082) 123 4567",
+      "+63 2 8123 4567",
+    ]) {
+      expect(readPayload(payload)).toEqual({
+        kind: "phone",
+        phone: null,
+        missing: true,
+      });
+    }
+    expect(readPayload("+63 917 123 4567")).toEqual({
+      kind: "phone",
+      phone: "09171234567",
+    });
+  });
+
   it("TC-P7-004 — a category button carries the category id", () => {
     expect(categoryPayload("cat_drinks")).toBe("MENU_CATEGORY:cat_drinks");
     expect(readPayload("MENU_CATEGORY:cat_drinks")).toEqual({

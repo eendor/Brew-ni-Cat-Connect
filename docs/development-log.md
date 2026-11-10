@@ -1631,3 +1631,13 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `feat/closed-today`.
 - **Next action:** Apply the migration with the team's OK, then release the POS toggle.
 
+## 2026-11-11 — Phone number button with a number that isn't a Philippine mobile
+
+- **Phase:** Phase 7 (Messenger).
+- **Task:** On a phone, the phone number button still led to "I couldn't get a Philippine mobile number from that" with the same button again. The Facebook account shares a number, but not a 09 mobile, so the #115 fix didn't cover it.
+- **Summary:** Any phone button number that isn't a Philippine mobile now gets the reply that asks the customer to type "order 09XXXXXXXXX", without the button. The reply now says it couldn't get a Philippine mobile number from the Facebook account.
+- **Files:** `src/lib/messenger/intents.ts`, `src/lib/messenger/ordering.ts`, `tests/unit/messenger-{intents,order-flow}.test.ts`, `docs/test-cases.md` §45 (TC-P7-080).
+- **Testing:** `NODE_OPTIONS=--no-experimental-webstorage npx vitest run` with the CI settings: 85 test files, 929 tests, all passed. `npx tsc --noEmit` reported nothing.
+- **Branch / PR:** `fix/phone-button-not-mobile`.
+- **Next action:** Check the button again on the phone after the deploy.
+
