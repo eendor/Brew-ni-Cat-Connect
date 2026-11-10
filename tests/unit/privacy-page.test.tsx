@@ -105,7 +105,9 @@ describe("Privacy Policy page", () => {
     const text = container.textContent ?? "";
 
     // no tracking, and passwords only in Supabase Auth
-    expect(text).toMatch(/no analytics, advertising or tracking cookies/);
+    // update 2026-11-10: ads only in the mini-games, after the customer agrees (FR-090)
+    expect(text).toMatch(/no analytics or tracking cookies/);
+    expect(text).toMatch(/It loads only if you tap Show ads/);
     expect(text).toMatch(/scrambled \(hashed\) form/);
     // the order link's token stays out of the server (security §18.3)
     expect(text).toMatch(/Browsers don't send that part to our server/);

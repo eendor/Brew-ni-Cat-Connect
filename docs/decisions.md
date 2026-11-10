@@ -243,7 +243,7 @@ This manual state is a temporary functional-verification condition, not a revisi
 - Connect reads site content with the publishable key and keeps a fallback copy so the pages still render if the read fails. The fallback is not shown as current when the live read works.
 - Checkout keeps pricing from the database at the moment of ordering (ADR-016), so a price change never changes an order already placed.
 - Prizes need the owner's rules. A game with real prizes may need a promo permit; keep results skill-based or points-based until the owner confirms. **TODO: Confirm with Brew ni Cat owner.**
-- Advertising needs an approved ad account and a domain the team controls; ads never load before consent and never appear on menu, cart, checkout, order, or account pages (FR-090).
+- Advertising needs an approved ad account and a domain the team controls; ads never load before consent and never appear on menu, cart, checkout, order, or account pages (FR-090). Update 2026-11-10: the site stays on `brew-ni-cat-connect.vercel.app`, and AdSense does not accept sites on a vercel.app address, so the ads come from Adsterra instead, using one 300x250 banner unit in Rodnee's publisher account. Pop-under, social bar, smartlink, native and adult ad formats are off. The ad runs in a sandboxed frame, and ads stay off until `NEXT_PUBLIC_AD_KEY` is set.
 
 ## ADR-018 — Live 3D Menu Cards Through One Shared WebGL Stage
 

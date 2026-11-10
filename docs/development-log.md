@@ -1719,3 +1719,13 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Testing:** the full Vitest suite and Playwright `home-reviews.spec.ts`; see the PR.
 - **Branch / PR:** `feat/reviews-front`.
 - **Next action:** None.
+
+## 2026-11-10 — An ad slot for the mini-games (FR-090)
+
+- **Phase:** Phase 9.
+- **Task:** The instructor asked for ads with the mini-games. The site stays on its vercel.app address, which AdSense does not accept.
+- **Summary:** Added an ad slot for one Adsterra 300x250 banner. It is labeled "Ad", asks the customer first, and loads the ad only after they tap Show ads. The ad runs in a sandboxed frame, so it can't redirect or cover the page. The slot never shows on the menu, cart, checkout, order or account pages, and ads stay off until `NEXT_PUBLIC_AD_KEY` is set. The privacy page now explains the ads.
+- **Files:** `src/lib/ads/ads.ts`, `src/components/ads/ad-slot.tsx`, `src/app/privacy/page.tsx`, `.env.example`, `tests/unit/ad-slot.test.tsx`, `docs/test-cases.md` §50, `docs/functional-requirements.md` (FR-090), `docs/decisions.md`.
+- **Testing:** the full Vitest suite with the CI settings; see the PR.
+- **Branch / PR:** `feat/ad-slot`.
+- **Next action:** Place the slot on the mini-game page, then set `NEXT_PUBLIC_AD_KEY` on Vercel and run MAN-P9-001.

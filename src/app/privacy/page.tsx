@@ -93,8 +93,8 @@ export default async function PrivacyPage() {
               <List>
                 <li>
                   <Term>Browsing.</Term> You can use every public page without
-                  an account. The site has no analytics, advertising or tracking
-                  cookies, and its fonts and pictures come from our own site.
+                  an account. The site has no analytics or tracking cookies, and
+                  its fonts and pictures come from our own site.
                 </li>
                 <li>
                   <Term>Your account.</Term> If you create one, we keep your
@@ -221,6 +221,14 @@ export default async function PrivacyPage() {
                 <li>
                   <Term>Google</Term> sends account emails, such as password
                   reset links, from the shop&apos;s email account.
+                </li>
+                <li>
+                  <Term>Adsterra</Term> may show one ad in the mini-games,
+                  labeled &ldquo;Ad&rdquo;. It loads only if you tap Show ads,
+                  never on the menu, cart, checkout, order or account pages, and
+                  it may use its own cookies inside the ad. We don&apos;t send
+                  it your account, orders or contact details, and you can turn
+                  ads off at any time.
                 </li>
               </List>
               <p>We don&apos;t sell your data or share it for advertising.</p>

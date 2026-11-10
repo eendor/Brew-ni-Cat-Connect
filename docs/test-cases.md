@@ -1301,3 +1301,17 @@ Customers could not find the reviews, because they were only near the bottom of 
 | TC-P5-207 | FR-098 | The site navigation | Has a Reviews link to `/about#reviews`, used by the header, the phone menu and the footer | Passed (automated) |
 | TC-P5-208 | FR-098 | Browser test at 390 and 1440 pixels wide | The home block shows the average, the count and three reviews without sideways scrolling; Read all reviews opens `/about#reviews` with the reviews in view | Passed (automated) |
 | TC-P5-209 | FR-098 | Browser test of the Reviews link in the desktop menu (1024 and 1440) and the phone menu (390) | The link fits without sideways scrolling and opens `/about#reviews` with the reviews in view | Passed (automated) |
+
+## 50. Ad Slot For The Mini-Games Cases (2026-11-10)
+
+The mini-games will show one labeled ad (FR-090). The ad slot is built before the games, so the games can place it. Ads stay off until the ad key is set.
+
+| ID | Requirement | Scenario | Expected result | Status |
+| --- | --- | --- | --- | --- |
+| TC-P9-007 | FR-090 | No ad key, or a key that isn't 32 letters and numbers | The slot shows nothing | Passed (automated) |
+| TC-P9-008 | FR-090 | The slot shows before the customer chooses | It is labeled "Ad" and asks "Show an ad here?"; no ad frame or ad script loads | Passed (automated) |
+| TC-P9-009 | FR-090 | The customer taps Show ads, then Turn off ads | The ad loads in a sandboxed frame that can't move the page; the choice is kept; Turn off ads removes it | Passed (automated) |
+| TC-P9-010 | FR-090 | The customer taps No thanks | No ad shows, and "Show ads to support the shop" lets them change their mind | Passed (automated) |
+| TC-P9-011 | FR-090 | The slot is placed on the menu, cart, checkout, order or account pages | It shows nothing, even after the customer agreed | Passed (automated) |
+| TC-P9-012 | FR-090 | The page inside the ad frame | Loads only the Adsterra 300x250 banner unit | Passed (automated) |
+| MAN-P9-001 | FR-090 | With the real key set on a preview, open the games page on a phone and tap Show ads | A real 300x250 ad shows with the "Ad" label, and tapping it opens the advertiser's page in a new tab without leaving the site | Not run (needs the games page) |
