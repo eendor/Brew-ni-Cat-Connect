@@ -109,7 +109,7 @@ export function newOrder(phone: string): OrderState {
 export function parsePhone(text: string, buttonNumber = false): string | null {
   const cleaned = text.replace(/[\s().-]/g, "");
   const match =
-    /^(?:\+?63|0)(9\d{9})$/.exec(cleaned) ??
+    /^(?:\+?63|0063|0)(9\d{9})$/.exec(cleaned) ??
     (buttonNumber ? /^(9\d{9})$/.exec(cleaned) : null);
   return match?.[1] ? `0${match[1]}` : null;
 }
