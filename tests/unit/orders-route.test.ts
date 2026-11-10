@@ -15,10 +15,25 @@ vi.mock("@/lib/supabase/public-client", async (importOriginal) => ({
   getPublicSupabaseClient,
 }));
 
+// The owner's Closed today switch (FR-111); open unless a test closes it.
+const shopClosure = vi.hoisted(() => ({ closed: false, note: "" }));
+vi.mock("@/lib/site-content/load", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@/lib/site-content/load")>();
+  return {
+    ...actual,
+    loadSiteContent: async () => ({
+      content: { ...actual.fallbackSiteContent, closure: { ...shopClosure } },
+      sources: {},
+    }),
+  };
+});
+
 import { POST } from "@/app/api/orders/route";
 import {
   ORDERING_UNAVAILABLE_MESSAGE,
   PLACE_ORDER_MESSAGES,
+  SHOP_CLOSED_MESSAGE,
 } from "@/lib/orders/place-order";
 import { orderRateLimiter } from "@/lib/orders/rate-limit";
 import { PublicSupabaseConfigurationError } from "@/lib/supabase/public-client";
@@ -95,6 +110,22 @@ describe("POST /api/orders", () => {
 
     vi.stubEnv("NEXT_PUBLIC_ONLINE_ORDERING", "true");
     expect((await POST(post())).status).toBe(503);
+  });
+
+  it("TC-P7-078 — while the owner has closed the shop today, nothing reaches the database (FR-111)", async () => {
+    shopClosure.closed = true;
+    try {
+      const response = await POST(post());
+      expect(response.status).toBe(503);
+      expect(await response.json()).toEqual({
+        ok: false,
+        reason: "server-error",
+        message: SHOP_CLOSED_MESSAGE,
+      });
+      expect(getPublicSupabaseClient).not.toHaveBeenCalled();
+    } finally {
+      shopClosure.closed = false;
+    }
   });
 
   it("TC-P4-116 — without the database settings it says ordering is unavailable", async () => {

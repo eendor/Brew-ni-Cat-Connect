@@ -59,6 +59,7 @@ import {
   itemsReply,
   needsFlavorChoice,
   optionsReply,
+  orderClosedReply,
   orderPausedReply,
   paymentReply,
   phoneAskReply,
@@ -137,8 +138,25 @@ const minutesOf = (ms: number) => Math.floor(ms / MINUTE_MS);
 // Starting ------------------------------------------------------------------
 
 /** "Order here": asks for the number, or says ordering is paused. */
-export const orderIntentReply = (deps: OrderFlowDeps): Reply =>
-  deps.onlineOrdering() ? phoneAskReply() : orderPausedReply();
+export async function orderIntentReply(
+  deps: OrderFlowDeps,
+  facts: OrderFacts,
+): Promise<Reply> {
+  return (await stopReply(deps, facts)) ?? phoneAskReply();
+}
+
+/** Ordering is off, or the owner closed the shop for today (FR-111). */
+async function stopReply(
+  deps: OrderFlowDeps,
+  facts: OrderFacts,
+): Promise<Reply | null> {
+  if (!deps.onlineOrdering()) return orderPausedReply();
+  const closure = await facts
+    .content()
+    .then((content) => content.closure)
+    .catch(() => null);
+  return closure?.closed ? orderClosedReply(closure) : null;
+}
 
 /** The customer gave a mobile number (or it wasn't a usable one). */
 export async function beginOrder(
@@ -147,7 +165,8 @@ export async function beginOrder(
   facts: OrderFacts,
   noNumberShared = false,
 ): Promise<Reply> {
-  if (!deps.onlineOrdering()) return orderPausedReply();
+  const stop = await stopReply(deps, facts);
+  if (stop) return stop;
   if (!phone) return noNumberShared ? phoneMissingReply() : phoneRetryReply();
   const catalog = await facts.menu();
   if (!catalog) return menuUnavailableReply(deps.origin);
@@ -201,7 +220,8 @@ export async function answerOrderTap(
   deps: OrderFlowDeps,
   facts: OrderFacts,
 ): Promise<Reply> {
-  if (!deps.onlineOrdering()) return orderPausedReply();
+  const stop = await stopReply(deps, facts);
+  if (stop) return stop;
   const { op, state, args } = tap;
   // Nothing was sent to the shop, so there is nothing to undo.
   if (op === "clear") return clearedReply();

@@ -1152,3 +1152,18 @@ Run on 2026-11-10: `NODE_OPTIONS=--no-experimental-webstorage npx vitest run` wi
 | ID | Requirement | Scenario | Expected result | Status |
 | --- | --- | --- | --- | --- |
 | TC-P7-075 | FR-101 | The phone number button sends no number | The chat says Messenger didn't share a number and asks the customer to type "order 09XXXXXXXXX"; the phone number button is not offered again. A non-Philippine number from the button still gets the retry with the button | Passed |
+
+## 47. Closed Today Switch Cases (2026-11-11)
+
+The owner asked for a switch in the POS app to close the shop for the day (FR-111). §46 is kept for the Phase 8 QA cases.
+
+Run on 2026-11-11: `NODE_OPTIONS=--no-experimental-webstorage npx vitest run` with the CI settings: 85 test files, 928 tests, all passed.
+
+| ID | Requirement | Scenario | Expected result | Status |
+| --- | --- | --- | --- | --- |
+| TC-P7-076 | FR-111 | The shop is closed today and a customer taps Order here, sends a number or taps an order step in Messenger | Each answers "🚪 We're closed today." with the note and says no orders are taken; nothing is placed. With the switch off, or content that can't be read, ordering carries on | Passed (automated) |
+| TC-P7-077 | FR-111 | The `closure` section in the database | Starts open like the website's copy; anyone reads it; staff can close it with a note; others change nothing; broken content is refused; other sections keep their checks; the undo removes it and the migration applies again | Passed (automated) |
+| TC-P7-078 | FR-111 | `POST /api/orders` while the shop is closed | 503 with the closed message; the database is not called | Passed (automated) |
+| TC-P7-079 | FR-111 | The line above every page | "We're closed today." with the note, then the notice; nothing extra while open | Passed (automated) |
+| MAN-P7-006 | FR-111 | The owner turns Closed today on and off in the POS, then checks the website and Messenger | The banner and closed replies appear while on and go away when off | Not run (needs the live migration and the POS release) |
+

@@ -17,8 +17,10 @@
  */
 
 import { isOnlineOrderingEnabled } from "@/lib/orders/online-ordering";
+import { loadSiteContent } from "@/lib/site-content/load";
 import {
   ORDERING_UNAVAILABLE_MESSAGE,
+  SHOP_CLOSED_MESSAGE,
   placeOrderFailure,
 } from "@/lib/orders/place-order";
 import {
@@ -63,6 +65,10 @@ export async function POST(request: Request): Promise<Response> {
       placeOrderFailure("server-error", ORDERING_UNAVAILABLE_MESSAGE),
       503,
     );
+  }
+
+  if ((await loadSiteContent()).content.closure.closed) {
+    return respond(placeOrderFailure("server-error", SHOP_CLOSED_MESSAGE), 503);
   }
 
   const limit = orderRateLimiter.check(clientKey(request));

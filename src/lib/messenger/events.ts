@@ -247,7 +247,7 @@ async function answerIntent(
     case "welcome":
       return plain(welcomeReply());
     case "order":
-      return ordering(orderIntentReply(deps));
+      return ordering(await orderIntentReply(deps, facts));
     case "menu":
       return plain(menuReply(await facts.menu(), deps.origin));
     case "hours-location":

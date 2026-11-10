@@ -60,6 +60,7 @@ import {
   MAX_CUSTOMER_NAME_LENGTH,
   MAX_ORDER_NOTES_LENGTH,
   placeOrderFailure,
+  SHOP_CLOSED_MESSAGE,
 } from "@/lib/orders/place-order";
 import { PAYMENT_PREFERENCES, type PlaceOrderResult } from "@/lib/orders/types";
 import type { MenuCatalog } from "@/types/menu";
@@ -221,6 +222,8 @@ export function CheckoutView({
 
   // Place order (pickup only; rider delivery always copies a summary)
   const placesOnline = onlineOrdering && !isRiderDelivery;
+  // The owner's "Closed today" switch in the POS (FR-111).
+  const closedToday = facts.closure.closed;
   const [isPlacing, setIsPlacing] = useState(false);
   const placingRef = useRef(false);
   const [placeNotice, setPlaceNotice] = useState<PlaceOrderNotice | null>(null);
@@ -1416,11 +1419,27 @@ export function CheckoutView({
                     </div>
                   ) : null}
 
+                  {placesOnline && closedToday ? (
+                    <div
+                      role="alert"
+                      className="rounded-2xl border border-[var(--danger)] bg-[var(--danger-soft)] p-4 text-sm text-[var(--text-strong)]"
+                    >
+                      <strong className="block font-semibold">
+                        {SHOP_CLOSED_MESSAGE}
+                      </strong>
+                      {facts.closure.note.trim() ? (
+                        <p className="mt-1 text-xs">
+                          {facts.closure.note.trim()}
+                        </p>
+                      ) : null}
+                    </div>
+                  ) : null}
+
                   {placesOnline ? (
                     <button
                       type="button"
                       onClick={() => void handlePlaceOrder()}
-                      disabled={isPlacing}
+                      disabled={isPlacing || closedToday}
                       className="button-primary w-full disabled:cursor-wait disabled:opacity-70"
                     >
                       {isPlacing ? "Placing order…" : "Place order"}

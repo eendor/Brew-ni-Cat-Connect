@@ -681,7 +681,11 @@ describe("Website content table (FR-085 – FR-087)", () => {
     const again = await fresh.query<{ count: number }>(
       "select count(*)::int as count from public.site_content",
     );
-    expect(again.rows[0]?.count).toBe(SITE_CONTENT_SECTIONS.length);
+    // Update 2026-11-11: the 'closure' row comes from a later migration
+    // (FR-111), so this migration alone adds every other section.
+    expect(again.rows[0]?.count).toBe(
+      SITE_CONTENT_SECTIONS.filter((section) => section !== "closure").length,
+    );
     await fresh.close();
   }, 60_000);
 });
