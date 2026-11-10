@@ -260,10 +260,20 @@ export function typedButton(text: string): Intent | null {
 const TYPED_ORDER_PATTERN =
   /^\s*(?:order|mag\s?order)\b[\s:,-]*(\+?[\d][\d\s().-]*)$/i;
 
-/** The mobile number in a short "order <number>" message, or null. */
+/** A message that is only a number: "0917 123 4567". */
+const BARE_NUMBER_PATTERN = /^\s*\+?\d[\d\s().-]*$/;
+
+/**
+ * The mobile number in a short "order <number>" message, or null.
+ * Update 2026-11-11: a message that is only a Philippine mobile number counts
+ * too, since customers often reply with just the number. Other bare numbers
+ * (landlines, short codes) are still left to the staff.
+ */
 export function typedOrderPhone(text: string): string | null {
   if (text.length > MAX_SHORT_MESSAGE_LENGTH) return null;
-  const number = TYPED_ORDER_PATTERN.exec(text)?.[1];
+  const number =
+    TYPED_ORDER_PATTERN.exec(text)?.[1] ??
+    (BARE_NUMBER_PATTERN.test(text) ? text : undefined);
   return number ? parsePhone(number) : null;
 }
 
