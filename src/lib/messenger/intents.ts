@@ -111,14 +111,39 @@ export function readPayload(payload: unknown): ButtonTap | null {
   const intent = INTENTS.find((name) => PAYLOADS[name] === payload);
   if (intent) return { kind: "intent", intent };
   // Messenger's "mobile number" button sends the number as its payload.
+  // A number that isn't a Philippine mobile can't be used either, and the
+  // button would send the same one again, so it isn't offered again.
   if (PHONE_PAYLOAD_PATTERN.test(payload)) {
-    return { kind: "phone", phone: parsePhone(payload, true) };
+    const phone = parsePhone(payload, true);
+    if (phone) return { kind: "phone", phone };
+    logUnusablePhone(payload);
+    return { kind: "phone", phone: null, missing: true };
   }
   // The phone button sent something we can't use as a number (empty, or
   // its label), so ask for the number again.
-  return payload.trim() === "" || /\d|phone|number/i.test(payload)
-    ? { kind: "phone", phone: null, missing: true }
-    : null;
+  if (payload.trim() === "" || /\d|phone|number/i.test(payload)) {
+    logUnusablePhone(payload);
+    return { kind: "phone", phone: null, missing: true };
+  }
+  return null;
+}
+
+/**
+ * The format of a phone button payload we couldn't use, with every digit
+ * shown as "d" and every letter as "a", so the number itself is never logged.
+ */
+export function phoneShape(payload: string): string {
+  return payload.slice(0, 30).replace(/\p{L}/gu, "a").replace(/\d/g, "d");
+}
+
+function logUnusablePhone(payload: string): void {
+  console.info(
+    JSON.stringify({
+      event: "messenger-phone-button-unusable",
+      shape: phoneShape(payload),
+      length: payload.length,
+    }),
+  );
 }
 
 /** Lowercase words, without accents or punctuation: "Menu?" → "menu". */
@@ -235,10 +260,20 @@ export function typedButton(text: string): Intent | null {
 const TYPED_ORDER_PATTERN =
   /^\s*(?:order|mag\s?order)\b[\s:,-]*(\+?[\d][\d\s().-]*)$/i;
 
-/** The mobile number in a short "order <number>" message, or null. */
+/** A message that is only a number: "0917 123 4567". */
+const BARE_NUMBER_PATTERN = /^\s*\+?\d[\d\s().-]*$/;
+
+/**
+ * The mobile number in a short "order <number>" message, or null.
+ * Update 2026-11-11: a message that is only a Philippine mobile number counts
+ * too, since customers often reply with just the number. Other bare numbers
+ * (landlines, short codes) are still left to the staff.
+ */
 export function typedOrderPhone(text: string): string | null {
   if (text.length > MAX_SHORT_MESSAGE_LENGTH) return null;
-  const number = TYPED_ORDER_PATTERN.exec(text)?.[1];
+  const number =
+    TYPED_ORDER_PATTERN.exec(text)?.[1] ??
+    (BARE_NUMBER_PATTERN.test(text) ? text : undefined);
   return number ? parsePhone(number) : null;
 }
 

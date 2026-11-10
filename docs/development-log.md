@@ -1631,3 +1631,53 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `feat/closed-today`.
 - **Next action:** Apply the migration with the team's OK, then release the POS toggle.
 
+## 2026-11-11 — Phone number button with a number that isn't a Philippine mobile
+
+- **Phase:** Phase 7 (Messenger).
+- **Task:** On a phone, the phone number button still led to "I couldn't get a Philippine mobile number from that" with the same button again. The Facebook account shares a number, but not a 09 mobile, so the #115 fix didn't cover it.
+- **Summary:** Any phone button number that isn't a Philippine mobile now gets the reply that asks the customer to type "order 09XXXXXXXXX", without the button. The reply now says it couldn't get a Philippine mobile number from the Facebook account.
+- **Files:** `src/lib/messenger/intents.ts`, `src/lib/messenger/ordering.ts`, `tests/unit/messenger-{intents,order-flow}.test.ts`, `docs/test-cases.md` §45 (TC-P7-080).
+- **Testing:** `NODE_OPTIONS=--no-experimental-webstorage npx vitest run` with the CI settings: 85 test files, 929 tests, all passed. `npx tsc --noEmit` reported nothing.
+- **Branch / PR:** `fix/phone-button-not-mobile`.
+- **Next action:** Check the button again on the phone after the deploy.
+
+## 2026-11-11 — Log the format of phone button numbers the bot can't use
+
+- **Phase:** Phase 7 (Messenger).
+- **Task:** The phone number button still didn't work on a test phone, so we need to see what Facebook sends.
+- **Summary:** When the button sends a number the bot can't use, the log records only its format (every digit as "d", every letter as "a") and its length. Numbers written with 0063 are now accepted.
+- **Files:** `src/lib/messenger/intents.ts`, `src/lib/messenger/order-state.ts`, `tests/unit/messenger-intents.test.ts`, `docs/test-cases.md` §45 (TC-P7-081).
+- **Testing:** the full Vitest suite with the CI settings: 85 test files, 930 tests, all passed.
+- **Branch / PR:** `fix/phone-button-format`.
+- **Next action:** Tap the button on the phone again and read the format in the Vercel logs.
+
+## 2026-11-11 — The shop follows its opening hours and opens by default (FR-112)
+
+- **Phase:** Phase 7.
+- **Task:** The owner wanted the switch to mean the shop is open or closed, on (open) by default, and for ordering to follow the schedule.
+- **Summary:** New `open-now.ts` decides whether the shop is open from Closed today and the saved hours, in Manila time. The website checkout, the order API and Messenger order steps refuse outside the hours with a message saying when the shop opens. Closed today now counts only on the day it was turned on, using the row's `updated_at`. Tests that place orders run at a fixed open time.
+- **Files:** `src/lib/site-content/{open-now,load,types}.ts`, `src/app/api/orders/route.ts`, `src/components/checkout/checkout-view.tsx`, `src/lib/messenger/{order-flow,ordering}.ts`, `src/lib/orders/place-order.ts`, tests, docs (FR-112, test cases §47, database design §16.2a).
+- **Testing:** the full Vitest suite with the CI settings: 86 test files, 935 tests, all passed.
+- **Branch / PR:** `feat/shop-open-schedule`.
+- **Next action:** MAN-P7-007 on the POS after build 10147.
+
+## 2026-11-11 — A mobile number on its own starts a Messenger order
+
+- **Phase:** Phase 7 (Messenger).
+- **Task:** On a test phone, a customer typed only their 09 number after the bot asked for it, and the bot said nothing.
+- **Summary:** A message that is only a Philippine mobile number now starts the order. Other bare numbers are still left to the staff. TC-P7-057's bare-number case now uses a landline and a short number.
+- **Files:** `src/lib/messenger/intents.ts`, `src/lib/messenger/events.ts`, `tests/unit/messenger-events.test.ts`, `docs/test-cases.md` §47 (TC-P7-086).
+- **Testing:** the full Vitest suite with the CI settings: 86 test files, 936 tests, all passed.
+- **Branch / PR:** `feat/bare-mobile-number`.
+- **Next action:** Type the number again on the phone after the deploy.
+
+## 2026-11-10 — Ratings and reviews on the website (FR-098)
+
+- **Phase:** Phase 5 (Customer accounts and reviews) and the website.
+- **Task:** Customers can give the shop a star rating and a short review, and everyone can read them on the website (Trello card: Van — Ratings and reviews on the website (FR-098)).
+- **Summary:** Added `public.reviews` table with column-level permissions (`anon` and `authenticated` can read visible reviews, staff can update `hidden` to moderate from the POS). Function `public.post_review` creates a customer review (using first word of `customer_profiles.full_name`) or guest review, enforcing a 10-review database-wide flood backstop. Function `public.my_review` allows signed-in customers to fetch and edit their review. Built `POST /api/reviews` route with per-IP rate limiting (3 in 10 minutes) passing session tokens to Supabase. Created accessible reviews UI on `/about` page featuring average rating summary, 10-per-page list with Show more, and accessible 1 to 5 star rating form with 500-character counter. The migration is not applied to the live database yet; Rodnee applies it after review.
+- **Files:** `supabase/migrations/20261112120000_reviews.sql`, `supabase/rollbacks/20261112120000_reviews.sql`, `src/app/api/reviews/route.ts`, `src/lib/reviews/` (`types.ts`, `constants.ts`, `rate-limit.ts`, `service.ts`), `src/components/reviews/` (`star-rating.tsx`, `review-card.tsx`, `review-form.tsx`, `reviews-list.tsx`, `reviews-section.tsx`), `src/app/about/page.tsx`, `tests/database/reviews.test.ts`, `tests/unit/` (`reviews-route.test.ts`, `review-form.test.tsx`, `reviews-list.test.tsx`), `tests/e2e/reviews.spec.ts`, `docs/test-cases.md` §39, `docs/functional-requirements.md` (FR-098 and §12), `docs/database-design.md` §17, `docs/security-and-privacy.md` §22, `docs/development-log.md`, `docs/evidence/phase-5/reviews/`.
+- **Testing:** Database tests run on PGlite (`tests/database/reviews.test.ts`): 12 passed. Unit tests run on Vitest: 19 passed. E2E browser tests run on Chromium with Playwright (`tests/e2e/reviews.spec.ts`): 3 passed. Evidence screenshots captured at 1440x900 and 390x844. Full test suite: 86 test files, 948 tests passed. `npm run typecheck`, `npm run lint`, `python scripts/validate_phase0_docs.py` and `npm run format:check` all passed.
+- **Branch / PR:** `feat/p5-reviews`.
+- **Next action:** Rodnee reviews the PR and applies the migration to the live database; Van runs manual test cases MAN-P5-001 to MAN-P5-009 on phone and desktop.
+

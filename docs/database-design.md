@@ -477,8 +477,57 @@ File: `supabase/migrations/20261111120000_closed_today.sql`. Undo: `supabase/rol
 - Messenger: Order here, a phone number and every order step answer with the closed reply; the Hours & location reply starts with the closed line.
 - POS: the owner turns it on and off (`eendor/Brew-ni-Cat-POS`).
 
+### 16.2a Update 2026-11-11: open by default (FR-112)
+
+- No schema change. The website reads `updated_at` of the `closure` row with its content: when Closed today was turned on before today (Philippine time), it is treated as off, so the shop opens by itself each day.
+- Ordering also follows the `hours` section; see `src/lib/site-content/open-now.ts`.
+
 ### 16.3 Undo and tests
 
 - The rollback deletes the `closure` row, puts back the earlier check function and the nine-section list.
 - TC-P7-077 runs on PGlite (`tests/database/closed-today.test.ts`).
+
+## 17. Ratings And Reviews (Phase 5 — 2026-11-09)
+
+File: `supabase/migrations/20261112120000_reviews.sql`. Undo: `supabase/rollbacks/20261112120000_reviews.sql`. Covers FR-098. **Not applied to the live database yet.** Rodnee applies migrations after review.
+
+### 17.1 Table `public.reviews`
+
+- `id`: uuid primary key default `gen_random_uuid()`.
+- `customer_id`: uuid null, references `auth.users(id)` on delete set null. Null for anonymous guest reviews.
+- `display_name`: text not null, checked not empty. First name of customer from `customer_profiles.full_name`, "Customer" if no profile exists, or "Guest" for anonymous reviews.
+- `rating`: smallint not null, checked between 1 and 5.
+- `body`: text not null, checked between 1 and 500 characters, trimmed.
+- `hidden`: boolean not null default false. Hidden reviews are omitted from public reading; shop staff can toggle this column from the POS app.
+- `created_at`: timestamptz not null default now().
+- `updated_at`: timestamptz not null default now().
+- A partial unique index `reviews_customer_id_unique_idx` on `customer_id` where `customer_id IS NOT NULL` guarantees one review per signed-in customer, which they can update.
+
+### 17.2 Permissions and RLS
+
+- Row Level Security (RLS) is enabled.
+- Public read policy `reviews_public_read`: allows everyone (`anon`, `authenticated`) to read visible reviews (`hidden = false`). Staff (`private.is_staff()`) may read all reviews including hidden ones.
+- Staff update policy `reviews_staff_update_hidden`: allows staff (`private.is_staff()`) to update reviews.
+- Column grants:
+  - `grant select (id, display_name, rating, body, hidden, created_at, updated_at) on public.reviews to anon, authenticated;` (omits `customer_id` completely from public reading, preventing disclosure of customer accounts, emails, or phone numbers).
+  - `grant update (hidden) on public.reviews to authenticated;` (limits staff updates strictly to the `hidden` moderation flag).
+  - No insert or delete grants are given on `public.reviews` to `anon` or `authenticated`.
+
+### 17.3 Functions
+
+- `public.post_review(p_rating integer, p_body text)`:
+  - Security definer with `set search_path = ''`.
+  - Verifies rating is an integer between 1 and 5, and body trimmed length is between 1 and 500 characters.
+  - Enforces database-wide guest limit as a backstop: at most 10 guest reviews created in any 10 minutes (`now() - interval '10 minutes'`).
+  - When signed in (`auth.uid() IS NOT NULL`): reads `full_name` from `public.customer_profiles`, extracts the first word, falling back to "Customer" if absent. Upserts the customer's review (updating rating, body, display_name, and updated_at if an existing review is found).
+  - When anonymous (`auth.uid() IS NULL`): inserts a new review with `display_name = 'Guest'`. Anonymous reviews cannot be edited.
+  - Returns the created or updated `public.reviews` row.
+- `public.my_review()`:
+  - Security definer with `set search_path = ''`.
+  - Returns `public.reviews` for `auth.uid()` if authenticated, or null if anonymous or no review exists.
+
+### 17.4 Undo and tests
+
+- Rollback drops `public.post_review`, `public.my_review`, `private.set_reviews_updated_at`, trigger `reviews_set_updated_at`, and table `public.reviews`.
+- TC-P5-170 to TC-P5-181 run on PGlite (`tests/database/reviews.test.ts`): public reading excludes `customer_id` and hidden reviews; staff can read and hide reviews; post_review works for guests and customers; customer edits their one review; guest cannot edit; database-wide guest flood limit; input validations.
 

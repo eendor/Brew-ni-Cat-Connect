@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Container } from "@/components/ui/container";
 import { PageIntro } from "@/components/ui/page-intro";
 import { Reveal } from "@/components/ui/reveal";
+import { ReviewsSection } from "@/components/reviews/reviews-section";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { siteConfig } from "@/config/site";
 import { formatDate, hoursNotice, townLine } from "@/lib/site-content/format";
@@ -116,6 +117,8 @@ export default async function AboutPage() {
           </div>
         </Container>
       </section>
+
+      <ReviewsSection />
 
       <section className="py-16 sm:py-20" aria-labelledby="about-visit-heading">
         <Container>

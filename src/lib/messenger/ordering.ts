@@ -33,7 +33,15 @@ import {
   hoursSummary,
   takeoutBoxText,
 } from "@/lib/site-content/format";
-import type { ClosureContent, SiteContent } from "@/lib/site-content/types";
+import {
+  shopClosedMessage,
+  type ShopStatus,
+} from "@/lib/site-content/open-now";
+import type {
+  ClosureContent,
+  HoursContent,
+  SiteContent,
+} from "@/lib/site-content/types";
 import type {
   MenuCatalog,
   MenuCategory,
@@ -257,7 +265,7 @@ export function phoneAskReply(note?: string): Reply {
 export function phoneMissingReply(): Reply {
   return buildReply(
     join(
-      "🤔 Messenger didn't share a mobile number from your Facebook account, so the phone number button won't work for you.",
+      "🤔 I couldn't get a Philippine mobile number from your Facebook account, so the phone number button won't work for you.",
       "📱 Please type your number like this instead: order 09XXXXXXXXX",
     ),
     [
@@ -284,6 +292,16 @@ export function orderPausedReply(): Reply {
 export function orderClosedReply(closure: ClosureContent): Reply {
   return buildReply(
     `${closedTodayText(closure)}\n\n🙏 I can't take orders while the shop is closed. You can still look at the menu 📋 or message our staff 💬.`,
+    mainQuickReplies("order"),
+  );
+}
+
+export function orderOutsideHoursReply(
+  status: ShopStatus,
+  hours: HoursContent,
+): Reply {
+  return buildReply(
+    `🕒 ${shopClosedMessage(status) ?? ""}\n\n${hoursSummary(hours)}\n\nYou can still look at the menu 📋 or message our staff 💬.`,
     mainQuickReplies("order"),
   );
 }

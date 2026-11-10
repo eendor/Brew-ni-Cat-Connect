@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
   categoryPayload,
@@ -7,6 +7,7 @@ import {
   MAX_SHORT_MESSAGE_LENGTH,
   normalizeText,
   PAYLOADS,
+  phoneShape,
   readPayload,
   typedButton,
 } from "@/lib/messenger/intents";
@@ -39,6 +40,43 @@ describe("Messenger button payloads (FR-059)", () => {
       missing: true,
     });
     expect(readPayload("menu")).toBeNull();
+  });
+
+  it("TC-P7-080 — a phone button number that isn't a Philippine mobile is not offered again", () => {
+    for (const payload of [
+      "+1 415 555 0100",
+      "(082) 123 4567",
+      "+63 2 8123 4567",
+    ]) {
+      expect(readPayload(payload)).toEqual({
+        kind: "phone",
+        phone: null,
+        missing: true,
+      });
+    }
+    expect(readPayload("+63 917 123 4567")).toEqual({
+      kind: "phone",
+      phone: "09171234567",
+    });
+  });
+
+  it("TC-P7-081 logs only the format of an unusable phone button number and accepts 0063", () => {
+    const info = vi.spyOn(console, "info").mockImplementation(() => {});
+    expect(readPayload("+1 415 555 0100")).toEqual({
+      kind: "phone",
+      phone: null,
+      missing: true,
+    });
+    const logged = String(info.mock.calls.at(-1)?.[0]);
+    expect(logged).toContain("messenger-phone-button-unusable");
+    expect(logged).toContain('"shape":"+d ddd ddd dddd"');
+    expect(logged).not.toMatch(/\d{3}/);
+    expect(phoneShape("Phone number")).toBe("aaaaa aaaaaa");
+    expect(readPayload("0063 917 123 4567")).toEqual({
+      kind: "phone",
+      phone: "09171234567",
+    });
+    info.mockRestore();
   });
 
   it("TC-P7-004 — a category button carries the category id", () => {

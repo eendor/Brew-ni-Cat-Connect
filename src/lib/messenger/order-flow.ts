@@ -23,6 +23,7 @@ import {
   MAX_MIXED_FLAVORS,
   resolveVariantUnitPrice,
 } from "@/lib/ordering/cart-pricing";
+import { shopStatus } from "@/lib/site-content/open-now";
 import type { SiteContent } from "@/lib/site-content/types";
 import type { MenuCatalog, MenuItem, MenuVariant } from "@/types/menu";
 
@@ -60,6 +61,7 @@ import {
   needsFlavorChoice,
   optionsReply,
   orderClosedReply,
+  orderOutsideHoursReply,
   orderPausedReply,
   paymentReply,
   phoneAskReply,
@@ -145,17 +147,23 @@ export async function orderIntentReply(
   return (await stopReply(deps, facts)) ?? phoneAskReply();
 }
 
-/** Ordering is off, or the owner closed the shop for today (FR-111). */
+/** Ordering is off, the owner closed the shop for today (FR-111), or the shop is outside its hours (FR-112). */
 async function stopReply(
   deps: OrderFlowDeps,
   facts: OrderFacts,
 ): Promise<Reply | null> {
   if (!deps.onlineOrdering()) return orderPausedReply();
-  const closure = await facts
-    .content()
-    .then((content) => content.closure)
-    .catch(() => null);
-  return closure?.closed ? orderClosedReply(closure) : null;
+  const content = await facts.content().catch(() => null);
+  if (!content) return null;
+  const status = shopStatus(
+    content.closure,
+    content.hours,
+    new Date(deps.now()),
+  );
+  if (status.open) return null;
+  return status.reason === "closed-today"
+    ? orderClosedReply(content.closure)
+    : orderOutsideHoursReply(status, content.hours);
 }
 
 /** The customer gave a mobile number (or it wasn't a usable one). */

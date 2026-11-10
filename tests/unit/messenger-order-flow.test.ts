@@ -241,7 +241,9 @@ describe("A phone number button with no number (FR-101)", () => {
   it("TC-P7-075 — asks the customer to type the number, without the button that can't work", async () => {
     const ctx = setup();
     const reply = await beginOrder(null, ctx.deps, ctx.facts, true);
-    expect(reply.text).toContain("didn't share a mobile number");
+    expect(reply.text).toContain(
+      "couldn't get a Philippine mobile number from your Facebook account",
+    );
     expect(reply.text).toContain("order 09XXXXXXXXX");
     expect(reply.askPhone).toBeUndefined();
 
@@ -1109,6 +1111,19 @@ describe("The owner's Closed today switch (FR-111)", () => {
         ctx.facts,
       ),
     ).resolves.toEqual(closed);
+    expect(ctx.deps.placeOrder).not.toHaveBeenCalled();
+  });
+
+  it("TC-P7-085 — outside the opening hours, Order here says when the shop is open (FR-112)", async () => {
+    // Monday 9 November 2026, 9 AM in Manila: before opening.
+    const ctx = setup({ now: () => Date.UTC(2026, 10, 9, 1, 0, 0) });
+    const reply = await orderIntentReply(ctx.deps, ctx.facts);
+    expect(reply.text).toContain("We're not open yet.");
+    expect(reply.text).toContain("Open ");
+    expect(reply.askPhone).toBeUndefined();
+    await expect(beginOrder(PHONE, ctx.deps, ctx.facts)).resolves.toEqual(
+      reply,
+    );
     expect(ctx.deps.placeOrder).not.toHaveBeenCalled();
   });
 
