@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { CatStrip } from "@/components/cats/cat-strip";
 import Link from "next/link";
 
 import { ExternalLink } from "@/components/ui/external-link";
@@ -43,6 +44,7 @@ export function SiteFooter({ content }: SiteFooterProps) {
   const { address, contact, social } = content;
   return (
     <footer className="border-t border-[var(--border-soft)] bg-[var(--footer-surface)] text-[var(--footer-text)]">
+      <CatStrip />
       <Container
         data-rise-group=""
         className="grid gap-10 py-12 sm:grid-cols-2 lg:grid-cols-[1.25fr_0.7fr_1.1fr_0.8fr] lg:gap-12 lg:py-16"

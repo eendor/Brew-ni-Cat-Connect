@@ -2341,3 +2341,72 @@ html[data-motion="on"]:not([data-motion-live])
   letter-spacing: -0.04em;
   line-height: 0.9;
 }
+
+/* Cat characters (FR-099): an empty strip at the top of the footer that only
+   the cats use. It ignores taps, so nothing under it is ever covered. */
+.cat-strip {
+  position: relative;
+  height: 64px;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+}
+.cat-strip__walker {
+  position: absolute;
+  bottom: 2px;
+  left: 0;
+  will-change: transform;
+  animation-name: cat-walk-across;
+  animation-timing-function: linear;
+  animation-fill-mode: both;
+}
+.cat-strip__sitting {
+  display: none;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 1rem;
+  height: 100%;
+}
+.cat-figure--walking .cat-leg {
+  animation: cat-leg-swing 0.6s ease-in-out infinite alternate;
+}
+.cat-figure--walking .cat-leg--b {
+  animation-delay: -0.6s;
+}
+.cat-figure--walking {
+  animation: cat-bob 0.3s ease-in-out infinite alternate;
+}
+@keyframes cat-walk-across {
+  from {
+    transform: translateX(-100px);
+  }
+  to {
+    transform: translateX(calc(100vw + 20px));
+  }
+}
+@keyframes cat-leg-swing {
+  from {
+    transform: rotate(-18deg);
+  }
+  to {
+    transform: rotate(18deg);
+  }
+}
+@keyframes cat-bob {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-1.5px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cat-strip__sitting {
+    display: flex;
+  }
+  .cat-strip__walker,
+  .cat-figure--walking,
+  .cat-figure--walking .cat-leg {
+    animation: none;
+  }
+}
