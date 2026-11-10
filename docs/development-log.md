@@ -1729,3 +1729,9 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Testing:** the full Vitest suite with the CI settings; see the PR.
 - **Branch / PR:** `feat/ad-slot`.
 - **Next action:** Place the slot on the mini-game page, then set `NEXT_PUBLIC_AD_KEY` on Vercel and run MAN-P9-001.
+
+## 2026-11-10 — One footer cat per coat (FR-099)
+
+- **Summary:** The footer strip showed up to 16 cats, so the six coats of the CC0 "Pet Cats Pack" repeated and the cats looked crowded on a desktop. The strip now shows at most one cat per coat: 3 on a phone and 6 on wider screens.
+- **More coats:** I looked for other CC0 cat packs on itch.io. None matched: they use a different frame size and art style, and none has the lying-down and sleeping animations the strip uses. The six coats stay until a matching CC0 pack is found.
+- **Tests:** TC-P9-001 (unit) and TC-P9-005 and TC-P9-006 (browser) now expect 6 cats at 1440 px.

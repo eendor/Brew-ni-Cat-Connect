@@ -47,10 +47,13 @@ export function catSheetUrl(id: string, action: CatAction): string {
 
 const clamp01 = (r: number) => Math.min(Math.max(r, 0), 0.999_999);
 
-/** The most cats in the strip at once; the six coats repeat. */
-export const MAX_CATS = 16;
+/**
+ * The most cats in the strip at once: one cat for each coat, so no coat
+ * shows twice (update 2026-11-10; it was 16 with the coats repeating).
+ */
+export const MAX_CATS = PIXEL_CATS.length;
 
-/** One cat for about every 120 pixels of width: 3 on a phone, 12 on a desktop. */
+/** One cat for about every 120 pixels of width: 3 on a phone, up to 6 on wider screens. */
 export function catCount(width: number): number {
   return Math.min(MAX_CATS, Math.max(3, Math.round(width / 120)));
 }
