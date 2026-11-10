@@ -1583,3 +1583,17 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `feat/messenger-reply-buttons`, PR #109.
 - **Known limitations:** Meta allows three buttons per message, so each reply shows three of its choices inside it. The email Supabase sends when an existing email signs up again comes from Supabase's email settings, not from this code.
 - **Next action:** Check the buttons in Messenger after the deploy.
+
+## 2026-11-10 — Phase 7 documentation closeout
+
+- **Phase:** Phase 7 (Messenger assistant), documentation.
+- **Task:** Record the merged Phase 7 work in the evidence register, the requirement status note, the development log and the README, and keep the pull request a draft until Renier's integrated QA merges.
+- **Summary:** Added `docs/evidence/phase-7-verification.md` with one row for #106 and #109 in merge order, their test files, TC IDs and reported counts. FR-058 to FR-063 were already Implemented (PR #106) and FR-064 stays Deferred. Added the Phase 7 closeout note to `docs/functional-requirements.md` as section 21, because section 19 is the Phase 7 implementation note and section 20 is the Privacy Policy Status Note added by PR #107, so the sections stay in number order. Added the Phase 7 Project Status row and the register links to `README.md`, changed the integration row to say the Messenger assistant is done (Phase 7) with its PR links, and took Messenger out of the Current Limitations item. The register has no Closeout section yet because Renier's Phase 7 integrated QA (`docs/test-cases.md`, section 43) is not merged.
+- **Files:** `docs/evidence/phase-7-verification.md`, `docs/functional-requirements.md`, `docs/development-log.md`, `README.md`.
+- **Testing:**
+  - `python scripts/validate_phase0_docs.py`: `REQUIRED_ROOT=5`, `REQUIRED_DOCS=14`, `MARKDOWN_FILES_CHECKED=33`, `FR_IDS=99 (001-099)`, `NFR_IDS=40 (001-040)`, `ERRORS=0`, `PHASE0_DOC_VALIDATION=PASS`.
+  - `npm run format:check`: `All matched files use Prettier code style!` The first run failed on `README.md`; `npx prettier --write README.md` fixed it, and the passing rerun is the one above.
+  - The application checks are left to CI because the pull request changes only documentation.
+- **Branch / PR:** `docs/p7-closeout`, PR #111.
+- **Known limitations:** Renier's Phase 7 integrated QA is Not merged yet, so the register has no Closeout section and the README Phase 7 row says In progress. The live Messenger checks TC-P7-042 to TC-P7-049 are Not run yet, the Meta app is being published with Standard Access, and FR-064 stays Deferred.
+- **Next action:** After `test/p7-integrated-qa-main` merges, run the same closeout prompt again: add the register's Closeout, mark the README Phase 7 row complete, update the Development status and Last updated lines, rerun the checks and mark the pull request ready for Rodnee's review.
