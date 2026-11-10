@@ -1593,7 +1593,7 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Testing:**
   - `python scripts/validate_phase0_docs.py`: `REQUIRED_ROOT=5`, `REQUIRED_DOCS=14`, `MARKDOWN_FILES_CHECKED=33`, `FR_IDS=99 (001-099)`, `NFR_IDS=40 (001-040)`, `ERRORS=0`, `PHASE0_DOC_VALIDATION=PASS`.
   - `npm run format:check`: `All matched files use Prettier code style!` The first run failed on `README.md`; `npx prettier --write README.md` fixed it, and the passing rerun is the one above.
-  - The application checks are left to CI because the pull request changes only documentation.
+  - The application checks are left to CI because the pull request changes only documentation. CI passed: Validate application (3m7s) and Browser tests (chromium) (3m0s).
 - **Branch / PR:** `docs/p7-closeout`, PR #111.
 - **Known limitations:** Renier's Phase 7 integrated QA is Not merged yet, so the register has no Closeout section and the README Phase 7 row says In progress. The live Messenger checks TC-P7-042 to TC-P7-049 are Not run yet, the Meta app is being published with Standard Access, and FR-064 stays Deferred.
 - **Next action:** After `test/p7-integrated-qa-main` merges, run the same closeout prompt again: add the register's Closeout, mark the README Phase 7 row complete, update the Development status and Last updated lines, rerun the checks and mark the pull request ready for Rodnee's review.
