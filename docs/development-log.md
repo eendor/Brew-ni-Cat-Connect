@@ -1610,3 +1610,13 @@ This log records completed work and observed evidence. Planned work is explicitl
   - `npx tsc --noEmit` and ESLint on the changed files reported nothing; Prettier and the docs validator passed.
 - **Branch / PR:** `fix/messenger-order-choices`, PR #114.
 - **Next action:** Re-apply the Page's menu and greeting, apply the order status migration, and check the steps again on a phone.
+
+## 2026-11-10 — Phone number button with no number, and the order status migration applied
+
+- **Phase:** Phase 7 (Messenger).
+- **Task:** On a phone, the phone number button showed "Phone number" and its tap gave no number, so the chat asked again with the same button. The user also approved applying the order status migration and re-applying the Page's menu.
+- **Summary:** A tap without a number now gets its own reply: Messenger didn't share a number, so type "order 09XXXXXXXXX". The button isn't offered again there. Separately, `20261110120000_messenger_order_status.sql` was applied to the live database on 2026-11-10 (database design §8.7): first with its checks and a forced rollback, then for real, and recorded in `supabase_migrations.schema_migrations`. A guest call to `list_online_orders_by_token` with an unknown token returned `[]`. The Page's persistent menu was re-applied with Order here first; Meta's API no longer accepts the greeting, so it stays as set in Business Suite.
+- **Files:** `src/lib/messenger/` (`intents.ts`, `events.ts`, `order-flow.ts`, `ordering.ts`), `tests/unit/messenger-{intents,order-flow}.test.ts`, `docs/test-cases.md` §45.
+- **Testing:** `NODE_OPTIONS=--no-experimental-webstorage npx vitest run` with the CI settings: 84 test files, 921 tests, all passed. `npx tsc --noEmit` reported nothing.
+- **Branch / PR:** `fix/messenger-phone-missing`, PR #115.
+- **Next action:** The closure switch on the POS app.

@@ -1146,3 +1146,9 @@ Run on 2026-11-10: `NODE_OPTIONS=--no-experimental-webstorage npx vitest run` wi
 | TC-P7-011 | FR-104 | The Menu reply | Only "🌐 Full menu" and "🛒 Order here" sit inside the message; the categories stay under it | Passed |
 
 - Update 2026-11-10: TC-P7-065 and TC-P7-066 in section 44a expected "No flavor" and no Back button on the flavor and extras steps. They now expect "🔙 Back" and no "No flavor" (PR #114).
+
+- Update 2026-11-10 (PR #115): on a phone, the phone number button showed "Phone number" instead of a number and its tap gave nothing usable, because the Facebook account had no number to share. The fallback above now answers with a separate reply.
+
+| ID | Requirement | Scenario | Expected result | Status |
+| --- | --- | --- | --- | --- |
+| TC-P7-075 | FR-101 | The phone number button sends no number | The chat says Messenger didn't share a number and asks the customer to type "order 09XXXXXXXXX"; the phone number button is not offered again. A non-Philippine number from the button still gets the retry with the button | Passed |

@@ -62,6 +62,7 @@ import {
   orderPausedReply,
   paymentReply,
   phoneAskReply,
+  phoneMissingReply,
   phoneRetryReply,
   pickReply,
   pickupReply,
@@ -144,9 +145,10 @@ export async function beginOrder(
   phone: string | null,
   deps: OrderFlowDeps,
   facts: OrderFacts,
+  noNumberShared = false,
 ): Promise<Reply> {
   if (!deps.onlineOrdering()) return orderPausedReply();
-  if (!phone) return phoneRetryReply();
+  if (!phone) return noNumberShared ? phoneMissingReply() : phoneRetryReply();
   const catalog = await facts.menu();
   if (!catalog) return menuUnavailableReply(deps.origin);
   return categoriesReply(catalog, deps.origin, newOrder(phone));

@@ -65,7 +65,12 @@ export type ButtonTap =
   | Readonly<{ kind: "order"; tap: OrderTap }>
   | Readonly<{ kind: "status"; reference: string; token: string }>
   /** The mobile number from Messenger's button; null when it isn't a PH one. */
-  | Readonly<{ kind: "phone"; phone: string | null }>;
+  | Readonly<{
+      kind: "phone";
+      phone: string | null;
+      /** The button sent no number at all (none on the Facebook account). */
+      missing?: true;
+    }>;
 
 /** The payload of a "check status" button, or null for an invalid link. */
 export function statusPayload(reference: string, token: string): string | null {
@@ -112,7 +117,7 @@ export function readPayload(payload: unknown): ButtonTap | null {
   // The phone button sent something we can't use as a number (empty, or
   // its label), so ask for the number again.
   return payload.trim() === "" || /\d|phone|number/i.test(payload)
-    ? { kind: "phone", phone: null }
+    ? { kind: "phone", phone: null, missing: true }
     : null;
 }
 

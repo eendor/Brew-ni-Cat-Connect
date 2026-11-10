@@ -232,6 +232,19 @@ describe("Starting an order in Messenger (FR-100, FR-101)", () => {
   });
 });
 
+describe("A phone number button with no number (FR-101)", () => {
+  it("TC-P7-075 — asks the customer to type the number, without the button that can't work", async () => {
+    const ctx = setup();
+    const reply = await beginOrder(null, ctx.deps, ctx.facts, true);
+    expect(reply.text).toContain("didn't share a mobile number");
+    expect(reply.text).toContain("order 09XXXXXXXXX");
+    expect(reply.askPhone).toBeUndefined();
+
+    const retry = await beginOrder(null, ctx.deps, ctx.facts);
+    expect(retry.askPhone).toBe(true);
+  });
+});
+
 describe("Browsing the menu in the chat (FR-102, FR-103, FR-105)", () => {
   it("TC-P7-065 — a category shows its items with pictures and prices, and the old-board note", async () => {
     const ctx = setup();

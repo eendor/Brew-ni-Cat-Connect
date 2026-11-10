@@ -28,8 +28,16 @@ describe("Messenger button payloads (FR-059)", () => {
   });
 
   it("TC-P7-004 — a phone button tap without a usable number asks for it again", () => {
-    expect(readPayload("")).toEqual({ kind: "phone", phone: null });
-    expect(readPayload("Phone number")).toEqual({ kind: "phone", phone: null });
+    expect(readPayload("")).toEqual({
+      kind: "phone",
+      phone: null,
+      missing: true,
+    });
+    expect(readPayload("Phone number")).toEqual({
+      kind: "phone",
+      phone: null,
+      missing: true,
+    });
     expect(readPayload("menu")).toBeNull();
   });
 

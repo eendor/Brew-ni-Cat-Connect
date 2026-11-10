@@ -285,7 +285,9 @@ async function answerTap(
     case "order":
       return ordering(await answerOrderTap(sender, tap.tap, deps, facts));
     case "phone":
-      return ordering(await beginOrder(tap.phone, deps, facts));
+      return ordering(
+        await beginOrder(tap.phone, deps, facts, tap.missing === true),
+      );
     case "status":
       return plain(await checkOrder(sender, tap.reference, tap.token, deps));
   }
