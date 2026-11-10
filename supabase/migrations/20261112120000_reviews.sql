@@ -8,7 +8,7 @@
 -- Only staff can hide reviews for moderation. Direct inserts/updates are disabled;
 -- posting and editing happen via public.post_review().
 --
--- Undo: supabase/rollbacks/20261109130000_reviews.sql
+-- Undo: supabase/rollbacks/20261112120000_reviews.sql
 
 create table public.reviews (
   id uuid primary key default gen_random_uuid(),

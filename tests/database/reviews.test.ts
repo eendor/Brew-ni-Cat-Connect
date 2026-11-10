@@ -15,7 +15,7 @@ import {
   signedIn,
 } from "./support/database";
 
-const REVIEWS_MIGRATION = "20261109130000_reviews.sql";
+const REVIEWS_MIGRATION = "20261112120000_reviews.sql";
 
 const STAFF = "11111111-1111-4111-8111-111111111111";
 const CUSTOMER_WITH_PROFILE = "22222222-2222-4222-8222-222222222222";

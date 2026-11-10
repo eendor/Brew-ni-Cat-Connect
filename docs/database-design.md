@@ -444,7 +444,7 @@ File: `supabase/migrations/20261111120000_closed_today.sql`. Undo: `supabase/rol
 
 ## 17. Ratings And Reviews (Phase 5 — 2026-11-09)
 
-File: `supabase/migrations/20261109130000_reviews.sql`. Undo: `supabase/rollbacks/20261109130000_reviews.sql`. Covers FR-098. **Not applied to the live database yet.** Rodnee applies migrations after review.
+File: `supabase/migrations/20261112120000_reviews.sql`. Undo: `supabase/rollbacks/20261112120000_reviews.sql`. Covers FR-098. **Not applied to the live database yet.** Rodnee applies migrations after review.
 
 ### 17.1 Table `public.reviews`
 

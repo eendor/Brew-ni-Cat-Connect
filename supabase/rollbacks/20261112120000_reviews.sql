@@ -1,4 +1,4 @@
--- Undo supabase/migrations/20261109130000_reviews.sql.
+-- Undo supabase/migrations/20261112120000_reviews.sql.
 --
 -- Drops the reviews table, its functions and triggers.
 
