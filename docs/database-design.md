@@ -197,6 +197,8 @@ It returns `{ ok: true, created, reference, status, createdAt }`, or `{ ok: fals
 
 `public.get_online_order(p_reference text, p_tracking_token text)` returns one order for the order page: reference, status, fulfillment, name, payment preference, notes, lines, subtotal, item count, rejection reason, `createdAt`, the status history and the Realtime topic. It never returns the phone number or internal ids. A guest needs the reference and the tracking token; a signed-in customer reads their own orders; staff read every order (FR-044, FR-045, FR-046). Anything else returns `null`, so a wrong token and a missing order look the same.
 
+Update 2026-11-10 (PR #113): `public.list_online_orders_by_token(p_tracking_token, p_limit)` is a third order function open to the API. The Messenger assistant uses it to list a customer's own orders without an order number (§15).
+
 ### 8.6 Realtime status updates
 
 After every status change on `online_orders`, a trigger sends a `status-changed` broadcast with `{ status, changedAt }` on the order's Realtime topic (`order:` plus 22 base64url characters). Only `get_online_order()` returns the topic, so only someone who can see the order can listen (FR-047). A failed broadcast is logged as a warning and never blocks the change; the order page also refreshes on its own (FR-048).
@@ -399,3 +401,21 @@ File: `supabase/migrations/20261105120000_three_flavor_mixes.sql`. Undo: `supaba
 
 - The rollback puts back the 2-flavor limit from `20261101120000_mixed_flavors.sql`. Orders already placed keep their flavor text.
 - TC-P6-220 runs on PGlite (`tests/database/mixed-flavors.test.ts`).
+
+## 15. Order Status By Tracking Token (Phase 7 — 2026-11-10)
+
+File: `supabase/migrations/20261110120000_messenger_order_status.sql`. Undo: `supabase/rollbacks/20261110120000_messenger_order_status.sql`. Covers FR-110 (ADR-029). **Not applied to the live database yet.** It is applied by the process in §8.7, and only with the team's OK. Until then the Messenger assistant's Order status says it can't check orders, and ordering is not affected.
+
+### 15.1 `public.list_online_orders_by_token(p_tracking_token, p_limit)`
+
+- A customer who orders in Messenger has one tracking token for all their orders. The assistant makes it from the sender's Messenger ID and the app secret, so nobody else can, and `place_online_order` already saves its hash in `private.online_order_tokens` with each order. `token_hash` isn't unique, so one token can belong to many orders.
+- The function returns a `jsonb` array of the newest orders for that token, newest first. Each entry is shaped exactly like `get_online_order(reference, token)`: reference, status, lines, subtotal, rejection reason, status history and so on. It never returns the phone number or internal ids.
+- The token must match `^[A-Za-z0-9_-]{43}$` and must exist in `private.online_order_tokens`, compared as the `sha256` of the token. A malformed or unknown token returns `[]`, not an error, so the answer doesn't tell a caller whether a token exists.
+- `p_limit` defaults to 5 and is kept between 1 and 10. The assistant asks for 3.
+- It runs as its owner (`security definer`, empty `search_path`) and is `stable`. Execute is revoked from everyone, then granted to `anon` and `authenticated` only.
+- No table, policy or existing function changes. The token is the credential, exactly as it is for `get_online_order`: 43 URL-safe characters can't be guessed.
+
+### 15.2 Undo and tests
+
+- The rollback drops the function. Orders and tokens are not touched.
+- TC-P7-051 runs on PGlite against the real migrations (`tests/database/messenger-order-status.test.ts`): only that customer's orders, newest first; the status the shop sets on the POS; an empty list for an unknown or malformed token; the limit of 1 to 10; callable by the website's roles only, changing nothing; and the rollback keeps the orders.

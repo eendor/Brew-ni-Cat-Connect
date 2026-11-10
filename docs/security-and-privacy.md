@@ -401,9 +401,9 @@ Before commit/PR, inspect staged and unstaged diffs, verify `.env.local` is untr
 ### 19.3 What the webhook reads, sends and keeps
 
 - It reads only customer-initiated events: the Page-scoped customer ID, the event time, the message ID, and the text or button payload. It reads at most the first 1,000 characters of a message.
-- It writes nothing to the database. The seen message IDs (1 hour), the customers already shown the notice (24 hours) and the per-customer limit counters (10-minute windows) live only in each server instance's memory and are lost when it restarts.
+- ~~It writes nothing to the database.~~ Superseded 2026-11-10 (PR #113): a Messenger order that the customer places is saved like a website order (§21), and nothing else is written. The seen message IDs (1 hour), the customers already shown the notice (24 hours) and the per-customer limit counters (10-minute windows) live only in each server instance's memory and are lost when it restarts.
 - It never sends `mark_seen` or another sender action, so a message it doesn't answer stays unread for the staff.
-- Its replies carry public facts only: the saved website content, the public menu, and an order's reference and status.
+- Its replies carry public facts only: the saved website content, the public menu, and an order's reference and status. Update 2026-11-10 (PR #113): the status reply to the customer who placed an order in Messenger also shows that order's items, total and the shop's reason for a rejection (§21.3).
 
 ### 19.4 Order privacy (FR-063)
 
@@ -411,6 +411,7 @@ Before commit/PR, inspect staged and unstaged diffs, verify `.env.local` is untr
 - A reference alone opens nothing. A short message with only a reference gets a reply asking for the link, and no lookup runs.
 - The reply holds only the reference and the status, never the customer's name, phone, notes, items or prices.
 - Each customer gets at most 5 order checks in 10 minutes.
+- Update 2026-11-10 (PR #113): this is how website orders are checked. Orders placed in Messenger are listed by who is asking, with no link (§21.3).
 
 ### 19.5 Logs
 
@@ -420,20 +421,20 @@ Before commit/PR, inspect staged and unstaged diffs, verify `.env.local` is untr
 
 - ~~The Meta app stays in Development mode, so only people with a role on the app get automated replies.~~ Superseded 2026-11-09: Meta sends no production webhooks to an app in Development mode, not even for people with a role on it, so a team member's test messages got no reply. The app is being published with Standard Access, which needs no App Review and still sends only the messages of people with a role on the app, so only they get automated replies. Publishing needs a privacy policy URL, which is now `/privacy` (§20). Everyone else's messages reach the staff exactly as before.
 - Reaching every customer needs Meta App Review for Advanced Access to `pages_messaging` and the app switched to Live. Submitting it is **TODO: Confirm with Brew ni Cat owner.**
-- A team member applies the chat profile (Get Started, the greeting and the ☰ menu) to the Page once with the Page token. The greeting says the chat has an automated assistant, and the profile has no ice breakers.
+- A team member applies the chat profile (Get Started, the greeting and the ☰ menu) to the Page once with the Page token. The greeting says the chat has an automated assistant, and the profile has no ice breakers. Update 2026-11-10 (PR #113): the profile also has the "🛒 Order here" menu entry and a greeting that says how to order. It is applied to the real Page only with the team's go-ahead.
 
 ### 19.7 Known limits
 
 - The limits and the duplicate check are kept per server instance, so they are best effort across instances.
-- The assistant replies in English only and checks orders by their link only; there is no phone-number check.
+- The assistant replies in English only and checks orders by their link only; there is no phone-number check. Update 2026-11-10 (PR #113): this still holds for website orders. Messenger orders are listed by who is asking (§21.3).
 - Meta keeps the conversation under its own terms, and the staff see the whole chat in the Page inbox as before.
 
 ## 20. Privacy Policy Addendum (PR #107)
 
 ### 20.1 The published policy
 
-- `/privacy` is the customer-facing privacy notice (NFR-026, FR-042). It is a static page that reads only the saved public contact details (§18.8) and is refreshed every minute like the other pages. Its version is `PRIVACY_POLICY_UPDATED` in `src/config/privacy.ts` (2026-11-09), shown at the top as "Last updated"; it changes whenever the wording changes.
-- It says in plain English what this document records: the account email and the password that only Supabase Auth handles (§18.7), the profile name and phone (§18.10), favorites, what a pickup order keeps (§18.2), the order link's token (§18.3), the rider delivery summary the site never sends (§17.1), the Messenger assistant (§19.3 to §19.5), the order limit's in-memory address counts (§18.6), what stays in the browser (§17.1, §18.9, the 3D lite key, the sign-in session and the offline cache), the service providers (Supabase, Vercel, Meta, and Google for the shop's account emails), how long data is kept, the RA 10173 rights and the National Privacy Commission.
+- `/privacy` is the customer-facing privacy notice (NFR-026, FR-042). It is a static page that reads only the saved public contact details (§18.8) and is refreshed every minute like the other pages. Its version is `PRIVACY_POLICY_UPDATED` in `src/config/privacy.ts` (~~2026-11-09~~ Superseded 2026-11-10: now 2026-11-10, because the policy covers orders placed in Messenger, §21.6), shown at the top as "Last updated"; it changes whenever the wording changes.
+- It says in plain English what this document records: the account email and the password that only Supabase Auth handles (§18.7), the profile name and phone (§18.10), favorites, what a pickup order keeps (§18.2), the order link's token (§18.3), the rider delivery summary the site never sends (§17.1), the Messenger assistant (§19.3 to §19.5) and, from 2026-11-10, orders placed in Messenger (§21), the order limit's in-memory address counts (§18.6), what stays in the browser (§17.1, §18.9, the 3D lite key, the sign-in session and the offline cache), the service providers (Supabase, Vercel, Meta, and Google for the shop's account emails), how long data is kept, the RA 10173 rights and the National Privacy Commission.
 - It makes no claim the code does not back. There are no analytics or tracking cookies because none are installed, the fonts are served by the site through `next/font`, and pictures come only from `/images/` (§18.8). TC-P5-090 fails if the page claims "never share", "guarantee" or "encrypted at rest".
 - The page names no customer, and the shop's email address and phone number come from the saved content, not from code.
 
@@ -449,9 +450,54 @@ Before commit/PR, inspect staged and unstaged diffs, verify `.env.local` is untr
 - `/privacy#delete-your-data` is the data deletion instructions URL in the Meta app's settings.
 - A team member with access to the Supabase dashboard deletes the account in Supabase Auth. The profile, favorites, loyalty rows and data requests go with it, and orders stay as guest orders with no `customer_id` (FR-043, TC-P4-082). The orders keep the name and number given at checkout, as the policy says.
 - The `data_requests` table (FR-042) has no customer form yet, so requests come by phone, email or Messenger for now.
+- Update 2026-11-10 (PR #113): an order placed in Messenger is a guest order, so it stays in the shop's sales records like a website order, and the assistant keeps no other data about the customer (§21).
 
 ### 20.4 Known limits
 
-- The owner has not confirmed the wording, how long orders are kept, or the deletion steps (MAN-P5-003). **TODO: Confirm with Brew ni Cat owner.**
+- The owner has not confirmed the wording, how long orders are kept, or the deletion steps (MAN-P5-003). **TODO: Confirm with Brew ni Cat owner.** Update 2026-11-10 (PR #113): the wording for orders placed in Messenger (§21.6) is not confirmed either.
 - There is no self-service delete button or in-app request form yet.
 - The policy is in English only.
+
+## 21. Messenger Ordering Addendum (PR #113)
+
+### 21.1 What the assistant now saves
+
+- The assistant writes to the database in one case: when the customer taps Place order. It calls `place_online_order` with the website's publishable key and no bearer token, so the order is a guest order, exactly like the website's checkout (§18.4). It still uses no privileged key.
+- The order keeps what a website order keeps (§18.2): the name from the customer's Messenger profile (or "Messenger customer"), the mobile number the customer gave, a note that starts "Messenger order." with the pickup time, the payment preference, the items and total, and the status history.
+- The cart is never stored by the shop. It lives in the buttons' payloads in the chat. A payload holds item IDs, sizes, flavors, quantities, the choices made so far and the mobile number the customer gave, which is already in the chat history. Meta keeps the conversation under its own terms.
+
+### 21.2 Identifiers made from the Facebook ID
+
+- The Facebook (Page-scoped) ID is never saved. Two values are made from it with HMAC-SHA256 and the app secret (`src/lib/messenger/order-ids.ts`): the order's idempotency key, from the secret, the sender and the one-time code in the Place order button, and the customer's tracking token, which is the same for all that customer's Messenger orders.
+- Only the SHA-256 hash of the token is saved, in `private.online_order_tokens`, as for a website order (§18.3). A hash can't be turned back into the token or the ID, and only the assistant, which holds the app secret, can make a customer's token.
+- The token is the credential. It is made again on each request and never put in a button, a reply, a URL or a log.
+- Rotating `MESSENGER_APP_SECRET` changes every token, so orders placed before the change no longer show in Order status. They stay in the database and the staff still see them.
+
+### 21.3 Order status privacy (FR-110)
+
+- Order status lists only the orders whose saved token hash equals the hash of the token made from the asking sender's ID. The sender ID comes from Meta's signed event (§19.2), so nobody can ask for another person's orders by typing something.
+- `list_online_orders_by_token` (database design §15) returns `[]` for a malformed or unknown token, never an error, so it tells a caller nothing about which tokens exist. It never returns the phone number or internal IDs.
+- Each reply lists at most 3 orders, newest first, with the number, status, items, total and the shop's reason for a rejection. A customer is limited to 5 order checks in 10 minutes. A failed lookup says the assistant can't check orders and never says there are none.
+- Website orders are unchanged: they are checked only by their link and tracking token (§19.4).
+
+### 21.4 The customer's name
+
+- To name the order, the assistant asks Meta for the customer's name in their conversation with the Page: `GET /me/conversations?platform=messenger&user_id=<id>&fields=participants&limit=1`, with the Page access token in the `Authorization` header (`pages_messaging`). The name goes only into the order. It is never logged, and when the lookup fails the order uses "Messenger customer".
+
+### 21.5 Limits and logs
+
+- Per customer in 10 minutes: 150 order steps, 5 placed orders, 5 order checks and 20 replies. A button payload is at most 1,000 characters, and the cart at most 12 lines of 99 each. These are technical limits, not shop policy.
+- A refused or failed order logs a reason code. The name lookup logs the path and Meta's status, and the order list logs an error code. No sender ID, token, name or phone number is logged (TC-P7-056, TC-P7-071, TC-P7-072).
+- A repeated tap or a Meta retry returns the saved order, so it can't create a second one (TC-P7-062, TC-P7-071).
+
+### 21.6 Privacy policy
+
+- `/privacy` has a new item, "Orders placed in Messenger", and the assistant item no longer says it saves nothing without exception. It says what is kept, that the Facebook ID isn't, and that the order stays in the shop's sales records. The version is 2026-11-10 (TC-P5-088, TC-P5-090, TC-P5-097). The owner has not confirmed the wording (MAN-P5-003). **TODO: Confirm with Brew ni Cat owner.**
+
+### 21.7 Known limits
+
+- Nothing checks that the mobile number belongs to the customer, because there is no code by text message. Staff confirm the order during shop hours, payment is at pickup, and a staff member can reject an order in the POS.
+- The limits and the duplicate check live in each server instance's memory, so they are best effort across instances, and someone with many Facebook accounts could still send many orders.
+- Rotating the app secret hides older Messenger orders from Order status (§21.2).
+- While the Meta app has Standard Access, only people with a role on the app get replies (§19.6).
+- The migration for Order status is not applied to the live database yet (database design §15), and the owner's decisions on orders outside shop hours and closure days are open (functional requirements §12). **TODO: Confirm with Brew ni Cat owner.**

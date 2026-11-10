@@ -10,7 +10,7 @@ This document tracks all business facts, copy, and media assets for Brew ni Cat 
 ## 1. Single Source of Truth Policy
 
 * **Menu & Pricing Source of Truth:** Supabase database is the sole source of truth for current menu items and pricing.
-* **Menu Posters & Static Images:** Physical/posted menu posters serve as visual reference only. They are not an authoritative source for real-time item availability or pricing.
+* **Menu Posters & Static Images:** Physical/posted menu posters serve as visual reference only. They are not an authoritative source for real-time item availability or pricing. Update 2026-11-10 (PR #113): the five posters are now also sent as pictures in Messenger when a customer opens a menu category, with a note that their prices may be older than the prices in the chat. They are still only a visual reference; the chat's prices come from the live menu.
 
 ---
 
