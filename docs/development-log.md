@@ -1641,3 +1641,13 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `fix/phone-button-not-mobile`.
 - **Next action:** Check the button again on the phone after the deploy.
 
+## 2026-11-11 — Log the format of phone button numbers the bot can't use
+
+- **Phase:** Phase 7 (Messenger).
+- **Task:** The phone number button still didn't work on a test phone, so we need to see what Facebook sends.
+- **Summary:** When the button sends a number the bot can't use, the log records only its format (every digit as "d", every letter as "a") and its length. Numbers written with 0063 are now accepted.
+- **Files:** `src/lib/messenger/intents.ts`, `src/lib/messenger/order-state.ts`, `tests/unit/messenger-intents.test.ts`, `docs/test-cases.md` §45 (TC-P7-081).
+- **Testing:** the full Vitest suite with the CI settings: 85 test files, 930 tests, all passed.
+- **Branch / PR:** `fix/phone-button-format`.
+- **Next action:** Tap the button on the phone again and read the format in the Vercel logs.
+
