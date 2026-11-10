@@ -1175,4 +1175,5 @@ Update 2026-11-11 (FR-112): run again with the opening hours cases: 86 test file
 | TC-P7-084 | FR-112 | `POST /api/orders` on a closed day | 503 with the closed message; the database is not called | Passed (automated) |
 | TC-P7-085 | FR-112 | Order here in Messenger before opening | Says "We're not open yet." with the hours and no phone button; no order is placed | Passed (automated) |
 | MAN-P7-007 | FR-112 | The owner checks the POS top bar during and outside the hours, and turns Closed today on | The bar shows Open, Outside hours or Closed today; the next morning it shows Open again | Not run (needs the live app) |
+| TC-P7-086 | FR-101 | The customer replies with only their mobile number, without "order" | Update 2026-11-11: the order starts as with "order 09XXXXXXXXX"; a landline or short number on its own is still left to the staff (TC-P7-057 updated) | Passed (automated) |
 
