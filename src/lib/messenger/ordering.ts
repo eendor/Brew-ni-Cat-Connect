@@ -246,6 +246,24 @@ export function phoneAskReply(note?: string): Reply {
   );
 }
 
+/**
+ * The phone number button sent no number, because the Facebook account has
+ * none to share. The button can't work for them, so it isn't offered again.
+ */
+export function phoneMissingReply(): Reply {
+  return buildReply(
+    join(
+      "🤔 Messenger didn't share a mobile number from your Facebook account, so the phone number button won't work for you.",
+      "📱 Please type your number like this instead: order 09XXXXXXXXX",
+    ),
+    [
+      ...mainQuickReplies().filter((entry) => entry.payload === PAYLOADS.menu),
+      ...staffChoice(),
+    ],
+    { listChoices: true },
+  );
+}
+
 export const phoneRetryReply = () =>
   phoneAskReply(
     "🤔 I couldn't get a Philippine mobile number from that. I can only take one like 09XXXXXXXXX.",
