@@ -47,9 +47,12 @@ export function catSheetUrl(id: string, action: CatAction): string {
 
 const clamp01 = (r: number) => Math.min(Math.max(r, 0), 0.999_999);
 
-/** One cat for about every 200 pixels of width: 3 on a phone, 6 on a desktop. */
+/** The most cats in the strip at once; the six coats repeat. */
+export const MAX_CATS = 16;
+
+/** One cat for about every 100 pixels of width: 4 on a phone, 14 on a desktop. */
 export function catCount(width: number): number {
-  return Math.min(PIXEL_CATS.length, Math.max(3, Math.round(width / 200)));
+  return Math.min(MAX_CATS, Math.max(4, Math.round(width / 100)));
 }
 
 export type CatRest = Readonly<{ action: CatAction; ms: number }>;

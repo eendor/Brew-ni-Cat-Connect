@@ -9,6 +9,7 @@ import {
   type CatAction,
   catCount,
   catSheetUrl,
+  MAX_CATS,
   nextRest,
   nextTarget,
   PIXEL_CATS,
@@ -70,8 +71,8 @@ export function CatStrip() {
     const count = catCount(width());
     const cats: Cat[] = nodes.map((node, index) => ({
       node,
-      id: PIXEL_CATS[index]!.id,
-      canItch: PIXEL_CATS[index]!.canItch,
+      id: PIXEL_CATS[index % PIXEL_CATS.length]!.id,
+      canItch: PIXEL_CATS[index % PIXEL_CATS.length]!.canItch,
       x: 0,
       dir: 1,
       action: "sitting",
@@ -178,20 +179,23 @@ export function CatStrip() {
       data-testid="cat-strip"
       aria-hidden="true"
     >
-      {PIXEL_CATS.map((cat, index) => (
-        <div
-          key={cat.id}
-          className="pixel-cat"
-          data-cat={cat.id}
-          data-action="sitting"
-          style={{
-            left: `${((index + 0.5) / PIXEL_CATS.length) * 100}%`,
-            backgroundImage: `url(${catSheetUrl(cat.id, "sitting")})`,
-            zIndex: (index * 3) % PIXEL_CATS.length,
-            bottom: `calc(var(--cat-size) * -0.36 + ${(index % 3) * 2}px)`,
-          }}
-        />
-      ))}
+      {Array.from({ length: MAX_CATS }, (_, index) => {
+        const cat = PIXEL_CATS[index % PIXEL_CATS.length]!;
+        return (
+          <div
+            key={index}
+            className="pixel-cat"
+            data-cat={cat.id}
+            data-action="sitting"
+            style={{
+              left: `${((index + 0.5) / MAX_CATS) * 100}%`,
+              backgroundImage: `url(${catSheetUrl(cat.id, "sitting")})`,
+              zIndex: (index * 7) % MAX_CATS,
+              bottom: `calc(var(--cat-size) * -0.36 + ${(index % 3) * 2}px)`,
+            }}
+          />
+        );
+      })}
     </div>
   );
 }

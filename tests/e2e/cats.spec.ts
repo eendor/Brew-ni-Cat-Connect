@@ -52,7 +52,7 @@ for (const size of [
     // Update 2026-11-10: the pixel cats (CC0 "Pet Cats Pack") wander on
     // their own; within a few seconds at least one has moved or changed
     // what it is doing. Their frames are a CSS animation in real time.
-    const count = size.name === "phone" ? 3 : 6;
+    const count = size.name === "phone" ? 4 : 14;
     const cats = strip.locator(".pixel-cat:not([hidden])");
     await expect(cats).toHaveCount(count);
     const sheet = await page.request.get("/cats/cat-1/walk.png");
@@ -100,7 +100,7 @@ test("TC-P9-006 — with reduced motion the cats sit still", async ({ page }) =>
   const strip = page.getByTestId("cat-strip");
   await strip.scrollIntoViewIfNeeded();
   const cats = strip.locator(".pixel-cat:not([hidden])");
-  await expect(cats).toHaveCount(6);
+  await expect(cats).toHaveCount(14);
   const state = () =>
     cats.evaluateAll((nodes) =>
       nodes

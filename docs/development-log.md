@@ -1675,7 +1675,7 @@ This log records completed work and observed evidence. Planned work is explicitl
 
 - **Phase:** Phase 9.
 - **Task:** The drawn cats did not look real enough, and we wanted many cats, like the walking pets in VS Code Pets.
-- **Summary:** The footer strip now has the six pixel cats of the CC0 "Pet Cats Pack". Three cats show on a phone and six on a desktop. Each one walks or runs somewhere, then sits, washes, meows, stretches, scratches, or lies down and sleeps, and walks on. The frames are a CSS sprite animation; one animation-frame loop moves the cats, and it stops while the tab is hidden or the strip is off screen. With reduced motion the cats sit still. The VS Code Pets art and two other downloaded packs were left out: their licenses don't let us put them in a public repo.
+- **Summary:** The footer strip now has the six pixel cats of the CC0 "Pet Cats Pack". Four cats show on a phone and fourteen on a desktop (up to 16; the six coats repeat). Each one walks or runs somewhere, then sits, washes, meows, stretches, scratches, or lies down and sleeps, and walks on. The frames are a CSS sprite animation; one animation-frame loop moves the cats, and it stops while the tab is hidden or the strip is off screen. With reduced motion the cats sit still. The VS Code Pets art and two other downloaded packs were left out: their licenses don't let us put them in a public repo.
 - **Files:** `public/cats/**` (sprites and `LICENSE.txt`), `src/lib/cats/cats.ts`, `src/components/cats/cat-strip.tsx` (the SVG `cat-figure.tsx` is removed), `src/app/globals.css`, `tests/unit/cat-characters.test.tsx`, `tests/e2e/cats.spec.ts`, docs.
 - **Testing:** the full Vitest suite and Playwright `cats.spec.ts` (3 passed); see the PR.
 - **Branch / PR:** `feat/cat-characters`.
