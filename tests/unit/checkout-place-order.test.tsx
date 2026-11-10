@@ -12,6 +12,9 @@ import {
 } from "@/lib/orders/types";
 import type { MenuCatalog } from "@/types/menu";
 import type { CartState } from "@/types/ordering";
+import { pinOpenShopClock } from "./shop-clock";
+
+pinOpenShopClock();
 
 const routerPush = vi.hoisted(() => vi.fn());
 vi.mock("next/navigation", () => ({

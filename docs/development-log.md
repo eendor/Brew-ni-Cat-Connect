@@ -1641,6 +1641,26 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `fix/phone-button-not-mobile`.
 - **Next action:** Check the button again on the phone after the deploy.
 
+## 2026-11-11 — Log the format of phone button numbers the bot can't use
+
+- **Phase:** Phase 7 (Messenger).
+- **Task:** The phone number button still didn't work on a test phone, so we need to see what Facebook sends.
+- **Summary:** When the button sends a number the bot can't use, the log records only its format (every digit as "d", every letter as "a") and its length. Numbers written with 0063 are now accepted.
+- **Files:** `src/lib/messenger/intents.ts`, `src/lib/messenger/order-state.ts`, `tests/unit/messenger-intents.test.ts`, `docs/test-cases.md` §45 (TC-P7-081).
+- **Testing:** the full Vitest suite with the CI settings: 85 test files, 930 tests, all passed.
+- **Branch / PR:** `fix/phone-button-format`.
+- **Next action:** Tap the button on the phone again and read the format in the Vercel logs.
+
+## 2026-11-11 — The shop follows its opening hours and opens by default (FR-112)
+
+- **Phase:** Phase 7.
+- **Task:** The owner wanted the switch to mean the shop is open or closed, on (open) by default, and for ordering to follow the schedule.
+- **Summary:** New `open-now.ts` decides whether the shop is open from Closed today and the saved hours, in Manila time. The website checkout, the order API and Messenger order steps refuse outside the hours with a message saying when the shop opens. Closed today now counts only on the day it was turned on, using the row's `updated_at`. Tests that place orders run at a fixed open time.
+- **Files:** `src/lib/site-content/{open-now,load,types}.ts`, `src/app/api/orders/route.ts`, `src/components/checkout/checkout-view.tsx`, `src/lib/messenger/{order-flow,ordering}.ts`, `src/lib/orders/place-order.ts`, tests, docs (FR-112, test cases §47, database design §16.2a).
+- **Testing:** the full Vitest suite with the CI settings: 86 test files, 935 tests, all passed.
+- **Branch / PR:** `feat/shop-open-schedule`.
+- **Next action:** MAN-P7-007 on the POS after build 10147.
+
 ## 2026-11-10 — Ratings and reviews on the website (FR-098)
 
 - **Phase:** Phase 5 (Customer accounts and reviews) and the website.

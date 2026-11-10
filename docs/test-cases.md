@@ -1232,12 +1232,15 @@ Run on 2026-11-10: `NODE_OPTIONS=--no-experimental-webstorage npx vitest run` wi
 | --- | --- | --- | --- | --- |
 | TC-P7-075 | FR-101 | The phone number button sends no number | The chat says Messenger didn't share a number and asks the customer to type "order 09XXXXXXXXX"; the phone number button is not offered again. A non-Philippine number from the button still gets the retry with the button | Passed |
 | TC-P7-080 | FR-101 | The phone number button sends a number that isn't a Philippine mobile (a foreign or landline number on the Facebook account) | Update 2026-11-11: the same reply as TC-P7-075 asks the customer to type "order 09XXXXXXXXX"; the button is not offered again | Passed (automated) |
+| TC-P7-081 | FR-101 | The phone number button sends a number the bot can't use, or a number written as 0063 9XX XXX XXXX | Update 2026-11-11: the log shows only the format (digits as d, letters as a) and the length, never the number; 0063 numbers are accepted | Passed (automated) |
 
 ## 47. Closed Today Switch Cases (2026-11-11)
 
 The owner asked for a switch in the POS app to close the shop for the day (FR-111). §46 is kept for the Phase 8 QA cases.
 
 Run on 2026-11-11: `NODE_OPTIONS=--no-experimental-webstorage npx vitest run` with the CI settings: 85 test files, 928 tests, all passed.
+
+Update 2026-11-11 (FR-112): run again with the opening hours cases: 86 test files, 935 tests, all passed. Tests that place an order now run at a fixed time inside the hours (`tests/unit/shop-clock.ts`).
 
 | ID | Requirement | Scenario | Expected result | Status |
 | --- | --- | --- | --- | --- |
@@ -1246,4 +1249,9 @@ Run on 2026-11-11: `NODE_OPTIONS=--no-experimental-webstorage npx vitest run` wi
 | TC-P7-078 | FR-111 | `POST /api/orders` while the shop is closed | 503 with the closed message; the database is not called | Passed (automated) |
 | TC-P7-079 | FR-111 | The line above every page | "We're closed today." with the note, then the notice; nothing extra while open | Passed (automated) |
 | MAN-P7-006 | FR-111 | The owner turns Closed today on and off in the POS, then checks the website and Messenger | The banner and closed replies appear while on and go away when off | Not run (needs the live migration and the POS release) |
+| TC-P7-082 | FR-112 | The time is before opening, during the hours, after closing, on a closed day, or just after midnight in Manila | Open only inside the saved hours, in Philippine time; the closed message says when ordering opens today | Passed (automated) |
+| TC-P7-083 | FR-112 | Closed today was turned on yesterday, or earlier today | Yesterday's switch no longer closes the shop; today's still does; the loader applies this | Passed (automated) |
+| TC-P7-084 | FR-112 | `POST /api/orders` on a closed day | 503 with the closed message; the database is not called | Passed (automated) |
+| TC-P7-085 | FR-112 | Order here in Messenger before opening | Says "We're not open yet." with the hours and no phone button; no order is placed | Passed (automated) |
+| MAN-P7-007 | FR-112 | The owner checks the POS top bar during and outside the hours, and turns Closed today on | The bar shows Open, Outside hours or Closed today; the next morning it shows Open again | Not run (needs the live app) |
 

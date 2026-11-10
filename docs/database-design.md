@@ -437,6 +437,11 @@ File: `supabase/migrations/20261111120000_closed_today.sql`. Undo: `supabase/rol
 - Messenger: Order here, a phone number and every order step answer with the closed reply; the Hours & location reply starts with the closed line.
 - POS: the owner turns it on and off (`eendor/Brew-ni-Cat-POS`).
 
+### 16.2a Update 2026-11-11: open by default (FR-112)
+
+- No schema change. The website reads `updated_at` of the `closure` row with its content: when Closed today was turned on before today (Philippine time), it is treated as off, so the shop opens by itself each day.
+- Ordering also follows the `hours` section; see `src/lib/site-content/open-now.ts`.
+
 ### 16.3 Undo and tests
 
 - The rollback deletes the `closure` row, puts back the earlier check function and the nine-section list.

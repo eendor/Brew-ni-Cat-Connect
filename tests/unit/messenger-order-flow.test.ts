@@ -1114,6 +1114,19 @@ describe("The owner's Closed today switch (FR-111)", () => {
     expect(ctx.deps.placeOrder).not.toHaveBeenCalled();
   });
 
+  it("TC-P7-085 — outside the opening hours, Order here says when the shop is open (FR-112)", async () => {
+    // Monday 9 November 2026, 9 AM in Manila: before opening.
+    const ctx = setup({ now: () => Date.UTC(2026, 10, 9, 1, 0, 0) });
+    const reply = await orderIntentReply(ctx.deps, ctx.facts);
+    expect(reply.text).toContain("We're not open yet.");
+    expect(reply.text).toContain("Open ");
+    expect(reply.askPhone).toBeUndefined();
+    await expect(beginOrder(PHONE, ctx.deps, ctx.facts)).resolves.toEqual(
+      reply,
+    );
+    expect(ctx.deps.placeOrder).not.toHaveBeenCalled();
+  });
+
   it("TC-P7-076 — with the switch off, or content that can't be read, ordering carries on", async () => {
     const ctx = setup();
     const unreadable: OrderFacts = {
