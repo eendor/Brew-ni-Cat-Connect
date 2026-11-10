@@ -1593,6 +1593,6 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Testing:**
   - `python scripts/validate_phase0_docs.py`: `PHASE0_DOC_VALIDATION=PASS`, 0 errors in 33 Markdown files (`FR_IDS=99`, `NFR_IDS=40`).
   - `npm run format:check`: first run warned about `README.md`; after `npx prettier --write README.md`, `All matched files use Prettier code style!`
-- **Branch / PR:** `docs/p8-closeout`, draft PR for the Phase 8 documentation closeout.
+- **Branch / PR:** `docs/p8-closeout`, draft PR #112.
 - **Known limitations:** Rodnee's Android app (`feat/p8-android-app`, FR-065 to FR-069), the production deploy and the v1.0.0 release with the APK are Not merged yet, and Renier's Phase 8 integrated QA (section 44) is Not merged yet. The manual install and offline checks on real browsers (MAN-P8-001 to MAN-P8-006) are still Not run yet. This register is partial until the final run.
 - **Next action:** Run this closeout again after Rodnee's Android pull request and the v1.0.0 release merge and after Renier's integrated QA merges, then fill in the final statuses, the release section and the Closeout, and mark the pull request ready for review.
