@@ -37,9 +37,9 @@ import {
 } from "@/lib/orders/place-order";
 import { orderRateLimiter } from "@/lib/orders/rate-limit";
 import { PublicSupabaseConfigurationError } from "@/lib/supabase/public-client";
-import { useOpenShopClock } from "./shop-clock";
+import { pinOpenShopClock } from "./shop-clock";
 
-useOpenShopClock();
+pinOpenShopClock();
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const TOKEN = "Zm9yLXRlc3RzLW9ubHktbm90LWEtcmVhbC10b2tlbg8";

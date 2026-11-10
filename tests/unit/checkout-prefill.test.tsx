@@ -16,9 +16,9 @@ import type { CustomerProfile } from "@/lib/account/profile";
 import { fallbackShop } from "@/lib/site-content/fallback-shop";
 import type { ShopFacts } from "@/lib/site-content/types";
 import type { MenuCatalog } from "@/types/menu";
-import { useOpenShopClock } from "./shop-clock";
+import { pinOpenShopClock } from "./shop-clock";
 
-useOpenShopClock();
+pinOpenShopClock();
 
 const mockFacts: ShopFacts = {
   ...fallbackShop,

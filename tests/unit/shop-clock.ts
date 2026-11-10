@@ -6,7 +6,7 @@ import { afterEach, beforeEach, vi } from "vitest";
  */
 export const OPEN_TIME = Date.UTC(2026, 10, 9, 6, 0, 0);
 
-export function useOpenShopClock() {
+export function pinOpenShopClock() {
   beforeEach(() => {
     vi.setSystemTime(OPEN_TIME);
   });
