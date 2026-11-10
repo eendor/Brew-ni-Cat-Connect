@@ -345,8 +345,9 @@ async function answerText(
   if (pointer && text.trim().length <= MAX_SHORT_MESSAGE_LENGTH) {
     return plain(orderLinkNeededReply(pointer.reference));
   }
-  // "order 09XXXXXXXXX" starts an order for someone who can't tap the
-  // phone number button. A bare number is left to the staff.
+  // "order 09XXXXXXXXX", or just the mobile number, starts an order for
+  // someone who can't tap the phone number button. Other numbers are left
+  // to the staff.
   const phone = typedOrderPhone(text);
   if (phone) return ordering(await beginOrder(phone, deps, facts));
   const intent = typedButton(text);

@@ -1661,3 +1661,13 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `feat/shop-open-schedule`.
 - **Next action:** MAN-P7-007 on the POS after build 10147.
 
+## 2026-11-11 — A mobile number on its own starts a Messenger order
+
+- **Phase:** Phase 7 (Messenger).
+- **Task:** On a test phone, a customer typed only their 09 number after the bot asked for it, and the bot said nothing.
+- **Summary:** A message that is only a Philippine mobile number now starts the order. Other bare numbers are still left to the staff. TC-P7-057's bare-number case now uses a landline and a short number.
+- **Files:** `src/lib/messenger/intents.ts`, `src/lib/messenger/events.ts`, `tests/unit/messenger-events.test.ts`, `docs/test-cases.md` §47 (TC-P7-086).
+- **Testing:** the full Vitest suite with the CI settings: 86 test files, 936 tests, all passed.
+- **Branch / PR:** `feat/bare-mobile-number`.
+- **Next action:** Type the number again on the phone after the deploy.
+
