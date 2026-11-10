@@ -17,6 +17,9 @@ import { phoneHref } from "@/lib/site-content/format";
 import type { ShopFacts } from "@/lib/site-content/types";
 import type { MenuCatalog } from "@/types/menu";
 import type { CartState } from "@/types/ordering";
+import { useOpenShopClock } from "./shop-clock";
+
+useOpenShopClock();
 
 // the checkout opens a placed order with the app router
 vi.mock("next/navigation", () => ({

@@ -8,10 +8,12 @@ import {
   SITE_CONTENT_SECTIONS,
   type LoadedSiteContent,
   type SiteContent,
+  type ClosureContent,
   type SiteContentRow,
   type SiteContentSection,
   type SiteContentSource,
 } from "./types";
+import { closureForToday } from "./open-now";
 import { parseSection } from "./validate";
 
 /** Server only: pages and layouts read site content through this. */
@@ -28,7 +30,7 @@ async function readRows(): Promise<readonly SiteContentRow[] | null> {
   if (!client) return null;
   const { data, error } = await client
     .from("site_content")
-    .select("section, content")
+    .select("section, content, updated_at")
     .returns<SiteContentRow[]>();
   return error ? null : data;
 }
@@ -61,6 +63,12 @@ export async function loadSiteContent(
     content[section] = live ?? fallbackSiteContent[section];
     sources[section] = live ? "live" : "fallback";
   }
+
+  // Closed today turns itself off the next day (FR-112).
+  content.closure = closureForToday(
+    content.closure as ClosureContent,
+    rows?.find((row) => row.section === "closure")?.updated_at,
+  );
 
   if (rows === null) {
     console.warn(

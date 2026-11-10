@@ -22,6 +22,7 @@ import { siteConfig } from "@/config/site";
 import { useAuth } from "@/context/auth-context";
 import { useCart } from "@/context/cart-context";
 import { useShopFacts } from "@/context/shop-facts-context";
+import { shopClosedMessage, shopStatus } from "@/lib/site-content/open-now";
 import {
   fetchCustomerProfile,
   type CustomerProfile,
@@ -60,7 +61,6 @@ import {
   MAX_CUSTOMER_NAME_LENGTH,
   MAX_ORDER_NOTES_LENGTH,
   placeOrderFailure,
-  SHOP_CLOSED_MESSAGE,
 } from "@/lib/orders/place-order";
 import { PAYMENT_PREFERENCES, type PlaceOrderResult } from "@/lib/orders/types";
 import type { MenuCatalog } from "@/types/menu";
@@ -223,7 +223,17 @@ export function CheckoutView({
   // Place order (pickup only; rider delivery always copies a summary)
   const placesOnline = onlineOrdering && !isRiderDelivery;
   // The owner's "Closed today" switch in the POS (FR-111).
-  const closedToday = facts.closure.closed;
+  // Closed today, or outside the opening hours (FR-111, FR-112). Checked
+  // after the page loads and every minute, so the server and browser agree.
+  const [shopClosed, setShopClosed] = useState<string | null>(null);
+  useEffect(() => {
+    const check = () =>
+      setShopClosed(shopClosedMessage(shopStatus(facts.closure, hours)));
+    check();
+    const timer = window.setInterval(check, 60_000);
+    return () => window.clearInterval(timer);
+  }, [facts.closure, hours]);
+  const closedToday = shopClosed !== null;
   const [isPlacing, setIsPlacing] = useState(false);
   const placingRef = useRef(false);
   const [placeNotice, setPlaceNotice] = useState<PlaceOrderNotice | null>(null);
@@ -1425,9 +1435,9 @@ export function CheckoutView({
                       className="rounded-2xl border border-[var(--danger)] bg-[var(--danger-soft)] p-4 text-sm text-[var(--text-strong)]"
                     >
                       <strong className="block font-semibold">
-                        {SHOP_CLOSED_MESSAGE}
+                        {shopClosed}
                       </strong>
-                      {facts.closure.note.trim() ? (
+                      {facts.closure.closed && facts.closure.note.trim() ? (
                         <p className="mt-1 text-xs">
                           {facts.closure.note.trim()}
                         </p>

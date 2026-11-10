@@ -1161,6 +1161,8 @@ The owner asked for a switch in the POS app to close the shop for the day (FR-11
 
 Run on 2026-11-11: `NODE_OPTIONS=--no-experimental-webstorage npx vitest run` with the CI settings: 85 test files, 928 tests, all passed.
 
+Update 2026-11-11 (FR-112): run again with the opening hours cases: 86 test files, 935 tests, all passed. Tests that place an order now run at a fixed time inside the hours (`tests/unit/shop-clock.ts`).
+
 | ID | Requirement | Scenario | Expected result | Status |
 | --- | --- | --- | --- | --- |
 | TC-P7-076 | FR-111 | The shop is closed today and a customer taps Order here, sends a number or taps an order step in Messenger | Each answers "🚪 We're closed today." with the note and says no orders are taken; nothing is placed. With the switch off, or content that can't be read, ordering carries on | Passed (automated) |
@@ -1168,4 +1170,9 @@ Run on 2026-11-11: `NODE_OPTIONS=--no-experimental-webstorage npx vitest run` wi
 | TC-P7-078 | FR-111 | `POST /api/orders` while the shop is closed | 503 with the closed message; the database is not called | Passed (automated) |
 | TC-P7-079 | FR-111 | The line above every page | "We're closed today." with the note, then the notice; nothing extra while open | Passed (automated) |
 | MAN-P7-006 | FR-111 | The owner turns Closed today on and off in the POS, then checks the website and Messenger | The banner and closed replies appear while on and go away when off | Not run (needs the live migration and the POS release) |
+| TC-P7-082 | FR-112 | The time is before opening, during the hours, after closing, on a closed day, or just after midnight in Manila | Open only inside the saved hours, in Philippine time; the closed message says when ordering opens today | Passed (automated) |
+| TC-P7-083 | FR-112 | Closed today was turned on yesterday, or earlier today | Yesterday's switch no longer closes the shop; today's still does; the loader applies this | Passed (automated) |
+| TC-P7-084 | FR-112 | `POST /api/orders` on a closed day | 503 with the closed message; the database is not called | Passed (automated) |
+| TC-P7-085 | FR-112 | Order here in Messenger before opening | Says "We're not open yet." with the hours and no phone button; no order is placed | Passed (automated) |
+| MAN-P7-007 | FR-112 | The owner checks the POS top bar during and outside the hours, and turns Closed today on | The bar shows Open, Outside hours or Closed today; the next morning it shows Open again | Not run (needs the live app) |
 
