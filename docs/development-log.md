@@ -1708,3 +1708,14 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Files:** `tests/e2e/ordering.spec.ts`, `tests/e2e/pwa.spec.ts`, `docs/test-cases.md`.
 - **Testing:** Playwright TC-P4-123 and TC-P8-019 after 10 PM Manila time: 2 passed.
 - **Branch / PR:** `fix/e2e-clock-hours`.
+
+
+## 2026-11-10 — Reviews on the home page and in the menu (FR-098)
+
+- **Phase:** Phase 5 and the website.
+- **Task:** The reviews were hard to find: they were only near the bottom of the About page, with no button or link to them.
+- **Summary:** The home page has a "What customers say" block with the average rating, the number of reviews, the newest three reviews, and the links Leave a review and Read all reviews. The header, phone menu and footer have a Reviews link to `/about#reviews`. If the reviews can't load, the block still shows Leave a review.
+- **Files:** `src/components/reviews/reviews-preview.tsx`, `src/app/page.tsx`, `src/config/site.ts`, `tests/unit/reviews-preview.test.tsx`, `tests/unit/site-header.test.tsx`, `tests/e2e/home-reviews.spec.ts`, `docs/test-cases.md` §49, `docs/evidence/phase-5/reviews-home/`.
+- **Testing:** the full Vitest suite and Playwright `home-reviews.spec.ts`; see the PR.
+- **Branch / PR:** `feat/reviews-front`.
+- **Next action:** None.
