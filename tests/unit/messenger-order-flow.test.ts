@@ -241,7 +241,9 @@ describe("A phone number button with no number (FR-101)", () => {
   it("TC-P7-075 — asks the customer to type the number, without the button that can't work", async () => {
     const ctx = setup();
     const reply = await beginOrder(null, ctx.deps, ctx.facts, true);
-    expect(reply.text).toContain("didn't share a mobile number");
+    expect(reply.text).toContain(
+      "couldn't get a Philippine mobile number from your Facebook account",
+    );
     expect(reply.text).toContain("order 09XXXXXXXXX");
     expect(reply.askPhone).toBeUndefined();
 

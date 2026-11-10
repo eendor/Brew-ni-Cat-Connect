@@ -257,7 +257,7 @@ export function phoneAskReply(note?: string): Reply {
 export function phoneMissingReply(): Reply {
   return buildReply(
     join(
-      "🤔 Messenger didn't share a mobile number from your Facebook account, so the phone number button won't work for you.",
+      "🤔 I couldn't get a Philippine mobile number from your Facebook account, so the phone number button won't work for you.",
       "📱 Please type your number like this instead: order 09XXXXXXXXX",
     ),
     [

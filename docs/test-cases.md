@@ -1152,6 +1152,7 @@ Run on 2026-11-10: `NODE_OPTIONS=--no-experimental-webstorage npx vitest run` wi
 | ID | Requirement | Scenario | Expected result | Status |
 | --- | --- | --- | --- | --- |
 | TC-P7-075 | FR-101 | The phone number button sends no number | The chat says Messenger didn't share a number and asks the customer to type "order 09XXXXXXXXX"; the phone number button is not offered again. A non-Philippine number from the button still gets the retry with the button | Passed |
+| TC-P7-080 | FR-101 | The phone number button sends a number that isn't a Philippine mobile (a foreign or landline number on the Facebook account) | Update 2026-11-11: the same reply as TC-P7-075 asks the customer to type "order 09XXXXXXXXX"; the button is not offered again | Passed (automated) |
 
 ## 47. Closed Today Switch Cases (2026-11-11)
 

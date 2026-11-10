@@ -111,8 +111,13 @@ export function readPayload(payload: unknown): ButtonTap | null {
   const intent = INTENTS.find((name) => PAYLOADS[name] === payload);
   if (intent) return { kind: "intent", intent };
   // Messenger's "mobile number" button sends the number as its payload.
+  // A number that isn't a Philippine mobile can't be used either, and the
+  // button would send the same one again, so it isn't offered again.
   if (PHONE_PAYLOAD_PATTERN.test(payload)) {
-    return { kind: "phone", phone: parsePhone(payload, true) };
+    const phone = parsePhone(payload, true);
+    return phone
+      ? { kind: "phone", phone }
+      : { kind: "phone", phone: null, missing: true };
   }
   // The phone button sent something we can't use as a number (empty, or
   // its label), so ask for the number again.
