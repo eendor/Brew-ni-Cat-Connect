@@ -1583,3 +1583,16 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `feat/messenger-reply-buttons`, PR #109.
 - **Known limitations:** Meta allows three buttons per message, so each reply shows three of its choices inside it. The email Supabase sends when an existing email signs up again comes from Supabase's email settings, not from this code.
 - **Next action:** Check the buttons in Messenger after the deploy.
+
+## 2026-11-10 — Phase 8 documentation closeout
+
+- **Phase:** Phase 8 (Android application), documentation.
+- **Task:** Record the Phase 8 work that is merged, add the Phase 8 evidence register, keep the requirement statuses truthful, and update the README while Rodnee's Android app, the v1.0.0 release and Renier's integrated QA are still open.
+- **Summary:** Added `docs/evidence/phase-8-verification.md` with the one merged Phase 8 pull request, the installable web app and offline page (PR #105, FR-068 web part), and listed the Android app, the release and the integrated QA as Not merged yet. Added section 21 to `docs/functional-requirements.md`. The FR-065 to FR-069 status cells are unchanged: FR-065, FR-066, FR-067 and FR-069 stay Planned, and FR-068 stays In development, until Rodnee's Android pull request merges; FR-070 stays Deferred. Added the Phase 8 Android app row to the README Project Status table and linked this register in the evidence sentence and the Documentation list. No test cases were added or edited, so `docs/test-cases.md` is untouched; Renier's QA will be section 44.
+- **Files:** `docs/evidence/phase-8-verification.md`, `docs/functional-requirements.md`, `docs/development-log.md`, `README.md`.
+- **Testing:**
+  - `python scripts/validate_phase0_docs.py`: `PHASE0_DOC_VALIDATION=PASS`, 0 errors in 33 Markdown files (`FR_IDS=99`, `NFR_IDS=40`).
+  - `npm run format:check`: first run warned about `README.md`; after `npx prettier --write README.md`, `All matched files use Prettier code style!`
+- **Branch / PR:** `docs/p8-closeout`, draft PR for the Phase 8 documentation closeout.
+- **Known limitations:** Rodnee's Android app (`feat/p8-android-app`, FR-065 to FR-069), the production deploy and the v1.0.0 release with the APK are Not merged yet, and Renier's Phase 8 integrated QA (section 44) is Not merged yet. The manual install and offline checks on real browsers (MAN-P8-001 to MAN-P8-006) are still Not run yet. This register is partial until the final run.
+- **Next action:** Run this closeout again after Rodnee's Android pull request and the v1.0.0 release merge and after Renier's integrated QA merges, then fill in the final statuses, the release section and the Closeout, and mark the pull request ready for review.
