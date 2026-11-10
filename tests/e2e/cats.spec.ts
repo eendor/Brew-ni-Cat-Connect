@@ -39,6 +39,8 @@ for (const size of [
   test(`TC-P9-005 — the cats walk in their own strip and cover nothing (${size.name})`, async ({
     page,
   }) => {
+    // The chromium project turns reduced motion on; the cats walk only without it.
+    await page.emulateMedia({ reducedMotion: "no-preference" });
     await page.clock.install();
     await page.setViewportSize({ width: size.width, height: size.height });
     await page.goto("/about");
@@ -52,11 +54,26 @@ for (const size of [
     await page.clock.runFor(19_000);
     const walker = page.locator(".cat-strip__walker [data-cat]");
     await expect(walker).toHaveCount(1);
-    await page.clock.runFor(6_000);
     if (CAPTURE_EVIDENCE) {
-      await page.locator("footer").screenshot({
-        path: `${EVIDENCE_DIR}/cat-walking-${size.name}-${size.width}.png`,
-      });
+      // The walk itself is a CSS animation, which runs in real time.
+      await page.evaluate(() =>
+        document
+          .querySelector('[data-testid="cat-strip"]')
+          ?.scrollIntoView({ block: "center" }),
+      );
+      await page.waitForTimeout(size.name === "phone" ? 3_000 : 6_000);
+      const box = await strip.boundingBox();
+      if (box) {
+        await page.screenshot({
+          path: `${EVIDENCE_DIR}/cat-walking-${size.name}-${size.width}.png`,
+          clip: {
+            x: 0,
+            y: box.y - 40,
+            width: size.width,
+            height: box.height + 200,
+          },
+        });
+      }
     }
   });
 }

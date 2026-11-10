@@ -1176,3 +1176,19 @@ Update 2026-11-11 (FR-112): run again with the opening hours cases: 86 test file
 | TC-P7-085 | FR-112 | Order here in Messenger before opening | Says "We're not open yet." with the hours and no phone button; no order is placed | Passed (automated) |
 | MAN-P7-007 | FR-112 | The owner checks the POS top bar during and outside the hours, and turns Closed today on | The bar shows Open, Outside hours or Closed today; the next morning it shows Open again | Not run (needs the live app) |
 
+## 48. Cat Characters Cases (2026-11-10)
+
+The owner asked for the shop's cats on the website (FR-099). The cats come from the shop's "With Main Characters" poster: Kasper, Latte, Luna and Kulas. They walk across an empty strip at the top of the footer on every page.
+
+Run on 2026-11-10: `NODE_OPTIONS=--no-experimental-webstorage npx vitest run` with the CI settings: 87 test files, 939 tests, all passed. `npx playwright test tests/e2e/cats.spec.ts --project=chromium`: 3 passed.
+
+| ID | Requirement | Area | Case | Setup | Steps | Expected | Result |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| TC-P9-001 | FR-099 | `src/lib/cats/cats.ts` | The four poster cats walk now and then, never the same cat twice in a row | None | Call `nextCatWait` and `nextCatIndex` with edge random values | Waits stay between 6 and 18 seconds; the next cat is never the last one | Pass |
+| TC-P9-002 | FR-099, NFR-035 | `CatStrip` | The strip is hidden from screen readers, ignores taps and walks one cat after a wait | Fake timers, no reduced motion | Render, advance 6 seconds | `aria-hidden="true"`, no links or buttons inside; one walking cat appears | Pass |
+| TC-P9-003 | FR-099 | `CatStrip` | No cat walks while the tab is hidden, and a hidden tab stops the walk | Fake timers, `document.hidden` true | Advance 36 seconds; show the tab; hide it again | No walk while hidden; a walk after it shows; hiding removes it | Pass |
+| TC-P9-004 | FR-099, NFR-032 | `CatStrip` | With reduced motion no cat walks; the four cats sit still | `prefers-reduced-motion: reduce` | Render, advance 54 seconds | No walking cat; four sitting cats | Pass |
+| TC-P9-005 | FR-099 | Footer strip (Playwright, 390 and 1440 wide) | The cats walk in their own strip and cover nothing | `/about`, reduced motion off, test clock | Scroll to the footer; check the strip; run the clock 19 seconds | `pointer-events: none`; no link, button, form field or text overlaps the strip; one cat walking | Pass |
+| TC-P9-006 | FR-099, NFR-032 | Footer strip (Playwright) | With reduced motion the four cats sit still | `/about`, reduced motion on | Run the clock 40 seconds | Four sitting cats, no walking cat | Pass |
+
+TC-P4-030 was updated: the footer icon count leaves out the cat drawings (marked "Update 2026-11-10").

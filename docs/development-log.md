@@ -1661,3 +1661,12 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `feat/shop-open-schedule`.
 - **Next action:** MAN-P7-007 on the POS after build 10147.
 
+## 2026-11-10 — The shop's cats walk across the footer (FR-099)
+
+- **Phase:** Phase 9.
+- **Task:** The owner asked for the shop's cats on the website. He didn't send photos, so the cats come from the shop's poster.
+- **Summary:** Kasper, Latte, Luna and Kulas are drawn as SVG cats with a walk cycle. Now and then one walks across an empty strip at the top of the footer, so they never cover buttons, links or text, and the strip ignores taps. With reduced motion the four cats sit still; no walk starts while the tab is hidden or the strip is off screen. CSS transforms only, no WebGL.
+- **Files:** `src/lib/cats/cats.ts`, `src/components/cats/{cat-figure,cat-strip}.tsx`, `src/components/layout/site-footer.tsx`, `src/app/globals.css`, `tests/unit/cat-characters.test.tsx`, `tests/e2e/cats.spec.ts`, `tests/unit/site-footer.test.tsx`, `docs/test-cases.md` §48, `docs/evidence/phase-9/cat-characters/`.
+- **Testing:** the full Vitest suite with the CI settings: 87 test files, 939 tests, all passed. Playwright `cats.spec.ts`: 3 passed.
+- **Branch / PR:** `feat/cat-characters`.
+- **Next action:** Show the owner and ask which pages should have the cats (the TODO in FR-099).
