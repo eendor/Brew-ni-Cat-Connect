@@ -1,70 +1,106 @@
 /**
- * The shop's cats (FR-099), drawn from the shop's "With Main Characters" poster.
- * Colors only; the drawing is in `components/cats/cat-figure.tsx`.
+ * The footer cats (FR-099): six pixel cats from the CC0 "Pet Cats Pack"
+ * (`public/cats`, license in `public/cats/LICENSE.txt`). Each sheet is one
+ * row of 50 x 50 frames; the cat stands on row 32 of its frame.
  */
-export type ShopCat = Readonly<{
-  name: string;
-  fur: string;
-  /** Face, ears, paws and tail for a colorpoint cat; the fur color otherwise. */
-  points: string;
-  earTips: string;
-  eyes: string;
-  longFur: boolean;
-  collar?: string;
-}>;
+export type CatAction =
+  | "walk"
+  | "run"
+  | "idle"
+  | "sitting"
+  | "laying"
+  | "sleeping"
+  | "licking"
+  | "stretching"
+  | "meow"
+  | "itch";
 
-export const SHOP_CATS: readonly ShopCat[] = [
-  {
-    name: "Kasper",
-    fur: "#f7f4ee",
-    points: "#f7f4ee",
-    earTips: "#f3c9c4",
-    eyes: "#b5c93b",
-    longFur: true,
-  },
-  {
-    name: "Latte",
-    fur: "#efe0c6",
-    points: "#7a5236",
-    earTips: "#7a5236",
-    eyes: "#5ea3d8",
-    longFur: false,
-  },
-  {
-    name: "Luna",
-    fur: "#fbfaf7",
-    points: "#fbfaf7",
-    earTips: "#3b3530",
-    eyes: "#8fb35a",
-    longFur: false,
-  },
-  {
-    name: "Kulas",
-    fur: "#8d8f93",
-    points: "#8d8f93",
-    earTips: "#6f7175",
-    eyes: "#d99a2b",
-    longFur: true,
-    collar: "#ffffff",
-  },
-];
+export type CatSheet = Readonly<{ frames: number; ms: number; once?: boolean }>;
 
-/** A walk takes this long to cross the strip. */
-export const CAT_WALK_MS = 14_000;
-/** Wait between walks, so the cats only show now and then. */
-export const CAT_WAIT_MIN_MS = 6_000;
-export const CAT_WAIT_MAX_MS = 18_000;
+export const CAT_SHEETS: Readonly<Record<CatAction, CatSheet>> = {
+  walk: { frames: 8, ms: 800 },
+  run: { frames: 8, ms: 480 },
+  idle: { frames: 10, ms: 1500 },
+  sitting: { frames: 1, ms: 1000 },
+  laying: { frames: 8, ms: 1100, once: true },
+  sleeping: { frames: 2, ms: 2600 },
+  licking: { frames: 5, ms: 900 },
+  stretching: { frames: 13, ms: 1700, once: true },
+  meow: { frames: 4, ms: 700 },
+  itch: { frames: 2, ms: 300 },
+};
 
-/** Wait before the next walk, from a random number in [0, 1). */
-export function nextCatWait(random: number): number {
-  const r = Math.min(Math.max(random, 0), 0.999_999);
-  return Math.round(CAT_WAIT_MIN_MS + r * (CAT_WAIT_MAX_MS - CAT_WAIT_MIN_MS));
+export type PixelCat = Readonly<{ id: string; canItch: boolean }>;
+
+/** Cat 3 has no scratching sheet. */
+export const PIXEL_CATS: readonly PixelCat[] = [1, 2, 3, 4, 5, 6].map((n) => ({
+  id: `cat-${n}`,
+  canItch: n !== 3,
+}));
+
+/** Walking and running speed, in cat sizes (one 50-pixel frame) per second. */
+export const CAT_SPEED = { walk: 0.3, run: 1 } as const;
+
+export function catSheetUrl(id: string, action: CatAction): string {
+  return `/cats/${id}/${action}.png`;
 }
 
-/** The next cat to walk, never the same one twice in a row. */
-export function nextCatIndex(random: number, last: number | null): number {
-  const count = SHOP_CATS.length;
-  const r = Math.min(Math.max(random, 0), 0.999_999);
-  if (last === null) return Math.floor(r * count);
-  return (last + 1 + Math.floor(r * (count - 1))) % count;
+const clamp01 = (r: number) => Math.min(Math.max(r, 0), 0.999_999);
+
+/** One cat for about every 200 pixels of width: 3 on a phone, 6 on a desktop. */
+export function catCount(width: number): number {
+  return Math.min(PIXEL_CATS.length, Math.max(3, Math.round(width / 200)));
+}
+
+export type CatRest = Readonly<{ action: CatAction; ms: number }>;
+
+const RESTS: readonly (readonly [CatAction, number, number])[] = [
+  ["idle", 3_000, 6_000],
+  ["sitting", 4_000, 9_000],
+  ["licking", 2_700, 4_500],
+  ["meow", 1_400, 1_400],
+  ["stretching", 1_700, 1_700],
+  ["laying", 1_100, 1_100],
+  ["itch", 1_200, 2_000],
+];
+
+/** What a cat does after a walk, and for how long, from two random numbers. */
+export function nextRest(
+  pick: number,
+  length: number,
+  canItch: boolean,
+): CatRest {
+  const options = canItch ? RESTS : RESTS.filter(([a]) => a !== "itch");
+  const [action, min, max] =
+    options[Math.floor(clamp01(pick) * options.length)]!;
+  return { action, ms: Math.round(min + clamp01(length) * (max - min)) };
+}
+
+/** A cat that lay down goes to sleep; any other rest ends in a walk. */
+export function afterRest(action: CatAction, length: number): CatRest | null {
+  if (action !== "laying") return null;
+  return {
+    action: "sleeping",
+    ms: Math.round(8_000 + clamp01(length) * 8_000),
+  };
+}
+
+/**
+ * Where the next walk ends: somewhere in the strip at least two cat sizes
+ * away, so every walk is worth watching. `size` is the cat's frame in pixels.
+ */
+export function nextTarget(
+  random: number,
+  x: number,
+  width: number,
+  size: number,
+): number {
+  const min = -0.2 * size;
+  const max = Math.max(min, width - 0.8 * size);
+  let target = min + clamp01(random) * (max - min);
+  if (Math.abs(target - x) < 2 * size) {
+    target = x + (target >= x ? 2 : -2) * size;
+    if (target > max || target < min) target = x - (target - x);
+  }
+  return Math.min(max, Math.max(min, target));
 }

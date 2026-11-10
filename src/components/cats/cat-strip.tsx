@@ -1,79 +1,173 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 
-import { CatFigure } from "@/components/cats/cat-figure";
 import {
-  type ShopCat,
-  CAT_WALK_MS,
-  SHOP_CATS,
-  nextCatIndex,
-  nextCatWait,
+  afterRest,
+  CAT_SHEETS,
+  CAT_SPEED,
+  type CatAction,
+  catCount,
+  catSheetUrl,
+  nextRest,
+  nextTarget,
+  PIXEL_CATS,
 } from "@/lib/cats/cats";
-
-type Walk = Readonly<{ cat: ShopCat; id: number }>;
 
 function prefersReducedMotion(): boolean {
   return (
-    typeof window !== "undefined" &&
     typeof window.matchMedia === "function" &&
     window.matchMedia("(prefers-reduced-motion: reduce)").matches
   );
 }
 
+type Cat = {
+  node: HTMLElement;
+  id: string;
+  canItch: boolean;
+  x: number;
+  dir: 1 | -1;
+  action: CatAction;
+  target: number;
+  until: number;
+};
+
+function show(cat: Cat, action: CatAction) {
+  const sheet = CAT_SHEETS[action];
+  const { node } = cat;
+  cat.action = action;
+  node.dataset.action = action;
+  node.style.backgroundImage = `url(${catSheetUrl(cat.id, action)})`;
+  node.style.setProperty("--frames", String(sheet.frames));
+  node.style.setProperty("--ms", `${sheet.ms}ms`);
+  node.style.setProperty("--repeat", sheet.once ? "1" : "infinite");
+  // start the new sheet from its first frame
+  node.style.animationName = "none";
+  void node.offsetWidth;
+  node.style.animationName = "";
+}
+
+function place(cat: Cat) {
+  cat.node.style.transform = `translateX(${Math.round(cat.x)}px) scaleX(${cat.dir})`;
+}
+
 /**
- * The shop's cats (FR-099). They walk across an empty strip at the top of the
- * footer now and then, so they never cover buttons, links or text, and the
- * strip ignores taps. With reduced motion they sit still (NFR-032); while the
- * tab is hidden or the strip is off screen no walk starts; the page works the
- * same without them (NFR-035).
+ * Pixel cats that wander along their own strip at the top of the footer
+ * (FR-099): they walk or run somewhere, then sit, wash, meow, stretch or lie
+ * down for a nap, and walk on. The strip is decorative (aria-hidden) and
+ * ignores taps. Nothing moves while the tab is hidden or the strip is off
+ * screen, and with reduced motion the cats sit still in a row.
  */
 export function CatStrip() {
   const strip = useRef<HTMLDivElement>(null);
-  const [walk, setWalk] = useState<Walk | null>(null);
 
   useEffect(() => {
-    // With reduced motion the sitting cats show instead (CSS), and none walk.
-    if (prefersReducedMotion()) return;
-    let inView = false;
-    let last: number | null = null;
-    let count = 0;
-    let timer: ReturnType<typeof setTimeout> | undefined;
+    const element = strip.current;
+    if (!element) return;
+    const nodes = [...element.querySelectorAll<HTMLElement>(".pixel-cat")];
+    const width = () => element.clientWidth || window.innerWidth;
+    const size = () => nodes[0]?.offsetWidth || 150;
+    const count = catCount(width());
+    const cats: Cat[] = nodes.map((node, index) => ({
+      node,
+      id: PIXEL_CATS[index]!.id,
+      canItch: PIXEL_CATS[index]!.canItch,
+      x: 0,
+      dir: 1,
+      action: "sitting",
+      target: 0,
+      until: 0,
+    }));
+    cats.forEach((cat, index) => {
+      cat.node.hidden = index >= count;
+      cat.node.style.left = "0";
+      cat.node.style.marginLeft = "0";
+    });
+    const shown = cats.slice(0, count);
+    const spread = (index: number) =>
+      ((index + 0.5) / count) * width() - size() / 2;
 
-    const schedule = (wait: number) => {
-      clearTimeout(timer);
-      timer = setTimeout(start, wait);
-    };
-    function start() {
-      if (document.hidden || !inView) {
-        // Try again later instead of walking where no one can see it.
-        schedule(nextCatWait(Math.random()));
-        return;
-      }
-      last = nextCatIndex(Math.random(), last);
-      count += 1;
-      setWalk({ cat: SHOP_CATS[last] ?? SHOP_CATS[0]!, id: count });
-      schedule(CAT_WALK_MS + nextCatWait(Math.random()));
+    if (prefersReducedMotion()) {
+      shown.forEach((cat, index) => {
+        cat.x = spread(index);
+        cat.dir = index % 2 ? -1 : 1;
+        show(cat, "sitting");
+        place(cat);
+      });
+      return;
     }
 
-    const observer =
-      typeof IntersectionObserver === "function" && strip.current
-        ? new IntersectionObserver((entries) => {
-            inView = entries.some((entry) => entry.isIntersecting);
-          })
-        : null;
-    if (observer && strip.current) observer.observe(strip.current);
-    else inView = true;
-
-    const onVisibility = () => {
-      if (document.hidden) setWalk(null);
+    const rest = (cat: Cat, now: number) => {
+      const next = nextRest(Math.random(), Math.random(), cat.canItch);
+      show(cat, next.action);
+      cat.until = now + next.ms;
     };
-    document.addEventListener("visibilitychange", onVisibility);
-    schedule(nextCatWait(Math.random()));
+    const walk = (cat: Cat) => {
+      cat.target = nextTarget(Math.random(), cat.x, width(), size());
+      cat.dir = cat.target >= cat.x ? 1 : -1;
+      show(cat, Math.random() < 0.15 ? "run" : "walk");
+    };
+
+    let last = performance.now();
+    shown.forEach((cat, index) => {
+      cat.x = spread(index) + (Math.random() - 0.5) * size();
+      cat.dir = Math.random() < 0.5 ? 1 : -1;
+      // start part-way through a rest so the cats never move in step
+      rest(cat, last - Math.random() * 3_000);
+      place(cat);
+    });
+
+    const step = (now: number) => {
+      const dt = Math.min(0.1, (now - last) / 1000);
+      last = now;
+      if (document.hidden) return;
+      for (const cat of shown) {
+        if (cat.action === "walk" || cat.action === "run") {
+          const move = CAT_SPEED[cat.action] * size() * dt;
+          const left = cat.target - cat.x;
+          if (Math.abs(left) <= move) {
+            cat.x = cat.target;
+            rest(cat, now);
+          } else {
+            cat.x += Math.sign(left) * move;
+          }
+          place(cat);
+        } else if (now >= cat.until) {
+          const next = afterRest(cat.action, Math.random());
+          if (next) {
+            show(cat, next.action);
+            cat.until = now + next.ms;
+          } else walk(cat);
+        }
+      }
+    };
+
+    let frame = 0;
+    let running = false;
+    const loop = (now: number) => {
+      step(now);
+      frame = requestAnimationFrame(loop);
+    };
+    const run = (on: boolean) => {
+      if (on === running) return;
+      running = on;
+      element.classList.toggle("is-paused", !on);
+      if (on) {
+        last = performance.now();
+        frame = requestAnimationFrame(loop);
+      } else cancelAnimationFrame(frame);
+    };
+    run(true);
+    const observer =
+      typeof IntersectionObserver === "function"
+        ? new IntersectionObserver(([entry]) =>
+            run(Boolean(entry?.isIntersecting)),
+          )
+        : null;
+    observer?.observe(element);
     return () => {
-      clearTimeout(timer);
       observer?.disconnect();
-      document.removeEventListener("visibilitychange", onVisibility);
+      run(false);
     };
   }, []);
 
@@ -81,24 +175,23 @@ export function CatStrip() {
     <div
       ref={strip}
       className="cat-strip"
-      aria-hidden="true"
       data-testid="cat-strip"
+      aria-hidden="true"
     >
-      <div className="cat-strip__sitting">
-        {SHOP_CATS.map((cat) => (
-          <CatFigure key={cat.name} cat={cat} walking={false} />
-        ))}
-      </div>
-      {walk ? (
+      {PIXEL_CATS.map((cat, index) => (
         <div
-          key={walk.id}
-          className="cat-strip__walker"
-          style={{ animationDuration: `${CAT_WALK_MS}ms` }}
-          onAnimationEnd={() => setWalk(null)}
-        >
-          <CatFigure cat={walk.cat} walking />
-        </div>
-      ) : null}
+          key={cat.id}
+          className="pixel-cat"
+          data-cat={cat.id}
+          data-action="sitting"
+          style={{
+            left: `${((index + 0.5) / PIXEL_CATS.length) * 100}%`,
+            backgroundImage: `url(${catSheetUrl(cat.id, "sitting")})`,
+            zIndex: (index * 3) % PIXEL_CATS.length,
+            bottom: `calc(var(--cat-size) * -0.36 + ${(index % 3) * 2}px)`,
+          }}
+        />
+      ))}
     </div>
   );
 }

@@ -1192,3 +1192,16 @@ Run on 2026-11-10: `NODE_OPTIONS=--no-experimental-webstorage npx vitest run` wi
 | TC-P9-006 | FR-099, NFR-032 | Footer strip (Playwright) | With reduced motion the four cats sit still | `/about`, reduced motion on | Run the clock 40 seconds | Four sitting cats, no walking cat | Pass |
 
 TC-P4-030 was updated: the footer icon count leaves out the cat drawings (marked "Update 2026-11-10").
+
+Update 2026-11-10: the drawn poster cats were replaced by the six pixel cats of the CC0 "Pet Cats Pack" (`public/cats`). The case IDs stay; what they check now:
+
+| ID | Requirement | Area | Updated check | Expected result |
+|---|---|---|---|---|
+| TC-P9-001 | FR-099 | `src/lib/cats/cats.ts` | `catCount`, `nextRest`, `afterRest`, `nextTarget` | 3 cats at 390 px and 6 at 1440 px; cat 3 never scratches; a cat that lies down goes to sleep; every walk goes at least two cat sizes and stays in the strip |
+| TC-P9-002 | FR-099, NFR-035 | `CatStrip` | Render with reduced motion off and step animation frames by hand | The strip is aria-hidden, and after the frames at least one cat has moved or changed what it does |
+| TC-P9-003 | FR-099 | `CatStrip` | `document.hidden` true, step 30 frames | No cat moves or changes |
+| TC-P9-004 | FR-099, NFR-032 | `CatStrip` | `prefers-reduced-motion: reduce` | Every shown cat sits, and no animation frame is requested |
+| TC-P9-005 | FR-099 | Footer strip (Playwright, 390 and 1440 wide) | `/about`, reduced motion off | 3 or 6 cats; the sprite sheet loads (200); a cat moves within 15 seconds; no link, button or text overlaps the strip; evidence `pixel-cats-{phone-390,desktop-1440}.png` |
+| TC-P9-006 | FR-099, NFR-032 | Footer strip (Playwright) | `/about`, reduced motion on, 1440 wide | 6 cats, none walking, and nothing changes in 3 seconds; evidence `pixel-cats-sitting-reduced-motion-1440.png` |
+
+The first screenshots of the drawn cats stay in `docs/evidence/phase-9/cat-characters/` as the record of the first version.

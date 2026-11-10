@@ -2342,71 +2342,51 @@ html[data-motion="on"]:not([data-motion-live])
   line-height: 0.9;
 }
 
-/* Cat characters (FR-099): an empty strip at the top of the footer that only
-   the cats use. It ignores taps, so nothing under it is ever covered. */
+/* Cat characters (FR-099): pixel cats (CC0 "Pet Cats Pack", public/cats) in an
+   empty strip at the top of the footer that only the cats use. It ignores
+   taps, so nothing under it is ever covered. Each sheet is one row of square
+   frames; the cat stands on row 32 of 50, so the strip shows rows 14 to 32. */
 .cat-strip {
+  --cat-size: 100px;
   position: relative;
-  height: 64px;
+  height: calc(var(--cat-size) * 0.38);
   overflow: hidden;
   pointer-events: none;
   user-select: none;
 }
-.cat-strip__walker {
+@media (min-width: 640px) {
+  .cat-strip {
+    --cat-size: 150px;
+  }
+}
+.pixel-cat {
   position: absolute;
-  bottom: 2px;
-  left: 0;
+  width: var(--cat-size);
+  height: var(--cat-size);
+  margin-left: calc(var(--cat-size) * -0.5);
+  background-repeat: no-repeat;
+  background-size: auto 100%;
+  image-rendering: pixelated;
   will-change: transform;
-  animation-name: cat-walk-across;
-  animation-timing-function: linear;
-  animation-fill-mode: both;
+  animation: pixel-cat-frames var(--ms, 1s) steps(var(--frames, 1))
+    var(--repeat, infinite) forwards;
 }
-.cat-strip__sitting {
+.pixel-cat[hidden] {
   display: none;
-  justify-content: center;
-  align-items: flex-end;
-  gap: 1rem;
-  height: 100%;
 }
-.cat-figure--walking .cat-leg {
-  animation: cat-leg-swing 0.6s ease-in-out infinite alternate;
+.cat-strip.is-paused .pixel-cat {
+  animation-play-state: paused;
 }
-.cat-figure--walking .cat-leg--b {
-  animation-delay: -0.6s;
-}
-.cat-figure--walking {
-  animation: cat-bob 0.3s ease-in-out infinite alternate;
-}
-@keyframes cat-walk-across {
+@keyframes pixel-cat-frames {
   from {
-    transform: translateX(-100px);
+    background-position-x: 0;
   }
   to {
-    transform: translateX(calc(100vw + 20px));
-  }
-}
-@keyframes cat-leg-swing {
-  from {
-    transform: rotate(-18deg);
-  }
-  to {
-    transform: rotate(18deg);
-  }
-}
-@keyframes cat-bob {
-  from {
-    transform: translateY(0);
-  }
-  to {
-    transform: translateY(-1.5px);
+    background-position-x: calc(var(--cat-size) * var(--frames, 1) * -1);
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .cat-strip__sitting {
-    display: flex;
-  }
-  .cat-strip__walker,
-  .cat-figure--walking,
-  .cat-figure--walking .cat-leg {
+  .pixel-cat {
     animation: none;
   }
 }

@@ -41,7 +41,6 @@ for (const size of [
   }) => {
     // The chromium project turns reduced motion on; the cats walk only without it.
     await page.emulateMedia({ reducedMotion: "no-preference" });
-    await page.clock.install();
     await page.setViewportSize({ width: size.width, height: size.height });
     await page.goto("/about");
     const strip = page.getByTestId("cat-strip");
@@ -50,22 +49,37 @@ for (const size of [
     await expect(strip).toHaveAttribute("aria-hidden", "true");
     expect(await overlapsWithStrip(page)).toEqual([]);
 
-    // After the longest wait one cat is on its way across.
-    await page.clock.runFor(19_000);
-    const walker = page.locator(".cat-strip__walker [data-cat]");
-    await expect(walker).toHaveCount(1);
-    if (CAPTURE_EVIDENCE) {
-      // The walk itself is a CSS animation, which runs in real time.
-      await page.evaluate(() =>
-        document
-          .querySelector('[data-testid="cat-strip"]')
-          ?.scrollIntoView({ block: "center" }),
+    // Update 2026-11-10: the pixel cats (CC0 "Pet Cats Pack") wander on
+    // their own; within a few seconds at least one has moved or changed
+    // what it is doing. Their frames are a CSS animation in real time.
+    const count = size.name === "phone" ? 3 : 6;
+    const cats = strip.locator(".pixel-cat:not([hidden])");
+    await expect(cats).toHaveCount(count);
+    const sheet = await page.request.get("/cats/cat-1/walk.png");
+    expect(sheet.status()).toBe(200);
+    const state = () =>
+      cats.evaluateAll((nodes) =>
+        nodes
+          .map(
+            (n) =>
+              `${(n as HTMLElement).style.transform} ${(n as HTMLElement).dataset.action}`,
+          )
+          .join("|"),
       );
-      await page.waitForTimeout(size.name === "phone" ? 3_000 : 6_000);
+    const before = await state();
+    await page.evaluate(() =>
+      document
+        .querySelector('[data-testid="cat-strip"]')
+        ?.scrollIntoView({ block: "center" }),
+    );
+    await expect.poll(state, { timeout: 15_000 }).not.toBe(before);
+    expect(await overlapsWithStrip(page)).toEqual([]);
+    if (CAPTURE_EVIDENCE) {
+      await page.waitForTimeout(4_000);
       const box = await strip.boundingBox();
       if (box) {
         await page.screenshot({
-          path: `${EVIDENCE_DIR}/cat-walking-${size.name}-${size.width}.png`,
+          path: `${EVIDENCE_DIR}/pixel-cats-${size.name}-${size.width}.png`,
           clip: {
             x: 0,
             y: box.y - 40,
@@ -78,21 +92,31 @@ for (const size of [
   });
 }
 
-test("TC-P9-006 — with reduced motion the four cats sit still", async ({
-  page,
-}) => {
+// Update 2026-11-10: the six pixel cats replace the four drawn ones.
+test("TC-P9-006 — with reduced motion the cats sit still", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.clock.install();
+  await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/about");
   const strip = page.getByTestId("cat-strip");
   await strip.scrollIntoViewIfNeeded();
-  await expect(strip.locator(".cat-strip__sitting [data-cat]")).toHaveCount(4);
-  await expect(strip.locator(".cat-strip__sitting")).toBeVisible();
-  await page.clock.runFor(40_000);
-  await expect(strip.locator(".cat-strip__walker")).toHaveCount(0);
+  const cats = strip.locator(".pixel-cat:not([hidden])");
+  await expect(cats).toHaveCount(6);
+  const state = () =>
+    cats.evaluateAll((nodes) =>
+      nodes
+        .map(
+          (n) =>
+            `${(n as HTMLElement).style.transform} ${(n as HTMLElement).dataset.action}`,
+        )
+        .join("|"),
+    );
+  const before = await state();
+  expect(before).not.toMatch(/walk|run/);
+  await page.waitForTimeout(3_000);
+  expect(await state()).toBe(before);
   if (CAPTURE_EVIDENCE) {
     await page.locator("footer").screenshot({
-      path: `${EVIDENCE_DIR}/cats-sitting-reduced-motion-1440.png`,
+      path: `${EVIDENCE_DIR}/pixel-cats-sitting-reduced-motion-1440.png`,
     });
   }
 });
