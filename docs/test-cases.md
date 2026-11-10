@@ -383,6 +383,8 @@ Run on 2026-10-24 for branch `feat/p4-online-orders`: Vitest 234/234 passed in 3
 | TC-P4-121 | FR-024 | Order client | Place order posts JSON, uncached, and returns the API's answer | Fake `fetch` | Place an order; then answer `price-changed` | One POST to `/api/orders` with JSON, `no-store` and same-origin credentials; the answer comes back as sent | Matched in the 234/234 Vitest run | Passed | `tests/unit/order-client.test.ts` |
 | TC-P4-122 | FR-024 | Order client | No answer, or an unknown one, is a server error to retry | Fake `fetch` | Fail the network; answer an HTML page, an empty body, an unknown shape, and a saved order with another token | A `server-error` result each time | Matched in the 234/234 Vitest run | Passed | `tests/unit/order-client.test.ts` |
 | TC-P4-123 | FR-022, FR-025 | Place order browser flow | A pickup order is placed and its page opens | Production build in `chromium` with the switch on, a mocked menu and a mocked `POST /api/orders` that echoes the request's token | Order 2 × 8 pcs Cheese Takoyaki, check out, fill name and phone, review, tap Place order | No Proceed to Send to Shop button; one request with the picks, the details and ₱220; the page opens `/orders/BNC-7K2Q9F#token=…` with the request's token | Matched in the 18/18 Playwright `chromium` run | Passed | `tests/e2e/ordering.spec.ts` |
+
+Update 2026-11-10: TC-P4-123 and TC-P8-019 now fix the browser clock at 2 PM Manila time (`page.clock.setFixedTime`). Since FR-112 the checkout follows the opening hours, so without this the two tests failed whenever CI ran after closing.
 | TC-P4-129 | FR-026 | Order page loader | A matching reference and token load the order | Mocked Supabase client | Call `fetchOrder` with a valid reference and token | One `get_online_order` call with both; the order comes back | Matched in the 246/246 Vitest run | Passed | `tests/unit/fetch-order.test.ts` |
 | TC-P4-130 | FR-026 | Order page loader | No order matches | Mocked client answers no data | Call `fetchOrder` | `null` | Matched in the 246/246 Vitest run | Passed | `tests/unit/fetch-order.test.ts` |
 | TC-P4-131 | FR-026 | Order page loader | A failed request is an error, not a missing order | Mocked client answers an error | Call `fetchOrder` | It throws “The order could not be loaded.” | Matched in the 246/246 Vitest run | Passed | `tests/unit/fetch-order.test.ts` |
@@ -940,6 +942,85 @@ These need a real browser or phone and were not run in this environment.
 | MAN-P8-005 | FR-068 | Turn the network back on and press Try again | The requested page loads from the network | Not run yet |
 | MAN-P8-006 | FR-068 | Run a Lighthouse installability/PWA audit on the production site | The manifest, service worker, icons and start URL pass the installability checks | Not run yet |
 
+## 39. Ratings And Reviews Cases (Phase 5, Week 3 — FR-098)
+
+Run on 2026-11-10 by Van Joaquin C. Baguio on branch `feat/p5-reviews` (PR #114). The migration adds the `public.reviews` table, column-level security grants, and security definer functions `public.post_review` and `public.my_review`. The website provides a Reviews section on the About page above the visit section, presenting the average rating, count, newest reviews (10 per page with Show more), and an accessible 1 to 5 star submission form with 500-character counter. `POST /api/reviews` applies a per-IP rate limit (3 in 10 minutes) and passes the authenticated session to Supabase. Database tests run on PGlite (`tests/database/reviews.test.ts`): 12 passed. Unit tests run on Vitest (`tests/unit/reviews-route.test.ts`, `tests/unit/review-form.test.tsx`, `tests/unit/reviews-list.test.tsx`): 19 passed. E2E browser tests run on Chromium with Playwright (`tests/e2e/reviews.spec.ts`): 3 passed. Evidence screenshots were captured into `docs/evidence/phase-5/reviews/` with `CAPTURE_EVIDENCE=1`. Manual verification cases MAN-P5-001 to MAN-P5-009 are Not run yet until the migration is applied to the live database by Rodnee.
+
+### 39a. Database permissions, constraints and functions (TC-P5-170 to TC-P5-181)
+
+| ID | Requirement ID(s) | Module | Scenario | Preconditions | Input / action | Expected result | Actual result | Status | Evidence |
+|---|---|---|---|---|---|---|---|---|---|
+| TC-P5-170 | FR-098 | `public.reviews` | Public reads visible reviews and cannot select `customer_id` | Migration applied; reviews populated | Anonymous client selects columns from `public.reviews` | Allowed columns return data; selecting `customer_id` fails with permission denied | Matched. | Passed | `tests/database/reviews.test.ts` |
+| TC-P5-171 | FR-098 | `public.reviews` | Public cannot read hidden reviews | Hidden review exists in database | Anonymous client selects visible reviews | Hidden review is omitted from query results | Matched. | Passed | `tests/database/reviews.test.ts` |
+| TC-P5-172 | FR-098 | `public.reviews` | Staff can view hidden reviews | Hidden review exists | Staff client queries `public.reviews` | Returns all reviews including hidden ones | Matched. | Passed | `tests/database/reviews.test.ts` |
+| TC-P5-173 | FR-098 | `public.post_review` | Signed-in customer posts review with name from profile | Customer profile with `full_name = 'Maria Clara'` | Call `post_review(5, 'Delicious matcha!')` as customer | Creates review with `display_name = 'Maria'` and references `customer_id` | Matched. | Passed | `tests/database/reviews.test.ts` |
+| TC-P5-174 | FR-098 | `public.post_review` | Signed-in customer's second post updates existing review | Customer already has a review | Call `post_review(4, 'Updated comment')` | Updates existing review (rating 4, new text) without creating a duplicate row | Matched. | Passed | `tests/database/reviews.test.ts` |
+| TC-P5-175 | FR-098 | `public.post_review` | Anonymous customer posts a guest review | Anonymous session (`auth.uid() IS NULL`) | Call `post_review(5, 'Lovely cats and great coffee!')` | Creates a new review with `display_name = 'Guest'` and `customer_id = NULL` | Matched. | Passed | `tests/database/reviews.test.ts` |
+| TC-P5-176 | FR-098 | `public.post_review` | Guest review cannot be edited | Anonymous session | Second guest call to `post_review` | Inserts another independent guest review rather than editing previous one | Matched. | Passed | `tests/database/reviews.test.ts` |
+| TC-P5-177 | FR-098 | `public.post_review` | Database-wide guest limit enforces max 10 in 10 minutes | 10 guest reviews already posted in last 10 minutes | Attempt 11th guest `post_review` | Function raises exception: guest limit reached; backstop protects database | Matched. | Passed | `tests/database/reviews.test.ts` |
+| TC-P5-178 | FR-098 | `public.post_review` | Rejects rating outside 1 to 5 | Anonymous or authenticated session | Call `post_review(0, 'Bad')` or `post_review(6, 'Super')` | Raises exception: rating must be between 1 and 5 | Matched. | Passed | `tests/database/reviews.test.ts` |
+| TC-P5-179 | FR-098 | `public.post_review` | Rejects empty or blank review body | Clean session | Call `post_review(5, '   ')` | Raises exception: review text cannot be empty | Matched. | Passed | `tests/database/reviews.test.ts` |
+| TC-P5-180 | FR-098 | `public.post_review` | Rejects review text exceeding 500 characters | Clean session | Call `post_review(5, 'a'.repeat(501))` | Raises exception: review text cannot exceed 500 characters | Matched. | Passed | `tests/database/reviews.test.ts` |
+| TC-P5-181 | FR-098 | `public.reviews` | Non-staff cannot hide reviews; staff cannot edit text; rollback drops cleanly | Test accounts | Anon tries updating `hidden`; staff tries updating `body`; rollback executed | Non-staff denied; staff denied editing body; rollback drops table and functions cleanly | Matched. | Passed | `tests/database/reviews.test.ts` |
+
+### 39b. Reviews API route (TC-P5-182 to TC-P5-187)
+
+| ID | Requirement ID(s) | Module | Scenario | Preconditions | Input / action | Expected result | Actual result | Status | Evidence |
+|---|---|---|---|---|---|---|---|---|---|
+| TC-P5-182 | FR-098 | `POST /api/reviews` | Validates input (rating 1-5, non-empty body <= 500 chars) | Mock rate limiter | Submit invalid ratings (0, 6, string) and bodies (empty, whitespace, >500 chars) | Returns HTTP 400 with friendly descriptive error message | Matched. | Passed | `tests/unit/reviews-route.test.ts` |
+| TC-P5-183 | FR-098 | `POST /api/reviews` | Applies sliding rate limit (max 3 posts in 10 min) and returns 429 | Sliding rate limiter configured | Send 4 rapid requests from same client IP | First 3 succeed (200), 4th returns 429 with `RATE_LIMITED_MESSAGE` | Matched. | Passed | `tests/unit/reviews-route.test.ts` |
+| TC-P5-184 | FR-098 | `POST /api/reviews` | Forwards customer session token to Supabase client | Signed-in customer with valid JWT | Send request with `Authorization: Bearer <token>` | Token is forwarded to Supabase client so `auth.uid()` resolves | Matched. | Passed | `tests/unit/reviews-route.test.ts` |
+| TC-P5-185 | FR-098 | `POST /api/reviews` | Sanitizes error logs and never logs review text or personal data | Spied console.error | Trigger input validation and rate limit errors | Logs operational error codes only; no review text or PII appears in logs | Matched. | Passed | `tests/unit/reviews-route.test.ts` |
+| TC-P5-186 | FR-098 | `POST /api/reviews` | Returns 500 with friendly message on database error | RPC call fails with exception | Send valid review request | Returns HTTP 500 with friendly generic message without leaking internals | Matched. | Passed | `tests/unit/reviews-route.test.ts` |
+| TC-P5-187 | FR-098 | `POST /api/reviews` | Creates anonymous review when no bearer token is present | Unauthenticated client | Send request without Authorization header | Client is initialized without token; guest review created | Matched. | Passed | `tests/unit/reviews-route.test.ts` |
+
+### 39c. Review form component (TC-P5-188 to TC-P5-194)
+
+| ID | Requirement ID(s) | Module | Scenario | Preconditions | Input / action | Expected result | Actual result | Status | Evidence |
+|---|---|---|---|---|---|---|---|---|---|
+| TC-P5-188 | FR-098 | `ReviewForm` | Requires a star choice (1 to 5) before submission | Form rendered | Enter review text and click Post review without selecting stars | Displays validation error: "Please select a star rating between 1 and 5." and does not call API | Matched. | Passed | `tests/unit/review-form.test.tsx` |
+| TC-P5-189 | FR-098 | `ReviewForm` | Enforces 500 character limit with live counter | Form rendered | Type text into textarea | Counter updates in real-time (`11/500`); submitting empty text shows error | Matched. | Passed | `tests/unit/review-form.test.tsx` |
+| TC-P5-190 | FR-098 | `ReviewForm` | Displays 'Posting as <first name>' when signed in and allows editing | Authenticated customer with existing review | Render form | Displays "Posting as Maria", pre-fills existing review, and button says "Update review" | Matched. | Passed | `tests/unit/review-form.test.tsx` |
+| TC-P5-191 | FR-098 | `ReviewForm` | Displays 'Posting as Guest' and note that guest reviews cannot be edited | Unauthenticated session | Render form | Shows "Posting as Guest" and explicit note that guest reviews cannot be edited | Matched. | Passed | `tests/unit/review-form.test.tsx` |
+| TC-P5-192 | FR-098 | `ReviewForm` | Disables form fields and button while submitting | Pending API promise | Click Post review | Radio buttons, textarea, and submit button disabled ("Saving...") | Matched. | Passed | `tests/unit/review-form.test.tsx` |
+| TC-P5-193 | FR-098 | `ReviewForm` | Displays success message and calls onReviewPosted on successful post | API resolves successfully | Post valid review | Shows success banner "Thank you! Your review has been posted." and calls callback | Matched. | Passed | `tests/unit/review-form.test.tsx` |
+| TC-P5-194 | FR-098 | `ReviewForm` | Displays clear error message when API call fails | API resolves with rate limit error | Submit review | Alert banner displays rate limit message | Matched. | Passed | `tests/unit/review-form.test.tsx` |
+
+### 39d. Reviews list component (TC-P5-195 to TC-P5-200)
+
+| ID | Requirement ID(s) | Module | Scenario | Preconditions | Input / action | Expected result | Actual result | Status | Evidence |
+|---|---|---|---|---|---|---|---|---|---|
+| TC-P5-195 | FR-098 | `ReviewsList` | Renders average rating and total count formatted properly | List rendered with 3 reviews | Provide averageRating=4.7 and totalCount=3 | Renders "4.7 out of 5 stars" and "Based on 3 customer reviews" | Matched. | Passed | `tests/unit/reviews-list.test.tsx` |
+| TC-P5-196 | FR-098 | `ReviewsList` | Renders empty state ("No reviews yet. Be the first.") | Total count is 0 and empty array | Render list | Displays "No reviews yet. Be the first." and hides average rating header | Matched. | Passed | `tests/unit/reviews-list.test.tsx` |
+| TC-P5-197 | FR-098 | `ReviewsList` | Renders reviews with star rating, display name, date, and text | Mock review list | Render list | Each review shows stars, author display name, formatted date, and review body | Matched. | Passed | `tests/unit/reviews-list.test.tsx` |
+| TC-P5-198 | FR-098 | `ReviewsList` | Renders error message when error prop is provided | Error prop passed | Render list with error string | Displays alert with the provided error message | Matched. | Passed | `tests/unit/reviews-list.test.tsx` |
+| TC-P5-199 | FR-098 | `ReviewsList` | Renders 'Show more' button when hasMore is true | hasMore=true, totalCount=15 | Render list and click Show more | Button is visible and triggers `onLoadMore` handler | Matched. | Passed | `tests/unit/reviews-list.test.tsx` |
+| TC-P5-200 | FR-098 | `ReviewsList` | Never renders customer email or phone number in cards | Review item rendered | Check card DOM text | Contains no email address, phone number, or internal UUID | Matched. | Passed | `tests/unit/reviews-list.test.tsx` |
+
+### 39e. Browser tests and evidence (TC-P5-201 to TC-P5-203)
+
+| ID | Requirement ID(s) | Module | Scenario | Preconditions | Input / action | Expected result | Actual result | Status | Evidence |
+|---|---|---|---|---|---|---|---|---|---|
+| TC-P5-201 | FR-098 | `/about` | Customers can read reviews with average rating and star counts on the About page | Chromium; PostgREST mocked with 3 reviews | Navigate to `/about` at 1440x900 and 390x844 | Reviews section is visible above the visit section; displays "5.0 out of 5 stars", star rating summary, 3 cards; no horizontal overflow | Matched. | Passed | `tests/e2e/reviews.spec.ts`, `docs/evidence/phase-5/reviews/reviews-list-desktop-1440.png`, `docs/evidence/phase-5/reviews/reviews-list-mobile-390.png` |
+| TC-P5-202 | FR-098 | `/about` | A guest customer can post a star rating and short review | Chromium; PostgREST and `/api/reviews` mocked | Select 5 stars, enter "The caramel latte is rich...", click Post review | Immediate success message "Thank you! Your review has been posted." and review card appears immediately in the list | Matched. | Passed | `tests/e2e/reviews.spec.ts`, `docs/evidence/phase-5/reviews/review-posted-desktop-1440.png`, `docs/evidence/phase-5/reviews/review-posted-mobile-390.png` |
+| TC-P5-203 | FR-098 | `/about` | Shows friendly error message when rate limited | Chromium; `/api/reviews` returns 429 | Submit review | Friendly rate-limit error message is displayed in an alert banner; review text remains preserved in textarea | Matched. | Passed | `tests/e2e/reviews.spec.ts`, `docs/evidence/phase-5/reviews/reviews-rate-limit-desktop-1440.png`, `docs/evidence/phase-5/reviews/reviews-rate-limit-mobile-390.png` |
+
+### 39f. Manual test cases (MAN-P5-001 to MAN-P5-009)
+
+| ID | Requirement ID(s) | Description | Expected result | Status |
+|---|---|---|---|---|
+| MAN-P5-001 | FR-098 | Anonymous visitor leaves a 5-star review on desktop | Review posts immediately as "Guest", success banner shows, and card appears at top | Not run yet |
+| MAN-P5-002 | FR-098 | Anonymous visitor leaves a review on mobile (390px) | Layout fits cleanly without sideways scroll; star touch targets are easily tappable | Not run yet |
+| MAN-P5-003 | FR-098 | Signed-in customer posts their first review | Form shows "Posting as <first name>", post succeeds, and name matches profile | Not run yet |
+| MAN-P5-004 | FR-098 | Signed-in customer edits their existing review | Form loads existing rating and text, button says "Update review", updating updates the card | Not run yet |
+| MAN-P5-005 | FR-098 | Rate limit triggers after 3 submissions from one IP | 4th submission within 10 minutes shows friendly rate limit message without database write | Not run yet |
+| MAN-P5-006 | FR-098 | Empty review text or missing star selection is blocked | Form validation displays clear inline warning without sending network request | Not run yet |
+| MAN-P5-007 | FR-098 | Long review exceeding 500 characters is rejected | Counter indicates limit and submission is blocked | Not run yet |
+| MAN-P5-008 | FR-098 | Staff hides an inappropriate review from POS | Review disappears from public `/about` page upon next reload | Not run yet |
+| MAN-P5-009 | FR-098 | Pagination with "Show more" loads next 10 reviews | Clicking Show more loads older reviews smoothly without page jump | Not run yet |
+
+
+
 ## 40. Messenger Assistant Webhook Cases (Phase 7 — FR-058 to FR-063)
 
 Run on 2026-11-09 by Rodnee on branch `feat/p7-messenger` (PR #106). The webhook route, the signature and subscription checks, the event handling, the replies and the Send API client are tested with Vitest. Meta's requests, the website content, the menu and the order lookup are mocked, and the tests use made-up Page and customer IDs, so no live message, account, order or data was used. The checks ran with the CI settings (`NEXT_PUBLIC_SUPABASE_URL=https://example.supabase.co`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=placeholder-publishable-key`, `NEXT_PUBLIC_ONLINE_ORDERING=enabled`).
@@ -1175,6 +1256,7 @@ Update 2026-11-11 (FR-112): run again with the opening hours cases: 86 test file
 | TC-P7-084 | FR-112 | `POST /api/orders` on a closed day | 503 with the closed message; the database is not called | Passed (automated) |
 | TC-P7-085 | FR-112 | Order here in Messenger before opening | Says "We're not open yet." with the hours and no phone button; no order is placed | Passed (automated) |
 | MAN-P7-007 | FR-112 | The owner checks the POS top bar during and outside the hours, and turns Closed today on | The bar shows Open, Outside hours or Closed today; the next morning it shows Open again | Not run (needs the live app) |
+| TC-P7-086 | FR-101 | The customer replies with only their mobile number, without "order" | Update 2026-11-11: the order starts as with "order 09XXXXXXXXX"; a landline or short number on its own is still left to the staff (TC-P7-057 updated) | Passed (automated) |
 
 ## 48. Cat Characters Cases (2026-11-10)
 

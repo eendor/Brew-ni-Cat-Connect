@@ -1679,3 +1679,32 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Files:** `public/cats/**` (sprites and `LICENSE.txt`), `src/lib/cats/cats.ts`, `src/components/cats/cat-strip.tsx` (the SVG `cat-figure.tsx` is removed), `src/app/globals.css`, `tests/unit/cat-characters.test.tsx`, `tests/e2e/cats.spec.ts`, docs.
 - **Testing:** the full Vitest suite and Playwright `cats.spec.ts` (3 passed); see the PR.
 - **Branch / PR:** `feat/cat-characters`.
+
+## 2026-11-11 — A mobile number on its own starts a Messenger order
+
+- **Phase:** Phase 7 (Messenger).
+- **Task:** On a test phone, a customer typed only their 09 number after the bot asked for it, and the bot said nothing.
+- **Summary:** A message that is only a Philippine mobile number now starts the order. Other bare numbers are still left to the staff. TC-P7-057's bare-number case now uses a landline and a short number.
+- **Files:** `src/lib/messenger/intents.ts`, `src/lib/messenger/events.ts`, `tests/unit/messenger-events.test.ts`, `docs/test-cases.md` §47 (TC-P7-086).
+- **Testing:** the full Vitest suite with the CI settings: 86 test files, 936 tests, all passed.
+- **Branch / PR:** `feat/bare-mobile-number`.
+- **Next action:** Type the number again on the phone after the deploy.
+
+## 2026-11-10 — Ratings and reviews on the website (FR-098)
+
+- **Phase:** Phase 5 (Customer accounts and reviews) and the website.
+- **Task:** Customers can give the shop a star rating and a short review, and everyone can read them on the website (Trello card: Van — Ratings and reviews on the website (FR-098)).
+- **Summary:** Added `public.reviews` table with column-level permissions (`anon` and `authenticated` can read visible reviews, staff can update `hidden` to moderate from the POS). Function `public.post_review` creates a customer review (using first word of `customer_profiles.full_name`) or guest review, enforcing a 10-review database-wide flood backstop. Function `public.my_review` allows signed-in customers to fetch and edit their review. Built `POST /api/reviews` route with per-IP rate limiting (3 in 10 minutes) passing session tokens to Supabase. Created accessible reviews UI on `/about` page featuring average rating summary, 10-per-page list with Show more, and accessible 1 to 5 star rating form with 500-character counter. The migration is not applied to the live database yet; Rodnee applies it after review.
+- **Files:** `supabase/migrations/20261112120000_reviews.sql`, `supabase/rollbacks/20261112120000_reviews.sql`, `src/app/api/reviews/route.ts`, `src/lib/reviews/` (`types.ts`, `constants.ts`, `rate-limit.ts`, `service.ts`), `src/components/reviews/` (`star-rating.tsx`, `review-card.tsx`, `review-form.tsx`, `reviews-list.tsx`, `reviews-section.tsx`), `src/app/about/page.tsx`, `tests/database/reviews.test.ts`, `tests/unit/` (`reviews-route.test.ts`, `review-form.test.tsx`, `reviews-list.test.tsx`), `tests/e2e/reviews.spec.ts`, `docs/test-cases.md` §39, `docs/functional-requirements.md` (FR-098 and §12), `docs/database-design.md` §17, `docs/security-and-privacy.md` §22, `docs/development-log.md`, `docs/evidence/phase-5/reviews/`.
+- **Testing:** Database tests run on PGlite (`tests/database/reviews.test.ts`): 12 passed. Unit tests run on Vitest: 19 passed. E2E browser tests run on Chromium with Playwright (`tests/e2e/reviews.spec.ts`): 3 passed. Evidence screenshots captured at 1440x900 and 390x844. Full test suite: 86 test files, 948 tests passed. `npm run typecheck`, `npm run lint`, `python scripts/validate_phase0_docs.py` and `npm run format:check` all passed.
+- **Branch / PR:** `feat/p5-reviews`.
+- **Next action:** Rodnee reviews the PR and applies the migration to the live database; Van runs manual test cases MAN-P5-001 to MAN-P5-009 on phone and desktop.
+
+## 2026-11-10 — Browser tests no longer fail after closing time (FR-112)
+
+- **Phase:** Testing.
+- **Task:** Two Place order browser tests (TC-P4-123, TC-P8-019) failed in CI after 9 PM Manila time.
+- **Summary:** Since the website follows the opening hours (PR #119), the checkout reads the browser clock and blocks orders after closing. The tests used the real clock, so they passed in the day and failed at night. They now fix the clock at 2 PM Manila time.
+- **Files:** `tests/e2e/ordering.spec.ts`, `tests/e2e/pwa.spec.ts`, `docs/test-cases.md`.
+- **Testing:** Playwright TC-P4-123 and TC-P8-019 after 10 PM Manila time: 2 passed.
+- **Branch / PR:** `fix/e2e-clock-hours`.

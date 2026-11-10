@@ -133,10 +133,14 @@ test("TC-P3-060 — adds two Takoyaki and validates Rider Delivery checkout", as
 test("TC-P4-123 — Place order sends the pickup order and opens its order page", async ({
   page,
 }) => {
+  // Checkout follows the opening hours (FR-112): pin the browser clock to an open hour.
+  await page.clock.setFixedTime(new Date(Date.UTC(2026, 10, 9, 6)));
   test.skip(
     process.env.NEXT_PUBLIC_ONLINE_ORDERING !== "enabled",
     "needs a build with NEXT_PUBLIC_ONLINE_ORDERING=enabled",
   );
+  // the checkout follows the opening hours: pin the clock to 2 PM in Manila
+  await page.clock.setFixedTime(new Date("2026-11-10T06:00:00Z"));
   await mockMenu(page);
   const sent: Array<Record<string, unknown>> = [];
   await page.route("**/api/orders", async (route) => {
