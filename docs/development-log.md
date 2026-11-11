@@ -1661,6 +1661,25 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `feat/shop-open-schedule`.
 - **Next action:** MAN-P7-007 on the POS after build 10147.
 
+## 2026-11-10 — The shop's cats walk across the footer (FR-099)
+
+- **Phase:** Phase 9.
+- **Task:** The owner asked for the shop's cats on the website. He didn't send photos, so the cats come from the shop's poster.
+- **Summary:** Kasper, Latte, Luna and Kulas are drawn as SVG cats with a walk cycle. Now and then one walks across an empty strip at the top of the footer, so they never cover buttons, links or text, and the strip ignores taps. With reduced motion the four cats sit still; no walk starts while the tab is hidden or the strip is off screen. CSS transforms only, no WebGL.
+- **Files:** `src/lib/cats/cats.ts`, `src/components/cats/{cat-figure,cat-strip}.tsx`, `src/components/layout/site-footer.tsx`, `src/app/globals.css`, `tests/unit/cat-characters.test.tsx`, `tests/e2e/cats.spec.ts`, `tests/unit/site-footer.test.tsx`, `docs/test-cases.md` §48, `docs/evidence/phase-9/cat-characters/`.
+- **Testing:** the full Vitest suite with the CI settings: 87 test files, 939 tests, all passed. Playwright `cats.spec.ts`: 3 passed.
+- **Branch / PR:** `feat/cat-characters`.
+- **Next action:** Show the owner and ask which pages should have the cats (the TODO in FR-099).
+
+## 2026-11-10 — Pixel cats replace the drawn cats (FR-099)
+
+- **Phase:** Phase 9.
+- **Task:** The drawn cats did not look real enough, and we wanted many cats, like the walking pets in VS Code Pets.
+- **Summary:** The footer strip now has the six pixel cats of the CC0 "Pet Cats Pack". Three cats show on a phone and twelve on a desktop (up to 16; the six coats repeat). The cats are big enough that the strip reaches down to the footer text, and the walks are short so the cats spend most of their time sitting, washing, meowing, stretching or napping. Each one walks or runs somewhere, then sits, washes, meows, stretches, scratches, or lies down and sleeps, and walks on. The frames are a CSS sprite animation; one animation-frame loop moves the cats, and it stops while the tab is hidden or the strip is off screen. With reduced motion the cats sit still. The VS Code Pets art and two other downloaded packs were left out: their licenses don't let us put them in a public repo.
+- **Files:** `public/cats/**` (sprites and `LICENSE.txt`), `src/lib/cats/cats.ts`, `src/components/cats/cat-strip.tsx` (the SVG `cat-figure.tsx` is removed), `src/app/globals.css`, `tests/unit/cat-characters.test.tsx`, `tests/e2e/cats.spec.ts`, docs.
+- **Testing:** the full Vitest suite and Playwright `cats.spec.ts` (3 passed); see the PR.
+- **Branch / PR:** `feat/cat-characters`.
+
 ## 2026-11-11 — A mobile number on its own starts a Messenger order
 
 - **Phase:** Phase 7 (Messenger).
@@ -1681,3 +1700,38 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `feat/p5-reviews`.
 - **Next action:** Rodnee reviews the PR and applies the migration to the live database; Van runs manual test cases MAN-P5-001 to MAN-P5-009 on phone and desktop.
 
+## 2026-11-10 — Browser tests no longer fail after closing time (FR-112)
+
+- **Phase:** Testing.
+- **Task:** Two Place order browser tests (TC-P4-123, TC-P8-019) failed in CI after 9 PM Manila time.
+- **Summary:** Since the website follows the opening hours (PR #119), the checkout reads the browser clock and blocks orders after closing. The tests used the real clock, so they passed in the day and failed at night. They now fix the clock at 2 PM Manila time.
+- **Files:** `tests/e2e/ordering.spec.ts`, `tests/e2e/pwa.spec.ts`, `docs/test-cases.md`.
+- **Testing:** Playwright TC-P4-123 and TC-P8-019 after 10 PM Manila time: 2 passed.
+- **Branch / PR:** `fix/e2e-clock-hours`.
+
+
+## 2026-11-10 — Reviews on the home page and in the menu (FR-098)
+
+- **Phase:** Phase 5 and the website.
+- **Task:** The reviews were hard to find: they were only near the bottom of the About page, with no button or link to them.
+- **Summary:** The home page has a "What customers say" block with the average rating, the number of reviews, the newest three reviews, and the links Leave a review and Read all reviews. The header, phone menu and footer have a Reviews link to `/about#reviews`. If the reviews can't load, the block still shows Leave a review.
+- **Files:** `src/components/reviews/reviews-preview.tsx`, `src/app/page.tsx`, `src/config/site.ts`, `tests/unit/reviews-preview.test.tsx`, `tests/unit/site-header.test.tsx`, `tests/e2e/home-reviews.spec.ts`, `docs/test-cases.md` §49, `docs/evidence/phase-5/reviews-home/`.
+- **Testing:** the full Vitest suite and Playwright `home-reviews.spec.ts`; see the PR.
+- **Branch / PR:** `feat/reviews-front`.
+- **Next action:** None.
+
+## 2026-11-10 — An ad slot for the mini-games (FR-090)
+
+- **Phase:** Phase 9.
+- **Task:** The instructor asked for ads with the mini-games. The site stays on its vercel.app address, which AdSense does not accept.
+- **Summary:** Added an ad slot for one Adsterra 300x250 banner. It is labeled "Ad", asks the customer first, and loads the ad only after they tap Show ads. The ad runs in a sandboxed frame, so it can't redirect or cover the page. The slot never shows on the menu, cart, checkout, order or account pages, and ads stay off until `NEXT_PUBLIC_AD_KEY` is set. The privacy page now explains the ads.
+- **Files:** `src/lib/ads/ads.ts`, `src/components/ads/ad-slot.tsx`, `src/app/privacy/page.tsx`, `.env.example`, `tests/unit/ad-slot.test.tsx`, `docs/test-cases.md` §50, `docs/functional-requirements.md` (FR-090), `docs/decisions.md`.
+- **Testing:** the full Vitest suite with the CI settings; see the PR.
+- **Branch / PR:** `feat/ad-slot`.
+- **Next action:** Place the slot on the mini-game page, then set `NEXT_PUBLIC_AD_KEY` on Vercel and run MAN-P9-001.
+
+## 2026-11-10 — One footer cat per coat (FR-099)
+
+- **Summary:** The footer strip showed up to 16 cats, so the six coats of the CC0 "Pet Cats Pack" repeated and the cats looked crowded on a desktop. The strip now shows at most one cat per coat: 3 on a phone and 6 on wider screens.
+- **More coats:** I looked for other CC0 cat packs on itch.io. None matched: they use a different frame size and art style, and none has the lying-down and sleeping animations the strip uses. The six coats stay until a matching CC0 pack is found.
+- **Tests:** TC-P9-001 (unit) and TC-P9-005 and TC-P9-006 (browser) now expect 6 cats at 1440 px.

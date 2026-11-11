@@ -383,6 +383,8 @@ Run on 2026-10-24 for branch `feat/p4-online-orders`: Vitest 234/234 passed in 3
 | TC-P4-121 | FR-024 | Order client | Place order posts JSON, uncached, and returns the API's answer | Fake `fetch` | Place an order; then answer `price-changed` | One POST to `/api/orders` with JSON, `no-store` and same-origin credentials; the answer comes back as sent | Matched in the 234/234 Vitest run | Passed | `tests/unit/order-client.test.ts` |
 | TC-P4-122 | FR-024 | Order client | No answer, or an unknown one, is a server error to retry | Fake `fetch` | Fail the network; answer an HTML page, an empty body, an unknown shape, and a saved order with another token | A `server-error` result each time | Matched in the 234/234 Vitest run | Passed | `tests/unit/order-client.test.ts` |
 | TC-P4-123 | FR-022, FR-025 | Place order browser flow | A pickup order is placed and its page opens | Production build in `chromium` with the switch on, a mocked menu and a mocked `POST /api/orders` that echoes the request's token | Order 2 × 8 pcs Cheese Takoyaki, check out, fill name and phone, review, tap Place order | No Proceed to Send to Shop button; one request with the picks, the details and ₱220; the page opens `/orders/BNC-7K2Q9F#token=…` with the request's token | Matched in the 18/18 Playwright `chromium` run | Passed | `tests/e2e/ordering.spec.ts` |
+
+Update 2026-11-10: TC-P4-123 and TC-P8-019 now fix the browser clock at 2 PM Manila time (`page.clock.setFixedTime`). Since FR-112 the checkout follows the opening hours, so without this the two tests failed whenever CI ran after closing.
 | TC-P4-129 | FR-026 | Order page loader | A matching reference and token load the order | Mocked Supabase client | Call `fetchOrder` with a valid reference and token | One `get_online_order` call with both; the order comes back | Matched in the 246/246 Vitest run | Passed | `tests/unit/fetch-order.test.ts` |
 | TC-P4-130 | FR-026 | Order page loader | No order matches | Mocked client answers no data | Call `fetchOrder` | `null` | Matched in the 246/246 Vitest run | Passed | `tests/unit/fetch-order.test.ts` |
 | TC-P4-131 | FR-026 | Order page loader | A failed request is an error, not a missing order | Mocked client answers an error | Call `fetchOrder` | It throws “The order could not be loaded.” | Matched in the 246/246 Vitest run | Passed | `tests/unit/fetch-order.test.ts` |
@@ -1308,3 +1310,60 @@ Update 2026-11-11 (FR-112): run again with the opening hours cases: 86 test file
 | MAN-P7-007 | FR-112 | The owner checks the POS top bar during and outside the hours, and turns Closed today on | The bar shows Open, Outside hours or Closed today; the next morning it shows Open again | Not run (needs the live app) |
 | TC-P7-086 | FR-101 | The customer replies with only their mobile number, without "order" | Update 2026-11-11: the order starts as with "order 09XXXXXXXXX"; a landline or short number on its own is still left to the staff (TC-P7-057 updated) | Passed (automated) |
 
+## 48. Cat Characters Cases (2026-11-10)
+
+The owner asked for the shop's cats on the website (FR-099). The cats come from the shop's "With Main Characters" poster: Kasper, Latte, Luna and Kulas. They walk across an empty strip at the top of the footer on every page.
+
+Run on 2026-11-10: `NODE_OPTIONS=--no-experimental-webstorage npx vitest run` with the CI settings: 87 test files, 939 tests, all passed. `npx playwright test tests/e2e/cats.spec.ts --project=chromium`: 3 passed.
+
+| ID | Requirement | Area | Case | Setup | Steps | Expected | Result |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| TC-P9-001 | FR-099 | `src/lib/cats/cats.ts` | The four poster cats walk now and then, never the same cat twice in a row | None | Call `nextCatWait` and `nextCatIndex` with edge random values | Waits stay between 6 and 18 seconds; the next cat is never the last one | Pass |
+| TC-P9-002 | FR-099, NFR-035 | `CatStrip` | The strip is hidden from screen readers, ignores taps and walks one cat after a wait | Fake timers, no reduced motion | Render, advance 6 seconds | `aria-hidden="true"`, no links or buttons inside; one walking cat appears | Pass |
+| TC-P9-003 | FR-099 | `CatStrip` | No cat walks while the tab is hidden, and a hidden tab stops the walk | Fake timers, `document.hidden` true | Advance 36 seconds; show the tab; hide it again | No walk while hidden; a walk after it shows; hiding removes it | Pass |
+| TC-P9-004 | FR-099, NFR-032 | `CatStrip` | With reduced motion no cat walks; the four cats sit still | `prefers-reduced-motion: reduce` | Render, advance 54 seconds | No walking cat; four sitting cats | Pass |
+| TC-P9-005 | FR-099 | Footer strip (Playwright, 390 and 1440 wide) | The cats walk in their own strip and cover nothing | `/about`, reduced motion off, test clock | Scroll to the footer; check the strip; run the clock 19 seconds | `pointer-events: none`; no link, button, form field or text overlaps the strip; one cat walking | Pass |
+| TC-P9-006 | FR-099, NFR-032 | Footer strip (Playwright) | With reduced motion the four cats sit still | `/about`, reduced motion on | Run the clock 40 seconds | Four sitting cats, no walking cat | Pass |
+
+TC-P4-030 was updated: the footer icon count leaves out the cat drawings (marked "Update 2026-11-10").
+
+Update 2026-11-10: the drawn poster cats were replaced by the six pixel cats of the CC0 "Pet Cats Pack" (`public/cats`). The case IDs stay; what they check now:
+
+| ID | Requirement | Area | Updated check | Expected result |
+|---|---|---|---|---|
+| TC-P9-001 | FR-099 | `src/lib/cats/cats.ts` | `catCount`, `nextRest`, `afterRest`, `nextTarget` | ~~3 cats at 390 px and 12 at 1440 px (up to 16; the six coats repeat)~~ Superseded 2026-11-10: 3 cats at 390 px and 6 at 1440 px, one cat per coat, so no coat shows twice; cat 3 never scratches; a cat that lies down goes to sleep; every walk goes one to three cat sizes and stays in the strip |
+| TC-P9-002 | FR-099, NFR-035 | `CatStrip` | Render with reduced motion off and step animation frames by hand | The strip is aria-hidden, and after the frames at least one cat has moved or changed what it does |
+| TC-P9-003 | FR-099 | `CatStrip` | `document.hidden` true, step 30 frames | No cat moves or changes |
+| TC-P9-004 | FR-099, NFR-032 | `CatStrip` | `prefers-reduced-motion: reduce` | Every shown cat sits, and no animation frame is requested |
+| TC-P9-005 | FR-099 | Footer strip (Playwright, 390 and 1440 wide) | `/about`, reduced motion off | 3 or 12 cats; the sprite sheet loads (200); a cat moves within 15 seconds; no link, button or text overlaps the strip; evidence `pixel-cats-{phone-390,desktop-1440}.png` |
+| TC-P9-006 | FR-099, NFR-032 | Footer strip (Playwright) | `/about`, reduced motion on, 1440 wide | 12 cats, none walking, and nothing changes in 3 seconds; evidence `pixel-cats-sitting-reduced-motion-1440.png` |
+
+The first screenshots of the drawn cats stay in `docs/evidence/phase-9/cat-characters/` as the record of the first version.
+
+
+## 49. Reviews On The Home Page Cases (2026-11-10)
+
+Customers could not find the reviews, because they were only near the bottom of the About page. The home page now shows the newest reviews, and the menu has a Reviews link that opens the reviews on the About page (FR-098).
+
+| ID | Requirement | Scenario | Expected result | Status |
+| --- | --- | --- | --- | --- |
+| TC-P5-204 | FR-098 | The home page loads with seven reviews | Shows the average rating 4.6, "7 reviews", the newest three reviews, and the links Leave a review and Read all reviews | Passed (automated) |
+| TC-P5-205 | FR-098 | The home page loads with no reviews | Shows "No reviews yet. Be the first." and Leave a review, without Read all reviews | Passed (automated) |
+| TC-P5-206 | FR-098 | The reviews can't be loaded | The home page still shows Leave a review, with no error and no empty message | Passed (automated) |
+| TC-P5-207 | FR-098 | The site navigation | Has a Reviews link to `/about#reviews`, used by the header, the phone menu and the footer | Passed (automated) |
+| TC-P5-208 | FR-098 | Browser test at 390 and 1440 pixels wide | The home block shows the average, the count and three reviews without sideways scrolling; Read all reviews opens `/about#reviews` with the reviews in view | Passed (automated) |
+| TC-P5-209 | FR-098 | Browser test of the Reviews link in the desktop menu (1024 and 1440) and the phone menu (390) | The link fits without sideways scrolling and opens `/about#reviews` with the reviews in view | Passed (automated) |
+
+## 50. Ad Slot For The Mini-Games Cases (2026-11-10)
+
+The mini-games will show one labeled ad (FR-090). The ad slot is built before the games, so the games can place it. Ads stay off until the ad key is set.
+
+| ID | Requirement | Scenario | Expected result | Status |
+| --- | --- | --- | --- | --- |
+| TC-P9-007 | FR-090 | No ad key, or a key that isn't 32 letters and numbers | The slot shows nothing | Passed (automated) |
+| TC-P9-008 | FR-090 | The slot shows before the customer chooses | It is labeled "Ad" and asks "Show an ad here?"; no ad frame or ad script loads | Passed (automated) |
+| TC-P9-009 | FR-090 | The customer taps Show ads, then Turn off ads | The ad loads in a sandboxed frame that can't move the page; the choice is kept; Turn off ads removes it | Passed (automated) |
+| TC-P9-010 | FR-090 | The customer taps No thanks | No ad shows, and "Show ads to support the shop" lets them change their mind | Passed (automated) |
+| TC-P9-011 | FR-090 | The slot is placed on the menu, cart, checkout, order or account pages | It shows nothing, even after the customer agreed | Passed (automated) |
+| TC-P9-012 | FR-090 | The page inside the ad frame | Loads only the Adsterra 300x250 banner unit | Passed (automated) |
+| MAN-P9-001 | FR-090 | With the real key set on a preview, open the games page on a phone and tap Show ads | A real 300x250 ad shows with the "Ad" label, and tapping it opens the advertiser's page in a new tab without leaving the site | Not run (needs the games page) |
