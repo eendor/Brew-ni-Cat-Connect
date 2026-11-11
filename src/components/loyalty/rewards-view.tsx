@@ -187,7 +187,7 @@ export function RewardsView() {
               {settings ? (
                 <div className="space-y-1.5 border-t border-[var(--separator)] pt-4 text-sm text-[var(--text-muted)] md:border-t-0 md:border-l md:pt-0 md:pl-10">
                   <p className="flex items-center gap-2">
-                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-[var(--accent-solid)]" />
+                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-[var(--accent-fill)]" />
                     <span>
                       {formatEarningRule(
                         settings.currencyStep,
@@ -196,7 +196,7 @@ export function RewardsView() {
                     </span>
                   </p>
                   <p className="flex items-center gap-2">
-                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-[var(--accent-solid)]" />
+                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-[var(--accent-fill)]" />
                     <span>{formatWeeklyLimit(settings.weeklyLimit)}</span>
                   </p>
                 </div>

@@ -1735,3 +1735,11 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Summary:** The footer strip showed up to 16 cats, so the six coats of the CC0 "Pet Cats Pack" repeated and the cats looked crowded on a desktop. The strip now shows at most one cat per coat: 3 on a phone and 6 on wider screens.
 - **More coats:** I looked for other CC0 cat packs on itch.io. None matched: they use a different frame size and art style, and none has the lying-down and sleeping animations the strip uses. The six coats stay until a matching CC0 pack is found.
 - **Tests:** TC-P9-001 (unit) and TC-P9-005 and TC-P9-006 (browser) now expect 6 cats at 1440 px.
+
+## 2026-11-11 — Rewards page uses the shared site styles (FR-053)
+
+- **Task:** Review follow-up on the loyalty PR (#123). The rewards page used four CSS variables that do not exist (`--border-subtle`, `--surface`, `--accent`, `--accent-contrast`), so borders fell back to black and the Redeem buttons looked faded.
+- **Summary:** `src/components/loyalty/rewards-view.tsx` now uses the shared card, sheet, well and button styles and only variables defined in `globals.css`. The rules sit beside the balance on a desktop, so the card has no empty gap. The text says "completed orders" instead of "pickup orders", because delivery orders earn points too.
+- **Tests:** TC-P5-104 now checks the ₱49 and ₱50 edges. TC-P5-106 now checks exactly 11 rewards and that an inactive reward is left out. TC-P5-210 (new) fails if the page uses a CSS variable that is not defined. TC-P5-125 also opens the confirm dialog and cancels it.
+- **Evidence:** new screenshots in `docs/evidence/phase-5/loyalty/` with `restyled-` names, in day and night mode at 1440 px and 390 px. The earlier screenshots are kept.
+- **Next action:** Apply `20261113120000_loyalty_points.sql` to the live database after merge.

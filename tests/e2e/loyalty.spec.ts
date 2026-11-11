@@ -188,11 +188,24 @@ async function mockLoyaltyBackend(
   );
 }
 
+// Update 2026-11-11: screenshots after the restyle use "restyled-" names, so
+// the earlier evidence files are kept.
 async function capture(page: Page, filename: string) {
   if (!CAPTURE_EVIDENCE) return;
   await page.screenshot({
     path: `${EVIDENCE_DIR}/${filename}`,
     fullPage: true,
+  });
+  // Added 2026-11-11: the same page in night mode.
+  await page.evaluate(() => {
+    document.documentElement.dataset.theme = "night";
+  });
+  await page.screenshot({
+    path: `${EVIDENCE_DIR}/${filename.replace(".png", "-night.png")}`,
+    fullPage: true,
+  });
+  await page.evaluate(() => {
+    document.documentElement.dataset.theme = "day";
   });
 }
 
@@ -237,7 +250,23 @@ test.describe("Customer loyalty and rewards", () => {
     await expect(page.getByText("BNC-ABCDEF")).toBeVisible();
     await expect(page.getByText("BNC-GHKLMN")).toBeVisible();
 
-    await capture(page, "rewards-page-1440x900.png");
+    await capture(page, "restyled-rewards-page-1440x900.png");
+
+    // Added 2026-11-11: the confirm dialog opens and Cancel closes it.
+    await page
+      .getByRole("button", { name: "Redeem Spanish latte for 50 points" })
+      .click();
+    const dialog = page.getByRole("dialog");
+    await expect(
+      dialog.getByRole("heading", { name: "Confirm Redemption" }),
+    ).toBeVisible();
+    if (CAPTURE_EVIDENCE) {
+      await page.screenshot({
+        path: `${EVIDENCE_DIR}/restyled-redeem-dialog-1440x900.png`,
+      });
+    }
+    await dialog.getByRole("button", { name: "Cancel" }).click();
+    await expect(dialog).toBeHidden();
   });
 
   test("TC-P5-126 — mobile customer sees responsive layout at 390x844", async ({
@@ -255,7 +284,7 @@ test.describe("Customer loyalty and rewards", () => {
     await expect(page.getByTestId("loyalty-balance")).toHaveText("60");
     await expect(page.getByText("Spanish latte")).toBeVisible();
 
-    await capture(page, "rewards-page-390x844.png");
+    await capture(page, "restyled-rewards-page-390x844.png");
   });
 
   test("TC-P5-127 — shows empty points history when customer has no transactions", async ({
@@ -277,6 +306,6 @@ test.describe("Customer loyalty and rewards", () => {
       ),
     ).toBeVisible();
 
-    await capture(page, "rewards-empty-1440x900.png");
+    await capture(page, "restyled-rewards-empty-1440x900.png");
   });
 });

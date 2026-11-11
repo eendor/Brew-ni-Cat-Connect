@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -274,5 +276,23 @@ describe("RewardsView component", () => {
     expect(
       screen.queryByText("Redemption Successful!"),
     ).not.toBeInTheDocument();
+  });
+});
+
+// Added 2026-11-11: the page once used four CSS variables that do not exist,
+// which drew black borders and faded buttons.
+describe("RewardsView styles", () => {
+  it("TC-P5-210 — every CSS variable the rewards page uses exists in globals.css", () => {
+    const view = readFileSync(
+      "src/components/loyalty/rewards-view.tsx",
+      "utf8",
+    );
+    const css = readFileSync("src/app/globals.css", "utf8");
+    const used = [...new Set(view.match(/var\((--[a-z0-9-]+)\)/g) ?? [])].map(
+      (v) => v.slice(4, -1),
+    );
+    expect(used.length).toBeGreaterThan(0);
+    const missing = used.filter((name) => !css.includes(`${name}:`));
+    expect(missing).toEqual([]);
   });
 });
