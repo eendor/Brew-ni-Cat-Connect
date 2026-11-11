@@ -421,6 +421,51 @@ File: `supabase/migrations/20261110120000_messenger_order_status.sql`. Undo: `su
 - The rollback drops the function. Orders and tokens are not touched.
 - TC-P7-051 runs on PGlite against the real migrations (`tests/database/messenger-order-status.test.ts`): only that customer's orders, newest first; the status the shop sets on the POS; an empty list for an unknown or malformed token; the limit of 1 to 10; callable by the website's roles only, changing nothing; and the rollback keeps the orders.
 
+## 15. Loyalty Points (Phase 5 — PR #123)
+
+File: `supabase/migrations/20261113120000_loyalty_points.sql`. Undo: `supabase/rollbacks/20261113120000_loyalty_points.sql`. Covers FR-050 to FR-055. **Not applied to the live database yet.** Rodnee applies migrations after review.
+
+### 15.1 Settings in one place
+
+- `private.loyalty_settings()` returns a `jsonb` object defining the earning rule (`currency_step = 50`, `points_per_currency_unit = 1`), weekly redemption limit (`weekly_limit = 2`), and the rewards catalog with required points and active flags.
+- Confirmed by the owner on 2026-11-10: 1 point for every ₱50 spent, weekly limit of 2 redemptions per customer, and 11 confirmed rewards (Kiwi soda 40 pts, Passion fruit soda 40 pts, Spanish latte 50 pts, Hazelnut latte 50 pts, Takoyaki veggie (4 pcs) 60 pts, Takoyaki cheese (4 pcs) 70 pts, Takoyaki squid (4 pcs) 80 pts, Takoyaki shrimp (4 pcs) 90 pts, Buldak carbonara 100 pts, Classy Cat combo 120 pts, Nachos with fries, meat and veggies 150 pts).
+- Access is revoked from all client roles (`public`, `anon`, `authenticated`).
+
+### 15.2 Earning trigger and status transitions
+
+- Trigger `online_orders_loyalty_trigger` runs `AFTER UPDATE OF status ON public.online_orders FOR EACH ROW EXECUTE FUNCTION private.sync_online_order_loyalty()`.
+- Runs as `security definer` with `set search_path = ''`.
+- Only orders with an associated `customer_id` earn points; guest orders earn nothing.
+- After every status update, the sum of points recorded for that order in `public.loyalty_transactions` reconciles to `floor(subtotal / 50)` if `status = 'completed'`, and 0 otherwise.
+- The initial award inserts one row with reason `'order-completed'`, `points > 0`, and the `order_id`.
+- Any subsequent correction (such as undoing completion or completing again) inserts an `'adjustment'` row with the compensating delta, the `order_id`, and an explanatory note (e.g., "Order completion undone").
+- Transactions are immutable (FR-052); existing rows are never updated or deleted.
+- If earned points are 0 (e.g. subtotal under ₱50), no transaction is inserted and the status change is not blocked.
+- Orders completed before this migration do not receive retroactively awarded points.
+- Trigger errors on unique violation are caught and logged via `RAISE WARNING` without blocking the order status transition.
+
+### 15.3 What an undo does
+
+- When staff invoke `public.undo_online_order_status()` on a completed order (FR-095), the status transitions back to the preceding state (e.g. `ready`).
+- The trigger fires and observes the non-completed target status (target points = 0). It calculates delta = `-earned_points` and inserts an `'adjustment'` transaction with note "Order completion undone", leaving the order's net point contribution at exactly 0.
+- If the order is subsequently completed again, the trigger inserts an `'adjustment'` transaction with +earned_points, restoring the points once.
+
+### 15.4 Functions and grants
+
+- `public.loyalty_rewards()`: `security definer`, `stable`, `set search_path = ''`. Returns a `jsonb` array of active rewards filtered from `private.loyalty_settings()`. Granted to `anon` and `authenticated`.
+- `public.loyalty_settings()`: `security definer`, `stable`, `set search_path = ''`. Returns program rules (`currencyStep`, `pointsPerStep`, `weeklyLimit`). Granted to `anon` and `authenticated`.
+- `public.redeem_reward(p_reward_id text)`: `security definer`, `set search_path = ''`. Enforces advisory transaction locks on the customer UUID, verifies reward availability and balance, checks the 7-day weekly redemption limit, and inserts a `'reward-redeemed'` row with negative points. Returns a verification code (`RWD-XXXXXX`) for shop counter redemption. Granted to `authenticated` only.
+- Table privileges on `public.loyalty_transactions`: authenticated customers retain `SELECT` only; `INSERT`, `UPDATE`, and `DELETE` remain revoked so no customer can alter their balance directly.
+
+### 15.5 Known Limitations
+
+- **Staff Counter Verification**: The generated `RWD-XXXXXX` verification code currently lives in the transaction note, and there is no staff screen or POS lookup to confirm and redeem it at the counter yet (planned for a future POS task).
+
+### 15.6 Rollback and tests
+
+- Rollback `supabase/rollbacks/20261113120000_loyalty_points.sql` drops the trigger and functions cleanly, leaving past transactions untouched.
+- Tested on PGlite in `tests/database/loyalty.test.ts` (TC-P5-098 to TC-P5-109): earning calculations, replay idempotency, undo/redo reconciliation, rejection/cancellation zero-points, subtotal under ₱50 handling, guest exclusion, RLS table isolation, active rewards filtering, balance floor protection, and weekly redemption limit enforcement.
+
 ## 16. Closed Today Switch (Phase 7 — 2026-11-11)
 
 File: `supabase/migrations/20261111120000_closed_today.sql`. Undo: `supabase/rollbacks/20261111120000_closed_today.sql`. Covers FR-111. **Not applied to the live database yet.** It is applied by the process in §8.7, and only with the team's OK. Until then the website and Messenger read the built-in copy, which is open.
