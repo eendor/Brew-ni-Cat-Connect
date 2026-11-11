@@ -210,7 +210,7 @@ describe("RewardsView component", () => {
     });
     expect(
       screen.getByText(
-        "No points yet. You earn points when a pickup order is completed.",
+        "No points yet. You earn points when an order is completed.",
       ),
     ).toBeInTheDocument();
   });

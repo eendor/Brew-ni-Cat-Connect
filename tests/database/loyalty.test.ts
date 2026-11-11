@@ -110,6 +110,8 @@ beforeAll(async () => {
     insert into public.items (id, category_id, name, flavors, variants_json, is_available) values
       ('latte', 'coffee', 'Latte', '', '[{"id":"latte-16","name":"16 oz","basePrice":120}]', true),
       ('cheap', 'snacks', 'Candy', '', '[{"id":"cheap-1","name":"Single","basePrice":5}]', true),
+      ('edge49', 'snacks', 'Cookie', '', '[{"id":"edge49-1","name":"Single","basePrice":49}]', true),
+      ('edge50', 'snacks', 'Brownie', '', '[{"id":"edge50-1","name":"Single","basePrice":50}]', true),
       ('medium', 'coffee', 'Brew', '', '[{"id":"brew-16","name":"16 oz","basePrice":255}]', true);
   `);
 
@@ -274,7 +276,9 @@ describe("Loyalty points earning and transactions (FR-050 to FR-054)", () => {
     expect(tx.rows).toHaveLength(0);
   });
 
-  it("TC-P5-104 — a subtotal under ₱10 adds no row and does not block completion", async () => {
+  // Update 2026-11-11: the rate is 1 point per ₱50 (owner-confirmed), so the
+  // title says ₱50 and the ₱49 and ₱50 edges are checked.
+  it("TC-P5-104 — a subtotal under ₱50 adds no row and does not block completion; ₱50 earns 1 point", async () => {
     const ref = await placeOrder({
       itemId: "cheap",
       variantId: "cheap-1",
@@ -294,6 +298,31 @@ describe("Loyalty points earning and transactions (FR-050 to FR-054)", () => {
       [ref],
     );
     expect(orderRes.rows[0]?.status).toBe("completed");
+
+    const pointsFor = async (reference: string) => {
+      const res = await db.query<{ points: number }>(
+        `select points from public.loyalty_transactions
+         where order_id = (select id from public.online_orders where reference = $1)`,
+        [reference],
+      );
+      return res.rows.map((row) => row.points);
+    };
+
+    const ref49 = await placeOrder({
+      itemId: "edge49",
+      variantId: "edge49-1",
+      expectedSubtotal: 49,
+    });
+    await completeOrder(ref49);
+    expect(await pointsFor(ref49)).toEqual([]);
+
+    const ref50 = await placeOrder({
+      itemId: "edge50",
+      variantId: "edge50-1",
+      expectedSubtotal: 50,
+    });
+    await completeOrder(ref50);
+    expect(await pointsFor(ref50)).toEqual([1]);
   });
 
   it("TC-P5-105 — customer reads only their own rows and cannot insert, update or delete", async () => {
@@ -360,12 +389,56 @@ describe("Loyalty points earning and transactions (FR-050 to FR-054)", () => {
     expect(res.ok).toBe(true);
     if (!res.ok) throw new Error(res.message);
     const rewards = res.rows[0]?.r ?? [];
-    expect(rewards.length).toBeGreaterThanOrEqual(3);
+    // Update 2026-11-11: the owner-confirmed catalog has exactly 11 rewards.
+    expect(rewards).toHaveLength(11);
 
     const ids = rewards.map((r: Answer) => r.id);
     expect(ids).toContain("reward-kiwi-soda");
     expect(ids).toContain("reward-spanish-latte");
     expect(ids).toContain("reward-buldak-carbonara");
+
+    // Update 2026-11-11: all 11 rewards are active, so the filter is checked
+    // with a test catalog that has one inactive reward. The real settings
+    // function is put back afterwards.
+    const saved = await db.query<{ def: string }>(
+      "select pg_get_functiondef('private.loyalty_settings()'::regprocedure) as def",
+    );
+    const original = saved.rows[0]?.def;
+    if (!original) throw new Error("could not read loyalty_settings()");
+    try {
+      await db.exec(`
+        create or replace function private.loyalty_settings()
+        returns jsonb language sql immutable set search_path = '' as $$
+          select jsonb_build_object(
+            'currency_step', 50,
+            'points_per_currency_unit', 1,
+            'weekly_limit', 2,
+            'rewards', jsonb_build_array(
+              jsonb_build_object('id', 'test-on', 'name', 'On', 'description', 'Shown', 'points', 10, 'active', true),
+              jsonb_build_object('id', 'test-off', 'name', 'Off', 'description', 'Hidden', 'points', 10, 'active', false)
+            )
+          );
+        $$;
+      `);
+      const filtered = await runAs<{ r: Answer[] }>(
+        db,
+        ANON,
+        "select public.loyalty_rewards() as r",
+      );
+      if (!filtered.ok) throw new Error(filtered.message);
+      expect((filtered.rows[0]?.r ?? []).map((r: Answer) => r.id)).toEqual([
+        "test-on",
+      ]);
+    } finally {
+      await db.exec(original);
+    }
+    const restored = await runAs<{ r: Answer[] }>(
+      db,
+      ANON,
+      "select public.loyalty_rewards() as r",
+    );
+    if (!restored.ok) throw new Error(restored.message);
+    expect(restored.rows[0]?.r ?? []).toHaveLength(11);
   });
 });
 

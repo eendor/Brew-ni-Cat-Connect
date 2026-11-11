@@ -273,7 +273,7 @@ test.describe("Customer loyalty and rewards", () => {
     ).toBeVisible();
     await expect(
       page.getByText(
-        "No points yet. You earn points when a pickup order is completed.",
+        "No points yet. You earn points when an order is completed.",
       ),
     ).toBeVisible();
 

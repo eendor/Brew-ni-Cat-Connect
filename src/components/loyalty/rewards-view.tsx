@@ -133,8 +133,7 @@ export function RewardsView() {
           Loyalty & Rewards
         </h1>
         <p className="mt-2 text-sm text-[var(--text-muted)]">
-          Earn points on completed pickup orders and redeem them for delicious
-          treats.
+          Earn points on completed orders and redeem them for delicious treats.
         </p>
       </header>
 
@@ -162,9 +161,9 @@ export function RewardsView() {
           {/* Balance and Program Rules Card */}
           <section
             aria-labelledby="balance-heading"
-            className="ios-card p-6 md:p-8 bg-gradient-to-br from-[var(--surface)] to-[var(--fill-secondary)] border border-[var(--border-subtle)] rounded-[var(--shape-lg)] shadow-sm"
+            className="ios-card p-6 md:p-8"
           >
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+            <div className="flex flex-col gap-6 md:flex-row md:items-center md:gap-10">
               <div>
                 <span
                   id="balance-heading"
@@ -186,9 +185,9 @@ export function RewardsView() {
               </div>
 
               {settings ? (
-                <div className="border-t md:border-t-0 md:border-l border-[var(--border-subtle)] pt-4 md:pt-0 md:pl-6 space-y-1.5 text-xs text-[var(--text-muted)]">
+                <div className="space-y-1.5 border-t border-[var(--separator)] pt-4 text-sm text-[var(--text-muted)] md:border-t-0 md:border-l md:pt-0 md:pl-10">
                   <p className="flex items-center gap-2">
-                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
+                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-[var(--accent-solid)]" />
                     <span>
                       {formatEarningRule(
                         settings.currencyStep,
@@ -197,7 +196,7 @@ export function RewardsView() {
                     </span>
                   </p>
                   <p className="flex items-center gap-2">
-                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
+                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-[var(--accent-solid)]" />
                     <span>{formatWeeklyLimit(settings.weeklyLimit)}</span>
                   </p>
                 </div>
@@ -221,7 +220,7 @@ export function RewardsView() {
             </div>
 
             {rewards.length === 0 ? (
-              <div className="ios-card p-8 text-center rounded-[var(--shape-lg)]">
+              <div className="ios-card p-8 text-center">
                 <p className="text-sm text-[var(--text-muted)]">
                   No rewards are currently available. Please check back later.
                 </p>
@@ -236,7 +235,7 @@ export function RewardsView() {
                     <div
                       key={reward.id}
                       data-testid={`reward-card-${reward.id}`}
-                      className="ios-card p-5 flex flex-col justify-between border border-[var(--border-subtle)] rounded-[var(--shape-md)] bg-[var(--surface)] hover:border-[var(--accent)] transition-colors"
+                      className="ios-card flex flex-col justify-between p-5"
                     >
                       <div>
                         <div className="flex items-start justify-between gap-2">
@@ -252,11 +251,11 @@ export function RewardsView() {
                         </p>
                       </div>
 
-                      <div className="mt-5 pt-3 border-t border-[var(--border-subtle)] flex items-center justify-between gap-3">
+                      <div className="mt-5 flex items-center justify-between gap-3 border-t border-[var(--separator)] pt-4">
                         <span
-                          className={`text-xs font-medium ${
+                          className={`text-sm font-medium ${
                             hasEnough
-                              ? "text-emerald-700 dark:text-emerald-400"
+                              ? "text-[var(--accent-solid)]"
                               : "text-[var(--text-muted)]"
                           }`}
                         >
@@ -270,11 +269,11 @@ export function RewardsView() {
                           onClick={() => handleStartRedeem(reward)}
                           disabled={!hasEnough}
                           aria-label={`Redeem ${reward.name} for ${reward.points} points`}
-                          className={`px-3.5 py-1.5 text-xs font-semibold rounded-[var(--shape-sm)] transition-all min-h-11 ${
+                          className={
                             hasEnough
-                              ? "bg-[var(--accent)] text-[var(--accent-contrast)] hover:opacity-90 active:scale-95 shadow-sm"
-                              : "bg-[var(--fill-secondary)] text-[var(--text-muted)] cursor-not-allowed opacity-60"
-                          }`}
+                              ? "button-primary"
+                              : "button-secondary cursor-not-allowed opacity-50"
+                          }
                         >
                           Redeem
                         </button>
@@ -296,25 +295,21 @@ export function RewardsView() {
             </h2>
 
             {history.length === 0 ? (
-              <div className="ios-card p-8 md:p-10 text-center rounded-[var(--shape-lg)] border border-[var(--border-subtle)]">
+              <div className="ios-card p-8 text-center md:p-10">
                 <h3 className="font-display text-lg font-semibold text-[var(--text-strong)]">
                   No Points Yet
                 </h3>
                 <p className="mt-2 text-sm text-[var(--text-muted)] max-w-md mx-auto">
-                  No points yet. You earn points when a pickup order is
-                  completed.
+                  No points yet. You earn points when an order is completed.
                 </p>
                 <div className="mt-6">
-                  <Link
-                    href="/menu"
-                    className="inline-flex items-center justify-center px-4 py-2 text-xs font-semibold rounded-[var(--shape-md)] bg-[var(--accent)] text-[var(--accent-contrast)] hover:opacity-90 transition-opacity min-h-11"
-                  >
+                  <Link href="/menu" className="button-primary">
                     View Menu
                   </Link>
                 </div>
               </div>
             ) : (
-              <div className="ios-card overflow-hidden border border-[var(--border-subtle)] rounded-[var(--shape-lg)] divide-y divide-[var(--border-subtle)] bg-[var(--surface)]">
+              <div className="ios-card divide-y divide-[var(--separator)] overflow-hidden">
                 {history.map((tx) => {
                   const isPositive = tx.points > 0;
                   const deltaStr = formatPointsDelta(tx.points);
@@ -349,10 +344,10 @@ export function RewardsView() {
 
                       <div className="text-right shrink-0">
                         <span
-                          className={`text-sm font-bold font-mono ${
+                          className={`text-sm font-bold ${
                             isPositive
-                              ? "text-emerald-700 dark:text-emerald-400"
-                              : "text-amber-800 dark:text-amber-400"
+                              ? "text-[var(--accent-solid)]"
+                              : "text-[var(--text-muted)]"
                           }`}
                         >
                           {deltaStr} pts
@@ -373,9 +368,9 @@ export function RewardsView() {
           role="dialog"
           aria-modal="true"
           aria-labelledby="redeem-dialog-title"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs"
+          className="fixed inset-0 z-[70] flex items-center justify-center bg-[var(--ink-scrim)] p-4 backdrop-blur-xs"
         >
-          <div className="ios-card max-w-md w-full p-6 rounded-[var(--shape-lg)] bg-[var(--surface)] shadow-2xl border border-[var(--border-subtle)]">
+          <div className="ios-sheet w-full max-w-md p-6">
             {!redeemResult || !redeemResult.ok ? (
               <div>
                 <h3
@@ -410,7 +405,7 @@ export function RewardsView() {
                     type="button"
                     onClick={handleCloseModal}
                     disabled={isRedeeming}
-                    className="px-4 py-2 text-xs font-semibold text-[var(--text-muted)] hover:text-[var(--text-strong)] transition-colors min-h-11"
+                    className="button-secondary disabled:opacity-50"
                   >
                     Cancel
                   </button>
@@ -418,7 +413,7 @@ export function RewardsView() {
                     type="button"
                     onClick={handleConfirmRedeem}
                     disabled={isRedeeming}
-                    className="px-4 py-2 text-xs font-semibold rounded-[var(--shape-md)] bg-[var(--accent)] text-[var(--accent-contrast)] hover:opacity-90 active:scale-95 transition-all min-h-11 shadow-sm"
+                    className="button-primary disabled:opacity-50"
                   >
                     {isRedeeming ? "Processing..." : "Confirm Redeem"}
                   </button>
@@ -426,7 +421,7 @@ export function RewardsView() {
               </div>
             ) : (
               <div className="text-center py-2">
-                <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-3 text-2xl font-bold">
+                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--accent-soft)] text-2xl font-bold text-[var(--accent-solid)]">
                   ✓
                 </div>
                 <h3
@@ -440,8 +435,8 @@ export function RewardsView() {
                   reward:
                 </p>
 
-                <div className="my-5 p-4 rounded-[var(--shape-md)] bg-[var(--fill-secondary)] border border-[var(--border-subtle)]">
-                  <span className="font-mono text-2xl font-black tracking-widest text-[var(--accent)]">
+                <div className="ios-well my-5 p-4">
+                  <span className="font-mono text-2xl font-black tracking-widest text-[var(--accent-solid)]">
                     {redeemResult.code}
                   </span>
                 </div>
@@ -463,7 +458,7 @@ export function RewardsView() {
                   <button
                     type="button"
                     onClick={handleCloseModal}
-                    className="w-full px-4 py-2.5 text-xs font-semibold rounded-[var(--shape-md)] bg-[var(--accent)] text-[var(--accent-contrast)] hover:opacity-90 transition-opacity min-h-11"
+                    className="button-primary w-full"
                   >
                     Done
                   </button>
