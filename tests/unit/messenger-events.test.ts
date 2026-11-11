@@ -243,6 +243,23 @@ describe("Messenger buttons (FR-059, FR-062)", () => {
     expect(deps.readMenu).not.toHaveBeenCalled();
   });
 
+  // Added 2026-11-11: a typed "are you open?" used to get no reply.
+  it("TC-P7-089 — a typed question about being open gets the hours and location", async () => {
+    const { deps, texts } = setup();
+    await expect(
+      processWebhook(
+        delivery(
+          typed("Hello po, open po ba kayo today?"),
+          typed("pa order po bukas"),
+        ),
+        deps,
+      ),
+    ).resolves.toEqual({ replied: 1, skipped: 1, failed: 0 });
+    expect(texts()[0]).toContain(ASSISTANT_NOTICE);
+    expect(texts()[0]).toContain("📍 We're at");
+    expect(deps.readMenu).not.toHaveBeenCalled();
+  });
+
   it("TC-P7-023 — skips events that aren't a customer's message or tap", async () => {
     const { deps } = setup();
     const echo = {
