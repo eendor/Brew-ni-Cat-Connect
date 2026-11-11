@@ -1743,3 +1743,13 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Tests:** TC-P5-104 now checks the ₱49 and ₱50 edges. TC-P5-106 now checks exactly 11 rewards and that an inactive reward is left out. TC-P5-210 (new) fails if the page uses a CSS variable that is not defined. TC-P5-125 also opens the confirm dialog and cancels it.
 - **Evidence:** new screenshots in `docs/evidence/phase-5/loyalty/` with `restyled-` names, in day and night mode at 1440 px and 390 px. The earlier screenshots are kept.
 - **Next action:** Apply `20261113120000_loyalty_points.sql` to the live database after merge.
+
+## 2026-11-11 — The Messenger assistant answers "are you open?" (FR-059)
+
+- **Task:** A customer asked in Messenger whether the shop was open and got no reply. The assistant only answered buttons, typed button names, order links and mobile numbers.
+- **Summary:** A short typed question about being open or the hours now gets the Hours & location reply. The rule is a small fixed word list in `typedHoursQuestion` (English, Tagalog, Bisaya and Hiligaynon words). "bukas" counts only beside a word such as "kayo" or "ba", because it also means "tomorrow". A message that names another topic (an order, a delivery, a reservation, a link) or is longer than 60 characters still goes to the staff.
+- **Check on real chats:** In the last 40 chats, 26 of 159 typed messages match the rule. I checked them with every other word masked, and all 26 ask about being open or the hours. No message text or name was saved.
+- **Files:** `src/lib/messenger/intents.ts`, `src/lib/messenger/events.ts`, `tests/unit/messenger-intents.test.ts`, `tests/unit/messenger-events.test.ts`, `docs/decisions.md` (ADR-028 update), `docs/functional-requirements.md`, `docs/test-cases.md` §51.
+- **Testing:** TC-P7-087 to TC-P7-089; the full Vitest suite with the CI settings; see the PR.
+- **Branch / PR:** `fix/messenger-open-question`.
+- **Next action:** MAN-P7-008 on the live Page after the deploy.

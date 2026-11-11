@@ -14,7 +14,8 @@
  *   order being built and PLACE_ORDER_LIMIT placed orders.
  *
  * The assistant answers button taps, typed button names, order links and
- * "order 09XXXXXXXXX", which starts an order inside the chat (FR-100). Every
+ * "order 09XXXXXXXXX", which starts an order inside the chat (FR-100), and
+ * short questions about being open or the hours (added 2026-11-11). Every
  * other message is for the shop's staff: it gets no automated reply and is
  * never marked as seen, so it stays unread in the Page inbox and the staff's
  * Messenger and Business Suite apps notify them as before.
@@ -32,6 +33,7 @@ import {
   MAX_SHORT_MESSAGE_LENGTH,
   readPayload,
   typedButton,
+  typedHoursQuestion,
   typedOrderPhone,
   type ButtonTap,
   type Intent,
@@ -350,7 +352,10 @@ async function answerText(
   // to the staff.
   const phone = typedOrderPhone(text);
   if (phone) return ordering(await beginOrder(phone, deps, facts));
-  const intent = typedButton(text);
+  // A short "are you open?" or hours question gets the hours and location
+  // (added 2026-11-11). Any other text is left to the staff.
+  const intent =
+    typedButton(text) ?? (typedHoursQuestion(text) ? "hours-location" : null);
   return intent ? answerIntent(sender, intent, deps, facts) : null;
 }
 

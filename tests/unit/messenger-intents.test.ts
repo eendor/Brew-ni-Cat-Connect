@@ -10,6 +10,7 @@ import {
   phoneShape,
   readPayload,
   typedButton,
+  typedHoursQuestion,
 } from "@/lib/messenger/intents";
 import { MAIN_BUTTONS } from "@/lib/messenger/replies";
 
@@ -151,6 +152,44 @@ describe("Messenger typed button names (FR-059, FR-061)", () => {
 
   it("TC-P7-006 — compares words without case, accents or punctuation", () => {
     expect(normalizeText("  Ménu & PRICES?! ")).toBe("menu prices");
+  });
+});
+
+// Added 2026-11-11: "are you open?" is the question customers type most.
+describe("Messenger hours questions (FR-059)", () => {
+  it("TC-P7-087 — a short question about being open or the hours is recognized", () => {
+    for (const text of [
+      "open po kayo?",
+      "Hello po, open po ba kayo today?",
+      "Good evening, open pa po kayo?",
+      "are you open today po",
+      "bukas ba kayo ngayon?",
+      "sarado na kayo?",
+      "abri kamo subong?",
+      "anong oras po kayo?",
+      "what time kayo mag close?",
+      "store hours?",
+    ]) {
+      expect(typedHoursQuestion(text), text).toBe(true);
+    }
+  });
+
+  it("TC-P7-088 — other topics, 'bukas' as tomorrow and long messages are not hours questions", () => {
+    for (const text of [
+      "pa order po bukas",
+      "punta kami bukas",
+      "open for delivery po?",
+      "pwede mag reserve, what time kayo?",
+      "can't open the link",
+      "ilang oras po kayo magluto?",
+      "what time darating?",
+      "may available pa po ba na matcha?",
+      `open po ba kayo ${"today ".repeat(12)}`,
+      "",
+    ]) {
+      expect(typedHoursQuestion(text), text).toBe(false);
+    }
+    expect(MAX_SHORT_MESSAGE_LENGTH).toBe(60);
   });
 });
 

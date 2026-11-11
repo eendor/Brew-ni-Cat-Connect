@@ -1368,3 +1368,14 @@ The mini-games will show one labeled ad (FR-090). The ad slot is built before th
 | TC-P9-011 | FR-090 | The slot is placed on the menu, cart, checkout, order or account pages | It shows nothing, even after the customer agreed | Passed (automated) |
 | TC-P9-012 | FR-090 | The page inside the ad frame | Loads only the Adsterra 300x250 banner unit | Passed (automated) |
 | MAN-P9-001 | FR-090 | With the real key set on a preview, open the games page on a phone and tap Show ads | A real 300x250 ad shows with the "Ad" label, and tapping it opens the advertiser's page in a new tab without leaving the site | Not run (needs the games page) |
+
+## 51. Messenger Hours Question Cases (2026-11-11)
+
+Customers often type "open po ba kayo?" instead of tapping a button, and it got no reply. A short question about being open or the hours now gets the Hours & location reply. TC-P7-022 still holds: other typed messages stay with the staff.
+
+| ID         | Requirement | Case                                                                                                          | Expected result                                                                            | Status             |
+| ---------- | ----------- | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ------------------ |
+| TC-P7-087  | FR-059      | "open po kayo?", "bukas ba kayo ngayon?", "sarado na kayo?", "anong oras po kayo?", "store hours?" and others | `typedHoursQuestion` returns true                                                          | Passed (automated) |
+| TC-P7-088  | FR-059      | "pa order po bukas", "open for delivery po?", "can't open the link", a message over 60 characters, and others | `typedHoursQuestion` returns false, so the message stays with the staff                    | Passed (automated) |
+| TC-P7-089  | FR-059      | One delivery with "Hello po, open po ba kayo today?" and "pa order po bukas"                                  | One reply with the automated notice, the hours and the address; the other message is skipped | Passed (automated) |
+| MAN-P7-008 | FR-059      | From a tester account, send "open po ba kayo?" to the Page                                                    | The assistant replies with the hours and location within a few seconds                     | Pending            |
