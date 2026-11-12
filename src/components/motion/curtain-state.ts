@@ -17,6 +17,7 @@ const opening = new Set<() => void>();
 const settling = new Set<() => void>();
 const unheld = new Set<() => void>();
 const holds = new Set<symbol>();
+const closing = new Set<() => void>();
 let covering = false;
 let moving = false;
 
@@ -46,6 +47,7 @@ export function setCurtainCovering(next: boolean) {
   covering = next;
   if (next) {
     markMoving(true);
+    for (const callback of closing) callback();
     return;
   }
   release(opening);
@@ -103,5 +105,16 @@ export function whenCurtainSettles(callback: () => void) {
   settling.add(callback);
   return () => {
     settling.delete(callback);
+  };
+}
+
+/**
+ * Runs `callback` each time the curtain starts closing over a navigation,
+ * for example to play the cat sound. Returns the unsubscribe.
+ */
+export function onCurtainCloses(callback: () => void) {
+  closing.add(callback);
+  return () => {
+    closing.delete(callback);
   };
 }
