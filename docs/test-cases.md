@@ -1398,19 +1398,23 @@ Update 2026-11-10: the drawn poster cats were replaced by the six pixel cats of 
 
 The first screenshots of the drawn cats stay in `docs/evidence/phase-9/cat-characters/` as the record of the first version.
 
-Update 2026-11-13 (ADR-032): the pixel cats in the footer were replaced by cut-outs of the shop's own cats, perched on the edges of the screen on every page (`CatCompanions`, `src/lib/cats/cats.ts`, `src/lib/sound/cat-sounds.ts`). The case IDs stay; what they check now, plus three new cases (TC-P9-007 to TC-P9-012 are the ad slot's):
+Update 2026-11-13 (ADR-032): the pixel cats in the footer were replaced by 3D cats built with three.js after the shop's own cats, perched on the edges of the screen on every page (`CatCompanions`, `cat-stage.ts`, `cat-model.ts`, `src/lib/cats/cats.ts`, `src/lib/sound/cat-sounds.ts`). The case IDs stay; what they check now, plus seven new cases (TC-P9-007 to TC-P9-012 are the ad slot's):
 
 | ID | Requirement | Area | Updated check | Expected result | Status |
 |---|---|---|---|---|---|
-| TC-P9-001 | FR-099 | `src/lib/cats/cats.ts` | `SHOP_CATS`, `catHeight`, `catCount`, `catsFor`, `stayMs` | Seven cats; 84 px tall at 390 px, 158 px at 1440 x 900, at most 220 px; 2, 3, 4 or 5 cats by width; the napping cat only on bottom spots; each cat stays 14 to 30 seconds | Passed (automated) |
-| TC-P9-002 | FR-099, NFR-035 | `CatCompanions`, `perchBox` | Render; every spot on a 390 x 844 screen | The layer is aria-hidden, every picture has empty alt text, every spot is inside the screen | Passed (automated) |
+| TC-P9-001 | FR-099 | `src/lib/cats/cats.ts` | `SHOP_CATS`, `catHeight`, `catCount`, `catsFor`, `stayMs` | Seven cats with seven coats (Kasper's eyes are two colours); 84 px tall at 390 px, 158 px at 1440 x 900, at most 220 px; 2, 3, 4 or 5 cats by width; the napping cat only on bottom spots and shown whole, sitting cats peek over the bottom edge; each cat stays 14 to 30 seconds | Passed (automated) |
+| TC-P9-002 | FR-099, NFR-035 | `CatCompanions`, `perchBox` | Render; every spot on a 390 x 844 screen | The layer is aria-hidden, holds a canvas and no pictures, every spot is inside the screen | Passed (automated) |
 | TC-P9-003 | FR-099 | `CatCompanions` | A page with nothing at the edges, 1440 wide | Four different cats show, and no two overlap | Passed (automated) |
-| TC-P9-004 | FR-099, NFR-032 | `CatCompanions` | `prefers-reduced-motion: reduce` | The cats appear at full opacity with no transform and never swap | Passed (automated) |
-| TC-P9-005 | FR-099 | Playwright, 390, 1440 and 1920 wide | Home, About, Menu, Gallery and Contact, reduced motion off, at the top, the middle and the bottom of each page | The layer ignores taps; no shown cat overlaps a link, button, field, text, picture or card; `/cats/kasper.webp` loads (200); evidence `shop-cats-{home,about}-{phone-390,desktop-1440,wide-1920}.png` | Passed (automated) |
+| TC-P9-004 | FR-099, NFR-032 | `CatCompanions` | `prefers-reduced-motion: reduce` | The cats appear in place with no anime.js motion and never swap | Passed (automated) |
+| TC-P9-005 | FR-099 | Playwright, 390, 1440 and 1920 wide | Home, About, Menu, Gallery and Contact, reduced motion off, at the top, the middle and the bottom of each page | The layer ignores taps; no shown cat overlaps a link, button, field, text, picture or card | Passed (automated) |
 | TC-P9-006 | FR-099, NFR-032 | Playwright, 1920 wide | `/about`, reduced motion on | Nothing about the cats changes in 3 seconds, and none covers content | Passed (automated) |
 | TC-P9-013 | FR-099 | `CatCompanions` | A paragraph, button, picture, link or heading fills the screen; then a paragraph only in the middle; then a picture inside an aria-hidden layer | No cat over the content; cats at the clear edges; the decorative layer doesn't count | Passed (automated) |
 | TC-P9-014 | FR-099 | `CatCompanions` | A button scrolls under the shown cats | Every cat ducks away | Passed (automated) |
 | TC-P9-015 | FR-099 | `meow`, `CatSoundsToggle` | A page transition starts; switch "Cat sounds" off, start another; switch it on | One meow, none while off (saved as "off" on the device), one meow when switched back on; every meow rises then falls and lasts at most 480 ms | Passed (automated) |
+| TC-P9-016 | FR-099 | `buildCat` | Build each of the seven cats; measure it; step its animation | More than 20 meshes each, none textured; its coat and eye colours are on it, and a tag only on Kasper, Oreo and napping Kasper; sitting cats taller than wide, the napping cat wider than tall; the meshes move between frames | Passed (automated) |
+| TC-P9-017 | FR-099 | `buildCat` | The pointer far right, then far left; then `meow()` | The head turns toward the pointer; the mouth opens with the meow | Passed (automated) |
+| TC-P9-018 | FR-099 | Playwright `chromium-3d`, 1440 wide | `/menu` with WebGL and motion on; two screenshots of each cat 0.9 s apart | The canvas has a WebGL2 context; at least one cat moved; no cat covers content; `/cats/kasper.webp` is gone (404); no page errors | Passed (automated) |
+| TC-P9-019 | FR-099 | Playwright `chromium-3d`, 390, 1440 and 1920 wide | Home, About (scrolled) and Menu | No cat covers content; evidence `shop-cats-{home,about,menu}-{phone-390,desktop-1440,wide-1920}.png` | Passed (automated) |
 
 The pixel-cat screenshots stay in `docs/evidence/phase-9/cat-characters/` as the record of the second version.
 
