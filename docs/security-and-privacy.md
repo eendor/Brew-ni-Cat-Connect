@@ -527,3 +527,34 @@ Before commit/PR, inspect staged and unstaged diffs, verify `.env.local` is untr
 ### 22.4 Open decisions
 
 - Moderation screen is built in the POS app (`eendor/Brew-ni-Cat-POS`) using the staff permission. **TODO: Confirm with Brew ni Cat owner.**
+
+## 23. Data Correction And Deletion Requests (Phase 5 — FR-042)
+
+Section 19 already belongs to the Phase 7 addendum on `main`, so this addendum takes the next free number to keep the sections in order. The table already exists in `supabase/migrations/20261024064600_customer_tables.sql`; this work needs no migration.
+
+### 23.1 What a request stores
+
+- `public.data_requests` keeps the row id, `customer_id`, `kind` (`correction` or `deletion`), `message`, `status`, `created_at` and `updated_at`.
+- The browser sends only `kind` and the trimmed `message` from `src/lib/account/data-requests.ts`. `customer_id` defaults to `auth.uid()`, and `created_at` and `updated_at` are set by the table trigger, so a customer cannot post a request for someone else or fake a date.
+- The database accepts a trimmed message of 1 to 1000 characters and only the two kinds. The form also checks this before sending.
+- A request is a message to the shop. It does not delete or change any other row by itself.
+
+### 23.2 Who can read it, and who can change it
+
+- Row Level Security policy `customer_or_staff_reads` lets a signed-in customer read only rows where `customer_id = auth.uid()`, and lets shop staff read every request through `private.is_staff()`. No one else can read the table.
+- The website's list also sends an explicit `.eq("customer_id", userId)` filter as defence-in-depth, the same way order history does. A signed-in customer therefore never sees another customer's requests, even if a policy were misconfigured.
+- Customers can add only their own request, and it must start as `open`: policy `customer_adds_own` checks both. Customers have no update or delete grant, so they cannot change a request's status, its message or its kind.
+- Only shop staff have the `staff_updates` policy, which is how a request moves `open` → `in-progress` → `resolved` or `declined`. The website shows those four states in plain words and never offers a status control.
+
+### 23.3 How the shop handles a request
+
+- The shop handles correction and deletion requests by hand for now; nothing is deleted automatically when a request arrives. Staff read the request in the POS/staff workflow and contact the customer using the contact details already on their profile.
+- The website tells the customer what happens next and shows the status of their earlier requests when they come back to `/account/data-request`.
+- A deletion request covers profile data. Order records that the shop must keep may stay after the request. The exact retention and deletion rule is **TODO: Confirm with Brew ni Cat owner.**
+- The response time for a request is **TODO: Confirm with Brew ni Cat owner.**
+
+### 23.4 Known limits
+
+- There is no email or text message when a status changes; the customer sees it the next time they open the page.
+- Requests are not rate limited. A signed-in customer could send several requests in a row; the shop sees all of them.
+- The owner's approved retention rule, the response time and the wording the shop should send are still open decisions (functional requirements §6 and §12). **TODO: Confirm with Brew ni Cat owner.**

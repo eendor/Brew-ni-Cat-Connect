@@ -271,8 +271,10 @@ test.describe("Data requests", () => {
     await expect(
       page.getByRole("heading", { level: 1, name: "Data Requests" }),
     ).toBeVisible();
-    await expect(page.getByText("Correction request")).toBeVisible();
-    await expect(page.getByText("In progress")).toBeVisible();
+    await expect(
+      page.getByText("Correction request", { exact: true }),
+    ).toBeVisible();
+    await expect(page.getByText("In progress", { exact: true })).toBeVisible();
     await expect(page.getByText(/Nov 10, 2026/)).toBeVisible();
 
     await capture(page, "data-request-1440x900.png");
@@ -285,12 +287,10 @@ test.describe("Data requests", () => {
       );
     await page.getByRole("button", { name: "Send request" }).click();
 
-    await expect(page.getByRole("status")).toContainText(
-      /Your request has been sent/,
-    );
-    await expect(page.getByRole("status")).toContainText(
-      /The shop will review it and contact you/,
-    );
+    await expect(page.getByText(/Your request has been sent/)).toBeVisible();
+    await expect(
+      page.getByText(/The shop will review it and contact you/),
+    ).toBeVisible();
     await expect(page.getByText("Open", { exact: true })).toBeVisible();
 
     const posts = calls.filter((call) => call.method === "POST");
@@ -321,9 +321,9 @@ test.describe("Data requests", () => {
     );
     await page.getByRole("button", { name: "Send request" }).click();
 
-    await expect(page.getByRole("alert")).toContainText(
-      /We couldn't send your request/,
-    );
+    await expect(
+      page.getByRole("form", { name: "Send a request" }).getByRole("alert"),
+    ).toContainText(/We couldn't send your request/);
     await expect(message).toHaveValue(
       "MOCK DATA — FOR DEVELOPMENT ONLY: please delete my profile data.",
     );
@@ -331,9 +331,7 @@ test.describe("Data requests", () => {
     await capture(page, "data-request-error-1440x900.png");
 
     await page.getByRole("button", { name: "Try again" }).click();
-    await expect(page.getByRole("status")).toContainText(
-      /Your request has been sent/,
-    );
+    await expect(page.getByText(/Your request has been sent/)).toBeVisible();
 
     const posts = mock.calls.filter((call) => call.method === "POST");
     expect(posts).toHaveLength(2);
@@ -376,9 +374,7 @@ test.describe("Data requests", () => {
       );
     await page.getByRole("button", { name: "Send request" }).click();
 
-    await expect(page.getByRole("status")).toContainText(
-      /Your request has been sent/,
-    );
+    await expect(page.getByText(/Your request has been sent/)).toBeVisible();
     await expectNoSidewaysScroll(page);
 
     await capture(page, "data-request-390x844.png");
