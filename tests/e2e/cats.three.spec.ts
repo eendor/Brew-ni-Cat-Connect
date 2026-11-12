@@ -15,7 +15,7 @@ async function toFooter(page: Page) {
   return strip;
 }
 
-test("TC-P9-018 — the cats walk across the footer, pulling the sleigh, and leave the page alone", async ({
+test("TC-P9-018 — the cats walk across the footer, free, and leave the page alone", async ({
   page,
 }) => {
   test.setTimeout(90_000);
@@ -24,10 +24,7 @@ test("TC-P9-018 — the cats walk across the footer, pulling the sleigh, and lea
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/menu");
   const strip = await toFooter(page);
-  await expect(strip).toHaveAttribute(
-    "data-cats",
-    "oreo latte luna kulas grey",
-  );
+  await expect(strip).toHaveAttribute("data-cats", "oreo latte kulas grey");
   await expect(strip).toHaveAttribute("data-walking", "true", {
     timeout: 5_000,
   });

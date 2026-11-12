@@ -11,6 +11,8 @@ import {
   setCurtainSettled,
 } from "@/components/motion/curtain-state";
 import {
+  festiveSeason,
+  KITTEN_COATS,
   PARADE_ORDER,
   paradeLap,
   paradeSize,
@@ -60,7 +62,7 @@ describe("cat characters (FR-099)", () => {
   // Update 2026-11-13 (ADR-032): 3D cats modelled in three.js after the
   // shop's own cats replace the pixel cats. They walk in single file across
   // the top of the footer, like reindeer, pulling a coffee-cup sleigh.
-  it("TC-P9-001 seven of the shop's cats; the parade's size follows the screen", () => {
+  it("TC-P9-001 seven of the shop's cats; Luna rides; the sleigh is seasonal; the parade's size follows the screen", () => {
     expect(SHOP_CATS.map((c) => c.id)).toEqual([
       "kasper",
       "latte",
@@ -74,18 +76,26 @@ describe("cat characters (FR-099)", () => {
     const kasper = SHOP_CATS.find((c) => c.id === "kasper")!;
     expect(kasper.look.eyeLeft).not.toBe(kasper.look.eyeRight);
     expect(new Set(SHOP_CATS.map((c) => c.look.coat)).size).toBe(7);
-    // Oreo leads; Kasper rides in the sleigh, asleep
+    // Oreo leads; Luna, a mama cat soon, never walks: she rides with her kittens
     expect(PARADE_ORDER[0]).toBe("oreo");
     expect(PARADE_ORDER).not.toContain(SLEIGH_RIDER);
-    expect(SHOP_CATS.find((c) => c.id === SLEIGH_RIDER)!.pose).toBe("lie");
+    expect(SLEIGH_RIDER).toBe("luna");
+    expect(KITTEN_COATS).toHaveLength(3);
+    for (const id of KITTEN_COATS)
+      expect(SHOP_CATS.map((c) => c.id)).toContain(id);
+    // the sleigh is for November and December only
+    expect(festiveSeason(new Date(2026, 10, 13))).toBe(true);
+    expect(festiveSeason(new Date(2026, 11, 31, 23, 59))).toBe(true);
+    expect(festiveSeason(new Date(2027, 0, 1))).toBe(false);
+    expect(festiveSeason(new Date(2027, 5, 1))).toBe(false);
     // more cats and a taller strip on wider screens, within limits
     expect(paradeSize(390)).toBe(3);
     expect(paradeSize(800)).toBe(4);
-    expect(paradeSize(1440)).toBe(5);
+    expect(paradeSize(1440)).toBe(4);
     expect(paradeWalkers(390).map((c) => c.id)).toEqual([
       "oreo",
       "latte",
-      "luna",
+      "kulas",
     ]);
     expect(stripHeight(390)).toBe(84);
     expect(stripHeight(1440)).toBe(108);

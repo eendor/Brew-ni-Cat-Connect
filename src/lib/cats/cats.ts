@@ -2,9 +2,10 @@
  * The shop's cats (FR-099, update 2026-11-13, ADR-032). Each cat is modelled
  * in three.js from simple geometry (no pictures), with its coat, markings and
  * eyes taken from the shop's own photos (`public/images/shop`): the four cats
- * on the opening poster, Oreo, a grey cat and Kasper napping. They walk in a
- * parade across the top of the footer, single file like reindeer, pulling a
- * coffee-cup sleigh with Kasper asleep in it.
+ * on the opening poster, Oreo, a grey cat and Kasper napping. They stroll
+ * across the top of the footer. In November and December they walk in single
+ * file with bells and reins, pulling a cosy coffee-cup sleigh with Luna, a
+ * mama cat soon, resting inside with her kittens.
  */
 
 export type CatPose = "sit" | "lie" | "walk";
@@ -187,21 +188,31 @@ export const SHOP_CATS: readonly ShopCat[] = [
   },
 ];
 
-/** The walkers, lead first; Kasper rides in the sleigh, asleep. */
+/**
+ * The walkers, lead first. Luna is about to be a mama cat, so she doesn't
+ * walk: in the holiday season she rides in the sleigh with her kittens.
+ */
 export const PARADE_ORDER: readonly string[] = [
   "oreo",
   "latte",
-  "luna",
   "kulas",
   "grey",
 ];
-export const SLEIGH_RIDER = "kasper-nap";
+export const SLEIGH_RIDER = "luna";
+/** The kittens riding with Luna, coloured after Luna and the shop's toms. */
+export const KITTEN_COATS: readonly string[] = ["luna", "kulas", "latte"];
 
-/** How many cats pull the sleigh, by screen width. */
+/**
+ * The sleigh, reins and bells are a holiday look: November and December
+ * only. From January the cats just stroll across, free, and Luna rests.
+ */
+export function festiveSeason(date: Date): boolean {
+  return date.getMonth() >= 10;
+}
+
+/** How many cats walk, by screen width. */
 export function paradeSize(width: number): number {
-  if (width < 640) return 3;
-  if (width < 1024) return 4;
-  return 5;
+  return width < 640 ? 3 : 4;
 }
 
 /** The cats walking at this width, lead first. */

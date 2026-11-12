@@ -5,6 +5,7 @@ import { useEffect, useRef } from "react";
 
 import { onCurtainCloses } from "@/components/motion/curtain-state";
 import {
+  festiveSeason,
   paradeLap,
   paradeWalkers,
   restMs,
@@ -34,8 +35,9 @@ function reducedMotion() {
 
 /**
  * The cat parade along the top of the footer (FR-099, ADR-032): the shop's
- * cats, built in three.js, walk across in single file like reindeer, with
- * reins and bells, pulling a coffee-cup sleigh with Kasper asleep inside.
+ * cats, built in three.js, walk across in single file. In November and
+ * December they wear bells and pull a cosy coffee-cup sleigh with Luna, a mama
+ * cat soon, resting inside with her kittens; from January they just stroll.
  * anime.js walks each lap: in from one side, a stop in the middle where the
  * cats look out and one meows, then off the other side; after a rest they
  * come back the other way. The strip has its own space in the footer, so it
@@ -64,6 +66,7 @@ export function CatParade() {
     const walkers = paradeWalkers(window.innerWidth);
     element.dataset.ready = "true";
     element.dataset.cats = walkers.map((cat) => cat.id).join(" ");
+    element.dataset.sleigh = String(festiveSeason(new Date()));
 
     const state: ParadeState = { x: -1e4, dir: 1, stride: 0, look: 0 };
     let stage: ParadeStage | null = null;
@@ -151,7 +154,13 @@ export function CatParade() {
     void import("./parade-stage")
       .then(({ createParadeStage }) => {
         if (closed) return;
-        stage = createParadeStage(surface, walkers, state, still);
+        stage = createParadeStage(
+          surface,
+          walkers,
+          state,
+          still,
+          festiveSeason(new Date()),
+        );
         watcher?.observe(element);
         if (still) {
           // standing in the middle, looking out

@@ -2,7 +2,12 @@ import * as THREE from "three";
 
 import { addFrame } from "@/components/three/engine/loop";
 import { EXPOSURE, TONE_MAPPING } from "@/components/three/engine/studio";
-import { type ShopCat, SHOP_CATS, SLEIGH_RIDER } from "@/lib/cats/cats";
+import {
+  KITTEN_COATS,
+  type ShopCat,
+  SHOP_CATS,
+  SLEIGH_RIDER,
+} from "@/lib/cats/cats";
 
 import { buildCat, type CatModel, disposeCatMaterials } from "./cat-model";
 
@@ -37,7 +42,7 @@ function material(color: string, roughness = 0.6, metalness = 0) {
   return new THREE.MeshStandardMaterial({ color, roughness, metalness });
 }
 
-/** A red collar with a little gold bell, like a reindeer's harness. */
+/** A red collar with a little gold bell, nothing more: no leash, no reins. */
 function harnessFor(cat: CatModel, made: THREE.Material[]) {
   const ribbon = material(RIBBON, 0.55);
   const gold = material(BELL, 0.3, 0.7);
@@ -58,8 +63,8 @@ function harnessFor(cat: CatModel, made: THREE.Material[]) {
 }
 
 /**
- * The sleigh: a coffee cup on golden runners, green band and all, with
- * Kasper asleep inside. Model units, facing +z like the cats.
+ * The sleigh: a coffee cup on golden runners, green band and all, with a
+ * cushion inside where Luna rests with her kittens. Model units, facing +z like the cats.
  */
 function buildSleigh(made: THREE.Material[]) {
   const sleigh = new THREE.Group();
@@ -118,10 +123,6 @@ function buildSleigh(made: THREE.Material[]) {
       sleigh.add(post);
     }
   }
-  // where the reins tie on
-  const hitch = new THREE.Object3D();
-  hitch.position.set(0, 0.42, 0.66);
-  sleigh.add(hitch);
   // a bow on the back
   const bow = new THREE.Mesh(
     new THREE.TorusKnotGeometry(0.05, 0.02, 40, 8),
@@ -130,14 +131,33 @@ function buildSleigh(made: THREE.Material[]) {
   bow.position.set(0, 0.5, -0.62);
   sleigh.add(bow);
 
-  const rider = SHOP_CATS.find((c) => c.id === SLEIGH_RIDER)!;
-  const kasper = buildCat(rider.look, rider.pose, 77);
-  // lying along the cup, head out over the front rim
-  kasper.root.scale.setScalar(0.62);
-  kasper.root.rotation.y = -Math.PI / 2;
-  kasper.root.position.set(0, 0.5, -0.05);
-  sleigh.add(kasper.root);
-  return { sleigh, hitch, kasper };
+  // a cushion to lie on
+  const cushion = new THREE.Mesh(
+    new THREE.SphereGeometry(0.4, 32, 16),
+    material("#c98a8f", 0.85),
+  );
+  made.push(cushion.material);
+  cushion.scale.set(0.95, 0.22, 1.25);
+  cushion.position.y = 0.62;
+  sleigh.add(cushion);
+
+  // Luna, a mama cat soon, lying comfortably along the cup
+  const look = (id: string) => SHOP_CATS.find((c) => c.id === id)!.look;
+  const luna = buildCat(look(SLEIGH_RIDER), "lie", 77);
+  luna.root.scale.setScalar(0.6);
+  luna.root.rotation.y = -Math.PI / 2;
+  luna.root.position.set(0, 0.62, -0.08);
+  sleigh.add(luna.root);
+  // and her kittens, peeking over the rim
+  const kittens = KITTEN_COATS.map((id, i) => {
+    const kitten = buildCat(look(id), "sit", 90 + i);
+    // one at the front rim, one at the back, one cuddled against Luna
+    kitten.root.scale.setScalar(0.42);
+    kitten.root.position.set(0, [0.6, 0.6, 0.7][i]!, [0.46, -0.5, 0.12][i]!);
+    sleigh.add(kitten.root);
+    return kitten;
+  });
+  return { sleigh, riders: [luna, ...kittens] };
 }
 
 /** A soft round shadow, drawn once on a canvas. */
@@ -157,7 +177,10 @@ function shadowTexture() {
 
 /**
  * The footer's cat parade (FR-099, ADR-032): the walking cats in single
- * file, reins from collar to collar, pulling the coffee-cup sleigh. One
+ * file. In the holiday season (`festive`) they wear collars with bells and
+ * walk ahead of a cosy coffee-cup sleigh that glides along on its own with
+ * Luna and her kittens (nobody is tied to anything); the rest
+ * of the year they just stroll, free, with room between them. One
  * transparent canvas the size of the strip, with an orthographic camera in
  * CSS pixels. Each cat steps with its own walk cycle; the parade only draws
  * while the strip is in view and the tab is showing.
@@ -167,6 +190,7 @@ export function createParadeStage(
   walkers: readonly ShopCat[],
   state: ParadeState,
   still: boolean,
+  festive: boolean,
 ): ParadeStage {
   const renderer = new THREE.WebGLRenderer({
     canvas,
@@ -193,22 +217,11 @@ export function createParadeStage(
 
   const made: THREE.Material[] = [];
   const cats = walkers.map((cat, i) => buildCat(cat.look, "walk", i * 13 + 5));
-  const bells = cats.map((cat) => harnessFor(cat, made));
-  const { sleigh, hitch, kasper } = buildSleigh(made);
-  scene.add(sleigh);
+  // the holiday look: collars with bells, and the sleigh gliding behind
+  const bells = festive ? cats.map((cat) => harnessFor(cat, made)) : [];
+  const { sleigh, riders } = buildSleigh(made);
+  if (festive) scene.add(sleigh);
   for (const cat of cats) scene.add(cat.root);
-
-  // reins: one line from the lead's collar back to the sleigh
-  const reinPoints = new Float32Array((cats.length + 1) * 3);
-  const reinGeometry = new THREE.BufferGeometry();
-  reinGeometry.setAttribute(
-    "position",
-    new THREE.BufferAttribute(reinPoints, 3),
-  );
-  const reinMaterial = new THREE.LineBasicMaterial({ color: RIBBON });
-  const reins = new THREE.Line(reinGeometry, reinMaterial);
-  reins.frustumCulled = false;
-  scene.add(reins);
 
   const shadowMap = shadowTexture();
   const shadowMaterial = new THREE.MeshBasicMaterial({
@@ -217,10 +230,10 @@ export function createParadeStage(
     depthWrite: false,
   });
   const shadowGeometry = new THREE.PlaneGeometry(1, 1);
-  const shadows = [...cats.map((c) => c.root), sleigh].map(() => {
+  const shadows = [...cats.map((c) => c.root), sleigh].map((_, i) => {
     const shadow = new THREE.Mesh(shadowGeometry, shadowMaterial);
     shadow.renderOrder = -1;
-    scene.add(shadow);
+    if (festive || i < cats.length) scene.add(shadow);
     return shadow;
   });
 
@@ -252,14 +265,19 @@ export function createParadeStage(
     camera.top = height;
     camera.bottom = 0;
     camera.updateProjectionMatrix();
-    // the cats stand most of the strip's height
-    // most of the strip's height, but the whole parade fits the screen at the stop
-    const units =
-      cats.length * catSize.x * 1.12 + catSize.x * 0.12 + sleighSize.x;
+    // the cats stand most of the strip's height, but the whole parade fits
+    // the screen at the stop; they walk with room between them, and the
+    // sleigh follows a little way behind, tied to no one
+    const spacing = festive ? 0.3 : 0.45;
+    const units = festive
+      ? cats.length * catSize.x * (1 + spacing) +
+        catSize.x * spacing * 2 +
+        sleighSize.x
+      : cats.length * catSize.x + (cats.length - 1) * catSize.x * spacing;
     scale = Math.min((height * 0.82) / catSize.y, (width * 0.94) / units);
     catLength = catSize.x * scale;
-    gap = catLength * 0.12;
-    sleighLength = sleighSize.x * scale;
+    gap = catLength * spacing;
+    sleighLength = festive ? sleighSize.x * scale : 0;
     dirty = true;
   };
   resize();
@@ -268,7 +286,6 @@ export function createParadeStage(
 
   let visible = true;
   const look = { x: 0, y: 0 };
-  const where = new THREE.Vector3();
 
   const frame = (dt: number, time: number) => {
     if (!visible || width === 0) return;
@@ -295,23 +312,22 @@ export function createParadeStage(
       look.y = -0.15 * state.look;
       cat.update(dt, time, look, still ? 0 : state.stride);
       // the bell swings with the step
-      bells[i]!.rotation.x = Math.sin(time * 9 + i) * 0.4 * state.stride;
+      if (bells[i])
+        bells[i].rotation.x = Math.sin(time * 9 + i) * 0.4 * state.stride;
     });
-    back -= dir * (catLength * 0.5 + gap * 2 + sleighLength * 0.5);
+    if (!festive) {
+      renderer.render(scene, camera);
+      return;
+    }
+    back -= dir * (catLength * 0.5 + gap * 3 + sleighLength * 0.5);
     place(sleigh, sleighLength, cats.length);
     // the sleigh glides with a little sway
     sleigh.position.y +=
       Math.abs(Math.sin(time * 3.4)) * height * 0.012 * state.stride;
-    kasper.update(dt, time, { x: 0, y: 0 });
-
-    scene.updateMatrixWorld();
-    cats.forEach((cat, i) => {
-      cat.harness.getWorldPosition(where);
-      reinPoints.set([where.x, where.y - 0.05 * scale, 5], i * 3);
-    });
-    hitch.getWorldPosition(where);
-    reinPoints.set([where.x, where.y, 5], cats.length * 3);
-    reinGeometry.attributes.position!.needsUpdate = true;
+    // Luna rests; the kittens look out with the others at the stop
+    riders.forEach((rider, i) =>
+      rider.update(dt, time, i === 0 ? { x: 0, y: 0 } : look),
+    );
 
     renderer.render(scene, camera);
   };
@@ -322,8 +338,7 @@ export function createParadeStage(
     span: () =>
       cats.length * catLength +
       (cats.length - 1) * gap +
-      gap * 2 +
-      sleighLength,
+      (festive ? gap * 3 + sleighLength : 0),
     meow(index) {
       cats[index]?.meow();
       dirty = true;
@@ -340,11 +355,9 @@ export function createParadeStage(
       stop();
       observer.disconnect();
       for (const cat of cats) cat.dispose();
-      kasper.dispose();
+      for (const rider of riders) rider.dispose();
       sleigh.traverse((object) => (object as THREE.Mesh).geometry?.dispose());
       for (const m of made) m.dispose();
-      reinGeometry.dispose();
-      reinMaterial.dispose();
       shadowGeometry.dispose();
       shadowMaterial.dispose();
       shadowMap.dispose();
