@@ -15,7 +15,7 @@ import {
   messengerProfile,
 } from "@/lib/messenger/profile";
 import {
-  ASSISTANT_NOTICE,
+  buildReply,
   BOARD_NOTE,
   categoryReply,
   clip,
@@ -38,7 +38,6 @@ import {
   staffReply,
   STATUS_TEXT,
   welcomeReply,
-  withNotice,
   type Reply,
 } from "@/lib/messenger/replies";
 import { formatPrice } from "@/lib/menu/format-price";
@@ -68,13 +67,11 @@ const linkTitles = (answer: Reply) => (answer.links ?? []).map((l) => l.title);
 const characters = (text: string) => Array.from(text).length;
 
 describe("Messenger welcome (FR-059, FR-062)", () => {
-  it("TC-P7-008 — the welcome says it's automated and shows the six main buttons", () => {
+  // Update 2026-11-13 (ADR-031): no "automated assistant" line.
+  it("TC-P7-008 — the welcome greets the customer and shows the six main buttons", () => {
     const answer = welcomeReply();
-    expect(ASSISTANT_NOTICE).toBe(
-      "I'm Brew ni Cat's automated assistant, not a person.",
-    );
     expect(answer.text).toBe(
-      `Hi! 👋 ${ASSISTANT_NOTICE} 🐱\n\nTap a button below to order right here in the chat 🛒, see our menu and prices 📋, our hours and location 🕒, or your order status 📦.\n\nOur staff read this chat too, so you can also type your message. 💬`,
+      `Hi! 👋 Welcome to Brew ni Cat! 🐱\n\nTap a button below to order right here in the chat 🛒, see our menu and prices 📋, our hours and location 🕒, or your order status 📦.\n\nYou can also just type your question, and our staff read this chat too. 💬`,
     );
     expect(titles(answer)).toEqual([
       "🛒 Order here",
@@ -555,22 +552,13 @@ describe("Messenger order status (FR-063)", () => {
 });
 
 describe("Messenger notice and limits (FR-062)", () => {
-  it("TC-P7-017 — the notice goes first and replies keep to Meta's limits", () => {
-    const noticed = withNotice(orderNotFoundReply());
-    expect(noticed.text).toBe(
-      `${ASSISTANT_NOTICE}\n\n${orderNotFoundReply().text}`,
-    );
-    expect(noticed.quickReplies).toEqual(orderNotFoundReply().quickReplies);
-
+  it("TC-P7-017 — replies keep to Meta's limits", () => {
     expect(clip("ab😀cd", 4)).toBe("ab😀…");
     expect(clip("abc", 3)).toBe("abc");
     expect(characters(clip("a".repeat(MAX_TEXT_LENGTH + 1)))).toBe(
       MAX_TEXT_LENGTH,
     );
-    const long = withNotice({
-      text: "a".repeat(MAX_TEXT_LENGTH),
-      quickReplies: [],
-    });
+    const long = buildReply("a".repeat(MAX_TEXT_LENGTH + 5));
     expect(characters(long.text)).toBe(MAX_TEXT_LENGTH);
     expect(long.text.endsWith("…")).toBe(true);
 
@@ -609,7 +597,8 @@ describe("Messenger notice and limits (FR-062)", () => {
 
     const [greeting] = profile.greeting;
     expect(greeting?.locale).toBe("default");
-    expect(greeting?.text).toContain("automated assistant");
+    expect(greeting?.text).toContain("Welcome to Brew ni Cat");
+    expect(greeting?.text).not.toMatch(/automated|assistant/i);
     expect(characters(greeting?.text ?? "")).toBeLessThanOrEqual(
       MAX_GREETING_LENGTH,
     );

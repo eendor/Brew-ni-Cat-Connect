@@ -22,6 +22,7 @@ import {
 } from "@/lib/supabase/public-client";
 import type { MenuCatalog } from "@/types/menu";
 
+import { createGeminiAssistant, type AskAssistant } from "./assistant";
 import type { MessengerDeps } from "./events";
 import { deriveOrderIds, deriveTrackingToken } from "./order-ids";
 import type { PlaceOrderInput } from "./order-flow";
@@ -207,5 +208,22 @@ export function createMessengerDeps(
     newNonce,
     placeOrder: (sender, nonce, order) =>
       placeMessengerOrder(appSecret, sender, nonce, order),
+    askAssistant: smartReplyAssistant(),
   };
+}
+
+/**
+ * Gemini smart replies (ADR-031), only when GEMINI_API_KEY is set on the
+ * server. GEMINI_MODELS can list other models, comma separated.
+ */
+export function smartReplyAssistant(
+  env: Readonly<Record<string, string | undefined>> = process.env,
+): AskAssistant | undefined {
+  const apiKey = env.GEMINI_API_KEY?.trim();
+  if (!apiKey) return undefined;
+  const models = (env.GEMINI_MODELS ?? "")
+    .split(",")
+    .map((model) => model.trim())
+    .filter((model) => /^[\w.-]{1,64}$/.test(model));
+  return createGeminiAssistant(apiKey, { models });
 }
