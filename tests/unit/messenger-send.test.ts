@@ -228,6 +228,20 @@ describe("Messenger Send API: links, pictures and cards (FR-104)", () => {
     expect(body?.message.quick_replies).toEqual([choice(3)]);
   });
 
+  it("TC-P7-053 — a reply can keep most of its choices under the message", () => {
+    const [body] = sendApiBodies(CUSTOMER, {
+      text: "What are you craving?",
+      quickReplies: [choice(1), choice(2), choice(3)],
+      links: [{ title: "🌐 Full menu", url: "https://brew.example/menu" }],
+      inlineChoices: 1,
+    });
+    const payload = (
+      body?.message.attachment as { payload: { buttons: unknown[] } }
+    ).payload;
+    expect(payload.buttons).toHaveLength(2);
+    expect(body?.message.quick_replies).toEqual([choice(2), choice(3)]);
+  });
+
   it("TC-P7-053 — a list of choices stays under the message as quick replies", () => {
     const bodies = sendApiBodies(CUSTOMER, {
       text: "Which size?",

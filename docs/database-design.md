@@ -297,6 +297,7 @@ Migration `20261030120000_site_content.sql` (undo: `supabase/rollbacks/202610301
 | `address` | Street, area, town, province, postal code, country, landmark and map link |
 | `payments` | The accepted payment methods (1 to 6) and an optional GCash QR picture |
 | `notice` | One line shown above every page; empty hides it |
+| `closure` | Added 2026-11-11 (§16): `closed` (true or false) and an optional `note`, the owner's "Closed today" switch |
 | `social` | Facebook, Facebook photos and TikTok links; an empty link is hidden |
 | `riders` | Up to 8 delivery partners, each with a name, a Facebook link and a logo |
 | `about` | Opening date, page titles and text, the story, photos, menu summary, footer text and cat rules |
@@ -404,7 +405,7 @@ File: `supabase/migrations/20261105120000_three_flavor_mixes.sql`. Undo: `supaba
 
 ## 15. Order Status By Tracking Token (Phase 7 — 2026-11-10)
 
-File: `supabase/migrations/20261110120000_messenger_order_status.sql`. Undo: `supabase/rollbacks/20261110120000_messenger_order_status.sql`. Covers FR-110 (ADR-029). **Not applied to the live database yet.** It is applied by the process in §8.7, and only with the team's OK. Until then the Messenger assistant's Order status says it can't check orders, and ordering is not affected.
+File: `supabase/migrations/20261110120000_messenger_order_status.sql`. Undo: `supabase/rollbacks/20261110120000_messenger_order_status.sql`. Covers FR-110 (ADR-029). **Not applied to the live database yet.** It is applied by the process in §8.7, and only with the team's OK. Until then the Messenger assistant's Order status says it can't check orders, and ordering is not affected. Update 2026-11-10: applied to the live database with the team's OK, and recorded in `supabase_migrations.schema_migrations` (version 20261110120000).
 
 ### 15.1 `public.list_online_orders_by_token(p_tracking_token, p_limit)`
 
@@ -419,3 +420,119 @@ File: `supabase/migrations/20261110120000_messenger_order_status.sql`. Undo: `su
 
 - The rollback drops the function. Orders and tokens are not touched.
 - TC-P7-051 runs on PGlite against the real migrations (`tests/database/messenger-order-status.test.ts`): only that customer's orders, newest first; the status the shop sets on the POS; an empty list for an unknown or malformed token; the limit of 1 to 10; callable by the website's roles only, changing nothing; and the rollback keeps the orders.
+
+## 15. Loyalty Points (Phase 5 — PR #123)
+
+File: `supabase/migrations/20261113120000_loyalty_points.sql`. Undo: `supabase/rollbacks/20261113120000_loyalty_points.sql`. Covers FR-050 to FR-055. **Not applied to the live database yet.** Rodnee applies migrations after review.
+
+### 15.1 Settings in one place
+
+- `private.loyalty_settings()` returns a `jsonb` object defining the earning rule (`currency_step = 50`, `points_per_currency_unit = 1`), weekly redemption limit (`weekly_limit = 2`), and the rewards catalog with required points and active flags.
+- Confirmed by the owner on 2026-11-10: 1 point for every ₱50 spent, weekly limit of 2 redemptions per customer, and 11 confirmed rewards (Kiwi soda 40 pts, Passion fruit soda 40 pts, Spanish latte 50 pts, Hazelnut latte 50 pts, Takoyaki veggie (4 pcs) 60 pts, Takoyaki cheese (4 pcs) 70 pts, Takoyaki squid (4 pcs) 80 pts, Takoyaki shrimp (4 pcs) 90 pts, Buldak carbonara 100 pts, Classy Cat combo 120 pts, Nachos with fries, meat and veggies 150 pts).
+- Access is revoked from all client roles (`public`, `anon`, `authenticated`).
+
+### 15.2 Earning trigger and status transitions
+
+- Trigger `online_orders_loyalty_trigger` runs `AFTER UPDATE OF status ON public.online_orders FOR EACH ROW EXECUTE FUNCTION private.sync_online_order_loyalty()`.
+- Runs as `security definer` with `set search_path = ''`.
+- Only orders with an associated `customer_id` earn points; guest orders earn nothing.
+- After every status update, the sum of points recorded for that order in `public.loyalty_transactions` reconciles to `floor(subtotal / 50)` if `status = 'completed'`, and 0 otherwise.
+- The initial award inserts one row with reason `'order-completed'`, `points > 0`, and the `order_id`.
+- Any subsequent correction (such as undoing completion or completing again) inserts an `'adjustment'` row with the compensating delta, the `order_id`, and an explanatory note (e.g., "Order completion undone").
+- Transactions are immutable (FR-052); existing rows are never updated or deleted.
+- If earned points are 0 (e.g. subtotal under ₱50), no transaction is inserted and the status change is not blocked.
+- Orders completed before this migration do not receive retroactively awarded points.
+- Trigger errors on unique violation are caught and logged via `RAISE WARNING` without blocking the order status transition.
+
+### 15.3 What an undo does
+
+- When staff invoke `public.undo_online_order_status()` on a completed order (FR-095), the status transitions back to the preceding state (e.g. `ready`).
+- The trigger fires and observes the non-completed target status (target points = 0). It calculates delta = `-earned_points` and inserts an `'adjustment'` transaction with note "Order completion undone", leaving the order's net point contribution at exactly 0.
+- If the order is subsequently completed again, the trigger inserts an `'adjustment'` transaction with +earned_points, restoring the points once.
+
+### 15.4 Functions and grants
+
+- `public.loyalty_rewards()`: `security definer`, `stable`, `set search_path = ''`. Returns a `jsonb` array of active rewards filtered from `private.loyalty_settings()`. Granted to `anon` and `authenticated`.
+- `public.loyalty_settings()`: `security definer`, `stable`, `set search_path = ''`. Returns program rules (`currencyStep`, `pointsPerStep`, `weeklyLimit`). Granted to `anon` and `authenticated`.
+- `public.redeem_reward(p_reward_id text)`: `security definer`, `set search_path = ''`. Enforces advisory transaction locks on the customer UUID, verifies reward availability and balance, checks the 7-day weekly redemption limit, and inserts a `'reward-redeemed'` row with negative points. Returns a verification code (`RWD-XXXXXX`) for shop counter redemption. Granted to `authenticated` only.
+- Table privileges on `public.loyalty_transactions`: authenticated customers retain `SELECT` only; `INSERT`, `UPDATE`, and `DELETE` remain revoked so no customer can alter their balance directly.
+
+### 15.5 Known Limitations
+
+- **Staff Counter Verification**: The generated `RWD-XXXXXX` verification code currently lives in the transaction note, and there is no staff screen or POS lookup to confirm and redeem it at the counter yet (planned for a future POS task).
+
+### 15.6 Rollback and tests
+
+- Rollback `supabase/rollbacks/20261113120000_loyalty_points.sql` drops the trigger and functions cleanly, leaving past transactions untouched.
+- Tested on PGlite in `tests/database/loyalty.test.ts` (TC-P5-098 to TC-P5-109): earning calculations, replay idempotency, undo/redo reconciliation, rejection/cancellation zero-points, subtotal under ₱50 handling, guest exclusion, RLS table isolation, active rewards filtering, balance floor protection, and weekly redemption limit enforcement.
+
+## 16. Closed Today Switch (Phase 7 — 2026-11-11)
+
+File: `supabase/migrations/20261111120000_closed_today.sql`. Undo: `supabase/rollbacks/20261111120000_closed_today.sql`. Covers FR-111. **Not applied to the live database yet.** It is applied by the process in §8.7, and only with the team's OK. Until then the website and Messenger read the built-in copy, which is open.
+
+### 16.1 What it changes
+
+- `public.site_content` accepts a tenth section, `closure`, with `{ "closed": boolean, "note": text up to 300 characters }`. The row is added open, with no note, because staff can only update rows.
+- The earlier section checks are kept as `private.is_valid_site_content_before_closure()`. The new `private.is_valid_site_content()` checks `closure` and hands every other section to it, so no earlier rule changes.
+- Access is the same as every section (§10.2): everyone reads it, only staff update it, and the change history (§10.4) records each change.
+
+### 16.2 Who reads it
+
+- Website: the line above every page says "We're closed today" with the note, before the owner's notice. Checkout disables Place order, and `POST /api/orders` answers 503 with the closed message before reaching the database.
+- Messenger: Order here, a phone number and every order step answer with the closed reply; the Hours & location reply starts with the closed line.
+- POS: the owner turns it on and off (`eendor/Brew-ni-Cat-POS`).
+
+### 16.2a Update 2026-11-11: open by default (FR-112)
+
+- No schema change. The website reads `updated_at` of the `closure` row with its content: when Closed today was turned on before today (Philippine time), it is treated as off, so the shop opens by itself each day.
+- Ordering also follows the `hours` section; see `src/lib/site-content/open-now.ts`.
+
+### 16.3 Undo and tests
+
+- The rollback deletes the `closure` row, puts back the earlier check function and the nine-section list.
+- TC-P7-077 runs on PGlite (`tests/database/closed-today.test.ts`).
+
+## 17. Ratings And Reviews (Phase 5 — 2026-11-09)
+
+File: `supabase/migrations/20261112120000_reviews.sql`. Undo: `supabase/rollbacks/20261112120000_reviews.sql`. Covers FR-098. **Not applied to the live database yet.** Rodnee applies migrations after review.
+
+### 17.1 Table `public.reviews`
+
+- `id`: uuid primary key default `gen_random_uuid()`.
+- `customer_id`: uuid null, references `auth.users(id)` on delete set null. Null for anonymous guest reviews.
+- `display_name`: text not null, checked not empty. First name of customer from `customer_profiles.full_name`, "Customer" if no profile exists, or "Guest" for anonymous reviews.
+- `rating`: smallint not null, checked between 1 and 5.
+- `body`: text not null, checked between 1 and 500 characters, trimmed.
+- `hidden`: boolean not null default false. Hidden reviews are omitted from public reading; shop staff can toggle this column from the POS app.
+- `created_at`: timestamptz not null default now().
+- `updated_at`: timestamptz not null default now().
+- A partial unique index `reviews_customer_id_unique_idx` on `customer_id` where `customer_id IS NOT NULL` guarantees one review per signed-in customer, which they can update.
+
+### 17.2 Permissions and RLS
+
+- Row Level Security (RLS) is enabled.
+- Public read policy `reviews_public_read`: allows everyone (`anon`, `authenticated`) to read visible reviews (`hidden = false`). Staff (`private.is_staff()`) may read all reviews including hidden ones.
+- Staff update policy `reviews_staff_update_hidden`: allows staff (`private.is_staff()`) to update reviews.
+- Column grants:
+  - `grant select (id, display_name, rating, body, hidden, created_at, updated_at) on public.reviews to anon, authenticated;` (omits `customer_id` completely from public reading, preventing disclosure of customer accounts, emails, or phone numbers).
+  - `grant update (hidden) on public.reviews to authenticated;` (limits staff updates strictly to the `hidden` moderation flag).
+  - No insert or delete grants are given on `public.reviews` to `anon` or `authenticated`.
+
+### 17.3 Functions
+
+- `public.post_review(p_rating integer, p_body text)`:
+  - Security definer with `set search_path = ''`.
+  - Verifies rating is an integer between 1 and 5, and body trimmed length is between 1 and 500 characters.
+  - Enforces database-wide guest limit as a backstop: at most 10 guest reviews created in any 10 minutes (`now() - interval '10 minutes'`).
+  - When signed in (`auth.uid() IS NOT NULL`): reads `full_name` from `public.customer_profiles`, extracts the first word, falling back to "Customer" if absent. Upserts the customer's review (updating rating, body, display_name, and updated_at if an existing review is found).
+  - When anonymous (`auth.uid() IS NULL`): inserts a new review with `display_name = 'Guest'`. Anonymous reviews cannot be edited.
+  - Returns the created or updated `public.reviews` row.
+- `public.my_review()`:
+  - Security definer with `set search_path = ''`.
+  - Returns `public.reviews` for `auth.uid()` if authenticated, or null if anonymous or no review exists.
+
+### 17.4 Undo and tests
+
+- Rollback drops `public.post_review`, `public.my_review`, `private.set_reviews_updated_at`, trigger `reviews_set_updated_at`, and table `public.reviews`.
+- TC-P5-170 to TC-P5-181 run on PGlite (`tests/database/reviews.test.ts`): public reading excludes `customer_id` and hidden reviews; staff can read and hide reviews; post_review works for guests and customers; customer edits their one review; guest cannot edit; database-wide guest flood limit; input validations.
+

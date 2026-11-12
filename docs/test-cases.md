@@ -383,6 +383,8 @@ Run on 2026-10-24 for branch `feat/p4-online-orders`: Vitest 234/234 passed in 3
 | TC-P4-121 | FR-024 | Order client | Place order posts JSON, uncached, and returns the API's answer | Fake `fetch` | Place an order; then answer `price-changed` | One POST to `/api/orders` with JSON, `no-store` and same-origin credentials; the answer comes back as sent | Matched in the 234/234 Vitest run | Passed | `tests/unit/order-client.test.ts` |
 | TC-P4-122 | FR-024 | Order client | No answer, or an unknown one, is a server error to retry | Fake `fetch` | Fail the network; answer an HTML page, an empty body, an unknown shape, and a saved order with another token | A `server-error` result each time | Matched in the 234/234 Vitest run | Passed | `tests/unit/order-client.test.ts` |
 | TC-P4-123 | FR-022, FR-025 | Place order browser flow | A pickup order is placed and its page opens | Production build in `chromium` with the switch on, a mocked menu and a mocked `POST /api/orders` that echoes the request's token | Order 2 × 8 pcs Cheese Takoyaki, check out, fill name and phone, review, tap Place order | No Proceed to Send to Shop button; one request with the picks, the details and ₱220; the page opens `/orders/BNC-7K2Q9F#token=…` with the request's token | Matched in the 18/18 Playwright `chromium` run | Passed | `tests/e2e/ordering.spec.ts` |
+
+Update 2026-11-10: TC-P4-123 and TC-P8-019 now fix the browser clock at 2 PM Manila time (`page.clock.setFixedTime`). Since FR-112 the checkout follows the opening hours, so without this the two tests failed whenever CI ran after closing.
 | TC-P4-129 | FR-026 | Order page loader | A matching reference and token load the order | Mocked Supabase client | Call `fetchOrder` with a valid reference and token | One `get_online_order` call with both; the order comes back | Matched in the 246/246 Vitest run | Passed | `tests/unit/fetch-order.test.ts` |
 | TC-P4-130 | FR-026 | Order page loader | No order matches | Mocked client answers no data | Call `fetchOrder` | `null` | Matched in the 246/246 Vitest run | Passed | `tests/unit/fetch-order.test.ts` |
 | TC-P4-131 | FR-026 | Order page loader | A failed request is an error, not a missing order | Mocked client answers an error | Call `fetchOrder` | It throws “The order could not be loaded.” | Matched in the 246/246 Vitest run | Passed | `tests/unit/fetch-order.test.ts` |
@@ -940,6 +942,193 @@ These need a real browser or phone and were not run in this environment.
 | MAN-P8-005 | FR-068 | Turn the network back on and press Try again | The requested page loads from the network | Not run yet |
 | MAN-P8-006 | FR-068 | Run a Lighthouse installability/PWA audit on the production site | The manifest, service worker, icons and start URL pass the installability checks | Not run yet |
 
+## 37. Loyalty Points And Rewards Cases (Phase 5, Week 3 — FR-050 to FR-055)
+
+Run on 2026-11-10 by Renier (GitHub: Apal-RP) on branch `feat/p5-loyalty` (PR #123). The database migration, earning trigger, settings, active rewards query, and atomic redemption are tested on PGlite. Formatting utilities and component views are tested with Vitest and React Testing Library. Browser tests with mocked Supabase sessions and PostgREST/RPC endpoints verify desktop (1440x900) and mobile (390x844) rendering. Evidence screenshots were captured with `CAPTURE_EVIDENCE=1` in `docs/evidence/phase-5/loyalty/`. Supabase is mocked in all tests; no live customer data or live credentials were used.
+
+`npx vitest run tests/database/loyalty.test.ts tests/unit/loyalty-format.test.ts tests/unit/loyalty-view.test.tsx` — 3 test files, 30 tests, all passed. Full suite (`npm run test`): 88 test files, 958 tests, all passed. `CI=1 npx playwright test tests/e2e/loyalty.spec.ts --project=chromium` — 3 passed.
+
+### 37a. Database triggers, earning rules, and redemption (TC-P5-098 to TC-P5-109)
+
+| ID | Requirement ID(s) | Module | Scenario | Preconditions | Input / action | Expected result | Actual result | Status | Evidence |
+|---|---|---|---|---|---|---|---|---|---|
+| TC-P5-098 | FR-051 | `private.sync_online_order_loyalty` | Earned points match formula for known subtotals | Signed-in customer order placed with known subtotal | Staff completes orders of ₱120 and ₱255 | ₱120 awards 2 points; ₱255 awards 5 points with reason `order-completed` | Matched. | Passed | `tests/database/loyalty.test.ts` |
+| TC-P5-099 | FR-051, FR-052 | `private.sync_online_order_loyalty` | One award per order even when completion is retried | Completed order with `order-completed` transaction | Staff re-sends completion with same correlation ID | No duplicate row inserted; total points stay at 2 | Matched. | Passed | `tests/database/loyalty.test.ts` |
+| TC-P5-100 | FR-051, FR-052 | `private.sync_online_order_loyalty` | Complete then undo leaves zero net points | Completed order with 2 points | Staff undoes completion back to ready status | Inserts `adjustment` row of -2 points with note "Order completion undone"; sum is 0 | Matched. | Passed | `tests/database/loyalty.test.ts` |
+| TC-P5-101 | FR-051, FR-052 | `private.sync_online_order_loyalty` | Complete, undo, complete leaves points awarded once | Undone order with net 0 points | Staff moves order back to completed | Inserts `adjustment` row of +2 points; sum reconciles to 2 points | Matched. | Passed | `tests/database/loyalty.test.ts` |
+| TC-P5-102 | FR-051 | `private.sync_online_order_loyalty` | Rejected and cancelled orders earn nothing | Placed online order | Staff moves order to rejected or cancelled | Zero loyalty transactions created | Matched. | Passed | `tests/database/loyalty.test.ts` |
+| TC-P5-103 | FR-051 | `private.sync_online_order_loyalty` | Guest orders earn nothing | Guest order placed without customer_id | Staff completes order | Zero loyalty transactions created | Matched. | Passed | `tests/database/loyalty.test.ts` |
+| TC-P5-104 | FR-051 | `private.sync_online_order_loyalty` | Subtotal under ₱50 adds no row and does not block | Order placed with subtotal ₱5 (Update 2026-11-11: also ₱49 and ₱50) | Staff completes order | Zero loyalty transactions added; order status moves to completed (Update 2026-11-11: ₱49 adds no row and ₱50 adds 1 point) | Matched. | Passed | `tests/database/loyalty.test.ts` |
+| TC-P5-105 | FR-052, FR-053 | `public.loyalty_transactions` | Customer reads only own rows; direct mutation fails | Transactions for customer A and B | Select and direct insert/update/delete as customer A | Reads only customer A rows; insert, update, delete fail with 42501 | Matched. | Passed | `tests/database/loyalty.test.ts` |
+| TC-P5-106 | FR-054 | `public.loyalty_rewards` | Returns only active rewards | Settings catalog with active and inactive rewards | Anonymous or authenticated user calls `loyalty_rewards()` | Returns only active rewards from 11 confirmed items (Update 2026-11-11: exactly 11 rewards from the real catalog; with a test catalog of one active and one inactive reward, only the active one is returned) | Matched. | Passed | `tests/database/loyalty.test.ts` |
+| TC-P5-107 | FR-055 | `public.redeem_reward` | Balance cannot go below zero | Customer with 0 loyalty points | Customer calls `redeem_reward('reward-spanish-latte')` | Returns `{ ok: false, error: 'insufficient_points' }`; balance stays 0 | Matched. | Passed | `tests/database/loyalty.test.ts` |
+| TC-P5-108 | FR-055 | `public.redeem_reward` | Enforces weekly redemption limit | Customer with 300 points; weekly limit is 2 | Customer redeems 3 rewards in same week | First 2 redemptions succeed with codes; 3rd fails with `weekly_limit_reached` | Matched. | Passed | `tests/database/loyalty.test.ts` |
+| TC-P5-109 | FR-050–FR-055 | `supabase/rollbacks/` | Rollback drops triggers and functions cleanly | Database with migration applied | Run rollback SQL | Triggers and functions dropped; prior orders and customer data preserved | Matched. | Passed | `tests/database/loyalty.test.ts` |
+
+### 37b. Loyalty formatters and client service (TC-P5-113 to TC-P5-117)
+
+| ID | Requirement ID(s) | Module | Scenario | Preconditions | Input / action | Expected result | Actual result | Status | Evidence |
+|---|---|---|---|---|---|---|---|---|---|
+| TC-P5-113 | FR-052, FR-053 | `src/lib/loyalty/format.ts` | Formats point deltas with explicit signs | Numeric delta | Call `formatPointsDelta` with positive, negative, and zero | Positive numbers format with `+`, negative with `−`, zero as `"0"` | Matched. | Passed | `tests/unit/loyalty-format.test.ts` |
+| TC-P5-114 | FR-053 | `src/lib/loyalty/format.ts` | Formats reason in plain words | Reason code and note | Call `formatReason` for each reason type | `order-completed` returns "Order completed"; `reward-redeemed` returns "Reward redeemed"; `adjustment` returns note | Matched. | Passed | `tests/unit/loyalty-format.test.ts` |
+| TC-P5-115 | FR-053 | `src/lib/loyalty/format.ts` | Formats ISO dates into readable date | ISO timestamp | Call `formatLoyaltyDate` | Formats to friendly Philippine date (e.g., "Nov 10, 2026") | Matched. | Passed | `tests/unit/loyalty-format.test.ts` |
+| TC-P5-116 | FR-054 | `src/lib/loyalty/format.ts` | Formats points earning rule with formatPrice | Currency step amount | Call `formatEarningRule(10, 1)` | Returns "Earn 1 point for every ₱10 spent on completed orders." | Matched. | Passed | `tests/unit/loyalty-format.test.ts` |
+| TC-P5-117 | FR-054 | `src/lib/loyalty/format.ts` | Formats weekly redemption limit in plain words | Weekly limit number | Call `formatWeeklyLimit(2)` | Returns "Redeem up to 2 rewards per week." | Matched. | Passed | `tests/unit/loyalty-format.test.ts` |
+
+### 37c. Rewards and points view component (TC-P5-118 to TC-P5-124)
+
+| ID | Requirement ID(s) | Module | Scenario | Preconditions | Input / action | Expected result | Actual result | Status | Evidence |
+|---|---|---|---|---|---|---|---|---|---|
+| TC-P5-118 | FR-053 | `RewardsView` | Shows loading skeleton while data loads | Pending API promises | Render `<RewardsView />` | Displays skeleton container with `data-testid="loyalty-loading"` | Matched. | Passed | `tests/unit/loyalty-view.test.tsx` |
+| TC-P5-119 | FR-053, FR-054 | `RewardsView` | Displays balance and plain-word rules | Loaded balance of 60 | Render `<RewardsView />` | Displays 60 points, earning rule with formatPrice, and weekly limit | Matched. | Passed | `tests/unit/loyalty-view.test.tsx` |
+| TC-P5-120 | FR-054 | `RewardsView` | Displays rewards with enough and not enough points | Balance of 60; rewards at 50, 80, 100 pts | Render `<RewardsView />` | 50 pts shows "Balance is enough" with enabled Redeem button; 80 pts shows "Need 20 more pts" with disabled button | Matched. | Passed | `tests/unit/loyalty-view.test.tsx` |
+| TC-P5-121 | FR-053 | `RewardsView` | Displays points history with formatted signs and reasons | Transactions with positive and negative points | Render `<RewardsView />` | Renders rows with "+12 pts", "−50 pts", order references, and plain reasons | Matched. | Passed | `tests/unit/loyalty-view.test.tsx` |
+| TC-P5-122 | FR-053 | `RewardsView` | Displays empty state when customer has no points | Empty history list | Render `<RewardsView />` | Displays ~~"No points yet. You earn points when a pickup order is completed."~~ Superseded 2026-11-11: "No points yet. You earn points when an order is completed." (delivery orders earn points too) | Matched. | Passed | `tests/unit/loyalty-view.test.tsx` |
+| TC-P5-123 | FR-053 | `RewardsView` | Displays error banner when loading fails | Rejected fetch promise | Render `<RewardsView />` | Renders error banner with `role="alert"` and retry messaging | Matched. | Passed | `tests/unit/loyalty-view.test.tsx` |
+| TC-P5-124 | FR-055 | `RewardsView` | Supports redemption confirmation and displays counter code | Eligible reward selected | Click Redeem, confirm in dialog | Calls `redeemReward`, displays counter verification code "RWD-999888", and updates balance | Matched. | Passed | `tests/unit/loyalty-view.test.tsx` |
+
+### 37d. Browser end-to-end inspection (TC-P5-125 to TC-P5-127)
+
+| ID | Requirement ID(s) | Module | Scenario | Preconditions | Input / action | Expected result | Actual result | Status | Evidence |
+|---|---|---|---|---|---|---|---|---|---|
+| TC-P5-125 | FR-050, FR-053, FR-054 | `/account/rewards` | Customer sees balance, rules, rewards, and history at 1440x900 | Authenticated mock session, mocked PostgREST/RPC | Open `/account/rewards` at 1440x900 | Heading, balance, earning rules, rewards catalog, and transaction history are visible | Matched. | Passed | `tests/e2e/loyalty.spec.ts`, `docs/evidence/phase-5/loyalty/rewards-page-1440x900.png` (Update 2026-11-11: after the restyle, `restyled-rewards-page-1440x900.png` and `restyled-rewards-page-1440x900-night.png`) |
+| TC-P5-126 | FR-053, FR-054 | `/account/rewards` | Mobile customer views responsive layout at 390x844 | Authenticated mock session | Open `/account/rewards` at 390x844 | No horizontal scroll, card and action tap targets meet touch standards | Matched. | Passed | `tests/e2e/loyalty.spec.ts`, `docs/evidence/phase-5/loyalty/rewards-page-390x844.png` (Update 2026-11-11: after the restyle, `restyled-rewards-page-390x844.png` and `restyled-rewards-page-390x844-night.png`) |
+| TC-P5-127 | FR-053 | `/account/rewards` | Shows empty points history when customer has no transactions | Authenticated mock session with 0 points and empty history | Open `/account/rewards` at 1440x900 | Displays ~~"No points yet. You earn points when a pickup order is completed."~~ Superseded 2026-11-11: "No points yet. You earn points when an order is completed." (delivery orders earn points too) and View Menu link | Matched. | Passed | `tests/e2e/loyalty.spec.ts`, `docs/evidence/phase-5/loyalty/rewards-empty-1440x900.png` (Update 2026-11-11: after the restyle, `restyled-rewards-empty-1440x900.png` and `restyled-rewards-empty-1440x900-night.png`) |
+| TC-P5-210 | FR-053 | `RewardsView` | Every CSS variable the rewards page uses exists in `globals.css` (added 2026-11-11) | `src/components/loyalty/rewards-view.tsx` and `src/app/globals.css` | Unit test reads both files | No missing variable names | Matched. | Passed | `tests/unit/loyalty-view.test.tsx` |
+
+## 38. Account Home And Data Request Cases (Phase 5, Week 3 — FR-042)
+
+Run on 2026-11-12 by Rizjie (GitHub: Mr-Jie29) on branch `feat/p5-account-home` (PR #130). The account home links the account pages and shows the newest order through the existing `fetchCustomerOrders` helper. The data request form writes to the existing `public.data_requests` table; no migration is needed and no request was sent to the live database. Every order, name, request and session in these cases is MOCK DATA — FOR DEVELOPMENT ONLY, and Supabase is mocked in the browser tests.
+
+Unit tests run on Vitest (`tests/unit/data-requests-helper.test.ts`, `tests/unit/account-home.test.tsx`, `tests/unit/data-request-form.test.tsx`, `tests/unit/site-header.test.tsx`): 27 passed. The full unit suite also passed: 99 files, 1034 tests. E2E browser tests run on Chromium with Playwright (`tests/e2e/account-home.spec.ts`): 5 passed, and the full Chromium suite passed with 62 passed and 3 skipped in CI mode (one worker, up to two retries) against the CI placeholder environment. Evidence screenshots were captured into `docs/evidence/phase-5/account-home/` with `CAPTURE_EVIDENCE=1` at 1440x900 and 390x844.
+
+### 38a. Data request helper (TC-P5-130 to TC-P5-133)
+
+| ID | Requirement ID(s) | Module | Scenario | Preconditions | Input / action | Expected result | Actual result | Status | Evidence |
+|---|---|---|---|---|---|---|---|---|---|
+| TC-P5-130 | FR-042 | `submitDataRequest` | Sends only the kind and the trimmed message | Stubbed Supabase client passed as `client` | Call `submitDataRequest({ kind: "correction", message: "  Please fix my phone number.  ", client })` | Inserts `{ kind: "correction", message: "Please fix my phone number." }` with no `customer_id` and no `status`, so the database fills them | Matched. | Passed | `tests/unit/data-requests-helper.test.ts` |
+| TC-P5-131 | FR-042 | `submitDataRequest` | Insert errors are thrown | Insert returns code `42501` "permission denied" | Call `submitDataRequest` | The promise rejects with "permission denied" | Matched. | Passed | `tests/unit/data-requests-helper.test.ts` |
+| TC-P5-132 | FR-042 | `fetchDataRequests` | Lists only that customer's requests, newest first | Stubbed client with two rows | Call `fetchDataRequests({ userId: "customer-123", client })` | Selects `id, kind, message, status, created_at`, filters `customer_id` to the customer and orders `created_at` descending | Matched. | Passed | `tests/unit/data-requests-helper.test.ts` |
+| TC-P5-133 | FR-042 | `submitDataRequest`, `fetchDataRequests` | Listing errors are thrown, and an empty or overlong message never inserts | Select returns "JWT expired"; message is spaces or 1001 characters | Call both helpers | Listing rejects with "JWT expired"; the empty and overlong messages are rejected before an insert is attempted | Matched. | Passed | `tests/unit/data-requests-helper.test.ts` |
+
+### 38b. Account home (TC-P5-134 to TC-P5-138)
+
+| ID | Requirement ID(s) | Module | Scenario | Preconditions | Input / action | Expected result | Actual result | Status | Evidence |
+|---|---|---|---|---|---|---|---|---|---|
+| TC-P5-134 | FR-042 | `AccountHomeView` | Five tiles link every account page | Signed in as `customer-123` | Render the page | Orders, Favorites, Rewards, Profile and Data requests tiles link `/account/orders`, `/account/favorites`, `/account/rewards`, `/account/profile` and `/account/data-request`; the heading is "My Account" | Matched. | Passed | `tests/unit/account-home.test.tsx` |
+| TC-P5-135 | FR-039, FR-042 | `AccountHomeView` | Shows the newest order in the order history words | `fetchCustomerOrders` returns one completed order | Render the page | Requests page 1 with page size 1 for that customer; shows the reference linked to `/orders/BNC-7K2Q9F`, the status, "Placed on" date, total and item count | Matched. | Passed | `tests/unit/account-home.test.tsx` |
+| TC-P5-136 | FR-042 | `AccountHomeView` | Empty order state | The customer has no orders | Render the page | "No orders yet" and a Browse Menu link to `/menu` | Matched. | Passed | `tests/unit/account-home.test.tsx` |
+| TC-P5-137 | FR-042 | `AccountHomeView` | Order error with Try again | The first request rejects, the retry succeeds | Render the page, then press Try again | The alert says "Unable to load your latest order. Please try again."; the retry loads the order and clears the alert | Matched. | Passed | `tests/unit/account-home.test.tsx` |
+| TC-P5-138 | FR-042 | `AccountHomeView` | Loading state | The order request never resolves | Render the page | The loading placeholder shows and "No orders yet" does not | Matched. | Passed | `tests/unit/account-home.test.tsx` |
+
+### 38c. Data request form (TC-P5-139 to TC-P5-146)
+
+| ID | Requirement ID(s) | Module | Scenario | Preconditions | Input / action | Expected result | Actual result | Status | Evidence |
+|---|---|---|---|---|---|---|---|---|---|
+| TC-P5-139 | FR-042 | `DataRequestView` | Both fields are required | Signed in; empty form | Press Send request | "Choose Correction or Deletion." and the message error show; nothing is sent; the message field has `aria-invalid` and an `aria-describedby` that points at its error text | Matched. | Passed | `tests/unit/data-request-form.test.tsx` |
+| TC-P5-140 | FR-042 | `DataRequestView` | The message is trimmed | Correction chosen | Type `   Please fix my name.   ` and send | `submitDataRequest` is called with `{ kind: "correction", message: "Please fix my name." }` | Matched. | Passed | `tests/unit/data-request-form.test.tsx` |
+| TC-P5-141 | FR-042 | `DataRequestView` | Live count and 1000-character limit | Empty form | Type 12 characters, then set 1001 characters | The field has `maxlength="1000"`; the count reads "12 / 1000 characters"; 1001 characters show the limit error and no request is sent | Matched. | Passed | `tests/unit/data-request-form.test.tsx` |
+| TC-P5-142 | FR-042 | `DataRequestView` | Send request is disabled while sending | The insert stays pending | Send a filled form | The button is disabled and reads "Sending…" until the insert settles | Matched. | Passed | `tests/unit/data-request-form.test.tsx` |
+| TC-P5-143 | FR-042 | `DataRequestView` | Success says what happens next | The insert succeeds | Send a filled form | The confirmation says the request was sent and that the shop will review it and contact the customer; the earlier list reloads | Matched. | Passed | `tests/unit/data-request-form.test.tsx` |
+| TC-P5-144 | FR-042 | `DataRequestView` | An error keeps the typed request and Try again resends it | The first insert rejects, the retry succeeds | Send a deletion request, then press Try again | The alert says the request could not be sent; the choice and message stay; the retry sends the same payload and shows the confirmation | Matched. | Passed | `tests/unit/data-request-form.test.tsx` |
+| TC-P5-145 | FR-042 | `DataRequestView` | Earlier requests show plain-word statuses | Two earlier rows: in progress and resolved | Render the page | "Correction request" and "Deletion request" show with "In progress" and "Resolved" and their dates; only the signed-in customer's rows are requested | Matched. | Passed | `tests/unit/data-request-form.test.tsx` |
+| TC-P5-146 | FR-042 | `DataRequestView` | Deletion explanation | Signed in | Render the page | The page says a deletion request covers profile data and that order records the shop must keep may stay | Matched. | Passed | `tests/unit/data-request-form.test.tsx` |
+
+### 38d. Account menu links (TC-P5-147)
+
+| ID | Requirement ID(s) | Module | Scenario | Preconditions | Input / action | Expected result | Actual result | Status | Evidence |
+|---|---|---|---|---|---|---|---|---|---|
+| TC-P5-147 | FR-042 | `SiteHeader` | The account menus lead with My account and keep Rewards after Favorites | Signed in through `AuthProvider` with a mock client | Open the Account menu, then the mobile navigation | Desktop links read My account, Profile, Order History, Favorites, Rewards; My account links `/account` and Rewards links `/account/rewards`; the phone menu has the same order | Matched. | Passed | `tests/unit/site-header.test.tsx` |
+
+### 38e. Browser tests (TC-P5-148 to TC-P5-152)
+
+| ID | Requirement ID(s) | Module | Scenario | Preconditions | Input / action | Expected result | Actual result | Status | Evidence |
+|---|---|---|---|---|---|---|---|---|---|
+| TC-P5-148 | FR-039, FR-042 | `/account` | Account home at 1440x900 | Chromium; Supabase Auth and PostgREST mocked; signed in as `customer-123` with one completed order | Open `/account` | One latest-order request filtered to `customer_id=eq.customer-123` with limit 1; five tile links; reference, status, "Placed on" date and ₱400 show; the reference opens `/orders/BNC-7K2Q9F` | Matched. | Passed | `tests/e2e/account-home.spec.ts`, `docs/evidence/phase-5/account-home/account-home-1440x900.png` |
+| TC-P5-149 | FR-042 | `/account` | Empty account home at 390x844 | Same mocks; no orders | Open `/account` | "No orders yet" and Browse Menu show; the page does not scroll sideways | Matched. | Passed | `tests/e2e/account-home.spec.ts`, `docs/evidence/phase-5/account-home/account-home-390x844.png` |
+| TC-P5-150 | FR-042 | `/account/data-request` | Send a correction request at 1440x900 | Signed in; one earlier request in progress | Open the page, choose Correction, type a mock message and send | The earlier request shows "In progress"; the insert body is exactly `{ kind, message }`; the confirmation explains what happens next; the new request shows as "Open" | Matched. | Passed | `tests/e2e/account-home.spec.ts`, `docs/evidence/phase-5/account-home/data-request-1440x900.png`, `docs/evidence/phase-5/account-home/data-request-success-1440x900.png` |
+| TC-P5-151 | FR-042 | `/account/data-request` | Required errors and a sent request at 390x844 | Signed in; empty form | Open the page and send empty; choose Deletion, type a mock message and send | The required errors show and are tied to the fields; after the second send the confirmation shows; no sideways scrolling | Matched. | Passed | `tests/e2e/account-home.spec.ts`, `docs/evidence/phase-5/account-home/data-request-validation-390x844.png`, `docs/evidence/phase-5/account-home/data-request-390x844.png` |
+| TC-P5-152 | FR-042 | `/account/data-request` | A failed send keeps the typed request | The first insert fails, the retry succeeds | Send a deletion request, then press Try again | The alert shows; the textarea keeps the mock message; Try again sends the same payload and shows the confirmation | Matched. | Passed | `tests/e2e/account-home.spec.ts`, `docs/evidence/phase-5/account-home/data-request-error-1440x900.png` |
+
+## 39. Ratings And Reviews Cases (Phase 5, Week 3 — FR-098)
+
+Run on 2026-11-10 by Van Joaquin C. Baguio on branch `feat/p5-reviews` (PR #114). The migration adds the `public.reviews` table, column-level security grants, and security definer functions `public.post_review` and `public.my_review`. The website provides a Reviews section on the About page above the visit section, presenting the average rating, count, newest reviews (10 per page with Show more), and an accessible 1 to 5 star submission form with 500-character counter. `POST /api/reviews` applies a per-IP rate limit (3 in 10 minutes) and passes the authenticated session to Supabase. Database tests run on PGlite (`tests/database/reviews.test.ts`): 12 passed. Unit tests run on Vitest (`tests/unit/reviews-route.test.ts`, `tests/unit/review-form.test.tsx`, `tests/unit/reviews-list.test.tsx`): 19 passed. E2E browser tests run on Chromium with Playwright (`tests/e2e/reviews.spec.ts`): 3 passed. Evidence screenshots were captured into `docs/evidence/phase-5/reviews/` with `CAPTURE_EVIDENCE=1`. Manual verification cases MAN-P5-001 to MAN-P5-009 are Not run yet until the migration is applied to the live database by Rodnee.
+
+### 39a. Database permissions, constraints and functions (TC-P5-170 to TC-P5-181)
+
+| ID | Requirement ID(s) | Module | Scenario | Preconditions | Input / action | Expected result | Actual result | Status | Evidence |
+|---|---|---|---|---|---|---|---|---|---|
+| TC-P5-170 | FR-098 | `public.reviews` | Public reads visible reviews and cannot select `customer_id` | Migration applied; reviews populated | Anonymous client selects columns from `public.reviews` | Allowed columns return data; selecting `customer_id` fails with permission denied | Matched. | Passed | `tests/database/reviews.test.ts` |
+| TC-P5-171 | FR-098 | `public.reviews` | Public cannot read hidden reviews | Hidden review exists in database | Anonymous client selects visible reviews | Hidden review is omitted from query results | Matched. | Passed | `tests/database/reviews.test.ts` |
+| TC-P5-172 | FR-098 | `public.reviews` | Staff can view hidden reviews | Hidden review exists | Staff client queries `public.reviews` | Returns all reviews including hidden ones | Matched. | Passed | `tests/database/reviews.test.ts` |
+| TC-P5-173 | FR-098 | `public.post_review` | Signed-in customer posts review with name from profile | Customer profile with `full_name = 'Maria Clara'` | Call `post_review(5, 'Delicious matcha!')` as customer | Creates review with `display_name = 'Maria'` and references `customer_id` | Matched. | Passed | `tests/database/reviews.test.ts` |
+| TC-P5-174 | FR-098 | `public.post_review` | Signed-in customer's second post updates existing review | Customer already has a review | Call `post_review(4, 'Updated comment')` | Updates existing review (rating 4, new text) without creating a duplicate row | Matched. | Passed | `tests/database/reviews.test.ts` |
+| TC-P5-175 | FR-098 | `public.post_review` | Anonymous customer posts a guest review | Anonymous session (`auth.uid() IS NULL`) | Call `post_review(5, 'Lovely cats and great coffee!')` | Creates a new review with `display_name = 'Guest'` and `customer_id = NULL` | Matched. | Passed | `tests/database/reviews.test.ts` |
+| TC-P5-176 | FR-098 | `public.post_review` | Guest review cannot be edited | Anonymous session | Second guest call to `post_review` | Inserts another independent guest review rather than editing previous one | Matched. | Passed | `tests/database/reviews.test.ts` |
+| TC-P5-177 | FR-098 | `public.post_review` | Database-wide guest limit enforces max 10 in 10 minutes | 10 guest reviews already posted in last 10 minutes | Attempt 11th guest `post_review` | Function raises exception: guest limit reached; backstop protects database | Matched. | Passed | `tests/database/reviews.test.ts` |
+| TC-P5-178 | FR-098 | `public.post_review` | Rejects rating outside 1 to 5 | Anonymous or authenticated session | Call `post_review(0, 'Bad')` or `post_review(6, 'Super')` | Raises exception: rating must be between 1 and 5 | Matched. | Passed | `tests/database/reviews.test.ts` |
+| TC-P5-179 | FR-098 | `public.post_review` | Rejects empty or blank review body | Clean session | Call `post_review(5, '   ')` | Raises exception: review text cannot be empty | Matched. | Passed | `tests/database/reviews.test.ts` |
+| TC-P5-180 | FR-098 | `public.post_review` | Rejects review text exceeding 500 characters | Clean session | Call `post_review(5, 'a'.repeat(501))` | Raises exception: review text cannot exceed 500 characters | Matched. | Passed | `tests/database/reviews.test.ts` |
+| TC-P5-181 | FR-098 | `public.reviews` | Non-staff cannot hide reviews; staff cannot edit text; rollback drops cleanly | Test accounts | Anon tries updating `hidden`; staff tries updating `body`; rollback executed | Non-staff denied; staff denied editing body; rollback drops table and functions cleanly | Matched. | Passed | `tests/database/reviews.test.ts` |
+
+### 39b. Reviews API route (TC-P5-182 to TC-P5-187)
+
+| ID | Requirement ID(s) | Module | Scenario | Preconditions | Input / action | Expected result | Actual result | Status | Evidence |
+|---|---|---|---|---|---|---|---|---|---|
+| TC-P5-182 | FR-098 | `POST /api/reviews` | Validates input (rating 1-5, non-empty body <= 500 chars) | Mock rate limiter | Submit invalid ratings (0, 6, string) and bodies (empty, whitespace, >500 chars) | Returns HTTP 400 with friendly descriptive error message | Matched. | Passed | `tests/unit/reviews-route.test.ts` |
+| TC-P5-183 | FR-098 | `POST /api/reviews` | Applies sliding rate limit (max 3 posts in 10 min) and returns 429 | Sliding rate limiter configured | Send 4 rapid requests from same client IP | First 3 succeed (200), 4th returns 429 with `RATE_LIMITED_MESSAGE` | Matched. | Passed | `tests/unit/reviews-route.test.ts` |
+| TC-P5-184 | FR-098 | `POST /api/reviews` | Forwards customer session token to Supabase client | Signed-in customer with valid JWT | Send request with `Authorization: Bearer <token>` | Token is forwarded to Supabase client so `auth.uid()` resolves | Matched. | Passed | `tests/unit/reviews-route.test.ts` |
+| TC-P5-185 | FR-098 | `POST /api/reviews` | Sanitizes error logs and never logs review text or personal data | Spied console.error | Trigger input validation and rate limit errors | Logs operational error codes only; no review text or PII appears in logs | Matched. | Passed | `tests/unit/reviews-route.test.ts` |
+| TC-P5-186 | FR-098 | `POST /api/reviews` | Returns 500 with friendly message on database error | RPC call fails with exception | Send valid review request | Returns HTTP 500 with friendly generic message without leaking internals | Matched. | Passed | `tests/unit/reviews-route.test.ts` |
+| TC-P5-187 | FR-098 | `POST /api/reviews` | Creates anonymous review when no bearer token is present | Unauthenticated client | Send request without Authorization header | Client is initialized without token; guest review created | Matched. | Passed | `tests/unit/reviews-route.test.ts` |
+
+### 39c. Review form component (TC-P5-188 to TC-P5-194)
+
+| ID | Requirement ID(s) | Module | Scenario | Preconditions | Input / action | Expected result | Actual result | Status | Evidence |
+|---|---|---|---|---|---|---|---|---|---|
+| TC-P5-188 | FR-098 | `ReviewForm` | Requires a star choice (1 to 5) before submission | Form rendered | Enter review text and click Post review without selecting stars | Displays validation error: "Please select a star rating between 1 and 5." and does not call API | Matched. | Passed | `tests/unit/review-form.test.tsx` |
+| TC-P5-189 | FR-098 | `ReviewForm` | Enforces 500 character limit with live counter | Form rendered | Type text into textarea | Counter updates in real-time (`11/500`); submitting empty text shows error | Matched. | Passed | `tests/unit/review-form.test.tsx` |
+| TC-P5-190 | FR-098 | `ReviewForm` | Displays 'Posting as <first name>' when signed in and allows editing | Authenticated customer with existing review | Render form | Displays "Posting as Maria", pre-fills existing review, and button says "Update review" | Matched. | Passed | `tests/unit/review-form.test.tsx` |
+| TC-P5-191 | FR-098 | `ReviewForm` | Displays 'Posting as Guest' and note that guest reviews cannot be edited | Unauthenticated session | Render form | Shows "Posting as Guest" and explicit note that guest reviews cannot be edited | Matched. | Passed | `tests/unit/review-form.test.tsx` |
+| TC-P5-192 | FR-098 | `ReviewForm` | Disables form fields and button while submitting | Pending API promise | Click Post review | Radio buttons, textarea, and submit button disabled ("Saving...") | Matched. | Passed | `tests/unit/review-form.test.tsx` |
+| TC-P5-193 | FR-098 | `ReviewForm` | Displays success message and calls onReviewPosted on successful post | API resolves successfully | Post valid review | Shows success banner "Thank you! Your review has been posted." and calls callback | Matched. | Passed | `tests/unit/review-form.test.tsx` |
+| TC-P5-194 | FR-098 | `ReviewForm` | Displays clear error message when API call fails | API resolves with rate limit error | Submit review | Alert banner displays rate limit message | Matched. | Passed | `tests/unit/review-form.test.tsx` |
+
+### 39d. Reviews list component (TC-P5-195 to TC-P5-200)
+
+| ID | Requirement ID(s) | Module | Scenario | Preconditions | Input / action | Expected result | Actual result | Status | Evidence |
+|---|---|---|---|---|---|---|---|---|---|
+| TC-P5-195 | FR-098 | `ReviewsList` | Renders average rating and total count formatted properly | List rendered with 3 reviews | Provide averageRating=4.7 and totalCount=3 | Renders "4.7 out of 5 stars" and "Based on 3 customer reviews" | Matched. | Passed | `tests/unit/reviews-list.test.tsx` |
+| TC-P5-196 | FR-098 | `ReviewsList` | Renders empty state ("No reviews yet. Be the first.") | Total count is 0 and empty array | Render list | Displays "No reviews yet. Be the first." and hides average rating header | Matched. | Passed | `tests/unit/reviews-list.test.tsx` |
+| TC-P5-197 | FR-098 | `ReviewsList` | Renders reviews with star rating, display name, date, and text | Mock review list | Render list | Each review shows stars, author display name, formatted date, and review body | Matched. | Passed | `tests/unit/reviews-list.test.tsx` |
+| TC-P5-198 | FR-098 | `ReviewsList` | Renders error message when error prop is provided | Error prop passed | Render list with error string | Displays alert with the provided error message | Matched. | Passed | `tests/unit/reviews-list.test.tsx` |
+| TC-P5-199 | FR-098 | `ReviewsList` | Renders 'Show more' button when hasMore is true | hasMore=true, totalCount=15 | Render list and click Show more | Button is visible and triggers `onLoadMore` handler | Matched. | Passed | `tests/unit/reviews-list.test.tsx` |
+| TC-P5-200 | FR-098 | `ReviewsList` | Never renders customer email or phone number in cards | Review item rendered | Check card DOM text | Contains no email address, phone number, or internal UUID | Matched. | Passed | `tests/unit/reviews-list.test.tsx` |
+
+### 39e. Browser tests and evidence (TC-P5-201 to TC-P5-203)
+
+| ID | Requirement ID(s) | Module | Scenario | Preconditions | Input / action | Expected result | Actual result | Status | Evidence |
+|---|---|---|---|---|---|---|---|---|---|
+| TC-P5-201 | FR-098 | `/about` | Customers can read reviews with average rating and star counts on the About page | Chromium; PostgREST mocked with 3 reviews | Navigate to `/about` at 1440x900 and 390x844 | Reviews section is visible above the visit section; displays "5.0 out of 5 stars", star rating summary, 3 cards; no horizontal overflow | Matched. | Passed | `tests/e2e/reviews.spec.ts`, `docs/evidence/phase-5/reviews/reviews-list-desktop-1440.png`, `docs/evidence/phase-5/reviews/reviews-list-mobile-390.png` |
+| TC-P5-202 | FR-098 | `/about` | A guest customer can post a star rating and short review | Chromium; PostgREST and `/api/reviews` mocked | Select 5 stars, enter "The caramel latte is rich...", click Post review | Immediate success message "Thank you! Your review has been posted." and review card appears immediately in the list | Matched. | Passed | `tests/e2e/reviews.spec.ts`, `docs/evidence/phase-5/reviews/review-posted-desktop-1440.png`, `docs/evidence/phase-5/reviews/review-posted-mobile-390.png` |
+| TC-P5-203 | FR-098 | `/about` | Shows friendly error message when rate limited | Chromium; `/api/reviews` returns 429 | Submit review | Friendly rate-limit error message is displayed in an alert banner; review text remains preserved in textarea | Matched. | Passed | `tests/e2e/reviews.spec.ts`, `docs/evidence/phase-5/reviews/reviews-rate-limit-desktop-1440.png`, `docs/evidence/phase-5/reviews/reviews-rate-limit-mobile-390.png` |
+
+### 39f. Manual test cases (MAN-P5-001 to MAN-P5-009)
+
+| ID | Requirement ID(s) | Description | Expected result | Status |
+|---|---|---|---|---|
+| MAN-P5-001 | FR-098 | Anonymous visitor leaves a 5-star review on desktop | Review posts immediately as "Guest", success banner shows, and card appears at top | Not run yet |
+| MAN-P5-002 | FR-098 | Anonymous visitor leaves a review on mobile (390px) | Layout fits cleanly without sideways scroll; star touch targets are easily tappable | Not run yet |
+| MAN-P5-003 | FR-098 | Signed-in customer posts their first review | Form shows "Posting as <first name>", post succeeds, and name matches profile | Not run yet |
+| MAN-P5-004 | FR-098 | Signed-in customer edits their existing review | Form loads existing rating and text, button says "Update review", updating updates the card | Not run yet |
+| MAN-P5-005 | FR-098 | Rate limit triggers after 3 submissions from one IP | 4th submission within 10 minutes shows friendly rate limit message without database write | Not run yet |
+| MAN-P5-006 | FR-098 | Empty review text or missing star selection is blocked | Form validation displays clear inline warning without sending network request | Not run yet |
+| MAN-P5-007 | FR-098 | Long review exceeding 500 characters is rejected | Counter indicates limit and submission is blocked | Not run yet |
+| MAN-P5-008 | FR-098 | Staff hides an inappropriate review from POS | Review disappears from public `/about` page upon next reload | Not run yet |
+| MAN-P5-009 | FR-098 | Pagination with "Show more" loads next 10 reviews | Clicking Show more loads older reviews smoothly without page jump | Not run yet |
+
+
+
 ## 40. Messenger Assistant Webhook Cases (Phase 7 — FR-058 to FR-063)
 
 Run on 2026-11-09 by Rodnee on branch `feat/p7-messenger` (PR #106). The webhook route, the signature and subscription checks, the event handling, the replies and the Send API client are tested with Vitest. Meta's requests, the website content, the menu and the order lookup are mocked, and the tests use made-up Page and customer IDs, so no live message, account, order or data was used. The checks ran with the CI settings (`NEXT_PUBLIC_SUPABASE_URL=https://example.supabase.co`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=placeholder-publishable-key`, `NEXT_PUBLIC_ONLINE_ORDERING=enabled`).
@@ -1130,3 +1319,161 @@ These need the real Page, the POS app and the live database. A live test order r
 | MAN-P7-003 | FR-107 | With the shop's staff told beforehand, place one order from Messenger and watch the POS app | The POS app shows a new online order whose note starts "Messenger order."; the staff cancel it afterwards | Not run yet |
 | MAN-P7-004 | FR-110 | After the migration `20261110120000_messenger_order_status.sql` is applied to the live database, tap Order status | The order from MAN-P7-003 is listed with its status, and the status changes after the staff change it on the POS app | Not run yet |
 | MAN-P7-005 | FR-109 | On a summary, tap Place order twice quickly | One order only; the second tap shows the same order number | Not run yet |
+
+## 45. Messenger Order Choice Fixes (2026-11-10)
+
+The user tried the order steps on a phone and reported cut-off choice names, a "No flavor" choice, missing Back buttons, Buldak & Sedaap inside the Menu reply, and a phone-number tap that showed the welcome again. PR #114 fixes them.
+
+Run on 2026-11-10: `NODE_OPTIONS=--no-experimental-webstorage npx vitest run` with the CI settings: 84 test files, 920 tests, all passed.
+
+| ID | Requirement | Scenario | Expected result | Status |
+| --- | --- | --- | --- | --- |
+| TC-P7-065 | FR-102 | A flavor name is longer than a button allows (20 characters) | Every choice is numbered in the message with its full name and price; the buttons show the numbers ("1", "2"); nothing ends in "…"; there is no "No flavor" button, and Back is offered | Passed |
+| TC-P7-066 | FR-102 | Flavors, extras and how many for fries | Each step ends with "🔙 Back"; Back goes to the sizes, or to the category when the item has one size | Passed |
+| TC-P7-053 | FR-104 | A reply sets how many choices sit inside the message | Only that many go inside the message; the rest stay under it | Passed |
+| TC-P7-004 | FR-101 | The phone-number button sends nothing usable (empty, or its label) | The chat asks for the number again instead of showing the welcome; an unknown word such as "menu" is still no button | Passed |
+| TC-P7-011 | FR-104 | The Menu reply | Only "🌐 Full menu" and "🛒 Order here" sit inside the message; the categories stay under it | Passed |
+
+- Update 2026-11-10: TC-P7-065 and TC-P7-066 in section 44a expected "No flavor" and no Back button on the flavor and extras steps. They now expect "🔙 Back" and no "No flavor" (PR #114).
+
+- Update 2026-11-10 (PR #115): on a phone, the phone number button showed "Phone number" instead of a number and its tap gave nothing usable, because the Facebook account had no number to share. The fallback above now answers with a separate reply.
+
+| ID | Requirement | Scenario | Expected result | Status |
+| --- | --- | --- | --- | --- |
+| TC-P7-075 | FR-101 | The phone number button sends no number | The chat says Messenger didn't share a number and asks the customer to type "order 09XXXXXXXXX"; the phone number button is not offered again. A non-Philippine number from the button still gets the retry with the button | Passed |
+| TC-P7-080 | FR-101 | The phone number button sends a number that isn't a Philippine mobile (a foreign or landline number on the Facebook account) | Update 2026-11-11: the same reply as TC-P7-075 asks the customer to type "order 09XXXXXXXXX"; the button is not offered again | Passed (automated) |
+| TC-P7-081 | FR-101 | The phone number button sends a number the bot can't use, or a number written as 0063 9XX XXX XXXX | Update 2026-11-11: the log shows only the format (digits as d, letters as a) and the length, never the number; 0063 numbers are accepted | Passed (automated) |
+
+## 47. Closed Today Switch Cases (2026-11-11)
+
+The owner asked for a switch in the POS app to close the shop for the day (FR-111). §46 is kept for the Phase 8 QA cases.
+
+Run on 2026-11-11: `NODE_OPTIONS=--no-experimental-webstorage npx vitest run` with the CI settings: 85 test files, 928 tests, all passed.
+
+Update 2026-11-11 (FR-112): run again with the opening hours cases: 86 test files, 935 tests, all passed. Tests that place an order now run at a fixed time inside the hours (`tests/unit/shop-clock.ts`).
+
+| ID | Requirement | Scenario | Expected result | Status |
+| --- | --- | --- | --- | --- |
+| TC-P7-076 | FR-111 | The shop is closed today and a customer taps Order here, sends a number or taps an order step in Messenger | Each answers "🚪 We're closed today." with the note and says no orders are taken; nothing is placed. With the switch off, or content that can't be read, ordering carries on | Passed (automated) |
+| TC-P7-077 | FR-111 | The `closure` section in the database | Starts open like the website's copy; anyone reads it; staff can close it with a note; others change nothing; broken content is refused; other sections keep their checks; the undo removes it and the migration applies again | Passed (automated) |
+| TC-P7-078 | FR-111 | `POST /api/orders` while the shop is closed | 503 with the closed message; the database is not called | Passed (automated) |
+| TC-P7-079 | FR-111 | The line above every page | "We're closed today." with the note, then the notice; nothing extra while open | Passed (automated) |
+| MAN-P7-006 | FR-111 | The owner turns Closed today on and off in the POS, then checks the website and Messenger | The banner and closed replies appear while on and go away when off | Not run (needs the live migration and the POS release) |
+| TC-P7-082 | FR-112 | The time is before opening, during the hours, after closing, on a closed day, or just after midnight in Manila | Open only inside the saved hours, in Philippine time; the closed message says when ordering opens today | Passed (automated) |
+| TC-P7-083 | FR-112 | Closed today was turned on yesterday, or earlier today | Yesterday's switch no longer closes the shop; today's still does; the loader applies this | Passed (automated) |
+| TC-P7-084 | FR-112 | `POST /api/orders` on a closed day | 503 with the closed message; the database is not called | Passed (automated) |
+| TC-P7-085 | FR-112 | Order here in Messenger before opening | Says "We're not open yet." with the hours and no phone button; no order is placed | Passed (automated) |
+| MAN-P7-007 | FR-112 | The owner checks the POS top bar during and outside the hours, and turns Closed today on | The bar shows Open, Outside hours or Closed today; the next morning it shows Open again | Not run (needs the live app) |
+| TC-P7-086 | FR-101 | The customer replies with only their mobile number, without "order" | Update 2026-11-11: the order starts as with "order 09XXXXXXXXX"; a landline or short number on its own is still left to the staff (TC-P7-057 updated) | Passed (automated) |
+
+## 48. Cat Characters Cases (2026-11-10)
+
+The owner asked for the shop's cats on the website (FR-099). The cats come from the shop's "With Main Characters" poster: Kasper, Latte, Luna and Kulas. They walk across an empty strip at the top of the footer on every page.
+
+Run on 2026-11-10: `NODE_OPTIONS=--no-experimental-webstorage npx vitest run` with the CI settings: 87 test files, 939 tests, all passed. `npx playwright test tests/e2e/cats.spec.ts --project=chromium`: 3 passed.
+
+| ID | Requirement | Area | Case | Setup | Steps | Expected | Result |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| TC-P9-001 | FR-099 | `src/lib/cats/cats.ts` | The four poster cats walk now and then, never the same cat twice in a row | None | Call `nextCatWait` and `nextCatIndex` with edge random values | Waits stay between 6 and 18 seconds; the next cat is never the last one | Pass |
+| TC-P9-002 | FR-099, NFR-035 | `CatStrip` | The strip is hidden from screen readers, ignores taps and walks one cat after a wait | Fake timers, no reduced motion | Render, advance 6 seconds | `aria-hidden="true"`, no links or buttons inside; one walking cat appears | Pass |
+| TC-P9-003 | FR-099 | `CatStrip` | No cat walks while the tab is hidden, and a hidden tab stops the walk | Fake timers, `document.hidden` true | Advance 36 seconds; show the tab; hide it again | No walk while hidden; a walk after it shows; hiding removes it | Pass |
+| TC-P9-004 | FR-099, NFR-032 | `CatStrip` | With reduced motion no cat walks; the four cats sit still | `prefers-reduced-motion: reduce` | Render, advance 54 seconds | No walking cat; four sitting cats | Pass |
+| TC-P9-005 | FR-099 | Footer strip (Playwright, 390 and 1440 wide) | The cats walk in their own strip and cover nothing | `/about`, reduced motion off, test clock | Scroll to the footer; check the strip; run the clock 19 seconds | `pointer-events: none`; no link, button, form field or text overlaps the strip; one cat walking | Pass |
+| TC-P9-006 | FR-099, NFR-032 | Footer strip (Playwright) | With reduced motion the four cats sit still | `/about`, reduced motion on | Run the clock 40 seconds | Four sitting cats, no walking cat | Pass |
+
+TC-P4-030 was updated: the footer icon count leaves out the cat drawings (marked "Update 2026-11-10").
+
+Update 2026-11-10: the drawn poster cats were replaced by the six pixel cats of the CC0 "Pet Cats Pack" (`public/cats`). The case IDs stay; what they check now:
+
+| ID | Requirement | Area | Updated check | Expected result |
+|---|---|---|---|---|
+| TC-P9-001 | FR-099 | `src/lib/cats/cats.ts` | `catCount`, `nextRest`, `afterRest`, `nextTarget` | ~~3 cats at 390 px and 12 at 1440 px (up to 16; the six coats repeat)~~ Superseded 2026-11-10: 3 cats at 390 px and 6 at 1440 px, one cat per coat, so no coat shows twice; cat 3 never scratches; a cat that lies down goes to sleep; every walk goes one to three cat sizes and stays in the strip |
+| TC-P9-002 | FR-099, NFR-035 | `CatStrip` | Render with reduced motion off and step animation frames by hand | The strip is aria-hidden, and after the frames at least one cat has moved or changed what it does |
+| TC-P9-003 | FR-099 | `CatStrip` | `document.hidden` true, step 30 frames | No cat moves or changes |
+| TC-P9-004 | FR-099, NFR-032 | `CatStrip` | `prefers-reduced-motion: reduce` | Every shown cat sits, and no animation frame is requested |
+| TC-P9-005 | FR-099 | Footer strip (Playwright, 390 and 1440 wide) | `/about`, reduced motion off | 3 or 12 cats; the sprite sheet loads (200); a cat moves within 15 seconds; no link, button or text overlaps the strip; evidence `pixel-cats-{phone-390,desktop-1440}.png` |
+| TC-P9-006 | FR-099, NFR-032 | Footer strip (Playwright) | `/about`, reduced motion on, 1440 wide | 12 cats, none walking, and nothing changes in 3 seconds; evidence `pixel-cats-sitting-reduced-motion-1440.png` |
+
+The first screenshots of the drawn cats stay in `docs/evidence/phase-9/cat-characters/` as the record of the first version.
+
+
+## 49. Reviews On The Home Page Cases (2026-11-10)
+
+Customers could not find the reviews, because they were only near the bottom of the About page. The home page now shows the newest reviews, and the menu has a Reviews link that opens the reviews on the About page (FR-098).
+
+| ID | Requirement | Scenario | Expected result | Status |
+| --- | --- | --- | --- | --- |
+| TC-P5-204 | FR-098 | The home page loads with seven reviews | Shows the average rating 4.6, "7 reviews", the newest three reviews, and the links Leave a review and Read all reviews | Passed (automated) |
+| TC-P5-205 | FR-098 | The home page loads with no reviews | Shows "No reviews yet. Be the first." and Leave a review, without Read all reviews | Passed (automated) |
+| TC-P5-206 | FR-098 | The reviews can't be loaded | The home page still shows Leave a review, with no error and no empty message | Passed (automated) |
+| TC-P5-207 | FR-098 | The site navigation | Has a Reviews link to `/about#reviews`, used by the header, the phone menu and the footer | Passed (automated) |
+| TC-P5-208 | FR-098 | Browser test at 390 and 1440 pixels wide | The home block shows the average, the count and three reviews without sideways scrolling; Read all reviews opens `/about#reviews` with the reviews in view | Passed (automated) |
+| TC-P5-209 | FR-098 | Browser test of the Reviews link in the desktop menu (1024 and 1440) and the phone menu (390) | The link fits without sideways scrolling and opens `/about#reviews` with the reviews in view | Passed (automated) |
+
+## 50. Ad Slot For The Mini-Games Cases (2026-11-10)
+
+The mini-games will show one labeled ad (FR-090). The ad slot is built before the games, so the games can place it. Ads stay off until the ad key is set.
+
+| ID | Requirement | Scenario | Expected result | Status |
+| --- | --- | --- | --- | --- |
+| TC-P9-007 | FR-090 | No ad key, or a key that isn't 32 letters and numbers | The slot shows nothing | Passed (automated) |
+| TC-P9-008 | FR-090 | The slot shows before the customer chooses | It is labeled "Ad" and asks "Show an ad here?"; no ad frame or ad script loads | Passed (automated) |
+| TC-P9-009 | FR-090 | The customer taps Show ads, then Turn off ads | The ad loads in a sandboxed frame that can't move the page; the choice is kept; Turn off ads removes it | Passed (automated) |
+| TC-P9-010 | FR-090 | The customer taps No thanks | No ad shows, and "Show ads to support the shop" lets them change their mind | Passed (automated) |
+| TC-P9-011 | FR-090 | The slot is placed on the menu, cart, checkout, order or account pages | It shows nothing, even after the customer agreed | Passed (automated) |
+| TC-P9-012 | FR-090 | The page inside the ad frame | Loads only the Adsterra 300x250 banner unit | Passed (automated) |
+| MAN-P9-001 | FR-090 | With the real key set on a preview, open the games page on a phone and tap Show ads | A real 300x250 ad shows with the "Ad" label, and tapping it opens the advertiser's page in a new tab without leaving the site | Not run (needs the games page) |
+
+## 51. Messenger Hours Question Cases (2026-11-11)
+
+Customers often type "open po ba kayo?" instead of tapping a button, and it got no reply. A short question about being open or the hours now gets the Hours & location reply. TC-P7-022 still holds: other typed messages stay with the staff.
+
+| ID         | Requirement | Case                                                                                                          | Expected result                                                                            | Status             |
+| ---------- | ----------- | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ------------------ |
+| TC-P7-087  | FR-059      | "open po kayo?", "bukas ba kayo ngayon?", "sarado na kayo?", "anong oras po kayo?", "store hours?" and others | `typedHoursQuestion` returns true                                                          | Passed (automated) |
+| TC-P7-088  | FR-059      | "pa order po bukas", "open for delivery po?", "can't open the link", a message over 60 characters, and others | `typedHoursQuestion` returns false, so the message stays with the staff                    | Passed (automated) |
+| TC-P7-089  | FR-059      | One delivery with "Hello po, open po ba kayo today?" and "pa order po bukas"                                  | One reply with the automated notice, the hours and the address; the other message is skipped | Passed (automated) |
+| MAN-P7-008 | FR-059      | From a tester account, send "open po ba kayo?" to the Page                                                    | The assistant replies with the hours and location within a few seconds                     | Pending            |
+
+## 52. Phase 5 Integrated QA Execution Summary
+
+Run on 2026-11-11 by Renier P. Apal, the integrated QA engineer, on `main` at `f82be0d` (branch `test/p5-integrated-qa-main`). Environment: Windows (win32), Node.js, Next.js 16 production build, Vitest for unit and database tests, and Playwright for browser tests. No live orders were placed, and no production database or POS data changed during the run.
+
+| Check | Command | Result |
+| --- | --- | --- |
+| Dependency audit | `npm run audit` | Passed: 0 vulnerabilities in production packages. |
+| Docs validator | `python scripts/validate_phase0_docs.py` | `PHASE0_DOC_VALIDATION=PASS` |
+| Unit and database tests | `$env:NODE_OPTIONS="--no-experimental-webstorage"; npx vitest run` | 96 test files passed, 1015 tests passed. |
+| Typecheck | `npm run typecheck` | Passed |
+| Lint | `npm run lint` | Passed with 0 errors and 0 warnings |
+| Format | `npm run format:check` | Passed |
+| Production build | `npm run build` | Passed |
+| Browser tests | `$env:CI="1"; ...; npx playwright test --project=chromium` | 57 passed, 3 skipped, 0 failed. |
+
+### Live and Manual Checks
+
+| ID | Check | Device | Result | Status |
+| --- | --- | --- | --- | --- |
+| LIVE-01 | GET `/account/rewards` | Live site (`/account/rewards`) | HTTP 200 OK | Passed |
+| LIVE-02 | GET `/account` | Live site (`/account`) | HTTP 200 OK | Passed |
+| LIVE-03 | GET `/account/data-request` | Live site (`/account/data-request`) | HTTP 404 Not Found (handled via privacy policy / contact) | ~~Not run yet~~ Superseded 2026-11-13: PR #130 adds this route after the run, so the 404 is a historical result. Re-check after the next production deploy. |
+| MAN-P5-010 | Sign in and sign out | Android phone & Desktop browser | Sign in and sign out work smoothly on both devices. | Passed |
+| MAN-P5-011 | Account home | Android phone & Desktop browser | Each tile opens the correct page, and the latest order shows (or "No orders yet"). | Passed |
+| MAN-P5-012 | Rewards | Android phone & Desktop browser | Balance, history, and rewards catalog display correctly without cross-customer data leakage. | Passed |
+| MAN-P5-013 | Data request | Android phone & Desktop browser | Form validation checks work (empty message, >1000 characters). Not submitted on live site per instructions. | Passed |
+| MAN-P5-014 | Reviews | Android phone & Desktop browser | List and average rating show on shop page/About page; form checks work. Not submitted without owner OK. | Passed |
+| MAN-P5-015 | Favorites | Android phone & Desktop browser | Save item to favorites, then remove it successfully. | Passed |
+| MAN-P5-016 | Order history and reorder | Android phone & Desktop browser | History shows past orders; Reorder successfully fills cart. Order not placed. | Passed |
+| MAN-P5-017 | Order tracking | Android phone & Desktop browser | Existing order page shows correct live status. | Passed |
+| MAN-P5-018 | Phone layout | Android phone | No page scrolls sideways. | Passed |
+
+**Phase 5 PRs Covered:**
+- #87 order history and reorder (FR-039, FR-041) - MERGED
+- #93 live order tracking (FR-044 to FR-049) - MERGED
+- #94 customer profiles (FR-038) - MERGED
+- #103 favorites (FR-040) - MERGED
+- #123 loyalty points and rewards (FR-050 to FR-055) - MERGED (`feat/p5-loyalty`)
+- #120 / #125 ratings and reviews (FR-098) - MERGED (`feat/p5-reviews`, `feat/reviews-front`)
+- Rizjie: account home and data requests (FR-042) - MERGED Update 2026-11-13: this was not true when the run finished, because PR #130 was still open. PR #130 merged on 2026-11-13.
+
+No waiting PRs remain for Phase 5.

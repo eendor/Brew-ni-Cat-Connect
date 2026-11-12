@@ -23,6 +23,7 @@ import {
   MAX_MIXED_FLAVORS,
   resolveVariantUnitPrice,
 } from "@/lib/ordering/cart-pricing";
+import { shopStatus } from "@/lib/site-content/open-now";
 import type { SiteContent } from "@/lib/site-content/types";
 import type { MenuCatalog, MenuItem, MenuVariant } from "@/types/menu";
 
@@ -59,9 +60,12 @@ import {
   itemsReply,
   needsFlavorChoice,
   optionsReply,
+  orderClosedReply,
+  orderOutsideHoursReply,
   orderPausedReply,
   paymentReply,
   phoneAskReply,
+  phoneMissingReply,
   phoneRetryReply,
   pickReply,
   pickupReply,
@@ -136,17 +140,42 @@ const minutesOf = (ms: number) => Math.floor(ms / MINUTE_MS);
 // Starting ------------------------------------------------------------------
 
 /** "Order here": asks for the number, or says ordering is paused. */
-export const orderIntentReply = (deps: OrderFlowDeps): Reply =>
-  deps.onlineOrdering() ? phoneAskReply() : orderPausedReply();
+export async function orderIntentReply(
+  deps: OrderFlowDeps,
+  facts: OrderFacts,
+): Promise<Reply> {
+  return (await stopReply(deps, facts)) ?? phoneAskReply();
+}
+
+/** Ordering is off, the owner closed the shop for today (FR-111), or the shop is outside its hours (FR-112). */
+async function stopReply(
+  deps: OrderFlowDeps,
+  facts: OrderFacts,
+): Promise<Reply | null> {
+  if (!deps.onlineOrdering()) return orderPausedReply();
+  const content = await facts.content().catch(() => null);
+  if (!content) return null;
+  const status = shopStatus(
+    content.closure,
+    content.hours,
+    new Date(deps.now()),
+  );
+  if (status.open) return null;
+  return status.reason === "closed-today"
+    ? orderClosedReply(content.closure)
+    : orderOutsideHoursReply(status, content.hours);
+}
 
 /** The customer gave a mobile number (or it wasn't a usable one). */
 export async function beginOrder(
   phone: string | null,
   deps: OrderFlowDeps,
   facts: OrderFacts,
+  noNumberShared = false,
 ): Promise<Reply> {
-  if (!deps.onlineOrdering()) return orderPausedReply();
-  if (!phone) return phoneRetryReply();
+  const stop = await stopReply(deps, facts);
+  if (stop) return stop;
+  if (!phone) return noNumberShared ? phoneMissingReply() : phoneRetryReply();
   const catalog = await facts.menu();
   if (!catalog) return menuUnavailableReply(deps.origin);
   return categoriesReply(catalog, deps.origin, newOrder(phone));
@@ -199,7 +228,8 @@ export async function answerOrderTap(
   deps: OrderFlowDeps,
   facts: OrderFacts,
 ): Promise<Reply> {
-  if (!deps.onlineOrdering()) return orderPausedReply();
+  const stop = await stopReply(deps, facts);
+  if (stop) return stop;
   const { op, state, args } = tap;
   // Nothing was sent to the shop, so there is nothing to undo.
   if (op === "clear") return clearedReply();
@@ -227,7 +257,15 @@ export async function answerOrderTap(
       if (!item || !isOrderable(item)) return browse(gone);
       const [only] = item.variants;
       return item.variants.length === 1 && only
-        ? pickReply(item, only, [], [], 0, state)
+        ? pickReply(
+            item,
+            only,
+            [],
+            [],
+            0,
+            state,
+            categoryOf(catalog, item.id)?.id ?? null,
+          )
         : optionsReply(item, state, categoryOf(catalog, item.id)?.id ?? null);
     }
     case "pick": {
@@ -241,6 +279,7 @@ export async function answerOrderTap(
         choice.addOns,
         done,
         state,
+        categoryOf(catalog, choice.item.id)?.id ?? null,
       );
     }
     case "qty": {

@@ -70,7 +70,13 @@ export function sendApiBodies(recipient: string, answer: Reply): SendApiBody[] {
   // A choice list that is meant to be picked from stays below the message.
   const inline = answer.listChoices
     ? []
-    : answer.quickReplies.slice(0, MAX_BUTTONS - links.length);
+    : answer.quickReplies.slice(
+        0,
+        Math.min(
+          MAX_BUTTONS - links.length,
+          answer.inlineChoices ?? MAX_BUTTONS,
+        ),
+      );
   const buttons = [
     ...links.map((link) => ({
       type: "web_url",

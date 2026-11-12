@@ -1,0 +1,360 @@
+-- Loyalty points and rewards program (FR-050 to FR-055).
+--
+-- FR-050: Every signed-in customer has exactly one loyalty account made of
+-- their own transactions in public.loyalty_transactions; there is no
+-- separate enrollment step.
+--
+-- FR-051, FR-052: An AFTER UPDATE OF status trigger on public.online_orders
+-- awards points when an order is completed, and takes them back if completion
+-- is undone (FR-095). Guests earn nothing. If subtotal is under ₱50, 0 points
+-- are awarded and no row is added. Transactions are immutable.
+--
+-- FR-054: public.loyalty_rewards() returns the active rewards catalog from
+-- private.loyalty_settings(), the single source of truth.
+--
+-- FR-055 (Partial): public.redeem_reward() allows an authenticated customer
+-- to redeem points for an active reward atomically, enforcing balance and
+-- weekly redemption limits. (Note: Redemption is not yet tied directly to a checkout order.)
+--
+-- Undo: supabase/rollbacks/20261113120000_loyalty_points.sql
+
+-- ---------------------------------------------------------------------------
+-- 1. Program settings (single source of truth)
+
+create or replace function private.loyalty_settings()
+returns jsonb
+language sql
+immutable
+set search_path = ''
+as $$
+  select jsonb_build_object(
+    -- Earning rule: 1 point for every ₱50 of the order subtotal, rounded down.
+    -- Confirmed by owner on 2026-11-10.
+    'currency_step', 50,
+    'points_per_currency_unit', 1,
+    -- Weekly redemption limit per customer.
+    -- Confirmed by owner on 2026-11-10.
+    'weekly_limit', 2,
+    -- Rewards catalog (11 confirmed items).
+    -- Confirmed by owner on 2026-11-10.
+    'rewards', jsonb_build_array(
+      jsonb_build_object(
+        'id', 'reward-kiwi-soda',
+        'name', 'Kiwi soda',
+        'description', 'Refreshing kiwi soda.',
+        'points', 40,
+        'active', true
+      ),
+      jsonb_build_object(
+        'id', 'reward-passion-fruit-soda',
+        'name', 'Passion fruit soda',
+        'description', 'Refreshing passion fruit soda.',
+        'points', 40,
+        'active', true
+      ),
+      jsonb_build_object(
+        'id', 'reward-spanish-latte',
+        'name', 'Spanish latte',
+        'description', 'Rich espresso with sweetened milk.',
+        'points', 50,
+        'active', true
+      ),
+      jsonb_build_object(
+        'id', 'reward-hazelnut-latte',
+        'name', 'Hazelnut latte',
+        'description', 'Espresso with hazelnut flavor and milk.',
+        'points', 50,
+        'active', true
+      ),
+      jsonb_build_object(
+        'id', 'reward-takoyaki-veggie-4',
+        'name', 'Takoyaki veggie (4 pcs)',
+        'description', '4 pieces of vegetable Takoyaki.',
+        'points', 60,
+        'active', true
+      ),
+      jsonb_build_object(
+        'id', 'reward-takoyaki-cheese-4',
+        'name', 'Takoyaki cheese (4 pcs)',
+        'description', '4 pieces of cheese-filled Takoyaki.',
+        'points', 70,
+        'active', true
+      ),
+      jsonb_build_object(
+        'id', 'reward-takoyaki-squid-4',
+        'name', 'Takoyaki squid (4 pcs)',
+        'description', '4 pieces of squid Takoyaki.',
+        'points', 80,
+        'active', true
+      ),
+      jsonb_build_object(
+        'id', 'reward-takoyaki-shrimp-4',
+        'name', 'Takoyaki shrimp (4 pcs)',
+        'description', '4 pieces of shrimp Takoyaki.',
+        'points', 90,
+        'active', true
+      ),
+      jsonb_build_object(
+        'id', 'reward-buldak-carbonara',
+        'name', 'Buldak carbonara',
+        'description', 'Spicy Buldak carbonara noodles.',
+        'points', 100,
+        'active', true
+      ),
+      jsonb_build_object(
+        'id', 'reward-classy-cat-combo',
+        'name', 'Classy Cat combo',
+        'description', 'Signature combo meal.',
+        'points', 120,
+        'active', true
+      ),
+      jsonb_build_object(
+        'id', 'reward-nachos-fries-meat-veggies',
+        'name', 'Nachos with fries, meat and veggies',
+        'description', 'Loaded nachos and fries with meat and vegetables.',
+        'points', 150,
+        'active', true
+      )
+    )
+  );
+$$;
+
+revoke all on function private.loyalty_settings() from public, anon, authenticated;
+
+-- ---------------------------------------------------------------------------
+-- 2. Earning trigger on public.online_orders (FR-051, FR-052)
+
+create or replace function private.sync_online_order_loyalty()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_settings jsonb := private.loyalty_settings();
+  v_step numeric;
+  v_pts_per_step int;
+  v_target_points int := 0;
+  v_current_points int := 0;
+  v_delta int;
+  v_has_award boolean;
+begin
+  -- Guests don't earn points.
+  if new.customer_id is null then
+    return new;
+  end if;
+
+  v_step := coalesce((v_settings->>'currency_step')::numeric, 50);
+  v_pts_per_step := coalesce((v_settings->>'points_per_currency_unit')::int, 1);
+
+  if new.status = 'completed' and v_step > 0 then
+    v_target_points := floor(new.subtotal / v_step)::int * v_pts_per_step;
+  else
+    v_target_points := 0;
+  end if;
+
+  select coalesce(sum(points), 0) into v_current_points
+  from public.loyalty_transactions
+  where order_id = new.id;
+
+  v_delta := v_target_points - v_current_points;
+
+  if v_delta = 0 then
+    return new;
+  end if;
+
+  select exists(
+    select 1
+    from public.loyalty_transactions
+    where order_id = new.id and reason = 'order-completed'
+  ) into v_has_award;
+
+  begin
+    if not v_has_award and v_delta > 0 then
+      insert into public.loyalty_transactions
+        (customer_id, points, reason, order_id, note)
+      values
+        (new.customer_id, v_delta, 'order-completed', new.id, null);
+    else
+      insert into public.loyalty_transactions
+        (customer_id, points, reason, order_id, note)
+      values
+        (
+          new.customer_id,
+          v_delta,
+          'adjustment',
+          new.id,
+          case
+            when new.status = 'completed' then 'Order completed'
+            else 'Order completion undone'
+          end
+        );
+    end if;
+  exception when unique_violation then
+    raise warning 'Loyalty transaction already exists for order %: %', new.id, sqlerrm;
+  end;
+
+  return new;
+end;
+$$;
+
+revoke all on function private.sync_online_order_loyalty()
+from public, anon, authenticated;
+
+drop trigger if exists online_orders_loyalty_trigger on public.online_orders;
+create trigger online_orders_loyalty_trigger
+  after update of status on public.online_orders
+  for each row execute function private.sync_online_order_loyalty();
+
+-- ---------------------------------------------------------------------------
+-- 3. Public rewards catalog and settings (FR-054)
+
+create or replace function public.loyalty_rewards()
+returns jsonb
+language sql
+security definer
+stable
+set search_path = ''
+as $$
+  select coalesce(
+    jsonb_agg(
+      jsonb_build_object(
+        'id', elem->>'id',
+        'name', elem->>'name',
+        'description', elem->>'description',
+        'points', (elem->>'points')::int
+      )
+    ),
+    '[]'::jsonb
+  )
+  from jsonb_array_elements(private.loyalty_settings()->'rewards') as elem
+  where (elem->>'active')::boolean = true;
+$$;
+
+revoke all on function public.loyalty_rewards() from public;
+grant execute on function public.loyalty_rewards() to anon, authenticated;
+
+create or replace function public.loyalty_settings()
+returns jsonb
+language sql
+security definer
+stable
+set search_path = ''
+as $$
+  select jsonb_build_object(
+    'currencyStep', coalesce((private.loyalty_settings()->>'currency_step')::numeric, 50),
+    'pointsPerStep', coalesce((private.loyalty_settings()->>'points_per_currency_unit')::int, 1),
+    'weeklyLimit', coalesce((private.loyalty_settings()->>'weekly_limit')::int, 2)
+  );
+$$;
+
+revoke all on function public.loyalty_settings() from public;
+grant execute on function public.loyalty_settings() to anon, authenticated;
+
+-- ---------------------------------------------------------------------------
+-- 4. Reward redemption (FR-055 stretch goal)
+
+create or replace function public.redeem_reward(p_reward_id text)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_user_id uuid := auth.uid();
+  v_settings jsonb := private.loyalty_settings();
+  v_reward jsonb;
+  v_reward_name text;
+  v_cost int;
+  v_is_active boolean;
+  v_weekly_limit int;
+  v_redeemed_this_week int;
+  v_balance int;
+  v_code text;
+begin
+  if v_user_id is null then
+    return jsonb_build_object('ok', false, 'error', 'unauthorized');
+  end if;
+
+  if p_reward_id is null or btrim(p_reward_id) = '' then
+    return jsonb_build_object('ok', false, 'error', 'invalid_reward');
+  end if;
+
+  -- Advisory lock per customer for atomic concurrency control.
+  perform pg_advisory_xact_lock(hashtext(v_user_id::text));
+
+  -- Locate reward in settings catalog.
+  select elem into v_reward
+  from jsonb_array_elements(v_settings->'rewards') as elem
+  where elem->>'id' = p_reward_id
+  limit 1;
+
+  if v_reward is null then
+    return jsonb_build_object('ok', false, 'error', 'reward_not_found');
+  end if;
+
+  v_is_active := coalesce((v_reward->>'active')::boolean, false);
+  if not v_is_active then
+    return jsonb_build_object('ok', false, 'error', 'reward_inactive');
+  end if;
+
+  v_cost := (v_reward->>'points')::int;
+  v_reward_name := v_reward->>'name';
+  v_weekly_limit := coalesce((v_settings->>'weekly_limit')::int, 2);
+
+  -- Weekly limit check: reward redemptions within the last 7 days.
+  select count(*) into v_redeemed_this_week
+  from public.loyalty_transactions
+  where customer_id = v_user_id
+    and reason = 'reward-redeemed'
+    and created_at >= now() - interval '7 days';
+
+  if v_redeemed_this_week >= v_weekly_limit then
+    return jsonb_build_object(
+      'ok', false,
+      'error', 'weekly_limit_reached',
+      'weeklyLimit', v_weekly_limit,
+      'redeemedThisWeek', v_redeemed_this_week
+    );
+  end if;
+
+  -- Current balance check.
+  select coalesce(sum(points), 0) into v_balance
+  from public.loyalty_transactions
+  where customer_id = v_user_id;
+
+  if v_balance < v_cost then
+    return jsonb_build_object(
+      'ok', false,
+      'error', 'insufficient_points',
+      'balance', v_balance,
+      'required', v_cost
+    );
+  end if;
+
+  -- Generate short counter verification code.
+  v_code := 'RWD-' || upper(substr(md5(random()::text || clock_timestamp()::text), 1, 6));
+
+  insert into public.loyalty_transactions
+    (customer_id, points, reason, order_id, note)
+  values
+    (
+      v_user_id,
+      -v_cost,
+      'reward-redeemed',
+      null,
+      'Redeemed: ' || v_reward_name || ' (' || v_code || ')'
+    );
+
+  return jsonb_build_object(
+    'ok', true,
+    'code', v_code,
+    'rewardName', v_reward_name,
+    'pointsSpent', v_cost,
+    'newBalance', v_balance - v_cost
+  );
+end;
+$$;
+
+revoke all on function public.redeem_reward(text) from public, anon;
+grant execute on function public.redeem_reward(text) to authenticated;

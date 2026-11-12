@@ -22,6 +22,7 @@ import { siteConfig } from "@/config/site";
 import { useAuth } from "@/context/auth-context";
 import { useCart } from "@/context/cart-context";
 import { useShopFacts } from "@/context/shop-facts-context";
+import { shopClosedMessage, shopStatus } from "@/lib/site-content/open-now";
 import {
   fetchCustomerProfile,
   type CustomerProfile,
@@ -221,6 +222,18 @@ export function CheckoutView({
 
   // Place order (pickup only; rider delivery always copies a summary)
   const placesOnline = onlineOrdering && !isRiderDelivery;
+  // The owner's "Closed today" switch in the POS (FR-111).
+  // Closed today, or outside the opening hours (FR-111, FR-112). Checked
+  // after the page loads and every minute, so the server and browser agree.
+  const [shopClosed, setShopClosed] = useState<string | null>(null);
+  useEffect(() => {
+    const check = () =>
+      setShopClosed(shopClosedMessage(shopStatus(facts.closure, hours)));
+    check();
+    const timer = window.setInterval(check, 60_000);
+    return () => window.clearInterval(timer);
+  }, [facts.closure, hours]);
+  const closedToday = shopClosed !== null;
   const [isPlacing, setIsPlacing] = useState(false);
   const placingRef = useRef(false);
   const [placeNotice, setPlaceNotice] = useState<PlaceOrderNotice | null>(null);
@@ -1416,11 +1429,27 @@ export function CheckoutView({
                     </div>
                   ) : null}
 
+                  {placesOnline && closedToday ? (
+                    <div
+                      role="alert"
+                      className="rounded-2xl border border-[var(--danger)] bg-[var(--danger-soft)] p-4 text-sm text-[var(--text-strong)]"
+                    >
+                      <strong className="block font-semibold">
+                        {shopClosed}
+                      </strong>
+                      {facts.closure.closed && facts.closure.note.trim() ? (
+                        <p className="mt-1 text-xs">
+                          {facts.closure.note.trim()}
+                        </p>
+                      ) : null}
+                    </div>
+                  ) : null}
+
                   {placesOnline ? (
                     <button
                       type="button"
                       onClick={() => void handlePlaceOrder()}
-                      disabled={isPlacing}
+                      disabled={isPlacing || closedToday}
                       className="button-primary w-full disabled:cursor-wait disabled:opacity-70"
                     >
                       {isPlacing ? "Placing order…" : "Place order"}

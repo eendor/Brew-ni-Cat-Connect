@@ -91,6 +91,15 @@ export function AccountNav() {
           <ul className="space-y-1">
             <li>
               <Link
+                href="/account"
+                onClick={() => setIsOpen(false)}
+                className="flex min-h-11 w-full items-center rounded-[var(--shape-md)] px-3 py-2 text-left text-sm font-medium text-[var(--text-strong)] transition-colors hover:bg-[var(--glass-hover)]"
+              >
+                My account
+              </Link>
+            </li>
+            <li>
+              <Link
                 href="/account/profile"
                 onClick={() => setIsOpen(false)}
                 className="flex min-h-11 w-full items-center rounded-[var(--shape-md)] px-3 py-2 text-left text-sm font-medium text-[var(--text-strong)] transition-colors hover:bg-[var(--glass-hover)]"
@@ -114,6 +123,15 @@ export function AccountNav() {
                 className="flex min-h-11 w-full items-center rounded-[var(--shape-md)] px-3 py-2 text-left text-sm font-medium text-[var(--text-strong)] transition-colors hover:bg-[var(--glass-hover)]"
               >
                 Favorites
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/account/rewards"
+                onClick={() => setIsOpen(false)}
+                className="flex min-h-11 w-full items-center rounded-[var(--shape-md)] px-3 py-2 text-left text-sm font-medium text-[var(--text-strong)] transition-colors hover:bg-[var(--glass-hover)]"
+              >
+                Rewards
               </Link>
             </li>
             <li>

@@ -65,7 +65,12 @@ export type ButtonTap =
   | Readonly<{ kind: "order"; tap: OrderTap }>
   | Readonly<{ kind: "status"; reference: string; token: string }>
   /** The mobile number from Messenger's button; null when it isn't a PH one. */
-  | Readonly<{ kind: "phone"; phone: string | null }>;
+  | Readonly<{
+      kind: "phone";
+      phone: string | null;
+      /** The button sent no number at all (none on the Facebook account). */
+      missing?: true;
+    }>;
 
 /** The payload of a "check status" button, or null for an invalid link. */
 export function statusPayload(reference: string, token: string): string | null {
@@ -106,9 +111,39 @@ export function readPayload(payload: unknown): ButtonTap | null {
   const intent = INTENTS.find((name) => PAYLOADS[name] === payload);
   if (intent) return { kind: "intent", intent };
   // Messenger's "mobile number" button sends the number as its payload.
-  return PHONE_PAYLOAD_PATTERN.test(payload)
-    ? { kind: "phone", phone: parsePhone(payload, true) }
-    : null;
+  // A number that isn't a Philippine mobile can't be used either, and the
+  // button would send the same one again, so it isn't offered again.
+  if (PHONE_PAYLOAD_PATTERN.test(payload)) {
+    const phone = parsePhone(payload, true);
+    if (phone) return { kind: "phone", phone };
+    logUnusablePhone(payload);
+    return { kind: "phone", phone: null, missing: true };
+  }
+  // The phone button sent something we can't use as a number (empty, or
+  // its label), so ask for the number again.
+  if (payload.trim() === "" || /\d|phone|number/i.test(payload)) {
+    logUnusablePhone(payload);
+    return { kind: "phone", phone: null, missing: true };
+  }
+  return null;
+}
+
+/**
+ * The format of a phone button payload we couldn't use, with every digit
+ * shown as "d" and every letter as "a", so the number itself is never logged.
+ */
+export function phoneShape(payload: string): string {
+  return payload.slice(0, 30).replace(/\p{L}/gu, "a").replace(/\d/g, "d");
+}
+
+function logUnusablePhone(payload: string): void {
+  console.info(
+    JSON.stringify({
+      event: "messenger-phone-button-unusable",
+      shape: phoneShape(payload),
+      length: payload.length,
+    }),
+  );
 }
 
 /** Lowercase words, without accents or punctuation: "Menu?" → "menu". */
@@ -221,14 +256,107 @@ export function typedButton(text: string): Intent | null {
   );
 }
 
+// Questions about being open -------------------------------------------------
+
+/** Words that ask whether the shop is open, or when it opens or closes. */
+const OPEN_WORDS = new Set([
+  "open",
+  "opens",
+  "opened",
+  "opening",
+  "close",
+  "closes",
+  "closed",
+  "closing",
+  "abri",
+  "abli",
+  "abre",
+  "sarado",
+  "sirado",
+  "magopen",
+  "magclose",
+  "magbukas",
+  "magbubukas",
+  "magsara",
+  "magsasara",
+]);
+
+/**
+ * "bukas" means "open" and also "tomorrow", so it only counts with one of
+ * these words beside it: "bukas ba kayo?".
+ */
+const BUKAS_COMPANIONS = new Set([
+  "kayo",
+  "kamo",
+  "ba",
+  "shop",
+  "store",
+  "cafe",
+  "ngayon",
+  "today",
+  "karon",
+  "subong",
+  "now",
+]);
+
+/** A time word counts only with a shop word: "anong oras kayo?". */
+const TIME_WORDS = new Set(["oras", "hours", "time", "schedule", "sched"]);
+const SHOP_WORDS = new Set([
+  "kayo",
+  "kamo",
+  "niyo",
+  "nyo",
+  "ninyo",
+  "shop",
+  "store",
+  "cafe",
+  "business",
+  "operating",
+]);
+
+/**
+ * Words that show the message is about something else, such as an order, a
+ * delivery or a page that won't open. Those stay with the staff.
+ */
+const OTHER_TOPIC_PATTERN =
+  /^(?:(?:mag|nag|pa|ma|i)?(?:order|deliver|pickup|reserv|book)|pick|hiring|apply|job|gcash|bayad|payment|refund|link|website|site|app|page|menu|photo|picture|file|account|ilang|pila)/;
+
+/**
+ * True for a short question about the shop being open or its hours:
+ * "open po ba kayo today?", "anong oras kayo magsasara?". The assistant
+ * answers these with the hours and location (added 2026-11-11). A message
+ * that also names another topic is left to the staff.
+ */
+export function typedHoursQuestion(text: string): boolean {
+  if (text.length > MAX_SHORT_MESSAGE_LENGTH) return false;
+  const words = normalizeText(text).split(" ").filter(Boolean);
+  if (words.some((word) => OTHER_TOPIC_PATTERN.test(word))) return false;
+  const has = (set: ReadonlySet<string>) => words.some((word) => set.has(word));
+  return (
+    has(OPEN_WORDS) ||
+    (words.includes("bukas") && has(BUKAS_COMPANIONS)) ||
+    (has(TIME_WORDS) && has(SHOP_WORDS))
+  );
+}
+
 /** "order 09171234567": starts an order with the number typed after it. */
 const TYPED_ORDER_PATTERN =
   /^\s*(?:order|mag\s?order)\b[\s:,-]*(\+?[\d][\d\s().-]*)$/i;
 
-/** The mobile number in a short "order <number>" message, or null. */
+/** A message that is only a number: "0917 123 4567". */
+const BARE_NUMBER_PATTERN = /^\s*\+?\d[\d\s().-]*$/;
+
+/**
+ * The mobile number in a short "order <number>" message, or null.
+ * Update 2026-11-11: a message that is only a Philippine mobile number counts
+ * too, since customers often reply with just the number. Other bare numbers
+ * (landlines, short codes) are still left to the staff.
+ */
 export function typedOrderPhone(text: string): string | null {
   if (text.length > MAX_SHORT_MESSAGE_LENGTH) return null;
-  const number = TYPED_ORDER_PATTERN.exec(text)?.[1];
+  const number =
+    TYPED_ORDER_PATTERN.exec(text)?.[1] ??
+    (BARE_NUMBER_PATTERN.test(text) ? text : undefined);
   return number ? parsePhone(number) : null;
 }
 

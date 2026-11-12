@@ -26,6 +26,7 @@ import {
   hoursSummary,
   joinList,
   midSentence,
+  closedTodayText,
 } from "@/lib/site-content/format";
 import type { SiteContent } from "@/lib/site-content/types";
 import type {
@@ -89,6 +90,8 @@ export type Reply = Readonly<{
   askPhone?: boolean;
   /** The choices are a list to pick from, so they all stay below. */
   listChoices?: boolean;
+  /** At most this many choices go inside the message; the rest stay below. */
+  inlineChoices?: number;
 }>;
 
 /** Said in the welcome and in each customer's first reply (FR-062). */
@@ -229,11 +232,12 @@ export function staffReply(content: SiteContent): Reply {
 // Shop facts ----------------------------------------------------------------
 
 export function hoursLocationReply(content: SiteContent): Reply {
-  const { address, hours, notice } = content;
+  const { address, closure, hours, notice } = content;
   const landmark = address.landmark.trim()
     ? `, ${midSentence(address.landmark.trim())}`
     : "";
   const parts = [
+    closedTodayText(closure),
     `🕒 ${hoursNotice(hours)}`,
     notice.text.trim() ? `📢 Notice: ${notice.text.trim()}` : null,
     `📍 We're at ${fullAddress(address)}${landmark}.`,
@@ -346,8 +350,11 @@ export function menuReply(
   ]
     .filter(Boolean)
     .join("\n\n");
+  // Only Full menu and Order here sit inside the message; the categories
+  // stay below it.
   return buildReply(text, menuChoices(categories), {
     links: webLinks("🌐 Full menu", `${origin}/menu`),
+    inlineChoices: 1,
   });
 }
 
@@ -467,7 +474,11 @@ export function categoryReply(
         .join("\n"),
     ),
     menuChoices(others),
-    { links: webLinks("🌐 Full menu", `${origin}/menu`), images },
+    {
+      links: webLinks("🌐 Full menu", `${origin}/menu`),
+      images,
+      inlineChoices: 1,
+    },
   );
 }
 

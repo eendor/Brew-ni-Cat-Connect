@@ -11,6 +11,11 @@ Evidence for merged Phase 5 pull requests, in merge order. Test counts come from
 | [#103](https://github.com/eendor/Brew-ni-Cat-Connect/pull/103) | 2026-11-07 | Customer favorites (FR-040) | `tests/unit/favorites-helper.test.ts`, `tests/unit/favorite-button.test.tsx`, `tests/unit/favorites-page.test.tsx`, `tests/unit/site-header.test.tsx`, `tests/e2e/favorites.spec.ts` (`TC-P5-065`–`TC-P5-087`) | Vitest 559/559 in 69 files; Playwright `chromium` 36 passed, 3 skipped; CI passed |
 | [#107](https://github.com/eendor/Brew-ni-Cat-Connect/pull/107) | 2026-11-09 | Privacy Policy page with data deletion steps (FR-042, NFR-026) | `tests/unit/privacy-page.test.tsx`, `tests/unit/site-footer.test.tsx`, `tests/unit/account-forms.test.tsx`, `tests/unit/checkout.test.tsx`, `tests/e2e/privacy.spec.ts` (`TC-P5-088`–`TC-P5-095`) | Vitest 728/728 in 80 files; Playwright `chromium` 46 passed, 3 skipped; CI passed |
 | [#108](https://github.com/eendor/Brew-ni-Cat-Connect/pull/108) | 2026-11-09 | Privacy Policy section links land after the page loads (FR-042) | `tests/e2e/privacy.spec.ts` (`TC-P5-094`) | Playwright privacy 2 passed; docs validator, typecheck, lint and build passed; CI passed |
+| [#120](https://github.com/eendor/Brew-ni-Cat-Connect/pull/120) | 2026-11-10 | Ratings and reviews on the website (FR-098, the website part) | `tests/database/reviews.test.ts`, `tests/unit/review-form.test.tsx`, `tests/unit/reviews-list.test.tsx`, `tests/unit/reviews-route.test.ts`, `tests/e2e/reviews.spec.ts` | CI passed |
+| [#125](https://github.com/eendor/Brew-ni-Cat-Connect/pull/125) | 2026-11-10 | Reviews on the home page and a Reviews menu link (FR-098) | `tests/unit/reviews-preview.test.tsx`, `tests/unit/site-header.test.tsx`, `tests/e2e/home-reviews.spec.ts` | CI passed |
+| [#123](https://github.com/eendor/Brew-ni-Cat-Connect/pull/123) | 2026-11-11 | Loyalty points and rewards (FR-050 to FR-054; FR-055 partial) | `tests/database/loyalty.test.ts`, `tests/unit/loyalty-format.test.ts`, `tests/unit/loyalty-view.test.tsx`, `tests/e2e/loyalty.spec.ts` | CI passed |
+| [#130](https://github.com/eendor/Brew-ni-Cat-Connect/pull/130) | 2026-11-12 | Account home and the in-app data request form (FR-042) | The unit and e2e tests listed in the pull request; screenshots in `docs/evidence/phase-5/account-home/` | CI passed |
+| [#129](https://github.com/eendor/Brew-ni-Cat-Connect/pull/129) | 2026-11-12 | Phase 5 integrated QA on `main` | The Phase 5 integrated QA section of `docs/test-cases.md` | Docs only; CI passed |
 
 #94 customer profiles (FR-038) is also a Phase 5 requirement, but it merged on 2026-11-05 and its row is in `docs/evidence/phase-4-verification.md`.
 
@@ -20,10 +25,8 @@ None.
 
 ## Not merged yet
 
-These items on the Phase 5 card are not merged yet, so this register does not cover them:
+Updated on 2026-11-13, after the rows for #120, #125, #123, #130 and #129 were added above. These items on the Phase 5 card are still open:
 
-- Renier: loyalty points and rewards, branch `feat/p5-loyalty` (FR-050 to FR-055).
-- Rizjie: account home and data requests, branch `feat/p5-account-home` (FR-042).
-- Van: ratings and reviews, branch `feat/p5-reviews` (FR-098, the website part).
-- Rodnee: the POS screen that hides reviews, in `eendor/Brew-ni-Cat-POS` (the rest of FR-098). Shan will get the pull request number from Rodnee.
-- Renier: the Phase 5 integrated QA on `main`, branch `test/p5-integrated-qa-main`, in the Phase 5 integrated QA section of `docs/test-cases.md`.
+- Rodnee: the POS screen that hides reviews, in `eendor/Brew-ni-Cat-POS` (the rest of FR-098).
+- FR-043 (account closure) and FR-056 (loyalty corrections) are not built. FR-055 is partial: redemption is not tied to a checkout order yet. FR-057 (points expiry) is deferred.
+- Rodnee: the final check of `main`.

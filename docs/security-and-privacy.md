@@ -501,3 +501,60 @@ Before commit/PR, inspect staged and unstaged diffs, verify `.env.local` is untr
 - Rotating the app secret hides older Messenger orders from Order status (§21.2).
 - While the Meta app has Standard Access, only people with a role on the app get replies (§19.6).
 - The migration for Order status is not applied to the live database yet (database design §15), and the owner's decisions on orders outside shop hours and closure days are open (functional requirements §12). **TODO: Confirm with Brew ni Cat owner.**
+
+## 22. Ratings And Reviews Security And Privacy Addendum (Phase 5 — FR-098)
+
+### 22.1 Public read boundary and privacy preservation
+
+- Column-level grants strictly limit public visibility: `grant select (id, display_name, rating, body, hidden, created_at, updated_at) on public.reviews to anon, authenticated`. The `customer_id` column is excluded from public SELECT grants.
+- No personal identifiable information (PII)—including Supabase user UUIDs, email addresses, or phone numbers—is ever returned to or readable by website visitors or signed-in customers.
+- Display names are generated entirely in the database via `public.post_review`: signed-in customers are assigned the first word of `customer_profiles.full_name` (or "Customer" if missing), while anonymous users are assigned "Guest". Reviewers cannot supply, tamper with, or forge arbitrary display names.
+- RLS policy `reviews_public_read` ensures public users view only non-hidden reviews (`hidden = false`). Only staff accounts (`private.is_staff()`) can view hidden reviews and toggle `hidden` status for moderation in the POS app. Staff cannot edit customer review ratings or text.
+
+### 22.2 Abuse prevention and multi-tier rate limiting
+
+- API rate limiting: `POST /api/reviews` applies a per-IP rate limit with `createRateLimiter` (3 posts per IP in 10 minutes). Exceeded requests return HTTP 429 with a friendly error message before reaching the database.
+- Database backstop: `public.post_review` checks total guest review volume across the table, rejecting guest submissions if more than 10 guest reviews have been created in the preceding 10 minutes.
+- Uniqueness invariant: signed-in customer reviews are constrained by a partial unique index on `customer_id`. A customer's second post updates their existing review instead of adding duplicate records.
+- Input validation: review ratings must be integers between 1 and 5. Review body text must be between 1 and 500 characters after whitespace trimming.
+
+### 22.3 Secrets, tokens, and sanitization
+
+- Client and server routes use only `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`. Privileged service-role keys are never used anywhere in the codebase.
+- When signed in, the client's bearer session token is forwarded to Supabase so `auth.uid()` can be verified in `post_review` and `my_review`.
+- No sensitive data or review content is logged: `POST /api/reviews` records only outcome codes and operational metrics (`rate-limited`, `invalid-input`, `database-error`, `success`), never logging review body text, star counts, IP addresses, or customer details.
+
+### 22.4 Open decisions
+
+- Moderation screen is built in the POS app (`eendor/Brew-ni-Cat-POS`) using the staff permission. **TODO: Confirm with Brew ni Cat owner.**
+
+## 23. Data Correction And Deletion Requests (Phase 5 — FR-042)
+
+Section 19 already belongs to the Phase 7 addendum on `main`, so this addendum takes the next free number to keep the sections in order. The table already exists in `supabase/migrations/20261024064600_customer_tables.sql`; this work needs no migration.
+
+### 23.1 What a request stores
+
+- `public.data_requests` keeps the row id, `customer_id`, `kind` (`correction` or `deletion`), `message`, `status`, `created_at` and `updated_at`.
+- The browser sends only `kind` and the trimmed `message` from `src/lib/account/data-requests.ts`. `customer_id` defaults to `auth.uid()`, and `created_at` and `updated_at` are set by the table trigger, so a customer cannot post a request for someone else or fake a date.
+- The database accepts a trimmed message of 1 to 1000 characters and only the two kinds. The form also checks this before sending.
+- A request is a message to the shop. It does not delete or change any other row by itself.
+
+### 23.2 Who can read it, and who can change it
+
+- Row Level Security policy `customer_or_staff_reads` lets a signed-in customer read only rows where `customer_id = auth.uid()`, and lets shop staff read every request through `private.is_staff()`. No one else can read the table.
+- The website's list also sends an explicit `.eq("customer_id", userId)` filter as defence-in-depth, the same way order history does. A signed-in customer therefore never sees another customer's requests, even if a policy were misconfigured.
+- Customers can add only their own request, and it must start as `open`: policy `customer_adds_own` checks both. Customers have no update or delete grant, so they cannot change a request's status, its message or its kind.
+- Only shop staff have the `staff_updates` policy, which is how a request moves `open` → `in-progress` → `resolved` or `declined`. The website shows those four states in plain words and never offers a status control.
+
+### 23.3 How the shop handles a request
+
+- The shop handles correction and deletion requests by hand for now; nothing is deleted automatically when a request arrives. Staff read the request in the POS/staff workflow and contact the customer using the contact details already on their profile.
+- The website tells the customer what happens next and shows the status of their earlier requests when they come back to `/account/data-request`.
+- A deletion request covers profile data. Order records that the shop must keep may stay after the request. The exact retention and deletion rule is **TODO: Confirm with Brew ni Cat owner.**
+- The response time for a request is **TODO: Confirm with Brew ni Cat owner.**
+
+### 23.4 Known limits
+
+- There is no email or text message when a status changes; the customer sees it the next time they open the page.
+- Requests are not rate limited. A signed-in customer could send several requests in a row; the shop sees all of them.
+- The owner's approved retention rule, the response time and the wording the shop should send are still open decisions (functional requirements §6 and §12). **TODO: Confirm with Brew ni Cat owner.**

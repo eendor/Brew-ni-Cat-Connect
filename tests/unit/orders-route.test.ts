@@ -15,13 +15,31 @@ vi.mock("@/lib/supabase/public-client", async (importOriginal) => ({
   getPublicSupabaseClient,
 }));
 
+// The owner's Closed today switch (FR-111); open unless a test closes it.
+const shopClosure = vi.hoisted(() => ({ closed: false, note: "" }));
+vi.mock("@/lib/site-content/load", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@/lib/site-content/load")>();
+  return {
+    ...actual,
+    loadSiteContent: async () => ({
+      content: { ...actual.fallbackSiteContent, closure: { ...shopClosure } },
+      sources: {},
+    }),
+  };
+});
+
 import { POST } from "@/app/api/orders/route";
 import {
   ORDERING_UNAVAILABLE_MESSAGE,
   PLACE_ORDER_MESSAGES,
+  SHOP_CLOSED_MESSAGE,
 } from "@/lib/orders/place-order";
 import { orderRateLimiter } from "@/lib/orders/rate-limit";
 import { PublicSupabaseConfigurationError } from "@/lib/supabase/public-client";
+import { pinOpenShopClock } from "./shop-clock";
+
+pinOpenShopClock();
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const TOKEN = "Zm9yLXRlc3RzLW9ubHktbm90LWEtcmVhbC10b2tlbg8";
@@ -95,6 +113,32 @@ describe("POST /api/orders", () => {
 
     vi.stubEnv("NEXT_PUBLIC_ONLINE_ORDERING", "true");
     expect((await POST(post())).status).toBe(503);
+  });
+
+  it("TC-P7-078 — while the owner has closed the shop today, nothing reaches the database (FR-111)", async () => {
+    shopClosure.closed = true;
+    try {
+      const response = await POST(post());
+      expect(response.status).toBe(503);
+      expect(await response.json()).toEqual({
+        ok: false,
+        reason: "server-error",
+        message: SHOP_CLOSED_MESSAGE,
+      });
+      expect(getPublicSupabaseClient).not.toHaveBeenCalled();
+    } finally {
+      shopClosure.closed = false;
+    }
+  });
+
+  it("TC-P7-084 — outside the opening hours, nothing reaches the database (FR-112)", async () => {
+    // Saturday 14 November 2026, 2 PM in Manila: a closed day.
+    vi.setSystemTime(Date.UTC(2026, 10, 14, 6, 0, 0));
+    const response = await POST(post());
+    expect(response.status).toBe(503);
+    const body = await response.json();
+    expect(body.message).toContain("We're closed for the day");
+    expect(getPublicSupabaseClient).not.toHaveBeenCalled();
   });
 
   it("TC-P4-116 — without the database settings it says ordering is unavailable", async () => {

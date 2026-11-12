@@ -20,6 +20,7 @@ import {
   expiredLead,
   FALLBACK_NAME,
   fullLead,
+  orderClosedReply,
   orderPausedReply,
   phoneAskReply,
   phoneRetryReply,
@@ -187,12 +188,16 @@ beforeEach(() => {
 });
 
 describe("Starting an order in Messenger (FR-100, FR-101)", () => {
-  it("TC-P7-064 — Order here asks for the phone number, or says ordering is paused", () => {
-    expect(orderIntentReply(setup().deps)).toEqual(phoneAskReply());
-    expect(orderIntentReply(setup().deps).askPhone).toBe(true);
-    expect(
-      orderIntentReply(setup({ onlineOrdering: () => false }).deps),
-    ).toEqual(orderPausedReply());
+  it("TC-P7-064 — Order here asks for the phone number, or says ordering is paused", async () => {
+    const ctx = setup();
+    await expect(orderIntentReply(ctx.deps, ctx.facts)).resolves.toEqual(
+      phoneAskReply(),
+    );
+    expect((await orderIntentReply(ctx.deps, ctx.facts)).askPhone).toBe(true);
+    const paused = setup({ onlineOrdering: () => false });
+    await expect(orderIntentReply(paused.deps, paused.facts)).resolves.toEqual(
+      orderPausedReply(),
+    );
   });
 
   it("TC-P7-064 — a number we can't use asks again; a paused shop and an unreadable menu are told so", async () => {
@@ -229,6 +234,21 @@ describe("Starting an order in Messenger (FR-100, FR-101)", () => {
       state: { phone: PHONE, lines: [] },
       args: ["cat_drinks"],
     });
+  });
+});
+
+describe("A phone number button with no number (FR-101)", () => {
+  it("TC-P7-075 — asks the customer to type the number, without the button that can't work", async () => {
+    const ctx = setup();
+    const reply = await beginOrder(null, ctx.deps, ctx.facts, true);
+    expect(reply.text).toContain(
+      "couldn't get a Philippine mobile number from your Facebook account",
+    );
+    expect(reply.text).toContain("order 09XXXXXXXXX");
+    expect(reply.askPhone).toBeUndefined();
+
+    const retry = await beginOrder(null, ctx.deps, ctx.facts);
+    expect(retry.askPhone).toBe(true);
   });
 });
 
@@ -272,7 +292,52 @@ describe("Browsing the menu in the chat (FR-102, FR-103, FR-105)", () => {
 
     const flavor = await press(drinks, "Matcha › 🛒 Order", ctx);
     expect(flavor.text).toContain("Pick a flavor:");
-    expect(titles(flavor)).toEqual(["Strawberry", "Mango", "No flavor"]);
+    expect(titles(flavor)).toEqual(["Strawberry", "Mango", "🔙 Back"]);
+  });
+
+  it("TC-P7-065 — numbers long flavor names instead of cutting them off, with no No flavor choice", async () => {
+    const long: Record<string, string> = {
+      Strawberry: "Strawberry Whiskers Swirl",
+      Mango: "Mango Meow Paradise Cream",
+    };
+    const rename = (flavor: string) => long[flavor] ?? flavor;
+    const longMenu: MenuCatalog = {
+      categories: menu.categories.map((category) => ({
+        ...category,
+        items: category.items.map((entry) =>
+          entry.name === "Matcha"
+            ? {
+                ...entry,
+                flavors: entry.flavors.map(rename),
+                variants: entry.variants.map((size) => ({
+                  ...size,
+                  flavorPrices: size.flavorPrices.map((row) => ({
+                    ...row,
+                    flavor: rename(row.flavor),
+                  })),
+                })),
+              }
+            : entry,
+        ),
+      })),
+    };
+    const ctx = setup({}, longMenu);
+    const categories = await beginOrder(PHONE, ctx.deps, ctx.facts);
+    const drinks = await press(
+      categories,
+      "🥤 Cat-Tastic Drinks › 👀 See items",
+      ctx,
+    );
+    const flavor = await press(drinks, "Matcha › 🛒 Order", ctx);
+    expect(flavor.text).toContain("1. Strawberry Whiskers Swirl");
+    expect(flavor.text).toContain("2. Mango Meow Paradise Cream");
+    expect(flavor.text).toContain("Tap its number below.");
+    expect(titles(flavor)).toEqual(["1", "2", "🔙 Back"]);
+    for (const title of titles(flavor)) expect(title).not.toContain("…");
+
+    const picked = await press(flavor, "2", ctx);
+    expect(picked.text).toContain("Flavor: Mango Meow Paradise Cream");
+    expect(titles(picked)).toContain("🔙 Back");
   });
 
   it("TC-P7-065 — spells out a combo's contents on its card, with its price", async () => {
@@ -363,12 +428,12 @@ describe("Choosing flavors and extras (FR-102)", () => {
   it("TC-P7-066 — fries offer up to three flavors with their prices, then extras, then how many", async () => {
     const { ctx, flavors } = await friesChoices();
     expect(flavors.text).toContain("Pick a flavor:");
-    expect(titles(flavors)).toEqual(["Cheese ₱45", "Barbecue ₱49"]);
+    expect(titles(flavors)).toEqual(["Cheese ₱45", "Barbecue ₱49", "🔙 Back"]);
 
     const more = await press(flavors, "Cheese ₱45", ctx);
     expect(more.text).toContain("Flavor: Cheese");
     expect(more.text).toContain("Add another flavor (up to 3), or continue.");
-    expect(titles(more)).toEqual(["Barbecue ₱49", "✅ Continue"]);
+    expect(titles(more)).toEqual(["Barbecue ₱49", "✅ Continue", "🔙 Back"]);
 
     const extras = await press(more, "✅ Continue", ctx);
     expect(extras.text).toContain("Want any extras?");
@@ -376,11 +441,12 @@ describe("Choosing flavors and extras (FR-102)", () => {
       "Egg ₱15",
       "Extra Cheese ₱10",
       "No extras",
+      "🔙 Back",
     ]);
 
     const withEgg = await press(extras, "Egg ₱15", ctx);
     expect(withEgg.text).toContain("Add-ons: Egg");
-    expect(titles(withEgg)).toEqual(["Extra Cheese ₱10", "✅ Done"]);
+    expect(titles(withEgg)).toEqual(["Extra Cheese ₱10", "✅ Done", "🔙 Back"]);
 
     const quantity = await press(withEgg, "✅ Done", ctx);
     expect(quantity.text).toContain("Flavor: Cheese\nAdd-ons: Egg");
@@ -1012,5 +1078,63 @@ describe("Placing the order (FR-100, FR-107, FR-108)", () => {
     const payload = encodeOrderPayload("place", state);
     // Too long to carry is a null, never a payload Meta would refuse.
     expect(payload === null || payload.length <= MAX_PAYLOAD_LENGTH).toBe(true);
+  });
+});
+
+describe("The owner's Closed today switch (FR-111)", () => {
+  const closure = { closed: true, note: "Back tomorrow at 1 PM." };
+  const closedSetup = () => {
+    const ctx = setup();
+    const facts: OrderFacts = {
+      ...ctx.facts,
+      content: async () => ({ ...content, closure }),
+    };
+    return { ...ctx, facts };
+  };
+
+  it("TC-P7-076 — Order here, a phone number and order taps all say the shop is closed", async () => {
+    const ctx = closedSetup();
+    const closed = orderClosedReply(closure);
+    expect(closed.text).toContain("We're closed today. Back tomorrow at 1 PM.");
+    expect(closed.askPhone).toBeUndefined();
+    await expect(orderIntentReply(ctx.deps, ctx.facts)).resolves.toEqual(
+      closed,
+    );
+    await expect(beginOrder(PHONE, ctx.deps, ctx.facts)).resolves.toEqual(
+      closed,
+    );
+    await expect(
+      answerOrderTap(
+        CUSTOMER,
+        { op: "place", state: { phone: PHONE, cart: [] }, args: [] } as never,
+        ctx.deps,
+        ctx.facts,
+      ),
+    ).resolves.toEqual(closed);
+    expect(ctx.deps.placeOrder).not.toHaveBeenCalled();
+  });
+
+  it("TC-P7-085 — outside the opening hours, Order here says when the shop is open (FR-112)", async () => {
+    // Monday 9 November 2026, 9 AM in Manila: before opening.
+    const ctx = setup({ now: () => Date.UTC(2026, 10, 9, 1, 0, 0) });
+    const reply = await orderIntentReply(ctx.deps, ctx.facts);
+    expect(reply.text).toContain("We're not open yet.");
+    expect(reply.text).toContain("Open ");
+    expect(reply.askPhone).toBeUndefined();
+    await expect(beginOrder(PHONE, ctx.deps, ctx.facts)).resolves.toEqual(
+      reply,
+    );
+    expect(ctx.deps.placeOrder).not.toHaveBeenCalled();
+  });
+
+  it("TC-P7-076 — with the switch off, or content that can't be read, ordering carries on", async () => {
+    const ctx = setup();
+    const unreadable: OrderFacts = {
+      ...ctx.facts,
+      content: async () => Promise.reject(new Error("down")),
+    };
+    await expect(orderIntentReply(ctx.deps, unreadable)).resolves.toEqual(
+      phoneAskReply(),
+    );
   });
 });
