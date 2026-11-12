@@ -1,57 +1,13 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
+
+import { catsOverContent } from "./cat-helpers";
 
 /**
  * Cat characters (FR-099). Update 2026-11-13 (ADR-032): the shop's own cats
  * perch on the edges of the screen instead of walking in a footer strip.
- * Set CAPTURE_EVIDENCE=1 to refresh the screenshots in
- * docs/evidence/phase-9/cat-characters/.
+ * This checks where they sit; cats.three.spec.ts checks the 3D cats drawn
+ * there (and refreshes the screenshots).
  */
-const CAPTURE_EVIDENCE = process.env.CAPTURE_EVIDENCE === "1";
-const EVIDENCE_DIR = "docs/evidence/phase-9/cat-characters";
-
-/** Page content (text, controls, pictures, cards) under any shown cat. */
-async function catsOverContent(page: Page): Promise<string[]> {
-  return page.evaluate(() => {
-    const content =
-      "a, button, input, select, textarea, label, p, h1, h2, h3, h4, h5, h6, li, img, picture, video, figure, svg, article, [role=dialog]";
-    const cats = [
-      ...document.querySelectorAll<HTMLElement>('.shop-cat[data-shown="true"]'),
-    ];
-    const hits: string[] = [];
-    for (const cat of cats) {
-      const c = cat.getBoundingClientRect();
-      const box = {
-        left: Math.max(0, c.left),
-        right: Math.min(window.innerWidth, c.right),
-        top: Math.max(0, c.top),
-        bottom: Math.min(window.innerHeight, c.bottom),
-      };
-      for (const el of document.querySelectorAll(content)) {
-        if (el.closest('[aria-hidden="true"]')) continue;
-        if (
-          !el.checkVisibility({
-            opacityProperty: true,
-            visibilityProperty: true,
-          })
-        )
-          continue;
-        const r = el.getBoundingClientRect();
-        if (r.width === 0 || r.height === 0) continue;
-        // a few pixels of slack for the sway
-        if (
-          r.left < box.right - 6 &&
-          r.right > box.left + 6 &&
-          r.top < box.bottom - 6 &&
-          r.bottom > box.top + 6
-        )
-          hits.push(
-            `${cat.dataset.cat} over ${el.tagName} ${el.textContent?.trim().slice(0, 30)}`,
-          );
-      }
-    }
-    return hits;
-  });
-}
 
 for (const size of [
   { name: "phone", width: 390, height: 844, paths: ["/", "/menu", "/contact"] },
@@ -87,21 +43,6 @@ for (const size of [
         await page.waitForTimeout(1_200);
         expect(await catsOverContent(page), `${path} at ${y}`).toEqual([]);
       }
-    }
-    const picture = await page.request.get("/cats/kasper.webp");
-    expect(picture.status()).toBe(200);
-    if (CAPTURE_EVIDENCE) {
-      await page.goto("/");
-      await page.waitForTimeout(2_500);
-      await page.screenshot({
-        path: `${EVIDENCE_DIR}/shop-cats-home-${size.name}-${size.width}.png`,
-      });
-      await page.goto("/about");
-      await page.evaluate(() => window.scrollTo(0, innerHeight * 1.2));
-      await page.waitForTimeout(2_500);
-      await page.screenshot({
-        path: `${EVIDENCE_DIR}/shop-cats-about-${size.name}-${size.width}.png`,
-      });
     }
   });
 }
