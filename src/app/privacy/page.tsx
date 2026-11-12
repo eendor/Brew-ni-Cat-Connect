@@ -143,7 +143,12 @@ export default async function PrivacyPage() {
                   logs hold only counts, never your name, Facebook ID or
                   message. To avoid repeating itself, it remembers recent chats
                   for at most 24 hours in the server&apos;s memory. Messages it
-                  doesn&apos;t answer are left for our staff to read.
+                  doesn&apos;t answer are left for our staff to read. To answer
+                  a typed question, it may send the text of that message, with
+                  mobile numbers, emails and long numbers hidden, to
+                  Google&apos;s Gemini together with our menu and shop details.
+                  It never sends your name, your Facebook ID or the rest of the
+                  chat.
                 </li>
                 <li>
                   <Term>Orders placed in Messenger.</Term> If you order in the
@@ -221,6 +226,13 @@ export default async function PrivacyPage() {
                 <li>
                   <Term>Google</Term> sends account emails, such as password
                   reset links, from the shop&apos;s email account.
+                </li>
+                <li>
+                  <Term>Google Gemini</Term> helps the Messenger assistant word
+                  its answers to typed questions. We use Google&apos;s free
+                  tier, where Google may keep and review what is sent to improve
+                  its products, so we send only the masked message described
+                  above.
                 </li>
                 <li>
                   <Term>Adsterra</Term> may show one ad in the mini-games,

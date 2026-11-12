@@ -21,6 +21,7 @@ import {
   MY_ORDERS_LIMIT,
   newNonce,
   placeMessengerOrder,
+  smartReplyAssistant,
 } from "@/lib/messenger/deps";
 import { PublicSupabaseConfigurationError } from "@/lib/supabase/public-client";
 
@@ -299,5 +300,22 @@ describe("Order summary numbers (FR-107)", () => {
     const numbers = Array.from({ length: 50 }, () => newNonce());
     for (const number of numbers) expect(number).toMatch(/^[A-Za-z0-9]{16}$/);
     expect(new Set(numbers).size).toBe(numbers.length);
+  });
+});
+
+// Added 2026-11-13 (ADR-031).
+describe("Smart replies switch (ADR-031)", () => {
+  it("TC-P7-107 — Gemini is used only when GEMINI_API_KEY is set on the server", () => {
+    expect(smartReplyAssistant({})).toBeUndefined();
+    expect(smartReplyAssistant({ GEMINI_API_KEY: "  " })).toBeUndefined();
+    expect(typeof smartReplyAssistant({ GEMINI_API_KEY: "test-key" })).toBe(
+      "function",
+    );
+    expect(
+      typeof smartReplyAssistant({
+        GEMINI_API_KEY: "test-key",
+        GEMINI_MODELS: "gemini-flash-latest, ../bad/model?x=1",
+      }),
+    ).toBe("function");
   });
 });
