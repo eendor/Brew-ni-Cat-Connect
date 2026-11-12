@@ -1763,3 +1763,14 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Testing:** Targeted unit tests (`account-home`, `data-request-form`, `data-requests-helper`, `site-header`): 27 passed. Full Vitest suite: 99 files, 1034 tests passed. Playwright `account-home.spec.ts` against the CI placeholder environment: 5 passed. Full Chromium suite in CI mode (one worker, up to two retries): 62 passed, 3 skipped. Evidence screenshots were captured with `CAPTURE_EVIDENCE=1` at 1440x900 and 390x844. `npm run lint`, `npm run typecheck`, `npm run format:check`, `npm run build` and `python scripts/validate_phase0_docs.py` passed.
 - **Branch / PR:** `feat/p5-account-home`, PR #130.
 - **Next action:** Rodnee reviews PR #130. The owner still needs to confirm the retention rule and response time (MAN items pending).
+
+## 2026-11-13 — Points history on its own page
+
+- **Phase:** Phase 5 (loyalty, FR-053).
+- **Task:** Rodnee asked to put the rewards points history on a separate page.
+- **Summary:** `/account/rewards` now shows the balance, the earning rules and the rewards catalog, with a "See points history →" link under the balance. `/account/rewards/history` (new `PointsHistoryView`) shows the current balance and every transaction, newest first, with "← Back to Rewards". The rewards page no longer loads the history. The Rewards tile on `/account` now says "Your loyalty points and rewards, with your points history."
+- **Files:** `src/components/loyalty/points-history-view.tsx` (new), `src/app/account/rewards/history/page.tsx` (new), `src/components/loyalty/rewards-view.tsx`, `src/app/account/rewards/page.tsx`, `src/components/account/account-home-view.tsx`, `tests/unit/loyalty-view.test.tsx`, `tests/e2e/loyalty.spec.ts`, `docs/test-cases.md` (TC-P5-121, TC-P5-122, TC-P5-125, TC-P5-127 and TC-P5-210 updated; TC-P5-211 and TC-P5-212 added).
+- **Testing:** `tests/unit/loyalty-view.test.tsx` and `tests/unit/account-home.test.tsx`: 16 passed. Playwright `chromium` on `loyalty.spec.ts` and `account-home.spec.ts`, built with the CI environment: 9 passed.
+- **Branch / PR:** `feat/rewards-history-page`.
+- **Next action:** Review and merge.
+
