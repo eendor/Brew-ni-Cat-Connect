@@ -7,7 +7,7 @@ import { expect, test, type Page } from "@playwright/test";
  * PostgREST is mocked in the browser, so no live database or personal
  * details are used.
  *
- * Set CAPTURE_EVIDENCE=1 to refresh the screenshots in docs/evidence/phase-5/reviews-home/.
+ * Set CAPTURE_EVIDENCE=1 to refresh the screenshots in docs/evidence/phase-5/reviews-home/ (the Reviews page shots too).
  */
 const CAPTURE_EVIDENCE = process.env.CAPTURE_EVIDENCE === "1";
 const EVIDENCE_DIR = "docs/evidence/phase-5/reviews-home";
@@ -82,7 +82,7 @@ async function captureEvidence(page: Page, filename: string) {
 }
 
 async function expectReviewsSectionInView(page: Page) {
-  await expect(page).toHaveURL(/\/about#reviews$/);
+  await expect(page).toHaveURL(/\/reviews$/);
   await expect(page.locator("#reviews")).toBeInViewport();
 }
 
@@ -121,7 +121,7 @@ test.describe("Reviews on the home page (FR-098)", () => {
     await expectReviewsSectionInView(page);
   });
 
-  test("TC-P5-209 — the Reviews link in the desktop and phone navigation opens the reviews on the About page", async ({
+  test("TC-P5-209 — the Reviews link in the desktop and phone navigation opens the Reviews page", async ({
     page,
   }) => {
     await mockReviewsRest(page);
@@ -132,7 +132,7 @@ test.describe("Reviews on the home page (FR-098)", () => {
       name: "Desktop navigation",
     });
     const link = desktop.getByRole("link", { name: "Reviews" });
-    await expect(link).toHaveAttribute("href", "/about#reviews");
+    await expect(link).toHaveAttribute("href", "/reviews");
     await expect(link).toBeVisible();
     const overflow = await page.evaluate(
       () => document.documentElement.scrollWidth - window.innerWidth,
@@ -152,5 +152,44 @@ test.describe("Reviews on the home page (FR-098)", () => {
     await captureEvidence(page, "nav-reviews-phone-390.png");
     await mobileLink.click();
     await expectReviewsSectionInView(page);
+  });
+});
+
+test.describe("The Reviews page (FR-098, update 2026-11-13)", () => {
+  test("TC-P5-217 — reviews have their own page, and old /about#reviews links forward to it", async ({
+    page,
+  }) => {
+    await mockReviewsRest(page);
+    for (const [width, height, name] of [
+      [390, 844, "reviews-page-phone-390.png"],
+      [1440, 900, "reviews-page-desktop-1440.png"],
+    ] as const) {
+      await page.setViewportSize({ width, height });
+      await page.goto("/reviews");
+      await expect(
+        page.getByRole("heading", { level: 1, name: "Reviews" }),
+      ).toBeVisible();
+      const section = page.locator("#reviews");
+      await expect(section.getByText(BODIES[0]!)).toBeVisible();
+      await expect(
+        section.getByRole("heading", { name: "Customer ratings and reviews" }),
+      ).toBeVisible();
+      const overflow = await page.evaluate(
+        () => document.documentElement.scrollWidth - window.innerWidth,
+      );
+      expect(overflow).toBeLessThanOrEqual(0);
+      await section.scrollIntoViewIfNeeded();
+      await captureEvidence(page, name);
+    }
+
+    await page.goto("/about");
+    await expect(
+      page.getByRole("heading", { level: 1, name: "About Brew ni Cat" }),
+    ).toBeVisible();
+    await expect(page.locator("#reviews")).toHaveCount(0);
+
+    await page.goto("/about#reviews");
+    await expect(page).toHaveURL(/\/reviews$/);
+    await expect(page.locator("#reviews")).toBeVisible();
   });
 });
