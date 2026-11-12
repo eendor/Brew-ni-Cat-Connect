@@ -5,7 +5,7 @@ import { SignUpView } from "@/components/account/sign-up-view";
 export const metadata: Metadata = {
   title: "Create an Account",
   description:
-    "Register for a Brew ni Cat customer account to manage your orders.",
+    "Create a Brew ni Cat customer account with Google to manage your orders.",
 };
 
 export default function SignUpPage() {

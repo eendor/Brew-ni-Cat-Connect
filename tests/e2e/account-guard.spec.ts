@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
 
+import { mockGoogleOAuth } from "./support/google-oauth";
+
 test.describe("Account Page Guard E2E (FR-036)", () => {
   const mockUser = {
     id: "e2e-user-guard",
@@ -7,7 +9,7 @@ test.describe("Account Page Guard E2E (FR-036)", () => {
     role: "authenticated",
     email: "guard-test@example.com",
     email_confirmed_at: "2026-11-05T00:00:00Z",
-    app_metadata: { provider: "email" },
+    app_metadata: { provider: "google" },
     user_metadata: {},
     created_at: "2026-11-05T00:00:00Z",
     updated_at: "2026-11-05T00:00:00Z",
@@ -25,22 +27,7 @@ test.describe("Account Page Guard E2E (FR-036)", () => {
   test("TC-P4-271 — redirects signed-out visitor from /account/profile to sign in, then redirects back upon sign in", async ({
     page,
   }) => {
-    // Intercept Supabase Auth endpoints for successful login
-    await page.route("**/auth/v1/token*", async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify(mockSession),
-      });
-    });
-
-    await page.route("**/auth/v1/user*", async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify(mockUser),
-      });
-    });
+    await mockGoogleOAuth(page, mockSession, mockUser);
 
     await page.route("**/rest/v1/customer_profiles*", async (route) => {
       await route.fulfill({
@@ -65,10 +52,8 @@ test.describe("Account Page Guard E2E (FR-036)", () => {
       page.getByRole("heading", { name: "Sign In", level: 1 }),
     ).toBeVisible();
 
-    // 3. Complete sign in
-    await page.getByLabel(/email address/i).fill("guard-test@example.com");
-    await page.getByLabel(/^password/i).fill("password123");
-    await page.getByRole("button", { name: /^sign in$/i }).click();
+    // 3. Sign in with (mocked) Google; it comes back through /account/callback
+    await page.getByRole("button", { name: "Sign in with Google" }).click();
 
     // 4. Should redirect back to /account/profile
     await page.waitForURL("**/account/profile");

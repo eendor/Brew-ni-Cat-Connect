@@ -429,3 +429,20 @@ This manual state is a temporary functional-verification condition, not a revisi
 - When online ordering is switched off in the settings, "Order here" says that ordering is paused.
 - The privacy policy page now says that Messenger orders are saved, and its version moved to 2026-11-10 (FR-042). The owner has not confirmed the wording yet (MAN-P5-003).
 - While the Meta app has Standard Access, only people with a role on the app get replies. Reaching every customer needs Meta App Review and the owner's approval.
+
+## ADR-030 — Google Sign-In As The Only Way To Sign In Or Create An Account
+
+**Decision:** Customers sign in and create their accounts only with Google, through Supabase Auth's Google provider. The Sign In and Create an Account pages each show one "Sign in with Google" or "Sign up with Google" button. The email and password forms, the confirmation email step and the Forgot password and Reset password pages are removed, and those two addresses now redirect to Sign In. Google sends the customer back to `/account/callback`, where the browser swaps a one-time code for the session (PKCE) and goes on to the checked `returnTo`.\
+**Date:** 2026-11-13\
+**Status:** Accepted and implemented on branch `feat/google-login`. Not merged until the Google provider is switched on in Supabase (Authentication → Sign In / Providers → Google) with a Google Cloud OAuth client, and the production `/account/callback` address is in the allowed redirect URLs. Until then, the button shows "We couldn't open Google sign-in."\
+**Context:** The lead developer asked for login and registration to use Google OAuth. Password accounts needed a confirmation email, a reset flow and their own error messages, and the shop's customers already have Google accounts on their phones. Supabase Auth supports Google without new server code.\
+**Alternatives considered:** Keeping email and password next to Google, which keeps the reset and confirmation flows the team wanted to drop; Facebook login, which needs another Meta App Review; email magic links, which still rely on email delivery.
+
+**Consequences:**
+
+- FR-031, FR-032 and FR-035 are met by Google: Google confirms the email address, so there is no separate confirmation step. FR-034 (password reset) no longer applies, because there is no password.
+- The session, `AccountGuard`, `returnTo` checks, profiles, favorites, orders, rewards and RLS policies are unchanged; they use the Supabase user, whatever the provider.
+- A customer who made a password account with the same Gmail address is linked to it by Supabase when the email is verified, so their orders and points stay. A customer whose old account used a non-Google email can't sign in to it any more; staff handle that by hand.
+- The privacy notice on both pages says the site gets the customer's name and email from Google.
+- Setting up the Google client and the redirect URLs is a manual step for the team, recorded in `docs/security-and-privacy.md`.
+

@@ -4,6 +4,17 @@ const nextConfig: NextConfig = {
   agentRules: false,
   poweredByHeader: false,
   reactStrictMode: true,
+  // Accounts use Google sign-in (ADR-030), so the password pages are gone.
+  // Old bookmarks and emailed links land on Sign In.
+  async redirects() {
+    return ["/account/forgot-password", "/account/reset-password"].map(
+      (source) => ({
+        source,
+        destination: "/account/sign-in",
+        permanent: false,
+      }),
+    );
+  },
   async headers() {
     return [
       {

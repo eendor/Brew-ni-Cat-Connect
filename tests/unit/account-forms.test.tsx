@@ -1,471 +1,308 @@
-import { render, screen, waitFor, act } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { Session, SupabaseClient, User } from "@supabase/supabase-js";
 
-import { SignUpView } from "@/components/account/sign-up-view";
+import { AuthCallbackView } from "@/components/account/auth-callback-view";
 import { SignInView } from "@/components/account/sign-in-view";
-import { ForgotPasswordView } from "@/components/account/forgot-password-view";
-import { ResetPasswordView } from "@/components/account/reset-password-view";
+import { SignUpView } from "@/components/account/sign-up-view";
 import { AuthProvider } from "@/context/auth-context";
 
-const routerPush = vi.fn();
+const routerReplace = vi.fn();
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({
-    push: routerPush,
-  }),
+  useRouter: () => ({ push: vi.fn(), replace: routerReplace }),
   useSearchParams: () => new URLSearchParams(),
   usePathname: () => "/account/sign-in",
 }));
 
-describe("Account Forms Component Tests", () => {
+const customer: User = {
+  id: "user-g",
+  email: "maria@example.com",
+  app_metadata: { provider: "google" },
+  user_metadata: {},
+  aud: "authenticated",
+  created_at: new Date().toISOString(),
+};
+
+function sessionFor(user: User): Session {
+  return {
+    access_token: "token",
+    refresh_token: "refresh",
+    expires_in: 3600,
+    expires_at: Math.floor(Date.now() / 1000) + 3600,
+    token_type: "bearer",
+    user,
+  };
+}
+
+function createMockSupabase(overrides?: Partial<SupabaseClient["auth"]>) {
+  const auth = {
+    getSession: vi.fn().mockResolvedValue({
+      data: { session: null },
+      error: null,
+    }),
+    onAuthStateChange: vi.fn().mockReturnValue({
+      data: { subscription: { unsubscribe: vi.fn() } },
+    }),
+    signInWithOAuth: vi.fn().mockResolvedValue({
+      data: { provider: "google", url: "https://accounts.example/auth" },
+      error: null,
+    }),
+    signOut: vi.fn().mockResolvedValue({ error: null }),
+    ...overrides,
+  };
+  return { client: { auth } as unknown as SupabaseClient, auth };
+}
+
+function setAddress(path: string) {
+  window.history.replaceState(null, "", path);
+}
+
+describe("Google sign-in and sign-up (ADR-030)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
+  afterEach(() => {
+    setAddress("/");
+  });
 
-  function createMockSupabase(overrides?: Partial<SupabaseClient["auth"]>) {
-    return {
-      auth: {
-        getSession: vi.fn().mockResolvedValue({
-          data: { session: null },
-          error: null,
-        }),
-        onAuthStateChange: vi.fn().mockReturnValue({
-          data: { subscription: { unsubscribe: vi.fn() } },
-        }),
-        signUp: vi.fn().mockResolvedValue({
-          data: { user: null, session: null },
-          error: null,
-        }),
-        signInWithPassword: vi.fn().mockResolvedValue({
-          data: { user: null, session: null },
-          error: null,
-        }),
-        resetPasswordForEmail: vi.fn().mockResolvedValue({
-          data: {},
-          error: null,
-        }),
-        updateUser: vi.fn().mockResolvedValue({
-          data: { user: null },
-          error: null,
-        }),
-        ...overrides,
-      },
-    } as unknown as SupabaseClient;
-  }
-
-  describe("SignUpView (FR-031, FR-035)", () => {
-    it("TC-P4-161 — shows validation errors on empty or invalid inputs", async () => {
-      const user = userEvent.setup();
-      const client = createMockSupabase();
-
+  describe("SignInView", () => {
+    it("TC-P5-216 — shows only the Google button: no email or password fields, no Forgot password link", async () => {
+      const { client } = createMockSupabase();
       render(
         <AuthProvider client={client}>
-          <SignUpView />
+          <SignInView />
         </AuthProvider>,
       );
-
-      await user.click(screen.getByRole("button", { name: /create account/i }));
-
-      expect(screen.getByText("Email is required.")).toBeInTheDocument();
-      expect(screen.getByText("Password is required.")).toBeInTheDocument();
-    });
-
-    it("TC-P4-162 — shows clear error for a weak password (less than 6 characters)", async () => {
-      const user = userEvent.setup();
-      const client = createMockSupabase();
-
-      render(
-        <AuthProvider client={client}>
-          <SignUpView />
-        </AuthProvider>,
-      );
-
-      await user.type(
-        screen.getByLabelText(/email address/i),
-        "test@example.com",
-      );
-      await user.type(screen.getByLabelText(/^password/i), "123");
-      await user.type(screen.getByLabelText(/confirm password/i), "123");
-
-      await user.click(screen.getByRole("button", { name: /create account/i }));
 
       expect(
-        screen.getByText("Password must be at least 6 characters long."),
+        await screen.findByRole("button", { name: "Sign in with Google" }),
       ).toBeInTheDocument();
-      expect(client.auth.signUp).not.toHaveBeenCalled();
-    });
-
-    it("TC-P4-163 — shows clear error when passwords do not match", async () => {
-      const user = userEvent.setup();
-      const client = createMockSupabase();
-
-      render(
-        <AuthProvider client={client}>
-          <SignUpView />
-        </AuthProvider>,
-      );
-
-      await user.type(
-        screen.getByLabelText(/email address/i),
-        "test@example.com",
-      );
-      await user.type(screen.getByLabelText(/^password/i), "Password123");
-      await user.type(
-        screen.getByLabelText(/confirm password/i),
-        "Different123",
-      );
-
-      await user.click(screen.getByRole("button", { name: /create account/i }));
-
-      expect(screen.getByText("Passwords do not match.")).toBeInTheDocument();
-      expect(client.auth.signUp).not.toHaveBeenCalled();
-    });
-
-    it("TC-P5-096 — the check-email screen fits both a new email and one that already has an account", async () => {
-      const user = userEvent.setup();
-      const client = createMockSupabase({
-        signUp: vi.fn().mockResolvedValue({
-          data: { user: null, session: null },
-          error: {
-            code: "user_already_exists",
-            message: "User already registered",
-            status: 422,
-          },
-        }),
-      });
-      render(
-        <AuthProvider client={client}>
-          <SignUpView />
-        </AuthProvider>,
-      );
-      await user.type(screen.getByLabelText(/email address/i), "a@example.com");
-      await user.type(screen.getByLabelText(/^password/i), "Password123!");
-      await user.type(
-        screen.getByLabelText(/confirm password/i),
-        "Password123!",
-      );
-      await user.click(screen.getByRole("button", { name: /create account/i }));
-
-      const status = await screen.findByRole("status");
-      expect(status).toHaveTextContent(/is new to us, we sent it a link/);
-      expect(status).toHaveTextContent(
-        /Already have an account with this email/,
-      );
+      expect(screen.getByRole("heading", { name: "Sign In" })).toBeVisible();
+      expect(screen.queryByLabelText(/email/i)).not.toBeInTheDocument();
+      expect(screen.queryByLabelText(/password/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/forgot password/i)).not.toBeInTheDocument();
       expect(
-        screen.getByRole("link", { name: "reset your password" }),
-      ).toHaveAttribute("href", "/account/forgot-password");
+        screen.getByRole("link", { name: "Create an account" }),
+      ).toHaveAttribute("href", "/account/sign-up");
     });
 
-    it("TC-P4-164 — does not reveal whether email is already registered and shows confirmation notice (FR-031, FR-032)", async () => {
+    it("TC-P5-217 — the button starts Google sign-in and keeps the checked returnTo", async () => {
+      setAddress("/account/sign-in?returnTo=%2Faccount%2Forders");
       const user = userEvent.setup();
-      const client = createMockSupabase({
-        signUp: vi.fn().mockResolvedValue({
-          data: { user: null, session: null },
-          error: {
-            code: "user_already_exists",
-            message: "User already registered",
-            status: 422,
-          },
-        }),
-      });
-
-      render(
-        <AuthProvider client={client}>
-          <SignUpView />
-        </AuthProvider>,
-      );
-
-      await user.type(
-        screen.getByLabelText(/email address/i),
-        "existing@example.com",
-      );
-      await user.type(screen.getByLabelText(/^password/i), "Password123!");
-      await user.type(
-        screen.getByLabelText(/confirm password/i),
-        "Password123!",
-      );
-
-      await user.click(screen.getByRole("button", { name: /create account/i }));
-
-      await waitFor(() => {
-        expect(
-          screen.getByRole("heading", { name: /check your email/i }),
-        ).toBeInTheDocument();
-      });
-      expect(
-        screen.queryByText(/this email is already in use/i),
-      ).not.toBeInTheDocument();
-    });
-
-    it("TC-P4-165 — asks customer to confirm their email on successful sign-up (FR-035)", async () => {
-      const user = userEvent.setup();
-      const client = createMockSupabase({
-        signUp: vi.fn().mockResolvedValue({
-          data: {
-            user: { id: "new-user", email: "newuser@example.com" },
-            session: null,
-          },
-          error: null,
-        }),
-      });
-
-      render(
-        <AuthProvider client={client}>
-          <SignUpView />
-        </AuthProvider>,
-      );
-
-      await user.type(
-        screen.getByLabelText(/email address/i),
-        "newuser@example.com",
-      );
-      await user.type(screen.getByLabelText(/^password/i), "Password123!");
-      await user.type(
-        screen.getByLabelText(/confirm password/i),
-        "Password123!",
-      );
-
-      await user.click(screen.getByRole("button", { name: /create account/i }));
-
-      await waitFor(() => {
-        expect(
-          screen.getByRole("heading", { name: /check your email/i }),
-        ).toBeInTheDocument();
-      });
-      expect(screen.getByText(/newuser@example\.com/i)).toBeInTheDocument();
-      expect(
-        screen.getByRole("link", { name: /proceed to sign in/i }),
-      ).toHaveAttribute("href", "/account/sign-in");
-    });
-
-    it("TC-P5-092 — tells the customer how their email is used, with the Privacy Policy, before the account is made (NFR-026)", () => {
-      render(
-        <AuthProvider client={createMockSupabase()}>
-          <SignUpView />
-        </AuthProvider>,
-      );
-
-      const link = screen.getByRole("link", { name: "Privacy Policy" });
-      expect(link).toHaveAttribute("href", "/privacy");
-      expect(link.parentElement).toHaveTextContent(
-        "We use your email to sign you in and to reach you about your account.",
-      );
-      // the notice comes before any data is sent: it sits with the button
-      const button = screen.getByRole("button", { name: /create account/i });
-      expect(
-        button.compareDocumentPosition(link) & Node.DOCUMENT_POSITION_FOLLOWING,
-      ).toBeTruthy();
-    });
-  });
-
-  describe("SignInView (FR-032)", () => {
-    it("TC-P4-166 — shows validation errors on empty submit", async () => {
-      const user = userEvent.setup();
-      const client = createMockSupabase();
-
+      const { client, auth } = createMockSupabase();
       render(
         <AuthProvider client={client}>
           <SignInView />
         </AuthProvider>,
       );
 
-      await user.click(screen.getByRole("button", { name: /^sign in$/i }));
-
-      expect(screen.getByText("Email is required.")).toBeInTheDocument();
-      expect(screen.getByText("Password is required.")).toBeInTheDocument();
-    });
-
-    it("TC-P4-167 — distinguishes unconfirmed account from invalid credentials (FR-032)", async () => {
-      const user = userEvent.setup();
-      const client = createMockSupabase({
-        signInWithPassword: vi.fn().mockResolvedValue({
-          data: { user: null, session: null },
-          error: {
-            code: "email_not_confirmed",
-            message: "Email not confirmed",
-            status: 400,
-          },
-        }),
-      });
-
-      render(
-        <AuthProvider client={client}>
-          <SignInView />
-        </AuthProvider>,
-      );
-
-      await user.type(
-        screen.getByLabelText(/email address/i),
-        "customer@example.com",
-      );
-      await user.type(screen.getByLabelText(/^password/i), "CorrectPass123");
-
-      await user.click(screen.getByRole("button", { name: /^sign in$/i }));
-
-      await waitFor(() => {
-        expect(
-          screen.getByText(
-            /please verify your email address before signing in\. check your inbox for the confirmation link\./i,
-          ),
-        ).toBeInTheDocument();
-      });
-      expect(
-        screen.queryByText(/incorrect email or password/i),
-      ).not.toBeInTheDocument();
-    });
-
-    it("TC-P4-168 — redirects to / on successful sign-in or shows signed-in notice", async () => {
-      const user = userEvent.setup();
-      const client = createMockSupabase({
-        signInWithPassword: vi.fn().mockResolvedValue({
-          data: {
-            user: { id: "c-1", email: "customer@example.com" },
-            session: { access_token: "tok" },
-          },
-          error: null,
-        }),
-      });
-
-      render(
-        <AuthProvider client={client}>
-          <SignInView />
-        </AuthProvider>,
-      );
-
-      await user.type(
-        screen.getByLabelText(/email address/i),
-        "customer@example.com",
-      );
-      await user.type(screen.getByLabelText(/^password/i), "CorrectPass123");
-
-      await user.click(screen.getByRole("button", { name: /^sign in$/i }));
-
-      await waitFor(() => {
-        expect(routerPush).toHaveBeenCalledWith("/");
-      });
-    });
-  });
-
-  describe("ForgotPasswordView (FR-034)", () => {
-    it("TC-P4-169 — sends password reset link and shows confirmation notice", async () => {
-      const user = userEvent.setup();
-      const client = createMockSupabase();
-
-      render(
-        <AuthProvider client={client}>
-          <ForgotPasswordView />
-        </AuthProvider>,
-      );
-
-      await user.type(
-        screen.getByLabelText(/email address/i),
-        "recovery@example.com",
-      );
       await user.click(
-        screen.getByRole("button", { name: /send reset link/i }),
+        await screen.findByRole("button", { name: "Sign in with Google" }),
       );
 
-      await waitFor(() => {
-        expect(
-          screen.getByRole("heading", { name: /check your email/i }),
-        ).toBeInTheDocument();
-      });
-      expect(screen.getByText(/recovery@example\.com/i)).toBeInTheDocument();
-      expect(client.auth.resetPasswordForEmail).toHaveBeenCalledWith(
-        "recovery@example.com",
-        {
-          redirectTo: `${window.location.origin}/account/reset-password`,
+      expect(auth.signInWithOAuth).toHaveBeenCalledWith({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/account/callback?returnTo=%2Faccount%2Forders`,
+          queryParams: { prompt: "select_account" },
         },
-      );
-    });
-  });
-
-  describe("ResetPasswordView (FR-034)", () => {
-    it("TC-P4-170 — protects reset password view when PASSWORD_RECOVERY event is absent (FR-034)", async () => {
-      const client = createMockSupabase();
-
-      render(
-        <AuthProvider client={client}>
-          <ResetPasswordView />
-        </AuthProvider>,
-      );
-
-      await waitFor(() => {
-        expect(
-          screen.getByRole("heading", { name: /invalid or expired link/i }),
-        ).toBeInTheDocument();
       });
       expect(
-        screen.getByText("This link is invalid or has expired."),
-      ).toBeInTheDocument();
-      expect(
-        screen.getByRole("link", { name: /forgot password/i }),
-      ).toHaveAttribute("href", "/account/forgot-password");
-      expect(screen.queryByLabelText(/^new password/i)).not.toBeInTheDocument();
+        screen.getByRole("button", { name: "Opening Google…" }),
+      ).toBeDisabled();
     });
 
-    it("TC-P4-171 — updates password when PASSWORD_RECOVERY event is present (FR-034)", async () => {
+    it("TC-P5-218 — an outside returnTo is dropped before Google sign-in starts", async () => {
+      setAddress("/account/sign-in?returnTo=https%3A%2F%2Fevil.example");
       const user = userEvent.setup();
-      let authChangeCb: ((event: string, session: unknown) => void) | null =
-        null;
-      const client = createMockSupabase({
-        onAuthStateChange: vi.fn().mockImplementation((cb) => {
-          authChangeCb = cb;
-          return { data: { subscription: { unsubscribe: vi.fn() } } };
-        }),
-        updateUser: vi.fn().mockResolvedValue({
-          data: { user: { id: "u-1" } },
-          error: null,
-        }),
-      });
-
+      const { client, auth } = createMockSupabase();
       render(
         <AuthProvider client={client}>
-          <ResetPasswordView />
+          <SignInView />
         </AuthProvider>,
-      );
-
-      // Trigger PASSWORD_RECOVERY event from onAuthStateChange
-      act(() => {
-        if (authChangeCb) {
-          authChangeCb("PASSWORD_RECOVERY", {
-            access_token: "tok",
-            user: { id: "u-1", email: "user@example.com" },
-          });
-        }
-      });
-
-      await waitFor(() => {
-        expect(
-          screen.getByRole("heading", { name: /set new password/i }),
-        ).toBeInTheDocument();
-      });
-
-      await user.type(
-        screen.getByLabelText(/^new password/i),
-        "BrandNewPassword123!",
-      );
-      await user.type(
-        screen.getByLabelText(/confirm new password/i),
-        "BrandNewPassword123!",
       );
 
       await user.click(
-        screen.getByRole("button", { name: /update password/i }),
+        await screen.findByRole("button", { name: "Sign in with Google" }),
+      );
+
+      expect(auth.signInWithOAuth).toHaveBeenCalledWith(
+        expect.objectContaining({
+          options: expect.objectContaining({
+            redirectTo: `${window.location.origin}/account/callback`,
+          }),
+        }),
+      );
+    });
+
+    it("TC-P5-219 — shows an alert and frees the button when Google sign-in can't start", async () => {
+      const user = userEvent.setup();
+      const { client } = createMockSupabase({
+        signInWithOAuth: vi.fn().mockResolvedValue({
+          data: { provider: "google", url: null },
+          error: new Error("provider is not enabled"),
+        }),
+      });
+      render(
+        <AuthProvider client={client}>
+          <SignInView />
+        </AuthProvider>,
+      );
+
+      await user.click(
+        await screen.findByRole("button", { name: "Sign in with Google" }),
+      );
+
+      expect(await screen.findByRole("alert")).toHaveTextContent(
+        "We couldn't open Google sign-in. Please try again.",
+      );
+      expect(
+        screen.getByRole("button", { name: "Sign in with Google" }),
+      ).toBeEnabled();
+    });
+
+    it("TC-P4-168 — a signed-in customer sees the already-signed-in notice instead of the button", async () => {
+      const { client } = createMockSupabase({
+        getSession: vi.fn().mockResolvedValue({
+          data: { session: sessionFor(customer) },
+          error: null,
+        }),
+      });
+      render(
+        <AuthProvider client={client}>
+          <SignInView />
+        </AuthProvider>,
+      );
+
+      expect(
+        await screen.findByRole("heading", {
+          name: "You're already signed in",
+        }),
+      ).toBeVisible();
+      expect(screen.getByText("maria@example.com")).toBeVisible();
+      expect(
+        screen.queryByRole("button", { name: /google/i }),
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  describe("SignUpView", () => {
+    it("TC-P5-220 — creating an account is the same Google button, with no password fields", async () => {
+      const user = userEvent.setup();
+      const { client, auth } = createMockSupabase();
+      render(
+        <AuthProvider client={client}>
+          <SignUpView />
+        </AuthProvider>,
+      );
+
+      expect(
+        screen.getByRole("heading", { name: "Create an Account" }),
+      ).toBeVisible();
+      expect(screen.queryByLabelText(/password/i)).not.toBeInTheDocument();
+      expect(screen.getByRole("link", { name: "Sign in" })).toHaveAttribute(
+        "href",
+        "/account/sign-in",
+      );
+
+      await user.click(
+        await screen.findByRole("button", { name: "Sign up with Google" }),
+      );
+      expect(auth.signInWithOAuth).toHaveBeenCalledWith(
+        expect.objectContaining({ provider: "google" }),
+      );
+    });
+
+    it("TC-P5-092 — tells the customer what Google shares and links the Privacy Policy before the account is made (NFR-026)", () => {
+      const { client } = createMockSupabase();
+      render(
+        <AuthProvider client={client}>
+          <SignUpView />
+        </AuthProvider>,
+      );
+
+      expect(
+        screen.getByText(/We get your name and email from Google/),
+      ).toBeVisible();
+      expect(
+        screen.getByRole("link", { name: "Privacy Policy" }),
+      ).toHaveAttribute("href", "/privacy");
+    });
+  });
+
+  describe("AuthCallbackView", () => {
+    it("TC-P5-221 — goes on to the checked returnTo once the session is in", async () => {
+      setAddress("/account/callback?returnTo=%2Faccount%2Frewards");
+      const { client } = createMockSupabase({
+        getSession: vi.fn().mockResolvedValue({
+          data: { session: sessionFor(customer) },
+          error: null,
+        }),
+      });
+      render(
+        <AuthProvider client={client}>
+          <AuthCallbackView />
+        </AuthProvider>,
       );
 
       await waitFor(() => {
-        expect(
-          screen.getByRole("heading", { name: /password updated/i }),
-        ).toBeInTheDocument();
+        expect(routerReplace).toHaveBeenCalledWith("/account/rewards");
       });
-      expect(client.auth.updateUser).toHaveBeenCalledWith({
-        password: "BrandNewPassword123!",
+    });
+
+    it("TC-P5-222 — never follows an outside returnTo from the callback address", async () => {
+      setAddress("/account/callback?returnTo=%2F%2Fevil.example");
+      const { client } = createMockSupabase({
+        getSession: vi.fn().mockResolvedValue({
+          data: { session: sessionFor(customer) },
+          error: null,
+        }),
       });
+      render(
+        <AuthProvider client={client}>
+          <AuthCallbackView />
+        </AuthProvider>,
+      );
+
+      await waitFor(() => {
+        expect(routerReplace).toHaveBeenCalledWith("/");
+      });
+    });
+
+    it("TC-P5-223 — says sign-in was cancelled when Google returns access_denied", async () => {
+      setAddress(
+        "/account/callback?error=access_denied&error_description=denied",
+      );
+      const { client } = createMockSupabase();
+      render(
+        <AuthProvider client={client}>
+          <AuthCallbackView />
+        </AuthProvider>,
+      );
+
+      expect(await screen.findByRole("alert")).toHaveTextContent(
+        "Google sign-in was cancelled.",
+      );
       expect(
-        screen.getByRole("link", { name: /continue to sign in/i }),
+        screen.getByRole("link", { name: "Back to Sign In" }),
       ).toHaveAttribute("href", "/account/sign-in");
+      expect(routerReplace).not.toHaveBeenCalled();
+    });
+
+    it("TC-P5-224 — says sign-in didn't finish when no session comes back", async () => {
+      setAddress("/account/callback?code=expired");
+      const { client } = createMockSupabase();
+      render(
+        <AuthProvider client={client}>
+          <AuthCallbackView />
+        </AuthProvider>,
+      );
+
+      expect(await screen.findByRole("alert")).toHaveTextContent(
+        "We couldn't finish signing you in with Google.",
+      );
+      expect(routerReplace).not.toHaveBeenCalled();
     });
   });
 });

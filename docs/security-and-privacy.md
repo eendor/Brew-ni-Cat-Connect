@@ -558,3 +558,16 @@ Section 19 already belongs to the Phase 7 addendum on `main`, so this addendum t
 - There is no email or text message when a status changes; the customer sees it the next time they open the page.
 - Requests are not rate limited. A signed-in customer could send several requests in a row; the shop sees all of them.
 - The owner's approved retention rule, the response time and the wording the shop should send are still open decisions (functional requirements §6 and §12). **TODO: Confirm with Brew ni Cat owner.**
+
+## 24. Google Sign-In Addendum (ADR-030)
+
+- Customers sign in only with Google through Supabase Auth. The site never sees a password, and the old password and reset forms are removed.
+- The auth client uses the PKCE flow: Google returns a one-time code to `/account/callback`, and only the browser that started the sign-in can swap it for a session, because it holds the code verifier.
+- `returnTo` is checked twice, before Google sign-in starts and again on the callback page, so only addresses on the same site are followed (FR-036).
+- Google shares the customer's name, email and profile photo URL with Supabase. The site uses the email and name; the privacy notice on Sign In and Create an Account says so.
+- **Setup, done by hand by the team (not in the repository):**
+  1. In Google Cloud Console, create an OAuth client of type Web application. Add the Supabase callback `https://<project-ref>.supabase.co/auth/v1/callback` as an authorized redirect URI, and fill in the consent screen with the shop's name, the privacy policy address and the support email.
+  2. In Supabase, open Authentication → Sign In / Providers → Google, switch it on, and paste the client ID and secret. The secret stays in Supabase and is never committed.
+  3. In Supabase, open Authentication → URL Configuration. Set the Site URL to the production address and add `https://<production-domain>/account/callback` and `http://localhost:3000/account/callback` to the redirect URLs.
+- Until step 2 is done, the Google button shows "We couldn't open Google sign-in." and nobody can sign in, so the change is not merged before then.
+

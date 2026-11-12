@@ -1477,3 +1477,27 @@ Run on 2026-11-11 by Renier P. Apal, the integrated QA engineer, on `main` at `f
 - Rizjie: account home and data requests (FR-042) - MERGED Update 2026-11-13: this was not true when the run finished, because PR #130 was still open. PR #130 merged on 2026-11-13.
 
 No waiting PRs remain for Phase 5.
+
+## 53. Google Sign-In Cases (2026-11-13)
+
+Sign in and Create an Account use Google only (ADR-030). TC-P4-152, TC-P4-153, TC-P4-155, TC-P4-156, TC-P4-161 to TC-P4-167 and TC-P4-169 to TC-P4-171 tested the email and password forms and are Superseded by the cases below. TC-P4-168 and TC-P5-092 were rewritten for the Google pages.
+
+| ID         | Requirement    | Case                                                                                       | Expected result                                                                                              | Status             |
+| ---------- | -------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------ | ------------------ |
+| TC-P5-213  | FR-031, FR-032 | `signInWithGoogle("/account/orders")`                                                      | `signInWithOAuth` is called with provider `google` and `redirectTo` `/account/callback?returnTo=%2Faccount%2Forders` | Passed (automated) |
+| TC-P5-214  | FR-032         | Supabase can't start Google sign-in (provider off)                                         | The error is returned to the page                                                                            | Passed (automated) |
+| TC-P5-215  | FR-036         | `oauthCallbackUrl` with no `returnTo`, with `/` and with a path and query                 | `returnTo` is left out for the home page and encoded otherwise                                               | Passed (automated) |
+| TC-P5-216  | FR-032         | Open Sign In                                                                               | Only the Google button; no email or password fields and no Forgot password link                              | Passed (automated) |
+| TC-P5-217  | FR-036         | Sign In opened with `returnTo=/account/orders`, tap the button                             | Google sign-in starts with that `returnTo`; the button shows "Opening Google…" and is disabled              | Passed (automated) |
+| TC-P5-218  | FR-036         | Sign In opened with an outside `returnTo`                                                  | The outside address is dropped before Google sign-in starts                                                  | Passed (automated) |
+| TC-P5-219  | FR-032         | Google sign-in can't start                                                                 | An alert says so and the button works again                                                                  | Passed (automated) |
+| TC-P5-220  | FR-031         | Open Create an Account and tap the button                                                  | No password fields; "Sign up with Google" starts the same Google sign-in                                     | Passed (automated) |
+| TC-P5-221  | FR-036         | The callback page gets a session with `returnTo=/account/rewards`                         | It goes on to `/account/rewards`                                                                             | Passed (automated) |
+| TC-P5-222  | FR-036         | The callback page gets an outside `returnTo`                                               | It goes to `/`                                                                                               | Passed (automated) |
+| TC-P5-223  | FR-032         | Google returns `error=access_denied`                                                       | "Google sign-in was cancelled." with Back to Sign In; no redirect                                            | Passed (automated) |
+| TC-P5-224  | FR-032         | No session comes back                                                                      | "We couldn't finish signing you in with Google." with Back to Sign In                                        | Passed (automated) |
+| TC-P5-225  | FR-034         | Open `/account/forgot-password` and `/account/reset-password` in the browser               | Both land on Sign In with the Google button                                                                  | Passed (automated) |
+| TC-P5-226  | FR-032         | Open `/account/callback?error=access_denied` in the browser and tap Back to Sign In         | The cancelled message shows, and the link opens Sign In                                                      | Passed (automated) |
+| TC-P4-172  | FR-032, FR-033 | Browser: sign in through a mocked Google round trip, then sign out (rewritten 2026-11-13) | Back on `/` signed in with the Account menu; signing out shows Sign in again                                 | Passed (automated) |
+| TC-P4-271  | FR-036         | Browser: `/account/profile` signed out, sign in with mocked Google (rewritten 2026-11-13)  | Sent to Sign In with `returnTo`, then back to Profile after the callback                                     | Passed (automated) |
+| MAN-P5-010 | FR-031, FR-032 | On the production site, after Google is switched on in Supabase, sign in with a Gmail account | Google's account chooser opens, and the customer comes back signed in on the page they started from        | Pending            |
