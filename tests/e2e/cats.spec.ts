@@ -1,129 +1,128 @@
 import { expect, test, type Page } from "@playwright/test";
 
 /**
- * Cat characters (FR-099). Set CAPTURE_EVIDENCE=1 to refresh the screenshots
- * in docs/evidence/phase-9/cat-characters/.
+ * Cat characters (FR-099). Update 2026-11-13 (ADR-032): the shop's own cats
+ * perch on the edges of the screen instead of walking in a footer strip.
+ * Set CAPTURE_EVIDENCE=1 to refresh the screenshots in
+ * docs/evidence/phase-9/cat-characters/.
  */
 const CAPTURE_EVIDENCE = process.env.CAPTURE_EVIDENCE === "1";
 const EVIDENCE_DIR = "docs/evidence/phase-9/cat-characters";
 
-/** Interactive or text elements whose box overlaps the cat strip. */
-async function overlapsWithStrip(page: Page): Promise<string[]> {
+/** Page content (text, controls, pictures, cards) under any shown cat. */
+async function catsOverContent(page: Page): Promise<string[]> {
   return page.evaluate(() => {
-    const strip = document.querySelector('[data-testid="cat-strip"]');
-    if (!strip) return ["no strip"];
-    const s = strip.getBoundingClientRect();
+    const content =
+      "a, button, input, select, textarea, label, p, h1, h2, h3, h4, h5, h6, li, img, picture, video, figure, svg, article, [role=dialog]";
+    const cats = [
+      ...document.querySelectorAll<HTMLElement>('.shop-cat[data-shown="true"]'),
+    ];
     const hits: string[] = [];
-    for (const el of document.querySelectorAll(
-      "a, button, input, select, textarea, p, h1, h2, h3, li, label",
-    )) {
-      if (strip.contains(el)) continue;
-      // skip hidden layers such as the page-transition curtain
-      if (el.closest('[aria-hidden="true"]')) continue;
-      if (
-        !el.checkVisibility({ opacityProperty: true, visibilityProperty: true })
-      )
-        continue;
-      const r = el.getBoundingClientRect();
-      if (r.width === 0 || r.height === 0) continue;
-      const overlap =
-        r.left < s.right &&
-        r.right > s.left &&
-        r.top < s.bottom &&
-        r.bottom > s.top;
-      if (overlap)
-        hits.push(`${el.tagName} ${el.textContent?.trim().slice(0, 30)}`);
+    for (const cat of cats) {
+      const c = cat.getBoundingClientRect();
+      const box = {
+        left: Math.max(0, c.left),
+        right: Math.min(window.innerWidth, c.right),
+        top: Math.max(0, c.top),
+        bottom: Math.min(window.innerHeight, c.bottom),
+      };
+      for (const el of document.querySelectorAll(content)) {
+        if (el.closest('[aria-hidden="true"]')) continue;
+        if (
+          !el.checkVisibility({
+            opacityProperty: true,
+            visibilityProperty: true,
+          })
+        )
+          continue;
+        const r = el.getBoundingClientRect();
+        if (r.width === 0 || r.height === 0) continue;
+        // a few pixels of slack for the sway
+        if (
+          r.left < box.right - 6 &&
+          r.right > box.left + 6 &&
+          r.top < box.bottom - 6 &&
+          r.bottom > box.top + 6
+        )
+          hits.push(
+            `${cat.dataset.cat} over ${el.tagName} ${el.textContent?.trim().slice(0, 30)}`,
+          );
+      }
     }
     return hits;
   });
 }
 
 for (const size of [
-  { name: "phone", width: 390, height: 844 },
-  { name: "desktop", width: 1440, height: 900 },
+  { name: "phone", width: 390, height: 844, paths: ["/", "/menu", "/contact"] },
+  {
+    name: "desktop",
+    width: 1440,
+    height: 900,
+    paths: ["/", "/about", "/gallery"],
+  },
+  { name: "wide", width: 1920, height: 1080, paths: ["/about", "/menu"] },
 ]) {
-  test(`TC-P9-005 — the cats walk in their own strip and cover nothing (${size.name})`, async ({
+  test(`TC-P9-005 — the shop's cats perch around the page and cover nothing (${size.name})`, async ({
     page,
   }) => {
-    // The chromium project turns reduced motion on; the cats walk only without it.
+    test.setTimeout(180_000);
+    // The chromium project turns reduced motion on; the cats move only without it.
     await page.emulateMedia({ reducedMotion: "no-preference" });
     await page.setViewportSize({ width: size.width, height: size.height });
-    await page.goto("/about");
-    const strip = page.getByTestId("cat-strip");
-    await strip.scrollIntoViewIfNeeded();
-    await expect(strip).toHaveCSS("pointer-events", "none");
-    await expect(strip).toHaveAttribute("aria-hidden", "true");
-    expect(await overlapsWithStrip(page)).toEqual([]);
-
-    // Update 2026-11-10: the pixel cats (CC0 "Pet Cats Pack") wander on
-    // their own; within a few seconds at least one has moved or changed
-    // what it is doing. Their frames are a CSS animation in real time.
-    // Update 2026-11-10: one cat per coat, so 6 on a desktop.
-    const count = size.name === "phone" ? 3 : 6;
-    const cats = strip.locator(".pixel-cat:not([hidden])");
-    await expect(cats).toHaveCount(count);
-    const sheet = await page.request.get("/cats/cat-1/walk.png");
-    expect(sheet.status()).toBe(200);
-    const state = () =>
-      cats.evaluateAll((nodes) =>
-        nodes
-          .map(
-            (n) =>
-              `${(n as HTMLElement).style.transform} ${(n as HTMLElement).dataset.action}`,
-          )
-          .join("|"),
-      );
-    const before = await state();
-    await page.evaluate(() =>
-      document
-        .querySelector('[data-testid="cat-strip"]')
-        ?.scrollIntoView({ block: "center" }),
-    );
-    await expect.poll(state, { timeout: 15_000 }).not.toBe(before);
-    expect(await overlapsWithStrip(page)).toEqual([]);
-    if (CAPTURE_EVIDENCE) {
-      await page.waitForTimeout(4_000);
-      const box = await strip.boundingBox();
-      if (box) {
-        await page.screenshot({
-          path: `${EVIDENCE_DIR}/pixel-cats-${size.name}-${size.width}.png`,
-          clip: {
-            x: 0,
-            y: box.y - 40,
-            width: size.width,
-            height: box.height + 200,
-          },
-        });
+    for (const path of size.paths) {
+      await page.goto(path);
+      const layer = page.getByTestId("cat-layer");
+      await expect(layer).toHaveAttribute("aria-hidden", "true");
+      await expect(layer).toHaveCSS("pointer-events", "none");
+      // let the cats settle after their entrance
+      await page.waitForTimeout(1_800);
+      expect(await catsOverContent(page), path).toEqual([]);
+      for (const y of [0.5, 1]) {
+        await page.evaluate(
+          (f) =>
+            window.scrollTo(0, f * (document.body.scrollHeight - innerHeight)),
+          y,
+        );
+        await page.waitForTimeout(1_200);
+        expect(await catsOverContent(page), `${path} at ${y}`).toEqual([]);
       }
+    }
+    const picture = await page.request.get("/cats/kasper.webp");
+    expect(picture.status()).toBe(200);
+    if (CAPTURE_EVIDENCE) {
+      await page.goto("/");
+      await page.waitForTimeout(2_500);
+      await page.screenshot({
+        path: `${EVIDENCE_DIR}/shop-cats-home-${size.name}-${size.width}.png`,
+      });
+      await page.goto("/about");
+      await page.evaluate(() => window.scrollTo(0, innerHeight * 1.2));
+      await page.waitForTimeout(2_500);
+      await page.screenshot({
+        path: `${EVIDENCE_DIR}/shop-cats-about-${size.name}-${size.width}.png`,
+      });
     }
   });
 }
 
-// Update 2026-11-10: the six pixel cats replace the four drawn ones.
 test("TC-P9-006 — with reduced motion the cats sit still", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.setViewportSize({ width: 1920, height: 1080 });
   await page.goto("/about");
-  const strip = page.getByTestId("cat-strip");
-  await strip.scrollIntoViewIfNeeded();
-  const cats = strip.locator(".pixel-cat:not([hidden])");
-  await expect(cats).toHaveCount(6);
+  await page.waitForTimeout(1_000);
+  const cats = page.locator('.shop-cat[data-shown="true"]');
   const state = () =>
     cats.evaluateAll((nodes) =>
       nodes
         .map(
           (n) =>
-            `${(n as HTMLElement).style.transform} ${(n as HTMLElement).dataset.action}`,
+            `${(n as HTMLElement).dataset.cat} ${(n as HTMLElement).style.transform} ${(n as HTMLElement).style.left} ${(n as HTMLElement).style.top}`,
         )
         .join("|"),
     );
   const before = await state();
-  expect(before).not.toMatch(/walk|run/);
   await page.waitForTimeout(3_000);
   expect(await state()).toBe(before);
-  if (CAPTURE_EVIDENCE) {
-    await page.locator("footer").screenshot({
-      path: `${EVIDENCE_DIR}/pixel-cats-sitting-reduced-motion-1440.png`,
-    });
-  }
+  expect(await catsOverContent(page)).toEqual([]);
 });
