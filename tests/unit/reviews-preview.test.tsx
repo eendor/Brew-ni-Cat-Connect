@@ -41,10 +41,10 @@ describe("Reviews on the home page (FR-098)", () => {
     expect(within(section).getByText("7 reviews")).toBeInTheDocument();
     expect(
       within(section).getByRole("link", { name: "Read all reviews" }),
-    ).toHaveAttribute("href", "/about#reviews");
+    ).toHaveAttribute("href", "/reviews");
     expect(
       within(section).getByRole("link", { name: "Leave a review" }),
-    ).toHaveAttribute("href", "/about#reviews");
+    ).toHaveAttribute("href", "/reviews");
   });
 
   it("TC-P5-205 with no reviews yet it invites the first one", async () => {
@@ -74,7 +74,7 @@ describe("Reviews on the home page (FR-098)", () => {
     await act(async () => fail(new Error("offline")));
     expect(
       screen.getByRole("link", { name: "Leave a review" }),
-    ).toHaveAttribute("href", "/about#reviews");
+    ).toHaveAttribute("href", "/reviews");
     expect(screen.queryAllByRole("article")).toHaveLength(0);
     expect(screen.queryByText("No reviews yet. Be the first.")).toBeNull();
   });
@@ -82,7 +82,7 @@ describe("Reviews on the home page (FR-098)", () => {
   it("TC-P5-207 the menu and the footer link to the reviews", () => {
     expect(siteConfig.navigation).toContainEqual({
       label: "Reviews",
-      href: "/about#reviews",
+      href: "/reviews",
     });
   });
 });

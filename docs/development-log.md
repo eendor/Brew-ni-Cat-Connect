@@ -1830,6 +1830,15 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Known limitations:** `GEMINI_API_KEY` is not in Vercel yet (needs the team's OK, and the key should be rotated first). The new greeting needs the Messenger Profile API after the merge. Only people with a role on the Meta app get replies until App Review. The free tier may use prompts to improve Google's products; the owner hasn't confirmed the policy wording. MAN-P7-009 is Pending.
 - **Update 2026-11-13 (Rodnee asked to loop every Gemini model until one answers, on the free tier):** `DEFAULT_GEMINI_MODELS` now lists every Gemini and Gemma text model the free-tier key can use (15, from the models list on 2026-11-13; `gemini-2.5-*` answer 404 "no longer available to new users" and were left out). The assistant goes round them until one answers: busy (503), rate-limited (429), failing, empty and slow models are skipped, with a short wait between rounds, within 45 seconds in all and 12 per model. A model that answers 404 or 400 rests for a day and a 429 model for its retry delay. Gemma gets its instructions in the message. The webhook route allows 60 seconds (`maxDuration`). A live run with the real key answered three questions on `gemini-3.1-flash-lite` in 5.4 seconds; in the probe before it, eight of the models were busy (503) or timed out. TC-P7-099 and TC-P7-100 updated, TC-P7-108 added. Also fixed TC-P5-088, which still expected the old policy date (CI failure).
 
+## 2026-11-13 — Reviews on their own page
+
+- **Phase:** Phase 5 (FR-098), enhancement.
+- **Task:** The team asked for the reviews to have their own page instead of a section of About.
+- **Summary:** Added `/reviews` (page heading, the reviews list and the review form). The header, phone menu, footer, the home page's Read all reviews link and the page curtain's title now point to `/reviews`. About no longer shows the reviews; an old `/about#reviews` link forwards to `/reviews`.
+- **Files:** `src/app/reviews/page.tsx` (new), `src/components/reviews/reviews-hash-redirect.tsx` (new), `src/app/about/page.tsx`, `src/components/reviews/reviews-preview.tsx`, `src/components/motion/route-curtain.tsx`, `src/config/site.ts`, `tests/unit/{reviews-page,reviews-preview}.test.tsx`, `tests/e2e/{reviews,home-reviews,foundation}.spec.ts`, `docs/test-cases.md` §49, `docs/evidence/phase-5/reviews-home/`.
+- **Testing:** see the PR.
+- **Branch / PR:** `feat/reviews-page`.
+
 
 ## 2026-11-13 — The shop's own cats walk in a footer parade (ADR-032)
 

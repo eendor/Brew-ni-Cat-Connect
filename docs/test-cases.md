@@ -1429,9 +1429,19 @@ Customers could not find the reviews, because they were only near the bottom of 
 | TC-P5-204 | FR-098 | The home page loads with seven reviews | Shows the average rating 4.6, "7 reviews", the newest three reviews, and the links Leave a review and Read all reviews | Passed (automated) |
 | TC-P5-205 | FR-098 | The home page loads with no reviews | Shows "No reviews yet. Be the first." and Leave a review, without Read all reviews | Passed (automated) |
 | TC-P5-206 | FR-098 | The reviews can't be loaded | The home page still shows Leave a review, with no error and no empty message | Passed (automated) |
-| TC-P5-207 | FR-098 | The site navigation | Has a Reviews link to `/about#reviews`, used by the header, the phone menu and the footer | Passed (automated) |
-| TC-P5-208 | FR-098 | Browser test at 390 and 1440 pixels wide | The home block shows the average, the count and three reviews without sideways scrolling; Read all reviews opens `/about#reviews` with the reviews in view | Passed (automated) |
-| TC-P5-209 | FR-098 | Browser test of the Reviews link in the desktop menu (1024 and 1440) and the phone menu (390) | The link fits without sideways scrolling and opens `/about#reviews` with the reviews in view | Passed (automated) |
+| TC-P5-207 | FR-098 | The site navigation | Has a Reviews link to `/reviews`, used by the header, the phone menu and the footer | Passed (automated) |
+| TC-P5-208 | FR-098 | Browser test at 390 and 1440 pixels wide | The home block shows the average, the count and three reviews without sideways scrolling; Read all reviews opens `/reviews` with the reviews in view | Passed (automated) |
+| TC-P5-209 | FR-098 | Browser test of the Reviews link in the desktop menu (1024 and 1440) and the phone menu (390) | The link fits without sideways scrolling and opens `/reviews` with the reviews in view | Passed (automated) |
+
+Update 2026-11-13: the reviews moved from the About page to their own page, `/reviews`, at the team's request. TC-P5-207 to TC-P5-209 now expect `/reviews` instead of `/about#reviews`. An old `/about#reviews` link forwards to `/reviews`.
+
+| ID | Requirement | Scenario | Expected result | Status |
+| --- | --- | --- | --- | --- |
+| TC-P5-213 | FR-098 | `/reviews` page | Has its own heading "Reviews", the reviews list and the review form | Passed (automated) |
+| TC-P5-214 | FR-098 | The site navigation | The Reviews link opens `/reviews`, not the About page | Passed (automated) |
+| TC-P5-215 | FR-098 | `/about#reviews` (an old link) | Forwards to `/reviews` | Passed (automated) |
+| TC-P5-216 | FR-098 | `/about` without the hash, then the hash changes to `#reviews` | Stays on About until the hash changes, then forwards to `/reviews` | Passed (automated) |
+| TC-P5-217 | FR-098 | Browser test at 390 and 1440 pixels wide | `/reviews` shows the reviews without sideways scrolling; `/about#reviews` lands on `/reviews`; evidence `docs/evidence/phase-5/reviews-home/reviews-page-{phone-390,desktop-1440}.png` | Passed (automated) |
 
 ## 50. Ad Slot For The Mini-Games Cases (2026-11-10)
 
