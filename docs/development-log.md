@@ -1806,3 +1806,14 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Known limitations:** Rodnee's Android app (`feat/p8-android-app`, FR-065 to FR-069), the production deploy and the v1.0.0 release with the APK are Not merged yet, and Renier's Phase 8 integrated QA (section 44) is Not merged yet. The manual install and offline checks on real browsers (MAN-P8-001 to MAN-P8-006) are still Not run yet. This register is partial until the final run.
 - **Next action:** Run this closeout again after Rodnee's Android pull request and the v1.0.0 release merge and after Renier's integrated QA merges, then fill in the final statuses, the release section and the Closeout, and mark the pull request ready for review.
 - **Update 2026-11-13 (Rodnee, before the merge):** merged `main` into this branch and renumbered the closeout note to section 23 (`main` uses sections 21 and 22). The Android app, the deploy, the v1.0.0 release and the Phase 8 integrated QA are still open, as the note says. The release date is not confirmed yet. Update after PR #111 merged: re-merged `main`, kept the Phase 7 row and register from `main`, and changed "section 44 of `docs/test-cases.md`" for the Phase 8 QA to "a new section", because section 44 now holds the Messenger ordering cases.
+
+## 2026-11-13 — Points history on its own page
+
+- **Phase:** Phase 5 (loyalty, FR-053).
+- **Task:** Rodnee asked to put the rewards points history on a separate page.
+- **Summary:** `/account/rewards` now shows the balance, the earning rules and the rewards catalog, with a "See points history →" link under the balance. `/account/rewards/history` (new `PointsHistoryView`) shows the current balance and every transaction, newest first, with "← Back to Rewards". The rewards page no longer loads the history. The Rewards tile on `/account` now says "Your loyalty points and rewards, with your points history."
+- **Files:** `src/components/loyalty/points-history-view.tsx` (new), `src/app/account/rewards/history/page.tsx` (new), `src/components/loyalty/rewards-view.tsx`, `src/app/account/rewards/page.tsx`, `src/components/account/account-home-view.tsx`, `tests/unit/loyalty-view.test.tsx`, `tests/e2e/loyalty.spec.ts`, `docs/test-cases.md` (TC-P5-121, TC-P5-122, TC-P5-125, TC-P5-127 and TC-P5-210 updated; TC-P5-211 and TC-P5-212 added).
+- **Testing:** `tests/unit/loyalty-view.test.tsx` and `tests/unit/account-home.test.tsx`: 16 passed. Playwright `chromium` on `loyalty.spec.ts` and `account-home.spec.ts`, built with the CI environment: 9 passed.
+- **Branch / PR:** `feat/rewards-history-page`.
+- **Next action:** Review and merge.
+

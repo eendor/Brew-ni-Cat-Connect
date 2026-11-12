@@ -243,12 +243,8 @@ test.describe("Customer loyalty and rewards", () => {
     await expect(page.getByText("Balance is enough").first()).toBeVisible();
     await expect(page.getByText("Need 10 more pts")).toBeVisible();
 
-    // Check history rows
-    await expect(
-      page.getByRole("heading", { level: 2, name: "Points History" }),
-    ).toBeVisible();
-    await expect(page.getByText("BNC-ABCDEF")).toBeVisible();
-    await expect(page.getByText("BNC-GHKLMN")).toBeVisible();
+    // Updated 2026-11-13: the history is on its own page, linked from here.
+    await expect(page.getByText("BNC-ABCDEF")).toHaveCount(0);
 
     await capture(page, "restyled-rewards-page-1440x900.png");
 
@@ -287,16 +283,16 @@ test.describe("Customer loyalty and rewards", () => {
     await capture(page, "restyled-rewards-page-390x844.png");
   });
 
-  test("TC-P5-127 — shows empty points history when customer has no transactions", async ({
+  test("TC-P5-127 — shows empty points history on /account/rewards/history when customer has no transactions", async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await mockLoyaltyBackend(page, []);
     await signIn(page);
 
-    await page.goto("/account/rewards");
+    await page.goto("/account/rewards/history");
 
-    await expect(page.getByTestId("loyalty-balance")).toHaveText("0");
+    await expect(page.getByTestId("history-balance")).toHaveText("0 points");
     await expect(
       page.getByRole("heading", { name: "No Points Yet" }),
     ).toBeVisible();
@@ -307,5 +303,29 @@ test.describe("Customer loyalty and rewards", () => {
     ).toBeVisible();
 
     await capture(page, "restyled-rewards-empty-1440x900.png");
+  });
+
+  // Added 2026-11-13: the points history has its own page.
+  test("TC-P5-211 — the rewards page links to the points history page, which lists the rows", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await mockLoyaltyBackend(page);
+    await signIn(page);
+
+    await page.goto("/account/rewards");
+    await page.getByRole("link", { name: "See points history →" }).click();
+    await expect(page).toHaveURL(/\/account\/rewards\/history$/);
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Points History" }),
+    ).toBeVisible();
+    await expect(page.getByTestId("history-balance")).toHaveText("60 points");
+    await expect(page.getByText("BNC-ABCDEF")).toBeVisible();
+    await expect(page.getByText("BNC-GHKLMN")).toBeVisible();
+
+    await capture(page, "points-history-page-1440x900.png");
+
+    await page.getByRole("link", { name: "← Back to Rewards" }).click();
+    await expect(page).toHaveURL(/\/account\/rewards$/);
   });
 });
