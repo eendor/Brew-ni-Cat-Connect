@@ -1764,6 +1764,20 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `feat/p5-account-home`, PR #130.
 - **Next action:** Rodnee reviews PR #130. The owner still needs to confirm the retention rule and response time (MAN items pending).
 
+## 2026-11-10 — Phase 5 documentation closeout
+
+- **Phase:** Phase 5 (order history, tracking, favorites and loyalty).
+- **Task:** The Phase 5 card item "Shan: docs closeout: requirement status, Phase 5 evidence, development log, README". This run records the merged Phase 5 work and lists the items still waiting.
+- **Summary:** Added `docs/evidence/phase-5-verification.md` with one row per merged Phase 5 pull request (#87, #96, #97, #93, #103, #107 and #108), the related POS note and the waiting items. FR-039, FR-040, FR-041 and FR-044 to FR-049 now name their pull requests, and FR-038 names PR #94. Added section 19 to `docs/functional-requirements.md` for the Phase 5 closeout, moving the Phase 7 and Privacy Policy notes to sections 20 and 21. README gets the Phase 5 status row, the evidence links and a shorter limitations item. FR-042, FR-043, FR-050 to FR-056 and FR-098 stay open, and FR-057 stays Deferred, so this register has no Closeout section yet.
+- **Files:** `docs/evidence/phase-5-verification.md` (new), `docs/functional-requirements.md`, `docs/development-log.md`, `README.md`.
+- **Testing:**
+  - `python scripts/validate_phase0_docs.py`: `PHASE0_DOC_VALIDATION=PASS`, 0 errors in 33 Markdown files.
+  - `npm run format:check`: "All matched files use Prettier code style!"
+- **Branch / PR:** `docs/p5-closeout`, PR #110 (draft).
+- **Known limitations:** Loyalty points and rewards (FR-050 to FR-055), the account home and data requests (FR-042), ratings and reviews on the website (FR-098) and the POS screen that hides reviews (FR-098), and the Phase 5 integrated QA are Not merged yet. FR-043, FR-056 and FR-057 are not built.
+- **Next action:** Run this closeout again after the waiting pull requests merge, then mark the PR ready for review.
+- **Update 2026-11-13 (Rodnee, before the merge):** merged `main` into this branch and brought the closeout up to date. PRs #120, #125, #123, #130 and #129 merged after Shan's run, so the evidence register has their rows, and the README, the register's open list and section 19 of the functional requirements now say what is still open: the POS screen that hides reviews, FR-043, FR-056, the rest of FR-055, and the final check. PR #110 is no longer a draft.
+
 ## 2026-11-10 — Phase 7 documentation closeout
 
 - **Phase:** Phase 7 (Messenger assistant), documentation.
@@ -1777,4 +1791,4 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `docs/p7-closeout`, PR #111.
 - **Known limitations:** Renier's Phase 7 integrated QA is Not merged yet, so the register has no Closeout section and the README Phase 7 row says In progress. The live Messenger checks TC-P7-042 to TC-P7-049 are Not run yet, the Meta app is being published with Standard Access, and FR-064 stays Deferred.
 - **Next action:** After `test/p7-integrated-qa-main` merges, run the same closeout prompt again: add the register's Closeout, mark the README Phase 7 row complete, update the Development status and Last updated lines, rerun the checks and mark the pull request ready for Rodnee's review.
-- **Update 2026-11-13 (Rodnee, before the merge):** merged `main` into this branch, added the evidence rows for PR #113 to #118, #121 and #128, renumbered the closeout note to section 22 (`main` already has a section 21), and added an update line to it and the README. Phase 7 stays open until Renier's integrated QA merges.
+- **Update 2026-11-13 (Rodnee, before the merge):** merged `main` into this branch, added the evidence rows for PR #113 to #118, #121 and #128, renumbered the closeout note to section 22 (`main` already has a section 21), and added an update line to it and the README. Phase 7 stays open until Renier's integrated QA merges. Update after PR #110 merged: `main` now numbers the Phase 7 note as section 20 and the Privacy Policy note as section 21, so the closeout note's references were changed to match. `docs/test-cases.md` has no section 43 yet; the Phase 7 integrated QA will add it.
