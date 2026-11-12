@@ -2342,51 +2342,26 @@ html[data-motion="on"]:not([data-motion-live])
   line-height: 0.9;
 }
 
-/* Cat characters (FR-099): pixel cats (CC0 "Pet Cats Pack", public/cats) in an
-   empty strip at the top of the footer that only the cats use. It ignores
-   taps, so nothing under it is ever covered. Each sheet is one row of square
-   frames; the cat stands on row 32 of 50, so the strip shows rows 14 to 32. */
-.cat-strip {
-  --cat-size: 160px;
-  position: relative;
-  height: calc(var(--cat-size) * 0.38);
+/* Cat characters (FR-099, ADR-032): cut-outs of the shop's own cats
+   (public/cats) perched on the screen's edges. The layer ignores taps, and
+   a cat only comes out where nothing on the page is under it. */
+.cat-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
   overflow: hidden;
   pointer-events: none;
   user-select: none;
 }
-@media (min-width: 640px) {
-  .cat-strip {
-    --cat-size: 260px;
-  }
-}
-.pixel-cat {
+.shop-cat {
   position: absolute;
-  width: var(--cat-size);
-  height: var(--cat-size);
-  margin-left: calc(var(--cat-size) * -0.5);
-  background-repeat: no-repeat;
-  background-size: auto 100%;
-  image-rendering: pixelated;
-  will-change: transform;
-  animation: pixel-cat-frames var(--ms, 1s) steps(var(--frames, 1))
-    var(--repeat, infinite) forwards;
+  max-width: none;
+  opacity: 0;
+  transform-origin: 50% 100%;
+  filter: drop-shadow(0 6px 10px rgb(0 0 0 / 0.22));
+  will-change: transform, opacity;
 }
-.pixel-cat[hidden] {
-  display: none;
-}
-.cat-strip.is-paused .pixel-cat {
-  animation-play-state: paused;
-}
-@keyframes pixel-cat-frames {
-  from {
-    background-position-x: 0;
-  }
-  to {
-    background-position-x: calc(var(--cat-size) * var(--frames, 1) * -1);
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .pixel-cat {
-    animation: none;
-  }
+/* cats on the right look in toward the page */
+.shop-cat[data-side="right"] {
+  scale: -1 1;
 }

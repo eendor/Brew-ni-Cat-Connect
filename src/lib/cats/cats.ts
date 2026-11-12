@@ -1,113 +1,129 @@
 /**
- * The footer cats (FR-099): six pixel cats from the CC0 "Pet Cats Pack"
- * (`public/cats`, license in `public/cats/LICENSE.txt`). Each sheet is one
- * row of 50 x 50 frames; the cat stands on row 32 of its frame.
+ * The shop's cats around the page (FR-099, update 2026-11-13, ADR-032).
+ * Each picture is a cut-out of one of the shop's own photos
+ * (`public/images/shop`): the four cats on the opening poster, Oreo, a grey
+ * cat and Kasper napping. The cats perch on the edges of the screen, never
+ * on top of the page's text, controls or pictures.
  */
-export type CatAction =
-  | "walk"
-  | "run"
-  | "idle"
-  | "sitting"
-  | "laying"
-  | "sleeping"
-  | "licking"
-  | "stretching"
-  | "meow"
-  | "itch";
 
-export type CatSheet = Readonly<{ frames: number; ms: number; once?: boolean }>;
+export type CatPose = "sit" | "lie";
 
-export const CAT_SHEETS: Readonly<Record<CatAction, CatSheet>> = {
-  walk: { frames: 8, ms: 800 },
-  run: { frames: 8, ms: 480 },
-  idle: { frames: 10, ms: 1500 },
-  sitting: { frames: 1, ms: 1000 },
-  laying: { frames: 8, ms: 1100, once: true },
-  sleeping: { frames: 2, ms: 2600 },
-  licking: { frames: 5, ms: 900 },
-  stretching: { frames: 13, ms: 1700, once: true },
-  meow: { frames: 4, ms: 700 },
-  itch: { frames: 2, ms: 300 },
-};
+export type ShopCat = Readonly<{
+  id: string;
+  /** Picture size in pixels; the page scales it. */
+  width: number;
+  height: number;
+  pose: CatPose;
+}>;
 
-export type PixelCat = Readonly<{ id: string; canItch: boolean }>;
-
-/** Cat 3 has no scratching sheet. */
-export const PIXEL_CATS: readonly PixelCat[] = [1, 2, 3, 4, 5, 6].map((n) => ({
-  id: `cat-${n}`,
-  canItch: n !== 3,
-}));
-
-/** Walking and running speed, in cat sizes (one 50-pixel frame) per second. */
-export const CAT_SPEED = { walk: 0.3, run: 1 } as const;
-
-export function catSheetUrl(id: string, action: CatAction): string {
-  return `/cats/${id}/${action}.png`;
-}
-
-const clamp01 = (r: number) => Math.min(Math.max(r, 0), 0.999_999);
-
-/**
- * The most cats in the strip at once: one cat for each coat, so no coat
- * shows twice (update 2026-11-10; it was 16 with the coats repeating).
- */
-export const MAX_CATS = PIXEL_CATS.length;
-
-/** One cat for about every 120 pixels of width: 3 on a phone, up to 6 on wider screens. */
-export function catCount(width: number): number {
-  return Math.min(MAX_CATS, Math.max(3, Math.round(width / 120)));
-}
-
-export type CatRest = Readonly<{ action: CatAction; ms: number }>;
-
-const RESTS: readonly (readonly [CatAction, number, number])[] = [
-  ["idle", 4_000, 8_000],
-  ["sitting", 6_000, 14_000],
-  ["licking", 3_600, 7_200],
-  ["meow", 1_400, 2_800],
-  ["stretching", 1_700, 1_700],
-  ["laying", 1_100, 1_100],
-  ["itch", 1_200, 2_400],
+export const SHOP_CATS: readonly ShopCat[] = [
+  { id: "kasper", width: 197, height: 314, pose: "sit" },
+  { id: "latte", width: 149, height: 310, pose: "sit" },
+  { id: "luna", width: 188, height: 320, pose: "sit" },
+  { id: "kulas", width: 185, height: 320, pose: "sit" },
+  { id: "oreo", width: 201, height: 320, pose: "sit" },
+  { id: "grey", width: 204, height: 320, pose: "sit" },
+  { id: "kasper-nap", width: 291, height: 320, pose: "lie" },
 ];
 
-/** What a cat does after a walk, and for how long, from two random numbers. */
-export function nextRest(
-  pick: number,
-  length: number,
-  canItch: boolean,
-): CatRest {
-  const options = canItch ? RESTS : RESTS.filter(([a]) => a !== "itch");
-  const [action, min, max] =
-    options[Math.floor(clamp01(pick) * options.length)]!;
-  return { action, ms: Math.round(min + clamp01(length) * (max - min)) };
+export function catSrc(id: string): string {
+  return `/cats/${id}.webp`;
 }
 
-/** A cat that lay down goes to sleep; any other rest ends in a walk. */
-export function afterRest(action: CatAction, length: number): CatRest | null {
-  if (action !== "laying") return null;
-  return {
-    action: "sleeping",
-    ms: Math.round(8_000 + clamp01(length) * 8_000),
-  };
+/** Where a cat perches: on a side of the screen or rising from its bottom. */
+export type Perch = Readonly<{
+  side: "left" | "right" | "bottom";
+  /** Along that edge, from 0 (top or left) to 1 (bottom or right). */
+  at: number;
+}>;
+
+/** Every spot a cat may take; each is only used while it is clear. */
+export const PERCHES: readonly Perch[] = [
+  { side: "left", at: 0.3 },
+  { side: "right", at: 0.45 },
+  { side: "left", at: 0.72 },
+  { side: "right", at: 0.8 },
+  { side: "bottom", at: 0.12 },
+  { side: "bottom", at: 0.88 },
+  { side: "right", at: 0.18 },
+  { side: "bottom", at: 0.5 },
+];
+
+/** How much of a side cat hides past the edge, and of a bottom cat below it. */
+export const SIDE_TUCK = 0.3;
+export const BOTTOM_TUCK = 0.35;
+
+/** A cat's height in CSS pixels: it scales with the screen. */
+export function catHeight(width: number, height: number): number {
+  const base = Math.min(width * 0.11, height * 0.2);
+  return Math.round(Math.min(220, Math.max(84, base)));
+}
+
+/** The most cats on the page at once, by screen width. */
+export function catCount(width: number): number {
+  if (width < 640) return 2;
+  if (width < 1024) return 3;
+  if (width < 1440) return 4;
+  return 5;
+}
+
+export type Box = Readonly<{
+  left: number;
+  top: number;
+  right: number;
+  bottom: number;
+}>;
+
+export function boxesOverlap(a: Box, b: Box, gap = 0): boolean {
+  return (
+    a.left < b.right + gap &&
+    a.right + gap > b.left &&
+    a.top < b.bottom + gap &&
+    a.bottom + gap > b.top
+  );
 }
 
 /**
- * Where the next walk ends: one to three cat sizes away, left or right, and
- * inside the strip. Short walks leave the cats more time to sit, wash, meow
- * or nap. `size` is the cat's frame in pixels.
+ * The part of the screen a cat at `perch` covers: its picture box, less the
+ * part tucked past the edge. `w` and `h` are the picture's size on screen.
  */
-export function nextTarget(
-  random: number,
-  x: number,
-  width: number,
-  size: number,
-): number {
-  const min = -0.2 * size;
-  const max = Math.max(min, width - 0.8 * size);
-  const r = clamp01(random);
-  const dir = r < 0.5 ? -1 : 1;
-  const steps = 1 + (r < 0.5 ? r * 2 : (r - 0.5) * 2) * 2;
-  let target = x + dir * steps * size;
-  if (target > max || target < min) target = x - dir * steps * size;
-  return Math.min(max, Math.max(min, target));
+export function perchBox(
+  perch: Perch,
+  w: number,
+  h: number,
+  screenWidth: number,
+  screenHeight: number,
+): Box {
+  if (perch.side === "bottom") {
+    const left = Math.min(
+      Math.max(0, perch.at * screenWidth - w / 2),
+      Math.max(0, screenWidth - w),
+    );
+    return {
+      left,
+      right: left + w,
+      top: screenHeight - h * (1 - BOTTOM_TUCK),
+      bottom: screenHeight,
+    };
+  }
+  const top = Math.min(
+    Math.max(0, perch.at * screenHeight - h / 2),
+    Math.max(0, screenHeight - h),
+  );
+  const shown = w * (1 - SIDE_TUCK);
+  return perch.side === "left"
+    ? { left: 0, right: shown, top, bottom: top + h }
+    : { left: screenWidth - shown, right: screenWidth, top, bottom: top + h };
+}
+
+/** Which cat goes on a perch: lying cats only rise from the bottom. */
+export function catsFor(perch: Perch): readonly ShopCat[] {
+  return perch.side === "bottom"
+    ? SHOP_CATS
+    : SHOP_CATS.filter((cat) => cat.pose === "sit");
+}
+
+/** Seconds a cat stays before another takes its place. */
+export function stayMs(random: number): number {
+  return Math.round(14_000 + Math.min(Math.max(random, 0), 1) * 16_000);
 }

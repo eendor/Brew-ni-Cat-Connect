@@ -1,7 +1,7 @@
 import Image from "next/image";
-import { CatStrip } from "@/components/cats/cat-strip";
 import Link from "next/link";
 
+import { CatSoundsToggle } from "@/components/cats/cat-sounds-toggle";
 import { ExternalLink } from "@/components/ui/external-link";
 import {
   ClockIcon,
@@ -44,7 +44,6 @@ export function SiteFooter({ content }: SiteFooterProps) {
   const { address, contact, social } = content;
   return (
     <footer className="border-t border-[var(--border-soft)] bg-[var(--footer-surface)] text-[var(--footer-text)]">
-      <CatStrip />
       <Container
         data-rise-group=""
         className="grid gap-10 pt-3 pb-12 sm:grid-cols-2 lg:grid-cols-[1.25fr_0.7fr_1.1fr_0.8fr] lg:gap-12 lg:pt-4 lg:pb-16"
@@ -161,6 +160,7 @@ export function SiteFooter({ content }: SiteFooterProps) {
             </Link>
           </div>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+            <CatSoundsToggle />
             <InstallAppButton />
             <span>{joinList(content.payments.methods)} accepted</span>
           </div>
