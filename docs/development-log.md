@@ -1817,3 +1817,13 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `feat/rewards-history-page`.
 - **Next action:** Review and merge.
 
+
+## 2026-11-13 — The shop's own cats around the page (ADR-032)
+
+- **Phase:** Phase 9 (FR-099), enhancement.
+- **Task:** The team asked for the cats to be remodelled with three.js and GSAP and then anime.js, for the shop's own cats instead of pixels, to scale, to be scattered around the page and not in the footer, to never overlap the page, and for cat sounds on transitions.
+- **Summary:** Cut seven cats out of the shop's photos with rembg (`public/cats/*.webp`). `CatCompanions` perches two to five of them on the edges of the screen on every page, sized by the screen. A cat only shows where no content is and ducks away when content scrolls under it. anime.js 4.5.0 moves them; with reduced motion they stay still. A synthesized meow plays on page transitions, and the footer's "Cat sounds" switch turns it off. The footer strip, the pixel cats and their license were removed. three.js was tried for the cats and dropped (ADR-032); it stays for the 3D scenes.
+- **Files:** `package.json` (`animejs`), `public/cats/`, `src/lib/cats/cats.ts`, `src/lib/sound/cat-sounds.ts`, `src/components/cats/{cat-companions,cat-sounds-toggle}.tsx` (`cat-strip.tsx` removed), `src/components/motion/curtain-state.ts`, `src/components/layout/site-footer.tsx`, `src/app/layout.tsx`, `src/app/globals.css`, `tests/unit/cat-characters.test.tsx`, `tests/e2e/cats.spec.ts`, `docs/test-cases.md` §48, `docs/decisions.md`, `docs/functional-requirements.md`, `docs/evidence/phase-9/cat-characters/`.
+- **Testing:** `tests/unit/cat-characters.test.tsx`: 7 passed. Playwright `chromium` on `cats.spec.ts`: 4 passed at 390, 1440 and 1920 wide.
+- **Branch / PR:** `feat/three-anime-cats`.
+- **Next action:** Review and merge. The anime.js mini-games follow in Phase 9.

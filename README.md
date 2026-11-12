@@ -41,6 +41,7 @@ Evidence for each Phase 3 pull request is in [`docs/evidence/phase-3-verificatio
 - **Gallery:** 30 curated, approved shop and customer photos, newest Facebook favorites first. The 3D photo ring uses only the photos without people.
 - **Contact:** location, opening hours, the payment methods (Cash or GCash) and the takeout box with its menu price, all from the saved shop content and the live menu since PR #69, social links with decorative icons, and how rider delivery works, with the six local rider services and their Facebook pages. The same icon set appears in the footer, home visit facts, mobile menu, rider cards and checkout.
 - **Cart and cart drawer:** kept in the browser (`localStorage`), with prices rechecked against the current catalog.
+- **The shop's cats:** cut-outs of the shop's own cats peek in from the edges of every page, never over its content, with a soft meow on page transitions (the footer's "Cat sounds" switch turns it off).
 - **Checkout:** three steps (details, review, and the order summary). For pickup, the customer chooses Cash or GCash at the counter, then copies the summary into Messenger or reads it out on the phone. For rider delivery, the customer adds a delivery address and sends the summary to one of the listed local riders, who orders it at the shop and delivers it; the delivery fee, timing and payment are agreed with the rider. Nothing is written to a server.
 
 The 3D scenes load after the static page. Visitors who prefer reduced motion, or whose browser lacks WebGL 2, get the static page. Old menu-poster artwork is a visual reference only and is not the source of current names or prices.
@@ -53,6 +54,7 @@ The 3D scenes load after the static page. Visitors who prefer reduced motion, or
 - Tailwind CSS 4.3.3
 - three.js 0.186.1 for the 3D scenes
 - GSAP 3.15.0 with ScrollTrigger and SplitText for motion
+- anime.js 4.5.0 for the shop's cats around the page (ADR-032)
 - Supabase JavaScript 2.112.3 for public read-only catalog access
 - Vitest 4.1.11 and Testing Library
 - Playwright 1.62.1

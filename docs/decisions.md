@@ -429,3 +429,18 @@ This manual state is a temporary functional-verification condition, not a revisi
 - When online ordering is switched off in the settings, "Order here" says that ordering is paused.
 - The privacy policy page now says that Messenger orders are saved, and its version moved to 2026-11-10 (FR-042). The owner has not confirmed the wording yet (MAN-P5-003).
 - While the Meta app has Standard Access, only people with a role on the app get replies. Reaching every customer needs Meta App Review and the owner's approval.
+
+## ADR-032 — The Shop's Own Cats Perched Around The Page, With anime.js
+
+**Decision:** Replace the pixel cats in the footer with cut-outs of the shop's own cats that perch on the edges of the screen on every page, moved with anime.js, and play a short synthesized meow on page transitions.\
+**Date:** 2026-11-13\
+**Status:** Accepted and implemented (branch `feat/three-anime-cats`).\
+**Context:** The team asked for the cats to be remodelled with three.js and GSAP, then for anime.js (https://github.com/juliangarnier/anime) for the cats and the mini-games, for the shop's own cats from its photos instead of the pixel cats, for them to scale and be scattered around the page (the footer "is not a nice place"), never to overlap the page, and for cat sounds on transitions.\
+**Alternatives considered:** the cats as textured planes in a three.js scene (tried first: a flat photo cut-out gains nothing from WebGL, and a full-screen canvas would cost every page a GPU context for seven pictures; three.js stays for the 3D scenes); GSAP for the cat motion (it is already used for page motion, but the team asked for anime.js); recorded meows (rejected: no clearly licensed recording, and a file to download); hit-testing with `elementsFromPoint` (replaced: it missed content still fading in).\
+**Consequences:**
+
+- Seven cut-outs (`public/cats/*.webp`, made with rembg from `public/images/shop`) replace the CC0 pixel pack, which was removed with its license file.
+- `CatCompanions` (in the root layout, `aria-hidden`, `pointer-events: none`) has eight spots on the left, right and bottom edges. Two to five cats show by screen width, each 84 to 220 px tall by screen size. A cat only takes a spot when no text, control, picture or card is within 10 px, and it ducks away when content scrolls under it. Cats swap every 14 to 30 seconds.
+- anime.js 4.5.0 (MIT, pinned) slides each cat in with a little overshoot and sways it while it sits. With reduced motion the cats appear in place and never move.
+- The meow is made with the Web Audio API (a sawtooth with a pitch glide through a moving band-pass filter), quiet and under half a second, and it only follows a visitor's own navigation. The footer's "Cat sounds" switch turns it off on the device.
+- The anime.js mini-games are Phase 9 work.
