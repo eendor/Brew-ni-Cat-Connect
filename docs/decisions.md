@@ -430,6 +430,32 @@ This manual state is a temporary functional-verification condition, not a revisi
 - The privacy policy page now says that Messenger orders are saved, and its version moved to 2026-11-10 (FR-042). The owner has not confirmed the wording yet (MAN-P5-003).
 - While the Meta app has Standard Access, only people with a role on the app get replies. Reaching every customer needs Meta App Review and the owner's approval.
 
+## ADR-031 — Messenger Replies To Every Message, With Gemini For Typed Questions
+
+**Decision:** The Messenger assistant now replies to typed questions, likes, stickers and photos instead of leaving them unanswered, and it no longer starts its first reply with "I'm Brew ni Cat's automated assistant, not a person." Replies are decided in this order, and only the last step calls an outside service:
+
+1. A button, a typed button name, an order link or a mobile number works as before (ADR-028, ADR-029).
+2. After "Talk to staff", or after a rider, partner or supplier message, the assistant stays quiet in that chat for 30 minutes so the staff can talk without it.
+3. Messages only the shop's people should answer, found with fixed patterns read from the Page's chats since it opened on 2026-06-12 (`src/lib/messenger/handoff.ts`), get a short "our staff will reply" message: a rider's or partner shop's order, catering, parties and reservations, jobs, lost items, complaints and cat scratches. Ice and other supplier offers, collabs and ads get no reply at all and stay unread for the staff (owner's call, 2026-11-13).
+4. "Open po kayo?" says whether the shop is open right now in Manila time, then the hours and location (`src/lib/messenger/shop-time.ts`). This was the question customers asked most, in about 40 chats.
+5. Any other typed question goes to Google's Gemini with the shop's facts only: the saved website content, today's menu and prices, and a short list of answers the staff gave most often (`src/lib/messenger/assistant.ts`). Gemini returns JSON with the reply, whether the staff should answer, and up to three buttons. If Gemini is off, or no model answers within 45 seconds (update 2026-11-13: the assistant goes round every free-tier model until one answers, see `docs/system-architecture.md` 25.2), or the limits are reached, the customer gets "Thanks for your message! Our staff will reply here soon" and the buttons.
+6. A 👍 or a sticker gets a hello with the buttons, and a photo gets "Our staff will check what you sent".
+
+**Date:** 2026-11-13\
+**Status:** Accepted and implemented on `feat/messenger-smart-replies`. Gemini needs `GEMINI_API_KEY` in the server's environment, which is not set in Vercel yet: adding it needs the team's OK. The new greeting in `src/lib/messenger/profile.ts` must be applied to the Page with the Messenger Profile API after the merge. This changes FR-062 and supersedes the parts of ADR-028 that leave typed messages, stickers and photos without a reply.\
+**Context:** Rodnee read every message on the Page since it opened (83 chats, 1,072 messages, read locally; nothing from them is in the repository). Most customers type instead of tapping buttons: "open po?", "how much takoyaki?", "may buldak pa?", directions for tricycle drivers, and rider orders. A friend's 👍 got no reply. The team found the repeated "automated assistant, not a person" line off-putting and asked for a dynamic, interactive bot that leaves ice orders, outside orders and offers to the staff, using the owner's Google AI Studio key on the free tier.\
+**Alternatives considered:** keep answering buttons only (rejected: most messages went unanswered); a fixed keyword FAQ only (kept for the most common questions, but it can't cover the many ways customers ask about the menu); a paid Gemini tier or another provider (not needed yet; the free tier with limits and masking is enough for the Page's traffic); storing chats to let the bot "learn" by itself (rejected: it would keep customers' messages, and unreviewed learning could teach it wrong prices; instead the team updates `SHOP_FAQ` by hand from what the staff answer); keeping the automated notice (rejected by the team; the bot still answers honestly if a customer sincerely asks whether it is a bot).\
+**Consequences:**
+
+- Every message that isn't for the staff gets an answer in the customer's language, from the shop's own facts. Gemini is told never to guess prices, stock or schedules and to hand off anything the facts don't answer.
+- Only the text of the one message goes to Gemini, after mobile numbers, emails and long numbers are masked. No name, Facebook ID or earlier message is sent, and the reply is not stored or logged.
+- On Google's free tier, Google may keep and review prompts to improve its products. The privacy policy now says so (version 2026-11-13). The owner has not confirmed the wording yet.
+- Gemini is asked at most 8 times per customer in 10 minutes and 8 times a minute for the whole Page, inside the free tier's limits. Past that, the customer gets the staff reply.
+- Gemini's reply is checked: links and markdown are removed, it is cut to 600 characters, and only known buttons are shown.
+- The reply doesn't call itself a bot or a person. If a customer sincerely asks, it says it is the shop's auto-reply and that the staff read the chat too.
+- While the Meta app has Standard Access, only people with a role on the app get replies. Reaching every customer still needs Meta App Review (Advanced Access for `pages_messaging`) and the owner's approval.
+- The quiet periods and the limits live in each server instance's memory, like the other Messenger limits (best effort).
+
 ## ADR-032 — The Shop's Own Cats Perched Around The Page, With anime.js
 
 **Decision:** Replace the pixel cats in the footer with cut-outs of the shop's own cats that perch on the edges of the screen on every page, moved with anime.js, and play a short synthesized meow on page transitions.\
