@@ -1,13 +1,13 @@
 /**
- * The shop's cats around the page (FR-099, update 2026-11-13, ADR-032).
- * Each cat is modelled in three.js from simple geometry (no pictures), with
- * its coat, markings and eyes taken from the shop's own photos
- * (`public/images/shop`): the four cats on the opening poster, Oreo, a grey
- * cat and Kasper napping. The cats perch on the edges of the screen, never
- * on top of the page's text, controls or pictures.
+ * The shop's cats (FR-099, update 2026-11-13, ADR-032). Each cat is modelled
+ * in three.js from simple geometry (no pictures), with its coat, markings and
+ * eyes taken from the shop's own photos (`public/images/shop`): the four cats
+ * on the opening poster, Oreo, a grey cat and Kasper napping. They walk in a
+ * parade across the top of the footer, single file like reindeer, pulling a
+ * coffee-cup sleigh with Kasper asleep in it.
  */
 
-export type CatPose = "sit" | "lie";
+export type CatPose = "sit" | "lie" | "walk";
 
 /** Colours of one cat, as CSS hex. */
 export type CatCoat = Readonly<{
@@ -187,110 +187,64 @@ export const SHOP_CATS: readonly ShopCat[] = [
   },
 ];
 
-/** Where a cat perches: on a side of the screen or rising from its bottom. */
-export type Perch = Readonly<{
-  side: "left" | "right" | "bottom";
-  /** Along that edge, from 0 (top or left) to 1 (bottom or right). */
-  at: number;
-}>;
-
-/** Every spot a cat may take; each is only used while it is clear. */
-export const PERCHES: readonly Perch[] = [
-  { side: "left", at: 0.3 },
-  { side: "right", at: 0.45 },
-  { side: "left", at: 0.72 },
-  { side: "right", at: 0.8 },
-  { side: "bottom", at: 0.12 },
-  { side: "bottom", at: 0.88 },
-  { side: "right", at: 0.18 },
-  { side: "bottom", at: 0.5 },
+/** The walkers, lead first; Kasper rides in the sleigh, asleep. */
+export const PARADE_ORDER: readonly string[] = [
+  "oreo",
+  "latte",
+  "luna",
+  "kulas",
+  "grey",
 ];
+export const SLEIGH_RIDER = "kasper-nap";
 
-/**
- * How much of a side cat hides past the edge (none: side cats sit whole on
- * the edge), and of a bottom cat below it (it peeks over the bottom edge).
- */
-export const SIDE_TUCK = 0;
-export const BOTTOM_TUCK = 0.3;
-
-/** A cat's height in CSS pixels: it scales with the screen. */
-export function catHeight(width: number, height: number): number {
-  const base = Math.min(width * 0.11, height * 0.2);
-  return Math.round(Math.min(220, Math.max(84, base)));
-}
-
-/** The most cats on the page at once, by screen width. */
-export function catCount(width: number): number {
-  if (width < 640) return 2;
-  if (width < 1024) return 3;
-  if (width < 1440) return 4;
+/** How many cats pull the sleigh, by screen width. */
+export function paradeSize(width: number): number {
+  if (width < 640) return 3;
+  if (width < 1024) return 4;
   return 5;
 }
 
-export type Box = Readonly<{
-  left: number;
-  top: number;
-  right: number;
-  bottom: number;
-}>;
-
-export function boxesOverlap(a: Box, b: Box, gap = 0): boolean {
-  return (
-    a.left < b.right + gap &&
-    a.right + gap > b.left &&
-    a.top < b.bottom + gap &&
-    a.bottom + gap > b.top
+/** The cats walking at this width, lead first. */
+export function paradeWalkers(width: number): readonly ShopCat[] {
+  return PARADE_ORDER.slice(0, paradeSize(width)).map((id) =>
+    SHOP_CATS.find((cat) => cat.id === id)!,
   );
+}
+
+/** Height of the footer's parade strip in CSS pixels: it scales with the screen. */
+export function stripHeight(width: number): number {
+  return Math.round(Math.min(150, Math.max(84, width * 0.075)));
+}
+
+/** Walking speed in px a second: about a body length a second. */
+export function paradeSpeed(height: number): number {
+  return Math.round(height * 0.95);
+}
+
+/** Milliseconds to walk `distance` px at the strip's speed. */
+export function walkMs(distance: number, height: number): number {
+  return Math.round((Math.abs(distance) / paradeSpeed(height)) * 1000);
 }
 
 /**
- * The part of the screen a cat at `perch` covers: its picture box, less the
- * part tucked past the edge. `w` and `h` are the cat's size on screen;
- * `tuck` is how much of a bottom cat hides below the edge.
+ * One lap across the strip. `x` is where the lead cat's nose is: the lap
+ * starts with the whole parade out of sight, stops once with the parade in the
+ * middle (the cats look out and one meows), and ends out of sight again.
  */
-export function perchBox(
-  perch: Perch,
-  w: number,
-  h: number,
-  screenWidth: number,
-  screenHeight: number,
-  tuck = BOTTOM_TUCK,
-): Box {
-  if (perch.side === "bottom") {
-    const left = Math.min(
-      Math.max(0, perch.at * screenWidth - w / 2),
-      Math.max(0, screenWidth - w),
-    );
-    return {
-      left,
-      right: left + w,
-      top: screenHeight - h * (1 - tuck),
-      bottom: screenHeight,
-    };
-  }
-  const top = Math.min(
-    Math.max(0, perch.at * screenHeight - h / 2),
-    Math.max(0, screenHeight - h),
-  );
-  const shown = w * (1 - SIDE_TUCK);
-  return perch.side === "left"
-    ? { left: 0, right: shown, top, bottom: top + h }
-    : { left: screenWidth - shown, right: screenWidth, top, bottom: top + h };
+export function paradeLap(
+  width: number,
+  span: number,
+  dir: 1 | -1,
+): { start: number; stop: number; end: number } {
+  return dir > 0
+    ? { start: 0, stop: (width + span) / 2, end: width + span }
+    : { start: width, stop: (width - span) / 2, end: -span };
 }
 
-/** A sitting cat peeks over the bottom edge; a lying cat shows whole. */
-export function tuckFor(cat: ShopCat): number {
-  return cat.pose === "lie" ? 0 : BOTTOM_TUCK;
-}
+/** The pause in the middle of a lap, in ms. */
+export const STOP_MS = 2_600;
 
-/** Which cat goes on a perch: lying cats only rise from the bottom. */
-export function catsFor(perch: Perch): readonly ShopCat[] {
-  return perch.side === "bottom"
-    ? SHOP_CATS
-    : SHOP_CATS.filter((cat) => cat.pose === "sit");
-}
-
-/** Seconds a cat stays before another takes its place. */
-export function stayMs(random: number): number {
-  return Math.round(14_000 + Math.min(Math.max(random, 0), 1) * 16_000);
+/** The rest between laps: 5 to 12 seconds. */
+export function restMs(random: number): number {
+  return Math.round(5_000 + Math.min(Math.max(random, 0), 1) * 7_000);
 }

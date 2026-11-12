@@ -7,15 +7,26 @@ import type { CatCoat, CatPose } from "@/lib/cats/cats";
  * files. Spheres with a little noise pushed into them make the furry body,
  * head and cheeks; cones make the ears; a chain of joints makes the tail.
  * The colours and markings come from `CatCoat`. Model units: a sitting cat
- * is 1 tall from its feet (y = 0) to its ear tips, facing +z.
+ * is 1 tall from its feet (y = 0) to its ear tips, facing +z. A walking cat
+ * stands on four jointed legs and steps with a walk cycle.
  */
 
 export type CatModel = {
   root: THREE.Group;
-  /** Moves the cat's idle life on by `dt` seconds. `look` is -1..1 each way. */
-  update: (dt: number, time: number, look: { x: number; y: number }) => void;
+  /**
+   * Moves the cat's life on by `dt` seconds. `look` is -1..1 each way.
+   * `stride` (walking cats) is 0 standing still to 1 walking.
+   */
+  update: (
+    dt: number,
+    time: number,
+    look: { x: number; y: number },
+    stride?: number,
+  ) => void;
   /** The head tilts up and the mouth opens for a moment. */
   meow: () => void;
+  /** The neck, where a collar or a harness goes. */
+  harness: THREE.Object3D;
   dispose: () => void;
 };
 
@@ -351,7 +362,86 @@ export function buildCat(look: CatCoat, pose: CatPose, seed: number): CatModel {
   const tail = makeTail(look, fluff);
 
   const neck = new THREE.Group();
-  if (pose === "sit") {
+  /** Walking cats: each leg's hip and knee, and when in the cycle it steps. */
+  const legs: {
+    hip: THREE.Group;
+    knee: THREE.Group;
+    front: boolean;
+    offset: number;
+  }[] = [];
+  if (pose === "walk") {
+    // a long body on four legs, the head up in front, the tail held high
+    body.add(
+      mesh(
+        furSphere(0.3, fluff, seed + 4),
+        coat,
+        [0, 0.5, -0.02],
+        [0.78, 0.72, 1.55],
+      ),
+    );
+    body.add(
+      mesh(
+        furSphere(0.15, fluff, seed + 6),
+        paint(look.chest),
+        [0, 0.45, 0.3],
+        [1, 1.1, 0.8],
+      ),
+    );
+    // diagonal pairs move together, the hind leg a little after the front
+    const order: [boolean, number, number][] = [
+      [true, -1, 0],
+      [false, 1, 0.25],
+      [true, 1, 0.5],
+      [false, -1, 0.75],
+    ];
+    for (const [front, side, offset] of order) {
+      const hip = new THREE.Group();
+      hip.position.set(0.12 * side, 0.46, front ? 0.3 : -0.3);
+      if (!front)
+        hip.add(
+          mesh(
+            furSphere(0.13, fluff, seed + 7 + side),
+            coat,
+            [0.02 * side, 0, 0],
+            [0.75, 1, 1.15],
+          ),
+        );
+      const legColour = paint(
+        front && look.paws === look.chest ? look.paws : look.coat,
+      );
+      hip.add(
+        mesh(
+          new THREE.CapsuleGeometry(0.058, 0.2, 6, 12),
+          legColour,
+          [0, -0.12, 0],
+        ),
+      );
+      const knee = new THREE.Group();
+      knee.position.y = -0.24;
+      knee.add(
+        mesh(
+          new THREE.CapsuleGeometry(0.048, 0.14, 6, 12),
+          paint(front ? look.paws : look.coat),
+          [0, -0.08, 0],
+        ),
+      );
+      knee.add(
+        mesh(
+          new THREE.SphereGeometry(0.058, 16, 10),
+          paint(look.paws),
+          [0, -0.19, 0.025],
+          [1, 0.6, 1.35],
+        ),
+      );
+      hip.add(knee);
+      body.add(hip);
+      legs.push({ hip, knee, front, offset });
+    }
+    neck.position.set(0, 0.68, 0.4);
+    head.position.set(0, 0.12, 0.08);
+    tail.base.position.set(0, 0.62, -0.42);
+    tail.base.rotation.x = -0.75;
+  } else if (pose === "sit") {
     // one pear-shaped body leaning forward a little, with a chest bib
     const torso = mesh(
       sittingBody(fluff, seed + 4),
@@ -446,7 +536,7 @@ export function buildCat(look: CatCoat, pose: CatPose, seed: number): CatModel {
   body.add(neck, tail.base);
   if (look.tag) {
     const tag = makeTag(look.tag);
-    tag.position.set(0, pose === "sit" ? -0.02 : -0.04, 0.0);
+    tag.position.set(0, pose === "lie" ? -0.04 : -0.02, 0.0);
     neck.add(tag);
   }
 
@@ -465,14 +555,32 @@ export function buildCat(look: CatCoat, pose: CatPose, seed: number): CatModel {
   const tailSpeed = 1.4 + random() * 0.8;
   const look2 = { x: 0, y: 0 };
   const sleepy = pose === "lie";
+  let step = random() * Math.PI * 2;
+  let gait = 0;
 
   return {
     root,
+    harness: neck,
     meow() {
       meowFor = 0.55;
     },
-    update(dt, time, look) {
+    update(dt, time, look, stride = 0) {
       const t = time + phase;
+      // the walk cycle: about 1.7 steps a second at full stride
+      if (legs.length) {
+        gait += (stride - gait) * (1 - Math.exp(-dt * 6));
+        step += dt * gait * Math.PI * 2 * 1.7;
+        for (const leg of legs) {
+          const a = step + leg.offset * Math.PI * 2;
+          // forward and back from the hip; the knee folds while the paw is lifted
+          leg.hip.rotation.x = -Math.sin(a) * 0.45 * gait;
+          const lift = Math.max(0, Math.cos(a)) * gait;
+          leg.knee.rotation.x = (leg.front ? 0.75 : -0.75) * lift;
+        }
+        // the body bobs twice a cycle and rolls a little
+        body.position.y = Math.abs(Math.sin(step)) * 0.018 * gait;
+        body.rotation.z = Math.sin(step) * 0.025 * gait;
+      }
       // breathing
       const breath = Math.sin(t * (sleepy ? 1.4 : 2.1));
       body.scale.set(
@@ -488,7 +596,10 @@ export function buildCat(look: CatCoat, pose: CatPose, seed: number): CatModel {
       const meowing = meowFor > 0;
       head.rotation.y = look2.x * 0.55 + Math.sin(t * 0.37) * 0.06;
       head.rotation.x =
-        look2.y * 0.3 + (meowing ? -0.35 : 0) + Math.sin(t * 0.29) * 0.03;
+        look2.y * 0.3 +
+        (meowing ? -0.35 : 0) +
+        Math.sin(t * 0.29) * 0.03 +
+        Math.sin(step * 2) * 0.04 * gait;
       head.rotation.z = Math.sin(t * 0.23) * 0.07 - look2.x * 0.08;
       for (const pupil of pupils) pupil.position.x = look2.x * 0.012;
 
@@ -524,10 +635,16 @@ export function buildCat(look: CatCoat, pose: CatPose, seed: number): CatModel {
 
       // the tail: a travelling wave, lazier when lying down
       const amp = sleepy ? 0.08 : 0.16;
+      const walking = pose === "walk";
       tail.joints.forEach((joint, i) => {
-        joint.rotation.z =
-          (i === 0 ? 0 : 0.13) + Math.sin(t * tailSpeed - i * 0.55) * amp;
-        joint.rotation.x = Math.sin(t * tailSpeed * 0.5 - i * 0.4) * amp * 0.5;
+        // a walking cat holds its tail up, curling forward at the tip
+        joint.rotation.z = walking
+          ? Math.sin(t * tailSpeed - i * 0.55) * amp * 0.7
+          : (i === 0 ? 0 : 0.13) + Math.sin(t * tailSpeed - i * 0.55) * amp;
+        joint.rotation.x = walking
+          ? (i > 6 ? 0.22 : 0.06) +
+            Math.sin(t * tailSpeed * 0.5 - i * 0.4) * amp * 0.3
+          : Math.sin(t * tailSpeed * 0.5 - i * 0.4) * amp * 0.5;
       });
 
       // meow: mouth opens and closes

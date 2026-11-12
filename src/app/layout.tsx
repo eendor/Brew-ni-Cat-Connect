@@ -4,7 +4,6 @@ import type { ReactNode } from "react";
 
 import { CartDrawer } from "@/components/cart/cart-drawer";
 import { CartUndoToast } from "@/components/cart/cart-undo-toast";
-import { CatCompanions } from "@/components/cats/cat-companions";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { MotionDirector } from "@/components/motion/motion-director";
@@ -157,7 +156,6 @@ export default async function RootLayout({ children }: RootLayoutProps) {
                 <MotionDirector />
                 <RouteCurtain />
                 <CartFxLayer />
-                <CatCompanions />
                 <ThemeSync />
                 <ServiceWorkerRegistration />
               </CartProvider>
