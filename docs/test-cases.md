@@ -1380,7 +1380,7 @@ Customers often type "open po ba kayo?" instead of tapping a button, and it got 
 | TC-P7-089  | FR-059      | One delivery with "Hello po, open po ba kayo today?" and "pa order po bukas"                                  | One reply with the automated notice, the hours and the address; the other message is skipped | Passed (automated) |
 | MAN-P7-008 | FR-059      | From a tester account, send "open po ba kayo?" to the Page                                                    | The assistant replies with the hours and location within a few seconds                     | Pending            |
 
-## 43. Phase 5 Integrated QA Execution Summary
+## 52. Phase 5 Integrated QA Execution Summary
 
 Run on 2026-11-11 by Renier P. Apal, the integrated QA engineer, on `main` at `f82be0d` (branch `test/p5-integrated-qa-main`). Environment: Windows (win32), Node.js, Next.js 16 production build, Vitest for unit and database tests, and Playwright for browser tests. No live orders were placed, and no production database or POS data changed during the run.
 
@@ -1401,7 +1401,7 @@ Run on 2026-11-11 by Renier P. Apal, the integrated QA engineer, on `main` at `f
 | --- | --- | --- | --- | --- |
 | LIVE-01 | GET `/account/rewards` | Live site (`/account/rewards`) | HTTP 200 OK | Passed |
 | LIVE-02 | GET `/account` | Live site (`/account`) | HTTP 200 OK | Passed |
-| LIVE-03 | GET `/account/data-request` | Live site (`/account/data-request`) | HTTP 404 Not Found (handled via privacy policy / contact) | Not run yet |
+| LIVE-03 | GET `/account/data-request` | Live site (`/account/data-request`) | HTTP 404 Not Found (handled via privacy policy / contact) | ~~Not run yet~~ Superseded 2026-11-13: PR #130 adds this route after the run, so the 404 is a historical result. Re-check after the next production deploy. |
 | MAN-P5-010 | Sign in and sign out | Android phone & Desktop browser | Sign in and sign out work smoothly on both devices. | Passed |
 | MAN-P5-011 | Account home | Android phone & Desktop browser | Each tile opens the correct page, and the latest order shows (or "No orders yet"). | Passed |
 | MAN-P5-012 | Rewards | Android phone & Desktop browser | Balance, history, and rewards catalog display correctly without cross-customer data leakage. | Passed |
@@ -1419,6 +1419,6 @@ Run on 2026-11-11 by Renier P. Apal, the integrated QA engineer, on `main` at `f
 - #103 favorites (FR-040) - MERGED
 - #123 loyalty points and rewards (FR-050 to FR-055) - MERGED (`feat/p5-loyalty`)
 - #120 / #125 ratings and reviews (FR-098) - MERGED (`feat/p5-reviews`, `feat/reviews-front`)
-- Rizjie: account home and data requests (FR-042) - MERGED
+- Rizjie: account home and data requests (FR-042) - MERGED Update 2026-11-13: this was not true when the run finished, because PR #130 was still open. PR #130 merged on 2026-11-13.
 
 No waiting PRs remain for Phase 5.
