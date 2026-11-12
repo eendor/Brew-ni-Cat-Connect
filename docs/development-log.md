@@ -1584,6 +1584,186 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Known limitations:** Meta allows three buttons per message, so each reply shows three of its choices inside it. The email Supabase sends when an existing email signs up again comes from Supabase's email settings, not from this code.
 - **Next action:** Check the buttons in Messenger after the deploy.
 
+## 2026-11-10 — Ordering and order status inside Messenger (FR-100 to FR-110)
+
+- **Phase:** Phase 7 (Messenger).
+- **Task:** The user asked for an ordering system of its own inside Messenger, with pictures and buttons, a button (not a pasted link) for the website, and a notification in the POS app. The user then said it must be standalone, not dependent on the browser or the website, and that the order status must be handled in the chat, not with a website order number.
+- **Summary:** "🛒 Order here" now takes a pickup order in the chat: the phone number (Messenger's phone-number button, or the typed words "order 09XXXXXXXXX"), a category with its menu board, item cards with photos, a size, flavors (up to three for fries), add-ons and a quantity, a payment preference and a pickup time, then a summary with the total, the saved hours and any shop notice, and Place order. The order so far travels in the buttons' payloads, so nothing is saved before Place order. Place order calls the website's `place_online_order` database function as a guest, so the order lands in the same queue the POS app already listens to, and a double tap returns the same order. "📦 Order status" lists the customer's last three Messenger orders, found by who is asking (a token made from their Messenger ID and the app secret) through the new `list_online_orders_by_token` function, with no order number or link to type. The Messenger ID is never stored. Website links are buttons, the five menu boards are shown with a note that their prices may be older, each Cat Association option's contents are spelled out, and the replies use emojis. Pasting a website order link still works. The privacy policy page and its date say what a Messenger order keeps. The docs validator now expects FR-001 to FR-110.
+- **Files:** `src/lib/messenger/` (`order-flow.ts`, `order-ids.ts`, `order-state.ts`, `ordering.ts`, `deps.ts`, `events.ts`, `intents.ts`, `profile.ts`, `replies.ts`, `send.ts`), `src/config/menu-boards.ts`, `src/app/api/messenger/route.ts`, `src/app/privacy/page.tsx`, `src/config/privacy.ts`, `public/images/messenger/no-photo.jpg`, `supabase/migrations/20261110120000_messenger_order_status.sql` and its rollback, `scripts/validate_phase0_docs.py`, `tests/unit/messenger-*.test.ts`, `tests/unit/privacy-page.test.tsx`, `tests/database/messenger-order-status.test.ts`, and the docs (functional requirements FR-100 to FR-110, ADR-029, database design §15, system architecture §24, security and privacy §21, test cases section 44, software and APIs, SRS, execution paths, the business content register and the Phase 2 evidence note). Section 43 of the test cases is left free for the Phase 7 integrated QA.
+- **Testing:**
+  - `NODE_OPTIONS=--no-experimental-webstorage npx vitest run` with the CI settings: 84 test files, 917 tests, all passed.
+  - `npx tsc --noEmit` and ESLint on the changed folders reported nothing; `npx prettier --check docs` passed.
+  - `python3 scripts/validate_phase0_docs.py`: `PHASE0_DOC_VALIDATION=PASS`, FR_IDS=110, 0 errors.
+  - `npm run build`, then `CI=1 npx playwright test --project=chromium`: 46 passed, 3 skipped, the same as on `main`.
+- **Branch / PR:** `feat/messenger-ordering`, PR #113.
+- **Known limitations:** The migration is NOT applied to the live database yet, so Order status says it can't check orders until it is; ordering is unaffected. Order status answers only when asked; the customer is not messaged when the status changes. Messenger orders share the website's order queue (no separate table) and show in the POS app as online orders whose note starts "Messenger order." Nothing checks that the phone number belongs to the customer. The per-person limits are kept per server instance. The live Messenger and POS checks (MAN-P7-001 to MAN-P7-005) are Not run yet. The Meta app has Standard Access, so only people with a role on the app get replies until Meta App Review. The owner has not confirmed the new privacy wording (MAN-P5-003), the closure-day behaviour or whether orders outside shop hours should be allowed.
+- **Next action:** Get the team's OK to apply the migration (database design §8.7), then run MAN-P7-001 to MAN-P7-005 with the shop's staff told beforehand.
+
+## 2026-11-10 — Messenger order choice fixes
+
+- **Phase:** Phase 7 (Messenger).
+- **Task:** The user tried the order steps on a phone and reported cut-off choice names, a "No flavor" choice on drinks that need one, no Back button on the flavor step, and Buldak & Sedaap inside the Menu reply next to Full menu and Order here. A tap on the phone-number button also showed the welcome again.
+- **Summary:** When any choice name is longer than a Messenger button (20 characters), the choices are numbered in the message with their full names and prices, and the buttons show the numbers. "No flavor" is gone. The flavor, extras and how-many steps all have "🔙 Back" (to the sizes, or to the category when there is one size). The Menu and category replies keep only Full menu and Order here inside the message. A phone-number tap without a usable number now asks for the number again.
+- **Files:** `src/lib/messenger/` (`ordering.ts`, `order-flow.ts`, `intents.ts`, `replies.ts`, `send.ts`), `tests/unit/messenger-{order-flow,send,intents,replies}.test.ts`, `docs/test-cases.md` §45.
+- **Testing:**
+  - `NODE_OPTIONS=--no-experimental-webstorage npx vitest run` with the CI settings: 84 test files, 920 tests, all passed.
+  - `npx tsc --noEmit` and ESLint on the changed files reported nothing; Prettier and the docs validator passed.
+- **Branch / PR:** `fix/messenger-order-choices`, PR #114.
+- **Next action:** Re-apply the Page's menu and greeting, apply the order status migration, and check the steps again on a phone.
+
+## 2026-11-10 — Phone number button with no number, and the order status migration applied
+
+- **Phase:** Phase 7 (Messenger).
+- **Task:** On a phone, the phone number button showed "Phone number" and its tap gave no number, so the chat asked again with the same button. The user also approved applying the order status migration and re-applying the Page's menu.
+- **Summary:** A tap without a number now gets its own reply: Messenger didn't share a number, so type "order 09XXXXXXXXX". The button isn't offered again there. Separately, `20261110120000_messenger_order_status.sql` was applied to the live database on 2026-11-10 (database design §8.7): first with its checks and a forced rollback, then for real, and recorded in `supabase_migrations.schema_migrations`. A guest call to `list_online_orders_by_token` with an unknown token returned `[]`. The Page's persistent menu was re-applied with Order here first; Meta's API no longer accepts the greeting, so it stays as set in Business Suite.
+- **Files:** `src/lib/messenger/` (`intents.ts`, `events.ts`, `order-flow.ts`, `ordering.ts`), `tests/unit/messenger-{intents,order-flow}.test.ts`, `docs/test-cases.md` §45.
+- **Testing:** `NODE_OPTIONS=--no-experimental-webstorage npx vitest run` with the CI settings: 84 test files, 921 tests, all passed. `npx tsc --noEmit` reported nothing.
+- **Branch / PR:** `fix/messenger-phone-missing`, PR #115.
+- **Next action:** The closure switch on the POS app.
+
+## 2026-11-11 — Closed today switch (FR-111)
+
+- **Phase:** Phase 7 (Messenger) and the website.
+- **Task:** The owner wanted to close the shop for the day from the POS app, so the website and Messenger stop taking orders.
+- **Summary:** A new `closure` site content section holds the switch and an optional note (database design §16). The website shows "We're closed today" above every page, checkout disables Place order and the order API refuses. In Messenger, Order here, a phone number and every order step get a closed reply, and Hours & location starts with the closed line. The POS toggle is a separate PR in `eendor/Brew-ni-Cat-POS`. The migration is not applied to the live database yet.
+- **Files:** `supabase/migrations/20261111120000_closed_today.sql`, `supabase/rollbacks/20261111120000_closed_today.sql`, `src/lib/site-content/` (`types.ts`, `validate.ts`, `fallback-shop.ts`, `format.ts`), `src/lib/messenger/` (`order-flow.ts`, `ordering.ts`, `replies.ts`, `events.ts`), `src/app/layout.tsx`, `src/app/api/orders/route.ts`, `src/components/checkout/checkout-view.tsx`, `src/lib/orders/place-order.ts`, tests, `docs/functional-requirements.md` (FR-111), `docs/database-design.md` §16, `docs/test-cases.md` §47, `scripts/validate_phase0_docs.py` (FR count 111).
+- **Testing:** `NODE_OPTIONS=--no-experimental-webstorage npx vitest run` with the CI settings: 85 test files, 928 tests, all passed. `npx tsc --noEmit` and ESLint reported nothing.
+- **Branch / PR:** `feat/closed-today`.
+- **Next action:** Apply the migration with the team's OK, then release the POS toggle.
+
+## 2026-11-11 — Phone number button with a number that isn't a Philippine mobile
+
+- **Phase:** Phase 7 (Messenger).
+- **Task:** On a phone, the phone number button still led to "I couldn't get a Philippine mobile number from that" with the same button again. The Facebook account shares a number, but not a 09 mobile, so the #115 fix didn't cover it.
+- **Summary:** Any phone button number that isn't a Philippine mobile now gets the reply that asks the customer to type "order 09XXXXXXXXX", without the button. The reply now says it couldn't get a Philippine mobile number from the Facebook account.
+- **Files:** `src/lib/messenger/intents.ts`, `src/lib/messenger/ordering.ts`, `tests/unit/messenger-{intents,order-flow}.test.ts`, `docs/test-cases.md` §45 (TC-P7-080).
+- **Testing:** `NODE_OPTIONS=--no-experimental-webstorage npx vitest run` with the CI settings: 85 test files, 929 tests, all passed. `npx tsc --noEmit` reported nothing.
+- **Branch / PR:** `fix/phone-button-not-mobile`.
+- **Next action:** Check the button again on the phone after the deploy.
+
+## 2026-11-11 — Log the format of phone button numbers the bot can't use
+
+- **Phase:** Phase 7 (Messenger).
+- **Task:** The phone number button still didn't work on a test phone, so we need to see what Facebook sends.
+- **Summary:** When the button sends a number the bot can't use, the log records only its format (every digit as "d", every letter as "a") and its length. Numbers written with 0063 are now accepted.
+- **Files:** `src/lib/messenger/intents.ts`, `src/lib/messenger/order-state.ts`, `tests/unit/messenger-intents.test.ts`, `docs/test-cases.md` §45 (TC-P7-081).
+- **Testing:** the full Vitest suite with the CI settings: 85 test files, 930 tests, all passed.
+- **Branch / PR:** `fix/phone-button-format`.
+- **Next action:** Tap the button on the phone again and read the format in the Vercel logs.
+
+## 2026-11-11 — The shop follows its opening hours and opens by default (FR-112)
+
+- **Phase:** Phase 7.
+- **Task:** The owner wanted the switch to mean the shop is open or closed, on (open) by default, and for ordering to follow the schedule.
+- **Summary:** New `open-now.ts` decides whether the shop is open from Closed today and the saved hours, in Manila time. The website checkout, the order API and Messenger order steps refuse outside the hours with a message saying when the shop opens. Closed today now counts only on the day it was turned on, using the row's `updated_at`. Tests that place orders run at a fixed open time.
+- **Files:** `src/lib/site-content/{open-now,load,types}.ts`, `src/app/api/orders/route.ts`, `src/components/checkout/checkout-view.tsx`, `src/lib/messenger/{order-flow,ordering}.ts`, `src/lib/orders/place-order.ts`, tests, docs (FR-112, test cases §47, database design §16.2a).
+- **Testing:** the full Vitest suite with the CI settings: 86 test files, 935 tests, all passed.
+- **Branch / PR:** `feat/shop-open-schedule`.
+- **Next action:** MAN-P7-007 on the POS after build 10147.
+
+## 2026-11-10 — The shop's cats walk across the footer (FR-099)
+
+- **Phase:** Phase 9.
+- **Task:** The owner asked for the shop's cats on the website. He didn't send photos, so the cats come from the shop's poster.
+- **Summary:** Kasper, Latte, Luna and Kulas are drawn as SVG cats with a walk cycle. Now and then one walks across an empty strip at the top of the footer, so they never cover buttons, links or text, and the strip ignores taps. With reduced motion the four cats sit still; no walk starts while the tab is hidden or the strip is off screen. CSS transforms only, no WebGL.
+- **Files:** `src/lib/cats/cats.ts`, `src/components/cats/{cat-figure,cat-strip}.tsx`, `src/components/layout/site-footer.tsx`, `src/app/globals.css`, `tests/unit/cat-characters.test.tsx`, `tests/e2e/cats.spec.ts`, `tests/unit/site-footer.test.tsx`, `docs/test-cases.md` §48, `docs/evidence/phase-9/cat-characters/`.
+- **Testing:** the full Vitest suite with the CI settings: 87 test files, 939 tests, all passed. Playwright `cats.spec.ts`: 3 passed.
+- **Branch / PR:** `feat/cat-characters`.
+- **Next action:** Show the owner and ask which pages should have the cats (the TODO in FR-099).
+
+## 2026-11-10 — Pixel cats replace the drawn cats (FR-099)
+
+- **Phase:** Phase 9.
+- **Task:** The drawn cats did not look real enough, and we wanted many cats, like the walking pets in VS Code Pets.
+- **Summary:** The footer strip now has the six pixel cats of the CC0 "Pet Cats Pack". Three cats show on a phone and twelve on a desktop (up to 16; the six coats repeat). The cats are big enough that the strip reaches down to the footer text, and the walks are short so the cats spend most of their time sitting, washing, meowing, stretching or napping. Each one walks or runs somewhere, then sits, washes, meows, stretches, scratches, or lies down and sleeps, and walks on. The frames are a CSS sprite animation; one animation-frame loop moves the cats, and it stops while the tab is hidden or the strip is off screen. With reduced motion the cats sit still. The VS Code Pets art and two other downloaded packs were left out: their licenses don't let us put them in a public repo.
+- **Files:** `public/cats/**` (sprites and `LICENSE.txt`), `src/lib/cats/cats.ts`, `src/components/cats/cat-strip.tsx` (the SVG `cat-figure.tsx` is removed), `src/app/globals.css`, `tests/unit/cat-characters.test.tsx`, `tests/e2e/cats.spec.ts`, docs.
+- **Testing:** the full Vitest suite and Playwright `cats.spec.ts` (3 passed); see the PR.
+- **Branch / PR:** `feat/cat-characters`.
+
+## 2026-11-11 — A mobile number on its own starts a Messenger order
+
+- **Phase:** Phase 7 (Messenger).
+- **Task:** On a test phone, a customer typed only their 09 number after the bot asked for it, and the bot said nothing.
+- **Summary:** A message that is only a Philippine mobile number now starts the order. Other bare numbers are still left to the staff. TC-P7-057's bare-number case now uses a landline and a short number.
+- **Files:** `src/lib/messenger/intents.ts`, `src/lib/messenger/events.ts`, `tests/unit/messenger-events.test.ts`, `docs/test-cases.md` §47 (TC-P7-086).
+- **Testing:** the full Vitest suite with the CI settings: 86 test files, 936 tests, all passed.
+- **Branch / PR:** `feat/bare-mobile-number`.
+- **Next action:** Type the number again on the phone after the deploy.
+
+## 2026-11-10 — Ratings and reviews on the website (FR-098)
+
+- **Phase:** Phase 5 (Customer accounts and reviews) and the website.
+- **Task:** Customers can give the shop a star rating and a short review, and everyone can read them on the website (Trello card: Van — Ratings and reviews on the website (FR-098)).
+- **Summary:** Added `public.reviews` table with column-level permissions (`anon` and `authenticated` can read visible reviews, staff can update `hidden` to moderate from the POS). Function `public.post_review` creates a customer review (using first word of `customer_profiles.full_name`) or guest review, enforcing a 10-review database-wide flood backstop. Function `public.my_review` allows signed-in customers to fetch and edit their review. Built `POST /api/reviews` route with per-IP rate limiting (3 in 10 minutes) passing session tokens to Supabase. Created accessible reviews UI on `/about` page featuring average rating summary, 10-per-page list with Show more, and accessible 1 to 5 star rating form with 500-character counter. The migration is not applied to the live database yet; Rodnee applies it after review.
+- **Files:** `supabase/migrations/20261112120000_reviews.sql`, `supabase/rollbacks/20261112120000_reviews.sql`, `src/app/api/reviews/route.ts`, `src/lib/reviews/` (`types.ts`, `constants.ts`, `rate-limit.ts`, `service.ts`), `src/components/reviews/` (`star-rating.tsx`, `review-card.tsx`, `review-form.tsx`, `reviews-list.tsx`, `reviews-section.tsx`), `src/app/about/page.tsx`, `tests/database/reviews.test.ts`, `tests/unit/` (`reviews-route.test.ts`, `review-form.test.tsx`, `reviews-list.test.tsx`), `tests/e2e/reviews.spec.ts`, `docs/test-cases.md` §39, `docs/functional-requirements.md` (FR-098 and §12), `docs/database-design.md` §17, `docs/security-and-privacy.md` §22, `docs/development-log.md`, `docs/evidence/phase-5/reviews/`.
+- **Testing:** Database tests run on PGlite (`tests/database/reviews.test.ts`): 12 passed. Unit tests run on Vitest: 19 passed. E2E browser tests run on Chromium with Playwright (`tests/e2e/reviews.spec.ts`): 3 passed. Evidence screenshots captured at 1440x900 and 390x844. Full test suite: 86 test files, 948 tests passed. `npm run typecheck`, `npm run lint`, `python scripts/validate_phase0_docs.py` and `npm run format:check` all passed.
+- **Branch / PR:** `feat/p5-reviews`.
+- **Next action:** Rodnee reviews the PR and applies the migration to the live database; Van runs manual test cases MAN-P5-001 to MAN-P5-009 on phone and desktop.
+
+## 2026-11-10 — Browser tests no longer fail after closing time (FR-112)
+
+- **Phase:** Testing.
+- **Task:** Two Place order browser tests (TC-P4-123, TC-P8-019) failed in CI after 9 PM Manila time.
+- **Summary:** Since the website follows the opening hours (PR #119), the checkout reads the browser clock and blocks orders after closing. The tests used the real clock, so they passed in the day and failed at night. They now fix the clock at 2 PM Manila time.
+- **Files:** `tests/e2e/ordering.spec.ts`, `tests/e2e/pwa.spec.ts`, `docs/test-cases.md`.
+- **Testing:** Playwright TC-P4-123 and TC-P8-019 after 10 PM Manila time: 2 passed.
+- **Branch / PR:** `fix/e2e-clock-hours`.
+
+
+## 2026-11-10 — Reviews on the home page and in the menu (FR-098)
+
+- **Phase:** Phase 5 and the website.
+- **Task:** The reviews were hard to find: they were only near the bottom of the About page, with no button or link to them.
+- **Summary:** The home page has a "What customers say" block with the average rating, the number of reviews, the newest three reviews, and the links Leave a review and Read all reviews. The header, phone menu and footer have a Reviews link to `/about#reviews`. If the reviews can't load, the block still shows Leave a review.
+- **Files:** `src/components/reviews/reviews-preview.tsx`, `src/app/page.tsx`, `src/config/site.ts`, `tests/unit/reviews-preview.test.tsx`, `tests/unit/site-header.test.tsx`, `tests/e2e/home-reviews.spec.ts`, `docs/test-cases.md` §49, `docs/evidence/phase-5/reviews-home/`.
+- **Testing:** the full Vitest suite and Playwright `home-reviews.spec.ts`; see the PR.
+- **Branch / PR:** `feat/reviews-front`.
+- **Next action:** None.
+
+## 2026-11-10 — An ad slot for the mini-games (FR-090)
+
+- **Phase:** Phase 9.
+- **Task:** The instructor asked for ads with the mini-games. The site stays on its vercel.app address, which AdSense does not accept.
+- **Summary:** Added an ad slot for one Adsterra 300x250 banner. It is labeled "Ad", asks the customer first, and loads the ad only after they tap Show ads. The ad runs in a sandboxed frame, so it can't redirect or cover the page. The slot never shows on the menu, cart, checkout, order or account pages, and ads stay off until `NEXT_PUBLIC_AD_KEY` is set. The privacy page now explains the ads.
+- **Files:** `src/lib/ads/ads.ts`, `src/components/ads/ad-slot.tsx`, `src/app/privacy/page.tsx`, `.env.example`, `tests/unit/ad-slot.test.tsx`, `docs/test-cases.md` §50, `docs/functional-requirements.md` (FR-090), `docs/decisions.md`.
+- **Testing:** the full Vitest suite with the CI settings; see the PR.
+- **Branch / PR:** `feat/ad-slot`.
+- **Next action:** Place the slot on the mini-game page, then set `NEXT_PUBLIC_AD_KEY` on Vercel and run MAN-P9-001.
+
+## 2026-11-10 — One footer cat per coat (FR-099)
+
+- **Summary:** The footer strip showed up to 16 cats, so the six coats of the CC0 "Pet Cats Pack" repeated and the cats looked crowded on a desktop. The strip now shows at most one cat per coat: 3 on a phone and 6 on wider screens.
+- **More coats:** I looked for other CC0 cat packs on itch.io. None matched: they use a different frame size and art style, and none has the lying-down and sleeping animations the strip uses. The six coats stay until a matching CC0 pack is found.
+- **Tests:** TC-P9-001 (unit) and TC-P9-005 and TC-P9-006 (browser) now expect 6 cats at 1440 px.
+
+## 2026-11-11 — Rewards page uses the shared site styles (FR-053)
+
+- **Task:** Review follow-up on the loyalty PR (#123). The rewards page used four CSS variables that do not exist (`--border-subtle`, `--surface`, `--accent`, `--accent-contrast`), so borders fell back to black and the Redeem buttons looked faded.
+- **Summary:** `src/components/loyalty/rewards-view.tsx` now uses the shared card, sheet, well and button styles and only variables defined in `globals.css`. The rules sit beside the balance on a desktop, so the card has no empty gap. The text says "completed orders" instead of "pickup orders", because delivery orders earn points too.
+- **Tests:** TC-P5-104 now checks the ₱49 and ₱50 edges. TC-P5-106 now checks exactly 11 rewards and that an inactive reward is left out. TC-P5-210 (new) fails if the page uses a CSS variable that is not defined. TC-P5-125 also opens the confirm dialog and cancels it.
+- **Evidence:** new screenshots in `docs/evidence/phase-5/loyalty/` with `restyled-` names, in day and night mode at 1440 px and 390 px. The earlier screenshots are kept.
+- **Next action:** Apply `20261113120000_loyalty_points.sql` to the live database after merge.
+
+## 2026-11-11 — The Messenger assistant answers "are you open?" (FR-059)
+
+- **Task:** A customer asked in Messenger whether the shop was open and got no reply. The assistant only answered buttons, typed button names, order links and mobile numbers.
+- **Summary:** A short typed question about being open or the hours now gets the Hours & location reply. The rule is a small fixed word list in `typedHoursQuestion` (English, Tagalog, Bisaya and Hiligaynon words). "bukas" counts only beside a word such as "kayo" or "ba", because it also means "tomorrow". A message that names another topic (an order, a delivery, a reservation, a link) or is longer than 60 characters still goes to the staff.
+- **Check on real chats:** In the last 40 chats, 26 of 159 typed messages match the rule. I checked them with every other word masked, and all 26 ask about being open or the hours. No message text or name was saved.
+- **Files:** `src/lib/messenger/intents.ts`, `src/lib/messenger/events.ts`, `tests/unit/messenger-intents.test.ts`, `tests/unit/messenger-events.test.ts`, `docs/decisions.md` (ADR-028 update), `docs/functional-requirements.md`, `docs/test-cases.md` §51.
+- **Testing:** TC-P7-087 to TC-P7-089; the full Vitest suite with the CI settings; see the PR.
+- **Branch / PR:** `fix/messenger-open-question`.
+- **Next action:** MAN-P7-008 on the live Page after the deploy.
+
+## 2026-11-12 — Account home and data requests (FR-042)
+
+- **Phase:** Phase 5.
+- **Task:** Rizjie — customers had no single account page, and asking the shop to correct or delete profile data meant leaving the website. The account menu also grew without a clear "home".
+- **Summary:** Added `/account`, a home that links Orders, Favorites, Rewards, Profile and Data requests and shows the newest order (reference, status, date, total and item count) through the existing `fetchCustomerOrders` helper, with loading, empty and error states. Added `/account/data-request`, a form that records a correction or deletion request in the existing `public.data_requests` table, says what happens next, and lists the signed-in customer's earlier requests with plain-word statuses. The browser sends only the kind and the trimmed message; `customer_id`, the initial `open` status and the dates are left to the database defaults and trigger. The desktop account menu and phone menu now lead with "My account", and "Loyalty & Rewards" is shortened to "Rewards". No migration, no live data and no live keys were used; every test order, name and request is mock data.
+- **Files:** `src/app/account/page.tsx`, `src/app/account/data-request/page.tsx`, `src/components/account/account-home-view.tsx`, `src/components/account/data-request-view.tsx`, `src/lib/account/data-requests.ts`, `src/components/layout/account-nav.tsx`, `src/components/layout/mobile-navigation.tsx`, `tests/unit/account-home.test.tsx`, `tests/unit/data-request-form.test.tsx`, `tests/unit/data-requests-helper.test.ts`, `tests/unit/site-header.test.tsx`, `tests/e2e/account-home.spec.ts`, `docs/test-cases.md` §38, `docs/functional-requirements.md` (FR-042), `docs/security-and-privacy.md` §23, `docs/evidence/phase-5/account-home/`.
+- **Testing:** Targeted unit tests (`account-home`, `data-request-form`, `data-requests-helper`, `site-header`): 27 passed. Full Vitest suite: 99 files, 1034 tests passed. Playwright `account-home.spec.ts` against the CI placeholder environment: 5 passed. Full Chromium suite in CI mode (one worker, up to two retries): 62 passed, 3 skipped. Evidence screenshots were captured with `CAPTURE_EVIDENCE=1` at 1440x900 and 390x844. `npm run lint`, `npm run typecheck`, `npm run format:check`, `npm run build` and `python scripts/validate_phase0_docs.py` passed.
+- **Branch / PR:** `feat/p5-account-home`, PR #130.
+- **Next action:** Rodnee reviews PR #130. The owner still needs to confirm the retention rule and response time (MAN items pending).
+
 ## 2026-11-10 — Phase 8 documentation closeout
 
 - **Phase:** Phase 8 (Android application), documentation.
@@ -1596,3 +1776,4 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `docs/p8-closeout`, draft PR #112.
 - **Known limitations:** Rodnee's Android app (`feat/p8-android-app`, FR-065 to FR-069), the production deploy and the v1.0.0 release with the APK are Not merged yet, and Renier's Phase 8 integrated QA (section 44) is Not merged yet. The manual install and offline checks on real browsers (MAN-P8-001 to MAN-P8-006) are still Not run yet. This register is partial until the final run.
 - **Next action:** Run this closeout again after Rodnee's Android pull request and the v1.0.0 release merge and after Renier's integrated QA merges, then fill in the final statuses, the release section and the Closeout, and mark the pull request ready for review.
+- **Update 2026-11-13 (Rodnee, before the merge):** merged `main` into this branch and renumbered the closeout note to section 23 (`main` uses sections 21 and 22). The Android app, the deploy, the v1.0.0 release and the Phase 8 integrated QA are still open, as the note says. The release date is not confirmed yet.

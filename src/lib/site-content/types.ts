@@ -10,6 +10,7 @@ export const SITE_CONTENT_SECTIONS = [
   "address",
   "payments",
   "notice",
+  "closure",
   "social",
   "riders",
   "about",
@@ -67,6 +68,16 @@ export type PaymentsContent = Readonly<{
 export type NoticeContent = Readonly<{
   /** Shown on every page while it isn't empty. */
   text: string;
+}>;
+
+/**
+ * The owner's "Closed today" switch in the POS (FR-111). While it is on, the
+ * website and Messenger say the shop is closed and don't take orders.
+ */
+export type ClosureContent = Readonly<{
+  closed: boolean;
+  /** Optional reason, e.g. "Back tomorrow at 1 PM". */
+  note: string;
 }>;
 
 export type SocialContent = Readonly<{
@@ -133,6 +144,7 @@ export type SiteContent = Readonly<{
   address: AddressContent;
   payments: PaymentsContent;
   notice: NoticeContent;
+  closure: ClosureContent;
   social: SocialContent;
   riders: RidersContent;
   about: AboutContent;
@@ -146,6 +158,7 @@ export const SHOP_SECTIONS = [
   "address",
   "payments",
   "notice",
+  "closure",
   "social",
   "riders",
 ] as const satisfies readonly SiteContentSection[];
@@ -173,4 +186,6 @@ export type LoadedSiteContent = Readonly<{
 export type SiteContentRow = Readonly<{
   section: string | null;
   content: unknown;
+  /** When the row was last saved; the closure switch uses it (FR-112). */
+  updated_at?: string | null;
 }>;

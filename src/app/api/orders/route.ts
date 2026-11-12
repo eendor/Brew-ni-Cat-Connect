@@ -17,6 +17,8 @@
  */
 
 import { isOnlineOrderingEnabled } from "@/lib/orders/online-ordering";
+import { shopClosedMessage, shopStatus } from "@/lib/site-content/open-now";
+import { loadSiteContent } from "@/lib/site-content/load";
 import {
   ORDERING_UNAVAILABLE_MESSAGE,
   placeOrderFailure,
@@ -63,6 +65,13 @@ export async function POST(request: Request): Promise<Response> {
       placeOrderFailure("server-error", ORDERING_UNAVAILABLE_MESSAGE),
       503,
     );
+  }
+
+  // Closed today, or outside the opening hours (FR-111, FR-112).
+  const { closure, hours } = (await loadSiteContent()).content;
+  const closedMessage = shopClosedMessage(shopStatus(closure, hours));
+  if (closedMessage) {
+    return respond(placeOrderFailure("server-error", closedMessage), 503);
   }
 
   const limit = orderRateLimiter.check(clientKey(request));

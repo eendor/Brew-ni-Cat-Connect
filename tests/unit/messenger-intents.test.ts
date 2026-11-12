@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
   categoryPayload,
@@ -7,8 +7,10 @@ import {
   MAX_SHORT_MESSAGE_LENGTH,
   normalizeText,
   PAYLOADS,
+  phoneShape,
   readPayload,
   typedButton,
+  typedHoursQuestion,
 } from "@/lib/messenger/intents";
 import { MAIN_BUTTONS } from "@/lib/messenger/replies";
 
@@ -25,6 +27,57 @@ describe("Messenger button payloads (FR-059)", () => {
       expect(readPayload(PAYLOADS[intent])).toEqual({ kind: "intent", intent });
     }
     expect(new Set(Object.values(PAYLOADS)).size).toBe(INTENTS.length);
+  });
+
+  it("TC-P7-004 — a phone button tap without a usable number asks for it again", () => {
+    expect(readPayload("")).toEqual({
+      kind: "phone",
+      phone: null,
+      missing: true,
+    });
+    expect(readPayload("Phone number")).toEqual({
+      kind: "phone",
+      phone: null,
+      missing: true,
+    });
+    expect(readPayload("menu")).toBeNull();
+  });
+
+  it("TC-P7-080 — a phone button number that isn't a Philippine mobile is not offered again", () => {
+    for (const payload of [
+      "+1 415 555 0100",
+      "(082) 123 4567",
+      "+63 2 8123 4567",
+    ]) {
+      expect(readPayload(payload)).toEqual({
+        kind: "phone",
+        phone: null,
+        missing: true,
+      });
+    }
+    expect(readPayload("+63 917 123 4567")).toEqual({
+      kind: "phone",
+      phone: "09171234567",
+    });
+  });
+
+  it("TC-P7-081 logs only the format of an unusable phone button number and accepts 0063", () => {
+    const info = vi.spyOn(console, "info").mockImplementation(() => {});
+    expect(readPayload("+1 415 555 0100")).toEqual({
+      kind: "phone",
+      phone: null,
+      missing: true,
+    });
+    const logged = String(info.mock.calls.at(-1)?.[0]);
+    expect(logged).toContain("messenger-phone-button-unusable");
+    expect(logged).toContain('"shape":"+d ddd ddd dddd"');
+    expect(logged).not.toMatch(/\d{3}/);
+    expect(phoneShape("Phone number")).toBe("aaaaa aaaaaa");
+    expect(readPayload("0063 917 123 4567")).toEqual({
+      kind: "phone",
+      phone: "09171234567",
+    });
+    info.mockRestore();
   });
 
   it("TC-P7-004 — a category button carries the category id", () => {
@@ -99,6 +152,44 @@ describe("Messenger typed button names (FR-059, FR-061)", () => {
 
   it("TC-P7-006 — compares words without case, accents or punctuation", () => {
     expect(normalizeText("  Ménu & PRICES?! ")).toBe("menu prices");
+  });
+});
+
+// Added 2026-11-11: "are you open?" is the question customers type most.
+describe("Messenger hours questions (FR-059)", () => {
+  it("TC-P7-087 — a short question about being open or the hours is recognized", () => {
+    for (const text of [
+      "open po kayo?",
+      "Hello po, open po ba kayo today?",
+      "Good evening, open pa po kayo?",
+      "are you open today po",
+      "bukas ba kayo ngayon?",
+      "sarado na kayo?",
+      "abri kamo subong?",
+      "anong oras po kayo?",
+      "what time kayo mag close?",
+      "store hours?",
+    ]) {
+      expect(typedHoursQuestion(text), text).toBe(true);
+    }
+  });
+
+  it("TC-P7-088 — other topics, 'bukas' as tomorrow and long messages are not hours questions", () => {
+    for (const text of [
+      "pa order po bukas",
+      "punta kami bukas",
+      "open for delivery po?",
+      "pwede mag reserve, what time kayo?",
+      "can't open the link",
+      "ilang oras po kayo magluto?",
+      "what time darating?",
+      "may available pa po ba na matcha?",
+      `open po ba kayo ${"today ".repeat(12)}`,
+      "",
+    ]) {
+      expect(typedHoursQuestion(text), text).toBe(false);
+    }
+    expect(MAX_SHORT_MESSAGE_LENGTH).toBe(60);
   });
 });
 

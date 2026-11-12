@@ -30,7 +30,8 @@ describe("Site footer", () => {
 
     // address, phone, email, Facebook, TikTok and hours: hidden from
     // screen readers, so the names above stay the visible text
-    const icons = container.querySelectorAll("svg");
+    // Update 2026-11-10 (FR-099): the cat drawings are not icons; their strip is aria-hidden.
+    const icons = container.querySelectorAll("svg:not(.cat-figure)");
     expect(icons).toHaveLength(6);
     icons.forEach((icon) => {
       expect(icon).toHaveAttribute("aria-hidden", "true");

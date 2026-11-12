@@ -13,6 +13,7 @@ import { ServiceWorkerRegistration } from "@/components/pwa/service-worker-regis
 import { ThemeSync } from "@/components/theme/theme-toggle";
 import { CartFxLayer } from "@/components/three/layers";
 import { SiteNotice } from "@/components/layout/site-notice";
+import { siteNoticeText } from "@/lib/site-content/format";
 import { siteConfig } from "@/config/site";
 import { AuthProvider } from "@/context/auth-context";
 import { FavoritesProvider } from "@/context/favorites-context";
@@ -140,7 +141,9 @@ export default async function RootLayout({ children }: RootLayoutProps) {
             <FavoritesProvider>
               <CartProvider>
                 <div className="flex min-h-dvh flex-col">
-                  <SiteNotice text={content.notice.text} />
+                  <SiteNotice
+                    text={siteNoticeText(content.closure, content.notice)}
+                  />
                   <SiteHeader />
                   <main id="main-content" className="flex-1" tabIndex={-1}>
                     {children}

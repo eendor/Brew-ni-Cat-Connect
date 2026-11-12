@@ -15,6 +15,9 @@ import {
   orderRateLimiter,
   RATE_LIMITED_MESSAGE,
 } from "@/lib/orders/rate-limit";
+import { pinOpenShopClock } from "./shop-clock";
+
+pinOpenShopClock();
 
 function post(ip: string) {
   return new Request("http://localhost/api/orders", {

@@ -9,13 +9,16 @@
  * - from the last hour, which is as long as Meta retries, and not from the
  *   future;
  * - new: Meta can deliver an event twice, and it gets one reply;
- * - within the limits: SENDER_REPLY_LIMIT replies and ORDER_LOOKUP_LIMIT
- *   order checks per customer in 10 minutes.
+ * - within the limits, per customer in 10 minutes: SENDER_REPLY_LIMIT
+ *   replies, ORDER_LOOKUP_LIMIT order checks, ORDER_STEP_LIMIT steps of an
+ *   order being built and PLACE_ORDER_LIMIT placed orders.
  *
- * The assistant answers button taps, typed button names and order links.
- * Every other message is for the shop's staff: it gets no automated reply
- * and is never marked as seen, so it stays unread in the Page inbox and the
- * staff's Messenger and Business Suite apps notify them as before.
+ * The assistant answers button taps, typed button names, order links and
+ * "order 09XXXXXXXXX", which starts an order inside the chat (FR-100), and
+ * short questions about being open or the hours (added 2026-11-11). Every
+ * other message is for the shop's staff: it gets no automated reply and is
+ * never marked as seen, so it stays unread in the Page inbox and the staff's
+ * Messenger and Business Suite apps notify them as before.
  *
  * Nothing a customer sends is stored or logged. Logs carry counts only.
  */
@@ -30,9 +33,18 @@ import {
   MAX_SHORT_MESSAGE_LENGTH,
   readPayload,
   typedButton,
+  typedHoursQuestion,
+  typedOrderPhone,
   type ButtonTap,
   type Intent,
 } from "./intents";
+import {
+  answerOrderTap,
+  beginOrder,
+  orderIntentReply,
+  resetOrderFlow,
+  type OrderFlowDeps,
+} from "./order-flow";
 import {
   ASSISTANT_NOTICE,
   categoryReply,
@@ -42,7 +54,8 @@ import {
   orderLimitReply,
   orderLinkNeededReply,
   orderNotFoundReply,
-  orderStatusPromptReply,
+  myOrdersReply,
+  noOrdersReply,
   orderStatusReply,
   orderUnavailableReply,
   staffReply,
@@ -51,19 +64,21 @@ import {
   type Reply,
 } from "./replies";
 
-export type MessengerDeps = Readonly<{
-  /** The website's address, for menu and order links. */
-  origin: string;
-  now: () => number;
-  onlineOrdering: () => boolean;
-  readContent: () => Promise<SiteContent>;
-  /** null when the menu can't be read. */
-  readMenu: () => Promise<MenuCatalog | null>;
-  /** null when no order matches; throws when orders can't be checked. */
-  lookupOrder: (reference: string, token: string) => Promise<OrderView | null>;
-  /** True when Meta accepted the reply. */
-  send: (recipient: string, answer: Reply) => Promise<boolean>;
-}>;
+export type MessengerDeps = OrderFlowDeps &
+  Readonly<{
+    readContent: () => Promise<SiteContent>;
+    /** null when the menu can't be read. */
+    readMenu: () => Promise<MenuCatalog | null>;
+    /** null when no order matches; throws when orders can't be checked. */
+    lookupOrder: (
+      reference: string,
+      token: string,
+    ) => Promise<OrderView | null>;
+    /** The orders placed in this chat; null when they can't be read. */
+    lookupMyOrders: (sender: string) => Promise<readonly OrderView[] | null>;
+    /** True when Meta accepted the reply. */
+    send: (recipient: string, answer: Reply) => Promise<boolean>;
+  }>;
 
 const MINUTE_MS = 60 * 1000;
 
@@ -73,6 +88,12 @@ export const NOTICE_INTERVAL_MS = 24 * 60 * MINUTE_MS;
 export const LIMIT_WINDOW_MS = 10 * MINUTE_MS;
 export const SENDER_REPLY_LIMIT = 20;
 export const ORDER_LOOKUP_LIMIT = 5;
+/**
+ * Taps while building an order. An order takes about 15 to 40 taps, so the
+ * reply limit would cut it off. A technical limit (FR-109); the shop has set
+ * none.
+ */
+export const ORDER_STEP_LIMIT = 150;
 export const MAX_EVENTS_PER_DELIVERY = 100;
 
 /** Only the start of a long message is read. */
@@ -114,6 +135,7 @@ const orderLookupLimiter = createRateLimiter(
   ORDER_LOOKUP_LIMIT,
   LIMIT_WINDOW_MS,
 );
+const orderStepLimiter = createRateLimiter(ORDER_STEP_LIMIT, LIMIT_WINDOW_MS);
 
 /** Forgets seen events, notices and limits (tests). */
 export function resetMessengerState(): void {
@@ -121,6 +143,8 @@ export function resetMessengerState(): void {
   noticeShown.clear();
   replyLimiter.reset();
   orderLookupLimiter.reset();
+  orderStepLimiter.reset();
+  resetOrderFlow();
 }
 
 // Reading events ------------------------------------------------------------
@@ -209,42 +233,82 @@ function once<T>(read: () => Promise<T>): () => Promise<T> {
   return () => (result ??= read());
 }
 
+/** A reply, and whether it is a step of an order being built. */
+type Answer = Readonly<{ reply: Reply; ordering: boolean }>;
+
+const plain = (reply: Reply): Answer => ({ reply, ordering: false });
+const ordering = (reply: Reply): Answer => ({ reply, ordering: true });
+
 async function answerIntent(
+  sender: string,
   intent: Intent,
   deps: MessengerDeps,
   facts: Facts,
-): Promise<Reply> {
+): Promise<Answer> {
   switch (intent) {
     case "welcome":
-      return welcomeReply();
+      return plain(welcomeReply());
+    case "order":
+      return ordering(await orderIntentReply(deps, facts));
     case "menu":
-      return menuReply(await facts.menu(), deps.origin);
+      return plain(menuReply(await facts.menu(), deps.origin));
     case "hours-location":
-      return hoursLocationReply(await facts.content());
+      return plain(hoursLocationReply(await facts.content()));
     case "how-to-order":
-      return howToOrderReply(
-        await facts.content(),
-        deps.origin,
-        deps.onlineOrdering(),
+      return plain(
+        howToOrderReply(
+          await facts.content(),
+          deps.origin,
+          deps.onlineOrdering(),
+        ),
       );
     case "order-status":
-      return orderStatusPromptReply();
+      return plain(await checkMyOrders(sender, deps));
     case "staff":
-      return staffReply(await facts.content());
+      return plain(staffReply(await facts.content()));
   }
 }
 
 async function answerTap(
+  sender: string,
   tap: ButtonTap | null,
   deps: MessengerDeps,
   facts: Facts,
-): Promise<Reply> {
+): Promise<Answer> {
   // An old or unknown button shows the buttons again.
-  if (!tap) return welcomeReply();
-  if (tap.kind === "category") {
-    return categoryReply(await facts.menu(), tap.categoryId, deps.origin);
+  if (!tap) return plain(welcomeReply());
+  switch (tap.kind) {
+    case "intent":
+      return answerIntent(sender, tap.intent, deps, facts);
+    case "category":
+      return plain(
+        categoryReply(await facts.menu(), tap.categoryId, deps.origin),
+      );
+    case "order":
+      return ordering(await answerOrderTap(sender, tap.tap, deps, facts));
+    case "phone":
+      return ordering(
+        await beginOrder(tap.phone, deps, facts, tap.missing === true),
+      );
+    case "status":
+      return plain(await checkOrder(sender, tap.reference, tap.token, deps));
   }
-  return answerIntent(tap.intent, deps, facts);
+}
+
+/**
+ * FR-110: the orders placed in this chat, found by who is asking. No order
+ * number or link is needed.
+ */
+async function checkMyOrders(
+  sender: string,
+  deps: MessengerDeps,
+): Promise<Reply> {
+  if (!orderLookupLimiter.check(sender, deps.now()).allowed) {
+    return orderLimitReply();
+  }
+  const orders = await deps.lookupMyOrders(sender).catch(() => null);
+  if (orders === null) return orderUnavailableReply();
+  return orders.length === 0 ? noOrdersReply() : myOrdersReply(orders);
 }
 
 /** FR-063: an order's status needs its tracking link, not just the reference. */
@@ -259,7 +323,9 @@ async function checkOrder(
   }
   try {
     const order = await deps.lookupOrder(reference, token);
-    return order ? orderStatusReply(order) : orderNotFoundReply();
+    return order
+      ? orderStatusReply(order, deps.origin, token)
+      : orderNotFoundReply();
   } catch {
     return orderUnavailableReply();
   }
@@ -271,26 +337,41 @@ async function answerText(
   text: string,
   deps: MessengerDeps,
   facts: Facts,
-): Promise<Reply | null> {
+): Promise<Answer | null> {
   const pointer = findOrderPointer(text);
   if (pointer?.token) {
-    return checkOrder(sender, pointer.reference, pointer.token, deps);
+    return plain(
+      await checkOrder(sender, pointer.reference, pointer.token, deps),
+    );
   }
   if (pointer && text.trim().length <= MAX_SHORT_MESSAGE_LENGTH) {
-    return orderLinkNeededReply(pointer.reference);
+    return plain(orderLinkNeededReply(pointer.reference));
   }
-  const intent = typedButton(text);
-  return intent ? answerIntent(intent, deps, facts) : null;
+  // "order 09XXXXXXXXX", or just the mobile number, starts an order for
+  // someone who can't tap the phone number button. Other numbers are left
+  // to the staff.
+  const phone = typedOrderPhone(text);
+  if (phone) return ordering(await beginOrder(phone, deps, facts));
+  // A short "are you open?" or hours question gets the hours and location
+  // (added 2026-11-11). Any other text is left to the staff.
+  const intent =
+    typedButton(text) ?? (typedHoursQuestion(text) ? "hours-location" : null);
+  return intent ? answerIntent(sender, intent, deps, facts) : null;
 }
 
 function answerEvent(
   event: CustomerEvent,
   deps: MessengerDeps,
   facts: Facts,
-): Promise<Reply | null> | null {
+): Promise<Answer | null> | null {
   switch (event.input.kind) {
     case "tap":
-      return answerTap(readPayload(event.input.payload), deps, facts);
+      return answerTap(
+        event.sender,
+        readPayload(event.input.payload),
+        deps,
+        facts,
+      );
     case "text":
       return answerText(
         event.sender,
@@ -321,13 +402,15 @@ async function handleEvent(
 
   const answer = await answerEvent(event, deps, facts);
   if (!answer) return "skipped";
-  if (!replyLimiter.check(event.sender, now).allowed) return "skipped";
+  const limiter = answer.ordering ? orderStepLimiter : replyLimiter;
+  if (!limiter.check(event.sender, now).allowed) return "skipped";
 
   // FR-062: each customer's first reply of the day says it's automated.
   const reply =
-    noticeShown.has(event.sender, now) || answer.text.includes(ASSISTANT_NOTICE)
-      ? answer
-      : withNotice(answer);
+    noticeShown.has(event.sender, now) ||
+    answer.reply.text.includes(ASSISTANT_NOTICE)
+      ? answer.reply
+      : withNotice(answer.reply);
   if (!(await deps.send(event.sender, reply))) return "failed";
   if (reply.text.includes(ASSISTANT_NOTICE)) noticeShown.add(event.sender, now);
   return "replied";

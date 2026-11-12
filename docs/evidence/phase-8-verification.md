@@ -14,8 +14,8 @@ None.
 
 - Rodnee: the Android app, branch `feat/p8-android-app` (FR-065 to FR-069), the production deploy, and the v1.0.0 release with the APK.
 - Renier: Phase 8 integrated QA, branch `test/p8-integrated-qa-main` (section 44 of `docs/test-cases.md`).
-- This docs closeout, PR #112: the Phase 8 status cells, section 21 of `docs/functional-requirements.md`, this register, the development log and the README.
+- This docs closeout, PR #112: the Phase 8 status cells, section 23 of `docs/functional-requirements.md`, this register, the development log and the README.
 
 ## Release
 
-The v1.0.0 release and its APK are Not published yet. Rodnee's release is due Fri Nov 13.
+The v1.0.0 release and its APK are Not published yet. Rodnee's release was due Fri Nov 13; update 2026-11-13: the date is not confirmed yet.

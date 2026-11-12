@@ -146,6 +146,8 @@ describe("Messenger webhook events (FR-058, NFR-022)", () => {
     expect(mocks.createMessengerDeps).toHaveBeenCalledWith(
       "https://brew.example",
       PAGE_TOKEN,
+      // FR-107: the app secret also makes a customer's order IDs.
+      APP_SECRET,
     );
     expect(mocks.processWebhook).toHaveBeenCalledWith(PAYLOAD, {
       origin: "https://brew.example",
