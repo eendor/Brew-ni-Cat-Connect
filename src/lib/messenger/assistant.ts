@@ -212,24 +212,127 @@ export function parseSmartAnswer(raw: unknown): SmartAnswer | null {
   return { handoff: record.handoff, reply, buttons };
 }
 
-/** Gemini models to try in order; the first busy or failing one is skipped. */
+/**
+ * Every Gemini model that writes text for a free-tier key (checked
+ * 2026-11-13), fastest and most generous first. The assistant goes round
+ * this list until one answers: a busy (503), rate-limited (429), failing or
+ * empty model is skipped and tried again on the next round.
+ */
 export const DEFAULT_GEMINI_MODELS: readonly string[] = [
-  "gemini-flash-latest",
+  "gemini-3.1-flash-lite",
+  "gemini-flash-lite-latest",
   "gemini-3.5-flash-lite",
+  "gemini-flash-latest",
+  "gemini-3.8-flash",
+  "gemini-3.7-flash",
+  "gemini-3.6-flash",
+  "gemini-3.5-flash",
+  "gemini-3-flash-preview",
+  "gemini-4-hydrogen",
+  "gemini-4-argon",
+  "gemini-4-carbon",
+  "gemini-pro-latest",
+  "gemma-4-31b-it",
+  "gemma-4-26b-a4b-it",
 ];
 
-export const GEMINI_TIMEOUT_MS = 7000;
+/** How long one reply may take in all, across every model and round. */
+export const GEMINI_TIMEOUT_MS = 45_000;
+/** How long one model may take to answer. */
+export const GEMINI_ATTEMPT_MS = 12_000;
+/** The longest pause between rounds (a 429's retry delay is honoured up to this). */
+export const GEMINI_MAX_PAUSE_MS = 8_000;
 
 const GEMINI_ENDPOINT =
   "https://generativelanguage.googleapis.com/v1beta/models";
 
-/** Calls Gemini; null when it is busy, slow, refuses or returns nonsense. */
+/** A model the server shouldn't ask again until this time (ms since epoch). */
+const resting = new Map<string, number>();
+
+/** For tests: forget which models are resting. */
+export function resetGeminiRest() {
+  resting.clear();
+}
+
+/** Seconds from a 429's RetryInfo ("17s", "1.5s"), if any. */
+function retryDelayMs(json: unknown): number | null {
+  const details = (json as { error?: { details?: unknown[] } })?.error?.details;
+  if (!Array.isArray(details)) return null;
+  for (const detail of details) {
+    const delay = (detail as { retryDelay?: unknown })?.retryDelay;
+    if (typeof delay === "string") {
+      const seconds = Number.parseFloat(delay);
+      if (Number.isFinite(seconds)) return Math.max(0, seconds * 1000);
+    }
+  }
+  return null;
+}
+
+/** Gemma models take no system instruction or JSON schema: ask in the text. */
+function requestBody(model: string, prompt: string) {
+  if (model.startsWith("gemma-")) {
+    return JSON.stringify({
+      contents: [
+        {
+          role: "user",
+          parts: [
+            {
+              text: `${SYSTEM_INSTRUCTION}\n\nAnswer with only a JSON object: {"handoff": boolean, "reply": string, "buttons": string[]}.\n\n${prompt}`,
+            },
+          ],
+        },
+      ],
+      generationConfig: { temperature: 0.4, maxOutputTokens: 400 },
+    });
+  }
+  return JSON.stringify({
+    systemInstruction: { parts: [{ text: SYSTEM_INSTRUCTION }] },
+    contents: [{ role: "user", parts: [{ text: prompt }] }],
+    generationConfig: {
+      temperature: 0.4,
+      maxOutputTokens: 400,
+      responseMimeType: "application/json",
+      responseSchema: RESPONSE_SCHEMA,
+    },
+  });
+}
+
+/** The JSON inside a reply, without a ```json fence around it. */
+function unfence(text: string) {
+  const match = /```(?:json)?\s*([\s\S]*?)```/i.exec(text);
+  return (match?.[1] ?? text).trim();
+}
+
+const wait = (ms: number, signal: AbortSignal) =>
+  new Promise<void>((resolve) => {
+    if (ms <= 0 || signal.aborted) return resolve();
+    const id = setTimeout(resolve, ms);
+    signal.addEventListener(
+      "abort",
+      () => {
+        clearTimeout(id);
+        resolve();
+      },
+      { once: true },
+    );
+  });
+
+/**
+ * Calls Gemini, going round every model until one gives a usable answer.
+ * Null only when the whole time limit passes without one; then the
+ * customer gets the staff reply. A model that is gone (404) or out of its
+ * free quota rests (for a day, or for the time Gemini asks) so later
+ * messages skip it.
+ */
 export function createGeminiAssistant(
   apiKey: string,
   options: Readonly<{
     models?: readonly string[];
     fetch?: typeof fetch;
     timeoutMs?: number;
+    attemptMs?: number;
+    maxPauseMs?: number;
+    now?: () => number;
   }> = {},
 ): AskAssistant {
   const models = options.models?.length
@@ -237,56 +340,69 @@ export function createGeminiAssistant(
     : DEFAULT_GEMINI_MODELS;
   const request = options.fetch ?? fetch;
   const timeoutMs = options.timeoutMs ?? GEMINI_TIMEOUT_MS;
+  const attemptMs = options.attemptMs ?? GEMINI_ATTEMPT_MS;
+  const maxPauseMs = options.maxPauseMs ?? GEMINI_MAX_PAUSE_MS;
+  const now = options.now ?? Date.now;
 
   return async (facts, message) => {
     const deadline = AbortSignal.timeout(timeoutMs);
-    const body = JSON.stringify({
-      systemInstruction: { parts: [{ text: SYSTEM_INSTRUCTION }] },
-      contents: [
-        {
-          role: "user",
-          parts: [
+    const prompt = `Shop facts:\n${facts}\n\nCustomer's message:\n"""\n${maskPersonal(message)}\n"""`;
+    let round = 0;
+    while (!deadline.aborted) {
+      let pause = Math.min(maxPauseMs, 500 * 2 ** round);
+      let asked = false;
+      // Resting models are still tried when every model is resting.
+      const awake = models.filter((m) => (resting.get(m) ?? 0) <= now());
+      for (const model of awake.length ? awake : models) {
+        if (deadline.aborted) return null;
+        asked = true;
+        try {
+          const response = await request(
+            `${GEMINI_ENDPOINT}/${encodeURIComponent(model)}:generateContent`,
             {
-              text: `Shop facts:\n${facts}\n\nCustomer's message:\n"""\n${maskPersonal(message)}\n"""`,
+              method: "POST",
+              headers: {
+                "content-type": "application/json",
+                "x-goog-api-key": apiKey,
+              },
+              body: requestBody(model, prompt),
+              signal: AbortSignal.any([
+                deadline,
+                AbortSignal.timeout(attemptMs),
+              ]),
+              cache: "no-store",
             },
-          ],
-        },
-      ],
-      generationConfig: {
-        temperature: 0.4,
-        maxOutputTokens: 400,
-        responseMimeType: "application/json",
-        responseSchema: RESPONSE_SCHEMA,
-      },
-    });
-    for (const model of models) {
-      if (deadline.aborted) return null;
-      try {
-        const response = await request(
-          `${GEMINI_ENDPOINT}/${encodeURIComponent(model)}:generateContent`,
-          {
-            method: "POST",
-            headers: {
-              "content-type": "application/json",
-              "x-goog-api-key": apiKey,
-            },
-            body,
-            signal: deadline,
-            cache: "no-store",
-          },
-        );
-        if (!response.ok) continue;
-        const json = (await response.json()) as {
-          candidates?: { content?: { parts?: { text?: unknown }[] } }[];
-        };
-        const text = json.candidates?.[0]?.content?.parts
-          ?.map((part) => (typeof part.text === "string" ? part.text : ""))
-          .join("");
-        const answer = text ? parseSmartAnswer(text) : null;
-        if (answer) return answer;
-      } catch {
-        // A timeout ends the loop above; other errors try the next model.
+          );
+          if (!response.ok) {
+            if (response.status === 404 || response.status === 400) {
+              // gone, or this model can't take the request: skip it for a day
+              resting.set(model, now() + 86_400_000);
+            } else if (response.status === 429) {
+              const delay = retryDelayMs(
+                await response.json().catch(() => null),
+              );
+              if (delay !== null) {
+                resting.set(model, now() + delay);
+                pause = Math.min(pause, delay);
+              }
+            }
+            continue;
+          }
+          const json = (await response.json()) as {
+            candidates?: { content?: { parts?: { text?: unknown }[] } }[];
+          };
+          const text = json.candidates?.[0]?.content?.parts
+            ?.map((part) => (typeof part.text === "string" ? part.text : ""))
+            .join("");
+          const answer = text ? parseSmartAnswer(unfence(text)) : null;
+          if (answer) return answer;
+        } catch {
+          // too slow, or the network failed: try the next model
+        }
       }
+      if (!asked) return null;
+      round += 1;
+      await wait(Math.min(pause, maxPauseMs), deadline);
     }
     return null;
   };

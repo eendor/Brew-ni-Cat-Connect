@@ -4,12 +4,13 @@
  * Gemini is never called: every test passes its own fetch.
  */
 
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   createGeminiAssistant,
   DEFAULT_GEMINI_MODELS,
   maskPersonal,
+  resetGeminiRest,
   parseSmartAnswer,
   shopFacts,
   SYSTEM_INSTRUCTION,
@@ -20,6 +21,8 @@ import { openStatusText, shopClock } from "@/lib/messenger/shop-time";
 import { catalog, content, NOW, ORIGIN } from "./messenger-fixtures";
 
 const HOUR = 60 * 60 * 1000;
+
+beforeEach(() => resetGeminiRest());
 /** NOW is Monday 9 November 2026, 2:00 PM in Manila. */
 const at = (hoursFromNow: number) => NOW + hoursFromNow * HOUR;
 
@@ -208,12 +211,20 @@ describe("Gemini smart replies (ADR-031)", () => {
     expect(body).not.toContain("09171234567");
   });
 
-  it("TC-P7-100 — gives up (null) when every model fails, errors or is too slow", async () => {
+  it("TC-P7-100 — gives up (null) only when the whole time limit passes without an answer", async () => {
+    // Update 2026-11-13: every model is tried, round after round, until one
+    // answers or the time limit passes.
     const failing = vi.fn<typeof fetch>().mockRejectedValue(new Error("down"));
     await expect(
-      createGeminiAssistant("k", { fetch: failing })("f", "m"),
+      createGeminiAssistant("k", {
+        fetch: failing,
+        timeoutMs: 60,
+        maxPauseMs: 5,
+      })("f", "m"),
     ).resolves.toBeNull();
-    expect(failing).toHaveBeenCalledTimes(DEFAULT_GEMINI_MODELS.length);
+    expect(failing.mock.calls.length).toBeGreaterThan(
+      DEFAULT_GEMINI_MODELS.length,
+    );
 
     const slow = vi.fn<typeof fetch>(
       (_url, init) =>
@@ -224,18 +235,99 @@ describe("Gemini smart replies (ADR-031)", () => {
         }),
     );
     await expect(
-      createGeminiAssistant("k", { fetch: slow, timeoutMs: 20 })("f", "m"),
+      createGeminiAssistant("k", {
+        fetch: slow,
+        timeoutMs: 80,
+        attemptMs: 20,
+        maxPauseMs: 0,
+      })("f", "m"),
     ).resolves.toBeNull();
-    expect(slow).toHaveBeenCalledTimes(1);
+    // one slow model doesn't use up the whole limit
+    expect(slow.mock.calls.length).toBeGreaterThan(1);
 
     const nonsense = vi
       .fn<typeof fetch>()
       .mockResolvedValue(new Response(JSON.stringify({ candidates: [] })));
     await expect(
-      createGeminiAssistant("k", { fetch: nonsense, models: ["one"] })(
-        "f",
-        "m",
-      ),
+      createGeminiAssistant("k", {
+        fetch: nonsense,
+        models: ["one"],
+        timeoutMs: 40,
+        maxPauseMs: 5,
+      })("f", "m"),
     ).resolves.toBeNull();
+  });
+
+  it("TC-P7-108 — keeps going round the models through busy, rate-limited, gone and empty answers until one replies", async () => {
+    const answer = {
+      handoff: false,
+      reply: "Hello po! 😺",
+      buttons: ["menu"],
+    };
+    const replies = [
+      new Response("busy", { status: 503 }), // a: busy
+      new Response(
+        JSON.stringify({
+          error: {
+            code: 429,
+            details: [{ "@type": "RetryInfo", retryDelay: "30s" }],
+          },
+        }),
+        { status: 429 },
+      ), // b: free quota used up for 30 s
+      new Response("gone", { status: 404 }), // c: no longer offered
+      new Response(JSON.stringify({ candidates: [] })), // gemma: empty
+      new Response("busy", { status: 503 }), // round 2, a: still busy
+      new Response(
+        JSON.stringify({
+          candidates: [
+            {
+              content: {
+                parts: [
+                  { text: "```json\n" + JSON.stringify(answer) + "\n```" },
+                ],
+              },
+            },
+          ],
+        }),
+      ), // round 2, gemma answers in a fence
+    ];
+    const request = vi.fn<typeof fetch>(async () => replies.shift()!);
+    const ask = createGeminiAssistant("k", {
+      fetch: request,
+      models: ["a", "b", "c", "gemma-x"],
+      maxPauseMs: 1,
+    });
+    await expect(ask("f", "hi")).resolves.toEqual(answer);
+    const asked = request.mock.calls.map(
+      ([url]) => String(url).split("/models/")[1]?.split(":")[0],
+    );
+    // b rests for its retry delay and c for a day, so round 2 skips them
+    expect(asked).toEqual(["a", "b", "c", "gemma-x", "a", "gemma-x"]);
+    // Gemma gets the instructions in the message, not as a system instruction
+    const gemmaBody = JSON.parse(String(request.mock.calls[5]?.[1]?.body));
+    expect(gemmaBody.systemInstruction).toBeUndefined();
+    expect(gemmaBody.contents[0].parts[0].text).toContain("JSON object");
+    const geminiBody = JSON.parse(String(request.mock.calls[0]?.[1]?.body));
+    expect(geminiBody.generationConfig.responseMimeType).toBe(
+      "application/json",
+    );
+
+    // The next message skips the resting models too.
+    const next = vi.fn<typeof fetch>(
+      async () =>
+        new Response(
+          JSON.stringify({
+            candidates: [
+              { content: { parts: [{ text: JSON.stringify(answer) }] } },
+            ],
+          }),
+        ),
+    );
+    await createGeminiAssistant("k", {
+      fetch: next,
+      models: ["b", "c", "a"],
+    })("f", "hi");
+    expect(String(next.mock.calls[0]?.[0])).toContain("/a:generateContent");
   });
 });
