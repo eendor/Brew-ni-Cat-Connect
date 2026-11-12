@@ -2342,8 +2342,8 @@ html[data-motion="on"]:not([data-motion-live])
   line-height: 0.9;
 }
 
-/* Cat characters (FR-099, ADR-032): cut-outs of the shop's own cats
-   (public/cats) perched on the screen's edges. The layer ignores taps, and
+/* Cat characters (FR-099, ADR-032): 3D cats modelled in three.js after
+   the shop's own cats, perched on the screen's edges. The layer ignores taps, and
    a cat only comes out where nothing on the page is under it. */
 .cat-layer {
   position: fixed;
@@ -2353,15 +2353,15 @@ html[data-motion="on"]:not([data-motion-live])
   pointer-events: none;
   user-select: none;
 }
+.cat-canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+/* an empty box where each cat sits; the cat itself is drawn on the canvas */
 .shop-cat {
   position: absolute;
-  max-width: none;
-  opacity: 0;
-  transform-origin: 50% 100%;
-  filter: drop-shadow(0 6px 10px rgb(0 0 0 / 0.22));
-  will-change: transform, opacity;
-}
-/* cats on the right look in toward the page */
-.shop-cat[data-side="right"] {
-  scale: -1 1;
+  visibility: hidden;
 }
