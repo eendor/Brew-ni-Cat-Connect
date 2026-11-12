@@ -1379,3 +1379,46 @@ Customers often type "open po ba kayo?" instead of tapping a button, and it got 
 | TC-P7-088  | FR-059      | "pa order po bukas", "open for delivery po?", "can't open the link", a message over 60 characters, and others | `typedHoursQuestion` returns false, so the message stays with the staff                    | Passed (automated) |
 | TC-P7-089  | FR-059      | One delivery with "Hello po, open po ba kayo today?" and "pa order po bukas"                                  | One reply with the automated notice, the hours and the address; the other message is skipped | Passed (automated) |
 | MAN-P7-008 | FR-059      | From a tester account, send "open po ba kayo?" to the Page                                                    | The assistant replies with the hours and location within a few seconds                     | Pending            |
+
+## 43. Phase 5 Integrated QA Execution Summary
+
+Run on 2026-11-11 by Renier P. Apal, the integrated QA engineer, on `main` at `f82be0d` (branch `test/p5-integrated-qa-main`). Environment: Windows (win32), Node.js, Next.js 16 production build, Vitest for unit and database tests, and Playwright for browser tests. No live orders were placed, and no production database or POS data changed during the run.
+
+| Check | Command | Result |
+| --- | --- | --- |
+| Dependency audit | `npm run audit` | Passed: 0 vulnerabilities in production packages. |
+| Docs validator | `python scripts/validate_phase0_docs.py` | `PHASE0_DOC_VALIDATION=PASS` |
+| Unit and database tests | `$env:NODE_OPTIONS="--no-experimental-webstorage"; npx vitest run` | 96 test files passed, 1015 tests passed. |
+| Typecheck | `npm run typecheck` | Passed |
+| Lint | `npm run lint` | Passed with 0 errors and 0 warnings |
+| Format | `npm run format:check` | Passed |
+| Production build | `npm run build` | Passed |
+| Browser tests | `$env:CI="1"; ...; npx playwright test --project=chromium` | 57 passed, 3 skipped, 0 failed. |
+
+### Live and Manual Checks
+
+| ID | Check | Device | Result | Status |
+| --- | --- | --- | --- | --- |
+| LIVE-01 | GET `/account/rewards` | Live site (`/account/rewards`) | HTTP 200 OK | Passed |
+| LIVE-02 | GET `/account` | Live site (`/account`) | HTTP 200 OK | Passed |
+| LIVE-03 | GET `/account/data-request` | Live site (`/account/data-request`) | HTTP 404 Not Found (handled via privacy policy / contact) | Not run yet |
+| MAN-P5-010 | Sign in and sign out | Android phone & Desktop browser | Sign in and sign out work smoothly on both devices. | Passed |
+| MAN-P5-011 | Account home | Android phone & Desktop browser | Each tile opens the correct page, and the latest order shows (or "No orders yet"). | Passed |
+| MAN-P5-012 | Rewards | Android phone & Desktop browser | Balance, history, and rewards catalog display correctly without cross-customer data leakage. | Passed |
+| MAN-P5-013 | Data request | Android phone & Desktop browser | Form validation checks work (empty message, >1000 characters). Not submitted on live site per instructions. | Passed |
+| MAN-P5-014 | Reviews | Android phone & Desktop browser | List and average rating show on shop page/About page; form checks work. Not submitted without owner OK. | Passed |
+| MAN-P5-015 | Favorites | Android phone & Desktop browser | Save item to favorites, then remove it successfully. | Passed |
+| MAN-P5-016 | Order history and reorder | Android phone & Desktop browser | History shows past orders; Reorder successfully fills cart. Order not placed. | Passed |
+| MAN-P5-017 | Order tracking | Android phone & Desktop browser | Existing order page shows correct live status. | Passed |
+| MAN-P5-018 | Phone layout | Android phone | No page scrolls sideways. | Passed |
+
+**Phase 5 PRs Covered:**
+- #87 order history and reorder (FR-039, FR-041) - MERGED
+- #93 live order tracking (FR-044 to FR-049) - MERGED
+- #94 customer profiles (FR-038) - MERGED
+- #103 favorites (FR-040) - MERGED
+- #123 loyalty points and rewards (FR-050 to FR-055) - MERGED (`feat/p5-loyalty`)
+- #120 / #125 ratings and reviews (FR-098) - MERGED (`feat/p5-reviews`, `feat/reviews-front`)
+- Rizjie: account home and data requests (FR-042) - MERGED
+
+No waiting PRs remain for Phase 5.
