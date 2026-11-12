@@ -65,6 +65,10 @@ export const fallbackShop: ShopContent = {
   notice: {
     text: "",
   },
+  closure: {
+    closed: false,
+    note: "",
+  },
   social: {
     facebook: "https://www.facebook.com/profile.php?id=100084186931413",
     facebookPhotos:

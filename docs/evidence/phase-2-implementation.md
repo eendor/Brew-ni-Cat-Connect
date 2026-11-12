@@ -33,7 +33,7 @@ Confirmed business content comes from the Phase 2 client brief dated 2026-08-24.
 - the confirmed opening date, Kabacan address and landmark, phone, email, payment methods, takeout fee, social destinations, variable-hours wording, and external-rider model; and
 - restrained factual About copy. A longer owner story remains provisional pending approval.
 
-The five menu posters under `public/images/menu/` were reviewed only as visual/brand reference. Their older prices were not transcribed, rendered as structured catalog data, or used for verification.
+The five menu posters under `public/images/menu/` were reviewed only as visual/brand reference. Their older prices were not transcribed, rendered as structured catalog data, or used for verification. Update 2026-11-10 (PR #113): the same five posters are now also shown in Messenger replies, with a note that their prices may be older; their prices are still not transcribed.
 
 ### Curated gallery files
 

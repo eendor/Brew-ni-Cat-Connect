@@ -430,7 +430,7 @@ flowchart TD
 | Customer profile, favorites, and reordering | FR-038–FR-043 | NFR-014–NFR-015, NFR-023–NFR-027, NFR-038 |
 | Order tracking and realtime fallback | FR-044–FR-049 | NFR-004, NFR-010, NFR-014, NFR-025 |
 | Loyalty earning and redemption | FR-050–FR-057 | NFR-006, NFR-014–NFR-015, NFR-021, NFR-025, NFR-038 |
-| Messenger inquiry and guided ordering | FR-058–FR-064 | NFR-018, NFR-022–NFR-028 |
+| Messenger inquiry and guided ordering | FR-058–FR-064, FR-100–FR-110 | NFR-018, NFR-022–NFR-028 |
 | Android journeys and offline handling | FR-065–FR-070 | NFR-019, NFR-025, NFR-028, NFR-036 |
 | POS synchronization and reconciliation | FR-071–FR-081 | NFR-006, NFR-008, NFR-021–NFR-022, NFR-038 |
 | Owner changes in the POS, live website content, mini-games, advertising | FR-082–FR-091, FR-093 | NFR-008, NFR-021, NFR-029–NFR-030, NFR-034 |

@@ -82,7 +82,10 @@ export async function POST(request: Request): Promise<Response> {
   const origin = new URL(request.url).origin;
   after(async () => {
     try {
-      await processWebhook(payload, createMessengerDeps(origin, pageToken));
+      await processWebhook(
+        payload,
+        createMessengerDeps(origin, pageToken, appSecret),
+      );
     } catch {
       warn("messenger-processing-failed");
     }

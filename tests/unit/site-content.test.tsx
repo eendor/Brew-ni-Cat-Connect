@@ -91,7 +91,8 @@ describe("Loading the saved content (TC-P4-218)", () => {
     expect(warn).toHaveBeenLastCalledWith(
       "Site content: the live content can't be read; showing the fallback.",
     );
-    expect(SITE_CONTENT_SECTIONS).toHaveLength(9);
+    // Update 2026-11-11: 'closure' is the tenth section (FR-111).
+    expect(SITE_CONTENT_SECTIONS).toHaveLength(10);
   });
 });
 
@@ -275,5 +276,27 @@ describe("Shop notice (TC-P4-221)", () => {
     expect(
       screen.queryByRole("complementary", { name: "Shop notice" }),
     ).toBeNull();
+  });
+});
+
+describe("Closed today banner (FR-111)", () => {
+  it("TC-P7-079 — says closed today with the note first, then the notice; nothing while open", async () => {
+    const { siteNoticeText, closedTodayText } =
+      await import("@/lib/site-content/format");
+    const notice = { text: "New flavors this week." };
+    expect(siteNoticeText({ closed: false, note: "" }, { text: "" })).toBe("");
+    expect(siteNoticeText({ closed: false, note: "x" }, notice)).toBe(
+      "New flavors this week.",
+    );
+    expect(
+      siteNoticeText({ closed: true, note: " Back tomorrow. " }, notice),
+    ).toBe("We're closed today. Back tomorrow. · New flavors this week.");
+    expect(siteNoticeText({ closed: true, note: "" }, { text: "" })).toBe(
+      "We're closed today.",
+    );
+    expect(closedTodayText({ closed: false, note: "x" })).toBeNull();
+    expect(closedTodayText({ closed: true, note: "" })).toBe(
+      "🚪 We're closed today.",
+    );
   });
 });

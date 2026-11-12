@@ -2341,3 +2341,52 @@ html[data-motion="on"]:not([data-motion-live])
   letter-spacing: -0.04em;
   line-height: 0.9;
 }
+
+/* Cat characters (FR-099): pixel cats (CC0 "Pet Cats Pack", public/cats) in an
+   empty strip at the top of the footer that only the cats use. It ignores
+   taps, so nothing under it is ever covered. Each sheet is one row of square
+   frames; the cat stands on row 32 of 50, so the strip shows rows 14 to 32. */
+.cat-strip {
+  --cat-size: 160px;
+  position: relative;
+  height: calc(var(--cat-size) * 0.38);
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+}
+@media (min-width: 640px) {
+  .cat-strip {
+    --cat-size: 260px;
+  }
+}
+.pixel-cat {
+  position: absolute;
+  width: var(--cat-size);
+  height: var(--cat-size);
+  margin-left: calc(var(--cat-size) * -0.5);
+  background-repeat: no-repeat;
+  background-size: auto 100%;
+  image-rendering: pixelated;
+  will-change: transform;
+  animation: pixel-cat-frames var(--ms, 1s) steps(var(--frames, 1))
+    var(--repeat, infinite) forwards;
+}
+.pixel-cat[hidden] {
+  display: none;
+}
+.cat-strip.is-paused .pixel-cat {
+  animation-play-state: paused;
+}
+@keyframes pixel-cat-frames {
+  from {
+    background-position-x: 0;
+  }
+  to {
+    background-position-x: calc(var(--cat-size) * var(--frames, 1) * -1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pixel-cat {
+    animation: none;
+  }
+}

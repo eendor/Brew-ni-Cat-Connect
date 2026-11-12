@@ -25,7 +25,7 @@ export function messengerProfile() {
     greeting: [
       {
         locale: "default",
-        text: `Hi {{user_first_name}}! I'm ${siteConfig.shortName}'s automated assistant. Tap Get Started for our menu, hours and location, or to reach our staff.`,
+        text: `Hi {{user_first_name}}! I'm ${siteConfig.shortName}'s automated assistant. Tap Get Started to order, see our menu, hours and location, or reach our staff.`,
       },
     ],
     persistent_menu: [

@@ -214,11 +214,15 @@ test("TC-P8-018 — the cache never holds API responses or page HTML", async ({
 test("TC-P8-019 — a failed Place order never shows as placed, and the retry reuses its idempotency key", async ({
   page,
 }) => {
+  // Checkout follows the opening hours (FR-112): pin the browser clock to an open hour.
+  await page.clock.setFixedTime(new Date(Date.UTC(2026, 10, 9, 6)));
   test.skip(
     process.env.NEXT_PUBLIC_ONLINE_ORDERING !== "enabled",
     "needs a build with NEXT_PUBLIC_ONLINE_ORDERING=enabled",
   );
 
+  // the checkout follows the opening hours: pin the clock to 2 PM in Manila
+  await page.clock.setFixedTime(new Date("2026-11-10T06:00:00Z"));
   await mockMenu(page);
   await mockOrderLookup(page);
   const sent: Array<Record<string, unknown>> = [];

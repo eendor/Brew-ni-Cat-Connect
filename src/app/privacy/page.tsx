@@ -93,8 +93,8 @@ export default async function PrivacyPage() {
               <List>
                 <li>
                   <Term>Browsing.</Term> You can use every public page without
-                  an account. The site has no analytics, advertising or tracking
-                  cookies, and its fonts and pictures come from our own site.
+                  an account. The site has no analytics or tracking cookies, and
+                  its fonts and pictures come from our own site.
                 </li>
                 <li>
                   <Term>Your account.</Term> If you create one, we keep your
@@ -138,12 +138,25 @@ export default async function PrivacyPage() {
                   <Term>Our Messenger assistant.</Term> When you message our
                   Facebook Page, the assistant reads your message or the button
                   you tap so it can reply with our menu, hours, location, how to
-                  order or an order&apos;s status. It saves nothing to our
-                  database, and its logs hold only counts, never your name,
-                  Facebook ID or message. To avoid repeating itself, it
-                  remembers recent chats for at most 24 hours in the
-                  server&apos;s memory. Messages it doesn&apos;t answer are left
-                  for our staff to read.
+                  order or the status of your orders. Asking questions and
+                  looking at the menu saves nothing to our database, and its
+                  logs hold only counts, never your name, Facebook ID or
+                  message. To avoid repeating itself, it remembers recent chats
+                  for at most 24 hours in the server&apos;s memory. Messages it
+                  doesn&apos;t answer are left for our staff to read.
+                </li>
+                <li>
+                  <Term>Orders placed in Messenger.</Term> If you order in the
+                  chat, the assistant asks for your mobile number and reads the
+                  name on your Messenger profile through Meta. We keep the same
+                  details as for a website order: your name, mobile number, a
+                  note that the order came from Messenger and when you will pick
+                  it up, your payment preference, the items, the total and each
+                  change of the order&apos;s status. We don&apos;t save your
+                  Facebook ID. We keep only a scrambled code made from it, so
+                  Order status can list the orders from your own chat without an
+                  order link. The shop sees the order on its POS like any other
+                  online order.
                 </li>
                 <li>
                   <Term>Order attempts.</Term> To stop floods of fake orders,
@@ -208,6 +221,14 @@ export default async function PrivacyPage() {
                 <li>
                   <Term>Google</Term> sends account emails, such as password
                   reset links, from the shop&apos;s email account.
+                </li>
+                <li>
+                  <Term>Adsterra</Term> may show one ad in the mini-games,
+                  labeled &ldquo;Ad&rdquo;. It loads only if you tap Show ads,
+                  never on the menu, cart, checkout, order or account pages, and
+                  it may use its own cookies inside the ad. We don&apos;t send
+                  it your account, orders or contact details, and you can turn
+                  ads off at any time.
                 </li>
               </List>
               <p>We don&apos;t sell your data or share it for advertising.</p>
@@ -282,7 +303,8 @@ export default async function PrivacyPage() {
               <p>
                 Our Messenger assistant keeps no copy of your chat. To remove a
                 conversation from your own Messenger, delete it there; Meta
-                handles the copy it keeps.
+                handles the copy it keeps. An order you placed in Messenger
+                stays in the shop&apos;s sales records, like a website order.
               </p>
             </PolicySection>
 

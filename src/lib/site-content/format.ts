@@ -1,6 +1,7 @@
 import { formatPrice } from "@/lib/menu/format-price";
 
 import type {
+  ClosureContent,
   AddressContent,
   GalleryContent,
   GalleryPhoto,
@@ -215,3 +216,21 @@ export const ringPhotos = (gallery: GalleryContent): GalleryPhoto[] =>
 /** Up to six featured photos for the home page. */
 export const homePhotos = (gallery: GalleryContent): GalleryPhoto[] =>
   gallery.photos.filter((photo) => photo.featured).slice(0, 6);
+
+/** The owner turned on "Closed today" in the POS (FR-111). */
+export function closedTodayText(closure: ClosureContent): string | null {
+  if (!closure.closed) return null;
+  const note = closure.note.trim();
+  return `🚪 We're closed today.${note ? ` ${note}` : ""}`;
+}
+
+/** The line above every page: "closed today" first, then the owner's notice. */
+export function siteNoticeText(
+  closure: ClosureContent,
+  notice: Readonly<{ text: string }>,
+): string {
+  const closed = closure.closed
+    ? `We're closed today. ${closure.note.trim()}`.trim()
+    : "";
+  return [closed, notice.text.trim()].filter(Boolean).join(" · ");
+}
