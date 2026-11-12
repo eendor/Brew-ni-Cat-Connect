@@ -4,22 +4,23 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { buildCat } from "@/components/cats/cat-model";
 
-import { CatCompanions } from "@/components/cats/cat-companions";
+import { CatParade } from "@/components/cats/cat-parade";
 import { CatSoundsToggle } from "@/components/cats/cat-sounds-toggle";
 import {
   setCurtainCovering,
   setCurtainSettled,
 } from "@/components/motion/curtain-state";
 import {
-  boxesOverlap,
-  catCount,
-  catHeight,
-  catsFor,
-  PERCHES,
-  perchBox,
+  PARADE_ORDER,
+  paradeLap,
+  paradeSize,
+  paradeSpeed,
+  paradeWalkers,
+  restMs,
   SHOP_CATS,
-  stayMs,
-  tuckFor,
+  SLEIGH_RIDER,
+  stripHeight,
+  walkMs,
 } from "@/lib/cats/cats";
 import {
   CAT_SOUNDS_KEY,
@@ -43,38 +44,6 @@ function mockReducedMotion(reduce: boolean) {
   );
 }
 
-/** Gives an element a box on screen (jsdom has no layout); by default the whole screen. */
-function onScreen(
-  element: Element,
-  r = { left: 0, top: 0, right: 1440, bottom: 900 },
-) {
-  element.getBoundingClientRect = () =>
-    ({
-      ...r,
-      x: r.left,
-      y: r.top,
-      width: r.right - r.left,
-      height: r.bottom - r.top,
-    }) as DOMRect;
-  return element;
-}
-
-const shown = (container: HTMLElement) =>
-  [...container.querySelectorAll<HTMLElement>(".shop-cat")].filter(
-    (n) => n.dataset.shown === "true",
-  );
-
-function box(node: HTMLElement) {
-  const left = Number.parseFloat(node.style.left);
-  const top = Number.parseFloat(node.style.top);
-  return {
-    left,
-    top,
-    right: left + Number.parseFloat(node.style.width),
-    bottom: top + Number.parseFloat(node.style.height),
-  };
-}
-
 beforeEach(() => {
   vi.stubGlobal("innerWidth", 1440);
   vi.stubGlobal("innerHeight", 900);
@@ -89,9 +58,9 @@ afterEach(() => {
 
 describe("cat characters (FR-099)", () => {
   // Update 2026-11-13 (ADR-032): 3D cats modelled in three.js after the
-  // shop's own cats replace the pixel cats, and they perch around the page
-  // instead of in a strip in the footer.
-  it("TC-P9-001 seven of the shop's cats, sized by the screen, more of them on wider screens", () => {
+  // shop's own cats replace the pixel cats. They walk in single file across
+  // the top of the footer, like reindeer, pulling a coffee-cup sleigh.
+  it("TC-P9-001 seven of the shop's cats; the parade's size follows the screen", () => {
     expect(SHOP_CATS.map((c) => c.id)).toEqual([
       "kasper",
       "latte",
@@ -105,66 +74,61 @@ describe("cat characters (FR-099)", () => {
     const kasper = SHOP_CATS.find((c) => c.id === "kasper")!;
     expect(kasper.look.eyeLeft).not.toBe(kasper.look.eyeRight);
     expect(new Set(SHOP_CATS.map((c) => c.look.coat)).size).toBe(7);
-    // they scale with the screen, within limits
-    expect(catHeight(390, 844)).toBe(84);
-    expect(catHeight(1440, 900)).toBe(158);
-    expect(catHeight(3840, 2160)).toBe(220);
-    expect(catHeight(1024, 768)).toBeGreaterThan(catHeight(390, 844));
-    expect(catCount(390)).toBe(2);
-    expect(catCount(800)).toBe(3);
-    expect(catCount(1280)).toBe(4);
-    expect(catCount(1920)).toBe(5);
-    // the napping cat only rises from the bottom edge
-    expect(catsFor({ side: "left", at: 0.5 }).map((c) => c.id)).not.toContain(
-      "kasper-nap",
-    );
-    expect(catsFor({ side: "bottom", at: 0.5 }).map((c) => c.id)).toContain(
-      "kasper-nap",
-    );
-    // a sitting cat peeks over the bottom edge; the lying cat shows whole
-    expect(tuckFor(kasper)).toBeGreaterThan(0);
-    expect(tuckFor(SHOP_CATS.find((c) => c.pose === "lie")!)).toBe(0);
-    expect(stayMs(0)).toBe(14_000);
-    expect(stayMs(1)).toBe(30_000);
+    // Oreo leads; Kasper rides in the sleigh, asleep
+    expect(PARADE_ORDER[0]).toBe("oreo");
+    expect(PARADE_ORDER).not.toContain(SLEIGH_RIDER);
+    expect(SHOP_CATS.find((c) => c.id === SLEIGH_RIDER)!.pose).toBe("lie");
+    // more cats and a taller strip on wider screens, within limits
+    expect(paradeSize(390)).toBe(3);
+    expect(paradeSize(800)).toBe(4);
+    expect(paradeSize(1440)).toBe(5);
+    expect(paradeWalkers(390).map((c) => c.id)).toEqual([
+      "oreo",
+      "latte",
+      "luna",
+    ]);
+    expect(stripHeight(390)).toBe(84);
+    expect(stripHeight(1440)).toBe(108);
+    expect(stripHeight(3840)).toBe(150);
   });
 
-  it("TC-P9-002 the layer is hidden from screen readers and every spot stays on the screen", () => {
+  it("TC-P9-002 the strip is hidden from screen readers and holds a canvas, not pictures", () => {
     mockReducedMotion(true);
-    render(<CatCompanions />);
-    const layer = screen.getByTestId("cat-layer");
-    expect(layer).toHaveAttribute("aria-hidden", "true");
-    // no pictures: the cats are drawn on the layer's canvas
-    expect(layer.querySelectorAll("img")).toHaveLength(0);
-    expect(layer.querySelector("canvas")).not.toBeNull();
-    for (const perch of PERCHES) {
-      const b = perchBox(perch, 100, 160, 390, 844);
-      expect(b.left).toBeGreaterThanOrEqual(0);
-      expect(b.right).toBeLessThanOrEqual(390);
-      expect(b.top).toBeGreaterThanOrEqual(0);
-      expect(b.bottom).toBeLessThanOrEqual(844);
+    render(<CatParade />);
+    const strip = screen.getByTestId("cat-parade");
+    expect(strip).toHaveAttribute("aria-hidden", "true");
+    expect(strip.querySelectorAll("img")).toHaveLength(0);
+    expect(strip.querySelector("canvas")).not.toBeNull();
+    // without WebGL2 (as here) it never says it is ready, so CSS keeps it hidden
+    expect(strip.dataset.ready).toBeUndefined();
+    expect(strip.dataset.walking).toBe("false");
+  });
+
+  it("TC-P9-003 each lap starts and ends with the parade out of sight and stops in the middle", () => {
+    for (const [width, span] of [
+      [390, 360],
+      [1440, 620],
+    ] as const) {
+      const right = paradeLap(width, span, 1);
+      // walking right, the lead's nose starts at the left edge with everyone behind it
+      expect(right.start - span).toBeLessThanOrEqual(0);
+      expect(right.end - span).toBeGreaterThanOrEqual(width);
+      // at the stop the whole parade is on screen, centred
+      expect(right.stop - span).toBeCloseTo(width - right.stop);
+      const left = paradeLap(width, span, -1);
+      expect(left.start).toBeGreaterThanOrEqual(width);
+      expect(left.end + span).toBeLessThanOrEqual(0);
+      expect(left.stop).toBeCloseTo(width - (left.stop + span));
     }
   });
 
-  it("TC-P9-003 on a clear page the cats fill their spots without touching each other", () => {
-    mockReducedMotion(true);
-    const { container } = render(<CatCompanions />);
-    const cats = shown(container);
-    expect(cats).toHaveLength(catCount(1440));
-    const ids = cats.map((c) => c.dataset.cat);
-    expect(new Set(ids).size).toBe(ids.length);
-    const boxes = cats.map(box);
-    for (let i = 0; i < boxes.length; i += 1)
-      for (let j = i + 1; j < boxes.length; j += 1)
-        expect(boxesOverlap(boxes[i]!, boxes[j]!)).toBe(false);
-  });
-
-  it("TC-P9-004 with reduced motion the cats appear in place and stay still", () => {
-    mockReducedMotion(true);
-    const { container } = render(<CatCompanions />);
-    const cats = shown(container);
-    expect(cats.length).toBeGreaterThan(0);
-    // nothing to animate: no anime.js motion was started on their boxes
-    for (const cat of cats) expect(cat.style.transform).toBe("");
+  it("TC-P9-004 they walk about a body length a second and rest between laps", () => {
+    expect(paradeSpeed(100)).toBe(95);
+    expect(walkMs(950, 100)).toBe(10_000);
+    expect(walkMs(-950, 100)).toBe(10_000);
+    expect(restMs(0)).toBe(5_000);
+    expect(restMs(1)).toBe(12_000);
+    expect(restMs(7)).toBe(12_000);
   });
 
   it("TC-P9-016 each cat is built from three.js geometry, with no pictures, and comes alive", () => {
@@ -197,7 +161,7 @@ describe("cat characters (FR-099)", () => {
       const size = new THREE.Box3()
         .setFromObject(model.root)
         .getSize(new THREE.Vector3());
-      if (cat.pose === "sit") expect(size.y).toBeGreaterThan(size.x);
+      if (cat.pose !== "lie") expect(size.y).toBeGreaterThan(size.x);
       else expect(size.x).toBeGreaterThan(size.y);
 
       // over time it moves: breathing and the tail change the shape
@@ -211,6 +175,14 @@ describe("cat characters (FR-099)", () => {
       expect(after).not.toBe(before);
       model.dispose();
     }
+    // the walking cat stands on four legs and is longer than it is wide
+    const walker = buildCat(SHOP_CATS[4]!.look, "walk", 9);
+    walker.update(0, 0, { x: 0, y: 0 }, 0);
+    const size = new THREE.Box3()
+      .setFromObject(walker.root)
+      .getSize(new THREE.Vector3());
+    expect(size.z).toBeGreaterThan(size.x * 1.5);
+    walker.dispose();
   });
 
   it("TC-P9-017 the head turns toward the pointer, and a meow opens the mouth", () => {
@@ -251,47 +223,56 @@ describe("cat characters (FR-099)", () => {
     model.dispose();
   });
 
-  it("TC-P9-013 no cat comes out over the page's text, controls or pictures", () => {
-    mockReducedMotion(true);
-    for (const tag of ["p", "button", "img", "a", "h2"]) {
-      const element = onScreen(document.createElement(tag));
-      document.body.append(element);
-      const { container, unmount } = render(<CatCompanions />);
-      expect(shown(container)).toHaveLength(0);
-      unmount();
-      element.remove();
-    }
-    // a paragraph in the middle of the screen leaves the edges to the cats
-    const middle = onScreen(document.createElement("p"), {
-      left: 400,
-      top: 100,
-      right: 1040,
-      bottom: 800,
+  it("TC-P9-013 a walking cat steps its legs; standing still, they stay put", () => {
+    const model = buildCat(SHOP_CATS[1]!.look, "walk", 3);
+    // a hip holds the upper leg, a capsule 0.058 across
+    const hips: THREE.Object3D[] = [];
+    model.root.traverse((o) => {
+      if (
+        o.children.some(
+          (c) =>
+            (c as THREE.Mesh).geometry instanceof THREE.CapsuleGeometry &&
+            ((c as THREE.Mesh).geometry as THREE.CapsuleGeometry).parameters
+              .radius === 0.058,
+        )
+      )
+        hips.push(o);
     });
-    document.body.append(middle);
-    const { container: withText, unmount } = render(<CatCompanions />);
-    expect(shown(withText).length).toBeGreaterThan(0);
-    unmount();
-    middle.remove();
-    // a decorative (aria-hidden) layer doesn't count
-    const decor = document.createElement("div");
-    decor.setAttribute("aria-hidden", "true");
-    decor.append(onScreen(document.createElement("img")));
-    document.body.append(decor);
-    const { container } = render(<CatCompanions />);
-    expect(shown(container).length).toBeGreaterThan(0);
-    decor.remove();
+    expect(hips).toHaveLength(4);
+    const legs = () => hips.map((hip) => hip.rotation.x);
+    for (let i = 0; i < 60; i += 1)
+      model.update(1 / 30, i / 30, { x: 0, y: 0 }, 0);
+    for (const turn of legs()) expect(Math.abs(turn)).toBeLessThan(0.01);
+    const snapshots: string[] = [];
+    for (let i = 0; i < 40; i += 1) {
+      model.update(1 / 30, 2 + i / 30, { x: 0, y: 0 }, 1);
+      if (i % 5 === 0)
+        snapshots.push(
+          legs()
+            .map((t) => t.toFixed(2))
+            .join(),
+        );
+    }
+    // the stride changes from frame to frame
+    expect(new Set(snapshots).size).toBeGreaterThan(4);
+    model.dispose();
   });
 
-  it("TC-P9-014 a cat on screen ducks away once content scrolls under it", () => {
-    mockReducedMotion(true);
-    const { container } = render(<CatCompanions />);
-    expect(shown(container).length).toBeGreaterThan(0);
-    const button = onScreen(document.createElement("button"));
-    document.body.append(button);
-    act(() => void window.dispatchEvent(new Event("scroll")));
-    expect(shown(container)).toHaveLength(0);
-    button.remove();
+  it("TC-P9-014 the footer's strip is part of the page, so it never covers anything", async () => {
+    const css = (await import("node:fs")).readFileSync(
+      "src/app/globals.css",
+      "utf8",
+    );
+    const rule = css.slice(
+      css.indexOf(".cat-parade {"),
+      css.indexOf("}", css.indexOf(".cat-parade {")),
+    );
+    expect(rule).toContain("position: relative");
+    expect(rule).toContain("pointer-events: none");
+    expect(rule).not.toContain("fixed");
+    // the paw cursor, with a pointing paw on things you can press
+    expect(css).toContain('url("/cursors/paw.svg")');
+    expect(css).toContain('url("/cursors/paw-pointer.svg")');
   });
 
   it("TC-P9-015 page transitions meow, and the footer switch turns it off on this device", () => {
@@ -324,7 +305,7 @@ describe("cat characters (FR-099)", () => {
     mockReducedMotion(true);
     render(
       <>
-        <CatCompanions />
+        <CatParade />
         <CatSoundsToggle />
       </>,
     );
