@@ -998,7 +998,7 @@ Run on 2026-11-10 by Renier (GitHub: Apal-RP) on branch `feat/p5-loyalty` (PR #1
 
 ## 38. Account Home And Data Request Cases (Phase 5, Week 3 — FR-042)
 
-Run on 2026-11-12 by Rizjie (GitHub: Mr-Jie29) on branch `feat/p5-account-home`. The account home links the account pages and shows the newest order through the existing `fetchCustomerOrders` helper. The data request form writes to the existing `public.data_requests` table; no migration is needed and no request was sent to the live database. Every order, name, request and session in these cases is MOCK DATA — FOR DEVELOPMENT ONLY, and Supabase is mocked in the browser tests.
+Run on 2026-11-12 by Rizjie (GitHub: Mr-Jie29) on branch `feat/p5-account-home` (PR #130). The account home links the account pages and shows the newest order through the existing `fetchCustomerOrders` helper. The data request form writes to the existing `public.data_requests` table; no migration is needed and no request was sent to the live database. Every order, name, request and session in these cases is MOCK DATA — FOR DEVELOPMENT ONLY, and Supabase is mocked in the browser tests.
 
 Unit tests run on Vitest (`tests/unit/data-requests-helper.test.ts`, `tests/unit/account-home.test.tsx`, `tests/unit/data-request-form.test.tsx`, `tests/unit/site-header.test.tsx`): 27 passed. The full unit suite also passed: 99 files, 1034 tests. E2E browser tests run on Chromium with Playwright (`tests/e2e/account-home.spec.ts`): 5 passed, and the full Chromium suite passed with 62 passed and 3 skipped in CI mode (one worker, up to two retries) against the CI placeholder environment. Evidence screenshots were captured into `docs/evidence/phase-5/account-home/` with `CAPTURE_EVIDENCE=1` at 1440x900 and 390x844.
 
