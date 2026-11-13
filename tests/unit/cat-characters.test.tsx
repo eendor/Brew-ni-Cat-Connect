@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { buildCat } from "@/components/cats/cat-model";
 
 import { CatParade } from "@/components/cats/cat-parade";
+import { restLuna } from "@/components/cats/parade-stage";
 import { CatSoundsToggle } from "@/components/cats/cat-sounds-toggle";
 import {
   setCurtainCovering,
@@ -114,7 +115,7 @@ describe("cat characters (FR-099)", () => {
     expect(strip.dataset.walking).toBe("false");
   });
 
-  it("TC-P9-003 each lap starts and ends with the parade out of sight and stops in the middle", () => {
+  it("TC-P9-003 each lap starts and ends with the parade out of sight and passes the middle without stopping", () => {
     for (const [width, span] of [
       [390, 360],
       [1440, 620],
@@ -123,12 +124,34 @@ describe("cat characters (FR-099)", () => {
       // walking right, the lead's nose starts at the left edge with everyone behind it
       expect(right.start - span).toBeLessThanOrEqual(0);
       expect(right.end - span).toBeGreaterThanOrEqual(width);
-      // at the stop the whole parade is on screen, centred
+      // mid-lap (where they glance out, still walking) the parade is centred
       expect(right.stop - span).toBeCloseTo(width - right.stop);
       const left = paradeLap(width, span, -1);
       expect(left.start).toBeGreaterThanOrEqual(width);
       expect(left.end + span).toBeLessThanOrEqual(0);
       expect(left.stop).toBeCloseTo(width - (left.stop + span));
+    }
+  });
+
+  it("TC-P9-021 Luna lies head first, facing the visitor, whichever way the sleigh goes", () => {
+    const luna = buildCat(
+      SHOP_CATS.find((c) => c.id === SLEIGH_RIDER)!.look,
+      "lie",
+      77,
+    );
+    const head = new THREE.Vector3();
+    const face = new THREE.Vector3();
+    for (const dir of [1, -1] as const) {
+      restLuna(luna.root, dir);
+      luna.root.updateMatrixWorld(true);
+      // the model's head is at -x and its face looks toward +z
+      head.set(-1, 0, 0).applyMatrix4(luna.root.matrixWorld);
+      face.set(0, 0, 1).transformDirection(luna.root.matrixWorld);
+      // the sleigh is turned to face dir along x: the head leads
+      expect(Math.sign(head.z)).toBe(1);
+      // and the face points out of the screen, never away
+      expect(face.x * dir).toBeLessThan(0.01);
+      expect(Math.abs(face.x)).toBeGreaterThan(0.99);
     }
   });
 
@@ -235,7 +258,7 @@ describe("cat characters (FR-099)", () => {
 
   it("TC-P9-013 a walking cat steps its legs; standing still, they stay put", () => {
     const model = buildCat(SHOP_CATS[1]!.look, "walk", 3);
-    // a hip holds the upper leg, a capsule 0.058 across
+    // a hip holds the upper leg, a capsule 0.068 across
     const hips: THREE.Object3D[] = [];
     model.root.traverse((o) => {
       if (
@@ -243,7 +266,7 @@ describe("cat characters (FR-099)", () => {
           (c) =>
             (c as THREE.Mesh).geometry instanceof THREE.CapsuleGeometry &&
             ((c as THREE.Mesh).geometry as THREE.CapsuleGeometry).parameters
-              .radius === 0.058,
+              .radius === 0.068,
         )
       )
         hips.push(o);

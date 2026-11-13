@@ -144,10 +144,9 @@ function buildSleigh(made: THREE.Material[]) {
   // Luna, a mama cat soon, lying comfortably along the cup
   const look = (id: string) => SHOP_CATS.find((c) => c.id === id)!.look;
   const luna = buildCat(look(SLEIGH_RIDER), "lie", 77);
-  luna.root.scale.setScalar(0.6);
-  luna.root.rotation.y = -Math.PI / 2;
   luna.root.position.set(0, 0.62, -0.08);
   sleigh.add(luna.root);
+  restLuna(luna.root, 1);
   // and her kittens, peeking over the rim
   const kittens = KITTEN_COATS.map((id, i) => {
     const kitten = buildCat(look(id), "sit", 90 + i);
@@ -158,6 +157,17 @@ function buildSleigh(made: THREE.Material[]) {
     return kitten;
   });
   return { sleigh, riders: [luna, ...kittens] };
+}
+
+/**
+ * Luna lies along the cup with her head at the front and her face toward
+ * the visitor, whichever way the sleigh goes. Her model lies along x with
+ * the head at -x and the face toward +z: walking right she is turned and
+ * mirrored, walking left only turned.
+ */
+export function restLuna(root: THREE.Object3D, dir: 1 | -1) {
+  root.rotation.set(0, (-dir * Math.PI) / 2, 0);
+  root.scale.set(dir > 0 ? -0.6 : 0.6, 0.6, 0.6);
 }
 
 /** A soft round shadow, drawn once on a canvas. */
@@ -321,6 +331,7 @@ export function createParadeStage(
     }
     back -= dir * (catLength * 0.5 + gap * 3 + sleighLength * 0.5);
     place(sleigh, sleighLength, cats.length);
+    restLuna(riders[0]!.root, dir);
     // the sleigh glides with a little sway
     sleigh.position.y +=
       Math.abs(Math.sin(time * 3.4)) * height * 0.012 * state.stride;

@@ -9,12 +9,14 @@ import {
   paradeLap,
   paradeWalkers,
   restMs,
-  STOP_MS,
   walkMs,
 } from "@/lib/cats/cats";
 import { meow } from "@/lib/sound/cat-sounds";
 
 import type { ParadeStage, ParadeState } from "./parade-stage";
+
+/** How long the cats take to turn their heads to the visitor and back. */
+const GLANCE_MS = 700;
 
 /** WebGL2 without touching jsdom's unimplemented canvas API. */
 function canDraw3d() {
@@ -38,8 +40,8 @@ function reducedMotion() {
  * cats, built in three.js, walk across in single file. In November and
  * December they wear bells and pull a cosy coffee-cup sleigh with Luna, a mama
  * cat soon, resting inside with her kittens; from January they just stroll.
- * anime.js walks each lap: in from one side, a stop in the middle where the
- * cats look out and one meows, then off the other side; after a rest they
+ * anime.js walks each lap in one smooth walk from one side to the other;
+ * passing the middle the cats glance out and one meows. After a rest they
  * come back the other way. The strip has its own space in the footer, so it
  * never covers the page. With reduced motion the parade stands still in the
  * middle. Without WebGL2 the strip stays hidden. Page transitions get a soft
@@ -77,64 +79,72 @@ export function CatParade() {
       motions.push(motion);
       return motion;
     };
-    /** "true" walking, "stopped" at the stop in the middle, "false" resting or still. */
-    const walking = (on: boolean | "stopped") => {
+    /** "true" while walking across, "false" resting or still. */
+    const walking = (on: boolean) => {
       element.dataset.walking = String(on);
     };
 
-    /** One lap: in, a stop in the middle, out; then a rest and back. */
+    /**
+     * One lap: in from one side and out the other in one smooth walk, with
+     * no halt (2026-11-13). Passing the middle, the cats glance out at the
+     * visitor and the lead meows, still walking. Then a rest, and back.
+     */
     const lap = () => {
       if (!stage || closed) return;
       motions.length = 0;
       const width = element.clientWidth;
       const height = element.clientHeight;
-      const { start, stop, end } = paradeLap(width, stage.span(), state.dir);
+      const {
+        start,
+        stop: middle,
+        end,
+      } = paradeLap(width, stage.span(), state.dir);
+      const total = walkMs(end - start, height);
+      const toMiddle = walkMs(middle - start, height);
       state.x = start;
       state.stride = 1;
       state.look = 0;
       walking(true);
+      delete element.dataset.greeting;
       run(
         animate(state, {
-          x: stop,
-          duration: walkMs(stop - start, height),
+          x: end,
+          duration: total,
           ease: "linear",
           onComplete: () => {
-            walking("stopped");
-            run(animate(state, { stride: 0, duration: 450, ease: "outQuad" }));
-            run(
-              animate(state, {
-                look: 1,
-                duration: 600,
-                delay: 300,
-                ease: "inOutQuad",
-                onComplete: () => stage?.meow(0),
-              }),
-            );
-            run(
-              animate(state, {
-                look: 0,
-                stride: 1,
-                duration: 500,
-                delay: STOP_MS,
-                ease: "inOutQuad",
-              }),
-            );
-            run(
-              animate(state, {
-                x: end,
-                duration: walkMs(end - stop, height),
-                delay: STOP_MS + 150,
-                ease: "linear",
-                onBegin: () => walking(true),
-                onComplete: () => {
-                  walking(false);
-                  state.dir = state.dir > 0 ? -1 : 1;
-                  rest = window.setTimeout(lap, restMs(Math.random()));
-                },
-              }),
-            );
+            walking(false);
+            state.dir = state.dir > 0 ? -1 : 1;
+            rest = window.setTimeout(lap, restMs(Math.random()));
           },
         }),
+      );
+      // one animation for the glance: two on "look" would replace each other
+      run(
+        animate(state, {
+          look: [
+            {
+              to: 0.8,
+              duration: GLANCE_MS,
+              delay: Math.max(0, toMiddle - GLANCE_MS),
+              ease: "inOutQuad",
+            },
+            { to: 0, duration: GLANCE_MS, delay: GLANCE_MS, ease: "inOutQuad" },
+          ],
+        }),
+      );
+      // the lead meows as the parade passes the middle
+      run(
+        animate(
+          { at: 0 },
+          {
+            at: 1,
+            duration: Math.max(1, toMiddle),
+            onComplete: () => {
+              element.dataset.greeting = "true";
+              stage?.meow(0);
+            },
+          },
+        ),
       );
     };
 
