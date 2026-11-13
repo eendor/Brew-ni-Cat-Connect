@@ -1,9 +1,11 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AdSlot } from "@/components/ads/ad-slot";
 import {
   AD_CONSENT_KEY,
+  AD_FILL_TIMEOUT_MS,
+  AD_FILLED_MESSAGE,
   adDocument,
   adKey,
   isAdFreePath,
@@ -98,5 +100,65 @@ describe("Ads in the mini-game area (FR-090)", () => {
     expect(html).toContain(`src="https://bauval.org/22/${KEY}"`);
     expect(html).toContain('"width":300');
     expect(html).toContain('"height":250');
+  });
+
+  it("TC-P9-044 — shows Loading ad until the frame reports a real ad, and ignores messages from other windows", () => {
+    window.localStorage.setItem(AD_CONSENT_KEY, "yes");
+    render(<AdSlot />);
+    const frame = screen.getByTitle("Advertisement") as HTMLIFrameElement;
+    expect(screen.getByTestId("ad-loading")).toHaveTextContent("Loading ad…");
+
+    act(() => {
+      window.dispatchEvent(
+        new MessageEvent("message", {
+          data: AD_FILLED_MESSAGE,
+          source: window,
+        }),
+      );
+    });
+    expect(screen.getByTestId("ad-loading")).toBeInTheDocument();
+
+    act(() => {
+      window.dispatchEvent(
+        new MessageEvent("message", {
+          data: AD_FILLED_MESSAGE,
+          source: frame.contentWindow,
+        }),
+      );
+    });
+    expect(screen.queryByTestId("ad-loading")).toBeNull();
+    expect(screen.getByTitle("Advertisement")).toBeInTheDocument();
+  });
+
+  it("TC-P9-045 — replaces a blank ad with a short note after the wait, and Try again reloads it", () => {
+    vi.useFakeTimers();
+    try {
+      window.localStorage.setItem(AD_CONSENT_KEY, "yes");
+      render(<AdSlot />);
+      act(() => {
+        vi.advanceTimersByTime(AD_FILL_TIMEOUT_MS);
+      });
+      expect(screen.queryByTitle("Advertisement")).toBeNull();
+      expect(screen.getByTestId("ad-empty")).toHaveTextContent(
+        "No ad to show right now.",
+      );
+      expect(
+        screen.getByRole("button", { name: "Turn off ads" }),
+      ).toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+      expect(screen.getByTitle("Advertisement")).toBeInTheDocument();
+      expect(screen.getByTestId("ad-loading")).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("TC-P9-046 — the ad page reports a filled ad by name only, before the ad script runs", () => {
+    const html = adDocument(KEY);
+    expect(html).toContain(`parent.postMessage("${AD_FILLED_MESSAGE}","*")`);
+    expect(html.indexOf("MutationObserver")).toBeLessThan(
+      html.indexOf("bauval.org"),
+    );
   });
 });

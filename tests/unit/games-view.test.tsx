@@ -196,4 +196,23 @@ describe("Cat games page (FR-089)", () => {
     );
     expect(formatReason("mini-game")).toBe("Mini-game");
   });
+
+  it("TC-P9-049 — links back to the order the customer left, and shows no link otherwise", async () => {
+    signIn("customer-1");
+    window.sessionStorage.clear();
+    const { unmount } = render(<GamesView />);
+    await screen.findByTestId("games-summary");
+    expect(screen.queryByTestId("back-to-order")).toBeNull();
+    unmount();
+
+    window.sessionStorage.setItem(
+      "bnc-waiting-order",
+      "/orders/BNC-7K2Q9F#token=abc",
+    );
+    render(<GamesView />);
+    expect(
+      await screen.findByRole("link", { name: "← Back to your order" }),
+    ).toHaveAttribute("href", "/orders/BNC-7K2Q9F#token=abc");
+    window.sessionStorage.clear();
+  });
 });

@@ -1625,3 +1625,21 @@ FR-089: loyalty mini-games decided on the server, three plays a day. FR-090: the
 | TC-P9-040 | FR-089, FR-090 | Playwright, 1440 wide, signed in with the RPCs mocked: cup 2 (found), cup 3, Lucky paw | +3, then +1, then +2 points; 3, 2, 1, then no plays left; balance 12 → 18; the done message; the requests carry only the game and the cup; no page errors | Passed (automated) |
 | TC-P9-041 | FR-089 | Playwright, 390 wide: a guest, then the status function returns PGRST202 | The sign-in link, games off, no sideways scroll; then the coming-soon message | Passed (automated) |
 | MAN-P9-002 | FR-089 | After the migration is applied, play on the live site with a real account | The plays and points show in the points history, and a fourth play that day is refused | Not run (the migration is applied; needs a real customer account) |
+
+## 59. Play While You Wait and Ad Fill Cases (2026-11-13)
+
+The lead developer asked for the cat games to be offered while customers wait for their orders, and reported that the live ad showed only a blank box. The order page now shows a "Play while you wait" card while the order is pending, accepted or preparing. The games page links back to that order. The ad frame now reports when a real ad appears. Until then the slot shows "Loading ad…", and if nothing appears within 8 seconds a short note replaces the blank box. The live blank box was traced to the Adsterra script itself: loaded from the real domain with no sandbox, it still drew nothing and asked for no ad, so the unit's status in the Adsterra dashboard needs a check (MAN-P9-003).
+
+| ID | Requirement | Scenario | Expected result | Status |
+| --- | --- | --- | --- | --- |
+| TC-P9-042 | FR-089 | Order page with a pending, accepted or preparing order; tap Play cat games | The card shows and links to `/games`; the order link with its token is kept for this tab | Passed (automated) |
+| TC-P9-043 | FR-089 | Order page with a ready, completed, cancelled or rejected order | No games card | Passed (automated) |
+| TC-P9-044 | FR-090 | Ads on; a fill message comes from another window, then from the ad frame | Loading ad stays for the first and goes away for the second | Passed (automated) |
+| TC-P9-045 | FR-090 | Ads on; no ad within 8 seconds; then Try again | The frame is removed and "No ad to show right now." shows with Turn off ads; Try again loads the frame again | Passed (automated) |
+| TC-P9-046 | FR-090 | The page inside the ad frame | Reports a filled ad by message name only, and starts watching before the ad script loads | Passed (automated) |
+| TC-P9-047 | FR-089 | Saving and reading the order link | Only `/orders/<reference>` links with an optional token are kept; other sites, `//` links and paths outside orders are refused | Passed (automated) |
+| TC-P9-048 | FR-089 | Which statuses count as waiting | Pending, accepted and preparing; not ready, completed, cancelled or rejected | Passed (automated) |
+| TC-P9-049 | FR-089 | Games page with and without a saved order link | "← Back to your order" with that link only when one is saved | Passed (automated) |
+| TC-P9-050 | FR-089, FR-090 | Playwright, 390 wide: a preparing order, Play cat games, then Back to your order | The card shows with no ad slot and no sideways scroll; the games page links back, and the order page opens again with its token | Passed (automated) |
+| TC-P9-051 | FR-090 | Playwright, 1440 wide, ads on: a stand-in ad script that draws a box, then one that draws nothing | Loading ad, then the ad; then the note after the wait | Passed (automated) |
+| MAN-P9-003 | FR-090 | In the Adsterra dashboard, check the 300x250 unit and the site address, then open `/games` on a phone with ads on | The unit is active for brew-ni-cat-connect.vercel.app and a real ad shows | Not run (needs the Adsterra account) |

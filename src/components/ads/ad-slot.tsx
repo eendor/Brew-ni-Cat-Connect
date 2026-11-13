@@ -1,9 +1,11 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 import {
+  AD_FILL_TIMEOUT_MS,
+  AD_FILLED_MESSAGE,
   AD_HEIGHT,
   AD_WIDTH,
   adDocument,
@@ -43,16 +45,7 @@ export function AdSlot() {
       </p>
       {consent === "yes" ? (
         <>
-          <iframe
-            title="Advertisement"
-            width={AD_WIDTH}
-            height={AD_HEIGHT}
-            srcDoc={adDocument(key)}
-            sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox"
-            referrerPolicy="no-referrer"
-            loading="lazy"
-            className="max-w-full border-0"
-          />
+          <AdFrame adKey={key} />
           <button
             type="button"
             className="text-xs underline"
@@ -94,5 +87,82 @@ export function AdSlot() {
         </>
       )}
     </aside>
+  );
+}
+
+type FillState = "loading" | "filled" | "empty";
+
+/**
+ * The sandboxed ad. The frame posts one message when an ad of real size
+ * appears; if none comes in time, a short note replaces the blank box.
+ */
+function AdFrame({ adKey: key }: Readonly<{ adKey: string }>) {
+  const frameRef = useRef<HTMLIFrameElement>(null);
+  const [attempt, setAttempt] = useState(0);
+  const [fill, setFill] = useState<FillState>("loading");
+
+  useEffect(() => {
+    if (fill !== "loading") return;
+    const onMessage = (event: MessageEvent) => {
+      if (
+        event.source === frameRef.current?.contentWindow &&
+        event.data === AD_FILLED_MESSAGE
+      ) {
+        setFill("filled");
+      }
+    };
+    window.addEventListener("message", onMessage);
+    const timer = window.setTimeout(() => setFill("empty"), AD_FILL_TIMEOUT_MS);
+    return () => {
+      window.removeEventListener("message", onMessage);
+      window.clearTimeout(timer);
+    };
+  }, [fill, attempt]);
+
+  if (fill === "empty") {
+    return (
+      <div data-testid="ad-empty" className="space-y-2 py-2 text-sm">
+        <p className="text-[var(--text-muted)]">
+          No ad to show right now. Thanks for keeping ads on.
+        </p>
+        <button
+          type="button"
+          className="text-xs underline"
+          onClick={() => {
+            setAttempt((n) => n + 1);
+            setFill("loading");
+          }}
+        >
+          Try again
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="relative max-w-full"
+      style={{ width: AD_WIDTH, height: AD_HEIGHT }}
+    >
+      {fill === "loading" ? (
+        <p
+          data-testid="ad-loading"
+          className="absolute inset-0 flex items-center justify-center rounded-xl bg-[var(--surface-overlay)] text-xs text-[var(--text-muted)]"
+        >
+          Loading ad…
+        </p>
+      ) : null}
+      <iframe
+        key={attempt}
+        ref={frameRef}
+        title="Advertisement"
+        width={AD_WIDTH}
+        height={AD_HEIGHT}
+        srcDoc={adDocument(key)}
+        sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox"
+        referrerPolicy="no-referrer"
+        className="relative max-w-full border-0"
+      />
+    </div>
   );
 }

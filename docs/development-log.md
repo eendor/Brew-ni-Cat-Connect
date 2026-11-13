@@ -1927,3 +1927,14 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `docs/games-live`.
 - **Known limitations:** MAN-P9-002 (a real account playing live) is not run yet; the game values wait for the owner.
 - **Next action:** none.
+
+## 2026-11-13 — Play while you wait, and no more blank ad box
+
+- **Phase:** Phase 9 (FR-089, FR-090).
+- **Task:** The lead developer asked for the cat games to be offered while customers wait for orders, and reported that the ad showed only a white box.
+- **Summary:** The order page shows a "Play while you wait" card while the order is pending, accepted or preparing. The order link is kept for the tab, so the games page shows "← Back to your order". That link is a plain link because client navigation doubled the `#token` part. Ads still never appear on the order page. The blank ad came from the Adsterra script: the live check (both script addresses, with and without the sandbox, on the real domain) showed it loading and then drawing nothing or asking for no ad, so the unit itself needs a check in the dashboard. The ad frame now posts one message when an ad of real size appears; until then the slot shows "Loading ad…", and after 8 seconds a note with Try again replaces the blank box. CI's browser build gets a dummy ad key so TC-P9-051 runs against a stand-in ad script.
+- **Files:** `src/components/games/play-while-you-wait.tsx`, `src/lib/games/waiting-order.ts`, `src/app/orders/[reference]/page.tsx`, `src/components/games/games-view.tsx`, `src/components/ads/ad-slot.tsx`, `src/lib/ads/ads.ts`, `.github/workflows/ci.yml`, tests, `docs/test-cases.md` §59.
+- **Testing:** see the PR.
+- **Branch / PR:** `feat/play-while-waiting`.
+- **Known limitations:** MAN-P9-003 needs the Adsterra account.
+- **Next action:** Check the unit in Adsterra.
