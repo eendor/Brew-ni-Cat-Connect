@@ -1,7 +1,9 @@
 import { expect, test } from "@playwright/test";
 
+import { mockGoogleOAuth } from "./support/google-oauth";
+
 test.describe("Customer Authentication E2E", () => {
-  test("TC-P4-172 — signs in with mocked Supabase Auth and signs out", async ({
+  test("TC-P4-172 — signs in with mocked Google OAuth and signs out", async ({
     page,
   }) => {
     const mockUser = {
@@ -10,7 +12,7 @@ test.describe("Customer Authentication E2E", () => {
       role: "authenticated",
       email: "customer@example.com",
       email_confirmed_at: "2026-10-27T00:00:00Z",
-      app_metadata: { provider: "email" },
+      app_metadata: { provider: "google" },
       user_metadata: {},
       created_at: "2026-10-27T00:00:00Z",
       updated_at: "2026-10-27T00:00:00Z",
@@ -25,38 +27,7 @@ test.describe("Customer Authentication E2E", () => {
       user: mockUser,
     };
 
-    // Intercept Supabase Auth endpoints
-    await page.route("**/auth/v1/token*", async (route) => {
-      const postData = route.request().postDataJSON();
-      if (postData?.password === "wrongpassword") {
-        await route.fulfill({
-          status: 400,
-          contentType: "application/json",
-          body: JSON.stringify({
-            code: "invalid_credentials",
-            error_code: "invalid_credentials",
-            error: "invalid_grant",
-            error_description: "Invalid login credentials",
-            message: "Invalid login credentials",
-          }),
-        });
-        return;
-      }
-
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify(mockSession),
-      });
-    });
-
-    await page.route("**/auth/v1/user*", async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify(mockUser),
-      });
-    });
+    await mockGoogleOAuth(page, mockSession, mockUser);
 
     await page.route("**/auth/v1/logout*", async (route) => {
       await route.fulfill({
@@ -71,22 +42,11 @@ test.describe("Customer Authentication E2E", () => {
       page.getByRole("heading", { name: "Sign In", level: 1 }),
     ).toBeVisible();
 
-    // 2. Test wrong password error
-    await page.getByLabel(/email address/i).fill("customer@example.com");
-    await page.getByLabel(/^password/i).fill("wrongpassword");
-    await page.getByRole("button", { name: /^sign in$/i }).click();
+    // 2. No email or password form: Google is the only way in (ADR-030)
+    await expect(page.getByLabel(/password/i)).toHaveCount(0);
 
-    await expect(
-      page.getByText(
-        /incorrect email or password\. please check your credentials and try again\./i,
-      ),
-    ).toBeVisible();
-
-    // 3. Test successful sign in
-    await page.getByLabel(/^password/i).fill("correctpassword123");
-    await page.getByRole("button", { name: /^sign in$/i }).click();
-
-    // Should redirect to home page
+    // 3. Sign in with (mocked) Google; it returns through /account/callback
+    await page.getByRole("button", { name: "Sign in with Google" }).click();
     await page.waitForURL("/");
 
     // 4. Header should now have Account menu instead of "Sign in"
@@ -109,7 +69,7 @@ test.describe("Customer Authentication E2E", () => {
     await expect(accountButton).not.toBeVisible();
   });
 
-  test("TC-P4-173 — captures screenshots of new customer auth screens", async ({
+  test("TC-P4-173 — captures screenshots of the Google sign-in screens", async ({
     page,
   }) => {
     test.skip(
@@ -117,28 +77,58 @@ test.describe("Customer Authentication E2E", () => {
       "Skipped unless CAPTURE_EVIDENCE=1",
     );
 
+    await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/account/sign-in");
     await page.screenshot({
-      path: "docs/evidence/phase-4/screenshots/sign-in.png",
+      path: "docs/evidence/phase-5/google-sign-in/sign-in-1440x900.png",
       fullPage: true,
     });
 
     await page.goto("/account/sign-up");
     await page.screenshot({
-      path: "docs/evidence/phase-4/screenshots/sign-up.png",
+      path: "docs/evidence/phase-5/google-sign-in/sign-up-1440x900.png",
       fullPage: true,
     });
 
-    await page.goto("/account/forgot-password");
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/account/sign-in");
     await page.screenshot({
-      path: "docs/evidence/phase-4/screenshots/forgot-password.png",
+      path: "docs/evidence/phase-5/google-sign-in/sign-in-390x844.png",
       fullPage: true,
     });
 
-    await page.goto("/account/reset-password");
+    await page.goto("/account/callback?error=access_denied");
     await page.screenshot({
-      path: "docs/evidence/phase-4/screenshots/reset-password.png",
+      path: "docs/evidence/phase-5/google-sign-in/callback-cancelled-390x844.png",
       fullPage: true,
     });
+  });
+
+  test("TC-P5-225 — the retired password pages send visitors to Sign In", async ({
+    page,
+  }) => {
+    for (const path of [
+      "/account/forgot-password",
+      "/account/reset-password",
+    ]) {
+      await page.goto(path);
+      await page.waitForURL("**/account/sign-in");
+      await expect(
+        page.getByRole("button", { name: "Sign in with Google" }),
+      ).toBeVisible();
+    }
+  });
+
+  test("TC-P5-226 — a cancelled Google sign-in shows the message and a way back", async ({
+    page,
+  }) => {
+    await page.goto("/account/callback?error=access_denied");
+    await expect(
+      page
+        .getByRole("alert")
+        .filter({ hasText: "Google sign-in was cancelled." }),
+    ).toBeVisible();
+    await page.getByRole("link", { name: "Back to Sign In" }).click();
+    await page.waitForURL("**/account/sign-in");
   });
 });

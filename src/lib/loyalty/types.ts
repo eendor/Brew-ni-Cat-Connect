@@ -12,7 +12,7 @@ export type LoyaltyProgramSettings = Readonly<{
 }>;
 
 export type LoyaltyReason =
-  "order-completed" | "reward-redeemed" | "adjustment";
+  "order-completed" | "reward-redeemed" | "adjustment" | "mini-game";
 
 export type LoyaltyTransaction = Readonly<{
   id: number;

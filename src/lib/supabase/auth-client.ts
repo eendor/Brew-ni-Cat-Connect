@@ -26,6 +26,9 @@ export function getAuthSupabaseClient(): SupabaseClient {
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: true,
+      // Google sign-in returns a one-time code that this browser swaps for
+      // the session (ADR-030), so the tokens never appear in the address.
+      flowType: "pkce",
     },
   });
 

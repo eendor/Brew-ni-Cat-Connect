@@ -500,7 +500,7 @@ Before commit/PR, inspect staged and unstaged diffs, verify `.env.local` is untr
 - The limits and the duplicate check live in each server instance's memory, so they are best effort across instances, and someone with many Facebook accounts could still send many orders.
 - Rotating the app secret hides older Messenger orders from Order status (§21.2).
 - While the Meta app has Standard Access, only people with a role on the app get replies (§19.6).
-- The migration for Order status is not applied to the live database yet (database design §15), and the owner's decisions on orders outside shop hours and closure days are open (functional requirements §12). **TODO: Confirm with Brew ni Cat owner.**
+- The migration for Order status is not applied to the live database yet (database design §15; update 2026-11-13: it was applied on 2026-11-10), and the owner's decisions on orders outside shop hours and closure days are open (functional requirements §12). **TODO: Confirm with Brew ni Cat owner.**
 
 ## 22. Ratings And Reviews Security And Privacy Addendum (Phase 5 — FR-098)
 
@@ -527,3 +527,79 @@ Before commit/PR, inspect staged and unstaged diffs, verify `.env.local` is untr
 ### 22.4 Open decisions
 
 - Moderation screen is built in the POS app (`eendor/Brew-ni-Cat-POS`) using the staff permission. **TODO: Confirm with Brew ni Cat owner.**
+
+## 23. Data Correction And Deletion Requests (Phase 5 — FR-042)
+
+Section 19 already belongs to the Phase 7 addendum on `main`, so this addendum takes the next free number to keep the sections in order. The table already exists in `supabase/migrations/20261024064600_customer_tables.sql`; this work needs no migration.
+
+### 23.1 What a request stores
+
+- `public.data_requests` keeps the row id, `customer_id`, `kind` (`correction` or `deletion`), `message`, `status`, `created_at` and `updated_at`.
+- The browser sends only `kind` and the trimmed `message` from `src/lib/account/data-requests.ts`. `customer_id` defaults to `auth.uid()`, and `created_at` and `updated_at` are set by the table trigger, so a customer cannot post a request for someone else or fake a date.
+- The database accepts a trimmed message of 1 to 1000 characters and only the two kinds. The form also checks this before sending.
+- A request is a message to the shop. It does not delete or change any other row by itself.
+
+### 23.2 Who can read it, and who can change it
+
+- Row Level Security policy `customer_or_staff_reads` lets a signed-in customer read only rows where `customer_id = auth.uid()`, and lets shop staff read every request through `private.is_staff()`. No one else can read the table.
+- The website's list also sends an explicit `.eq("customer_id", userId)` filter as defence-in-depth, the same way order history does. A signed-in customer therefore never sees another customer's requests, even if a policy were misconfigured.
+- Customers can add only their own request, and it must start as `open`: policy `customer_adds_own` checks both. Customers have no update or delete grant, so they cannot change a request's status, its message or its kind.
+- Only shop staff have the `staff_updates` policy, which is how a request moves `open` → `in-progress` → `resolved` or `declined`. The website shows those four states in plain words and never offers a status control.
+
+### 23.3 How the shop handles a request
+
+- The shop handles correction and deletion requests by hand for now; nothing is deleted automatically when a request arrives. Staff read the request in the POS/staff workflow and contact the customer using the contact details already on their profile.
+- The website tells the customer what happens next and shows the status of their earlier requests when they come back to `/account/data-request`.
+- A deletion request covers profile data. Order records that the shop must keep may stay after the request. The exact retention and deletion rule is **TODO: Confirm with Brew ni Cat owner.**
+- The response time for a request is **TODO: Confirm with Brew ni Cat owner.**
+
+### 23.4 Known limits
+
+- There is no email or text message when a status changes; the customer sees it the next time they open the page.
+- Requests are not rate limited. A signed-in customer could send several requests in a row; the shop sees all of them.
+- The owner's approved retention rule, the response time and the wording the shop should send are still open decisions (functional requirements §6 and §12). **TODO: Confirm with Brew ni Cat owner.**
+
+## 24. Messenger Smart Replies Addendum (ADR-031, 2026-11-13)
+
+### 24.1 What goes to Google
+
+- Only for a typed question that no button, order link, hours question or staff topic answers. The request holds the text of that one message and the shop's public facts (§25 of the system architecture).
+- Before sending, `maskPersonal` replaces emails, Philippine mobile numbers and any run of 9 or more digits. The customer's name, Facebook ID and earlier messages are never sent.
+- Rider and partner orders, offers, jobs, lost items and complaints are matched on the server and never sent to Gemini.
+- The reply is not stored. Logs keep only the replied, skipped and failed counts.
+
+### 24.2 Free tier
+
+- The owner's Google AI Studio key is on the free tier. Google may keep and have people review free-tier prompts to improve its products, so the masking above is the main control and the privacy policy says so (`/privacy`, version 2026-11-13). Moving to the paid tier, where prompts aren't used that way, is an owner decision. **TODO: Confirm with Brew ni Cat owner.**
+- `GEMINI_API_KEY` and `GEMINI_MODELS` are server-only settings, listed without values in `.env.example`. The key is never logged and is sent only in the request header. A key that was shared in a chat should be rotated in Google AI Studio before it goes into Vercel.
+
+### 24.3 Abuse and wrong answers
+
+- The system instruction treats the customer's message as data and tells Gemini to use only the given facts and to hand off anything else. The reply is checked on the server: no links, no markdown, at most 600 characters, and known buttons only. It never places an order or changes data.
+- Per-customer and Page-wide limits keep a flood of messages from using up the free tier. Past them, the customer gets the staff reply.
+- The bot doesn't present itself as a person. If a customer sincerely asks, it says it is the shop's auto-reply and that the staff read the chat.
+
+## 25. Google Sign-In Addendum (ADR-030)
+
+- Customers sign in only with Google through Supabase Auth. The site never sees a password, and the old password and reset forms are removed.
+- The auth client uses the PKCE flow: Google returns a one-time code to `/account/callback`, and only the browser that started the sign-in can swap it for a session, because it holds the code verifier.
+- `returnTo` is checked twice, before Google sign-in starts and again on the callback page, so only addresses on the same site are followed (FR-036).
+- Google shares the customer's name, email and profile photo URL with Supabase. The site uses the email and name; the privacy notice on Sign In and Create an Account says so.
+- **Setup, done by hand by the team (not in the repository):**
+  1. In Google Cloud Console, create an OAuth client of type Web application. Add the Supabase callback `https://<project-ref>.supabase.co/auth/v1/callback` as an authorized redirect URI, and fill in the consent screen with the shop's name, the privacy policy address and the support email.
+  2. In Supabase, open Authentication → Sign In / Providers → Google, switch it on, and paste the client ID and secret. The secret stays in Supabase and is never committed.
+  3. In Supabase, open Authentication → URL Configuration. Set the Site URL to the production address and add `https://<production-domain>/account/callback` and `http://localhost:3000/account/callback` to the redirect URLs.
+- Until step 2 is done, the Google button shows "We couldn't open Google sign-in." and nobody can sign in, so the change is not merged before then.
+
+## 26. Messenger Staff Replies Addendum (FR-113, 2026-11-13)
+
+- The webhook now receives `message_echoes`, so it sees every message the Page sends, including the staff's. It reads only who the echo went to and whether the assistant sent it; the staff's text is not read, stored or logged.
+- A chat the staff answered is saved as an HMAC-SHA256 of the customer's Page-scoped ID with the Meta app secret (64 hex characters) and the time. The ID itself is never stored, and without the app secret nobody can make a customer's code, so the open `anon` functions can't be used to quiet the assistant for someone else or to learn who wrote to the Page.
+- `private.messenger_staff_chats` has RLS on and no grants; only the two security definer functions touch it. Rows older than two days are removed whenever a new one is saved.
+
+## 27. Messenger Page Posts Addendum (FR-114, 2026-11-13)
+
+- The assistant reads the shop's own posts (`/me/posts`: id, time, caption and picture link) with the Page token, which now has `pages_read_engagement`. Comments, reactions and anything about the people who interact with the Page are not read.
+- Only a picture whose link is `https` on `*.fbcdn.net` or `*.facebook.com` is fetched (no redirects, at most 4 MB, JPEG, PNG or WebP), and it is sent to Gemini only to read its words. The words, cut to 300 characters with links removed, are kept in the server's memory for the day and are never stored or logged.
+- The post's words are the shop's own public text; they are quoted to customers and given to Gemini as shop facts. Gemini's system instruction still treats the customer's message as data.
+- A failed read logs only the Graph path and status, never the token or the post.

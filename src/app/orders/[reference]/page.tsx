@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import { PlayWhileYouWait } from "@/components/games/play-while-you-wait";
+import { isWaitingForShop } from "@/lib/games/waiting-order";
 import { OrderStatusTracker } from "@/components/orders/order-status-tracker";
 import { siteConfig } from "@/config/site";
 import { useAuth } from "@/context/auth-context";
@@ -248,6 +250,9 @@ export default function OrderConfirmationPage() {
             setState({ status: "success", order: updated })
           }
         />
+
+        {/* Cat games while the shop works on the order (FR-089) */}
+        {isWaitingForShop(order.status) && <PlayWhileYouWait />}
 
         {/* Customer Details Card */}
         <div className="ios-card p-6">

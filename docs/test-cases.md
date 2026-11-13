@@ -420,7 +420,6 @@ Run on 2026-10-25 for branch `perf/home-intro-low-end-phones`: Vitest 238/238 pa
 | TC-P4-127 | NFR-001, NFR-034 | Device quality | Only phones without `?quality=high` get the phone tier | jsdom with a stubbed `matchMedia` | Read the quality on a phone, on a phone with `?quality=high`, and on a desktop | Phone: pixel-ratio cap 1.25 and the phone tier on. Phone with `?quality=high`: the phone tier off. Desktop: cap 1.5 (1.75 before PR #63) and the phone tier off | Matched in the 238/238 Vitest run; with the 1.5 cap, matched in the 307/307 Vitest run for PR #63 | Superseded (PR #63): integrated and software GPUs now get the lite tier too; see TC-P4-190 | `tests/unit/three-phone-tier.test.ts` |
 | TC-P4-128 | FR-001, NFR-001, NFR-034 | 3D on a phone | A phone gets the light showcase at a pixel ratio of 1 with the half-size HDRI | Production build in `chromium-3d` with a Pixel 7 profile | Open `/`; wait for the showcase; record every HDRI request | The canvas is marked `lite`, draws real pixels, and has a pixel ratio of at most 1; the only HDRI downloaded is `studio_small_09_512.hdr`; no console errors | Matched in the Playwright `chromium-3d` run (17/17 passed) | Passed | `tests/e2e/three.spec.ts` |
 
-
 ## 16. Phase 4 Customer Authentication Cases
 
 Run on 2026-10-27 for PR #58 (branch `feat/p4-customer-auth`): covers the browser auth Supabase client, auth context and hook, session persistence, restoration, sign-up, sign-in, forgot-password, reset-password, desktop/mobile navigation auth triggers, and Playwright end-to-end authentication.
@@ -982,8 +981,8 @@ Run on 2026-11-10 by Renier (GitHub: Apal-RP) on branch `feat/p5-loyalty` (PR #1
 | TC-P5-118 | FR-053 | `RewardsView` | Shows loading skeleton while data loads | Pending API promises | Render `<RewardsView />` | Displays skeleton container with `data-testid="loyalty-loading"` | Matched. | Passed | `tests/unit/loyalty-view.test.tsx` |
 | TC-P5-119 | FR-053, FR-054 | `RewardsView` | Displays balance and plain-word rules | Loaded balance of 60 | Render `<RewardsView />` | Displays 60 points, earning rule with formatPrice, and weekly limit | Matched. | Passed | `tests/unit/loyalty-view.test.tsx` |
 | TC-P5-120 | FR-054 | `RewardsView` | Displays rewards with enough and not enough points | Balance of 60; rewards at 50, 80, 100 pts | Render `<RewardsView />` | 50 pts shows "Balance is enough" with enabled Redeem button; 80 pts shows "Need 20 more pts" with disabled button | Matched. | Passed | `tests/unit/loyalty-view.test.tsx` |
-| TC-P5-121 | FR-053 | `RewardsView` | Displays points history with formatted signs and reasons | Transactions with positive and negative points | Render `<RewardsView />` | Renders rows with "+12 pts", "−50 pts", order references, and plain reasons | Matched. | Passed | `tests/unit/loyalty-view.test.tsx` |
-| TC-P5-122 | FR-053 | `RewardsView` | Displays empty state when customer has no points | Empty history list | Render `<RewardsView />` | Displays ~~"No points yet. You earn points when a pickup order is completed."~~ Superseded 2026-11-11: "No points yet. You earn points when an order is completed." (delivery orders earn points too) | Matched. | Passed | `tests/unit/loyalty-view.test.tsx` |
+| TC-P5-121 | FR-053 | `RewardsView` | Displays points history with formatted signs and reasons | Transactions with positive and negative points | Render `<RewardsView />` | Renders rows with "+12 pts", "−50 pts", order references, and plain reasons Update 2026-11-13: the history moved to `/account/rewards/history`, so this case now renders `<PointsHistoryView />`. | Matched. | Passed | `tests/unit/loyalty-view.test.tsx` |
+| TC-P5-122 | FR-053 | `RewardsView` | Displays empty state when customer has no points | Empty history list | Render `<RewardsView />` | Displays ~~"No points yet. You earn points when a pickup order is completed."~~ Superseded 2026-11-11: "No points yet. You earn points when an order is completed." (delivery orders earn points too) Update 2026-11-13: now renders `<PointsHistoryView />`, which shows this empty state; `<RewardsView />` no longer lists history. | Matched. | Passed | `tests/unit/loyalty-view.test.tsx` |
 | TC-P5-123 | FR-053 | `RewardsView` | Displays error banner when loading fails | Rejected fetch promise | Render `<RewardsView />` | Renders error banner with `role="alert"` and retry messaging | Matched. | Passed | `tests/unit/loyalty-view.test.tsx` |
 | TC-P5-124 | FR-055 | `RewardsView` | Supports redemption confirmation and displays counter code | Eligible reward selected | Click Redeem, confirm in dialog | Calls `redeemReward`, displays counter verification code "RWD-999888", and updates balance | Matched. | Passed | `tests/unit/loyalty-view.test.tsx` |
 
@@ -991,10 +990,67 @@ Run on 2026-11-10 by Renier (GitHub: Apal-RP) on branch `feat/p5-loyalty` (PR #1
 
 | ID | Requirement ID(s) | Module | Scenario | Preconditions | Input / action | Expected result | Actual result | Status | Evidence |
 |---|---|---|---|---|---|---|---|---|---|
-| TC-P5-125 | FR-050, FR-053, FR-054 | `/account/rewards` | Customer sees balance, rules, rewards, and history at 1440x900 | Authenticated mock session, mocked PostgREST/RPC | Open `/account/rewards` at 1440x900 | Heading, balance, earning rules, rewards catalog, and transaction history are visible | Matched. | Passed | `tests/e2e/loyalty.spec.ts`, `docs/evidence/phase-5/loyalty/rewards-page-1440x900.png` (Update 2026-11-11: after the restyle, `restyled-rewards-page-1440x900.png` and `restyled-rewards-page-1440x900-night.png`) |
+| TC-P5-125 | FR-050, FR-053, FR-054 | `/account/rewards` | Customer sees balance, rules, rewards, and history at 1440x900 | Authenticated mock session, mocked PostgREST/RPC | Open `/account/rewards` at 1440x900 | Heading, balance, earning rules, rewards catalog, and transaction history are visible Update 2026-11-13: the history rows are on `/account/rewards/history` now (TC-P5-211), so this case checks that the rewards page no longer lists them. | Matched. | Passed | `tests/e2e/loyalty.spec.ts`, `docs/evidence/phase-5/loyalty/rewards-page-1440x900.png` (Update 2026-11-11: after the restyle, `restyled-rewards-page-1440x900.png` and `restyled-rewards-page-1440x900-night.png`) |
 | TC-P5-126 | FR-053, FR-054 | `/account/rewards` | Mobile customer views responsive layout at 390x844 | Authenticated mock session | Open `/account/rewards` at 390x844 | No horizontal scroll, card and action tap targets meet touch standards | Matched. | Passed | `tests/e2e/loyalty.spec.ts`, `docs/evidence/phase-5/loyalty/rewards-page-390x844.png` (Update 2026-11-11: after the restyle, `restyled-rewards-page-390x844.png` and `restyled-rewards-page-390x844-night.png`) |
-| TC-P5-127 | FR-053 | `/account/rewards` | Shows empty points history when customer has no transactions | Authenticated mock session with 0 points and empty history | Open `/account/rewards` at 1440x900 | Displays ~~"No points yet. You earn points when a pickup order is completed."~~ Superseded 2026-11-11: "No points yet. You earn points when an order is completed." (delivery orders earn points too) and View Menu link | Matched. | Passed | `tests/e2e/loyalty.spec.ts`, `docs/evidence/phase-5/loyalty/rewards-empty-1440x900.png` (Update 2026-11-11: after the restyle, `restyled-rewards-empty-1440x900.png` and `restyled-rewards-empty-1440x900-night.png`) |
-| TC-P5-210 | FR-053 | `RewardsView` | Every CSS variable the rewards page uses exists in `globals.css` (added 2026-11-11) | `src/components/loyalty/rewards-view.tsx` and `src/app/globals.css` | Unit test reads both files | No missing variable names | Matched. | Passed | `tests/unit/loyalty-view.test.tsx` |
+| TC-P5-127 | FR-053 | `/account/rewards` | Shows empty points history when customer has no transactions | Authenticated mock session with 0 points and empty history | Open `/account/rewards` at 1440x900 | Displays ~~"No points yet. You earn points when a pickup order is completed."~~ Superseded 2026-11-11: "No points yet. You earn points when an order is completed." (delivery orders earn points too) and View Menu link Update 2026-11-13: now opens `/account/rewards/history`, and the balance shows as "0 points" there. | Matched. | Passed | `tests/e2e/loyalty.spec.ts`, `docs/evidence/phase-5/loyalty/rewards-empty-1440x900.png` (Update 2026-11-11: after the restyle, `restyled-rewards-empty-1440x900.png` and `restyled-rewards-empty-1440x900-night.png`) |
+| TC-P5-210 | FR-053 | `RewardsView` | Every CSS variable the rewards page uses exists in `globals.css` (added 2026-11-11) | `src/components/loyalty/rewards-view.tsx` and `src/app/globals.css` | Unit test reads both files | No missing variable names Update 2026-11-13: it also checks `src/components/loyalty/points-history-view.tsx`. | Matched. | Passed | `tests/unit/loyalty-view.test.tsx` |
+| TC-P5-211 | FR-053 | `/account/rewards`, `/account/rewards/history` | The points history has its own page, linked both ways (added 2026-11-13) | Authenticated mock session with 60 points and two transactions | Open `/account/rewards`, click "See points history →", then "← Back to Rewards" | The history page shows the "Points History" heading, "60 points" and both order references; the back link returns to `/account/rewards` | Passed locally (Playwright `chromium`) | Passed | `tests/unit/loyalty-view.test.tsx` |
+| TC-P5-212 | FR-053 | `RewardsView`, `PointsHistoryView` | The rewards view links to the history page and does not fetch history; the history view shows the balance, a back link and an error banner (added 2026-11-13) | Mocked loyalty client | Render each view | `RewardsView` has the link to `/account/rewards/history`, no history rows and no `fetchLoyaltyHistory` call; `PointsHistoryView` shows "60 points", the h1 and the back link, and the error banner when loading fails | Passed (Vitest) | Passed | `tests/unit/loyalty-view.test.tsx` |
+
+## 38. Account Home And Data Request Cases (Phase 5, Week 3 — FR-042)
+
+Run on 2026-11-12 by Rizjie (GitHub: Mr-Jie29) on branch `feat/p5-account-home` (PR #130). The account home links the account pages and shows the newest order through the existing `fetchCustomerOrders` helper. The data request form writes to the existing `public.data_requests` table; no migration is needed and no request was sent to the live database. Every order, name, request and session in these cases is MOCK DATA — FOR DEVELOPMENT ONLY, and Supabase is mocked in the browser tests.
+
+Unit tests run on Vitest (`tests/unit/data-requests-helper.test.ts`, `tests/unit/account-home.test.tsx`, `tests/unit/data-request-form.test.tsx`, `tests/unit/site-header.test.tsx`): 27 passed. The full unit suite also passed: 99 files, 1034 tests. E2E browser tests run on Chromium with Playwright (`tests/e2e/account-home.spec.ts`): 5 passed, and the full Chromium suite passed with 62 passed and 3 skipped in CI mode (one worker, up to two retries) against the CI placeholder environment. Evidence screenshots were captured into `docs/evidence/phase-5/account-home/` with `CAPTURE_EVIDENCE=1` at 1440x900 and 390x844.
+
+### 38a. Data request helper (TC-P5-130 to TC-P5-133)
+
+| ID | Requirement ID(s) | Module | Scenario | Preconditions | Input / action | Expected result | Actual result | Status | Evidence |
+|---|---|---|---|---|---|---|---|---|---|
+| TC-P5-130 | FR-042 | `submitDataRequest` | Sends only the kind and the trimmed message | Stubbed Supabase client passed as `client` | Call `submitDataRequest({ kind: "correction", message: "  Please fix my phone number.  ", client })` | Inserts `{ kind: "correction", message: "Please fix my phone number." }` with no `customer_id` and no `status`, so the database fills them | Matched. | Passed | `tests/unit/data-requests-helper.test.ts` |
+| TC-P5-131 | FR-042 | `submitDataRequest` | Insert errors are thrown | Insert returns code `42501` "permission denied" | Call `submitDataRequest` | The promise rejects with "permission denied" | Matched. | Passed | `tests/unit/data-requests-helper.test.ts` |
+| TC-P5-132 | FR-042 | `fetchDataRequests` | Lists only that customer's requests, newest first | Stubbed client with two rows | Call `fetchDataRequests({ userId: "customer-123", client })` | Selects `id, kind, message, status, created_at`, filters `customer_id` to the customer and orders `created_at` descending | Matched. | Passed | `tests/unit/data-requests-helper.test.ts` |
+| TC-P5-133 | FR-042 | `submitDataRequest`, `fetchDataRequests` | Listing errors are thrown, and an empty or overlong message never inserts | Select returns "JWT expired"; message is spaces or 1001 characters | Call both helpers | Listing rejects with "JWT expired"; the empty and overlong messages are rejected before an insert is attempted | Matched. | Passed | `tests/unit/data-requests-helper.test.ts` |
+
+### 38b. Account home (TC-P5-134 to TC-P5-138)
+
+| ID | Requirement ID(s) | Module | Scenario | Preconditions | Input / action | Expected result | Actual result | Status | Evidence |
+|---|---|---|---|---|---|---|---|---|---|
+| TC-P5-134 | FR-042 | `AccountHomeView` | Five tiles link every account page | Signed in as `customer-123` | Render the page | Orders, Favorites, Rewards, Profile and Data requests tiles link `/account/orders`, `/account/favorites`, `/account/rewards`, `/account/profile` and `/account/data-request`; the heading is "My Account" | Matched. | Passed | `tests/unit/account-home.test.tsx` |
+| TC-P5-135 | FR-039, FR-042 | `AccountHomeView` | Shows the newest order in the order history words | `fetchCustomerOrders` returns one completed order | Render the page | Requests page 1 with page size 1 for that customer; shows the reference linked to `/orders/BNC-7K2Q9F`, the status, "Placed on" date, total and item count | Matched. | Passed | `tests/unit/account-home.test.tsx` |
+| TC-P5-136 | FR-042 | `AccountHomeView` | Empty order state | The customer has no orders | Render the page | "No orders yet" and a Browse Menu link to `/menu` | Matched. | Passed | `tests/unit/account-home.test.tsx` |
+| TC-P5-137 | FR-042 | `AccountHomeView` | Order error with Try again | The first request rejects, the retry succeeds | Render the page, then press Try again | The alert says "Unable to load your latest order. Please try again."; the retry loads the order and clears the alert | Matched. | Passed | `tests/unit/account-home.test.tsx` |
+| TC-P5-138 | FR-042 | `AccountHomeView` | Loading state | The order request never resolves | Render the page | The loading placeholder shows and "No orders yet" does not | Matched. | Passed | `tests/unit/account-home.test.tsx` |
+
+### 38c. Data request form (TC-P5-139 to TC-P5-146)
+
+| ID | Requirement ID(s) | Module | Scenario | Preconditions | Input / action | Expected result | Actual result | Status | Evidence |
+|---|---|---|---|---|---|---|---|---|---|
+| TC-P5-139 | FR-042 | `DataRequestView` | Both fields are required | Signed in; empty form | Press Send request | "Choose Correction or Deletion." and the message error show; nothing is sent; the message field has `aria-invalid` and an `aria-describedby` that points at its error text | Matched. | Passed | `tests/unit/data-request-form.test.tsx` |
+| TC-P5-140 | FR-042 | `DataRequestView` | The message is trimmed | Correction chosen | Type `   Please fix my name.   ` and send | `submitDataRequest` is called with `{ kind: "correction", message: "Please fix my name." }` | Matched. | Passed | `tests/unit/data-request-form.test.tsx` |
+| TC-P5-141 | FR-042 | `DataRequestView` | Live count and 1000-character limit | Empty form | Type 12 characters, then set 1001 characters | The field has `maxlength="1000"`; the count reads "12 / 1000 characters"; 1001 characters show the limit error and no request is sent | Matched. | Passed | `tests/unit/data-request-form.test.tsx` |
+| TC-P5-142 | FR-042 | `DataRequestView` | Send request is disabled while sending | The insert stays pending | Send a filled form | The button is disabled and reads "Sending…" until the insert settles | Matched. | Passed | `tests/unit/data-request-form.test.tsx` |
+| TC-P5-143 | FR-042 | `DataRequestView` | Success says what happens next | The insert succeeds | Send a filled form | The confirmation says the request was sent and that the shop will review it and contact the customer; the earlier list reloads | Matched. | Passed | `tests/unit/data-request-form.test.tsx` |
+| TC-P5-144 | FR-042 | `DataRequestView` | An error keeps the typed request and Try again resends it | The first insert rejects, the retry succeeds | Send a deletion request, then press Try again | The alert says the request could not be sent; the choice and message stay; the retry sends the same payload and shows the confirmation | Matched. | Passed | `tests/unit/data-request-form.test.tsx` |
+| TC-P5-145 | FR-042 | `DataRequestView` | Earlier requests show plain-word statuses | Two earlier rows: in progress and resolved | Render the page | "Correction request" and "Deletion request" show with "In progress" and "Resolved" and their dates; only the signed-in customer's rows are requested | Matched. | Passed | `tests/unit/data-request-form.test.tsx` |
+| TC-P5-146 | FR-042 | `DataRequestView` | Deletion explanation | Signed in | Render the page | The page says a deletion request covers profile data and that order records the shop must keep may stay | Matched. | Passed | `tests/unit/data-request-form.test.tsx` |
+
+### 38d. Account menu links (TC-P5-147)
+
+| ID | Requirement ID(s) | Module | Scenario | Preconditions | Input / action | Expected result | Actual result | Status | Evidence |
+|---|---|---|---|---|---|---|---|---|---|
+| TC-P5-147 | FR-042 | `SiteHeader` | The account menus lead with My account and keep Rewards after Favorites | Signed in through `AuthProvider` with a mock client | Open the Account menu, then the mobile navigation | Desktop links read My account, Profile, Order History, Favorites, Rewards; My account links `/account` and Rewards links `/account/rewards`; the phone menu has the same order | Matched. | Passed | `tests/unit/site-header.test.tsx` |
+
+### 38e. Browser tests (TC-P5-148 to TC-P5-152)
+
+| ID | Requirement ID(s) | Module | Scenario | Preconditions | Input / action | Expected result | Actual result | Status | Evidence |
+|---|---|---|---|---|---|---|---|---|---|
+| TC-P5-148 | FR-039, FR-042 | `/account` | Account home at 1440x900 | Chromium; Supabase Auth and PostgREST mocked; signed in as `customer-123` with one completed order | Open `/account` | One latest-order request filtered to `customer_id=eq.customer-123` with limit 1; five tile links; reference, status, "Placed on" date and ₱400 show; the reference opens `/orders/BNC-7K2Q9F` | Matched. | Passed | `tests/e2e/account-home.spec.ts`, `docs/evidence/phase-5/account-home/account-home-1440x900.png` |
+| TC-P5-149 | FR-042 | `/account` | Empty account home at 390x844 | Same mocks; no orders | Open `/account` | "No orders yet" and Browse Menu show; the page does not scroll sideways | Matched. | Passed | `tests/e2e/account-home.spec.ts`, `docs/evidence/phase-5/account-home/account-home-390x844.png` |
+| TC-P5-150 | FR-042 | `/account/data-request` | Send a correction request at 1440x900 | Signed in; one earlier request in progress | Open the page, choose Correction, type a mock message and send | The earlier request shows "In progress"; the insert body is exactly `{ kind, message }`; the confirmation explains what happens next; the new request shows as "Open" | Matched. | Passed | `tests/e2e/account-home.spec.ts`, `docs/evidence/phase-5/account-home/data-request-1440x900.png`, `docs/evidence/phase-5/account-home/data-request-success-1440x900.png` |
+| TC-P5-151 | FR-042 | `/account/data-request` | Required errors and a sent request at 390x844 | Signed in; empty form | Open the page and send empty; choose Deletion, type a mock message and send | The required errors show and are tied to the fields; after the second send the confirmation shows; no sideways scrolling | Matched. | Passed | `tests/e2e/account-home.spec.ts`, `docs/evidence/phase-5/account-home/data-request-validation-390x844.png`, `docs/evidence/phase-5/account-home/data-request-390x844.png` |
+| TC-P5-152 | FR-042 | `/account/data-request` | A failed send keeps the typed request | The first insert fails, the retry succeeds | Send a deletion request, then press Try again | The alert shows; the textarea keeps the mock message; Try again sends the same payload and shows the confirmation | Matched. | Passed | `tests/e2e/account-home.spec.ts`, `docs/evidence/phase-5/account-home/data-request-error-1440x900.png` |
+
 ## 39. Ratings And Reviews Cases (Phase 5, Week 3 — FR-098)
 
 Run on 2026-11-10 by Van Joaquin C. Baguio on branch `feat/p5-reviews` (PR #114). The migration adds the `public.reviews` table, column-level security grants, and security definer functions `public.post_review` and `public.my_review`. The website provides a Reviews section on the About page above the visit section, presenting the average rating, count, newest reviews (10 per page with Show more), and an accessible 1 to 5 star submission form with 500-character counter. `POST /api/reviews` applies a per-IP rate limit (3 in 10 minutes) and passes the authenticated session to Supabase. Database tests run on PGlite (`tests/database/reviews.test.ts`): 12 passed. Unit tests run on Vitest (`tests/unit/reviews-route.test.ts`, `tests/unit/review-form.test.tsx`, `tests/unit/reviews-list.test.tsx`): 19 passed. E2E browser tests run on Chromium with Playwright (`tests/e2e/reviews.spec.ts`): 3 passed. Evidence screenshots were captured into `docs/evidence/phase-5/reviews/` with `CAPTURE_EVIDENCE=1`. Manual verification cases MAN-P5-001 to MAN-P5-009 are Not run yet until the migration is applied to the live database by Rodnee.
@@ -1071,8 +1127,6 @@ Run on 2026-11-10 by Van Joaquin C. Baguio on branch `feat/p5-reviews` (PR #114)
 | MAN-P5-007 | FR-098 | Long review exceeding 500 characters is rejected | Counter indicates limit and submission is blocked | Not run yet |
 | MAN-P5-008 | FR-098 | Staff hides an inappropriate review from POS | Review disappears from public `/about` page upon next reload | Not run yet |
 | MAN-P5-009 | FR-098 | Pagination with "Show more" loads next 10 reviews | Clicking Show more loads older reviews smoothly without page jump | Not run yet |
-
-
 
 ## 40. Messenger Assistant Webhook Cases (Phase 7 — FR-058 to FR-063)
 
@@ -1341,6 +1395,27 @@ Update 2026-11-10: the drawn poster cats were replaced by the six pixel cats of 
 
 The first screenshots of the drawn cats stay in `docs/evidence/phase-9/cat-characters/` as the record of the first version.
 
+Update 2026-11-13 (ADR-032): the pixel cats in the footer were replaced by 3D cats built with three.js after the shop's own cats. A first 3D version perched them on the edges of every page; the team asked for walking cats in the footer instead, like Santa's reindeer, and a paw cursor; then for no leash or reins, Luna (expecting) riding with kittens, and the sleigh only until the end of December (`CatParade`, `parade-stage.ts`, `cat-model.ts`, `src/lib/cats/cats.ts`, `src/lib/sound/cat-sounds.ts`). The case IDs stay; what they check now, plus eight new cases (TC-P9-007 to TC-P9-012 are the ad slot's):
+
+| ID | Requirement | Area | Updated check | Expected result | Status |
+|---|---|---|---|---|---|
+| TC-P9-001 | FR-099 | `src/lib/cats/cats.ts` | `SHOP_CATS`, `PARADE_ORDER`, `SLEIGH_RIDER`, `KITTEN_COATS`, `festiveSeason`, `paradeSize`, `paradeWalkers`, `stripHeight` | Seven cats with seven coats (Kasper's eyes are two colours); Oreo leads and Luna never walks: she rides with three kittens; the sleigh shows from November to December 31 and not from January 1; 3 walkers below 640 px, 4 from there; the strip is 84 px at 390, 108 px at 1440 and at most 150 px | Passed (automated) |
+| TC-P9-002 | FR-099, NFR-035 | `CatParade` | Render without a 2D canvas | The strip is aria-hidden, holds a canvas and no pictures, and never says it is ready, so it stays hidden | Passed (automated) |
+| TC-P9-003 | FR-099 | `paradeLap` | Laps both ways at 390 and 1440 px | Each lap starts and ends with the whole parade out of sight; mid-lap, where the cats glance out without stopping, it is centred on screen | Passed (automated) |
+| TC-P9-004 | FR-099 | `paradeSpeed`, `walkMs`, `restMs` | Edge values | About a body length a second (950 px takes 10 s on a 100 px strip, either way); rests of 5 to 12 seconds | Passed (automated) |
+| TC-P9-005 | FR-099 | Playwright, 390, 1440 and 1920 wide | Home, About and Menu | The strip is the footer's first child, aria-hidden, ignores taps, sits in the page's flow and ends above every footer link, heading and text | Passed (automated) |
+| TC-P9-006 | FR-099 | Playwright, 1440 wide | `/contact`; a text field added to the page | The page shows the paw cursor, links the pointing paw, the text field the text cursor; both SVGs load (200) | Passed (automated) |
+| TC-P9-013 | FR-099 | `walkFrame`, `sleighFrame` | Twelve frame times walking (stride 1) for the lead and the next cat, then standing (stride 0); the sleigh moving and stopped | Walking, the lead steps through all six frames, out of step with the next cat; standing, frame 0 only; the sleigh rocks through its four frames only while moving | Passed (automated) |
+| TC-P9-014 | FR-099 | `globals.css` | Read the strip and cursor rules | The strip is `position: relative` (never fixed) with `pointer-events: none`; both paw cursors are set | Passed (automated) |
+| TC-P9-015 | FR-099 | `meow`, `CatSoundsToggle` | A page transition starts; switch "Cat sounds" off, start another; switch it on | One meow, none while off (saved as "off" on the device), one meow when switched back on; every meow rises then falls and lasts at most 480 ms | Passed (automated) |
+| TC-P9-021 | FR-099 | `pixelScale`, `spriteSpan` | Phone 390 × 84 at 3×, desktop 1440 × 108 at 1× and 2×, 1920 × 144, 4K 3840 × 150 at 2×, festive and not | A whole number of device pixels a sprite pixel, at least 1; the cats fit the strip's height and the parade the screen's width; on a desktop the cats stand at least 80 px | Passed (automated) |
+| TC-P9-016 | FR-099 | Aseprite sprites | Read each walker's `.aseprite` source, frame data and sheet, and the sleigh's | Each source exists; each sheet is 288 × 240 (six frames by six tags), the sleigh's 288 × 44; the tags are walk, look, meow and their festive versions, one row each, six frames of 110 ms; `cat-model.ts` is gone | Passed (automated) |
+| TC-P9-017 | FR-099 | `catRow` | Look 0, 0.3 and 0.8; meowing; festive | Looking ahead below halfway, out past it; the meow row while meowing; the festive rows (collar and bell) in the holidays | Passed (automated) |
+| TC-P9-018 | FR-099 | Playwright `chromium-3d`, 1440 wide | `/menu`, scrolled to the footer, WebGL and motion on | The strip is ready with Oreo, Latte, Kulas and the grey cat; it walks, and two screenshots 0.7 s apart differ; passing the middle (they glance out) it is still walking and still moving; the lap ends; `/cats/kasper.webp` is gone (404); the five sprite sheets load as PNGs; no page errors | Passed (automated) |
+| TC-P9-019 | FR-099, NFR-032 | Playwright `chromium-3d`, 1440 wide | `/about` with reduced motion | The parade stands still: not walking, and nothing changes in 1.2 seconds | Passed (automated) |
+| TC-P9-020 | FR-099 | Playwright `chromium-3d`, 390, 1440 and 1920 wide | `/about`, passing the middle, still walking | Evidence `cat-parade-{strip,footer}-{phone-390,desktop-1440,wide-1920}.png` | Passed (automated) |
+
+The pixel-cat screenshots stay in `docs/evidence/phase-9/cat-characters/` as the record of the second version; the screenshots of the perched 3D cats were not kept.
 
 ## 49. Reviews On The Home Page Cases (2026-11-10)
 
@@ -1351,9 +1426,19 @@ Customers could not find the reviews, because they were only near the bottom of 
 | TC-P5-204 | FR-098 | The home page loads with seven reviews | Shows the average rating 4.6, "7 reviews", the newest three reviews, and the links Leave a review and Read all reviews | Passed (automated) |
 | TC-P5-205 | FR-098 | The home page loads with no reviews | Shows "No reviews yet. Be the first." and Leave a review, without Read all reviews | Passed (automated) |
 | TC-P5-206 | FR-098 | The reviews can't be loaded | The home page still shows Leave a review, with no error and no empty message | Passed (automated) |
-| TC-P5-207 | FR-098 | The site navigation | Has a Reviews link to `/about#reviews`, used by the header, the phone menu and the footer | Passed (automated) |
-| TC-P5-208 | FR-098 | Browser test at 390 and 1440 pixels wide | The home block shows the average, the count and three reviews without sideways scrolling; Read all reviews opens `/about#reviews` with the reviews in view | Passed (automated) |
-| TC-P5-209 | FR-098 | Browser test of the Reviews link in the desktop menu (1024 and 1440) and the phone menu (390) | The link fits without sideways scrolling and opens `/about#reviews` with the reviews in view | Passed (automated) |
+| TC-P5-207 | FR-098 | The site navigation | Has a Reviews link to `/reviews`, used by the header, the phone menu and the footer | Passed (automated) |
+| TC-P5-208 | FR-098 | Browser test at 390 and 1440 pixels wide | The home block shows the average, the count and three reviews without sideways scrolling; Read all reviews opens `/reviews` with the reviews in view | Passed (automated) |
+| TC-P5-209 | FR-098 | Browser test of the Reviews link in the desktop menu (1024 and 1440) and the phone menu (390) | The link fits without sideways scrolling and opens `/reviews` with the reviews in view | Passed (automated) |
+
+Update 2026-11-13: the reviews moved from the About page to their own page, `/reviews`, at the team's request. TC-P5-207 to TC-P5-209 now expect `/reviews` instead of `/about#reviews`. An old `/about#reviews` link forwards to `/reviews`.
+
+| ID | Requirement | Scenario | Expected result | Status |
+| --- | --- | --- | --- | --- |
+| TC-P5-213 | FR-098 | `/reviews` page | Has its own heading "Reviews", the reviews list and the review form | Passed (automated) |
+| TC-P5-214 | FR-098 | The site navigation | The Reviews link opens `/reviews`, not the About page | Passed (automated) |
+| TC-P5-215 | FR-098 | `/about#reviews` (an old link) | Forwards to `/reviews` | Passed (automated) |
+| TC-P5-216 | FR-098 | `/about` without the hash, then the hash changes to `#reviews` | Stays on About until the hash changes, then forwards to `/reviews` | Passed (automated) |
+| TC-P5-217 | FR-098 | Browser test at 390 and 1440 pixels wide | `/reviews` shows the reviews without sideways scrolling; `/about#reviews` lands on `/reviews`; evidence `docs/evidence/phase-5/reviews-home/reviews-page-{phone-390,desktop-1440}.png` | Passed (automated) |
 
 ## 50. Ad Slot For The Mini-Games Cases (2026-11-10)
 
@@ -1367,7 +1452,7 @@ The mini-games will show one labeled ad (FR-090). The ad slot is built before th
 | TC-P9-010 | FR-090 | The customer taps No thanks | No ad shows, and "Show ads to support the shop" lets them change their mind | Passed (automated) |
 | TC-P9-011 | FR-090 | The slot is placed on the menu, cart, checkout, order or account pages | It shows nothing, even after the customer agreed | Passed (automated) |
 | TC-P9-012 | FR-090 | The page inside the ad frame | Loads only the Adsterra 300x250 banner unit | Passed (automated) |
-| MAN-P9-001 | FR-090 | With the real key set on a preview, open the games page on a phone and tap Show ads | A real 300x250 ad shows with the "Ad" label, and tapping it opens the advertiser's page in a new tab without leaving the site | Not run (needs the games page) |
+| MAN-P9-001 | FR-090 | With the real key set on a preview, open the games page on a phone and tap Show ads | A real 300x250 ad shows with the "Ad" label, and tapping it opens the advertiser's page in a new tab without leaving the site | Not run (the games page is built; needs the real key on a preview) |
 
 ## 51. Messenger Hours Question Cases (2026-11-11)
 
@@ -1383,6 +1468,9 @@ Customers often type "open po ba kayo?" instead of tapping a button, and it got 
 ## 46. Phase 7 Integrated QA Execution Summary
 
 Run on 2026-11-11 by Renier P. Apal, the integrated QA engineer, on `main` at `f82be0d` (branch `test/p7-integrated-qa-main`). Environment: Windows (win32), Node.js, Next.js 16 production build, Vitest for unit and database tests, and Playwright for browser tests. No live orders were placed, and no production database or POS data changed during the run.
+## 52. Phase 5 Integrated QA Execution Summary
+
+Run on 2026-11-11 by Renier P. Apal, the integrated QA engineer, on `main` at `f82be0d` (branch `test/p5-integrated-qa-main`). Environment: Windows (win32), Node.js, Next.js 16 production build, Vitest for unit and database tests, and Playwright for browser tests. No live orders were placed, and no production database or POS data changed during the run.
 
 | Check | Command | Result |
 | --- | --- | --- |
@@ -1414,3 +1502,178 @@ Run on 2026-11-11 by Renier P. Apal, the integrated QA engineer, on `main` at `f
 - #106: `feat/p7-messenger` — Messenger assistant webhook with button replies (FR-058 to FR-063) - MERGED
 - FR-064 (recommendations) - Deferred.
 - Waiting PRs: None.
+| LIVE-01 | GET `/account/rewards` | Live site (`/account/rewards`) | HTTP 200 OK | Passed |
+| LIVE-02 | GET `/account` | Live site (`/account`) | HTTP 200 OK | Passed |
+| LIVE-03 | GET `/account/data-request` | Live site (`/account/data-request`) | HTTP 404 Not Found (handled via privacy policy / contact) | ~~Not run yet~~ Superseded 2026-11-13: PR #130 adds this route after the run, so the 404 is a historical result. Re-check after the next production deploy. |
+| MAN-P5-010 | Sign in and sign out | Android phone & Desktop browser | Sign in and sign out work smoothly on both devices. | Passed |
+| MAN-P5-011 | Account home | Android phone & Desktop browser | Each tile opens the correct page, and the latest order shows (or "No orders yet"). | Passed |
+| MAN-P5-012 | Rewards | Android phone & Desktop browser | Balance, history, and rewards catalog display correctly without cross-customer data leakage. | Passed |
+| MAN-P5-013 | Data request | Android phone & Desktop browser | Form validation checks work (empty message, >1000 characters). Not submitted on live site per instructions. | Passed |
+| MAN-P5-014 | Reviews | Android phone & Desktop browser | List and average rating show on shop page/About page; form checks work. Not submitted without owner OK. | Passed |
+| MAN-P5-015 | Favorites | Android phone & Desktop browser | Save item to favorites, then remove it successfully. | Passed |
+| MAN-P5-016 | Order history and reorder | Android phone & Desktop browser | History shows past orders; Reorder successfully fills cart. Order not placed. | Passed |
+| MAN-P5-017 | Order tracking | Android phone & Desktop browser | Existing order page shows correct live status. | Passed |
+| MAN-P5-018 | Phone layout | Android phone | No page scrolls sideways. | Passed |
+
+**Phase 5 PRs Covered:**
+- #87 order history and reorder (FR-039, FR-041) - MERGED
+- #93 live order tracking (FR-044 to FR-049) - MERGED
+- #94 customer profiles (FR-038) - MERGED
+- #103 favorites (FR-040) - MERGED
+- #123 loyalty points and rewards (FR-050 to FR-055) - MERGED (`feat/p5-loyalty`)
+- #120 / #125 ratings and reviews (FR-098) - MERGED (`feat/p5-reviews`, `feat/reviews-front`)
+- Rizjie: account home and data requests (FR-042) - MERGED Update 2026-11-13: this was not true when the run finished, because PR #130 was still open. PR #130 merged on 2026-11-13.
+
+No waiting PRs remain for Phase 5.
+
+## 53. Messenger Smart Replies Cases (2026-11-13)
+
+ADR-031: typed questions, likes, stickers and photos get a reply, the "automated assistant" line is gone, and staff topics are left to the staff. TC-P7-008, TC-P7-017, TC-P7-018, TC-P7-019, TC-P7-022, TC-P7-027, TC-P7-029, TC-P7-030, TC-P7-031, TC-P7-033, TC-P7-052, TC-P7-057 and TC-P7-089 were updated to match. No test calls Gemini.
+
+| ID         | Requirement | Case                                                                                                      | Expected result                                                                                   | Status             |
+| ---------- | ----------- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | ------------------ |
+| TC-P7-090  | FR-059      | The shop's clock for 2:00 PM Manila and 11:30 PM UTC on a Monday                                          | Monday 2:00 PM, then Tuesday 7:30 AM                                                              | Passed (automated) |
+| TC-P7-091  | FR-059      | Open status before, during and after the hours, on a closed day and on Friday night                       | "open now until", "we open today at", "closed for today… tomorrow", "closed today (Saturday)", "Sunday" | Passed (automated) |
+| TC-P7-092  | FR-111      | The closed-today switch is on                                                                             | "Sorry, we're closed today" with the note and the next opening                                    | Passed (automated) |
+| TC-P7-093  | FR-062      | Rider and partner orders, item lists, ice and other offers, collabs, reservations, jobs, lost items, scratches | Each gets its staff topic                                                                     | Passed (automated) |
+| TC-P7-094  | FR-062      | "open po kayo today?", "how much po takoyaki?", "may matcha po?", "pa order po"                            | No staff topic                                                                                    | Passed (automated) |
+| TC-P7-095  | NFR-026     | A message with mobile numbers, an email and a long number                                                 | All masked before Gemini                                                                          | Passed (automated) |
+| TC-P7-096  | FR-059      | The facts for Gemini, with and without the menu                                                           | Open status, address, takeout box, known answers and menu; without the menu, "hand off price questions" | Passed (automated) |
+| TC-P7-097  | FR-062      | The system instruction                                                                                    | Hands off riders, ice, offers and unknowns; never calls itself an AI; honest "auto-reply" if asked | Passed (automated) |
+| TC-P7-098  | FR-062      | Gemini returns links, markdown, unknown or repeated buttons, bad JSON or a long reply                     | Cleaned reply, at most 3 known buttons, null for bad JSON, 600 characters at most                 | Passed (automated) |
+| TC-P7-099  | NFR-026     | The first model answers 503 (update 2026-11-13: each model is tried in turn)                                                                               | The next model answers; the key is only in the header; the mobile number is masked                | Passed (automated) |
+| TC-P7-100  | FR-062      | Every model errors, every model is slow, or returns no candidates (update 2026-11-13: until the whole limit passes) | Every model is tried more than once, a slow model doesn't use up the limit; then null, so the staff reply is sent | Passed (automated) |
+| TC-P7-101  | FR-059      | A typed question with Gemini on                                                                           | Gemini's reply with its buttons; no customer ID or name in the facts                              | Passed (automated) |
+| TC-P7-102  | FR-062      | A rider's order, an ice offer, then follow-ups in both chats                                              | "Our staff will confirm" for the rider, no reply for the offer, then quiet; Gemini never called   | Passed (automated) |
+| TC-P7-103  | FR-062      | Gemini says the staff should answer                                                                       | Its reply with the main buttons                                                                   | Passed (automated) |
+| TC-P7-104  | FR-062      | Gemini returns nothing or throws                                                                          | "Our staff will reply here soon"                                                                  | Passed (automated) |
+| TC-P7-105  | FR-062      | More typed questions than the limit                                                                       | Gemini is asked at most 8 times; the rest get the staff reply                                     | Passed (automated) |
+| TC-P7-106  | FR-059      | "open po kayo today?" with Gemini on                                                                      | "🟢 Yes, we're open now until 6 PM!" without Gemini                                                | Passed (automated) |
+| TC-P7-107  | FR-062      | `GEMINI_API_KEY` missing, blank or set                                                                    | Gemini off, off, on                                                                               | Passed (automated) |
+| TC-P7-108  | FR-062      | Models answer 503, 429 with a 30 s retry delay, 404 and empty, then a Gemma model answers in a code fence | Round 2 skips the 429 and 404 models and returns the Gemma answer; Gemma gets the instructions in the message; the next message skips the resting models | Passed (automated) |
+| MAN-P7-009 | FR-062      | From a tester account, send 👍, a photo, "open po?", "magkano takoyaki?" and an ice offer to the Page    | A hello with buttons, "staff will check", the open status, an answer with the price, and no reply to the offer | Pending            |
+
+## 54. Google Sign-In Cases (2026-11-13)
+
+Sign in and Create an Account use Google only (ADR-030). TC-P4-152, TC-P4-153, TC-P4-155, TC-P4-156, TC-P4-161 to TC-P4-167 and TC-P4-169 to TC-P4-171 tested the email and password forms and are Superseded by the cases below. TC-P4-168 and TC-P5-092 were rewritten for the Google pages.
+
+| ID         | Requirement    | Case                                                                                       | Expected result                                                                                              | Status             |
+| ---------- | -------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------ | ------------------ |
+| TC-P5-213  | FR-031, FR-032 | `signInWithGoogle("/account/orders")`                                                      | `signInWithOAuth` is called with provider `google` and `redirectTo` `/account/callback?returnTo=%2Faccount%2Forders` | Passed (automated) |
+| TC-P5-214  | FR-032         | Supabase can't start Google sign-in (provider off)                                         | The error is returned to the page                                                                            | Passed (automated) |
+| TC-P5-215  | FR-036         | `oauthCallbackUrl` with no `returnTo`, with `/` and with a path and query                 | `returnTo` is left out for the home page and encoded otherwise                                               | Passed (automated) |
+| TC-P5-216  | FR-032         | Open Sign In                                                                               | Only the Google button; no email or password fields and no Forgot password link                              | Passed (automated) |
+| TC-P5-217  | FR-036         | Sign In opened with `returnTo=/account/orders`, tap the button                             | Google sign-in starts with that `returnTo`; the button shows "Opening Google…" and is disabled              | Passed (automated) |
+| TC-P5-218  | FR-036         | Sign In opened with an outside `returnTo`                                                  | The outside address is dropped before Google sign-in starts                                                  | Passed (automated) |
+| TC-P5-219  | FR-032         | Google sign-in can't start                                                                 | An alert says so and the button works again                                                                  | Passed (automated) |
+| TC-P5-220  | FR-031         | Open Create an Account and tap the button                                                  | No password fields; "Sign up with Google" starts the same Google sign-in                                     | Passed (automated) |
+| TC-P5-221  | FR-036         | The callback page gets a session with `returnTo=/account/rewards`                         | It goes on to `/account/rewards`                                                                             | Passed (automated) |
+| TC-P5-222  | FR-036         | The callback page gets an outside `returnTo`                                               | It goes to `/`                                                                                               | Passed (automated) |
+| TC-P5-223  | FR-032         | Google returns `error=access_denied`                                                       | "Google sign-in was cancelled." with Back to Sign In; no redirect                                            | Passed (automated) |
+| TC-P5-224  | FR-032         | No session comes back                                                                      | "We couldn't finish signing you in with Google." with Back to Sign In                                        | Passed (automated) |
+| TC-P5-225  | FR-034         | Open `/account/forgot-password` and `/account/reset-password` in the browser               | Both land on Sign In with the Google button                                                                  | Passed (automated) |
+| TC-P5-226  | FR-032         | Open `/account/callback?error=access_denied` in the browser and tap Back to Sign In         | The cancelled message shows, and the link opens Sign In                                                      | Passed (automated) |
+| TC-P4-172  | FR-032, FR-033 | Browser: sign in through a mocked Google round trip, then sign out (rewritten 2026-11-13) | Back on `/` signed in with the Account menu; signing out shows Sign in again                                 | Passed (automated) |
+| TC-P4-271  | FR-036         | Browser: `/account/profile` signed out, sign in with mocked Google (rewritten 2026-11-13)  | Sent to Sign In with `returnTo`, then back to Profile after the callback                                     | Passed (automated) |
+| MAN-P5-019 | FR-031, FR-032 | With Google switched on in Supabase (2026-11-13), sign in on the branch preview with a real Gmail account | Google's account chooser opens, and the customer comes back signed in on the page they started from        | Passed 2026-11-13 on the preview (the lead developer's own Google account): Google's chooser opened, and the account menu showed the signed-in email |
+
+## 55. Messenger Quiet After A Staff Reply Cases (2026-11-13)
+
+FR-113: when the staff answer a chat by hand, the assistant leaves it to them. TC-P7-022 now sends the photo before the sticker, since a photo right after a reply gets no reply of its own. TC-P7-035, TC-P7-050, TC-P7-053 and TC-P7-054 now expect the assistant's `metadata` on each message.
+
+| ID         | Requirement | Case                                                                                         | Expected result                                                                                  | Status             |
+| ---------- | ----------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ | ------------------ |
+| TC-P7-109  | FR-113      | A reply with pictures and quick replies                                                      | Every message carries the assistant's `metadata`                                                 | Passed (automated) |
+| TC-P7-110  | FR-113      | A staff echo, then 11 hours later a greeting and a photo, a button tap, and another customer | The echo is saved; the greeting and photo get no reply; the tap and the other customer are answered | Passed (automated) |
+| TC-P7-111  | FR-113      | The assistant's own echo; a saved staff reply 1 hour and 12 hours old; the database down     | Still answered; quiet; answered; answered                                                        | Passed (automated) |
+| TC-P7-112  | FR-113      | "Good day 😊" and a photo together, then a photo 2 minutes later                             | One reply, then "Thanks! 📸 Our staff will check what you sent"                                   | Passed (automated) |
+| TC-P7-113  | NFR-026     | The chat code for a customer                                                                 | 64 hex characters, without the Messenger ID, the same each time, different per secret and customer | Passed (automated) |
+| TC-P7-114  | FR-113      | `anon` saves and reads a staff reply by code, and selects the table                          | The time comes back for that code only; the table is refused (42501)                             | Passed (automated) |
+| TC-P7-115  | FR-113      | A Messenger ID, upper-case or short codes; a reply three days old when another is saved      | Refused; the old row is removed                                                                  | Passed (automated) |
+| TC-P7-116  | FR-113      | The rollback, then the migration again                                                       | Table and functions removed, then working again                                                  | Passed (automated) |
+| MAN-P7-010 | FR-113      | From a tester account, message the Page; reply by hand from the Page inbox; send "hi" and a photo; tap a button | No reply to "hi" or the photo; the button answers                                   | Pending            |
+
+## 56. Messenger Today's Page Posts Cases (2026-11-13)
+
+FR-114: the assistant reads today's posts on the Facebook Page, including the words in a picture, and uses them for the hours.
+
+| ID         | Requirement | Case | Expected result | Status |
+| ---------- | ----------- | ---- | --------------- | ------ |
+| TC-P7-117  | FR-114      | Three posts from today and one from late yesterday (Manila); a second read within 2 minutes, then after | The two newest of today's posts; the Page is read again only after 2 minutes | Passed (automated) |
+| TC-P7-118  | FR-114      | A picture-only post whose words can't be read yet, then can; a picture on another site | Retried on the next read, then read once and kept; the other site's picture is never fetched | Passed (automated) |
+| TC-P7-119  | FR-114      | Opening times and "closed today" in English and Tagalog; a post about tomorrow; Graph API times; long text and links | Found; the post about tomorrow changes nothing; `+0000` times parse; links removed, cut to 300 | Passed (automated) |
+| TC-P7-120  | FR-114      | "Are you open?" before and after a posted later opening time; a posted "closed today"; the Closed today switch on | The posted time, then the usual status, with the post quoted; closed; the switch's own message | Passed (automated) |
+| TC-P7-121  | FR-114      | Gemini's shop facts with and without a post from today | The posted status and the post are in the facts only when there is one | Passed (automated) |
+| TC-P7-122  | FR-114      | Listing the Page's posts, and a 403 | `/me/posts` with the 4 fields, limit 5 and the Page token; null and a log line with only the path and status | Passed (automated) |
+| TC-P7-123  | FR-114      | Reading a picture: a busy model, NONE, an HTML page, a link off Facebook, a network failure | The next model's words; ""; ""; nothing fetched; null | Passed (automated) |
+| TC-P7-124  | FR-114      | A typed "open po kayo today?" with a post from today, then with the posts unreadable | The posted opening time; the usual open status | Passed (automated) |
+| MAN-P7-011 | FR-114      | Post a picture saying the shop opens later today on the Page; ask "open po kayo?" in Messenger before that time | The reply gives the posted time and quotes the post | Pending |
+
+## 57. Café Jukebox Cases (2026-11-13)
+
+FR-115: soft French café music in the footer, only when a visitor presses play.
+
+| ID        | Requirement | Case | Expected result | Status |
+| --------- | ----------- | ---- | --------------- | ------ |
+| TC-P9-022 | FR-115      | Read the four songs | Each is traditional (public domain) or written for the shop; every bar has whole beats; every pitch and chord parses; the last song is followed by the first | Passed (automated) |
+| TC-P9-023 | FR-115      | `midi`, `frequency`, `chordNotes` | A4 is 69 and 440 Hz; Am is A, C, E and G7 is G, B, D, F; roots from E2 and chord tones from G3, within an octave | Passed (automated) |
+| TC-P9-024 | FR-115      | `arrange` each song | Every note inside the song's length; a bass note on beat one of every bar (and beat three in 4/4); chords; one melody note a written note | Passed (automated) |
+| TC-P9-025 | FR-115      | Render the footer control with a Web Audio stand-in; press play, Next song, wait out the song, press stop | No audio before the press; then playing, "Now playing" with the title and credit, the next song on skip and after the song ends; stopped and quiet | Passed (automated) |
+| TC-P9-026 | FR-115      | Render without Web Audio and press play | Nothing plays, no error, the button stays "Play café music" | Passed (automated) |
+| TC-P9-027 | FR-115 | Playwright, 1440 wide: `/menu` footer, press play, Next song, go to About, press stop | Idle and silent first; "Now playing: Valse du chat (Written for Brew ni Cat)"; then Au clair de la lune; still playing on About; stopped, Next song gone; no page errors | Passed (automated) |
+
+## 58. Cat Games Cases (2026-11-13)
+
+FR-089: loyalty mini-games decided on the server, three plays a day. FR-090: the ad slot on the games page.
+
+| ID        | Requirement | Case | Expected result | Status |
+| --------- | ----------- | ---- | --------------- | ------ |
+| TC-P9-028 | FR-089 | PGlite: a customer plays Cat cups (cup 2), then Lucky paw | The server picks the cup; 3 points for a find, 1 otherwise; one play row and one `mini-game` ledger row linked to it; Lucky paw pays 1, 2, 3 or 5; the balance is the sum | Passed (automated) |
+| TC-P9-029 | FR-089 | PGlite: three plays, then a fourth; then the plays move to yesterday | The fourth is refused with `daily_limit_reached` and nothing recorded; status says 0 left; yesterday's plays don't count | Passed (automated) |
+| TC-P9-030 | FR-089 | PGlite: an unknown game, a missing or out-of-range cup, a cup for Lucky paw; a guest plays; a guest reads the status | Each refused with no points; the guest is denied (42501); the guest sees both games, 3 plays and the top points | Passed (automated) |
+| TC-P9-031 | FR-089 | PGlite: a customer inserts a play or a mini-game ledger row; reads plays; the server edits a play or adds a mini-game row with no play | All refused; another customer's plays are not visible | Passed (automated) |
+| TC-P9-032 | FR-089 | PGlite: 90 customers each pick cup 1 | Oreo is found under every cup more than 10 times; wins equal the times he was under cup 1 and are between 13 and 49 | Passed (automated) |
+| TC-P9-033 | FR-089 | PGlite: apply the rollback | The functions and table are gone; game points are removed and other points kept | Passed (automated) |
+| TC-P9-034 | FR-089 | Render `/games` signed in and pick cup 1; the server says cup 3 | "Oreo was under cup 3. +1 point for playing"; Oreo shows; plays left and balance update; the cups lock until "Hide him again" | Passed (automated) |
+| TC-P9-035 | FR-089 | Play the last Lucky paw of the day (5 points) | "Latte pawed out 5 points!"; the done message shows and both games turn off | Passed (automated) |
+| TC-P9-036 | FR-089 | A play fails | "Something went wrong. Your play wasn't used. Try again." and the cups can be picked again | Passed (automated) |
+| TC-P9-037 | FR-089 | Render as a guest | A sign-in link back to `/games`; the games are shown but off; no balance read | Passed (automated) |
+| TC-P9-038 | FR-089 | The status function is missing (migration not applied) | "The cats are still setting up" and no games | Passed (automated) |
+| TC-P9-039 | FR-089 | Wording helpers and missing-function check | Singular and plural points and plays; PGRST202 and "Could not find the function" count as missing; the history shows the game's name | Passed (automated) |
+| TC-P9-040 | FR-089, FR-090 | Playwright, 1440 wide, signed in with the RPCs mocked: cup 2 (found), cup 3, Lucky paw | +3, then +1, then +2 points; 3, 2, 1, then no plays left; balance 12 → 18; the done message; the requests carry only the game and the cup; no page errors | Passed (automated) |
+| TC-P9-041 | FR-089 | Playwright, 390 wide: a guest, then the status function returns PGRST202 | The sign-in link, games off, no sideways scroll; then the coming-soon message | Passed (automated) |
+| MAN-P9-002 | FR-089 | After the migration is applied, play on the live site with a real account | The plays and points show in the points history, and a fourth play that day is refused | Passed 2026-11-13 (the lead developer played on the live site with a real account) |
+
+## 59. Play While You Wait and Ad Fill Cases (2026-11-13)
+
+The lead developer asked for the cat games to be offered while customers wait for their orders, and reported that the live ad showed only a blank box. The order page now shows a "Play while you wait" card while the order is pending, accepted or preparing. The games page links back to that order. The ad frame now reports when a real ad appears. Until then the slot shows "Loading ad…", and if nothing appears within 8 seconds a short note replaces the blank box. The live blank box was traced to the Adsterra script itself: loaded from the real domain with no sandbox, it still drew nothing and asked for no ad, so the unit's status in the Adsterra dashboard needs a check (MAN-P9-003).
+
+| ID | Requirement | Scenario | Expected result | Status |
+| --- | --- | --- | --- | --- |
+| TC-P9-042 | FR-089 | Order page with a pending, accepted or preparing order; tap Play cat games | The card shows and links to `/games`; the order link with its token is kept for this tab | Passed (automated) |
+| TC-P9-043 | FR-089 | Order page with a ready, completed, cancelled or rejected order | No games card | Passed (automated) |
+| TC-P9-044 | FR-090 | Ads on; a fill message comes from another window, then from the ad frame | Loading ad stays for the first and goes away for the second | Passed (automated) |
+| TC-P9-045 | FR-090 | Ads on; no ad within 8 seconds; then Try again | The frame is removed and "No ad to show right now." shows with Turn off ads; Try again loads the frame again | Passed (automated) |
+| TC-P9-046 | FR-090 | The page inside the ad frame | Reports a filled ad by message name only, and starts watching before the ad script loads | Passed (automated) |
+| TC-P9-047 | FR-089 | Saving and reading the order link | Only `/orders/<reference>` links with an optional token are kept; other sites, `//` links and paths outside orders are refused | Passed (automated) |
+| TC-P9-048 | FR-089 | Which statuses count as waiting | Pending, accepted and preparing; not ready, completed, cancelled or rejected | Passed (automated) |
+| TC-P9-049 | FR-089 | Games page with and without a saved order link | "← Back to your order" with that link only when one is saved | Passed (automated) |
+| TC-P9-050 | FR-089, FR-090 | Playwright, 390 wide: a preparing order, Play cat games, then Back to your order | The card shows with no ad slot and no sideways scroll; the games page links back, and the order page opens again with its token | Passed (automated) |
+| TC-P9-051 | FR-090 | Playwright, 1440 wide, ads on: a stand-in ad script that draws a box, then one that draws nothing | Loading ad, then the ad; then the note after the wait | Passed (automated). Update 2026-11-13: the stand-in ad is now a 300x250 canvas, and the "nothing" case leaves an empty inner frame, as the live unit did |
+| TC-P9-052 | FR-090 | Unit: render the ad slot with ads on | The frame loads the ad page from a `data:` URL (never `srcdoc`), with sandbox `allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox` and no top navigation | Passed (automated) |
+| MAN-P9-003 | FR-090 | In the Adsterra dashboard, check the 300x250 unit and the site address, then open `/games` on a phone with ads on | The unit is active for brew-ni-cat-connect.vercel.app and a real ad shows | Not run (needs the Adsterra account). Update 2026-11-13: the unit is active and serves ads; in a normal (not headless) browser it returned a 300x250 image ad. The ad stays blank only because the loader writes into an inner frame, which our sandbox (no `allow-same-origin`) keeps it from reading. Showing ads safely needs the ad page on a separate address; see the development log. Update 2026-11-13 (later): fixed by loading the ad page from a `data:` URL with `allow-same-origin`; the real unit showed an ad in a normal browser and could not read the parent page or its storage |
+
+## 60. Android App Cases (2026-11-13)
+
+The customer Android app is a Trusted Web Activity over the live site (ADR-035). These cases keep the Android project, the site's `assetlinks.json` and the web app manifest in step, and record the emulator run.
+
+| ID | Requirement | Scenario | Expected result | Status |
+| --- | --- | --- | --- | --- |
+| TC-P8-022 | FR-065, FR-067 | `public/.well-known/assetlinks.json` | One `handle_all_urls` statement for the app's package, with SHA-256 fingerprints in the standard form | Passed (automated) |
+| TC-P8-023 | FR-065, FR-069 | The Android project's site address, start URL and link filter | The app opens `https://brew-ni-cat-connect.vercel.app/`, claims only that host over https with verification, and matches the manifest start URL | Passed (automated) |
+| TC-P8-024 | FR-067 | Search the Android project | No Supabase address or key, no service-role or JWT string; only the internet permission; backup off | Passed (automated) |
+| TC-P8-025 | FR-066 | The app's colours | The status bar, navigation bar and splash colour match the web app manifest's theme and background colours | Passed (automated) |
+| TC-P8-026 | FR-065 | Playwright: GET `/.well-known/assetlinks.json` from the production build | 200, JSON, with the app's package | Passed (automated) |
+| TC-P8-027 | FR-066, NFR-036 | `./gradlew assembleRelease lintRelease`, then install the signed APK on an Android 15 Pixel 6 emulator and open it | Lint passes with warnings as errors; the APK is signed with the release key; the icon shows on the home screen and the app opens the live site | Passed 2026-11-13 (emulator; before `assetlinks.json` was live, so the address bar still showed) |
+| MAN-P8-007 | FR-066, NFR-036 | On a real Android phone with Chrome, install the APK from the release, then sign in, order, follow the order, play a game and open the profile | The app opens full screen with no address bar, and every journey works as on the website | Not run yet |
+| MAN-P8-008 | FR-068 | In the app on a real phone, turn on airplane mode and open a page, then try Place order | The offline page shows, and no order is reported as placed | Not run yet |

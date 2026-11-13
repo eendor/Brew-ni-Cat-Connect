@@ -263,6 +263,80 @@ describe("SiteHeader", () => {
     ).toHaveAttribute("href", "/account/favorites");
   });
 
+  it("TC-P5-147 — the account menus start with My account and put Rewards after Favorites", async () => {
+    const user = userEvent.setup();
+    const mockUser: User = {
+      id: "cust-4",
+      email: "account-home@example.com",
+      app_metadata: {},
+      user_metadata: {},
+      aud: "authenticated",
+      created_at: new Date().toISOString(),
+    };
+
+    render(
+      <AuthProvider client={createMockSupabase(mockUser)}>
+        <SiteHeader />
+      </AuthProvider>,
+    );
+
+    await user.click(
+      await screen.findByRole("button", { name: "Account menu" }),
+    );
+
+    const myAccount = screen.getByRole("link", { name: "My account" });
+    const desktopList = myAccount.closest("ul");
+    expect(desktopList).not.toBeNull();
+    const desktopLinks = within(desktopList as HTMLElement)
+      .getAllByRole("link")
+      .map((link) => link.textContent?.trim());
+    expect(desktopLinks).toEqual([
+      "My account",
+      "Profile",
+      "Order History",
+      "Favorites",
+      "Rewards",
+      // Added 2026-11-13: the loyalty games (FR-089).
+      "Cat games",
+    ]);
+    expect(myAccount).toHaveAttribute("href", "/account");
+    expect(screen.getByRole("link", { name: "Rewards" })).toHaveAttribute(
+      "href",
+      "/account/rewards",
+    );
+    expect(screen.getByRole("link", { name: "Cat games" })).toHaveAttribute(
+      "href",
+      "/games",
+    );
+    await user.keyboard("{Escape}");
+
+    await user.click(screen.getByRole("button", { name: "Open navigation" }));
+    const mobileNav = screen.getByRole("navigation", {
+      name: "Mobile navigation",
+    });
+    const mobileLinks = within(mobileNav)
+      .getAllByRole("link")
+      .map((link) => link.textContent?.trim());
+
+    expect(mobileLinks).toContain("My account");
+    expect(mobileLinks).toContain("Rewards");
+    expect(mobileLinks.indexOf("My account")).toBeLessThan(
+      mobileLinks.indexOf("Profile"),
+    );
+    expect(mobileLinks.indexOf("Rewards")).toBe(
+      mobileLinks.indexOf("Favorites") + 1,
+    );
+    expect(mobileLinks.indexOf("Cat games")).toBe(
+      mobileLinks.indexOf("Rewards") + 1,
+    );
+    expect(
+      within(mobileNav).getByRole("link", { name: "My account" }),
+    ).toHaveAttribute("href", "/account");
+    expect(
+      within(mobileNav).getByRole("link", { name: "Rewards" }),
+    ).toHaveAttribute("href", "/account/rewards");
+  });
+
   it("TC-P4-160 — displays Sign out in mobile navigation when signed in", async () => {
     const user = userEvent.setup();
     const signOutMock = vi.fn();

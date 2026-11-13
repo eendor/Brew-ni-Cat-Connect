@@ -13,6 +13,7 @@
  * Authorization header, and logs carry only the path and Meta's status.
  */
 
+import type { RawPost } from "./page-posts";
 import {
   MAX_QUICK_REPLIES,
   type Card,
@@ -33,6 +34,12 @@ const BUTTONS_PROMPT = "Tap below 👇";
 export const GRAPH_API_VERSION = "v26.0";
 const GRAPH_API_ORIGIN = "https://graph.facebook.com";
 const SEND_TIMEOUT_MS = 8000;
+
+/**
+ * Sent with every reply and echoed back by Meta, so the webhook can tell the
+ * assistant's own messages from the staff's (FR-113).
+ */
+export const ASSISTANT_METADATA = "brew-ni-cat:assistant";
 
 type Message = Readonly<Record<string, unknown>>;
 
@@ -123,10 +130,13 @@ export function sendApiBodies(recipient: string, answer: Reply): SendApiBody[] {
   return messages.map((message, index) => ({
     recipient: { id: recipient },
     messaging_type: "RESPONSE",
-    message:
-      index === last && quickReplies.length > 0
-        ? { ...message, quick_replies: quickReplies }
-        : message,
+    message: {
+      ...message,
+      ...(index === last && quickReplies.length > 0
+        ? { quick_replies: quickReplies }
+        : {}),
+      metadata: ASSISTANT_METADATA,
+    },
   }));
 }
 
@@ -142,7 +152,12 @@ export type GraphClient = Readonly<{
    * null when Meta doesn't give one. It is never logged or kept.
    */
   customerName: (recipient: string) => Promise<string | null>;
+  /** The Page's latest posts, newest first (FR-114); null when unknown. */
+  listPosts: () => Promise<readonly RawPost[] | null>;
 }>;
+
+/** How many of the Page's latest posts are read for today's notices. */
+export const POSTS_LIMIT = 5;
 
 const MAX_NAME_LENGTH = 100;
 
@@ -239,6 +254,39 @@ export function createGraphClient(
           return participantName(await response.json(), recipient);
         }
         status = response.status;
+      } catch {
+        // A network error, timeout or odd answer is logged with status 0.
+      }
+      logFailure(path, status);
+      return null;
+    },
+    async listPosts() {
+      const path = "/me/posts";
+      const query = new URLSearchParams({
+        fields: "id,created_time,message,full_picture",
+        limit: String(POSTS_LIMIT),
+      });
+      let status = 0;
+      try {
+        const response = await fetchImpl(
+          `${GRAPH_API_ORIGIN}/${GRAPH_API_VERSION}${path}?${query}`,
+          {
+            headers: { Authorization: `Bearer ${pageToken}` },
+            cache: "no-store",
+            signal: AbortSignal.timeout(SEND_TIMEOUT_MS),
+          },
+        );
+        if (response.ok) {
+          const rows = ((await response.json()) as { data?: unknown } | null)
+            ?.data;
+          if (Array.isArray(rows)) {
+            return rows.filter(
+              (row): row is RawPost => typeof row === "object" && row !== null,
+            );
+          }
+        } else {
+          status = response.status;
+        }
       } catch {
         // A network error, timeout or odd answer is logged with status 0.
       }

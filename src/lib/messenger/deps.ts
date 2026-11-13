@@ -22,9 +22,16 @@ import {
 } from "@/lib/supabase/public-client";
 import type { MenuCatalog } from "@/types/menu";
 
+import { createGeminiAssistant, type AskAssistant } from "./assistant";
 import type { MessengerDeps } from "./events";
-import { deriveOrderIds, deriveTrackingToken } from "./order-ids";
+import {
+  deriveOrderIds,
+  deriveStaffChat,
+  deriveTrackingToken,
+} from "./order-ids";
 import type { PlaceOrderInput } from "./order-flow";
+import { readTodaysPosts } from "./page-posts";
+import { createPictureReader } from "./picture-text";
 import { createGraphClient } from "./send";
 
 /** A slow database must not hold up the replies after it. */
@@ -177,6 +184,47 @@ export async function listMessengerOrders(
   }
 }
 
+/**
+ * Saves that the staff replied in this chat by hand (FR-113), so every
+ * server instance leaves the chat to them. Only a code is logged.
+ */
+export async function noteStaffReply(
+  appSecret: string,
+  sender: string,
+): Promise<void> {
+  try {
+    const answer = await getPublicSupabaseClient(null)
+      .rpc("note_messenger_staff_reply", {
+        p_chat: deriveStaffChat(appSecret, sender),
+      })
+      .abortSignal(AbortSignal.timeout(READ_TIMEOUT_MS));
+    if (answer.error) {
+      console.error("Messenger staff reply not saved:", answer.error.code);
+    }
+  } catch {
+    console.error("Messenger staff reply not saved:", "rpc-unreachable");
+  }
+}
+
+/** When the staff last replied in this chat by hand; null if never or unknown. */
+export async function readStaffReply(
+  appSecret: string,
+  sender: string,
+): Promise<number | null> {
+  try {
+    const answer = await getPublicSupabaseClient(null)
+      .rpc("messenger_staff_replied_at", {
+        p_chat: deriveStaffChat(appSecret, sender),
+      })
+      .abortSignal(AbortSignal.timeout(READ_TIMEOUT_MS));
+    if (answer.error || typeof answer.data !== "string") return null;
+    const at = Date.parse(answer.data);
+    return Number.isFinite(at) ? at : null;
+  } catch {
+    return null;
+  }
+}
+
 const NONCE_ALPHABET =
   "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
@@ -192,6 +240,8 @@ export function createMessengerDeps(
   appSecret: string,
 ): MessengerDeps {
   const graph = createGraphClient(pageToken);
+  const geminiKey = process.env.GEMINI_API_KEY?.trim();
+  const readImageText = geminiKey ? createPictureReader(geminiKey) : undefined;
   return {
     origin,
     now: () => Date.now(),
@@ -207,5 +257,30 @@ export function createMessengerDeps(
     newNonce,
     placeOrder: (sender, nonce, order) =>
       placeMessengerOrder(appSecret, sender, nonce, order),
+    askAssistant: smartReplyAssistant(),
+    noteStaffReply: (sender) => noteStaffReply(appSecret, sender),
+    readStaffReply: (sender) => readStaffReply(appSecret, sender),
+    readTodaysPosts: () =>
+      readTodaysPosts({
+        listPosts: graph.listPosts,
+        readImageText,
+        now: () => Date.now(),
+      }),
   };
+}
+
+/**
+ * Gemini smart replies (ADR-031), only when GEMINI_API_KEY is set on the
+ * server. GEMINI_MODELS can list other models, comma separated.
+ */
+export function smartReplyAssistant(
+  env: Readonly<Record<string, string | undefined>> = process.env,
+): AskAssistant | undefined {
+  const apiKey = env.GEMINI_API_KEY?.trim();
+  if (!apiKey) return undefined;
+  const models = (env.GEMINI_MODELS ?? "")
+    .split(",")
+    .map((model) => model.trim())
+    .filter((model) => /^[\w.-]{1,64}$/.test(model));
+  return createGeminiAssistant(apiKey, { models });
 }

@@ -5,23 +5,15 @@ import { useEffect, useState } from "react";
 
 import { Container } from "@/components/ui/container";
 import { useAuth } from "@/context/auth-context";
-import {
-  formatEarningRule,
-  formatLoyaltyDate,
-  formatPointsDelta,
-  formatReason,
-  formatWeeklyLimit,
-} from "@/lib/loyalty/format";
+import { formatEarningRule, formatWeeklyLimit } from "@/lib/loyalty/format";
 import {
   fetchLoyaltyBalance,
-  fetchLoyaltyHistory,
   fetchLoyaltyRewards,
   fetchLoyaltySettings,
   redeemReward,
 } from "@/lib/loyalty/loyalty-client";
 import type {
   LoyaltyProgramSettings,
-  LoyaltyTransaction,
   RedeemResult,
   RewardItem,
 } from "@/lib/loyalty/types";
@@ -31,7 +23,6 @@ export function RewardsView() {
   const userId = user?.id ?? null;
 
   const [balance, setBalance] = useState<number>(0);
-  const [history, setHistory] = useState<readonly LoyaltyTransaction[]>([]);
   const [rewards, setRewards] = useState<readonly RewardItem[]>([]);
   const [settings, setSettings] = useState<LoyaltyProgramSettings | null>(null);
 
@@ -51,14 +42,12 @@ export function RewardsView() {
 
     Promise.all([
       fetchLoyaltyBalance({ userId }),
-      fetchLoyaltyHistory({ userId }),
       fetchLoyaltyRewards(),
       fetchLoyaltySettings(),
     ])
-      .then(([userBalance, userHistory, activeRewards, programSettings]) => {
+      .then(([userBalance, activeRewards, programSettings]) => {
         if (!active) return;
         setBalance(userBalance);
-        setHistory(userHistory);
         setRewards(activeRewards);
         setSettings(programSettings);
         setError(null);
@@ -101,7 +90,7 @@ export function RewardsView() {
       const result = await redeemReward(selectedReward.id);
       if (result.ok) {
         setRedeemResult(result);
-        // Refresh balance and history after successful redemption
+        // Refresh the balance after successful redemption
         setRefreshIndex((prev) => prev + 1);
       } else {
         if (result.error === "weekly_limit_reached") {
@@ -182,6 +171,18 @@ export function RewardsView() {
                     points
                   </span>
                 </div>
+                <Link
+                  href="/account/rewards/history"
+                  className="mt-2 inline-block text-sm font-medium text-[var(--accent-solid)] hover:underline"
+                >
+                  See points history →
+                </Link>
+                <Link
+                  href="/games"
+                  className="mt-2 ml-4 inline-block text-sm font-medium text-[var(--accent-solid)] hover:underline"
+                >
+                  Play for points →
+                </Link>
               </div>
 
               {settings ? (
@@ -277,81 +278,6 @@ export function RewardsView() {
                         >
                           Redeem
                         </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </section>
-
-          {/* Points History */}
-          <section aria-labelledby="history-heading">
-            <h2
-              id="history-heading"
-              className="font-display text-2xl font-bold text-[var(--text-strong)] tracking-tight mb-4"
-            >
-              Points History
-            </h2>
-
-            {history.length === 0 ? (
-              <div className="ios-card p-8 text-center md:p-10">
-                <h3 className="font-display text-lg font-semibold text-[var(--text-strong)]">
-                  No Points Yet
-                </h3>
-                <p className="mt-2 text-sm text-[var(--text-muted)] max-w-md mx-auto">
-                  No points yet. You earn points when an order is completed.
-                </p>
-                <div className="mt-6">
-                  <Link href="/menu" className="button-primary">
-                    View Menu
-                  </Link>
-                </div>
-              </div>
-            ) : (
-              <div className="ios-card divide-y divide-[var(--separator)] overflow-hidden">
-                {history.map((tx) => {
-                  const isPositive = tx.points > 0;
-                  const deltaStr = formatPointsDelta(tx.points);
-                  const reasonLabel = formatReason(tx.reason, tx.note);
-
-                  return (
-                    <div
-                      key={tx.id}
-                      data-testid={`history-row-${tx.id}`}
-                      className="p-4 flex items-center justify-between gap-4 hover:bg-[var(--fill-secondary)] transition-colors"
-                    >
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-semibold text-[var(--text-strong)]">
-                            {reasonLabel}
-                          </span>
-                          {tx.orderReference ? (
-                            <span className="text-xs px-2 py-0.5 rounded bg-[var(--fill-secondary)] font-mono text-[var(--text-muted)]">
-                              {tx.orderReference}
-                            </span>
-                          ) : null}
-                        </div>
-                        {tx.note ? (
-                          <p className="mt-0.5 text-xs text-[var(--text-muted)]">
-                            {tx.note}
-                          </p>
-                        ) : null}
-                        <p className="mt-0.5 text-xs text-[var(--text-muted)]">
-                          {formatLoyaltyDate(tx.createdAt)}
-                        </p>
-                      </div>
-
-                      <div className="text-right shrink-0">
-                        <span
-                          className={`text-sm font-bold ${
-                            isPositive
-                              ? "text-[var(--accent-solid)]"
-                              : "text-[var(--text-muted)]"
-                          }`}
-                        >
-                          {deltaStr} pts
-                        </span>
                       </div>
                     </div>
                   );

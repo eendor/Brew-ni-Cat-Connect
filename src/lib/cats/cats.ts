@@ -1,113 +1,259 @@
 /**
- * The footer cats (FR-099): six pixel cats from the CC0 "Pet Cats Pack"
- * (`public/cats`, license in `public/cats/LICENSE.txt`). Each sheet is one
- * row of 50 x 50 frames; the cat stands on row 32 of its frame.
+ * The shop's cats (FR-099, update 2026-11-13, ADR-032), with their coats,
+ * markings and eyes taken from the shop's own photos (`public/images/shop`):
+ * the four cats on the opening poster, Oreo, a grey cat and Kasper napping.
+ * Aseprite draws the walkers, the sleigh and the kittens as pixel art from
+ * these colours (`scripts/aseprite/cat-sprites.lua`). They stroll across the
+ * top of the footer. In November and December they wear bells, and a cosy
+ * coffee-cup sleigh follows with Luna, a mama cat soon, resting inside with
+ * her kittens.
  */
-export type CatAction =
-  | "walk"
-  | "run"
-  | "idle"
-  | "sitting"
-  | "laying"
-  | "sleeping"
-  | "licking"
-  | "stretching"
-  | "meow"
-  | "itch";
 
-export type CatSheet = Readonly<{ frames: number; ms: number; once?: boolean }>;
+export type CatPose = "sit" | "lie" | "walk";
 
-export const CAT_SHEETS: Readonly<Record<CatAction, CatSheet>> = {
-  walk: { frames: 8, ms: 800 },
-  run: { frames: 8, ms: 480 },
-  idle: { frames: 10, ms: 1500 },
-  sitting: { frames: 1, ms: 1000 },
-  laying: { frames: 8, ms: 1100, once: true },
-  sleeping: { frames: 2, ms: 2600 },
-  licking: { frames: 5, ms: 900 },
-  stretching: { frames: 13, ms: 1700, once: true },
-  meow: { frames: 4, ms: 700 },
-  itch: { frames: 2, ms: 300 },
-};
+/** Colours of one cat, as CSS hex. */
+export type CatCoat = Readonly<{
+  coat: string;
+  /** Chest and belly (a bib on Oreo). */
+  chest: string;
+  muzzle: string;
+  paws: string;
+  ears: string;
+  innerEar: string;
+  tail: string;
+  tailTip: string;
+  /** A patch on top of the head (Luna's grey cap). */
+  cap?: string;
+  eyeLeft: string;
+  eyeRight: string;
+  nose: string;
+  /** How shaggy the fur is, 0 (smooth) to 1. */
+  fluff: number;
+  /** A name tag on the collar. */
+  tag?: string;
+}>;
 
-export type PixelCat = Readonly<{ id: string; canItch: boolean }>;
+export type ShopCat = Readonly<{
+  id: string;
+  /** Size of the model's box (any unit); the page scales it. */
+  width: number;
+  height: number;
+  pose: CatPose;
+  look: CatCoat;
+}>;
 
-/** Cat 3 has no scratching sheet. */
-export const PIXEL_CATS: readonly PixelCat[] = [1, 2, 3, 4, 5, 6].map((n) => ({
-  id: `cat-${n}`,
-  canItch: n !== 3,
-}));
-
-/** Walking and running speed, in cat sizes (one 50-pixel frame) per second. */
-export const CAT_SPEED = { walk: 0.3, run: 1 } as const;
-
-export function catSheetUrl(id: string, action: CatAction): string {
-  return `/cats/${id}/${action}.png`;
-}
-
-const clamp01 = (r: number) => Math.min(Math.max(r, 0), 0.999_999);
-
-/**
- * The most cats in the strip at once: one cat for each coat, so no coat
- * shows twice (update 2026-11-10; it was 16 with the coats repeating).
- */
-export const MAX_CATS = PIXEL_CATS.length;
-
-/** One cat for about every 120 pixels of width: 3 on a phone, up to 6 on wider screens. */
-export function catCount(width: number): number {
-  return Math.min(MAX_CATS, Math.max(3, Math.round(width / 120)));
-}
-
-export type CatRest = Readonly<{ action: CatAction; ms: number }>;
-
-const RESTS: readonly (readonly [CatAction, number, number])[] = [
-  ["idle", 4_000, 8_000],
-  ["sitting", 6_000, 14_000],
-  ["licking", 3_600, 7_200],
-  ["meow", 1_400, 2_800],
-  ["stretching", 1_700, 1_700],
-  ["laying", 1_100, 1_100],
-  ["itch", 1_200, 2_400],
+export const SHOP_CATS: readonly ShopCat[] = [
+  {
+    id: "kasper",
+    width: 72,
+    height: 100,
+    pose: "sit",
+    look: {
+      coat: "#f3efe7",
+      chest: "#fbf9f4",
+      muzzle: "#fbf9f4",
+      paws: "#f6f2ea",
+      ears: "#efe9df",
+      innerEar: "#f0b9b4",
+      tail: "#efe9df",
+      tailTip: "#f3efe7",
+      eyeLeft: "#c9c14a",
+      eyeRight: "#93bb63",
+      nose: "#e9a3a0",
+      fluff: 0.9,
+      tag: "#cfd3d8",
+    },
+  },
+  {
+    id: "latte",
+    width: 66,
+    height: 100,
+    pose: "sit",
+    look: {
+      coat: "#ede0cb",
+      chest: "#f5ecdd",
+      muzzle: "#7b5a47",
+      paws: "#6f4f3d",
+      ears: "#5a3d2f",
+      innerEar: "#9b7461",
+      tail: "#7a5845",
+      tailTip: "#4f3529",
+      eyeLeft: "#6ea6dc",
+      eyeRight: "#6ea6dc",
+      nose: "#5a3d33",
+      fluff: 0.25,
+    },
+  },
+  {
+    id: "luna",
+    width: 68,
+    height: 100,
+    pose: "sit",
+    look: {
+      coat: "#f2f0ed",
+      chest: "#faf9f7",
+      muzzle: "#faf9f7",
+      paws: "#f7f6f3",
+      ears: "#8e8c90",
+      innerEar: "#d9a7a8",
+      tail: "#9a989c",
+      tailTip: "#77757a",
+      cap: "#a4a2a6",
+      eyeLeft: "#3b3633",
+      eyeRight: "#3b3633",
+      nose: "#e3a0a3",
+      fluff: 0.2,
+    },
+  },
+  {
+    id: "kulas",
+    width: 72,
+    height: 100,
+    pose: "sit",
+    look: {
+      coat: "#7b8789",
+      chest: "#8b9698",
+      muzzle: "#8f9a9c",
+      paws: "#7f8a8c",
+      ears: "#6e7a7c",
+      innerEar: "#b08f8c",
+      tail: "#737f81",
+      tailTip: "#687476",
+      eyeLeft: "#c98a3a",
+      eyeRight: "#c98a3a",
+      nose: "#5d6466",
+      fluff: 0.8,
+    },
+  },
+  {
+    id: "oreo",
+    width: 72,
+    height: 100,
+    pose: "sit",
+    look: {
+      coat: "#1f1d20",
+      chest: "#f6f4f0",
+      muzzle: "#f6f4f0",
+      paws: "#f6f4f0",
+      ears: "#1b191c",
+      innerEar: "#8f6b70",
+      tail: "#1f1d20",
+      tailTip: "#1f1d20",
+      eyeLeft: "#d9a238",
+      eyeRight: "#d9a238",
+      nose: "#e7a4ae",
+      fluff: 0.7,
+      tag: "#eeb3c0",
+    },
+  },
+  {
+    id: "grey",
+    width: 74,
+    height: 100,
+    pose: "sit",
+    look: {
+      coat: "#7a6e68",
+      chest: "#867a73",
+      muzzle: "#8b7f78",
+      paws: "#7e726b",
+      ears: "#6f635d",
+      innerEar: "#a98a84",
+      tail: "#73675f",
+      tailTip: "#655a54",
+      eyeLeft: "#dc9c38",
+      eyeRight: "#dc9c38",
+      nose: "#6a5853",
+      fluff: 1,
+    },
+  },
+  {
+    id: "kasper-nap",
+    width: 140,
+    height: 80,
+    pose: "lie",
+    look: {
+      coat: "#f2e4c9",
+      chest: "#f8f0e0",
+      muzzle: "#faf4e8",
+      paws: "#f6ecd8",
+      ears: "#efdcbc",
+      innerEar: "#efb8ac",
+      tail: "#ecd9b6",
+      tailTip: "#e7cfa6",
+      eyeLeft: "#b9b04a",
+      eyeRight: "#8db45e",
+      nose: "#e6a29a",
+      fluff: 0.9,
+      tag: "#cfd3d8",
+    },
+  },
 ];
 
-/** What a cat does after a walk, and for how long, from two random numbers. */
-export function nextRest(
-  pick: number,
-  length: number,
-  canItch: boolean,
-): CatRest {
-  const options = canItch ? RESTS : RESTS.filter(([a]) => a !== "itch");
-  const [action, min, max] =
-    options[Math.floor(clamp01(pick) * options.length)]!;
-  return { action, ms: Math.round(min + clamp01(length) * (max - min)) };
+/**
+ * The walkers, lead first. Luna is about to be a mama cat, so she doesn't
+ * walk: in the holiday season she rides in the sleigh with her kittens.
+ */
+export const PARADE_ORDER: readonly string[] = [
+  "oreo",
+  "latte",
+  "kulas",
+  "grey",
+];
+export const SLEIGH_RIDER = "luna";
+/** The kittens riding with Luna, coloured after Luna and the shop's toms. */
+export const KITTEN_COATS: readonly string[] = ["luna", "kulas", "latte"];
+
+/**
+ * The sleigh, reins and bells are a holiday look: November and December
+ * only. From January the cats just stroll across, free, and Luna rests.
+ */
+export function festiveSeason(date: Date): boolean {
+  return date.getMonth() >= 10;
 }
 
-/** A cat that lay down goes to sleep; any other rest ends in a walk. */
-export function afterRest(action: CatAction, length: number): CatRest | null {
-  if (action !== "laying") return null;
-  return {
-    action: "sleeping",
-    ms: Math.round(8_000 + clamp01(length) * 8_000),
-  };
+/** How many cats walk, by screen width. */
+export function paradeSize(width: number): number {
+  return width < 640 ? 3 : 4;
+}
+
+/** The cats walking at this width, lead first. */
+export function paradeWalkers(width: number): readonly ShopCat[] {
+  return PARADE_ORDER.slice(0, paradeSize(width)).map((id) =>
+    SHOP_CATS.find((cat) => cat.id === id)!,
+  );
+}
+
+/** Height of the footer's parade strip in CSS pixels: it scales with the screen. */
+export function stripHeight(width: number): number {
+  return Math.round(Math.min(150, Math.max(84, width * 0.075)));
+}
+
+/** Walking speed in px a second: about a body length a second. */
+export function paradeSpeed(height: number): number {
+  return Math.round(height * 0.95);
+}
+
+/** Milliseconds to walk `distance` px at the strip's speed. */
+export function walkMs(distance: number, height: number): number {
+  return Math.round((Math.abs(distance) / paradeSpeed(height)) * 1000);
 }
 
 /**
- * Where the next walk ends: one to three cat sizes away, left or right, and
- * inside the strip. Short walks leave the cats more time to sit, wash, meow
- * or nap. `size` is the cat's frame in pixels.
+ * One lap across the strip. `x` is where the lead cat's nose is: the lap
+ * starts with the whole parade out of sight, passes the middle (where the
+ * cats glance out and one meows, without stopping), and ends out of sight.
  */
-export function nextTarget(
-  random: number,
-  x: number,
+export function paradeLap(
   width: number,
-  size: number,
-): number {
-  const min = -0.2 * size;
-  const max = Math.max(min, width - 0.8 * size);
-  const r = clamp01(random);
-  const dir = r < 0.5 ? -1 : 1;
-  const steps = 1 + (r < 0.5 ? r * 2 : (r - 0.5) * 2) * 2;
-  let target = x + dir * steps * size;
-  if (target > max || target < min) target = x - dir * steps * size;
-  return Math.min(max, Math.max(min, target));
+  span: number,
+  dir: 1 | -1,
+): { start: number; stop: number; end: number } {
+  return dir > 0
+    ? { start: 0, stop: (width + span) / 2, end: width + span }
+    : { start: width, stop: (width - span) / 2, end: -span };
+}
+
+/** The rest between laps: 5 to 12 seconds. */
+export function restMs(random: number): number {
+  return Math.round(5_000 + Math.min(Math.max(random, 0), 1) * 7_000);
 }

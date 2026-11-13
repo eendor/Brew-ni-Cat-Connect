@@ -1,9 +1,11 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AdSlot } from "@/components/ads/ad-slot";
 import {
   AD_CONSENT_KEY,
+  AD_FILL_TIMEOUT_MS,
+  AD_FILLED_MESSAGE,
   adDocument,
   adKey,
   isAdFreePath,
@@ -51,13 +53,14 @@ describe("Ads in the mini-game area (FR-090)", () => {
     render(<AdSlot />);
     fireEvent.click(screen.getByRole("button", { name: "Show ads" }));
     const frame = screen.getByTitle("Advertisement");
+    // Update 2026-11-13: allow-same-origin is on so the ad can draw into its
+    // inner frame; the data: URL keeps it on its own origin (TC-P9-052)
     expect(frame).toHaveAttribute(
       "sandbox",
-      "allow-scripts allow-popups allow-popups-to-escape-sandbox",
+      "allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox",
     );
     expect(frame.getAttribute("sandbox")).not.toContain("allow-top-navigation");
-    expect(frame.getAttribute("sandbox")).not.toContain("allow-same-origin");
-    expect(frame.getAttribute("srcdoc")).toContain(KEY);
+    expect(decodeURIComponent(frame.getAttribute("src") ?? "")).toContain(KEY);
     expect(window.localStorage.getItem(AD_CONSENT_KEY)).toBe("yes");
 
     fireEvent.click(screen.getByRole("button", { name: "Turn off ads" }));
@@ -98,5 +101,78 @@ describe("Ads in the mini-game area (FR-090)", () => {
     expect(html).toContain(`src="https://bauval.org/22/${KEY}"`);
     expect(html).toContain('"width":300');
     expect(html).toContain('"height":250');
+  });
+
+  it("TC-P9-044 — shows Loading ad until the frame reports a real ad, and ignores messages from other windows", () => {
+    window.localStorage.setItem(AD_CONSENT_KEY, "yes");
+    render(<AdSlot />);
+    const frame = screen.getByTitle("Advertisement") as HTMLIFrameElement;
+    expect(screen.getByTestId("ad-loading")).toHaveTextContent("Loading ad…");
+
+    act(() => {
+      window.dispatchEvent(
+        new MessageEvent("message", {
+          data: AD_FILLED_MESSAGE,
+          source: window,
+        }),
+      );
+    });
+    expect(screen.getByTestId("ad-loading")).toBeInTheDocument();
+
+    act(() => {
+      window.dispatchEvent(
+        new MessageEvent("message", {
+          data: AD_FILLED_MESSAGE,
+          source: frame.contentWindow,
+        }),
+      );
+    });
+    expect(screen.queryByTestId("ad-loading")).toBeNull();
+    expect(screen.getByTitle("Advertisement")).toBeInTheDocument();
+  });
+
+  it("TC-P9-045 — replaces a blank ad with a short note after the wait, and Try again reloads it", () => {
+    vi.useFakeTimers();
+    try {
+      window.localStorage.setItem(AD_CONSENT_KEY, "yes");
+      render(<AdSlot />);
+      act(() => {
+        vi.advanceTimersByTime(AD_FILL_TIMEOUT_MS);
+      });
+      expect(screen.queryByTitle("Advertisement")).toBeNull();
+      expect(screen.getByTestId("ad-empty")).toHaveTextContent(
+        "No ad to show right now.",
+      );
+      expect(
+        screen.getByRole("button", { name: "Turn off ads" }),
+      ).toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+      expect(screen.getByTitle("Advertisement")).toBeInTheDocument();
+      expect(screen.getByTestId("ad-loading")).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("TC-P9-046 — the ad page reports a filled ad by name only, before the ad script runs", () => {
+    const html = adDocument(KEY);
+    expect(html).toContain(`parent.postMessage("${AD_FILLED_MESSAGE}","*")`);
+    expect(html.indexOf("MutationObserver")).toBeLessThan(
+      html.indexOf("bauval.org"),
+    );
+  });
+
+  it("TC-P9-052 — the ad page is a data: URL and never srcdoc, so allow-same-origin can't give it this site's origin", () => {
+    window.localStorage.setItem(AD_CONSENT_KEY, "yes");
+    render(<AdSlot />);
+    const frame = screen.getByTitle("Advertisement");
+    expect(frame.getAttribute("src")).toMatch(
+      /^data:text\/html;charset=utf-8,/,
+    );
+    expect(frame.hasAttribute("srcdoc")).toBe(false);
+    expect(frame.getAttribute("src")).toBe(
+      `data:text/html;charset=utf-8,${encodeURIComponent(adDocument(KEY))}`,
+    );
   });
 });

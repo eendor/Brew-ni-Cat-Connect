@@ -13,8 +13,7 @@ import { useAuth } from "@/context/auth-context";
 export const PUBLIC_ACCOUNT_PATHS = new Set([
   "/account/sign-in",
   "/account/sign-up",
-  "/account/forgot-password",
-  "/account/reset-password",
+  "/account/callback",
 ]);
 
 export function AccountGuard({ children }: { children: ReactNode }) {

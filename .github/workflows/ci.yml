@@ -74,6 +74,8 @@ jobs:
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "placeholder-publishable-key"
       # Place order is tested against a mocked order API (TC-P4-123)
       NEXT_PUBLIC_ONLINE_ORDERING: "enabled"
+      # A dummy ad key so the ad slot renders; the ad script is stubbed (TC-P9-051)
+      NEXT_PUBLIC_AD_KEY: "0123456789abcdef0123456789abcdef"
 
     steps:
       - name: Check out repository
@@ -112,4 +114,35 @@ jobs:
         with:
           name: playwright-report
           path: playwright-report/
+          retention-days: 7
+
+  android:
+    name: Android app (build and lint)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      # The runner has the Android SDK. CI has no release key, so this builds an
+      # unsigned release APK; the signed one is built on the lead developer's
+      # machine (android/README.md).
+      - name: Build the release APK and run Android lint
+        working-directory: android
+        run: ./gradlew --no-daemon assembleRelease lintRelease
+
+      - name: Upload Android lint report
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: android-lint-report
+          path: android/app/build/reports/
           retention-days: 7

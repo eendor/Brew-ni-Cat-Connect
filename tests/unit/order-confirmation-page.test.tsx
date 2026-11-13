@@ -1,4 +1,4 @@
-import { act, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const fetchOrder = vi.hoisted(() => vi.fn());
@@ -216,5 +216,43 @@ describe("Order confirmation page", () => {
     expect(
       screen.queryByRole("heading", { name: "Next Steps" }),
     ).not.toBeInTheDocument();
+  });
+
+  it("TC-P9-042 — invites the customer to play while the shop works on the order, and remembers the order for the way back (FR-089)", async () => {
+    window.sessionStorage.clear();
+    window.history.replaceState(null, "", `/orders/BNC-7K2Q9F#token=${TOKEN}`);
+    for (const status of ["pending", "accepted", "preparing"] as const) {
+      fetchOrder.mockResolvedValue({ ...ORDER, status });
+      const { unmount } = render(<OrderConfirmationPage />);
+      expect(
+        await screen.findByRole("heading", { name: "Play while you wait" }),
+      ).toBeInTheDocument();
+      unmount();
+    }
+
+    fetchOrder.mockResolvedValue(ORDER);
+    render(<OrderConfirmationPage />);
+    const link = await screen.findByRole("link", { name: "Play cat games" });
+    expect(link).toHaveAttribute("href", "/games");
+    link.addEventListener("click", (event) => event.preventDefault());
+    fireEvent.click(link);
+    expect(window.sessionStorage.getItem("bnc-waiting-order")).toBe(
+      `/orders/BNC-7K2Q9F#token=${TOKEN}`,
+    );
+  });
+
+  it("TC-P9-043 — leaves the games out once the order is ready or closed (FR-089)", async () => {
+    for (const status of [
+      "ready",
+      "completed",
+      "cancelled",
+      "rejected",
+    ] as const) {
+      fetchOrder.mockResolvedValue({ ...ORDER, status });
+      const { unmount } = render(<OrderConfirmationPage />);
+      await screen.findByText("BNC-7K2Q9F");
+      expect(screen.queryByTestId("play-while-you-wait")).toBeNull();
+      unmount();
+    }
   });
 });

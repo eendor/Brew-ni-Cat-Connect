@@ -22,6 +22,7 @@ import {
   MAX_BUTTONS,
   MAX_CARDS,
   participantName,
+  ASSISTANT_METADATA,
   sendApiBodies,
 } from "@/lib/messenger/send";
 
@@ -86,7 +87,7 @@ describe("Messenger Send API (FR-059)", () => {
       {
         recipient: { id: CUSTOMER },
         messaging_type: "RESPONSE",
-        message: { text: "Okay!" },
+        message: { text: "Okay!", metadata: ASSISTANT_METADATA },
       },
     ]);
 
@@ -102,7 +103,10 @@ describe("Messenger Send API (FR-059)", () => {
     // quick replies ride on the last message.
     const bodies = sendApiBodies(CUSTOMER, { ...many, text: "x".repeat(641) });
     expect(bodies).toHaveLength(2);
-    expect(bodies[0]?.message).toEqual({ text: "x".repeat(641) });
+    expect(bodies[0]?.message).toEqual({
+      text: "x".repeat(641),
+      metadata: ASSISTANT_METADATA,
+    });
     const last = bodies.at(-1);
     expect(last?.message.quick_replies).toHaveLength(MAX_QUICK_REPLIES);
     expect(
@@ -137,6 +141,7 @@ describe("Messenger Send API (FR-059)", () => {
             },
           },
           quick_replies: choices.slice(MAX_BUTTONS),
+          metadata: ASSISTANT_METADATA,
         },
       },
     ]);
@@ -252,7 +257,11 @@ describe("Messenger Send API: links, pictures and cards (FR-104)", () => {
       {
         recipient: { id: CUSTOMER },
         messaging_type: "RESPONSE",
-        message: { text: "Which size?", quick_replies: [choice(1), choice(2)] },
+        message: {
+          text: "Which size?",
+          quick_replies: [choice(1), choice(2)],
+          metadata: ASSISTANT_METADATA,
+        },
       },
     ]);
   });
@@ -274,7 +283,10 @@ describe("Messenger Send API: links, pictures and cards (FR-104)", () => {
       cards,
     });
     expect(bodies).toHaveLength(3);
-    expect(bodies[0]?.message).toEqual({ text: "Bites" });
+    expect(bodies[0]?.message).toEqual({
+      text: "Bites",
+      metadata: ASSISTANT_METADATA,
+    });
     expect(bodies[1]?.message).toEqual({
       attachment: {
         type: "image",
@@ -283,6 +295,7 @@ describe("Messenger Send API: links, pictures and cards (FR-104)", () => {
           is_reusable: true,
         },
       },
+      metadata: ASSISTANT_METADATA,
     });
     const carousel = bodies[2]?.message.attachment as {
       payload: {
@@ -432,5 +445,18 @@ describe("Messenger customer name for an order (FR-106)", () => {
     expect(cleanName(`${"y".repeat(99)}\ud83d`)).toBe(
       `${"y".repeat(99)}\ufffd`,
     );
+  });
+
+  it("TC-P7-109 — marks every message the assistant sends, so its echoes aren't taken for the staff", () => {
+    const bodies = sendApiBodies(CUSTOMER, {
+      text: "Bites",
+      quickReplies: [choice(1)],
+      listChoices: true,
+      images: ["https://brew.example/images/menu/bites.jpg"],
+    });
+    expect(bodies.length).toBeGreaterThan(1);
+    for (const body of bodies) {
+      expect(body.message.metadata).toBe(ASSISTANT_METADATA);
+    }
   });
 });

@@ -17,6 +17,9 @@ import {
  * on the database or the Send API and doesn't resend the events.
  */
 
+/** Smart replies may go round the Gemini models after the 200 (ADR-031). */
+export const maxDuration = 60;
+
 const HEADERS = {
   "cache-control": "no-store",
   "content-type": "text/plain; charset=utf-8",

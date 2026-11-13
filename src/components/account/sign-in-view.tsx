@@ -1,104 +1,50 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
 
+import { GoogleSignInButton } from "@/components/account/google-sign-in-button";
 import { Container } from "@/components/ui/container";
+import { PRIVACY_POLICY_PATH } from "@/config/privacy";
 import { useAuth } from "@/context/auth-context";
 
-/**
- * Validates a return destination URL to protect against open redirects.
- * Only relative paths under the same origin are permitted; external URLs,
- * protocol-relative URLs (`//evil.example`), backslashes (`/\evil.example`),
- * and whitespace bypasses (`/\t/evil.example`) fall back to `/`.
- */
-export function safeReturnTo(raw: string | null): string {
-  if (!raw) return "/";
-  try {
-    const origin =
-      typeof window !== "undefined"
-        ? window.location.origin
-        : "http://localhost:3000";
-    const url = new URL(raw, origin);
-    return url.origin === origin
-      ? `${url.pathname}${url.search}${url.hash}`
-      : "/";
-  } catch {
-    return "/";
+export { safeReturnTo } from "@/lib/auth/safe-return-to";
+
+export type AuthMode = "sign-in" | "sign-up";
+
+const COPY: Record<
+  AuthMode,
+  {
+    title: string;
+    intro: string;
+    button: string;
+    switchText: string;
+    switchLink: string;
+    switchHref: string;
   }
-}
+> = {
+  "sign-in": {
+    title: "Sign In",
+    intro: "Welcome back! Sign in with your Google account.",
+    button: "Sign in with Google",
+    switchText: "New to Brew ni Cat?",
+    switchLink: "Create an account",
+    switchHref: "/account/sign-up",
+  },
+  "sign-up": {
+    title: "Create an Account",
+    intro:
+      "Join Brew ni Cat with your Google account. There's no password to remember.",
+    button: "Sign up with Google",
+    switchText: "Already have an account?",
+    switchLink: "Sign in",
+    switchHref: "/account/sign-in",
+  },
+};
 
-export function SignInView() {
-  const { signIn, user, isLoading } = useAuth();
-  const router = useRouter();
-
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [generalError, setGeneralError] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    setGeneralError("");
-    const newErrors: Record<string, string> = {};
-
-    const trimmedEmail = email.trim();
-    if (!trimmedEmail) {
-      newErrors.email = "Email is required.";
-    }
-
-    if (!password) {
-      newErrors.password = "Password is required.";
-    }
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
-    }
-
-    setErrors({});
-    setIsSubmitting(true);
-
-    try {
-      const res = await signIn(trimmedEmail, password);
-      if (res.error) {
-        const errorCode =
-          "code" in res.error && typeof res.error.code === "string"
-            ? res.error.code
-            : "";
-        if (errorCode === "email_not_confirmed") {
-          setGeneralError(
-            "Please verify your email address before signing in. Check your inbox for the confirmation link.",
-          );
-        } else if (
-          errorCode === "invalid_credentials" ||
-          errorCode === "invalid_grant"
-        ) {
-          setGeneralError(
-            "Incorrect email or password. Please check your credentials and try again.",
-          );
-        } else if (errorCode === "over_email_send_rate_limit") {
-          setGeneralError(
-            "Too many requests. Please wait a moment and try again.",
-          );
-        } else {
-          setGeneralError("Something went wrong. Please try again.");
-        }
-      } else {
-        const rawParam =
-          typeof window !== "undefined"
-            ? new URLSearchParams(window.location.search).get("returnTo")
-            : null;
-        router.push(safeReturnTo(rawParam));
-      }
-    } catch {
-      setGeneralError("An unexpected error occurred. Please try again.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+/** Sign-in and sign-up both use Google (ADR-030); only the wording differs. */
+export function GoogleAuthView({ mode }: { mode: AuthMode }) {
+  const { user, isLoading } = useAuth();
+  const copy = COPY[mode];
 
   if (!isLoading && user) {
     return (
@@ -134,129 +80,42 @@ export function SignInView() {
           <div className="text-center">
             <p className="eyebrow">Customer Account</p>
             <h1 className="font-display mt-2 text-4xl sm:text-5xl tracking-tight text-[var(--text-strong)]">
-              Sign In
+              {copy.title}
             </h1>
             <p className="mt-2 text-sm text-[var(--text-muted)]">
-              Welcome back! Please enter your details to access your account.
+              {copy.intro}
             </p>
           </div>
 
-          <div className="ios-card mt-8 p-6 sm:p-8">
-            <form onSubmit={handleSubmit} noValidate className="space-y-5">
-              {generalError ? (
-                <div
-                  role="alert"
-                  className="rounded-[var(--shape-md)] border border-[var(--danger)] bg-[var(--danger-soft)] p-4 text-sm font-semibold text-[var(--danger)]"
-                >
-                  {generalError}
-                </div>
-              ) : null}
-
-              <div>
-                <label htmlFor="signin-email" className="ios-label block">
-                  Email address{" "}
-                  <span className="text-[var(--danger)]" aria-hidden="true">
-                    *
-                  </span>
-                </label>
-                <input
-                  id="signin-email"
-                  type="email"
-                  required
-                  autoComplete="email"
-                  value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value);
-                    if (errors.email) {
-                      setErrors((prev) => ({ ...prev, email: "" }));
-                    }
-                  }}
-                  aria-invalid={!!errors.email}
-                  aria-describedby={
-                    errors.email ? "signin-email-error" : undefined
-                  }
-                  placeholder="e.g. maria@example.com"
-                  className="ios-field mt-2"
-                />
-                {errors.email ? (
-                  <p
-                    id="signin-email-error"
-                    role="alert"
-                    className="mt-1.5 text-sm font-semibold text-[var(--danger)]"
-                  >
-                    {errors.email}
-                  </p>
-                ) : null}
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between">
-                  <label htmlFor="signin-password" className="ios-label block">
-                    Password{" "}
-                    <span className="text-[var(--danger)]" aria-hidden="true">
-                      *
-                    </span>
-                  </label>
-                  <Link
-                    href="/account/forgot-password"
-                    className="text-xs font-semibold text-[var(--accent-solid)] hover:underline"
-                  >
-                    Forgot password?
-                  </Link>
-                </div>
-                <input
-                  id="signin-password"
-                  type="password"
-                  required
-                  autoComplete="current-password"
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                    if (errors.password) {
-                      setErrors((prev) => ({ ...prev, password: "" }));
-                    }
-                  }}
-                  aria-invalid={!!errors.password}
-                  aria-describedby={
-                    errors.password ? "signin-password-error" : undefined
-                  }
-                  placeholder="Enter your password"
-                  className="ios-field mt-2"
-                />
-                {errors.password ? (
-                  <p
-                    id="signin-password-error"
-                    role="alert"
-                    className="mt-1.5 text-sm font-semibold text-[var(--danger)]"
-                  >
-                    {errors.password}
-                  </p>
-                ) : null}
-              </div>
-
-              <div className="pt-2">
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="button-primary w-full disabled:opacity-50"
-                >
-                  {isSubmitting ? "Signing in…" : "Sign In"}
-                </button>
-              </div>
-
-              <div className="border-t border-[var(--separator)] pt-4 text-center text-sm text-[var(--text-muted)]">
-                Don&apos;t have an account?{" "}
-                <Link
-                  href="/account/sign-up"
-                  className="font-semibold text-[var(--accent-solid)] hover:underline"
-                >
-                  Create one now
-                </Link>
-              </div>
-            </form>
+          <div className="ios-card mt-8 space-y-5 p-6 sm:p-8">
+            <GoogleSignInButton label={copy.button} />
+            <p className="text-center text-xs leading-5 text-[var(--text-muted)]">
+              We get your name and email from Google to sign you in and to reach
+              you about your account. Read our{" "}
+              <Link
+                href={PRIVACY_POLICY_PATH}
+                className="font-semibold text-[var(--accent-solid)] underline underline-offset-4"
+              >
+                Privacy Policy
+              </Link>
+              .
+            </p>
+            <div className="border-t border-[var(--separator)] pt-4 text-center text-sm text-[var(--text-muted)]">
+              {copy.switchText}{" "}
+              <Link
+                href={copy.switchHref}
+                className="font-semibold text-[var(--accent-solid)] hover:underline"
+              >
+                {copy.switchLink}
+              </Link>
+            </div>
           </div>
         </div>
       </Container>
     </div>
   );
+}
+
+export function SignInView() {
+  return <GoogleAuthView mode="sign-in" />;
 }

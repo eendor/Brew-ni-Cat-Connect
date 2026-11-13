@@ -65,6 +65,7 @@ test("TC-P1-007 — public routes preserve the shared application shell", async 
   const routes = [
     { path: "/menu", heading: "Menu" },
     { path: "/about", heading: "About Brew ni Cat" },
+    { path: "/reviews", heading: "Reviews" },
     { path: "/gallery", heading: "Gallery" },
     { path: "/contact", heading: "Contact & location" },
   ];
@@ -103,6 +104,9 @@ test("TC-P1-008 — unknown routes show the not-found experience", async ({
 test("TC-P1-009 — key public pages avoid horizontal viewport overflow", async ({
   page,
 }) => {
+  // 8 pages at 5 widths: 40 page loads take about 30 s in CI, past the
+  // default limit, so this test gets more time
+  test.setTimeout(90_000);
   // one category and item, so /menu renders its full-bleed category bar
   await page.route("**/rest/v1/categories*", async (route) => {
     await route.fulfill({
@@ -140,6 +144,7 @@ test("TC-P1-009 — key public pages avoid horizontal viewport overflow", async 
       "/",
       "/menu",
       "/about",
+      "/reviews",
       "/gallery",
       "/contact",
       "/cart",

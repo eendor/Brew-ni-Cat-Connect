@@ -423,7 +423,7 @@ File: `supabase/migrations/20261110120000_messenger_order_status.sql`. Undo: `su
 
 ## 15. Loyalty Points (Phase 5 — PR #123)
 
-File: `supabase/migrations/20261113120000_loyalty_points.sql`. Undo: `supabase/rollbacks/20261113120000_loyalty_points.sql`. Covers FR-050 to FR-055. **Not applied to the live database yet.** Rodnee applies migrations after review.
+File: `supabase/migrations/20261113120000_loyalty_points.sql`. Undo: `supabase/rollbacks/20261113120000_loyalty_points.sql`. Covers FR-050 to FR-055. **Not applied to the live database yet.** Rodnee applies migrations after review. Update 2026-11-13: applied to the live database and recorded in `supabase_migrations.schema_migrations` (version 20261113120000).
 
 ### 15.1 Settings in one place
 
@@ -468,7 +468,7 @@ File: `supabase/migrations/20261113120000_loyalty_points.sql`. Undo: `supabase/r
 
 ## 16. Closed Today Switch (Phase 7 — 2026-11-11)
 
-File: `supabase/migrations/20261111120000_closed_today.sql`. Undo: `supabase/rollbacks/20261111120000_closed_today.sql`. Covers FR-111. **Not applied to the live database yet.** It is applied by the process in §8.7, and only with the team's OK. Until then the website and Messenger read the built-in copy, which is open.
+File: `supabase/migrations/20261111120000_closed_today.sql`. Undo: `supabase/rollbacks/20261111120000_closed_today.sql`. Covers FR-111. **Not applied to the live database yet.** It is applied by the process in §8.7, and only with the team's OK. Until then the website and Messenger read the built-in copy, which is open. Update 2026-11-13: applied to the live database and recorded in `supabase_migrations.schema_migrations` (version 20261111120000).
 
 ### 16.1 What it changes
 
@@ -494,7 +494,7 @@ File: `supabase/migrations/20261111120000_closed_today.sql`. Undo: `supabase/rol
 
 ## 17. Ratings And Reviews (Phase 5 — 2026-11-09)
 
-File: `supabase/migrations/20261112120000_reviews.sql`. Undo: `supabase/rollbacks/20261112120000_reviews.sql`. Covers FR-098. **Not applied to the live database yet.** Rodnee applies migrations after review.
+File: `supabase/migrations/20261112120000_reviews.sql`. Undo: `supabase/rollbacks/20261112120000_reviews.sql`. Covers FR-098. **Not applied to the live database yet.** Rodnee applies migrations after review. Update 2026-11-13: applied to the live database and recorded in `supabase_migrations.schema_migrations` (version 20261112120000).
 
 ### 17.1 Table `public.reviews`
 
@@ -536,3 +536,22 @@ File: `supabase/migrations/20261112120000_reviews.sql`. Undo: `supabase/rollback
 - Rollback drops `public.post_review`, `public.my_review`, `private.set_reviews_updated_at`, trigger `reviews_set_updated_at`, and table `public.reviews`.
 - TC-P5-170 to TC-P5-181 run on PGlite (`tests/database/reviews.test.ts`): public reading excludes `customer_id` and hidden reviews; staff can read and hide reviews; post_review works for guests and customers; customer edits their one review; guest cannot edit; database-wide guest flood limit; input validations.
 
+## 18. Messenger Staff Chats (Phase 7 — 2026-11-13)
+
+Migration `20261113130000_messenger_staff_chats.sql` (FR-113).
+
+- Table `private.messenger_staff_chats`: `chat` text primary key, checked `^[0-9a-f]{64}$` (an HMAC of the customer's Page-scoped ID with the Meta app secret); `replied_at` timestamptz not null default now(). RLS on, no grants.
+- `public.note_messenger_staff_reply(p_chat text)`: security definer, `set search_path = ''`. Refuses a bad code (22023), removes rows older than two days, and saves or updates the chat with now(). Granted to `anon` and `authenticated`.
+- `public.messenger_staff_replied_at(p_chat text)`: security definer, stable. The time the staff last replied in that chat, or null. Granted to `anon` and `authenticated`.
+- Undo: `supabase/rollbacks/20261113130000_messenger_staff_chats.sql` drops both functions and the table. TC-P7-114 to TC-P7-116 run on PGlite (`tests/database/messenger-staff-chats.test.ts`).
+
+## 19. Loyalty Mini-Games (Phase 9 — 2026-11-13)
+
+Migration `20261113140000_mini_games.sql` (FR-089, ADR-034). Needs `20261113120000_loyalty_points.sql` first. **Not applied to the live database yet.** Rodnee applies migrations after review (§8.7). Update 2026-11-13: applied with the lead developer's OK after a PGlite run and a live run with a forced rollback (three plays, a refused fourth, guests denied, RLS on), and recorded in `supabase_migrations.schema_migrations` (version 20261113140000). The PostgREST schema cache was reloaded so the page finds the functions.
+
+- `private.mini_game_settings()`: immutable jsonb with `daily_plays` (3) and the two games: `cat-cups` (3 cups, 3 points for the right one, 1 otherwise) and `lucky-paw` (1, 2, 3 or 5 points, weights 50, 30, 15, 5). No grants. **TODO: Confirm with Brew ni Cat owner.**
+- Table `public.game_plays`: `id` identity, `customer_id` → `auth.users` on delete cascade, `game` checked, `choice` smallint 0–9 or null, `outcome` jsonb, `points` > 0, `played_on` date (Manila), `created_at`. Index on (`customer_id`, `played_on`). Updates are refused by a trigger. RLS: a customer selects only their own rows; no insert, update or delete grants.
+- `public.loyalty_transactions`: new column `game_play_id` → `game_plays` on delete cascade, with a unique partial index (one award per play). The reason check gains `mini-game`, and the reason rules require points > 0 and a play for it.
+- `public.mini_game_status()`: security definer, stable. The games with their points, the daily plays and how many the caller has used today. Granted to `anon` and `authenticated`.
+- `public.play_mini_game(p_game text, p_choice integer default null)`: security definer. Refuses guests, unknown games and bad choices; takes `pg_advisory_xact_lock` per customer; refuses past the daily limit (`daily_limit_reached`); draws the result; writes the play and the ledger row; returns `{ok, playId, game, outcome, points, playsLeft, balance}`. Granted to `authenticated` only.
+- Undo: `supabase/rollbacks/20261113140000_mini_games.sql` drops the functions, deletes the mini-game ledger rows, restores the reason checks, and drops the column, the table and the settings. Other loyalty rows are kept. TC-P9-028 to TC-P9-033 run on PGlite (`tests/database/mini-games.test.ts`).

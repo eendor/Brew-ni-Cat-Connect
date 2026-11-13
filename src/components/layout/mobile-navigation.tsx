@@ -184,6 +184,13 @@ export function MobileNavigation({ items }: MobileNavigationProps) {
           {user ? (
             <li className="mt-1 border-t border-[var(--separator)] pt-2">
               <NavLink
+                href="/account"
+                className="flex min-h-12 items-center rounded-[var(--shape-md)] px-4 py-3 text-base font-semibold text-[var(--text-strong)] transition-colors hover:bg-[var(--fill-tertiary)] aria-[current=page]:bg-[var(--accent-soft)] aria-[current=page]:text-[var(--accent-solid)]"
+                onClick={closeNavigation}
+              >
+                My account
+              </NavLink>
+              <NavLink
                 href="/account/profile"
                 className="flex min-h-12 items-center rounded-[var(--shape-md)] px-4 py-3 text-base font-semibold text-[var(--text-strong)] transition-colors hover:bg-[var(--fill-tertiary)] aria-[current=page]:bg-[var(--accent-soft)] aria-[current=page]:text-[var(--accent-solid)]"
                 onClick={closeNavigation}
@@ -209,7 +216,14 @@ export function MobileNavigation({ items }: MobileNavigationProps) {
                 className="flex min-h-12 items-center rounded-[var(--shape-md)] px-4 py-3 text-base font-semibold text-[var(--text-strong)] transition-colors hover:bg-[var(--fill-tertiary)] aria-[current=page]:bg-[var(--accent-soft)] aria-[current=page]:text-[var(--accent-solid)]"
                 onClick={closeNavigation}
               >
-                Loyalty & Rewards
+                Rewards
+              </NavLink>
+              <NavLink
+                href="/games"
+                className="flex min-h-12 items-center rounded-[var(--shape-md)] px-4 py-3 text-base font-semibold text-[var(--text-strong)] transition-colors hover:bg-[var(--fill-tertiary)] aria-[current=page]:bg-[var(--accent-soft)] aria-[current=page]:text-[var(--accent-solid)]"
+                onClick={closeNavigation}
+              >
+                Cat games
               </NavLink>
               <div className="flex items-center justify-between px-4 py-2">
                 <span className="ios-caption truncate">

@@ -4,6 +4,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { PointsHistoryView } from "@/components/loyalty/points-history-view";
 import { RewardsView } from "@/components/loyalty/rewards-view";
 import { useAuth } from "@/context/auth-context";
 import {
@@ -186,35 +187,16 @@ describe("RewardsView component", () => {
     ).toBeDisabled();
   });
 
-  it("displays points history with formatted signs, plain reasons, and order references", async () => {
+  it("links to the points history page and does not list history rows (added 2026-11-13)", async () => {
     render(<RewardsView />);
     await waitFor(() => {
-      expect(screen.getByTestId("history-row-1")).toBeInTheDocument();
-    });
-
-    const row1 = screen.getByTestId("history-row-1");
-    expect(row1).toHaveTextContent("Order completed");
-    expect(row1).toHaveTextContent("BNC-ABCDEF");
-    expect(row1).toHaveTextContent("+12 pts");
-
-    const row2 = screen.getByTestId("history-row-2");
-    expect(row2).toHaveTextContent("Redeemed: Spanish latte (RWD-123456)");
-    expect(row2).toHaveTextContent("−50 pts");
-  });
-
-  it("displays empty state when customer has no transactions", async () => {
-    vi.mocked(fetchLoyaltyBalance).mockResolvedValue(0);
-    vi.mocked(fetchLoyaltyHistory).mockResolvedValue([]);
-    render(<RewardsView />);
-
-    await waitFor(() => {
-      expect(screen.getByText("No Points Yet")).toBeInTheDocument();
+      expect(screen.getByTestId("loyalty-balance")).toHaveTextContent("60");
     });
     expect(
-      screen.getByText(
-        "No points yet. You earn points when an order is completed.",
-      ),
-    ).toBeInTheDocument();
+      screen.getByRole("link", { name: "See points history →" }),
+    ).toHaveAttribute("href", "/account/rewards/history");
+    expect(screen.queryByTestId("history-row-1")).not.toBeInTheDocument();
+    expect(fetchLoyaltyHistory).not.toHaveBeenCalled();
   });
 
   it("displays error banner when loading fails", async () => {
@@ -279,14 +261,83 @@ describe("RewardsView component", () => {
   });
 });
 
+// Added 2026-11-13: the points history moved to /account/rewards/history.
+describe("PointsHistoryView component", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(useAuth).mockReturnValue({
+      user: { id: "customer-123" },
+      isLoading: false,
+    } as unknown as ReturnType<typeof useAuth>);
+    vi.mocked(fetchLoyaltyBalance).mockResolvedValue(60);
+    vi.mocked(fetchLoyaltyHistory).mockResolvedValue(mockHistory);
+  });
+
+  it("displays points history with formatted signs, plain reasons, and order references", async () => {
+    render(<PointsHistoryView />);
+    await waitFor(() => {
+      expect(screen.getByTestId("history-row-1")).toBeInTheDocument();
+    });
+
+    const row1 = screen.getByTestId("history-row-1");
+    expect(row1).toHaveTextContent("Order completed");
+    expect(row1).toHaveTextContent("BNC-ABCDEF");
+    expect(row1).toHaveTextContent("+12 pts");
+
+    const row2 = screen.getByTestId("history-row-2");
+    expect(row2).toHaveTextContent("Redeemed: Spanish latte (RWD-123456)");
+    expect(row2).toHaveTextContent("−50 pts");
+  });
+
+  it("displays empty state when customer has no transactions", async () => {
+    vi.mocked(fetchLoyaltyBalance).mockResolvedValue(0);
+    vi.mocked(fetchLoyaltyHistory).mockResolvedValue([]);
+    render(<PointsHistoryView />);
+
+    await waitFor(() => {
+      expect(screen.getByText("No Points Yet")).toBeInTheDocument();
+    });
+    expect(
+      screen.getByText(
+        "No points yet. You earn points when an order is completed.",
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it("shows the balance and a link back to Rewards", async () => {
+    render(<PointsHistoryView />);
+    await waitFor(() => {
+      expect(screen.getByTestId("history-balance")).toHaveTextContent(
+        "60 points",
+      );
+    });
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Points History" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "← Back to Rewards" }),
+    ).toHaveAttribute("href", "/account/rewards");
+  });
+
+  it("shows an error banner when loading fails", async () => {
+    vi.mocked(fetchLoyaltyHistory).mockRejectedValue(new Error("Offline"));
+    render(<PointsHistoryView />);
+    await waitFor(() => {
+      expect(screen.getByRole("alert")).toHaveTextContent("Offline");
+    });
+  });
+});
+
 // Added 2026-11-11: the page once used four CSS variables that do not exist,
 // which drew black borders and faded buttons.
 describe("RewardsView styles", () => {
   it("TC-P5-210 — every CSS variable the rewards page uses exists in globals.css", () => {
-    const view = readFileSync(
+    const view = [
       "src/components/loyalty/rewards-view.tsx",
-      "utf8",
-    );
+      "src/components/loyalty/points-history-view.tsx",
+    ]
+      .map((file) => readFileSync(file, "utf8"))
+      .join("\n");
     const css = readFileSync("src/app/globals.css", "utf8");
     const used = [...new Set(view.match(/var\((--[a-z0-9-]+)\)/g) ?? [])].map(
       (v) => v.slice(4, -1),

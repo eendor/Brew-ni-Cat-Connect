@@ -41,6 +41,8 @@ import {
   statusPayload,
   type Intent,
 } from "./intents";
+import { postedStatusText, postsNotice, type PagePost } from "./page-posts";
+import { openStatusText } from "./shop-time";
 
 /** Meta's limits for a text message and its quick replies. */
 export const MAX_TEXT_LENGTH = 2000;
@@ -95,7 +97,6 @@ export type Reply = Readonly<{
 }>;
 
 /** Said in the welcome and in each customer's first reply (FR-062). */
-export const ASSISTANT_NOTICE = `I'm ${siteConfig.shortName}'s automated assistant, not a person.`;
 
 /** The main buttons: quick replies under each answer and the chat's menu. */
 export const MAIN_BUTTONS: readonly Readonly<{
@@ -193,9 +194,20 @@ export function buildReply(
   };
 }
 
-/** The notice before a reply, for a customer's first reply. */
-export function withNotice(answer: Reply): Reply {
-  return { ...answer, text: clip(`${ASSISTANT_NOTICE}\n\n${answer.text}`) };
+/**
+ * Buttons for these intents first, then the other main buttons.
+ * Update 2026-11-13: smart replies pick the buttons that fit the answer.
+ */
+export function suggestedQuickReplies(first: readonly Intent[]): QuickReply[] {
+  const ordered = [
+    ...MAIN_BUTTONS.filter((button) => first.includes(button.intent)).sort(
+      (a, b) => first.indexOf(a.intent) - first.indexOf(b.intent),
+    ),
+    ...MAIN_BUTTONS.filter((button) => !first.includes(button.intent)),
+  ];
+  return ordered.map((button) =>
+    quickReply(button.title, PAYLOADS[button.intent]),
+  );
 }
 
 /** An emoji for a menu category, by its name. */
@@ -214,14 +226,15 @@ export function categoryEmoji(name: string): string {
 /** Get Started, a greeting, or a button the assistant doesn't know. */
 export function welcomeReply(): Reply {
   return buildReply(
-    `Hi! 👋 ${ASSISTANT_NOTICE} 🐱\n\nTap a button below to order right here in the chat 🛒, see our menu and prices 📋, our hours and location 🕒, or your order status 📦.\n\nOur staff read this chat too, so you can also type your message. 💬`,
+    `Hi! 👋 Welcome to ${siteConfig.shortName}! 🐱\n\nTap a button below to order right here in the chat 🛒, see our menu and prices 📋, our hours and location 🕒, or your order status 📦.\n\nYou can also just type your question, and our staff read this chat too. 💬`,
     mainQuickReplies(),
   );
 }
 
 /**
  * Talk to staff. Every message already reaches the Page inbox, and the
- * assistant doesn't answer typed messages, so the staff can just reply.
+ * assistant leaves the customer's typed messages to the staff for a while
+ * (STAFF_QUIET_MS in events.ts), so the staff can just reply.
  */
 export function staffReply(content: SiteContent): Reply {
   return buildReply(
@@ -229,9 +242,85 @@ export function staffReply(content: SiteContent): Reply {
   );
 }
 
+// Smart replies (added 2026-11-13) --------------------------------------------
+
+/**
+ * A message only the staff should answer. While the shop is closed it also
+ * says when the staff will be back.
+ */
+export function handoffReply(
+  text: string,
+  content: SiteContent,
+  now: number,
+): Reply {
+  const status = openStatusText(content, now);
+  const closed = !status.startsWith("🟢");
+  return buildReply(
+    closed ? `${text}\n\n${status}` : text,
+    mainQuickReplies("staff"),
+  );
+}
+
+/** An answer written by the smart reply, with the buttons it picked first. */
+export function smartReply(text: string, buttons: readonly Intent[]): Reply {
+  return buildReply(text, suggestedQuickReplies(buttons));
+}
+
+/** "Are you open?" answered for right now, then the hours and the address. */
+export function openNowReply(
+  content: SiteContent,
+  now: number,
+  posts: readonly PagePost[] = [],
+): Reply {
+  const answer = hoursLocationReply(content, posts);
+  // A post about today ("We open at 1:00 pm today") wins (FR-114), unless
+  // the "closed today" switch is on.
+  const status =
+    (content.closure.closed ? null : postedStatusText(posts, now)) ??
+    openStatusText(content, now);
+  // The "closed today" switch is already the first line of the status.
+  const rest = answer.text.replace(
+    `${closedTodayText(content.closure)}\n\n`,
+    "",
+  );
+  return { ...answer, text: clip(`${status}\n\n${rest}`) };
+}
+
+/** A 👍, a sticker or a reaction: say hi back with the buttons. */
+export function likeReply(): Reply {
+  return buildReply(
+    `😺 Thank you po! What can we get you today?\n\nTap a button below, or type your question.`,
+    mainQuickReplies(),
+  );
+}
+
+/** A photo, video, file or voice message: the staff will look at it. */
+export function attachmentReply(content: SiteContent, now: number): Reply {
+  return handoffReply(
+    "Thanks! 📸 Our staff will check what you sent and reply here.",
+    content,
+    now,
+  );
+}
+
+/** When a smart reply can't be written: the staff will answer. */
+export function questionForStaffReply(
+  content: SiteContent,
+  now: number,
+): Reply {
+  return handoffReply(
+    "Thanks for your message! 😊 Our staff will reply here soon. Meanwhile, the buttons below can help.",
+    content,
+    now,
+  );
+}
+
 // Shop facts ----------------------------------------------------------------
 
-export function hoursLocationReply(content: SiteContent): Reply {
+export function hoursLocationReply(
+  content: SiteContent,
+  posts: readonly PagePost[] = [],
+): Reply {
   const { address, closure, hours, notice } = content;
   const landmark = address.landmark.trim()
     ? `, ${midSentence(address.landmark.trim())}`
@@ -239,6 +328,7 @@ export function hoursLocationReply(content: SiteContent): Reply {
   const parts = [
     closedTodayText(closure),
     `🕒 ${hoursNotice(hours)}`,
+    postsNotice(posts),
     notice.text.trim() ? `📢 Notice: ${notice.text.trim()}` : null,
     `📍 We're at ${fullAddress(address)}${landmark}.`,
   ];

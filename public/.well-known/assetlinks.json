@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.brewnicat.connect",
+      "sha256_cert_fingerprints": [
+        "DB:9C:C1:54:2C:9E:83:20:15:16:53:07:7A:11:98:1C:44:43:4D:91:37:34:43:8B:1A:E4:35:14:3D:6B:63:CB"
+      ]
+    }
+  }
+]

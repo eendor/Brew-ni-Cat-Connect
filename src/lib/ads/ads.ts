@@ -9,6 +9,18 @@ export const AD_WIDTH = 300;
 export const AD_HEIGHT = 250;
 export const AD_SCRIPT_HOST = "https://bauval.org/22/";
 export const AD_CONSENT_KEY = "bnc-ad-consent";
+/** The message the ad frame posts to this page once an ad has appeared. */
+export const AD_FILLED_MESSAGE = "bnc-ad-filled";
+/** How long to wait for an ad before showing a note instead of a blank box. */
+export const AD_FILL_TIMEOUT_MS = 8000;
+
+/**
+ * Runs inside the ad frame. It watches for an ad of real size (an image,
+ * canvas or video, or a frame loaded from an http(s) address) and tells the
+ * parent page once, with no data beyond the message name. An empty inner
+ * frame it can't read does not count, so a blank box never reads as an ad.
+ */
+const FILL_REPORTER = `(function(){var sent=false;function sized(el){var r=el.getBoundingClientRect();return r.width>=100&&r.height>=50}function has(doc,depth){var els=doc.querySelectorAll("img,canvas,video,iframe");for(var i=0;i<els.length;i++){var el=els[i];if(!sized(el))continue;if(el.tagName!=="IFRAME")return true;if(/^https?:/.test(el.getAttribute("src")||""))return true;if(depth<2){try{var d=el.contentDocument;if(d&&has(d,depth+1))return true}catch(e){}}}return false}function check(){if(sent)return;if(has(document,0)){sent=true;parent.postMessage("${AD_FILLED_MESSAGE}","*")}}new MutationObserver(check).observe(document.documentElement,{childList:true,subtree:true,attributes:true});setInterval(check,1000)})();`;
 
 /** Pages where an ad must never appear, even if a slot is placed there. */
 export const AD_FREE_PREFIXES = [
@@ -74,6 +86,22 @@ export function resetAdConsentForTests(): void {
   memoryConsent = null;
 }
 
+/**
+ * The ad frame's sandbox. `allow-same-origin` lets the ad network's loader
+ * write the ad into the inner frame it creates; without it the ad stays
+ * blank. It is safe only because the page is a `data:` URL (see adFrameSrc):
+ * a `data:` page always has its own opaque origin, so the ad code still
+ * can't read this site's storage, cookies or page. Never pair this sandbox
+ * with `srcdoc`, which would give the ad this site's origin.
+ */
+export const AD_SANDBOX =
+  "allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox";
+
+/** The ad page as a `data:` URL, so it never shares this site's origin. */
+export function adFrameSrc(key: string): string {
+  return `data:text/html;charset=utf-8,${encodeURIComponent(adDocument(key))}`;
+}
+
 /** The page loaded inside the sandboxed ad frame. */
 export function adDocument(key: string): string {
   const options = JSON.stringify({
@@ -83,5 +111,5 @@ export function adDocument(key: string): string {
     width: AD_WIDTH,
     params: {},
   });
-  return `<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;padding:0;overflow:hidden;background:transparent}</style></head><body><script>atOptions = ${options};</script><script src="${AD_SCRIPT_HOST}${key}"></script></body></html>`;
+  return `<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;padding:0;overflow:hidden;background:transparent}</style></head><body><script>${FILL_REPORTER}</script><script>atOptions = ${options};</script><script src="${AD_SCRIPT_HOST}${key}"></script></body></html>`;
 }

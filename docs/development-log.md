@@ -1,7 +1,7 @@
 # Development Log
 
 **Document version:** 0.1 Draft\
-**Last updated:** 2026-11-05
+**Last updated:** 2026-11-13
 
 This log records completed work and observed evidence. Planned work is explicitly identified and is not reported as implemented or tested.
 
@@ -337,7 +337,6 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Git branch:** `feat/gallery-ui-polish`\
 **Pull request:** [#10](https://github.com/eendor/Brew-ni-Cat-Connect/pull/10)
 
-
 ## 2026-09-24 — Menu item photos from shop Facebook stills
 
 **Date:** 2026-09-24\
@@ -379,7 +378,6 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Files/modules affected:** `src/app/layout.tsx`; `src/app/globals.css`; `src/components/layout/site-header.tsx`; `src/app/page.tsx`; `src/app/contact/page.tsx`; `docs/development-log.md`.\
 **Git branch:** `feat/gallery-ui-polish`\
 **Pull request:** [#10](https://github.com/eendor/Brew-ni-Cat-Connect/pull/10)
-
 
 ## 2026-09-24 — Menu item photos: foods-only remapping
 
@@ -455,7 +453,6 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Git branch:** `feat/homepage-ui-polish`\
 **Pull request:** [#11 — feat: polish homepage visit logistics, customer favorites, and cat lounge etiquette](https://github.com/eendor/Brew-ni-Cat-Connect/pull/11), merged 2026-10-05 as `937d6f5`.\
 **Next action:** None; merged and recorded on Trello.
-
 
 ## 2026-10-11 — Update vulnerable sharp and source-map-js
 
@@ -878,7 +875,6 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Pull request:** [#41](https://github.com/eendor/Brew-ni-Cat-Connect/pull/41), self-reviewed and squash-merged into `main` on 2026-10-24\
 **Next action:** Shan's order page reads `get_online_order()`. The POS order screen needs its own status-change function. `POST /api/orders` needs a rate limit before Place order is turned on.
 
-
 ## 2026-10-24 — New shop hours: closed every Saturday
 
 **Date:** 2026-10-24\
@@ -988,7 +984,6 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `feat/p3-gallery-facebook-photos`.
 - **Next action:** None. The photos were already public on the shop's Facebook page and the owner confirmed the customers are fine with it.
 
-
 ## 2026-10-26 — Page-transition curtain restored to the original look
 
 - **Phase:** 3 (motion follow-up)
@@ -1013,7 +1008,6 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `feat/p3-3d-in-order-dialog`.
 - **Next action:** Phone check of the dialog in MAN-P4-007.
 
-
 ## 2026-10-26 — Smoother rising text on page entrances
 
 - **Phase:** 3 (motion follow-up)
@@ -1023,7 +1017,6 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Testing:** TC-P4-022 and TC-P4-026 on a fresh build; checked by eye on a phone in MAN-P4-007.
 - **Branch / PR:** `fix/p3-text-rise-smooth`.
 - **Next action:** Ask the team to confirm the rise feels smooth in MAN-P4-007.
-
 
 ## 2026-10-27 — Customer authentication (FR-031, FR-032, FR-034 Implemented; FR-033, FR-035, FR-036 In development)
 
@@ -1035,7 +1028,6 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `feat/p4-customer-auth` / PR #58.
 - **Next action:** Re-review and merge by Rodnee; independent QA by Renier.
 
-
 ## 2026-10-27 — Faster Playwright install in CI
 
 - **Phase:** 4 (CI upkeep)
@@ -1045,7 +1037,6 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Testing:** The `Browser tests (chromium)` job on PR #59 runs the full `chromium` project with the new install step. Its step timings are compared with the runs before it in the PR.
 - **Branch / PR:** `perf/ci-playwright-install`, PR #59.
 - **Next action:** None. If a future runner image drops a library, the step installs the system packages by itself.
-
 
 ## 2026-10-28 — The cart empties once the order summary is made
 
@@ -1196,7 +1187,7 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Phase:** Phase 4 / Phase 9 (Stage 3, owner side in the POS).
 - **Task:** Build the owner-only Shop settings screen in the POS web dashboard (`Brew-ni-Cat-POS`) so the owner can edit all nine `public.site_content` sections and the takeout box fee without touching code or the Supabase dashboard, completing Trello card `Vm8fmX7J`.
 - **Summary:** Added `web/src/lib/site-content.ts` and `web/src/components/shop-settings-tab.tsx` to `Brew-ni-Cat-POS` and wired a new **Shop Settings** navigation tab into `web/src/app/page.tsx` (desktop sidebar and mobile bottom bar). The screen loads all nine `public.site_content` sections (`hours`, `notice`, `contact`, `address`, `payments`, `social`, `riders`, `about`, `gallery`) plus the `Take-out Box` item from `public.items`, organises them into five segmented editor groups (*Hours & Notice*, *Contact, Address & Fees*, *Social & Riders*, *About & Home Copy*, and *Gallery Photos*), validates every section in the browser with the same rules as `private.is_valid_site_content()` before saving, and writes updates through the signed-in staff session so `private.site_content_audit` records the actor and old/new JSON. Updated FR-085 and FR-086 to `Implemented (PR #69, POS PR #3)` and recorded test cases TC-P4-240 to TC-P4-242.
-- **Files:** In `Brew-ni-Cat-POS`: `web/src/lib/site-content.ts`, `web/src/components/shop-settings-tab.tsx`, `web/src/app/page.tsx`, `web/tests/site-content.test.mjs`, `web/package.json`, `README.md`, `docs/screenshots/shop-settings/before-pos-menu.png` and `after-pos-shop-settings.png`. In `Brew-ni-Cat-Connect`: `docs/functional-requirements.md`, `docs/decisions.md`, `docs/system-architecture.md`, `docs/test-cases.md`, `docs/development-log.md`.
+- **Files:** In `Brew-ni-Cat-POS`: `web/src/lib/site-content.ts`, `web/src/components/shop-settings-tab.tsx`, `web/src/app/page.tsx`, `web/tests/site-content.test.mjs`, `web/package.json`, `README.md`, `docs/screenshots/shop-settings/before-pos-menu.png` and `after-pos-shop-settings.png`. In `Brew-ni-Cat-Connect`: `docs/functional-requirements.md`, `docs/decisions.md`, `docs/system-architecture.md`, `docs/test-cases.md`, `docs/development-log.md`, `README.md`.
 - **Testing:** In `Brew-ni-Cat-POS/web`: `npm test` (3/3 passed, TC-P4-240 to TC-P4-242), `npm run lint` (0 warnings), `npm run build` (PASS). In `Brew-ni-Cat-Connect`: `python3 -I scripts/validate_phase0_docs.py` (PASS) and `npm run format:check` (PASS).
 - **Branch / PR:** `Brew-ni-Cat-POS` `feat/shop-settings` (POS PR #3) and `Brew-ni-Cat-Connect` `docs/pos-shop-settings-evidence` (Connect PR #74).
 - **Known limitations:** Gallery photo paths must reference files shipped under `/images/` on the website. Menu price changes in `public.items` are not written to `private.site_content_audit`.
@@ -1207,7 +1198,7 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Phase:** Phase 9 (Stage 3, POS product editor database schema).
 - **Task:** Add `icon` and `image_url` columns to `public.items` with check constraints and a rollback script so the Android and web POS product editors can save a product icon choice and optional photo path/URL.
 - **Summary:** Added `supabase/migrations/20261031120000_item_icon_and_image.sql` and `supabase/rollbacks/20261031120000_item_icon_and_image.sql`. `public.items.icon` accepts `null` or a lowercase identifier (`^[a-z0-9_]{1,40}$`), and `public.items.image_url` accepts `null`, a `/images/...` path, or an `https://` URL up to 500 characters. Added PGlite tests in `tests/database/item-icon-and-image.test.ts` (`TC-P4-243` to `TC-P4-247`) and updated `docs/database-design.md` §11, `docs/functional-requirements.md` (`FR-093`), and `docs/test-cases.md` §27.
-- **Files:** `supabase/migrations/20261031120000_item_icon_and_image.sql`, `supabase/rollbacks/20261031120000_item_icon_and_image.sql`, `tests/database/item-icon-and-image.test.ts`, `docs/database-design.md`, `docs/functional-requirements.md`, `docs/test-cases.md`, `docs/development-log.md`.
+- **Files:** `supabase/migrations/20261031120000_item_icon_and_image.sql`, `supabase/rollbacks/20261031120000_item_icon_and_image.sql`, `tests/database/item-icon-and-image.test.ts`, `docs/database-design.md`, `docs/functional-requirements.md`, `docs/test-cases.md`, `docs/development-log.md`, `README.md`.
 - **Testing:** Vitest 444/444 in 50 files (`npm test`), `python3 -I scripts/validate_phase0_docs.py` (PASS), `npm run format:check` (PASS), `npm run lint` (PASS), `npm run typecheck` (PASS).
 - **Branch / PR:** `feat/pos-item-icon-columns`, PR #75.
 - **Known limitations:** The migration is not applied to the live database until approved by the user.
@@ -1221,7 +1212,7 @@ This log records completed work and observed evidence. Planned work is explicitl
   1. **Android POS product and category editor (`Brew-ni-Cat-POS` PR #4):** Added `MenuEditorScreen.kt` and `MenuEditorViewModel.kt` behind the owner PIN (`PinAccessTarget.MENU_EDITOR`). The editor lets the owner create, edit, and delete categories and products, choose from a 30-icon picker (`FluentIcons.productIconOptions`), configure variants (`basePrice`, `priceByFlavor`, `description`) and flavors, and toggle `isAvailable`. Upgraded Room from v19 to v20 (`MIGRATION_19_20` adding `items.isAvailable`, `items.icon`, and `app_config.catalogVersion`). Replaced destructive re-seeding in `MenuContentUpdater` with a `catalogVersion` check that only seeds the default catalog when `items` is empty, so owner edits and deletions are never overwritten or restored on app restart. Extended `SyncWorker` for two-way `is_available` and `icon` sync (with automatic retry without `icon` if the remote migration is not yet applied) and remote catalog deletion.
   2. **Web POS 30-icon product icon picker (`Brew-ni-Cat-POS` PR #5):** Added `web/src/lib/product-icons.ts` and `web/src/components/product-icon.tsx` and updated `web/src/app/page.tsx` so the Web POS Menu Catalog Editor offers the same 30 lowercase icon keys as Android POS and `public.items.icon`, displays each product's chosen icon on catalog cards, and retries without `icon` if the column is not yet applied on the remote database.
   3. **Android Supabase `BuildConfig` cleanup (`Brew-ni-Cat-POS` PR #6):** Updated `app/build.gradle.kts` to inject `BuildConfig.SUPABASE_URL` and `BuildConfig.SUPABASE_PUBLISHABLE_KEY` from gitignored `local.properties` or environment variables, and replaced all hardcoded Supabase URL and publishable key literals in `DatabaseSeeder.kt`, `AppConfigRepositoryImpl.kt`, and `AppUpdateManager.kt` (`0` matches in `app/src`). Updated FR-082 and FR-093 to `Implemented` and recorded test cases `TC-P4-248` to `TC-P4-251`.
-- **Files:** In `Brew-ni-Cat-POS`: `app/build.gradle.kts`, `app/src/main/java/com/example/cattasticpos/data/local/*`, `data/repository/*`, `data/remote/AppUpdateManager.kt`, `domain/model/MenuModels.kt`, `domain/repository/MenuRepository.kt`, `sync/SyncWorker.kt`, `ui/components/FluentIcons.kt`, `ui/components/ParallaxNavigation.kt`, `ui/dashboard/*`, `ui/history/HistoryScreen.kt`, `ui/inventory/InventoryScreen.kt`, `ui/menu/MenuEditorScreen.kt`, `ui/menu/MenuEditorViewModel.kt`, `ui/pin/PinScreen.kt`, `MainActivity.kt`, `app/src/test/java/com/example/cattasticpos/MenuCatalogEditorTest.kt`, `web/src/lib/product-icons.ts`, `web/src/components/product-icon.tsx`, `web/src/app/page.tsx`, `web/tests/product-icons.test.mjs`, `docs/screenshots/web-product-icon-picker/`, `README.md`. In `Brew-ni-Cat-Connect`: `docs/functional-requirements.md`, `docs/system-architecture.md`, `docs/test-cases.md`, `docs/development-log.md`.
+- **Files:** In `Brew-ni-Cat-POS`: `app/build.gradle.kts`, `app/src/main/java/com/example/cattasticpos/data/local/*`, `data/repository/*`, `data/remote/AppUpdateManager.kt`, `domain/model/MenuModels.kt`, `domain/repository/MenuRepository.kt`, `sync/SyncWorker.kt`, `ui/components/FluentIcons.kt`, `ui/components/ParallaxNavigation.kt`, `ui/dashboard/*`, `ui/history/HistoryScreen.kt`, `ui/inventory/InventoryScreen.kt`, `ui/menu/MenuEditorScreen.kt`, `ui/menu/MenuEditorViewModel.kt`, `ui/pin/PinScreen.kt`, `MainActivity.kt`, `app/src/test/java/com/example/cattasticpos/MenuCatalogEditorTest.kt`, `web/src/lib/product-icons.ts`, `web/src/components/product-icon.tsx`, `web/src/app/page.tsx`, `web/tests/product-icons.test.mjs`, `docs/screenshots/web-product-icon-picker/`, `README.md`. In `Brew-ni-Cat-Connect`: `docs/functional-requirements.md`, `docs/system-architecture.md`, `docs/test-cases.md`, `docs/development-log.md`, `README.md`.
 - **Testing:** In `Brew-ni-Cat-POS`: `bash gradlew testDebugUnitTest` (PASS, `TC-P4-248` to `TC-P4-250`) and in `web/`: `npm test` (7/7 passed, `TC-P4-240` to `TC-P4-242` and `TC-P4-251`), `npm run lint` (0 warnings), `npm run build` (PASS). In `Brew-ni-Cat-Connect`: `python3 -I scripts/validate_phase0_docs.py` (PASS) and `npm run format:check` (PASS).
 - **Branch / PR:** `Brew-ni-Cat-POS` `feat/android-product-editor` (POS PR #4), `feat/web-product-icon-picker` (POS PR #5), `chore/android-supabase-buildconfig` (POS PR #6), and `Brew-ni-Cat-Connect` `docs/stage3-pos-product-editor-evidence` (Connect PR #76).
 - **Known limitations:** `20261031120000_item_icon_and_image.sql` remains unapplied on the live database until approved by the user; both POS apps automatically fall back if the remote `icon` column is absent.
@@ -1265,7 +1256,7 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Phase:** Phase 9 (website polish).
 - **Task:** At night the gallery ring's side photos did not haze into the wall, and the home showcase took too long to scroll through on a phone.
 - **Summary:** The ring mixes each side photo toward the page's wall in linear light. By day the cream wall makes that a clear haze, but at night a 60% keep of the dark wall still looks like about 80% of the photo, so the photos barely receded. The dark theme now keeps 20% of color and 45% of saturation (day stays 60% and 60%), read from a shader uniform that the theme toggle updates in place. On phones (up to 760px) the home showcase is 300vh tall instead of 520vh, which is 338px of scroll per item instead of 709px on a 390 by 844 phone (measured in the browser). Wider screens are unchanged.
-- **Files:** `src/components/three/scenes/gallery-ring.ts`, `src/app/globals.css`, `tests/unit/daylight-glass.test.ts`, `docs/test-cases.md`, `docs/development-log.md`.
+- **Files:** `src/components/three/scenes/gallery-ring.ts`, `src/app/globals.css`, `tests/unit/daylight-glass.test.ts`, `docs/test-cases.md`, `docs/development-log.md`, `README.md`.
 - **Testing:** TC-P4-260 passes. Before and after renders of `/gallery` at night are in `docs/evidence/phase-4/night-gallery-haze/`, and the side photos recede into the wall in the after render. The full Vitest suite, type check, lint, Prettier and the docs validator pass.
 - **Branch / PR:** `fix/night-gallery-haze-and-mobile-showcase`.
 - **Known limitations:** The phone showcase length was judged on the numbers and a desktop render, not yet on a real phone.
@@ -1286,7 +1277,7 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Phase:** Phase 6 (POS Online orders screen and status rules).
 - **Task:** Add the rate limit on `POST /api/orders` that has to be in before Place order is turned on for the public.
 - **Summary:** Each client address may try up to five orders in ten minutes. A sixth attempt gets a 429 with `retry-after`, `no-store` and a fixed message, and the database is never called. The address is the first `x-forwarded-for` entry. Counts live in the server's memory, so each Vercel instance counts on its own.
-- **Files:** `src/lib/orders/rate-limit.ts`, `src/app/api/orders/route.ts`, `tests/unit/order-rate-limit.test.ts`, `tests/unit/orders-route.test.ts`, `docs/security-and-privacy.md`, `docs/test-cases.md`, `docs/development-log.md`.
+- **Files:** `src/lib/orders/rate-limit.ts`, `src/app/api/orders/route.ts`, `tests/unit/order-rate-limit.test.ts`, `tests/unit/orders-route.test.ts`, `docs/security-and-privacy.md`, `docs/test-cases.md`, `docs/development-log.md`, `README.md`.
 - **Testing:** TC-P4-261 passes; the full suite passes (464 tests), with type check, lint and format checks.
 - **Branch / PR:** `feat/order-rate-limit`.
 - **Known limitations:** Per instance, not a shared quota. Customers behind one shop or school network share an address and so share the five attempts.
@@ -1297,7 +1288,7 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Phase:** Phase 4 (menu and ordering).
 - **Task:** Stop website orders from skipping the flavor on items that have flavors.
 - **Summary:** The order dialog showed "Optional" and a "No flavor / Standard" chip whenever a size had its own price. The chip is gone, the heading always says Required, and Add to Order asks for a flavor until one is picked. The POS already asks for a flavor before adding.
-- **Files:** `src/components/menu/menu-item-order-dialog.tsx`, `tests/unit/menu-order-dialog.test.tsx`, `tests/unit/menu-stage-card.test.tsx`, `docs/test-cases.md`, `docs/development-log.md`.
+- **Files:** `src/components/menu/menu-item-order-dialog.tsx`, `tests/unit/menu-order-dialog.test.tsx`, `tests/unit/menu-stage-card.test.tsx`, `docs/test-cases.md`, `docs/development-log.md`, `README.md`.
 - **Testing:** TC-P4-262 passes; the full suite passes.
 - **Branch / PR:** `fix/flavor-required`.
 - **Known limitations:** The database still prices a line with no flavor when the size has a price, so a request made outside the website could skip it.
@@ -1320,7 +1311,7 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Task:** Give authenticated customers a paginated order history page and a Reorder button that rechecks current prices and availability instead of adding items silently.
 - **Summary:** `/account/orders` shows the signed-in customer's orders newest-first at 10 per page. It uses the authenticated Supabase client and also filters by `customer_id`, because RLS lets staff accounts read every order. Each order card shows reference, status badge, date, items, and subtotal. Clicking Reorder calls `reorderItems()`, which resolves each item against the live menu catalog: available items are added via `addItem` from `useCart()` at their current price; items whose prices have changed are added and listed under "Price updates" with the old and new prices; items that are no longer on the menu, unavailable, or can't be priced are left out and listed under "Unavailable items". While one reorder is running every Reorder button is disabled, and a menu-load failure gets its own reorder notice instead of replacing the page's history error. The same Reorder button and notices were added to the existing `/orders/[reference]` order detail page. "Order History" links were added to the desktop account dropdown (`account-nav.tsx`) and the mobile navigation (`mobile-navigation.tsx`). `fetchOrder` in `fetch-order.ts` was made backward compatible with an optional `trackingToken`: when omitted, the authenticated client is used so customers can load their own orders without a hash token.
 - **Files created:** `src/lib/orders/order-history.ts`, `src/lib/orders/reorder.ts`, `src/app/account/orders/page.tsx`, `src/components/account/order-history-view.tsx`, `tests/unit/reorder.test.ts`, `tests/unit/order-history.test.tsx`, `tests/unit/order-history-service.test.ts`, `tests/e2e/order-history.spec.ts`, `docs/evidence/phase-5/screenshots/order-history-list.png`, `docs/evidence/phase-5/screenshots/order-history-empty.png`, `docs/evidence/phase-5/screenshots/order-history-reorder-notices.png`, `docs/evidence/phase-5/screenshots/order-page-reorder-button.png`.
-- **Files modified:** `src/lib/orders/fetch-order.ts` (optional trackingToken), `src/components/layout/account-nav.tsx` (Order History link), `src/components/layout/mobile-navigation.tsx` (Order History link), `src/app/orders/[reference]/page.tsx` (Reorder button and notices), `docs/test-cases.md`, `docs/development-log.md`.
+- **Files modified:** `src/lib/orders/fetch-order.ts` (optional trackingToken), `src/components/layout/account-nav.tsx` (Order History link), `src/components/layout/mobile-navigation.tsx` (Order History link), `src/app/orders/[reference]/page.tsx` (Reorder button and notices), `docs/test-cases.md`, `docs/development-log.md`, `README.md`.
 - **Testing:** `npx vitest run tests/unit` — 50 test files, 333 tests, all passed. New tests: TC-P5-001 to TC-P5-006 and TC-P5-024 (order history view), TC-P5-010 to TC-P5-013 (reorder logic), TC-P5-020 to TC-P5-023 (fetch service). `npx playwright test tests/e2e/order-history.spec.ts` — 4 passed (4): TC-P5-030 to TC-P5-033 cover the list and pagination, empty state, reorder notices, and the order page Reorder button with mocked sign-in and PostgREST responses. All pre-existing tests continue to pass (fetch-order ×4, order-confirmation-page ×4, site-header ×7).
 - **Checks:** `npm run typecheck` — exit 0. `npm run lint` — exit 0. `npm run format:check` — exit 0. `npm run build` — succeeded; `/account/orders` appears as a static route.
 - **Branch / PR:** `feat/p5-order-history`.
@@ -1431,7 +1422,7 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Phase:** Phase 4 (online ordering).
 - **Task:** Let fries mix up to 3 flavors instead of 2 on the website, in the database and on the Android POS.
 - **Summary:** The shop sells fries with 2 or 3 flavors. `MAX_MIXED_FLAVORS` is now 3, the order dialog's chip reads "Mix up to 3 flavors", and `20261105120000_three_flavor_mixes.sql` replaces `private.resolve_unit_price` so the database accepts a 3-flavor mix. A mix still costs the size price, or the dearest flavor in it when the size prices flavors differently, and mixing stays fries only. A 4-flavor mix is refused as `unknown-flavor`. POS PR #24 makes the same change on the tablet, whose price and stock code already handled a mix of any length. ADR-027 records the decision and supersedes ADR-025's 2-flavor limit. The migration goes on the live database before the website change merges, since it only widens what the database accepts.
-- **Files:** `src/lib/ordering/cart-pricing.ts`, `src/components/menu/menu-item-order-dialog.tsx`, `supabase/migrations/20261105120000_three_flavor_mixes.sql`, `supabase/rollbacks/20261105120000_three_flavor_mixes.sql`, `tests/unit/mixed-flavors.test.ts`, `tests/unit/menu-order-dialog.test.tsx`, `tests/database/mixed-flavors.test.ts`, `tests/e2e/menu.spec.ts`, `docs/evidence/phase-4/three-flavor-mixes/fries-mix-dialog.png`, `docs/database-design.md`, `docs/decisions.md`, `docs/functional-requirements.md`, `docs/test-cases.md`, `docs/development-log.md`.
+- **Files:** `src/lib/ordering/cart-pricing.ts`, `src/components/menu/menu-item-order-dialog.tsx`, `supabase/migrations/20261105120000_three_flavor_mixes.sql`, `supabase/rollbacks/20261105120000_three_flavor_mixes.sql`, `tests/unit/mixed-flavors.test.ts`, `tests/unit/menu-order-dialog.test.tsx`, `tests/database/mixed-flavors.test.ts`, `tests/e2e/menu.spec.ts`, `docs/evidence/phase-4/three-flavor-mixes/fries-mix-dialog.png`, `docs/database-design.md`, `docs/decisions.md`, `docs/functional-requirements.md`, `docs/test-cases.md`, `docs/development-log.md`, `README.md`.
 - **Testing:** `npx vitest run`: 61 files, 494 tests passed. `npx playwright test --project=chromium` on a production build: 29 passed, 1 skipped. `python3 scripts/validate_phase0_docs.py` (`PHASE0_DOC_VALIDATION=PASS`), `npx tsc --noEmit`, `npx eslint .` and `npx prettier --check .` pass. POS: `sh gradlew :app:testDebugUnitTest :app:compileReleaseKotlin`, 90 tests, 0 failures (TC-P6-221).
 - **Branch / PR:** `feat/three-flavor-mixes`, PR #98; POS PR #24.
 - **Known limitations:** Until the tablet installs the POS update, its product sheet allows only 2 picks. It already prices 3-flavor website orders and deducts their stock correctly.
@@ -1709,7 +1700,6 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Testing:** Playwright TC-P4-123 and TC-P8-019 after 10 PM Manila time: 2 passed.
 - **Branch / PR:** `fix/e2e-clock-hours`.
 
-
 ## 2026-11-10 — Reviews on the home page and in the menu (FR-098)
 
 - **Phase:** Phase 5 and the website.
@@ -1753,3 +1743,231 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Testing:** TC-P7-087 to TC-P7-089; the full Vitest suite with the CI settings; see the PR.
 - **Branch / PR:** `fix/messenger-open-question`.
 - **Next action:** MAN-P7-008 on the live Page after the deploy.
+
+## 2026-11-12 — Account home and data requests (FR-042)
+
+- **Phase:** Phase 5.
+- **Task:** Rizjie — customers had no single account page, and asking the shop to correct or delete profile data meant leaving the website. The account menu also grew without a clear "home".
+- **Summary:** Added `/account`, a home that links Orders, Favorites, Rewards, Profile and Data requests and shows the newest order (reference, status, date, total and item count) through the existing `fetchCustomerOrders` helper, with loading, empty and error states. Added `/account/data-request`, a form that records a correction or deletion request in the existing `public.data_requests` table, says what happens next, and lists the signed-in customer's earlier requests with plain-word statuses. The browser sends only the kind and the trimmed message; `customer_id`, the initial `open` status and the dates are left to the database defaults and trigger. The desktop account menu and phone menu now lead with "My account", and "Loyalty & Rewards" is shortened to "Rewards". No migration, no live data and no live keys were used; every test order, name and request is mock data.
+- **Files:** `src/app/account/page.tsx`, `src/app/account/data-request/page.tsx`, `src/components/account/account-home-view.tsx`, `src/components/account/data-request-view.tsx`, `src/lib/account/data-requests.ts`, `src/components/layout/account-nav.tsx`, `src/components/layout/mobile-navigation.tsx`, `tests/unit/account-home.test.tsx`, `tests/unit/data-request-form.test.tsx`, `tests/unit/data-requests-helper.test.ts`, `tests/unit/site-header.test.tsx`, `tests/e2e/account-home.spec.ts`, `docs/test-cases.md` §38, `docs/functional-requirements.md` (FR-042), `docs/security-and-privacy.md` §23, `docs/evidence/phase-5/account-home/`.
+- **Testing:** Targeted unit tests (`account-home`, `data-request-form`, `data-requests-helper`, `site-header`): 27 passed. Full Vitest suite: 99 files, 1034 tests passed. Playwright `account-home.spec.ts` against the CI placeholder environment: 5 passed. Full Chromium suite in CI mode (one worker, up to two retries): 62 passed, 3 skipped. Evidence screenshots were captured with `CAPTURE_EVIDENCE=1` at 1440x900 and 390x844. `npm run lint`, `npm run typecheck`, `npm run format:check`, `npm run build` and `python scripts/validate_phase0_docs.py` passed.
+- **Branch / PR:** `feat/p5-account-home`, PR #130.
+- **Next action:** Rodnee reviews PR #130. The owner still needs to confirm the retention rule and response time (MAN items pending).
+
+## 2026-11-10 — Phase 5 documentation closeout
+
+- **Phase:** Phase 5 (order history, tracking, favorites and loyalty).
+- **Task:** The Phase 5 card item "Shan: docs closeout: requirement status, Phase 5 evidence, development log, README". This run records the merged Phase 5 work and lists the items still waiting.
+- **Summary:** Added `docs/evidence/phase-5-verification.md` with one row per merged Phase 5 pull request (#87, #96, #97, #93, #103, #107 and #108), the related POS note and the waiting items. FR-039, FR-040, FR-041 and FR-044 to FR-049 now name their pull requests, and FR-038 names PR #94. Added section 19 to `docs/functional-requirements.md` for the Phase 5 closeout, moving the Phase 7 and Privacy Policy notes to sections 20 and 21. README gets the Phase 5 status row, the evidence links and a shorter limitations item. FR-042, FR-043, FR-050 to FR-056 and FR-098 stay open, and FR-057 stays Deferred, so this register has no Closeout section yet.
+- **Files:** `docs/evidence/phase-5-verification.md` (new), `docs/functional-requirements.md`, `docs/development-log.md`, `README.md`.
+- **Testing:**
+  - `python scripts/validate_phase0_docs.py`: `PHASE0_DOC_VALIDATION=PASS`, 0 errors in 33 Markdown files.
+  - `npm run format:check`: "All matched files use Prettier code style!"
+- **Branch / PR:** `docs/p5-closeout`, PR #110 (draft).
+- **Known limitations:** Loyalty points and rewards (FR-050 to FR-055), the account home and data requests (FR-042), ratings and reviews on the website (FR-098) and the POS screen that hides reviews (FR-098), and the Phase 5 integrated QA are Not merged yet. FR-043, FR-056 and FR-057 are not built.
+- **Next action:** Run this closeout again after the waiting pull requests merge, then mark the PR ready for review.
+- **Update 2026-11-13 (Rodnee, before the merge):** merged `main` into this branch and brought the closeout up to date. PRs #120, #125, #123, #130 and #129 merged after Shan's run, so the evidence register has their rows, and the README, the register's open list and section 19 of the functional requirements now say what is still open: the POS screen that hides reviews, FR-043, FR-056, the rest of FR-055, and the final check. PR #110 is no longer a draft.
+
+## 2026-11-10 — Phase 7 documentation closeout
+
+- **Phase:** Phase 7 (Messenger assistant), documentation.
+- **Task:** Record the merged Phase 7 work in the evidence register, the requirement status note, the development log and the README, and keep the pull request a draft until Renier's integrated QA merges.
+- **Summary:** Added `docs/evidence/phase-7-verification.md` with one row for #106 and #109 in merge order, their test files, TC IDs and reported counts. FR-058 to FR-063 were already Implemented (PR #106) and FR-064 stays Deferred. Added the Phase 7 closeout note to `docs/functional-requirements.md` as section 21, because section 19 is the Phase 7 implementation note and section 20 is the Privacy Policy Status Note added by PR #107, so the sections stay in number order. Added the Phase 7 Project Status row and the register links to `README.md`, changed the integration row to say the Messenger assistant is done (Phase 7) with its PR links, and took Messenger out of the Current Limitations item. The register has no Closeout section yet because Renier's Phase 7 integrated QA (`docs/test-cases.md`, section 43) is not merged.
+- **Files:** `docs/evidence/phase-7-verification.md`, `docs/functional-requirements.md`, `docs/development-log.md`, `README.md`.
+- **Testing:**
+  - `python scripts/validate_phase0_docs.py`: `REQUIRED_ROOT=5`, `REQUIRED_DOCS=14`, `MARKDOWN_FILES_CHECKED=33`, `FR_IDS=99 (001-099)`, `NFR_IDS=40 (001-040)`, `ERRORS=0`, `PHASE0_DOC_VALIDATION=PASS`.
+  - `npm run format:check`: `All matched files use Prettier code style!` The first run failed on `README.md`; `npx prettier --write README.md` fixed it, and the passing rerun is the one above.
+  - The application checks are left to CI because the pull request changes only documentation. CI passed: Validate application (3m7s) and Browser tests (chromium) (3m0s).
+- **Branch / PR:** `docs/p7-closeout`, PR #111.
+- **Known limitations:** Renier's Phase 7 integrated QA is Not merged yet, so the register has no Closeout section and the README Phase 7 row says In progress. The live Messenger checks TC-P7-042 to TC-P7-049 are Not run yet, the Meta app is being published with Standard Access, and FR-064 stays Deferred.
+- **Next action:** After `test/p7-integrated-qa-main` merges, run the same closeout prompt again: add the register's Closeout, mark the README Phase 7 row complete, update the Development status and Last updated lines, rerun the checks and mark the pull request ready for Rodnee's review.
+- **Update 2026-11-13 (Rodnee, before the merge):** merged `main` into this branch, added the evidence rows for PR #113 to #118, #121 and #128, renumbered the closeout note to section 22 (`main` already has a section 21), and added an update line to it and the README. Phase 7 stays open until Renier's integrated QA merges. Update after PR #110 merged: `main` now numbers the Phase 7 note as section 20 and the Privacy Policy note as section 21, so the closeout note's references were changed to match. `docs/test-cases.md` has no section 43 yet; the Phase 7 integrated QA will add it.
+
+## 2026-11-10 — Phase 8 documentation closeout
+
+- **Phase:** Phase 8 (Android application), documentation.
+- **Task:** Record the Phase 8 work that is merged, add the Phase 8 evidence register, keep the requirement statuses truthful, and update the README while Rodnee's Android app, the v1.0.0 release and Renier's integrated QA are still open.
+- **Summary:** Added `docs/evidence/phase-8-verification.md` with the one merged Phase 8 pull request, the installable web app and offline page (PR #105, FR-068 web part), and listed the Android app, the release and the integrated QA as Not merged yet. Added section 21 to `docs/functional-requirements.md`. The FR-065 to FR-069 status cells are unchanged: FR-065, FR-066, FR-067 and FR-069 stay Planned, and FR-068 stays In development, until Rodnee's Android pull request merges; FR-070 stays Deferred. Added the Phase 8 Android app row to the README Project Status table and linked this register in the evidence sentence and the Documentation list. No test cases were added or edited, so `docs/test-cases.md` is untouched; Renier's QA will be section 44.
+- **Files:** `docs/evidence/phase-8-verification.md`, `docs/functional-requirements.md`, `docs/development-log.md`, `README.md`.
+- **Testing:**
+  - `python scripts/validate_phase0_docs.py`: `PHASE0_DOC_VALIDATION=PASS`, 0 errors in 33 Markdown files (`FR_IDS=99`, `NFR_IDS=40`).
+  - `npm run format:check`: first run warned about `README.md`; after `npx prettier --write README.md`, `All matched files use Prettier code style!`
+- **Branch / PR:** `docs/p8-closeout`, draft PR #112.
+- **Known limitations:** Rodnee's Android app (`feat/p8-android-app`, FR-065 to FR-069), the production deploy and the v1.0.0 release with the APK are Not merged yet, and Renier's Phase 8 integrated QA (section 44) is Not merged yet. The manual install and offline checks on real browsers (MAN-P8-001 to MAN-P8-006) are still Not run yet. This register is partial until the final run.
+- **Next action:** Run this closeout again after Rodnee's Android pull request and the v1.0.0 release merge and after Renier's integrated QA merges, then fill in the final statuses, the release section and the Closeout, and mark the pull request ready for review.
+- **Update 2026-11-13 (Rodnee, before the merge):** merged `main` into this branch and renumbered the closeout note to section 23 (`main` uses sections 21 and 22). The Android app, the deploy, the v1.0.0 release and the Phase 8 integrated QA are still open, as the note says. The release date is not confirmed yet. Update after PR #111 merged: re-merged `main`, kept the Phase 7 row and register from `main`, and changed "section 44 of `docs/test-cases.md`" for the Phase 8 QA to "a new section", because section 44 now holds the Messenger ordering cases.
+
+## 2026-11-13 — Points history on its own page
+
+- **Phase:** Phase 5 (loyalty, FR-053).
+- **Task:** Rodnee asked to put the rewards points history on a separate page.
+- **Summary:** `/account/rewards` now shows the balance, the earning rules and the rewards catalog, with a "See points history →" link under the balance. `/account/rewards/history` (new `PointsHistoryView`) shows the current balance and every transaction, newest first, with "← Back to Rewards". The rewards page no longer loads the history. The Rewards tile on `/account` now says "Your loyalty points and rewards, with your points history."
+- **Files:** `src/components/loyalty/points-history-view.tsx` (new), `src/app/account/rewards/history/page.tsx` (new), `src/components/loyalty/rewards-view.tsx`, `src/app/account/rewards/page.tsx`, `src/components/account/account-home-view.tsx`, `tests/unit/loyalty-view.test.tsx`, `tests/e2e/loyalty.spec.ts`, `docs/test-cases.md` (TC-P5-121, TC-P5-122, TC-P5-125, TC-P5-127 and TC-P5-210 updated; TC-P5-211 and TC-P5-212 added).
+- **Testing:** `tests/unit/loyalty-view.test.tsx` and `tests/unit/account-home.test.tsx`: 16 passed. Playwright `chromium` on `loyalty.spec.ts` and `account-home.spec.ts`, built with the CI environment: 9 passed.
+- **Branch / PR:** `feat/rewards-history-page`.
+- **Next action:** Review and merge.
+
+## 2026-11-13 — Messenger smart replies (ADR-031)
+
+- **Phase:** Phase 7 (Messenger assistant), enhancement.
+- **Task:** New customers and likes got no reply, and most typed questions went unanswered. The team asked for a dynamic, interactive bot without the "automated assistant" line, that leaves ice orders, outside orders and offers to the staff, using the owner's Google AI Studio key on the free tier. The owner asked that ice offers get no reply at all.
+- **Summary:** Read every message on the Page since it opened on 2026-06-12 (83 chats, 1,072 messages, locally only; nothing from them is committed). Added `shop-time.ts` (open right now), `handoff.ts` (staff topics from those chats) and `assistant.ts` (Gemini with the shop's facts, masking and checks). The assistant now replies to likes, stickers and photos, stays quiet for 30 minutes after a staff topic or "Talk to staff", and gives a staff reply when Gemini is off or busy. Offers get no reply. Removed the automated-assistant notice and changed the welcome and greeting. Added the Gemini disclosure to the privacy policy (version 2026-11-13). Moved the shop's address out of the code after the FR-086 scan (TC-P4-222) failed on it.
+- **Files:** `src/lib/messenger/{assistant,handoff,shop-time,events,replies,profile,deps}.ts`, `src/app/privacy/page.tsx`, `src/config/privacy.ts`, `.env.example`, `tests/unit/messenger-{smart-replies,events,replies,deps}.test.ts`, `docs/decisions.md`, `docs/functional-requirements.md`, `docs/system-architecture.md`, `docs/security-and-privacy.md`, `docs/test-cases.md`, `docs/development-log.md`, `README.md`.
+- **Testing:**
+  - `NODE_OPTIONS=--no-experimental-webstorage npx vitest run --maxWorkers=2`: 100 files, 1,066 tests passed.
+  - `npx tsc --noEmit -p .` and `npx eslint src tests/unit`: no errors.
+- **Branch / PR:** `feat/messenger-smart-replies`.
+- **Known limitations:** `GEMINI_API_KEY` is not in Vercel yet (needs the team's OK, and the key should be rotated first). The new greeting needs the Messenger Profile API after the merge. Only people with a role on the Meta app get replies until App Review. The free tier may use prompts to improve Google's products; the owner hasn't confirmed the policy wording. MAN-P7-009 is Pending.
+- **Update 2026-11-13 (Rodnee asked to loop every Gemini model until one answers, on the free tier):** `DEFAULT_GEMINI_MODELS` now lists every Gemini and Gemma text model the free-tier key can use (15, from the models list on 2026-11-13; `gemini-2.5-*` answer 404 "no longer available to new users" and were left out). The assistant goes round them until one answers: busy (503), rate-limited (429), failing, empty and slow models are skipped, with a short wait between rounds, within 45 seconds in all and 12 per model. A model that answers 404 or 400 rests for a day and a 429 model for its retry delay. Gemma gets its instructions in the message. The webhook route allows 60 seconds (`maxDuration`). A live run with the real key answered three questions on `gemini-3.1-flash-lite` in 5.4 seconds; in the probe before it, eight of the models were busy (503) or timed out. TC-P7-099 and TC-P7-100 updated, TC-P7-108 added. Also fixed TC-P5-088, which still expected the old policy date (CI failure).
+
+## 2026-11-13 — Reviews on their own page
+
+- **Phase:** Phase 5 (FR-098), enhancement.
+- **Task:** The team asked for the reviews to have their own page instead of a section of About.
+- **Summary:** Added `/reviews` (page heading, the reviews list and the review form). The header, phone menu, footer, the home page's Read all reviews link and the page curtain's title now point to `/reviews`. About no longer shows the reviews; an old `/about#reviews` link forwards to `/reviews`.
+- **Files:** `src/app/reviews/page.tsx` (new), `src/components/reviews/reviews-hash-redirect.tsx` (new), `src/app/about/page.tsx`, `src/components/reviews/reviews-preview.tsx`, `src/components/motion/route-curtain.tsx`, `src/config/site.ts`, `tests/unit/{reviews-page,reviews-preview}.test.tsx`, `tests/e2e/{reviews,home-reviews,foundation}.spec.ts`, `docs/test-cases.md` §49, `docs/evidence/phase-5/reviews-home/`.
+- **Testing:** see the PR.
+- **Branch / PR:** `feat/reviews-page`.
+
+## 2026-11-13 — The shop's own cats stroll across the footer (ADR-032)
+
+- **Phase:** Phase 9 (FR-099), enhancement.
+- **Task:** The team asked for the cats to be remodelled with three.js and GSAP and then anime.js, for the shop's own cats instead of pixels, to scale, never to overlap the page, and for cat sounds on transitions. After seeing the cats perched around the page, they asked for walking cats instead, "like Christmas Santa with reindeer", back in the footer, and for a paw cursor. Seeing it, they asked for no leash ("do not make them slaves, make them comfortable"), for Luna, a mama cat soon, to ride with kittens, and for the sleigh to go after December.
+- **Summary:** Built seven 3D cats from procedural three.js geometry (`cat-model.ts`), coloured after the shop's photos: fur-displaced bodies, slit-pupil eyes with eyelids, whiskers, an 11-joint tail and collars, with breathing, blinks, ear twitches, a tail wave, heads that turn and a meow pose. A walking pose has four jointed legs with a walk gait. A first version used rembg photo cut-outs (messy, removed); a second perched the 3D cats on the edges of every page (the team wanted them walking, removed). `CatParade` now walks three or four of them in single file across the top of the footer, free, with room between them. In November and December they wear red collars with gold bells, and a coffee-cup sleigh glides behind on its own with Luna resting on a cushion with three kittens; a version with reins was removed. From January 1 the sleigh and bells go away by date, checked by hand with the date set to 2027-01-10 (`cat-parade-strip-after-december-desktop-1440.png`) (`parade-stage.ts`, WebGL2 only, loaded on demand, drawing only while in view). anime.js 4.5.0 walks each lap with a stop in the middle, where the cats look out and the lead meows; with reduced motion they stand still. A synthesized meow plays on page transitions, and the footer's "Cat sounds" switch turns it off. The cursor is a cat paw, with a pointing paw on links and buttons. The pixel cats and their license were removed.
+- **Files:** `package.json` (`animejs`), `src/lib/cats/cats.ts`, `src/lib/sound/cat-sounds.ts`, `src/components/cats/{cat-parade,cat-sounds-toggle}.tsx`, `src/components/cats/{cat-model,parade-stage}.ts` (`cat-strip.tsx` removed), `src/components/motion/curtain-state.ts`, `src/components/layout/site-footer.tsx`, `src/app/globals.css`, `public/cursors/{paw,paw-pointer}.svg`, `tests/unit/cat-characters.test.tsx`, `tests/e2e/{cats.spec,cats.three.spec}.ts`, `docs/test-cases.md` §48, `docs/decisions.md`, `docs/functional-requirements.md`, `docs/evidence/phase-9/cat-characters/`.
+- **Testing:** `tests/unit/cat-characters.test.tsx`: 9 passed. Playwright: `cats.spec.ts` 4 passed (`chromium`) and `cats.three.spec.ts` 5 passed (`chromium-3d`, software WebGL) at 390, 1440 and 1920 wide.
+- **Branch / PR:** `feat/three-anime-cats`, [PR #134](https://github.com/eendor/Brew-ni-Cat-Connect/pull/134).
+- **Next action:** Review and merge. The anime.js mini-games follow in Phase 9.
+
+## 2026-11-13 — Google sign-in replaces email and password
+
+- **Phase:** Phase 5 (customer accounts), requested by the lead developer.
+- **Task:** Change sign-in and registration to Google OAuth.
+- **Summary:** `useAuth()` now offers `signInWithGoogle(returnTo)` and `signOut()`; the email and password methods and the password recovery state are gone. The auth client uses the PKCE flow. Sign In and Create an Account share one view with a single Google button and the privacy notice. The new `/account/callback` page finishes the sign-in and goes on to the checked `returnTo`, or says the sign-in was cancelled or didn't finish. `/account/forgot-password` and `/account/reset-password` are removed and redirect to Sign In in `next.config.ts`. `safeReturnTo` moved to `src/lib/auth/safe-return-to.ts`. ADR-030 records the decision.
+- **Files:** `src/context/auth-context.tsx`, `src/lib/supabase/auth-client.ts`, `src/lib/auth/safe-return-to.ts`, `src/components/account/google-sign-in-button.tsx`, `src/components/account/sign-in-view.tsx`, `src/components/account/sign-up-view.tsx`, `src/components/account/auth-callback-view.tsx`, `src/components/account/account-guard.tsx`, `src/app/account/callback/page.tsx`, `src/app/account/sign-up/page.tsx`, `next.config.ts`, removed `src/components/account/forgot-password-view.tsx`, `src/components/account/reset-password-view.tsx`, `src/app/account/forgot-password/`, `src/app/account/reset-password/`; `tests/unit/auth-context.test.tsx`, `tests/unit/account-forms.test.tsx`, `tests/e2e/auth.spec.ts`, `tests/e2e/account-guard.spec.ts`, `tests/e2e/support/google-oauth.ts`; `docs/decisions.md` (ADR-030), `docs/functional-requirements.md`, `docs/security-and-privacy.md` (§25), `docs/test-cases.md` (section 54).
+- **Testing:** see the pull request; unit, lint, type check and the account browser tests were run before opening it.
+- **Branch / PR:** `feat/google-login`.
+- **Known limitations:** Old password accounts with a non-Google email can't sign in any more. Google's chooser says "to continue to" the Supabase address, because the brand isn't verified (that would need a custom auth domain).
+- **Update 2026-11-13:** Google was switched on in Supabase through the Management API with the shop's OAuth web client (the secret is kept only in Supabase), branch previews were added to the allowed redirect URLs, and a real Google sign-in on the preview passed (MAN-P5-019; renumbered from MAN-P5-010, which the Phase 5 QA summary already used).
+- **Next action:** Repeat the sign-in on production after the merge; rotate the OAuth client secret.
+
+## 2026-11-13 — Messenger stays quiet after the staff reply by hand
+
+- **Phase:** Phase 7 (FR-113), fix.
+- **Task:** The lead developer asked to check how the bot handles new messages. A supplier who had been answered by hand the night before sent a greeting and a photo, and the bot sent the welcome buttons and "our staff will check what you sent". The lead developer turned on `message_echoes` in the Meta webhook and asked for the fix, and for the Gemini key to be added to Vercel.
+- **Summary:** Every message the assistant sends now carries `metadata`. An echo without it is a staff reply: the chat is saved (in memory and in Supabase, under an HMAC of the customer's ID) and typed messages, photos and stickers there get no automatic reply for 12 hours; buttons still answer. A photo sent within 2 minutes of a reply gets no reply of its own, so a greeting and a photo get one reply. `GEMINI_API_KEY` was added to Vercel (production and preview, encrypted), so smart replies start with the next deploy.
+- **Files:** `supabase/migrations/20261113130000_messenger_staff_chats.sql`, `supabase/rollbacks/20261113130000_messenger_staff_chats.sql`, `src/lib/messenger/{events,send,deps,order-ids}.ts`, `tests/unit/{messenger-events,messenger-send}.test.ts`, `tests/database/messenger-staff-chats.test.ts`, `tests/e2e/foundation.spec.ts`, `scripts/validate_phase0_docs.py`, `docs/{functional-requirements,test-cases,security-and-privacy,database-design}.md`.
+- **Testing:** unit and database tests: 1084 passed; lint and type check clean.
+- **Branch / PR:** `fix/messenger-staff-quiet`.
+- **CI on main:** the merge of #132 failed TC-P1-009 on time alone: it loads 8 pages at 5 widths, and those 40 loads went from 11 s to over the 30 s limit as pages grew. It now has 90 s (37.6 s locally).
+- **Next action:** Apply the migration to the live database after the merge, then run MAN-P7-010.
+
+## 2026-11-13 — Messenger reads today's Page posts
+
+- **Phase:** Phase 7 (FR-114), feature.
+- **Task:** The lead developer pointed out that the shop posts the day's changes on the Facebook Page, often as a picture only, and asked for the assistant to always check the posts.
+- **Summary:** A new Page token with `pages_read_engagement` (never expires) was saved to `.env.local` and to Vercel. The assistant lists the Page's 5 latest posts, keeps up to 2 from today in Manila time, and reads the words in a picture with Gemini when the caption is short or missing. A posted later opening time or "closed today" changes the open status in the hours and "are you open?" replies and in Gemini's facts, and the post is quoted. A live check read the Page's latest picture-only post correctly and answered with the posted opening time.
+- **Files:** `src/lib/messenger/{page-posts,picture-text,send,replies,assistant,events,deps}.ts`, `tests/unit/messenger-page-posts.test.ts`, `scripts/validate_phase0_docs.py`, `docs/{functional-requirements,test-cases,security-and-privacy,development-log}.md`.
+- **Testing:** see the pull request.
+- **Branch / PR:** `feat/messenger-page-posts`.
+- **Known limitations:** posts are read when a customer asks (at most every 2 minutes), not pushed by a `feed` webhook; only an opening time or "closed today" changes the status, other notices are only quoted.
+- **Next action:** Run MAN-P7-011 on the live Page.
+
+## 2026-11-13 — The parade cats walk through, look cuter, and Luna lies the right way
+
+- **Phase:** Phase 9 (FR-099), fix.
+- **Task:** The lead developer reported that the cats halt in the middle of the walk, that their look was creepy rather than adorable, and that Luna lay the wrong way in the sleigh walking right.
+- **Summary:** Each lap is now one smooth walk; passing the middle the cats glance out at the visitor and the lead meows while still walking. The cats were redrawn as kittens: much less fur noise (smooth, plush shapes), a head 1.3 times bigger on a rounder, shorter body, big round eyes with round pupils and two glints in place of slit pupils, rosy cheeks, round shoulders and haunches over the legs, bean paws and a thicker tail. Luna is now turned (and mirrored when walking right) so her head leads and her face looks out of the screen both ways.
+- **Files:** `src/components/cats/{cat-model,cat-parade,parade-stage}.ts(x)`, `src/lib/cats/cats.ts`, `tests/unit/cat-characters.test.tsx`, `tests/e2e/cats.three.spec.ts`, `docs/{decisions,test-cases,development-log}.md`, `docs/evidence/phase-9/cat-characters/`.
+- **Testing:** see the pull request.
+- **Branch / PR:** `fix/cat-parade`.
+- **Known limitations:** the cats are still built from three.js shapes, not drawn sprites.
+- **Next action:** none.
+
+## 2026-11-13 — The parade cats are pixel art drawn in Aseprite
+
+- **Phase:** Phase 9 (FR-099), change.
+- **Task:** The lead developer still found the 3D cats unappealing and asked for them to be made in Aseprite; they reviewed and approved preview sheets before the switch.
+- **Summary:** Aseprite 1.3.18 was built from source and runs an Lua script (`scripts/aseprite/cat-sprites.lua`) that draws each walker (Oreo, Latte, Kulas and the grey cat) as a 48 × 40 pixel-art kitten in the coat colours from `cats.ts`: six-frame walk, look and meow cycles, with festive versions in a red collar and gold bell, plus a 72 × 44 coffee-cup sleigh with Luna facing the visitor and her three kittens. `npm run cats:sprites` writes the editable `.aseprite` sources and frame data to `art/cats/` and the sheets to `public/cats/sprites/`. The footer parade now draws these sheets on a 2D canvas, crisp at a whole number of device pixels a sprite pixel and mirrored walking left, behind the same stage contract, so the anime.js laps, the glance and meow, the shared frame loop and reduced motion are unchanged. The three.js cat model was removed.
+- **Files:** `scripts/aseprite/cat-sprites.lua`, `scripts/cat-sprites.mts`, `package.json`, `tsconfig.json`, `art/cats/`, `public/cats/sprites/`, `src/lib/cats/{sprites,cats}.ts`, `src/components/cats/{parade-stage.ts,cat-parade.tsx}`, `src/components/cats/cat-model.ts` (removed), `tests/unit/cat-characters.test.tsx`, `tests/e2e/cats.three.spec.ts`, `docs/{decisions,test-cases,development-log}.md`, `docs/evidence/phase-9/cat-characters/`.
+- **Testing:** see the pull request.
+- **Branch / PR:** `feat/pixel-cats`.
+- **Known limitations:** regenerating the sprites needs Aseprite installed locally (it is not a project dependency); the art is drawn by script, not by hand.
+- **Next action:** none.
+
+## 2026-11-13 — Café music in the footer
+
+- **Phase:** Phase 9 (FR-115), feature.
+- **Task:** The team asked for French café music on the website.
+- **Summary:** A "Play café music" button in the footer plays four songs made in the browser with Web Audio as a musette accordion over an oom-pah bass: two traditional French folk songs in the public domain (*Au clair de la lune*, *Frère Jacques*) and two waltzes written for the shop. It never autoplays, names the song and its source while playing, skips with Next song, fades out with Stop music and carries on from page to page. Nothing is downloaded or licensed.
+- **Files:** `src/lib/sound/jukebox.ts`, `src/components/sound/jukebox-control.tsx`, `src/components/layout/site-footer.tsx`, `tests/unit/jukebox.test.tsx`, `tests/e2e/jukebox.spec.ts`, `scripts/validate_phase0_docs.py`, `docs/{functional-requirements,decisions,test-cases,development-log}.md`, `docs/evidence/phase-9/jukebox/`.
+- **Testing:** see the pull request.
+- **Branch / PR:** `feat/jukebox-music`.
+- **Known limitations:** synthesized, so it sounds like a simple accordion, not a recording; the songs are short and loop in turn.
+- **Next action:** none.
+
+## 2026-11-13 — Cat games for loyalty points
+
+- **Phase:** Phase 9 (FR-089, FR-090), feature.
+- **Task:** Build the loyalty mini-games.
+- **Summary:** A new `/games` page has two games with the pixel-art café cats: Cat cups (find Oreo under one of three cups) and Lucky paw (shake the treat jar for Latte). Every play is free and pays 1 to 5 loyalty points, three plays a day. The database decides each result in `public.play_mini_game()` and records the play and its points together, under a per-customer lock. The page shows plays left and the balance, links guests to sign in, says the games open soon until the migration is applied, and holds the site's one ad slot. Links were added on the rewards page and in the account menu.
+- **Files:** `supabase/migrations/20261113140000_mini_games.sql`, `supabase/rollbacks/20261113140000_mini_games.sql`, `src/lib/games/games.ts`, `src/components/games/{games-view,cat-cups,lucky-paw,cat-sprite}.tsx`, `src/app/games/page.tsx`, `src/lib/loyalty/{types,format}.ts`, `src/components/loyalty/rewards-view.tsx`, `src/components/layout/account-nav.tsx`, `tests/database/mini-games.test.ts`, `tests/unit/games-view.test.tsx`, `tests/e2e/games.spec.ts`, `docs/{functional-requirements,decisions,database-design,test-cases,development-log}.md`, `docs/evidence/phase-9/games/`.
+- **Testing:** see the pull request.
+- **Branch / PR:** `feat/cat-games`.
+- **Known limitations:** the migration is not applied to the live database yet; the plays per day and points wait for the owner; prizes (FR-088, FR-091) are POS work.
+- **Next action:** Rodnee applies the migration after review; confirm the values with the owner.
+
+## 2026-11-13 — Cat games migration applied to the live database
+
+- **Phase:** Phase 9 (FR-089), release.
+- **Task:** The lead developer approved applying the mini-games migration.
+- **Summary:** `20261113140000_mini_games.sql` was run live with a forced rollback first (three plays decided on the server, a fourth refused, guests denied, RLS on, nothing left behind), then applied and recorded in `supabase_migrations.schema_migrations`. The PostgREST schema cache was reloaded; `mini_game_status` answers guests and `play_mini_game` refuses them (42501). The check also showed `loyalty_points`, `reviews` and `closed_today` were already applied, so the docs that still said otherwise now carry dated updates.
+- **Files:** `docs/{database-design,functional-requirements,decisions,security-and-privacy,test-cases,development-log}.md`.
+- **Testing:** the live checks above; `python3 scripts/validate_phase0_docs.py`.
+- **Branch / PR:** `docs/games-live`.
+- **Known limitations:** MAN-P9-002 (a real account playing live) is not run yet; the game values wait for the owner.
+- **Next action:** none.
+
+## 2026-11-13 — Play while you wait, and no more blank ad box
+
+- **Phase:** Phase 9 (FR-089, FR-090).
+- **Task:** The lead developer asked for the cat games to be offered while customers wait for orders, and reported that the ad showed only a white box.
+- **Summary:** The order page shows a "Play while you wait" card while the order is pending, accepted or preparing. The order link is kept for the tab, so the games page shows "← Back to your order". That link is a plain link because client navigation doubled the `#token` part. Ads still never appear on the order page. The blank ad came from the Adsterra script: the live check (both script addresses, with and without the sandbox, on the real domain) showed it loading and then drawing nothing or asking for no ad, so the unit itself needs a check in the dashboard. The ad frame now posts one message when an ad of real size appears; until then the slot shows "Loading ad…", and after 8 seconds a note with Try again replaces the blank box. CI's browser build gets a dummy ad key so TC-P9-051 runs against a stand-in ad script.
+- **Files:** `src/components/games/play-while-you-wait.tsx`, `src/lib/games/waiting-order.ts`, `src/app/orders/[reference]/page.tsx`, `src/components/games/games-view.tsx`, `src/components/ads/ad-slot.tsx`, `src/lib/ads/ads.ts`, `.github/workflows/ci.yml`, tests, `docs/test-cases.md` §59.
+- **Testing:** see the PR.
+- **Branch / PR:** `feat/play-while-waiting`.
+- **Known limitations:** MAN-P9-003 needs the Adsterra account.
+- **Next action:** Check the unit in Adsterra.
+
+## 2026-11-13 — MAN-P9-002 passed; why the live ad stays blank
+
+- **Phase:** Phase 9 (FR-089, FR-090).
+- **Task:** The lead developer played the games on the live site with a real account and asked whether ads work.
+- **Summary:** MAN-P9-002 passed. The ad unit works: in a normal (not headless) browser the Adsterra loader asked for an ad and got a 300x250 image ad. Headless browsers get nothing, which hid this earlier. The ad stays blank on the site because the loader writes the ad into an inner frame it creates. Our sandbox has no `allow-same-origin`, so each frame gets its own opaque origin and the loader can't reach its inner frame. Side by side in one browser, the current sandbox was blank, while `allow-same-origin` and no sandbox both showed the ad. Adding `allow-same-origin` to our `srcdoc` frame would make the ad code same-origin with this site, able to read the customer's sign-in session, so it was not done. The safe fix is to serve the ad page from a separate address, where `allow-same-origin` only gives it its own origin. The project's other Vercel addresses are behind Vercel's login, so that needs a decision. Meanwhile the fill check counts only a real image, canvas or video, or an http(s) frame, so the slot shows the note instead of a blank box. One of the ads served in the test was a large "DOWNLOAD" button, the kind of misleading ad worth filtering in the Adsterra settings.
+- **Files:** `src/lib/ads/ads.ts`, `tests/e2e/play-while-waiting.spec.ts`, `docs/test-cases.md`, `docs/development-log.md`.
+- **Testing:** see the PR.
+- **Branch / PR:** `fix/ad-fill-check`.
+- **Known limitations:** No ad shows until the ad page has its own address.
+- **Next action:** The lead developer chooses where the ad page lives.
+
+## 2026-11-13 — Live ads show: ad frame moved to a data: URL
+
+- **Phase:** Phase 9 (FR-090).
+- **Task:** The lead developer asked to loosen the ad frame's sandbox so ads show.
+- **Summary:** The frame now has `allow-same-origin`, which lets the Adsterra loader draw the ad in its inner frame. To keep the ad code away from the customer's sign-in session, the ad page is now loaded from a `data:` URL instead of `srcdoc`. A `data:` page always gets its own opaque origin, even with `allow-same-origin`, while `srcdoc` would have taken this site's origin. Checked with the real unit in a normal browser: both versions showed an ad, but from `srcdoc` the ad code could read a test value in the parent's storage, while from the `data:` URL both storage and the parent page were blocked (SecurityError). No separate ad address is needed.
+- **Files:** `src/lib/ads/ads.ts`, `src/components/ads/ad-slot.tsx`, `tests/unit/ad-slot.test.tsx`, `docs/test-cases.md`, `docs/development-log.md`.
+- **Testing:** see the PR.
+- **Branch / PR:** `fix/ad-frame-data-url`.
+- **Known limitations:** Ad content is chosen by Adsterra. Test ads included gambling and "Download" ads, which may need filtering in the Adsterra settings for a café audience.
+- **Next action:** The lead developer checks a live ad (MAN-P9-003) and reviews Adsterra's ad-category settings.
+
+## 2026-11-13 — Phase 8: the Android app
+
+- **Phase:** Phase 8 (FR-065 to FR-069, NFR-036).
+- **Task:** Build the customer Android app.
+- **Summary:** Added `android/`, a Trusted Web Activity built with androidbrowserhelper 2.7.4 and AGP 8.11.1, API 24 to 36 (ADR-035). It opens the live site full screen, with the shop's icon, cream status and navigation bars and a splash. Added `public/.well-known/assetlinks.json` with the package and the release key's SHA-256 fingerprint. The release key was made on the lead developer's machine and kept outside the repository (`android/README.md` says how to sign and back it up). Android lint runs with warnings as errors; the browser's data-management screen is declared and the library's classes keep their names, after the first shrunk build crashed when the library switched that screen on by name. CI gets an Android job that builds an unsigned release APK and runs lint. The signed APK opened the live site on an Android 15 emulator.
+- **Files:** `android/**`, `public/.well-known/assetlinks.json`, `.github/workflows/ci.yml`, `tests/unit/android-app.test.ts`, `tests/e2e/pwa.spec.ts`, `docs/decisions.md`, `docs/functional-requirements.md`, `docs/non-functional-requirements.md`, `docs/test-cases.md`, `docs/development-log.md`, `docs/evidence/phase-8/android-app/`, `README.md`, `docs/evidence/phase-8-verification.md`.
+- **Testing:** see the PR.
+- **Branch / PR:** `feat/p8-android-app`.
+- **Known limitations:** The address bar hides only after `assetlinks.json` is live. A real phone run (MAN-P8-007, MAN-P8-008) is still to do. Google Play needs a developer account and a closed test first; the APK is shared through GitHub for now.
+- **Next action:** Check full screen on the live site, then publish the v1.0.0 release with the APK once the lead developer agrees.
