@@ -500,7 +500,7 @@ Before commit/PR, inspect staged and unstaged diffs, verify `.env.local` is untr
 - The limits and the duplicate check live in each server instance's memory, so they are best effort across instances, and someone with many Facebook accounts could still send many orders.
 - Rotating the app secret hides older Messenger orders from Order status (§21.2).
 - While the Meta app has Standard Access, only people with a role on the app get replies (§19.6).
-- The migration for Order status is not applied to the live database yet (database design §15), and the owner's decisions on orders outside shop hours and closure days are open (functional requirements §12). **TODO: Confirm with Brew ni Cat owner.**
+- The migration for Order status is not applied to the live database yet (database design §15; update 2026-11-13: it was applied on 2026-11-10), and the owner's decisions on orders outside shop hours and closure days are open (functional requirements §12). **TODO: Confirm with Brew ni Cat owner.**
 
 ## 22. Ratings And Reviews Security And Privacy Addendum (Phase 5 — FR-098)
 

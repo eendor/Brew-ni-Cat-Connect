@@ -1916,3 +1916,14 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `feat/cat-games`.
 - **Known limitations:** the migration is not applied to the live database yet; the plays per day and points wait for the owner; prizes (FR-088, FR-091) are POS work.
 - **Next action:** Rodnee applies the migration after review; confirm the values with the owner.
+
+## 2026-11-13 — Cat games migration applied to the live database
+
+- **Phase:** Phase 9 (FR-089), release.
+- **Task:** The lead developer approved applying the mini-games migration.
+- **Summary:** `20261113140000_mini_games.sql` was run live with a forced rollback first (three plays decided on the server, a fourth refused, guests denied, RLS on, nothing left behind), then applied and recorded in `supabase_migrations.schema_migrations`. The PostgREST schema cache was reloaded; `mini_game_status` answers guests and `play_mini_game` refuses them (42501). The check also showed `loyalty_points`, `reviews` and `closed_today` were already applied, so the docs that still said otherwise now carry dated updates.
+- **Files:** `docs/{database-design,functional-requirements,decisions,security-and-privacy,test-cases,development-log}.md`.
+- **Testing:** the live checks above; `python3 scripts/validate_phase0_docs.py`.
+- **Branch / PR:** `docs/games-live`.
+- **Known limitations:** MAN-P9-002 (a real account playing live) is not run yet; the game values wait for the owner.
+- **Next action:** none.
