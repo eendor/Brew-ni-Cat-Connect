@@ -15,10 +15,12 @@ export const AD_FILLED_MESSAGE = "bnc-ad-filled";
 export const AD_FILL_TIMEOUT_MS = 8000;
 
 /**
- * Runs inside the ad frame. It watches for an ad of real size and tells the
- * parent page once, with no data beyond the message name.
+ * Runs inside the ad frame. It watches for an ad of real size (an image,
+ * canvas or video, or a frame loaded from an http(s) address) and tells the
+ * parent page once, with no data beyond the message name. An empty inner
+ * frame it can't read does not count, so a blank box never reads as an ad.
  */
-const FILL_REPORTER = `(function(){var sent=false;function check(){if(sent)return;var els=document.querySelectorAll("iframe,img,ins,a,canvas,video,div");for(var i=0;i<els.length;i++){var r=els[i].getBoundingClientRect();if(r.width>=100&&r.height>=50){sent=true;parent.postMessage("${AD_FILLED_MESSAGE}","*");return}}}new MutationObserver(check).observe(document.documentElement,{childList:true,subtree:true,attributes:true});setInterval(check,1000)})();`;
+const FILL_REPORTER = `(function(){var sent=false;function sized(el){var r=el.getBoundingClientRect();return r.width>=100&&r.height>=50}function has(doc,depth){var els=doc.querySelectorAll("img,canvas,video,iframe");for(var i=0;i<els.length;i++){var el=els[i];if(!sized(el))continue;if(el.tagName!=="IFRAME")return true;if(/^https?:/.test(el.getAttribute("src")||""))return true;if(depth<2){try{var d=el.contentDocument;if(d&&has(d,depth+1))return true}catch(e){}}}return false}function check(){if(sent)return;if(has(document,0)){sent=true;parent.postMessage("${AD_FILLED_MESSAGE}","*")}}new MutationObserver(check).observe(document.documentElement,{childList:true,subtree:true,attributes:true});setInterval(check,1000)})();`;
 
 /** Pages where an ad must never appear, even if a slot is placed there. */
 export const AD_FREE_PREFIXES = [

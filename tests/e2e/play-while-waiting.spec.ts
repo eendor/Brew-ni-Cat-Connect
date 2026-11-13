@@ -138,7 +138,7 @@ test.describe("Play while you wait", () => {
     await page.route("https://bauval.org/**", (route) =>
       route.fulfill({
         contentType: "application/javascript",
-        body: `setTimeout(function(){var d=document.createElement("div");d.style.cssText="width:300px;height:250px;background:#e8d5c4";d.textContent="Test ad";document.body.appendChild(d)},500);`,
+        body: `setTimeout(function(){var c=document.createElement("canvas");c.width=300;c.height=250;var g=c.getContext("2d");g.fillStyle="#e8d5c4";g.fillRect(0,0,300,250);g.fillStyle="#333";g.font="20px sans-serif";g.fillText("Test ad",16,36);document.body.appendChild(c)},500);`,
       }),
     );
 
@@ -152,10 +152,14 @@ test.describe("Play while you wait", () => {
       await slot.screenshot({ path: `${EVIDENCE_DIR}/ad-filled.png` });
     }
 
-    // the network sends nothing back, like an unapproved ad unit
+    // the network leaves an empty inner frame, as the live unit did in the
+    // sandbox; that is not an ad
     await page.unroute("https://bauval.org/**");
     await page.route("https://bauval.org/**", (route) =>
-      route.fulfill({ contentType: "application/javascript", body: "" }),
+      route.fulfill({
+        contentType: "application/javascript",
+        body: `var f=document.createElement("iframe");f.width=300;f.height=250;f.style.border="0";document.body.appendChild(f);`,
+      }),
     );
     await page.reload();
     await expect(slot.getByTestId("ad-empty")).toContainText(

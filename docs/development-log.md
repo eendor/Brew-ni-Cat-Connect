@@ -1938,3 +1938,14 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `feat/play-while-waiting`.
 - **Known limitations:** MAN-P9-003 needs the Adsterra account.
 - **Next action:** Check the unit in Adsterra.
+
+## 2026-11-13 — MAN-P9-002 passed; why the live ad stays blank
+
+- **Phase:** Phase 9 (FR-089, FR-090).
+- **Task:** The lead developer played the games on the live site with a real account and asked whether ads work.
+- **Summary:** MAN-P9-002 passed. The ad unit works: in a normal (not headless) browser the Adsterra loader asked for an ad and got a 300x250 image ad. Headless browsers get nothing, which hid this earlier. The ad stays blank on the site because the loader writes the ad into an inner frame it creates. Our sandbox has no `allow-same-origin`, so each frame gets its own opaque origin and the loader can't reach its inner frame. Side by side in one browser, the current sandbox was blank, while `allow-same-origin` and no sandbox both showed the ad. Adding `allow-same-origin` to our `srcdoc` frame would make the ad code same-origin with this site, able to read the customer's sign-in session, so it was not done. The safe fix is to serve the ad page from a separate address, where `allow-same-origin` only gives it its own origin. The project's other Vercel addresses are behind Vercel's login, so that needs a decision. Meanwhile the fill check counts only a real image, canvas or video, or an http(s) frame, so the slot shows the note instead of a blank box. One of the ads served in the test was a large "DOWNLOAD" button, the kind of misleading ad worth filtering in the Adsterra settings.
+- **Files:** `src/lib/ads/ads.ts`, `tests/e2e/play-while-waiting.spec.ts`, `docs/test-cases.md`, `docs/development-log.md`.
+- **Testing:** see the PR.
+- **Branch / PR:** `fix/ad-fill-check`.
+- **Known limitations:** No ad shows until the ad page has its own address.
+- **Next action:** The lead developer chooses where the ad page lives.
