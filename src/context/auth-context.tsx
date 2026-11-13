@@ -11,11 +11,9 @@ import {
 } from "react";
 import type {
   AuthError,
-  AuthResponse,
   Session,
   SupabaseClient,
   User,
-  UserResponse,
 } from "@supabase/supabase-js";
 
 import { getAuthSupabaseClient } from "@/lib/supabase/auth-client";
@@ -24,57 +22,37 @@ export type AuthContextValue = Readonly<{
   user: User | null;
   session: Session | null;
   isLoading: boolean;
-  isPasswordRecovery: boolean;
-  signUp: (
-    email: string,
-    password: string,
-  ) => Promise<{
-    data: { user: User | null; session: Session | null } | null;
-    error: AuthError | Error | null;
-  }>;
-  signIn: (
-    email: string,
-    password: string,
-  ) => Promise<{
-    data: { user: User | null; session: Session | null } | null;
-    error: AuthError | Error | null;
-  }>;
+  /**
+   * Sends the browser to Google's sign-in (ADR-030). The same call signs in an
+   * existing customer and creates the account for a new one. On success the
+   * page navigates away, so only a failure to start is returned.
+   */
+  signInWithGoogle: (
+    returnTo?: string,
+  ) => Promise<{ error: AuthError | Error | null }>;
   signOut: () => Promise<{ error: AuthError | Error | null }>;
-  resetPassword: (email: string) => Promise<{
-    data: Record<string, unknown> | null;
-    error: AuthError | Error | null;
-  }>;
-  updatePassword: (password: string) => Promise<{
-    data: { user: User | null } | null;
-    error: AuthError | Error | null;
-  }>;
 }>;
 
 const AuthContext = createContext<AuthContextValue | null>(null);
+
+const unavailable = () => new Error("Authentication service is unavailable");
 
 const fallbackAuthValue: AuthContextValue = {
   user: null,
   session: null,
   isLoading: false,
-  isPasswordRecovery: false,
-  signUp: async () => ({
-    data: null,
-    error: new Error("Authentication service is unavailable"),
-  }),
-  signIn: async () => ({
-    data: null,
-    error: new Error("Authentication service is unavailable"),
-  }),
+  signInWithGoogle: async () => ({ error: unavailable() }),
   signOut: async () => ({ error: null }),
-  resetPassword: async () => ({
-    data: null,
-    error: new Error("Authentication service is unavailable"),
-  }),
-  updatePassword: async () => ({
-    data: null,
-    error: new Error("Authentication service is unavailable"),
-  }),
 };
+
+/** The address Google returns to; `returnTo` is checked again there. */
+export function oauthCallbackUrl(origin: string, returnTo?: string): string {
+  const url = new URL("/account/callback", origin);
+  if (returnTo && returnTo !== "/") {
+    url.searchParams.set("returnTo", returnTo);
+  }
+  return url.toString();
+}
 
 export type AuthProviderProps = Readonly<{
   children: ReactNode;
@@ -88,7 +66,6 @@ export function AuthProvider({
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
 
   const getClient = useCallback((): SupabaseClient | null => {
     if (clientProp) {
@@ -145,12 +122,7 @@ export function AuthProvider({
       data: { subscription },
     } = client.auth.onAuthStateChange((event, session) => {
       if (!isMounted) return;
-      if (event === "PASSWORD_RECOVERY") {
-        setIsPasswordRecovery(true);
-        setUser(session?.user ?? null);
-        setSession(session ?? null);
-      } else if (event === "SIGNED_OUT") {
-        setIsPasswordRecovery(false);
+      if (event === "SIGNED_OUT") {
         setUser(null);
         setSession(null);
       } else if (!session) {
@@ -175,56 +147,28 @@ export function AuthProvider({
     };
   }, [getClient]);
 
-  const signUp = useCallback(
-    async (email: string, password: string) => {
+  const signInWithGoogle = useCallback(
+    async (returnTo?: string) => {
       const client = getClient();
       if (!client) {
-        return {
-          data: null,
-          error: new Error("Authentication service is unavailable"),
-        };
+        return { error: unavailable() };
       }
       const origin =
         typeof window !== "undefined" ? window.location.origin : "";
-      const emailRedirectTo = origin ? `${origin}/account/sign-in` : undefined;
-
-      const res = await client.auth.signUp({
-        email,
-        password,
+      const { error } = await client.auth.signInWithOAuth({
+        provider: "google",
         options: {
-          emailRedirectTo,
+          redirectTo: origin ? oauthCallbackUrl(origin, returnTo) : undefined,
+          queryParams: { prompt: "select_account" },
         },
       });
-      return res as AuthResponse;
-    },
-    [getClient],
-  );
-
-  const signIn = useCallback(
-    async (email: string, password: string) => {
-      const client = getClient();
-      if (!client) {
-        return {
-          data: null,
-          error: new Error("Authentication service is unavailable"),
-        };
-      }
-      const res = await client.auth.signInWithPassword({
-        email,
-        password,
-      });
-      if (res.data?.user) {
-        setUser(res.data.user);
-        setSession(res.data.session);
-      }
-      return res as AuthResponse;
+      return { error: error ?? null };
     },
     [getClient],
   );
 
   const signOut = useCallback(async () => {
     const client = getClient();
-    setIsPasswordRecovery(false);
     if (!client) {
       setUser(null);
       setSession(null);
@@ -236,69 +180,15 @@ export function AuthProvider({
     return res;
   }, [getClient]);
 
-  const resetPassword = useCallback(
-    async (email: string) => {
-      const client = getClient();
-      if (!client) {
-        return {
-          data: null,
-          error: new Error("Authentication service is unavailable"),
-        };
-      }
-      const origin =
-        typeof window !== "undefined" ? window.location.origin : "";
-      const redirectTo = origin
-        ? `${origin}/account/reset-password`
-        : undefined;
-
-      const res = await client.auth.resetPasswordForEmail(email, {
-        redirectTo,
-      });
-      return res;
-    },
-    [getClient],
-  );
-
-  const updatePassword = useCallback(
-    async (password: string) => {
-      const client = getClient();
-      if (!client) {
-        return {
-          data: null,
-          error: new Error("Authentication service is unavailable"),
-        };
-      }
-      const res = await client.auth.updateUser({
-        password,
-      });
-      return res as UserResponse;
-    },
-    [getClient],
-  );
-
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
       session,
       isLoading,
-      isPasswordRecovery,
-      signUp,
-      signIn,
+      signInWithGoogle,
       signOut,
-      resetPassword,
-      updatePassword,
     }),
-    [
-      user,
-      session,
-      isLoading,
-      isPasswordRecovery,
-      signUp,
-      signIn,
-      signOut,
-      resetPassword,
-      updatePassword,
-    ],
+    [user, session, isLoading, signInWithGoogle, signOut],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

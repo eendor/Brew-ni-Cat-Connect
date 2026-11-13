@@ -337,7 +337,6 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Git branch:** `feat/gallery-ui-polish`\
 **Pull request:** [#10](https://github.com/eendor/Brew-ni-Cat-Connect/pull/10)
 
-
 ## 2026-09-24 — Menu item photos from shop Facebook stills
 
 **Date:** 2026-09-24\
@@ -379,7 +378,6 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Files/modules affected:** `src/app/layout.tsx`; `src/app/globals.css`; `src/components/layout/site-header.tsx`; `src/app/page.tsx`; `src/app/contact/page.tsx`; `docs/development-log.md`.\
 **Git branch:** `feat/gallery-ui-polish`\
 **Pull request:** [#10](https://github.com/eendor/Brew-ni-Cat-Connect/pull/10)
-
 
 ## 2026-09-24 — Menu item photos: foods-only remapping
 
@@ -455,7 +453,6 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Git branch:** `feat/homepage-ui-polish`\
 **Pull request:** [#11 — feat: polish homepage visit logistics, customer favorites, and cat lounge etiquette](https://github.com/eendor/Brew-ni-Cat-Connect/pull/11), merged 2026-10-05 as `937d6f5`.\
 **Next action:** None; merged and recorded on Trello.
-
 
 ## 2026-10-11 — Update vulnerable sharp and source-map-js
 
@@ -878,7 +875,6 @@ This log records completed work and observed evidence. Planned work is explicitl
 **Pull request:** [#41](https://github.com/eendor/Brew-ni-Cat-Connect/pull/41), self-reviewed and squash-merged into `main` on 2026-10-24\
 **Next action:** Shan's order page reads `get_online_order()`. The POS order screen needs its own status-change function. `POST /api/orders` needs a rate limit before Place order is turned on.
 
-
 ## 2026-10-24 — New shop hours: closed every Saturday
 
 **Date:** 2026-10-24\
@@ -988,7 +984,6 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `feat/p3-gallery-facebook-photos`.
 - **Next action:** None. The photos were already public on the shop's Facebook page and the owner confirmed the customers are fine with it.
 
-
 ## 2026-10-26 — Page-transition curtain restored to the original look
 
 - **Phase:** 3 (motion follow-up)
@@ -1013,7 +1008,6 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `feat/p3-3d-in-order-dialog`.
 - **Next action:** Phone check of the dialog in MAN-P4-007.
 
-
 ## 2026-10-26 — Smoother rising text on page entrances
 
 - **Phase:** 3 (motion follow-up)
@@ -1023,7 +1017,6 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Testing:** TC-P4-022 and TC-P4-026 on a fresh build; checked by eye on a phone in MAN-P4-007.
 - **Branch / PR:** `fix/p3-text-rise-smooth`.
 - **Next action:** Ask the team to confirm the rise feels smooth in MAN-P4-007.
-
 
 ## 2026-10-27 — Customer authentication (FR-031, FR-032, FR-034 Implemented; FR-033, FR-035, FR-036 In development)
 
@@ -1035,7 +1028,6 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `feat/p4-customer-auth` / PR #58.
 - **Next action:** Re-review and merge by Rodnee; independent QA by Renier.
 
-
 ## 2026-10-27 — Faster Playwright install in CI
 
 - **Phase:** 4 (CI upkeep)
@@ -1045,7 +1037,6 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Testing:** The `Browser tests (chromium)` job on PR #59 runs the full `chromium` project with the new install step. Its step timings are compared with the runs before it in the PR.
 - **Branch / PR:** `perf/ci-playwright-install`, PR #59.
 - **Next action:** None. If a future runner image drops a library, the step installs the system packages by itself.
-
 
 ## 2026-10-28 — The cart empties once the order summary is made
 
@@ -1709,7 +1700,6 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Testing:** Playwright TC-P4-123 and TC-P8-019 after 10 PM Manila time: 2 passed.
 - **Branch / PR:** `fix/e2e-clock-hours`.
 
-
 ## 2026-11-10 — Reviews on the home page and in the menu (FR-098)
 
 - **Phase:** Phase 5 and the website.
@@ -1839,7 +1829,6 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Testing:** see the PR.
 - **Branch / PR:** `feat/reviews-page`.
 
-
 ## 2026-11-13 — The shop's own cats stroll across the footer (ADR-032)
 
 - **Phase:** Phase 9 (FR-099), enhancement.
@@ -1849,3 +1838,16 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Testing:** `tests/unit/cat-characters.test.tsx`: 9 passed. Playwright: `cats.spec.ts` 4 passed (`chromium`) and `cats.three.spec.ts` 5 passed (`chromium-3d`, software WebGL) at 390, 1440 and 1920 wide.
 - **Branch / PR:** `feat/three-anime-cats`, [PR #134](https://github.com/eendor/Brew-ni-Cat-Connect/pull/134).
 - **Next action:** Review and merge. The anime.js mini-games follow in Phase 9.
+
+## 2026-11-13 — Google sign-in replaces email and password
+
+- **Phase:** Phase 5 (customer accounts), requested by the lead developer.
+- **Task:** Change sign-in and registration to Google OAuth.
+- **Summary:** `useAuth()` now offers `signInWithGoogle(returnTo)` and `signOut()`; the email and password methods and the password recovery state are gone. The auth client uses the PKCE flow. Sign In and Create an Account share one view with a single Google button and the privacy notice. The new `/account/callback` page finishes the sign-in and goes on to the checked `returnTo`, or says the sign-in was cancelled or didn't finish. `/account/forgot-password` and `/account/reset-password` are removed and redirect to Sign In in `next.config.ts`. `safeReturnTo` moved to `src/lib/auth/safe-return-to.ts`. ADR-030 records the decision.
+- **Files:** `src/context/auth-context.tsx`, `src/lib/supabase/auth-client.ts`, `src/lib/auth/safe-return-to.ts`, `src/components/account/google-sign-in-button.tsx`, `src/components/account/sign-in-view.tsx`, `src/components/account/sign-up-view.tsx`, `src/components/account/auth-callback-view.tsx`, `src/components/account/account-guard.tsx`, `src/app/account/callback/page.tsx`, `src/app/account/sign-up/page.tsx`, `next.config.ts`, removed `src/components/account/forgot-password-view.tsx`, `src/components/account/reset-password-view.tsx`, `src/app/account/forgot-password/`, `src/app/account/reset-password/`; `tests/unit/auth-context.test.tsx`, `tests/unit/account-forms.test.tsx`, `tests/e2e/auth.spec.ts`, `tests/e2e/account-guard.spec.ts`, `tests/e2e/support/google-oauth.ts`; `docs/decisions.md` (ADR-030), `docs/functional-requirements.md`, `docs/security-and-privacy.md` (§25), `docs/test-cases.md` (section 54).
+- **Testing:** see the pull request; unit, lint, type check and the account browser tests were run before opening it.
+- **Branch / PR:** `feat/google-login`.
+- **Known limitations:** Old password accounts with a non-Google email can't sign in any more. Google's chooser says "to continue to" the Supabase address, because the brand isn't verified (that would need a custom auth domain).
+- **Update 2026-11-13:** Google was switched on in Supabase through the Management API with the shop's OAuth web client (the secret is kept only in Supabase), branch previews were added to the allowed redirect URLs, and a real Google sign-in on the preview passed (MAN-P5-019; renumbered from MAN-P5-010, which the Phase 5 QA summary already used).
+- **Next action:** Repeat the sign-in on production after the merge; rotate the OAuth client secret.
+

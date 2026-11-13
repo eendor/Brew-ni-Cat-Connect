@@ -44,7 +44,7 @@ describe("auth Supabase client", () => {
     expect(createClientMock).not.toHaveBeenCalled();
   });
 
-  it("initializes with session persistence, URL detection, and auto-refresh enabled", async () => {
+  it("initializes with session persistence, URL detection, auto-refresh and the PKCE flow (ADR-030)", async () => {
     process.env.NEXT_PUBLIC_SUPABASE_URL = "https://public-project.example";
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = "public-test-key";
     const clientFixture = { auth: {} };
@@ -62,6 +62,7 @@ describe("auth Supabase client", () => {
           persistSession: true,
           autoRefreshToken: true,
           detectSessionInUrl: true,
+          flowType: "pkce",
         },
       },
     );

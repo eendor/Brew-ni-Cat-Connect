@@ -1,9 +1,14 @@
 import { render, screen, act, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { useState } from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Session, SupabaseClient, User } from "@supabase/supabase-js";
 
-import { AuthProvider, useAuth } from "@/context/auth-context";
+import {
+  AuthProvider,
+  oauthCallbackUrl,
+  useAuth,
+} from "@/context/auth-context";
 
 const routerPush = vi.fn();
 vi.mock("next/navigation", () => ({
@@ -12,49 +17,26 @@ vi.mock("next/navigation", () => ({
   }),
 }));
 
-function TestConsumer() {
-  const {
-    user,
-    isLoading,
-    isPasswordRecovery,
-    signUp,
-    signIn,
-    signOut,
-    resetPassword,
-    updatePassword,
-  } = useAuth();
+function TestConsumer({ returnTo }: { returnTo?: string }) {
+  const { user, isLoading, signInWithGoogle, signOut } = useAuth();
+  const [startError, setStartError] = useState("");
 
   return (
     <div>
       <div data-testid="loading">{isLoading ? "loading" : "ready"}</div>
       <div data-testid="user-email">{user ? user.email : "guest"}</div>
-      <div data-testid="is-recovery">{isPasswordRecovery ? "yes" : "no"}</div>
+      <div data-testid="start-error">{startError}</div>
       <button
-        onClick={() => signUp("new@example.com", "Password123!")}
-        data-testid="signup-btn"
+        onClick={async () => {
+          const res = await signInWithGoogle(returnTo);
+          setStartError(res.error ? res.error.message : "none");
+        }}
+        data-testid="google-btn"
       >
-        Sign Up
-      </button>
-      <button
-        onClick={() => signIn("test@example.com", "Password123!")}
-        data-testid="signin-btn"
-      >
-        Sign In
+        Google
       </button>
       <button onClick={() => signOut()} data-testid="signout-btn">
         Sign Out
-      </button>
-      <button
-        onClick={() => resetPassword("reset@example.com")}
-        data-testid="reset-btn"
-      >
-        Reset Password
-      </button>
-      <button
-        onClick={() => updatePassword("NewPassword123!")}
-        data-testid="update-pw-btn"
-      >
-        Update Password
       </button>
     </div>
   );
@@ -84,29 +66,15 @@ describe("AuthContext and useAuth", () => {
           },
         };
       }),
-      signUp: vi.fn().mockResolvedValue({
-        data: { user: null, session: null },
+      signInWithOAuth: vi.fn().mockResolvedValue({
+        data: { provider: "google", url: "https://accounts.example/auth" },
         error: null,
-      }),
-      signInWithPassword: vi.fn().mockImplementation(async () => {
-        return {
-          data: { user: null, session: null },
-          error: null,
-        };
       }),
       signOut: vi.fn().mockImplementation(async () => {
         if (authCallback) {
           authCallback("SIGNED_OUT", null);
         }
         return { error: null };
-      }),
-      resetPasswordForEmail: vi.fn().mockResolvedValue({
-        data: {},
-        error: null,
-      }),
-      updateUser: vi.fn().mockResolvedValue({
-        data: { user: null },
-        error: null,
       }),
       ...overrides,
     };
@@ -216,13 +184,13 @@ describe("AuthContext and useAuth", () => {
     expect(routerPush).not.toHaveBeenCalled();
   });
 
-  it("TC-P4-152 — signUp builds emailRedirectTo from origin (FR-031, FR-035)", async () => {
+  it("TC-P5-213 — signInWithGoogle starts Google OAuth back to /account/callback (ADR-030)", async () => {
     const user = userEvent.setup();
     const { client, mockAuth } = createMockSupabase();
 
     render(
       <AuthProvider client={client}>
-        <TestConsumer />
+        <TestConsumer returnTo="/account/orders" />
       </AuthProvider>,
     );
 
@@ -230,56 +198,26 @@ describe("AuthContext and useAuth", () => {
       expect(screen.getByTestId("loading").textContent).toBe("ready");
     });
 
-    await user.click(screen.getByTestId("signup-btn"));
+    await user.click(screen.getByTestId("google-btn"));
 
-    expect(mockAuth.signUp).toHaveBeenCalledWith({
-      email: "new@example.com",
-      password: "Password123!",
+    expect(mockAuth.signInWithOAuth).toHaveBeenCalledWith({
+      provider: "google",
       options: {
-        emailRedirectTo: `${window.location.origin}/account/sign-in`,
+        redirectTo: `${window.location.origin}/account/callback?returnTo=%2Faccount%2Forders`,
+        queryParams: { prompt: "select_account" },
       },
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId("start-error").textContent).toBe("none");
     });
   });
 
-  it("TC-P4-153 — signIn updates user on success (FR-032)", async () => {
+  it("TC-P5-214 — signInWithGoogle returns the error when Google sign-in can't start", async () => {
     const user = userEvent.setup();
-    const loggedInUser: User = {
-      id: "signed-in-user",
-      email: "test@example.com",
-      app_metadata: {},
-      user_metadata: {},
-      aud: "authenticated",
-      created_at: new Date().toISOString(),
-    };
-
-    let authChangeCb:
-      ((event: string, session: Session | null) => void) | null = null;
-
-    const { client, mockAuth } = createMockSupabase({
-      onAuthStateChange: vi.fn().mockImplementation((cb) => {
-        authChangeCb = cb;
-        return {
-          data: { subscription: { unsubscribe: vi.fn() } },
-        };
-      }),
-      signInWithPassword: vi.fn().mockImplementation(async () => {
-        const session: Session = {
-          access_token: "token",
-          refresh_token: "refresh",
-          expires_in: 3600,
-          token_type: "bearer",
-          user: loggedInUser,
-        };
-        if (authChangeCb) {
-          authChangeCb("SIGNED_IN", session);
-        }
-        return {
-          data: {
-            user: loggedInUser,
-            session,
-          },
-          error: null,
-        };
+    const { client } = createMockSupabase({
+      signInWithOAuth: vi.fn().mockResolvedValue({
+        data: { provider: "google", url: null },
+        error: new Error("Unsupported provider: provider is not enabled"),
       }),
     });
 
@@ -292,18 +230,25 @@ describe("AuthContext and useAuth", () => {
     await waitFor(() => {
       expect(screen.getByTestId("loading").textContent).toBe("ready");
     });
+    await user.click(screen.getByTestId("google-btn"));
 
-    await user.click(screen.getByTestId("signin-btn"));
-
-    expect(mockAuth.signInWithPassword).toHaveBeenCalledWith({
-      email: "test@example.com",
-      password: "Password123!",
-    });
     await waitFor(() => {
-      expect(screen.getByTestId("user-email").textContent).toBe(
-        "test@example.com",
+      expect(screen.getByTestId("start-error").textContent).toBe(
+        "Unsupported provider: provider is not enabled",
       );
     });
+  });
+
+  it("TC-P5-215 — oauthCallbackUrl leaves out returnTo for the home page", () => {
+    expect(oauthCallbackUrl("https://shop.example")).toBe(
+      "https://shop.example/account/callback",
+    );
+    expect(oauthCallbackUrl("https://shop.example", "/")).toBe(
+      "https://shop.example/account/callback",
+    );
+    expect(oauthCallbackUrl("https://shop.example", "/menu?x=1")).toBe(
+      "https://shop.example/account/callback?returnTo=%2Fmenu%3Fx%3D1",
+    );
   });
 
   it("TC-P4-154 — signOut terminates session and clears user (FR-033)", async () => {
@@ -368,52 +313,7 @@ describe("AuthContext and useAuth", () => {
     });
   });
 
-  it("TC-P4-155 — resetPassword builds redirectTo from origin (FR-034)", async () => {
-    const user = userEvent.setup();
-    const { client, mockAuth } = createMockSupabase();
-
-    render(
-      <AuthProvider client={client}>
-        <TestConsumer />
-      </AuthProvider>,
-    );
-
-    await waitFor(() => {
-      expect(screen.getByTestId("loading").textContent).toBe("ready");
-    });
-
-    await user.click(screen.getByTestId("reset-btn"));
-
-    expect(mockAuth.resetPasswordForEmail).toHaveBeenCalledWith(
-      "reset@example.com",
-      {
-        redirectTo: `${window.location.origin}/account/reset-password`,
-      },
-    );
-  });
-
-  it("TC-P4-156 — updatePassword calls updateUser with new password", async () => {
-    const user = userEvent.setup();
-    const { client, mockAuth } = createMockSupabase();
-
-    render(
-      <AuthProvider client={client}>
-        <TestConsumer />
-      </AuthProvider>,
-    );
-
-    await waitFor(() => {
-      expect(screen.getByTestId("loading").textContent).toBe("ready");
-    });
-
-    await user.click(screen.getByTestId("update-pw-btn"));
-
-    expect(mockAuth.updateUser).toHaveBeenCalledWith({
-      password: "NewPassword123!",
-    });
-  });
-
-  it("TC-P4-157 — handles auth state change listener events including PASSWORD_RECOVERY", async () => {
+  it("TC-P4-157 — follows SIGNED_IN and SIGNED_OUT events from the auth listener (Google return)", async () => {
     const { client, triggerAuthStateChange } = createMockSupabase();
 
     render(
@@ -436,7 +336,7 @@ describe("AuthContext and useAuth", () => {
     };
 
     act(() => {
-      triggerAuthStateChange("PASSWORD_RECOVERY", {
+      triggerAuthStateChange("SIGNED_IN", {
         access_token: "t-recovery",
         refresh_token: "r-recovery",
         expires_in: 3600,
@@ -450,7 +350,6 @@ describe("AuthContext and useAuth", () => {
       expect(screen.getByTestId("user-email").textContent).toBe(
         "event@example.com",
       );
-      expect(screen.getByTestId("is-recovery").textContent).toBe("yes");
     });
 
     act(() => {
@@ -459,7 +358,6 @@ describe("AuthContext and useAuth", () => {
 
     await waitFor(() => {
       expect(screen.getByTestId("user-email").textContent).toBe("guest");
-      expect(screen.getByTestId("is-recovery").textContent).toBe("no");
     });
   });
 });

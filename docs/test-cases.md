@@ -420,7 +420,6 @@ Run on 2026-10-25 for branch `perf/home-intro-low-end-phones`: Vitest 238/238 pa
 | TC-P4-127 | NFR-001, NFR-034 | Device quality | Only phones without `?quality=high` get the phone tier | jsdom with a stubbed `matchMedia` | Read the quality on a phone, on a phone with `?quality=high`, and on a desktop | Phone: pixel-ratio cap 1.25 and the phone tier on. Phone with `?quality=high`: the phone tier off. Desktop: cap 1.5 (1.75 before PR #63) and the phone tier off | Matched in the 238/238 Vitest run; with the 1.5 cap, matched in the 307/307 Vitest run for PR #63 | Superseded (PR #63): integrated and software GPUs now get the lite tier too; see TC-P4-190 | `tests/unit/three-phone-tier.test.ts` |
 | TC-P4-128 | FR-001, NFR-001, NFR-034 | 3D on a phone | A phone gets the light showcase at a pixel ratio of 1 with the half-size HDRI | Production build in `chromium-3d` with a Pixel 7 profile | Open `/`; wait for the showcase; record every HDRI request | The canvas is marked `lite`, draws real pixels, and has a pixel ratio of at most 1; the only HDRI downloaded is `studio_small_09_512.hdr`; no console errors | Matched in the Playwright `chromium-3d` run (17/17 passed) | Passed | `tests/e2e/three.spec.ts` |
 
-
 ## 16. Phase 4 Customer Authentication Cases
 
 Run on 2026-10-27 for PR #58 (branch `feat/p4-customer-auth`): covers the browser auth Supabase client, auth context and hook, session persistence, restoration, sign-up, sign-in, forgot-password, reset-password, desktop/mobile navigation auth triggers, and Playwright end-to-end authentication.
@@ -1129,8 +1128,6 @@ Run on 2026-11-10 by Van Joaquin C. Baguio on branch `feat/p5-reviews` (PR #114)
 | MAN-P5-008 | FR-098 | Staff hides an inappropriate review from POS | Review disappears from public `/about` page upon next reload | Not run yet |
 | MAN-P5-009 | FR-098 | Pagination with "Show more" loads next 10 reviews | Clicking Show more loads older reviews smoothly without page jump | Not run yet |
 
-
-
 ## 40. Messenger Assistant Webhook Cases (Phase 7 — FR-058 to FR-063)
 
 Run on 2026-11-09 by Rodnee on branch `feat/p7-messenger` (PR #106). The webhook route, the signature and subscription checks, the event handling, the replies and the Send API client are tested with Vitest. Meta's requests, the website content, the menu and the order lookup are mocked, and the tests use made-up Page and customer IDs, so no live message, account, order or data was used. The checks ran with the CI settings (`NEXT_PUBLIC_SUPABASE_URL=https://example.supabase.co`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=placeholder-publishable-key`, `NEXT_PUBLIC_ONLINE_ORDERING=enabled`).
@@ -1419,7 +1416,6 @@ Update 2026-11-13 (ADR-032): the pixel cats in the footer were replaced by 3D ca
 
 The pixel-cat screenshots stay in `docs/evidence/phase-9/cat-characters/` as the record of the second version; the screenshots of the perched 3D cats were not kept.
 
-
 ## 49. Reviews On The Home Page Cases (2026-11-10)
 
 Customers could not find the reviews, because they were only near the bottom of the About page. The home page now shows the newest reviews, and the menu has a Reviews link that opens the reviews on the About page (FR-098).
@@ -1537,3 +1533,27 @@ ADR-031: typed questions, likes, stickers and photos get a reply, the "automated
 | TC-P7-107  | FR-062      | `GEMINI_API_KEY` missing, blank or set                                                                    | Gemini off, off, on                                                                               | Passed (automated) |
 | TC-P7-108  | FR-062      | Models answer 503, 429 with a 30 s retry delay, 404 and empty, then a Gemma model answers in a code fence | Round 2 skips the 429 and 404 models and returns the Gemma answer; Gemma gets the instructions in the message; the next message skips the resting models | Passed (automated) |
 | MAN-P7-009 | FR-062      | From a tester account, send 👍, a photo, "open po?", "magkano takoyaki?" and an ice offer to the Page    | A hello with buttons, "staff will check", the open status, an answer with the price, and no reply to the offer | Pending            |
+
+## 54. Google Sign-In Cases (2026-11-13)
+
+Sign in and Create an Account use Google only (ADR-030). TC-P4-152, TC-P4-153, TC-P4-155, TC-P4-156, TC-P4-161 to TC-P4-167 and TC-P4-169 to TC-P4-171 tested the email and password forms and are Superseded by the cases below. TC-P4-168 and TC-P5-092 were rewritten for the Google pages.
+
+| ID         | Requirement    | Case                                                                                       | Expected result                                                                                              | Status             |
+| ---------- | -------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------ | ------------------ |
+| TC-P5-213  | FR-031, FR-032 | `signInWithGoogle("/account/orders")`                                                      | `signInWithOAuth` is called with provider `google` and `redirectTo` `/account/callback?returnTo=%2Faccount%2Forders` | Passed (automated) |
+| TC-P5-214  | FR-032         | Supabase can't start Google sign-in (provider off)                                         | The error is returned to the page                                                                            | Passed (automated) |
+| TC-P5-215  | FR-036         | `oauthCallbackUrl` with no `returnTo`, with `/` and with a path and query                 | `returnTo` is left out for the home page and encoded otherwise                                               | Passed (automated) |
+| TC-P5-216  | FR-032         | Open Sign In                                                                               | Only the Google button; no email or password fields and no Forgot password link                              | Passed (automated) |
+| TC-P5-217  | FR-036         | Sign In opened with `returnTo=/account/orders`, tap the button                             | Google sign-in starts with that `returnTo`; the button shows "Opening Google…" and is disabled              | Passed (automated) |
+| TC-P5-218  | FR-036         | Sign In opened with an outside `returnTo`                                                  | The outside address is dropped before Google sign-in starts                                                  | Passed (automated) |
+| TC-P5-219  | FR-032         | Google sign-in can't start                                                                 | An alert says so and the button works again                                                                  | Passed (automated) |
+| TC-P5-220  | FR-031         | Open Create an Account and tap the button                                                  | No password fields; "Sign up with Google" starts the same Google sign-in                                     | Passed (automated) |
+| TC-P5-221  | FR-036         | The callback page gets a session with `returnTo=/account/rewards`                         | It goes on to `/account/rewards`                                                                             | Passed (automated) |
+| TC-P5-222  | FR-036         | The callback page gets an outside `returnTo`                                               | It goes to `/`                                                                                               | Passed (automated) |
+| TC-P5-223  | FR-032         | Google returns `error=access_denied`                                                       | "Google sign-in was cancelled." with Back to Sign In; no redirect                                            | Passed (automated) |
+| TC-P5-224  | FR-032         | No session comes back                                                                      | "We couldn't finish signing you in with Google." with Back to Sign In                                        | Passed (automated) |
+| TC-P5-225  | FR-034         | Open `/account/forgot-password` and `/account/reset-password` in the browser               | Both land on Sign In with the Google button                                                                  | Passed (automated) |
+| TC-P5-226  | FR-032         | Open `/account/callback?error=access_denied` in the browser and tap Back to Sign In         | The cancelled message shows, and the link opens Sign In                                                      | Passed (automated) |
+| TC-P4-172  | FR-032, FR-033 | Browser: sign in through a mocked Google round trip, then sign out (rewritten 2026-11-13) | Back on `/` signed in with the Account menu; signing out shows Sign in again                                 | Passed (automated) |
+| TC-P4-271  | FR-036         | Browser: `/account/profile` signed out, sign in with mocked Google (rewritten 2026-11-13)  | Sent to Sign In with `returnTo`, then back to Profile after the callback                                     | Passed (automated) |
+| MAN-P5-019 | FR-031, FR-032 | With Google switched on in Supabase (2026-11-13), sign in on the branch preview with a real Gmail account | Google's account chooser opens, and the customer comes back signed in on the page they started from        | Passed 2026-11-13 on the preview (the lead developer's own Google account): Google's chooser opened, and the account menu showed the signed-in email |
