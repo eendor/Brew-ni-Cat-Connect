@@ -544,3 +544,14 @@ Migration `20261113130000_messenger_staff_chats.sql` (FR-113).
 - `public.note_messenger_staff_reply(p_chat text)`: security definer, `set search_path = ''`. Refuses a bad code (22023), removes rows older than two days, and saves or updates the chat with now(). Granted to `anon` and `authenticated`.
 - `public.messenger_staff_replied_at(p_chat text)`: security definer, stable. The time the staff last replied in that chat, or null. Granted to `anon` and `authenticated`.
 - Undo: `supabase/rollbacks/20261113130000_messenger_staff_chats.sql` drops both functions and the table. TC-P7-114 to TC-P7-116 run on PGlite (`tests/database/messenger-staff-chats.test.ts`).
+
+## 19. Loyalty Mini-Games (Phase 9 — 2026-11-13)
+
+Migration `20261113140000_mini_games.sql` (FR-089, ADR-034). Needs `20261113120000_loyalty_points.sql` first. **Not applied to the live database yet.** Rodnee applies migrations after review (§8.7).
+
+- `private.mini_game_settings()`: immutable jsonb with `daily_plays` (3) and the two games: `cat-cups` (3 cups, 3 points for the right one, 1 otherwise) and `lucky-paw` (1, 2, 3 or 5 points, weights 50, 30, 15, 5). No grants. **TODO: Confirm with Brew ni Cat owner.**
+- Table `public.game_plays`: `id` identity, `customer_id` → `auth.users` on delete cascade, `game` checked, `choice` smallint 0–9 or null, `outcome` jsonb, `points` > 0, `played_on` date (Manila), `created_at`. Index on (`customer_id`, `played_on`). Updates are refused by a trigger. RLS: a customer selects only their own rows; no insert, update or delete grants.
+- `public.loyalty_transactions`: new column `game_play_id` → `game_plays` on delete cascade, with a unique partial index (one award per play). The reason check gains `mini-game`, and the reason rules require points > 0 and a play for it.
+- `public.mini_game_status()`: security definer, stable. The games with their points, the daily plays and how many the caller has used today. Granted to `anon` and `authenticated`.
+- `public.play_mini_game(p_game text, p_choice integer default null)`: security definer. Refuses guests, unknown games and bad choices; takes `pg_advisory_xact_lock` per customer; refuses past the daily limit (`daily_limit_reached`); draws the result; writes the play and the ledger row; returns `{ok, playId, game, outcome, points, playsLeft, balance}`. Granted to `authenticated` only.
+- Undo: `supabase/rollbacks/20261113140000_mini_games.sql` drops the functions, deletes the mini-game ledger rows, restores the reason checks, and drops the column, the table and the settings. Other loyalty rows are kept. TC-P9-028 to TC-P9-033 run on PGlite (`tests/database/mini-games.test.ts`).

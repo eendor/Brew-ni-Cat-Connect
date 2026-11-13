@@ -1452,7 +1452,7 @@ The mini-games will show one labeled ad (FR-090). The ad slot is built before th
 | TC-P9-010 | FR-090 | The customer taps No thanks | No ad shows, and "Show ads to support the shop" lets them change their mind | Passed (automated) |
 | TC-P9-011 | FR-090 | The slot is placed on the menu, cart, checkout, order or account pages | It shows nothing, even after the customer agreed | Passed (automated) |
 | TC-P9-012 | FR-090 | The page inside the ad frame | Loads only the Adsterra 300x250 banner unit | Passed (automated) |
-| MAN-P9-001 | FR-090 | With the real key set on a preview, open the games page on a phone and tap Show ads | A real 300x250 ad shows with the "Ad" label, and tapping it opens the advertiser's page in a new tab without leaving the site | Not run (needs the games page) |
+| MAN-P9-001 | FR-090 | With the real key set on a preview, open the games page on a phone and tap Show ads | A real 300x250 ad shows with the "Ad" label, and tapping it opens the advertiser's page in a new tab without leaving the site | Not run (the games page is built; needs the real key on a preview) |
 
 ## 51. Messenger Hours Question Cases (2026-11-11)
 
@@ -1603,3 +1603,25 @@ FR-115: soft French café music in the footer, only when a visitor presses play.
 | TC-P9-025 | FR-115      | Render the footer control with a Web Audio stand-in; press play, Next song, wait out the song, press stop | No audio before the press; then playing, "Now playing" with the title and credit, the next song on skip and after the song ends; stopped and quiet | Passed (automated) |
 | TC-P9-026 | FR-115      | Render without Web Audio and press play | Nothing plays, no error, the button stays "Play café music" | Passed (automated) |
 | TC-P9-027 | FR-115 | Playwright, 1440 wide: `/menu` footer, press play, Next song, go to About, press stop | Idle and silent first; "Now playing: Valse du chat (Written for Brew ni Cat)"; then Au clair de la lune; still playing on About; stopped, Next song gone; no page errors | Passed (automated) |
+
+## 58. Cat Games Cases (2026-11-13)
+
+FR-089: loyalty mini-games decided on the server, three plays a day. FR-090: the ad slot on the games page.
+
+| ID        | Requirement | Case | Expected result | Status |
+| --------- | ----------- | ---- | --------------- | ------ |
+| TC-P9-028 | FR-089 | PGlite: a customer plays Cat cups (cup 2), then Lucky paw | The server picks the cup; 3 points for a find, 1 otherwise; one play row and one `mini-game` ledger row linked to it; Lucky paw pays 1, 2, 3 or 5; the balance is the sum | Passed (automated) |
+| TC-P9-029 | FR-089 | PGlite: three plays, then a fourth; then the plays move to yesterday | The fourth is refused with `daily_limit_reached` and nothing recorded; status says 0 left; yesterday's plays don't count | Passed (automated) |
+| TC-P9-030 | FR-089 | PGlite: an unknown game, a missing or out-of-range cup, a cup for Lucky paw; a guest plays; a guest reads the status | Each refused with no points; the guest is denied (42501); the guest sees both games, 3 plays and the top points | Passed (automated) |
+| TC-P9-031 | FR-089 | PGlite: a customer inserts a play or a mini-game ledger row; reads plays; the server edits a play or adds a mini-game row with no play | All refused; another customer's plays are not visible | Passed (automated) |
+| TC-P9-032 | FR-089 | PGlite: 90 customers each pick cup 1 | Oreo is found under every cup more than 10 times; wins equal the times he was under cup 1 and are between 13 and 49 | Passed (automated) |
+| TC-P9-033 | FR-089 | PGlite: apply the rollback | The functions and table are gone; game points are removed and other points kept | Passed (automated) |
+| TC-P9-034 | FR-089 | Render `/games` signed in and pick cup 1; the server says cup 3 | "Oreo was under cup 3. +1 point for playing"; Oreo shows; plays left and balance update; the cups lock until "Hide him again" | Passed (automated) |
+| TC-P9-035 | FR-089 | Play the last Lucky paw of the day (5 points) | "Latte pawed out 5 points!"; the done message shows and both games turn off | Passed (automated) |
+| TC-P9-036 | FR-089 | A play fails | "Something went wrong. Your play wasn't used. Try again." and the cups can be picked again | Passed (automated) |
+| TC-P9-037 | FR-089 | Render as a guest | A sign-in link back to `/games`; the games are shown but off; no balance read | Passed (automated) |
+| TC-P9-038 | FR-089 | The status function is missing (migration not applied) | "The cats are still setting up" and no games | Passed (automated) |
+| TC-P9-039 | FR-089 | Wording helpers and missing-function check | Singular and plural points and plays; PGRST202 and "Could not find the function" count as missing; the history shows the game's name | Passed (automated) |
+| TC-P9-040 | FR-089, FR-090 | Playwright, 1440 wide, signed in with the RPCs mocked: cup 2 (found), cup 3, Lucky paw | +3, then +1, then +2 points; 3, 2, 1, then no plays left; balance 12 → 18; the done message; the requests carry only the game and the cup; no page errors | Passed (automated) |
+| TC-P9-041 | FR-089 | Playwright, 390 wide: a guest, then the status function returns PGRST202 | The sign-in link, games off, no sideways scroll; then the coming-soon message | Passed (automated) |
+| MAN-P9-002 | FR-089 | After the migration is applied, play on the live site with a real account | The plays and points show in the points history, and a fourth play that day is refused | Not run (needs the migration applied) |

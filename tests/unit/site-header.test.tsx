@@ -296,11 +296,17 @@ describe("SiteHeader", () => {
       "Order History",
       "Favorites",
       "Rewards",
+      // Added 2026-11-13: the loyalty games (FR-089).
+      "Cat games",
     ]);
     expect(myAccount).toHaveAttribute("href", "/account");
     expect(screen.getByRole("link", { name: "Rewards" })).toHaveAttribute(
       "href",
       "/account/rewards",
+    );
+    expect(screen.getByRole("link", { name: "Cat games" })).toHaveAttribute(
+      "href",
+      "/games",
     );
     await user.keyboard("{Escape}");
 
@@ -319,6 +325,9 @@ describe("SiteHeader", () => {
     );
     expect(mobileLinks.indexOf("Rewards")).toBe(
       mobileLinks.indexOf("Favorites") + 1,
+    );
+    expect(mobileLinks.indexOf("Cat games")).toBe(
+      mobileLinks.indexOf("Rewards") + 1,
     );
     expect(
       within(mobileNav).getByRole("link", { name: "My account" }),

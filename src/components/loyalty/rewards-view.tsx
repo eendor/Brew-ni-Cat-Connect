@@ -177,6 +177,12 @@ export function RewardsView() {
                 >
                   See points history →
                 </Link>
+                <Link
+                  href="/games"
+                  className="mt-2 ml-4 inline-block text-sm font-medium text-[var(--accent-solid)] hover:underline"
+                >
+                  Play for points →
+                </Link>
               </div>
 
               {settings ? (

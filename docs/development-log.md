@@ -1905,3 +1905,14 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `feat/jukebox-music`.
 - **Known limitations:** synthesized, so it sounds like a simple accordion, not a recording; the songs are short and loop in turn.
 - **Next action:** none.
+
+## 2026-11-13 — Cat games for loyalty points
+
+- **Phase:** Phase 9 (FR-089, FR-090), feature.
+- **Task:** Build the loyalty mini-games.
+- **Summary:** A new `/games` page has two games with the pixel-art café cats: Cat cups (find Oreo under one of three cups) and Lucky paw (shake the treat jar for Latte). Every play is free and pays 1 to 5 loyalty points, three plays a day. The database decides each result in `public.play_mini_game()` and records the play and its points together, under a per-customer lock. The page shows plays left and the balance, links guests to sign in, says the games open soon until the migration is applied, and holds the site's one ad slot. Links were added on the rewards page and in the account menu.
+- **Files:** `supabase/migrations/20261113140000_mini_games.sql`, `supabase/rollbacks/20261113140000_mini_games.sql`, `src/lib/games/games.ts`, `src/components/games/{games-view,cat-cups,lucky-paw,cat-sprite}.tsx`, `src/app/games/page.tsx`, `src/lib/loyalty/{types,format}.ts`, `src/components/loyalty/rewards-view.tsx`, `src/components/layout/account-nav.tsx`, `tests/database/mini-games.test.ts`, `tests/unit/games-view.test.tsx`, `tests/e2e/games.spec.ts`, `docs/{functional-requirements,decisions,database-design,test-cases,development-log}.md`, `docs/evidence/phase-9/games/`.
+- **Testing:** see the pull request.
+- **Branch / PR:** `feat/cat-games`.
+- **Known limitations:** the migration is not applied to the live database yet; the plays per day and points wait for the owner; prizes (FR-088, FR-091) are POS work.
+- **Next action:** Rodnee applies the migration after review; confirm the values with the owner.
