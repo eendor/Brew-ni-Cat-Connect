@@ -1960,3 +1960,14 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `fix/ad-frame-data-url`.
 - **Known limitations:** Ad content is chosen by Adsterra. Test ads included gambling and "Download" ads, which may need filtering in the Adsterra settings for a café audience.
 - **Next action:** The lead developer checks a live ad (MAN-P9-003) and reviews Adsterra's ad-category settings.
+
+## 2026-11-13 — Phase 8: the Android app
+
+- **Phase:** Phase 8 (FR-065 to FR-069, NFR-036).
+- **Task:** Build the customer Android app.
+- **Summary:** Added `android/`, a Trusted Web Activity built with androidbrowserhelper 2.7.4 and AGP 8.11.1, API 24 to 36 (ADR-035). It opens the live site full screen, with the shop's icon, cream status and navigation bars and a splash. Added `public/.well-known/assetlinks.json` with the package and the release key's SHA-256 fingerprint. The release key was made on the lead developer's machine and kept outside the repository (`android/README.md` says how to sign and back it up). Android lint runs with warnings as errors; the browser's data-management screen is declared and the library's classes keep their names, after the first shrunk build crashed when the library switched that screen on by name. CI gets an Android job that builds an unsigned release APK and runs lint. The signed APK opened the live site on an Android 15 emulator.
+- **Files:** `android/**`, `public/.well-known/assetlinks.json`, `.github/workflows/ci.yml`, `tests/unit/android-app.test.ts`, `tests/e2e/pwa.spec.ts`, `docs/decisions.md`, `docs/functional-requirements.md`, `docs/non-functional-requirements.md`, `docs/test-cases.md`, `docs/development-log.md`, `docs/evidence/phase-8/android-app/`, `README.md`, `docs/evidence/phase-8-verification.md`.
+- **Testing:** see the PR.
+- **Branch / PR:** `feat/p8-android-app`.
+- **Known limitations:** The address bar hides only after `assetlinks.json` is live. A real phone run (MAN-P8-007, MAN-P8-008) is still to do. Google Play needs a developer account and a closed test first; the APK is shared through GitHub for now.
+- **Next action:** Check full screen on the live site, then publish the v1.0.0 release with the APK once the lead developer agrees.

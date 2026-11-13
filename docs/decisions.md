@@ -519,3 +519,18 @@ This manual state is a temporary functional-verification condition, not a revisi
 - A per-customer advisory lock keeps two tabs from playing past the limit. Plays can't be changed, and a mini-game ledger row must point to a play, at most once.
 - The page is outside `/account` so it can hold the site's one ad slot (FR-090), which still asks first. Until the migration is applied, the page says the games open soon.
 - The cats are the Aseprite sprites from the footer parade (ADR-032), and the cups and jar move with anime.js; with reduced motion they move without animation.
+
+## ADR-035 — The Android App Is A Trusted Web Activity Over The Live Site
+
+**Decision:** The customer Android app (`android/`, package `com.brewnicat.connect`) is a Trusted Web Activity built with Google's androidbrowserhelper. It opens `https://brew-ni-cat-connect.vercel.app/` full screen in the phone's browser engine. The site's `/.well-known/assetlinks.json` lists the app's package and the SHA-256 fingerprint of its signing key, which is how the browser knows to hide the address bar.\
+**Date:** 2026-11-13\
+**Status:** Accepted and implemented (branch `feat/p8-android-app`).\
+**Context:** FR-065 to FR-069 ask for an Android app with the same journeys, data and rules as the website, secure sessions and safe offline behaviour. The website already does all of that, is installable (PR #105), and has an offline page and a safe Place order retry. The release was due the same day.\
+**Alternatives considered:** a native Kotlin app like the POS (rejected for now: it would rebuild every screen and keep two customer apps in step, taking weeks); a WebView wrapper (rejected: the session would live in the app's own WebView storage, Google sign-in is blocked in WebViews, and WebViews miss browser security updates); Capacitor (rejected: the same WebView limits, plus a JavaScript build to maintain).\
+**Consequences:**
+
+- The app has no screens, data or rules of its own, so FR-065 and FR-069 hold by construction: every request goes to the same server rules and RLS as the website.
+- The app holds no backend key and keeps no session; sign-in stays in the browser's storage (FR-067). It asks only for internet access and backs up nothing.
+- The app needs Chrome or another browser that supports Trusted Web Activities. Without one, the site opens in a Custom Tab with an address bar.
+- The signing key lives outside the repository (`android/README.md`). Losing it means phones won't accept updates. Publishing on Google Play with Play App Signing means adding Play's fingerprint to `assetlinks.json`.
+- Every website change reaches the app at once, with no app update.

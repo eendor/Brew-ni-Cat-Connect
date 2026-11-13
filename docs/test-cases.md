@@ -1644,3 +1644,18 @@ The lead developer asked for the cat games to be offered while customers wait fo
 | TC-P9-051 | FR-090 | Playwright, 1440 wide, ads on: a stand-in ad script that draws a box, then one that draws nothing | Loading ad, then the ad; then the note after the wait | Passed (automated). Update 2026-11-13: the stand-in ad is now a 300x250 canvas, and the "nothing" case leaves an empty inner frame, as the live unit did |
 | TC-P9-052 | FR-090 | Unit: render the ad slot with ads on | The frame loads the ad page from a `data:` URL (never `srcdoc`), with sandbox `allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox` and no top navigation | Passed (automated) |
 | MAN-P9-003 | FR-090 | In the Adsterra dashboard, check the 300x250 unit and the site address, then open `/games` on a phone with ads on | The unit is active for brew-ni-cat-connect.vercel.app and a real ad shows | Not run (needs the Adsterra account). Update 2026-11-13: the unit is active and serves ads; in a normal (not headless) browser it returned a 300x250 image ad. The ad stays blank only because the loader writes into an inner frame, which our sandbox (no `allow-same-origin`) keeps it from reading. Showing ads safely needs the ad page on a separate address; see the development log. Update 2026-11-13 (later): fixed by loading the ad page from a `data:` URL with `allow-same-origin`; the real unit showed an ad in a normal browser and could not read the parent page or its storage |
+
+## 60. Android App Cases (2026-11-13)
+
+The customer Android app is a Trusted Web Activity over the live site (ADR-035). These cases keep the Android project, the site's `assetlinks.json` and the web app manifest in step, and record the emulator run.
+
+| ID | Requirement | Scenario | Expected result | Status |
+| --- | --- | --- | --- | --- |
+| TC-P8-022 | FR-065, FR-067 | `public/.well-known/assetlinks.json` | One `handle_all_urls` statement for the app's package, with SHA-256 fingerprints in the standard form | Passed (automated) |
+| TC-P8-023 | FR-065, FR-069 | The Android project's site address, start URL and link filter | The app opens `https://brew-ni-cat-connect.vercel.app/`, claims only that host over https with verification, and matches the manifest start URL | Passed (automated) |
+| TC-P8-024 | FR-067 | Search the Android project | No Supabase address or key, no service-role or JWT string; only the internet permission; backup off | Passed (automated) |
+| TC-P8-025 | FR-066 | The app's colours | The status bar, navigation bar and splash colour match the web app manifest's theme and background colours | Passed (automated) |
+| TC-P8-026 | FR-065 | Playwright: GET `/.well-known/assetlinks.json` from the production build | 200, JSON, with the app's package | Passed (automated) |
+| TC-P8-027 | FR-066, NFR-036 | `./gradlew assembleRelease lintRelease`, then install the signed APK on an Android 15 Pixel 6 emulator and open it | Lint passes with warnings as errors; the APK is signed with the release key; the icon shows on the home screen and the app opens the live site | Passed 2026-11-13 (emulator; before `assetlinks.json` was live, so the address bar still showed) |
+| MAN-P8-007 | FR-066, NFR-036 | On a real Android phone with Chrome, install the APK from the release, then sign in, order, follow the order, play a game and open the profile | The app opens full screen with no address bar, and every journey works as on the website | Not run yet |
+| MAN-P8-008 | FR-068 | In the app on a real phone, turn on airplane mode and open a page, then try Place order | The offline page shows, and no order is reported as placed | Not run yet |

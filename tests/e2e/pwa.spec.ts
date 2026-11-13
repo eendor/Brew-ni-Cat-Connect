@@ -333,3 +333,15 @@ test("TC-P8-021 — captures the footer with the Install app button", async ({
       .screenshot({ path: `${EVIDENCE_DIR}/footer-install-button.png` });
   }
 });
+
+test("TC-P8-026 — the site serves assetlinks.json so the Android app opens full screen", async ({
+  request,
+}) => {
+  const response = await request.get("/.well-known/assetlinks.json");
+  expect(response.status()).toBe(200);
+  expect(response.headers()["content-type"]).toContain("application/json");
+  const body = (await response.json()) as Array<{
+    target: { package_name: string };
+  }>;
+  expect(body[0]?.target.package_name).toBe("com.brewnicat.connect");
+});
