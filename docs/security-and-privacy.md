@@ -559,7 +559,27 @@ Section 19 already belongs to the Phase 7 addendum on `main`, so this addendum t
 - Requests are not rate limited. A signed-in customer could send several requests in a row; the shop sees all of them.
 - The owner's approved retention rule, the response time and the wording the shop should send are still open decisions (functional requirements §6 and §12). **TODO: Confirm with Brew ni Cat owner.**
 
-## 24. Google Sign-In Addendum (ADR-030)
+## 24. Messenger Smart Replies Addendum (ADR-031, 2026-11-13)
+
+### 24.1 What goes to Google
+
+- Only for a typed question that no button, order link, hours question or staff topic answers. The request holds the text of that one message and the shop's public facts (§25 of the system architecture).
+- Before sending, `maskPersonal` replaces emails, Philippine mobile numbers and any run of 9 or more digits. The customer's name, Facebook ID and earlier messages are never sent.
+- Rider and partner orders, offers, jobs, lost items and complaints are matched on the server and never sent to Gemini.
+- The reply is not stored. Logs keep only the replied, skipped and failed counts.
+
+### 24.2 Free tier
+
+- The owner's Google AI Studio key is on the free tier. Google may keep and have people review free-tier prompts to improve its products, so the masking above is the main control and the privacy policy says so (`/privacy`, version 2026-11-13). Moving to the paid tier, where prompts aren't used that way, is an owner decision. **TODO: Confirm with Brew ni Cat owner.**
+- `GEMINI_API_KEY` and `GEMINI_MODELS` are server-only settings, listed without values in `.env.example`. The key is never logged and is sent only in the request header. A key that was shared in a chat should be rotated in Google AI Studio before it goes into Vercel.
+
+### 24.3 Abuse and wrong answers
+
+- The system instruction treats the customer's message as data and tells Gemini to use only the given facts and to hand off anything else. The reply is checked on the server: no links, no markdown, at most 600 characters, and known buttons only. It never places an order or changes data.
+- Per-customer and Page-wide limits keep a flood of messages from using up the free tier. Past them, the customer gets the staff reply.
+- The bot doesn't present itself as a person. If a customer sincerely asks, it says it is the shop's auto-reply and that the staff read the chat.
+
+## 25. Google Sign-In Addendum (ADR-030)
 
 - Customers sign in only with Google through Supabase Auth. The site never sees a password, and the old password and reset forms are removed.
 - The auth client uses the PKCE flow: Google returns a one-time code to `/account/callback`, and only the browser that started the sign-in can swap it for a session, because it holds the code verifier.

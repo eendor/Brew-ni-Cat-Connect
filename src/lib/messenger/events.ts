@@ -15,12 +15,25 @@
  *
  * The assistant answers button taps, typed button names, order links and
  * "order 09XXXXXXXXX", which starts an order inside the chat (FR-100), and
- * short questions about being open or the hours (added 2026-11-11). Every
- * other message is for the shop's staff: it gets no automated reply and is
- * never marked as seen, so it stays unread in the Page inbox and the staff's
- * Messenger and Business Suite apps notify them as before.
+ * short questions about being open or the hours (added 2026-11-11).
  *
- * Nothing a customer sends is stored or logged. Logs carry counts only.
+ * Update 2026-11-13 (ADR-031): every customer now gets a reply.
+ * - "Are you open?" says whether the shop is open right now.
+ * - Orders from riders and partner shops, big orders and events, offers,
+ *   jobs, lost items and complaints get a short "our staff will reply" and
+ *   are left to the staff (handoff.ts).
+ * - Any other question gets a smart reply written from the shop's facts
+ *   (assistant.ts), or "our staff will reply" when that can't be written.
+ * - A 👍 or a sticker gets a hello with the buttons; a photo or file gets
+ *   "our staff will check it".
+ * - After "Talk to staff", typed messages are left to the staff for
+ *   STAFF_QUIET_MS.
+ * The replies no longer start with "I'm an automated assistant": the owner
+ * found it off-putting (FR-062 update in ADR-031).
+ *
+ * No message is ever marked as seen, so each one stays unread in the Page
+ * inbox and the staff's apps notify them as before. Nothing a customer sends
+ * is stored or logged. Logs carry counts only.
  */
 
 import { createRateLimiter } from "@/lib/orders/rate-limit";
@@ -38,6 +51,8 @@ import {
   type ButtonTap,
   type Intent,
 } from "./intents";
+import { shopFacts, type AskAssistant } from "./assistant";
+import { handoffText, handoffTopic } from "./handoff";
 import {
   answerOrderTap,
   beginOrder,
@@ -46,21 +61,25 @@ import {
   type OrderFlowDeps,
 } from "./order-flow";
 import {
-  ASSISTANT_NOTICE,
+  attachmentReply,
   categoryReply,
+  handoffReply,
   hoursLocationReply,
   howToOrderReply,
+  likeReply,
   menuReply,
   orderLimitReply,
   orderLinkNeededReply,
   orderNotFoundReply,
   myOrdersReply,
   noOrdersReply,
+  openNowReply,
   orderStatusReply,
   orderUnavailableReply,
+  questionForStaffReply,
+  smartReply,
   staffReply,
   welcomeReply,
-  withNotice,
   type Reply,
 } from "./replies";
 
@@ -78,16 +97,27 @@ export type MessengerDeps = OrderFlowDeps &
     lookupMyOrders: (sender: string) => Promise<readonly OrderView[] | null>;
     /** True when Meta accepted the reply. */
     send: (recipient: string, answer: Reply) => Promise<boolean>;
+    /** Smart replies; missing when GEMINI_API_KEY isn't set. */
+    askAssistant?: AskAssistant;
   }>;
 
 const MINUTE_MS = 60 * 1000;
 
 export const EVENT_MAX_AGE_MS = 60 * MINUTE_MS;
 export const EVENT_MAX_SKEW_MS = 5 * MINUTE_MS;
-export const NOTICE_INTERVAL_MS = 24 * 60 * MINUTE_MS;
+/** After "Talk to staff", typed messages are left to the staff this long. */
+export const STAFF_QUIET_MS = 30 * MINUTE_MS;
 export const LIMIT_WINDOW_MS = 10 * MINUTE_MS;
 export const SENDER_REPLY_LIMIT = 20;
 export const ORDER_LOOKUP_LIMIT = 5;
+/** Smart replies per customer in 10 minutes. */
+export const SMART_REPLY_LIMIT = 8;
+/**
+ * Smart replies per minute for the whole Page: under the Gemini free tier's
+ * requests per minute, so a busy hour falls back to the staff reply instead
+ * of failing.
+ */
+export const SMART_REPLY_PAGE_LIMIT = 8;
 /**
  * Taps while building an order. An order takes about 15 to 40 taps, so the
  * reply limit would cut it off. A technical limit (FR-109); the shop has set
@@ -129,18 +159,22 @@ export function createRecentSet(capacity: number, ttlMs: number) {
 // Each server instance keeps its own copy, so these are best effort: a
 // retry that reaches another instance can get a second reply.
 const seenEvents = createRecentSet(2000, EVENT_MAX_AGE_MS);
-const noticeShown = createRecentSet(5000, NOTICE_INTERVAL_MS);
+const askedForStaff = createRecentSet(5000, STAFF_QUIET_MS);
 const replyLimiter = createRateLimiter(SENDER_REPLY_LIMIT, LIMIT_WINDOW_MS);
 const orderLookupLimiter = createRateLimiter(
   ORDER_LOOKUP_LIMIT,
   LIMIT_WINDOW_MS,
 );
 const orderStepLimiter = createRateLimiter(ORDER_STEP_LIMIT, LIMIT_WINDOW_MS);
+const smartLimiter = createRateLimiter(SMART_REPLY_LIMIT, LIMIT_WINDOW_MS);
+const smartPageLimiter = createRateLimiter(SMART_REPLY_PAGE_LIMIT, MINUTE_MS);
 
-/** Forgets seen events, notices and limits (tests). */
+/** Forgets seen events, staff requests and limits (tests). */
 export function resetMessengerState(): void {
   seenEvents.clear();
-  noticeShown.clear();
+  askedForStaff.clear();
+  smartLimiter.reset();
+  smartPageLimiter.reset();
   replyLimiter.reset();
   orderLookupLimiter.reset();
   orderStepLimiter.reset();
@@ -177,7 +211,11 @@ export function eventTime(value: unknown): number | null {
 type Input =
   | Readonly<{ kind: "tap"; payload: unknown }>
   | Readonly<{ kind: "text"; text: string }>
-  /** A photo, a sticker or anything else without text. */
+  /** The 👍 button or another sticker. */
+  | Readonly<{ kind: "like" }>
+  /** A photo, video, voice message, file or location. */
+  | Readonly<{ kind: "attachment" }>
+  /** Anything else without text. */
   | Readonly<{ kind: "other" }>;
 
 type CustomerEvent = Readonly<{
@@ -186,6 +224,20 @@ type CustomerEvent = Readonly<{
   key: string;
   input: Input;
 }>;
+
+/** The 👍 button sends a sticker, as do the other stickers. */
+function isSticker(message: Json): boolean {
+  if (message.sticker_id !== undefined) return true;
+  return (
+    Array.isArray(message.attachments) &&
+    message.attachments.some(
+      (attachment) =>
+        isRecord(attachment) &&
+        isRecord(attachment.payload) &&
+        attachment.payload.sticker_id !== undefined,
+    )
+  );
+}
 
 function readEvent(event: unknown, pageId: unknown): CustomerEvent | null {
   if (!isRecord(event) || !isRecord(event.sender)) return null;
@@ -216,6 +268,10 @@ function readEvent(event: unknown, pageId: unknown): CustomerEvent | null {
   }
   if (typeof message.text === "string") {
     return { sender, time, key, input: { kind: "text", text: message.text } };
+  }
+  if (isSticker(message)) return { sender, time, key, input: { kind: "like" } };
+  if (Array.isArray(message.attachments) && message.attachments.length > 0) {
+    return { sender, time, key, input: { kind: "attachment" } };
   }
   return { sender, time, key, input: { kind: "other" } };
 }
@@ -265,6 +321,7 @@ async function answerIntent(
     case "order-status":
       return plain(await checkMyOrders(sender, deps));
     case "staff":
+      askedForStaff.add(sender, deps.now());
       return plain(staffReply(await facts.content()));
   }
 }
@@ -352,11 +409,72 @@ async function answerText(
   // to the staff.
   const phone = typedOrderPhone(text);
   if (phone) return ordering(await beginOrder(phone, deps, facts));
-  // A short "are you open?" or hours question gets the hours and location
-  // (added 2026-11-11). Any other text is left to the staff.
-  const intent =
-    typedButton(text) ?? (typedHoursQuestion(text) ? "hours-location" : null);
-  return intent ? answerIntent(sender, intent, deps, facts) : null;
+  const intent = typedButton(text);
+  if (intent) {
+    // A greeting after "Talk to staff" is still for the staff.
+    if (intent === "welcome" && askedForStaff.has(sender, deps.now())) {
+      return null;
+    }
+    return answerIntent(sender, intent, deps, facts);
+  }
+  // The customer asked for the staff: let them answer (added 2026-11-13).
+  if (askedForStaff.has(sender, deps.now())) return null;
+
+  const now = deps.now();
+  const topic = handoffTopic(text);
+  if (topic) {
+    // The staff take over this chat for a while, so later messages from the
+    // rider or supplier don't get automatic replies in between.
+    askedForStaff.add(sender, now);
+    // Ice and other supplier offers get no reply at all: the message stays
+    // unread for the staff, who answer it themselves (owner's call, 2026-11-13).
+    if (topic === "offer") return null;
+    return plain(handoffReply(handoffText(topic), await facts.content(), now));
+  }
+  // A short "are you open?" or hours question says whether the shop is open
+  // right now, then the hours and location (2026-11-11, updated 2026-11-13).
+  if (typedHoursQuestion(text)) {
+    return plain(openNowReply(await facts.content(), now));
+  }
+  return plain(await answerQuestion(sender, text, deps, facts));
+}
+
+/** A smart reply, or "our staff will reply" when one can't be written. */
+async function answerQuestion(
+  sender: string,
+  text: string,
+  deps: MessengerDeps,
+  facts: Facts,
+): Promise<Reply> {
+  const now = deps.now();
+  const content = await facts.content();
+  const ask = deps.askAssistant;
+  if (
+    !ask ||
+    !smartLimiter.check(sender, now).allowed ||
+    !smartPageLimiter.check("page", now).allowed
+  ) {
+    return questionForStaffReply(content, now);
+  }
+  const [menu, takeoutBoxPrice] = await Promise.all([
+    facts.menu(),
+    deps.readTakeoutBoxPrice().catch(() => null),
+  ]);
+  const answer = await ask(
+    shopFacts({
+      content,
+      menu,
+      takeoutBoxPrice,
+      now,
+      onlineOrdering: deps.onlineOrdering(),
+      origin: deps.origin,
+    }),
+    text,
+  ).catch(() => null);
+  if (!answer) return questionForStaffReply(content, now);
+  return answer.handoff
+    ? handoffReply(answer.reply, content, now)
+    : smartReply(answer.reply, answer.buttons);
 }
 
 function answerEvent(
@@ -379,6 +497,13 @@ function answerEvent(
         deps,
         facts,
       );
+    case "like":
+      return Promise.resolve(plain(likeReply()));
+    case "attachment":
+      // Often a payment screenshot or a photo for the staff.
+      return facts
+        .content()
+        .then((content) => plain(attachmentReply(content, deps.now())));
     case "other":
       return null;
   }
@@ -405,14 +530,7 @@ async function handleEvent(
   const limiter = answer.ordering ? orderStepLimiter : replyLimiter;
   if (!limiter.check(event.sender, now).allowed) return "skipped";
 
-  // FR-062: each customer's first reply of the day says it's automated.
-  const reply =
-    noticeShown.has(event.sender, now) ||
-    answer.reply.text.includes(ASSISTANT_NOTICE)
-      ? answer.reply
-      : withNotice(answer.reply);
-  if (!(await deps.send(event.sender, reply))) return "failed";
-  if (reply.text.includes(ASSISTANT_NOTICE)) noticeShown.add(event.sender, now);
+  if (!(await deps.send(event.sender, answer.reply))) return "failed";
   return "replied";
 }
 

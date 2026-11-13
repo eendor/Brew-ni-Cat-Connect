@@ -15,26 +15,30 @@ import {
   eventTime,
   LIMIT_WINDOW_MS,
   MAX_EVENTS_PER_DELIVERY,
-  NOTICE_INTERVAL_MS,
   ORDER_LOOKUP_LIMIT,
   ORDER_STEP_LIMIT,
   processWebhook,
   resetMessengerState,
   SENDER_REPLY_LIMIT,
+  STAFF_QUIET_MS,
+  SMART_REPLY_LIMIT,
+  SMART_REPLY_PAGE_LIMIT,
   type MessengerDeps,
 } from "@/lib/messenger/events";
 import { CATEGORY_PAYLOAD_PREFIX, PAYLOADS } from "@/lib/messenger/intents";
 import { encodeOrderPayload, newOrder } from "@/lib/messenger/order-state";
 import { orderPausedReply } from "@/lib/messenger/ordering";
 import {
-  ASSISTANT_NOTICE,
   noOrdersReply,
   orderLimitReply,
   orderNotFoundReply,
   orderUnavailableReply,
+  likeReply,
   welcomeReply,
   type Reply,
 } from "@/lib/messenger/replies";
+import type { AskAssistant } from "@/lib/messenger/assistant";
+import { handoffText } from "@/lib/messenger/handoff";
 import { hoursNotice } from "@/lib/site-content/format";
 
 import {
@@ -145,14 +149,14 @@ afterEach(() => {
 });
 
 describe("Messenger buttons (FR-059, FR-062)", () => {
-  it("TC-P7-019 — answers a button tap, with the notice on the first reply only", async () => {
+  it("TC-P7-019 — answers a button tap, with no 'automated assistant' notice (ADR-031)", async () => {
     const { deps, sent, texts } = setup();
     await expect(
       processWebhook(delivery(postback(PAYLOADS["hours-location"])), deps),
     ).resolves.toEqual({ replied: 1, skipped: 0, failed: 0 });
     expect(sent[0]?.recipient).toBe(CUSTOMER);
     expect(texts()[0]).toBe(
-      `${ASSISTANT_NOTICE}\n\n🕒 ${hoursNotice(content.hours)}\n\n📢 Notice: Closed on June 12 for a holiday.\n\n📍 We're at 1 Sample St, Sample Area, Sample Town, Sample Province 1000, beside the sample park.`,
+      `🕒 ${hoursNotice(content.hours)}\n\n📢 Notice: Closed on June 12 for a holiday.\n\n📍 We're at 1 Sample St, Sample Area, Sample Town, Sample Province 1000, beside the sample park.`,
     );
     // The map comes as a button (FR-104).
     expect(sent[0]?.answer.links).toEqual([
@@ -161,7 +165,8 @@ describe("Messenger buttons (FR-059, FR-062)", () => {
 
     await processWebhook(delivery(postback(PAYLOADS["how-to-order"])), deps);
     expect(texts()[1]).toMatch(/^How to order from Brew ni Cat: 🐱☕\n/);
-    expect(count(texts()[1], ASSISTANT_NOTICE)).toBe(0);
+    for (const text of texts())
+      expect(text).not.toMatch(/automated|assistant/i);
   });
 
   it("TC-P7-020 — a quick reply goes by its payload, not its text", async () => {
@@ -193,15 +198,14 @@ describe("Messenger buttons (FR-059, FR-062)", () => {
     const { deps, texts } = setup();
     await processWebhook(delivery(typed("Hi!")), deps);
     expect(texts()[0]).toBe(welcomeReply().text);
-    expect(count(texts()[0], ASSISTANT_NOTICE)).toBe(1);
 
     await processWebhook(delivery(typed("menu po")), deps);
     expect(texts()[1]).toContain("What are you craving?");
-    expect(count(texts()[1], ASSISTANT_NOTICE)).toBe(0);
   });
 
-  it("TC-P7-022 — other messages, photos and stickers are left for the staff", async () => {
-    const { deps } = setup();
+  // Update 2026-11-13 (ADR-031): a 👍, a sticker or a photo gets a reply.
+  it("TC-P7-022 — a 👍 or sticker gets a hello with the buttons, a photo gets 'our staff will check it'", async () => {
+    const { deps, sent, texts } = setup();
     const photo = {
       ...base({}),
       message: {
@@ -228,19 +232,28 @@ describe("Messenger buttons (FR-059, FR-062)", () => {
       },
     };
     await expect(
+      processWebhook(delivery(sticker, photo), deps),
+    ).resolves.toEqual({ replied: 2, skipped: 0, failed: 0 });
+    expect(texts()[0]).toBe(likeReply().text);
+    expect(sent[0]?.answer.quickReplies[0]?.payload).toBe(PAYLOADS.order);
+    expect(texts()[1]).toMatch(
+      /^Thanks! 📸 Our staff will check what you sent/,
+    );
+    expect(deps.readMenu).not.toHaveBeenCalled();
+  });
+
+  it("TC-P7-022 — without Gemini, another question gets 'our staff will reply' and the buttons", async () => {
+    const { deps, sent, texts } = setup();
+    await expect(
       processWebhook(
-        delivery(
-          typed("pa order po 2 fries, pickup at 5"),
-          typed("may available pa po ba na matcha?"),
-          photo,
-          sticker,
-        ),
+        delivery(typed("may available pa po ba na matcha?")),
         deps,
       ),
-    ).resolves.toEqual({ replied: 0, skipped: 4, failed: 0 });
-    expect(deps.send).not.toHaveBeenCalled();
-    expect(deps.readContent).not.toHaveBeenCalled();
-    expect(deps.readMenu).not.toHaveBeenCalled();
+    ).resolves.toEqual({ replied: 1, skipped: 0, failed: 0 });
+    expect(texts()[0]).toMatch(
+      /^Thanks for your message! 😊 Our staff will reply here soon\./,
+    );
+    expect(sent[0]?.answer.quickReplies.length).toBeGreaterThan(0);
   });
 
   // Added 2026-11-11: a typed "are you open?" used to get no reply.
@@ -254,8 +267,10 @@ describe("Messenger buttons (FR-059, FR-062)", () => {
         ),
         deps,
       ),
-    ).resolves.toEqual({ replied: 1, skipped: 1, failed: 0 });
-    expect(texts()[0]).toContain(ASSISTANT_NOTICE);
+    ).resolves.toEqual({ replied: 2, skipped: 0, failed: 0 });
+    // Update 2026-11-13: it says whether the shop is open right now first,
+    // and "pa order po bukas" gets "our staff will reply".
+    expect(texts()[0]).toMatch(/^(🟢|⏰|😿|🌙|🚪)/);
     expect(texts()[0]).toContain("📍 We're at");
     expect(deps.readMenu).not.toHaveBeenCalled();
   });
@@ -463,7 +478,7 @@ describe("Messenger order status (FR-063)", () => {
     );
     expect(lookupOrder).toHaveBeenCalledWith(REFERENCE, TOKEN);
     expect(texts()[0]).toBe(
-      `${ASSISTANT_NOTICE}\n\n🍳 Order BNC-7K2Q9F: Preparing\nYour drinks and food are being prepared.`,
+      `🍳 Order BNC-7K2Q9F: Preparing\nYour drinks and food are being prepared.`,
     );
     // An order from the website keeps its page, as a button.
     expect(sent[0]?.answer.links?.[0]?.title).toBe("📍 Track order");
@@ -489,7 +504,7 @@ describe("Messenger order status (FR-063)", () => {
     await expect(
       processWebhook(delivery(typed(ORDER_LINK)), deps),
     ).resolves.toEqual({ replied: 1, skipped: 0, failed: 0 });
-    expect(texts()[0]).toBe(`${ASSISTANT_NOTICE}\n\n${text}`);
+    expect(texts()[0]).toBe(`${text}`);
   });
 
   it("TC-P7-029 — a short message with only a reference gets asked for the link", async () => {
@@ -507,8 +522,8 @@ describe("Messenger order status (FR-063)", () => {
     );
   });
 
-  it("TC-P7-029 — a longer message with a reference is left for the staff", async () => {
-    const { deps } = setup();
+  it("TC-P7-029 — a longer message with a reference is for the staff", async () => {
+    const { deps, texts } = setup();
     await expect(
       processWebhook(
         delivery(
@@ -518,34 +533,34 @@ describe("Messenger order status (FR-063)", () => {
         ),
         deps,
       ),
-    ).resolves.toEqual({ replied: 0, skipped: 1, failed: 0 });
-    expect(deps.send).not.toHaveBeenCalled();
+    ).resolves.toEqual({ replied: 1, skipped: 0, failed: 0 });
+    expect(texts()[0]).toContain("Our staff will reply here soon");
     expect(deps.lookupOrder).not.toHaveBeenCalled();
   });
 });
 
 describe("Messenger notice and delivery (FR-062)", () => {
-  it("TC-P7-030 — says it's automated again after 24 hours", async () => {
+  it("TC-P7-030 — after Talk to staff, typed messages are left to the staff for a while", async () => {
     const { deps, texts, advance } = setup();
     await processWebhook(delivery(postback(PAYLOADS.staff)), deps);
-    advance(NOTICE_INTERVAL_MS - 1);
+    await expect(
+      processWebhook(delivery(typed("pwede po pa reserve ng table?")), deps),
+    ).resolves.toEqual({ replied: 0, skipped: 1, failed: 0 });
+    await expect(
+      processWebhook(delivery(typed("hello po")), deps),
+    ).resolves.toEqual({ replied: 0, skipped: 1, failed: 0 });
+    // A button still works.
+    await processWebhook(delivery(postback(PAYLOADS.menu)), deps);
+    expect(texts()).toHaveLength(2);
+    advance(STAFF_QUIET_MS);
     await processWebhook(
-      delivery(
-        postback(PAYLOADS.staff, { time: NOW + NOTICE_INTERVAL_MS - 1 }),
-      ),
+      delivery(typed("may matcha po?", { time: NOW + STAFF_QUIET_MS })),
       deps,
     );
-    advance(1);
-    await processWebhook(
-      delivery(postback(PAYLOADS.staff, { time: NOW + NOTICE_INTERVAL_MS })),
-      deps,
-    );
-    expect(texts().map((text) => count(text, ASSISTANT_NOTICE))).toEqual([
-      1, 0, 1,
-    ]);
+    expect(texts()).toHaveLength(3);
   });
 
-  it("TC-P7-031 — a reply Meta refuses is counted, and the next reply has the notice", async () => {
+  it("TC-P7-031 — a reply Meta refuses is counted as failed", async () => {
     const send = vi
       .fn<MessengerDeps["send"]>()
       .mockResolvedValueOnce(false)
@@ -554,11 +569,9 @@ describe("Messenger notice and delivery (FR-062)", () => {
     await expect(
       processWebhook(delivery(postback(PAYLOADS.staff)), deps),
     ).resolves.toEqual({ replied: 0, skipped: 0, failed: 1 });
-    await processWebhook(delivery(postback(PAYLOADS.staff)), deps);
-    expect(send).toHaveBeenCalledTimes(2);
-    for (const [, answer] of send.mock.calls) {
-      expect(count(answer.text, ASSISTANT_NOTICE)).toBe(1);
-    }
+    await expect(
+      processWebhook(delivery(postback(PAYLOADS.staff)), deps),
+    ).resolves.toEqual({ replied: 1, skipped: 0, failed: 0 });
   });
 
   it("TC-P7-032 — an unknown button shows the welcome again", async () => {
@@ -617,15 +630,17 @@ describe("Messenger notice and delivery (FR-062)", () => {
           typed("menu"),
           typed("hours po", { sender: OTHER_CUSTOMER }),
           typed("pa order po"),
+          // Update 2026-11-13: an empty message is the one left unanswered.
+          { ...base({}), message: { mid: nextMid() } },
         ),
         deps,
       ),
-    ).resolves.toEqual({ replied: 1, skipped: 1, failed: 1 });
+    ).resolves.toEqual({ replied: 2, skipped: 1, failed: 1 });
     expect(info).toHaveBeenCalledTimes(1);
     expect(info).toHaveBeenCalledWith(
       JSON.stringify({
         event: "messenger-webhook-processed",
-        replied: 1,
+        replied: 2,
         skipped: 1,
         failed: 1,
       }),
@@ -670,7 +685,7 @@ describe("Messenger order status in the chat (FR-110)", () => {
     expect(lookupMyOrders).toHaveBeenCalledWith(CUSTOMER);
     expect(lookupOrder).not.toHaveBeenCalled();
     expect(texts()[0]).toBe(
-      `${ASSISTANT_NOTICE}\n\n📦 Your orders from this chat\n\n🍳 Order BNC-7K2Q9F: Preparing\nYour drinks and food are being prepared.\n🧾 2 × Iced Latte · ₱98\n\nTap Refresh to see the latest status. 🔄`,
+      `📦 Your orders from this chat\n\n🍳 Order BNC-7K2Q9F: Preparing\nYour drinks and food are being prepared.\n🧾 2 × Iced Latte · ₱98\n\nTap Refresh to see the latest status. 🔄`,
     );
     expect(texts()[0]).not.toContain("https://");
     expect(texts()[0]).not.toContain("#token");
@@ -761,14 +776,15 @@ describe("Messenger ordering entry points (FR-100)", () => {
 
   // Update 2026-11-11 (TC-P7-086): a bare mobile number now starts the
   // order; any other bare number is still left to the staff.
-  it("TC-P7-057 — a bare number that isn't a mobile is left to the staff, not taken as an order", async () => {
-    const { deps, sent } = setup();
+  it("TC-P7-057 — a bare number that isn't a mobile is for the staff, not taken as an order", async () => {
+    const { deps, texts } = setup();
     for (const text of ["(082) 123 4567", "1234"]) {
       await expect(
         processWebhook(delivery(typed(text)), deps),
-      ).resolves.toEqual({ replied: 0, skipped: 1, failed: 0 });
+      ).resolves.toEqual({ replied: 1, skipped: 0, failed: 0 });
     }
-    expect(sent).toHaveLength(0);
+    expect(deps.placeOrder).not.toHaveBeenCalled();
+    for (const text of texts()) expect(text).toContain("Our staff will reply");
   });
 
   it("TC-P7-086 — a message that is only a mobile number starts the order", async () => {
@@ -796,5 +812,115 @@ describe("Messenger ordering entry points (FR-100)", () => {
     }
     // Past the limit it stops answering rather than looping forever.
     expect(sent.length).toBeLessThan(SENDER_REPLY_LIMIT + 5 + ORDER_STEP_LIMIT);
+  });
+});
+
+// Added 2026-11-13 (ADR-031): typed questions answered with the shop's facts.
+describe("Smart replies (ADR-031)", () => {
+  const smart = (
+    answer: Awaited<ReturnType<AskAssistant>> = {
+      handoff: false,
+      reply: "Opo, may matcha po kami! 🍵",
+      buttons: ["order", "menu"],
+    },
+  ) => vi.fn<AskAssistant>(async () => answer);
+
+  it("TC-P7-101 — a typed question gets the shop's own answer and the buttons it picked", async () => {
+    const askAssistant = smart();
+    const { deps, sent, texts } = setup({ askAssistant });
+    await expect(
+      processWebhook(delivery(typed("may matcha po? 09171234567")), deps),
+    ).resolves.toEqual({ replied: 1, skipped: 0, failed: 0 });
+    expect(texts()[0]).toBe("Opo, may matcha po kami! 🍵");
+    expect(sent[0]?.answer.quickReplies[0]?.payload).toBe(PAYLOADS.order);
+    expect(sent[0]?.answer.quickReplies[1]?.payload).toBe(PAYLOADS.menu);
+    const [facts, message] = askAssistant.mock.calls[0] ?? [];
+    expect(facts).toContain("1 Sample St");
+    expect(message).toBe("may matcha po? 09171234567");
+    // No customer ID or name goes into the facts.
+    expect(facts).not.toContain(CUSTOMER);
+    expect(facts).not.toContain("Test Customer");
+  });
+
+  it("TC-P7-102 — rider and partner orders get 'our staff will confirm'; ice and other offers get no reply", async () => {
+    const askAssistant = smart();
+    const { deps, texts } = setup({ askAssistant });
+    await processWebhook(
+      delivery(
+        typed("M&S rider po, pa order 2 takoyaki"),
+        typed("Hi po, nag ooffer kami ng ice cubes", {
+          sender: OTHER_CUSTOMER,
+        }),
+      ),
+      deps,
+    );
+    expect(texts()[0]).toMatch(
+      new RegExp(`^${handoffText("partner-order").slice(0, 20)}`),
+    );
+    // Ice and other supplier offers are left for the staff with no reply.
+    expect(texts()).toHaveLength(1);
+    expect(askAssistant).not.toHaveBeenCalled();
+    // Later messages in either chat are left for the staff too.
+    await processWebhook(
+      delivery(
+        typed("ready na po?"),
+        typed("magkano po per sack?", { sender: OTHER_CUSTOMER }),
+      ),
+      deps,
+    );
+    expect(texts()).toHaveLength(1);
+    expect(askAssistant).not.toHaveBeenCalled();
+  });
+
+  it("TC-P7-103 — when Gemini says the staff should answer, it says so and shows Talk to staff", async () => {
+    const { deps, sent, texts } = setup({
+      askAssistant: smart({
+        handoff: true,
+        reply: "Our staff will reply here about that po. 😊",
+        buttons: [],
+      }),
+    });
+    await processWebhook(delivery(typed("may free table pa po ngayon?")), deps);
+    expect(texts()[0]).toMatch(/^Our staff will reply here about that po\. 😊/);
+    expect(
+      sent[0]?.answer.quickReplies.map((reply) => reply.payload),
+    ).toContain(PAYLOADS.order);
+  });
+
+  it("TC-P7-104 — if Gemini fails or is busy, the customer still gets 'our staff will reply'", async () => {
+    const askAssistant = vi
+      .fn<AskAssistant>()
+      .mockResolvedValueOnce(null)
+      .mockRejectedValueOnce(new Error("boom"));
+    const { deps, texts } = setup({ askAssistant });
+    await processWebhook(
+      delivery(
+        typed("may matcha po?"),
+        typed("pwede dog?", { sender: OTHER_CUSTOMER }),
+      ),
+      deps,
+    );
+    for (const text of texts())
+      expect(text).toContain("Our staff will reply here soon");
+  });
+
+  it("TC-P7-105 — Gemini is asked at most a few times per customer and per minute for the Page", async () => {
+    const askAssistant = smart();
+    const { deps, texts } = setup({ askAssistant });
+    for (let index = 0; index < SMART_REPLY_LIMIT + 2; index += 1) {
+      await processWebhook(delivery(typed(`question ${index} po?`)), deps);
+    }
+    expect(askAssistant).toHaveBeenCalledTimes(
+      Math.min(SMART_REPLY_LIMIT, SMART_REPLY_PAGE_LIMIT),
+    );
+    expect(texts().at(-1)).toContain("Our staff will reply here soon");
+  });
+
+  it("TC-P7-106 — 'open po kayo?' says whether the shop is open right now, without Gemini", async () => {
+    const askAssistant = smart();
+    const { deps, texts } = setup({ askAssistant });
+    await processWebhook(delivery(typed("open po kayo today?")), deps);
+    expect(texts()[0]).toMatch(/^🟢 Yes, we're open now until 6 PM!/);
+    expect(askAssistant).not.toHaveBeenCalled();
   });
 });

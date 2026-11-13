@@ -306,6 +306,26 @@ a {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* A cat paw for the cursor (FR-099); a pointing paw on links and buttons.
+   Text fields keep the text cursor, and touch screens have none. */
+@media (pointer: fine) {
+  html {
+    cursor:
+      url("/cursors/paw.svg") 6 4,
+      auto;
+  }
+  a,
+  button,
+  [role="button"],
+  label[for],
+  select,
+  summary {
+    cursor:
+      url("/cursors/paw-pointer.svg") 11 3,
+      pointer;
+  }
+}
+
 button {
   cursor: pointer;
 }
@@ -2342,51 +2362,39 @@ html[data-motion="on"]:not([data-motion-live])
   line-height: 0.9;
 }
 
-/* Cat characters (FR-099): pixel cats (CC0 "Pet Cats Pack", public/cats) in an
-   empty strip at the top of the footer that only the cats use. It ignores
-   taps, so nothing under it is ever covered. Each sheet is one row of square
-   frames; the cat stands on row 32 of 50, so the strip shows rows 14 to 32. */
-.cat-strip {
-  --cat-size: 160px;
+/* Cat parade (FR-099, ADR-032): the shop's cats, modelled in three.js,
+   walk across the top of the footer in single file pulling a coffee-cup
+   sleigh. The strip has its own height in the footer, so it never covers the
+   page; it is hidden until WebGL2 is ready. */
+.cat-parade {
   position: relative;
-  height: calc(var(--cat-size) * 0.38);
+  height: clamp(84px, 7.5vw, 150px);
+  margin-top: -1px;
   overflow: hidden;
   pointer-events: none;
   user-select: none;
 }
-@media (min-width: 640px) {
-  .cat-strip {
-    --cat-size: 260px;
-  }
-}
-.pixel-cat {
-  position: absolute;
-  width: var(--cat-size);
-  height: var(--cat-size);
-  margin-left: calc(var(--cat-size) * -0.5);
-  background-repeat: no-repeat;
-  background-size: auto 100%;
-  image-rendering: pixelated;
-  will-change: transform;
-  animation: pixel-cat-frames var(--ms, 1s) steps(var(--frames, 1))
-    var(--repeat, infinite) forwards;
-}
-.pixel-cat[hidden] {
+.cat-parade:not([data-ready="true"]) {
   display: none;
 }
-.cat-strip.is-paused .pixel-cat {
-  animation-play-state: paused;
+.cat-parade::after {
+  /* the ground they walk on */
+  content: "";
+  position: absolute;
+  inset: auto 0 6% 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--border-soft) 12%,
+    var(--border-soft) 88%,
+    transparent
+  );
 }
-@keyframes pixel-cat-frames {
-  from {
-    background-position-x: 0;
-  }
-  to {
-    background-position-x: calc(var(--cat-size) * var(--frames, 1) * -1);
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .pixel-cat {
-    animation: none;
-  }
+.cat-parade__canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
 }

@@ -108,7 +108,7 @@ async function captureEvidence(page: Page, filename: string) {
 }
 
 test.describe("Ratings and reviews (FR-098)", () => {
-  test("TC-P5-201 — customers can read reviews with average rating and star counts on the About page", async ({
+  test("TC-P5-201 — customers can read reviews with average rating and star counts on the Reviews page", async ({
     page,
   }) => {
     const reviews = [...initialMockReviews];
@@ -116,7 +116,7 @@ test.describe("Ratings and reviews (FR-098)", () => {
 
     // Desktop viewport
     await page.setViewportSize({ width: 1440, height: 900 });
-    await page.goto("/about");
+    await page.goto("/reviews");
 
     const reviewsSection = page.locator("#reviews");
     await expect(reviewsSection).toBeVisible();
@@ -186,7 +186,7 @@ test.describe("Ratings and reviews (FR-098)", () => {
     });
 
     await page.setViewportSize({ width: 1440, height: 900 });
-    await page.goto("/about");
+    await page.goto("/reviews");
 
     const reviewsSection = page.locator("#reviews");
     await reviewsSection.scrollIntoViewIfNeeded();
@@ -250,7 +250,7 @@ test.describe("Ratings and reviews (FR-098)", () => {
     });
 
     await page.setViewportSize({ width: 1440, height: 900 });
-    await page.goto("/about");
+    await page.goto("/reviews");
 
     const reviewsSection = page.locator("#reviews");
     await reviewsSection.scrollIntoViewIfNeeded();

@@ -25,7 +25,7 @@ const ACCOUNT_TILES = [
   {
     href: "/account/rewards",
     title: "Rewards",
-    description: "Your loyalty points, points history and rewards.",
+    description: "Your loyalty points and rewards, with your points history.",
   },
   {
     href: "/account/profile",

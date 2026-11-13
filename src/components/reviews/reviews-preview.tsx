@@ -17,7 +17,7 @@ export const HOME_REVIEW_COUNT = 3;
 /**
  * The newest reviews and the average rating on the home page (FR-098), so
  * customers find the reviews without opening the About page. The full list
- * and the form stay on `/about#reviews`. If the reviews can't load, only the
+ * and the form are on `/reviews`. If the reviews can't load, only the
  * two links show.
  */
 export function ReviewsPreview() {
@@ -76,11 +76,11 @@ export function ReviewsPreview() {
         ) : null}
 
         <div className="flex flex-wrap gap-3">
-          <Link href="/about#reviews" className="button-primary">
+          <Link href="/reviews" className="button-primary">
             Leave a review
           </Link>
           {data && data.totalCount > 0 ? (
-            <Link href="/about#reviews" className="button-ghost">
+            <Link href="/reviews" className="button-ghost">
               Read all reviews
             </Link>
           ) : null}

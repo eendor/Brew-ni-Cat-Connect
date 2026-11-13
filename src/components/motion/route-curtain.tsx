@@ -18,6 +18,7 @@ const TITLES: Readonly<Record<string, string>> = {
   "/": "Brew ni Cat",
   "/menu": "The Menu",
   "/about": "Our Story",
+  "/reviews": "Reviews",
   "/gallery": "Gallery",
   "/contact": "Find Us",
   "/cart": "Your Order",

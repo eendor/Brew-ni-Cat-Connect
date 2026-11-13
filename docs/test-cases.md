@@ -420,7 +420,6 @@ Run on 2026-10-25 for branch `perf/home-intro-low-end-phones`: Vitest 238/238 pa
 | TC-P4-127 | NFR-001, NFR-034 | Device quality | Only phones without `?quality=high` get the phone tier | jsdom with a stubbed `matchMedia` | Read the quality on a phone, on a phone with `?quality=high`, and on a desktop | Phone: pixel-ratio cap 1.25 and the phone tier on. Phone with `?quality=high`: the phone tier off. Desktop: cap 1.5 (1.75 before PR #63) and the phone tier off | Matched in the 238/238 Vitest run; with the 1.5 cap, matched in the 307/307 Vitest run for PR #63 | Superseded (PR #63): integrated and software GPUs now get the lite tier too; see TC-P4-190 | `tests/unit/three-phone-tier.test.ts` |
 | TC-P4-128 | FR-001, NFR-001, NFR-034 | 3D on a phone | A phone gets the light showcase at a pixel ratio of 1 with the half-size HDRI | Production build in `chromium-3d` with a Pixel 7 profile | Open `/`; wait for the showcase; record every HDRI request | The canvas is marked `lite`, draws real pixels, and has a pixel ratio of at most 1; the only HDRI downloaded is `studio_small_09_512.hdr`; no console errors | Matched in the Playwright `chromium-3d` run (17/17 passed) | Passed | `tests/e2e/three.spec.ts` |
 
-
 ## 16. Phase 4 Customer Authentication Cases
 
 Run on 2026-10-27 for PR #58 (branch `feat/p4-customer-auth`): covers the browser auth Supabase client, auth context and hook, session persistence, restoration, sign-up, sign-in, forgot-password, reset-password, desktop/mobile navigation auth triggers, and Playwright end-to-end authentication.
@@ -982,8 +981,8 @@ Run on 2026-11-10 by Renier (GitHub: Apal-RP) on branch `feat/p5-loyalty` (PR #1
 | TC-P5-118 | FR-053 | `RewardsView` | Shows loading skeleton while data loads | Pending API promises | Render `<RewardsView />` | Displays skeleton container with `data-testid="loyalty-loading"` | Matched. | Passed | `tests/unit/loyalty-view.test.tsx` |
 | TC-P5-119 | FR-053, FR-054 | `RewardsView` | Displays balance and plain-word rules | Loaded balance of 60 | Render `<RewardsView />` | Displays 60 points, earning rule with formatPrice, and weekly limit | Matched. | Passed | `tests/unit/loyalty-view.test.tsx` |
 | TC-P5-120 | FR-054 | `RewardsView` | Displays rewards with enough and not enough points | Balance of 60; rewards at 50, 80, 100 pts | Render `<RewardsView />` | 50 pts shows "Balance is enough" with enabled Redeem button; 80 pts shows "Need 20 more pts" with disabled button | Matched. | Passed | `tests/unit/loyalty-view.test.tsx` |
-| TC-P5-121 | FR-053 | `RewardsView` | Displays points history with formatted signs and reasons | Transactions with positive and negative points | Render `<RewardsView />` | Renders rows with "+12 pts", "−50 pts", order references, and plain reasons | Matched. | Passed | `tests/unit/loyalty-view.test.tsx` |
-| TC-P5-122 | FR-053 | `RewardsView` | Displays empty state when customer has no points | Empty history list | Render `<RewardsView />` | Displays ~~"No points yet. You earn points when a pickup order is completed."~~ Superseded 2026-11-11: "No points yet. You earn points when an order is completed." (delivery orders earn points too) | Matched. | Passed | `tests/unit/loyalty-view.test.tsx` |
+| TC-P5-121 | FR-053 | `RewardsView` | Displays points history with formatted signs and reasons | Transactions with positive and negative points | Render `<RewardsView />` | Renders rows with "+12 pts", "−50 pts", order references, and plain reasons Update 2026-11-13: the history moved to `/account/rewards/history`, so this case now renders `<PointsHistoryView />`. | Matched. | Passed | `tests/unit/loyalty-view.test.tsx` |
+| TC-P5-122 | FR-053 | `RewardsView` | Displays empty state when customer has no points | Empty history list | Render `<RewardsView />` | Displays ~~"No points yet. You earn points when a pickup order is completed."~~ Superseded 2026-11-11: "No points yet. You earn points when an order is completed." (delivery orders earn points too) Update 2026-11-13: now renders `<PointsHistoryView />`, which shows this empty state; `<RewardsView />` no longer lists history. | Matched. | Passed | `tests/unit/loyalty-view.test.tsx` |
 | TC-P5-123 | FR-053 | `RewardsView` | Displays error banner when loading fails | Rejected fetch promise | Render `<RewardsView />` | Renders error banner with `role="alert"` and retry messaging | Matched. | Passed | `tests/unit/loyalty-view.test.tsx` |
 | TC-P5-124 | FR-055 | `RewardsView` | Supports redemption confirmation and displays counter code | Eligible reward selected | Click Redeem, confirm in dialog | Calls `redeemReward`, displays counter verification code "RWD-999888", and updates balance | Matched. | Passed | `tests/unit/loyalty-view.test.tsx` |
 
@@ -991,10 +990,12 @@ Run on 2026-11-10 by Renier (GitHub: Apal-RP) on branch `feat/p5-loyalty` (PR #1
 
 | ID | Requirement ID(s) | Module | Scenario | Preconditions | Input / action | Expected result | Actual result | Status | Evidence |
 |---|---|---|---|---|---|---|---|---|---|
-| TC-P5-125 | FR-050, FR-053, FR-054 | `/account/rewards` | Customer sees balance, rules, rewards, and history at 1440x900 | Authenticated mock session, mocked PostgREST/RPC | Open `/account/rewards` at 1440x900 | Heading, balance, earning rules, rewards catalog, and transaction history are visible | Matched. | Passed | `tests/e2e/loyalty.spec.ts`, `docs/evidence/phase-5/loyalty/rewards-page-1440x900.png` (Update 2026-11-11: after the restyle, `restyled-rewards-page-1440x900.png` and `restyled-rewards-page-1440x900-night.png`) |
+| TC-P5-125 | FR-050, FR-053, FR-054 | `/account/rewards` | Customer sees balance, rules, rewards, and history at 1440x900 | Authenticated mock session, mocked PostgREST/RPC | Open `/account/rewards` at 1440x900 | Heading, balance, earning rules, rewards catalog, and transaction history are visible Update 2026-11-13: the history rows are on `/account/rewards/history` now (TC-P5-211), so this case checks that the rewards page no longer lists them. | Matched. | Passed | `tests/e2e/loyalty.spec.ts`, `docs/evidence/phase-5/loyalty/rewards-page-1440x900.png` (Update 2026-11-11: after the restyle, `restyled-rewards-page-1440x900.png` and `restyled-rewards-page-1440x900-night.png`) |
 | TC-P5-126 | FR-053, FR-054 | `/account/rewards` | Mobile customer views responsive layout at 390x844 | Authenticated mock session | Open `/account/rewards` at 390x844 | No horizontal scroll, card and action tap targets meet touch standards | Matched. | Passed | `tests/e2e/loyalty.spec.ts`, `docs/evidence/phase-5/loyalty/rewards-page-390x844.png` (Update 2026-11-11: after the restyle, `restyled-rewards-page-390x844.png` and `restyled-rewards-page-390x844-night.png`) |
-| TC-P5-127 | FR-053 | `/account/rewards` | Shows empty points history when customer has no transactions | Authenticated mock session with 0 points and empty history | Open `/account/rewards` at 1440x900 | Displays ~~"No points yet. You earn points when a pickup order is completed."~~ Superseded 2026-11-11: "No points yet. You earn points when an order is completed." (delivery orders earn points too) and View Menu link | Matched. | Passed | `tests/e2e/loyalty.spec.ts`, `docs/evidence/phase-5/loyalty/rewards-empty-1440x900.png` (Update 2026-11-11: after the restyle, `restyled-rewards-empty-1440x900.png` and `restyled-rewards-empty-1440x900-night.png`) |
-| TC-P5-210 | FR-053 | `RewardsView` | Every CSS variable the rewards page uses exists in `globals.css` (added 2026-11-11) | `src/components/loyalty/rewards-view.tsx` and `src/app/globals.css` | Unit test reads both files | No missing variable names | Matched. | Passed | `tests/unit/loyalty-view.test.tsx` |
+| TC-P5-127 | FR-053 | `/account/rewards` | Shows empty points history when customer has no transactions | Authenticated mock session with 0 points and empty history | Open `/account/rewards` at 1440x900 | Displays ~~"No points yet. You earn points when a pickup order is completed."~~ Superseded 2026-11-11: "No points yet. You earn points when an order is completed." (delivery orders earn points too) and View Menu link Update 2026-11-13: now opens `/account/rewards/history`, and the balance shows as "0 points" there. | Matched. | Passed | `tests/e2e/loyalty.spec.ts`, `docs/evidence/phase-5/loyalty/rewards-empty-1440x900.png` (Update 2026-11-11: after the restyle, `restyled-rewards-empty-1440x900.png` and `restyled-rewards-empty-1440x900-night.png`) |
+| TC-P5-210 | FR-053 | `RewardsView` | Every CSS variable the rewards page uses exists in `globals.css` (added 2026-11-11) | `src/components/loyalty/rewards-view.tsx` and `src/app/globals.css` | Unit test reads both files | No missing variable names Update 2026-11-13: it also checks `src/components/loyalty/points-history-view.tsx`. | Matched. | Passed | `tests/unit/loyalty-view.test.tsx` |
+| TC-P5-211 | FR-053 | `/account/rewards`, `/account/rewards/history` | The points history has its own page, linked both ways (added 2026-11-13) | Authenticated mock session with 60 points and two transactions | Open `/account/rewards`, click "See points history →", then "← Back to Rewards" | The history page shows the "Points History" heading, "60 points" and both order references; the back link returns to `/account/rewards` | Passed locally (Playwright `chromium`) | Passed | `tests/unit/loyalty-view.test.tsx` |
+| TC-P5-212 | FR-053 | `RewardsView`, `PointsHistoryView` | The rewards view links to the history page and does not fetch history; the history view shows the balance, a back link and an error banner (added 2026-11-13) | Mocked loyalty client | Render each view | `RewardsView` has the link to `/account/rewards/history`, no history rows and no `fetchLoyaltyHistory` call; `PointsHistoryView` shows "60 points", the h1 and the back link, and the error banner when loading fails | Passed (Vitest) | Passed | `tests/unit/loyalty-view.test.tsx` |
 
 ## 38. Account Home And Data Request Cases (Phase 5, Week 3 — FR-042)
 
@@ -1126,8 +1127,6 @@ Run on 2026-11-10 by Van Joaquin C. Baguio on branch `feat/p5-reviews` (PR #114)
 | MAN-P5-007 | FR-098 | Long review exceeding 500 characters is rejected | Counter indicates limit and submission is blocked | Not run yet |
 | MAN-P5-008 | FR-098 | Staff hides an inappropriate review from POS | Review disappears from public `/about` page upon next reload | Not run yet |
 | MAN-P5-009 | FR-098 | Pagination with "Show more" loads next 10 reviews | Clicking Show more loads older reviews smoothly without page jump | Not run yet |
-
-
 
 ## 40. Messenger Assistant Webhook Cases (Phase 7 — FR-058 to FR-063)
 
@@ -1396,6 +1395,26 @@ Update 2026-11-10: the drawn poster cats were replaced by the six pixel cats of 
 
 The first screenshots of the drawn cats stay in `docs/evidence/phase-9/cat-characters/` as the record of the first version.
 
+Update 2026-11-13 (ADR-032): the pixel cats in the footer were replaced by 3D cats built with three.js after the shop's own cats. A first 3D version perched them on the edges of every page; the team asked for walking cats in the footer instead, like Santa's reindeer, and a paw cursor; then for no leash or reins, Luna (expecting) riding with kittens, and the sleigh only until the end of December (`CatParade`, `parade-stage.ts`, `cat-model.ts`, `src/lib/cats/cats.ts`, `src/lib/sound/cat-sounds.ts`). The case IDs stay; what they check now, plus eight new cases (TC-P9-007 to TC-P9-012 are the ad slot's):
+
+| ID | Requirement | Area | Updated check | Expected result | Status |
+|---|---|---|---|---|---|
+| TC-P9-001 | FR-099 | `src/lib/cats/cats.ts` | `SHOP_CATS`, `PARADE_ORDER`, `SLEIGH_RIDER`, `KITTEN_COATS`, `festiveSeason`, `paradeSize`, `paradeWalkers`, `stripHeight` | Seven cats with seven coats (Kasper's eyes are two colours); Oreo leads and Luna never walks: she rides with three kittens; the sleigh shows from November to December 31 and not from January 1; 3 walkers below 640 px, 4 from there; the strip is 84 px at 390, 108 px at 1440 and at most 150 px | Passed (automated) |
+| TC-P9-002 | FR-099, NFR-035 | `CatParade` | Render without WebGL2 | The strip is aria-hidden, holds a canvas and no pictures, and never says it is ready, so it stays hidden | Passed (automated) |
+| TC-P9-003 | FR-099 | `paradeLap` | Laps both ways at 390 and 1440 px | Each lap starts and ends with the whole parade out of sight; at the stop it is centred on screen | Passed (automated) |
+| TC-P9-004 | FR-099 | `paradeSpeed`, `walkMs`, `restMs` | Edge values | About a body length a second (950 px takes 10 s on a 100 px strip, either way); rests of 5 to 12 seconds | Passed (automated) |
+| TC-P9-005 | FR-099 | Playwright, 390, 1440 and 1920 wide | Home, About and Menu | The strip is the footer's first child, aria-hidden, ignores taps, sits in the page's flow and ends above every footer link, heading and text | Passed (automated) |
+| TC-P9-006 | FR-099 | Playwright, 1440 wide | `/contact`; a text field added to the page | The page shows the paw cursor, links the pointing paw, the text field the text cursor; both SVGs load (200) | Passed (automated) |
+| TC-P9-013 | FR-099 | `buildCat` walking pose | 60 frames standing (stride 0), then 40 walking (stride 1) | Four hips; standing, none turns; walking, the legs change from frame to frame | Passed (automated) |
+| TC-P9-014 | FR-099 | `globals.css` | Read the strip and cursor rules | The strip is `position: relative` (never fixed) with `pointer-events: none`; both paw cursors are set | Passed (automated) |
+| TC-P9-015 | FR-099 | `meow`, `CatSoundsToggle` | A page transition starts; switch "Cat sounds" off, start another; switch it on | One meow, none while off (saved as "off" on the device), one meow when switched back on; every meow rises then falls and lasts at most 480 ms | Passed (automated) |
+| TC-P9-016 | FR-099 | `buildCat` | Build each of the seven cats, then a walking cat; measure; step the animation | More than 20 meshes each, none textured; coat and eye colours on it, a tag only on Kasper, Oreo and napping Kasper; standing and sitting cats taller than wide, the napping cat wider than tall, the walking cat longer than 1.5 times its width; the meshes move between frames | Passed (automated) |
+| TC-P9-017 | FR-099 | `buildCat` | The pointer far right, then far left; then `meow()` | The head turns toward the pointer; the mouth opens with the meow | Passed (automated) |
+| TC-P9-018 | FR-099 | Playwright `chromium-3d`, 1440 wide | `/menu`, scrolled to the footer, WebGL and motion on | The strip is ready with Oreo, Latte, Kulas and the grey cat; it walks, and two screenshots 0.7 s apart differ; the lap ends; `/cats/kasper.webp` is gone (404); no page errors | Passed (automated) |
+| TC-P9-019 | FR-099, NFR-032 | Playwright `chromium-3d`, 1440 wide | `/about` with reduced motion | The parade stands still: not walking, and nothing changes in 1.2 seconds | Passed (automated) |
+| TC-P9-020 | FR-099 | Playwright `chromium-3d`, 390, 1440 and 1920 wide | `/about`, at the stop in the middle | Evidence `cat-parade-{strip,footer}-{phone-390,desktop-1440,wide-1920}.png` | Passed (automated) |
+
+The pixel-cat screenshots stay in `docs/evidence/phase-9/cat-characters/` as the record of the second version; the screenshots of the perched 3D cats were not kept.
 
 ## 49. Reviews On The Home Page Cases (2026-11-10)
 
@@ -1406,9 +1425,19 @@ Customers could not find the reviews, because they were only near the bottom of 
 | TC-P5-204 | FR-098 | The home page loads with seven reviews | Shows the average rating 4.6, "7 reviews", the newest three reviews, and the links Leave a review and Read all reviews | Passed (automated) |
 | TC-P5-205 | FR-098 | The home page loads with no reviews | Shows "No reviews yet. Be the first." and Leave a review, without Read all reviews | Passed (automated) |
 | TC-P5-206 | FR-098 | The reviews can't be loaded | The home page still shows Leave a review, with no error and no empty message | Passed (automated) |
-| TC-P5-207 | FR-098 | The site navigation | Has a Reviews link to `/about#reviews`, used by the header, the phone menu and the footer | Passed (automated) |
-| TC-P5-208 | FR-098 | Browser test at 390 and 1440 pixels wide | The home block shows the average, the count and three reviews without sideways scrolling; Read all reviews opens `/about#reviews` with the reviews in view | Passed (automated) |
-| TC-P5-209 | FR-098 | Browser test of the Reviews link in the desktop menu (1024 and 1440) and the phone menu (390) | The link fits without sideways scrolling and opens `/about#reviews` with the reviews in view | Passed (automated) |
+| TC-P5-207 | FR-098 | The site navigation | Has a Reviews link to `/reviews`, used by the header, the phone menu and the footer | Passed (automated) |
+| TC-P5-208 | FR-098 | Browser test at 390 and 1440 pixels wide | The home block shows the average, the count and three reviews without sideways scrolling; Read all reviews opens `/reviews` with the reviews in view | Passed (automated) |
+| TC-P5-209 | FR-098 | Browser test of the Reviews link in the desktop menu (1024 and 1440) and the phone menu (390) | The link fits without sideways scrolling and opens `/reviews` with the reviews in view | Passed (automated) |
+
+Update 2026-11-13: the reviews moved from the About page to their own page, `/reviews`, at the team's request. TC-P5-207 to TC-P5-209 now expect `/reviews` instead of `/about#reviews`. An old `/about#reviews` link forwards to `/reviews`.
+
+| ID | Requirement | Scenario | Expected result | Status |
+| --- | --- | --- | --- | --- |
+| TC-P5-213 | FR-098 | `/reviews` page | Has its own heading "Reviews", the reviews list and the review form | Passed (automated) |
+| TC-P5-214 | FR-098 | The site navigation | The Reviews link opens `/reviews`, not the About page | Passed (automated) |
+| TC-P5-215 | FR-098 | `/about#reviews` (an old link) | Forwards to `/reviews` | Passed (automated) |
+| TC-P5-216 | FR-098 | `/about` without the hash, then the hash changes to `#reviews` | Stays on About until the hash changes, then forwards to `/reviews` | Passed (automated) |
+| TC-P5-217 | FR-098 | Browser test at 390 and 1440 pixels wide | `/reviews` shows the reviews without sideways scrolling; `/about#reviews` lands on `/reviews`; evidence `docs/evidence/phase-5/reviews-home/reviews-page-{phone-390,desktop-1440}.png` | Passed (automated) |
 
 ## 50. Ad Slot For The Mini-Games Cases (2026-11-10)
 
@@ -1478,7 +1507,34 @@ Run on 2026-11-11 by Renier P. Apal, the integrated QA engineer, on `main` at `f
 
 No waiting PRs remain for Phase 5.
 
-## 53. Google Sign-In Cases (2026-11-13)
+## 53. Messenger Smart Replies Cases (2026-11-13)
+
+ADR-031: typed questions, likes, stickers and photos get a reply, the "automated assistant" line is gone, and staff topics are left to the staff. TC-P7-008, TC-P7-017, TC-P7-018, TC-P7-019, TC-P7-022, TC-P7-027, TC-P7-029, TC-P7-030, TC-P7-031, TC-P7-033, TC-P7-052, TC-P7-057 and TC-P7-089 were updated to match. No test calls Gemini.
+
+| ID         | Requirement | Case                                                                                                      | Expected result                                                                                   | Status             |
+| ---------- | ----------- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | ------------------ |
+| TC-P7-090  | FR-059      | The shop's clock for 2:00 PM Manila and 11:30 PM UTC on a Monday                                          | Monday 2:00 PM, then Tuesday 7:30 AM                                                              | Passed (automated) |
+| TC-P7-091  | FR-059      | Open status before, during and after the hours, on a closed day and on Friday night                       | "open now until", "we open today at", "closed for today… tomorrow", "closed today (Saturday)", "Sunday" | Passed (automated) |
+| TC-P7-092  | FR-111      | The closed-today switch is on                                                                             | "Sorry, we're closed today" with the note and the next opening                                    | Passed (automated) |
+| TC-P7-093  | FR-062      | Rider and partner orders, item lists, ice and other offers, collabs, reservations, jobs, lost items, scratches | Each gets its staff topic                                                                     | Passed (automated) |
+| TC-P7-094  | FR-062      | "open po kayo today?", "how much po takoyaki?", "may matcha po?", "pa order po"                            | No staff topic                                                                                    | Passed (automated) |
+| TC-P7-095  | NFR-026     | A message with mobile numbers, an email and a long number                                                 | All masked before Gemini                                                                          | Passed (automated) |
+| TC-P7-096  | FR-059      | The facts for Gemini, with and without the menu                                                           | Open status, address, takeout box, known answers and menu; without the menu, "hand off price questions" | Passed (automated) |
+| TC-P7-097  | FR-062      | The system instruction                                                                                    | Hands off riders, ice, offers and unknowns; never calls itself an AI; honest "auto-reply" if asked | Passed (automated) |
+| TC-P7-098  | FR-062      | Gemini returns links, markdown, unknown or repeated buttons, bad JSON or a long reply                     | Cleaned reply, at most 3 known buttons, null for bad JSON, 600 characters at most                 | Passed (automated) |
+| TC-P7-099  | NFR-026     | The first model answers 503 (update 2026-11-13: each model is tried in turn)                                                                               | The next model answers; the key is only in the header; the mobile number is masked                | Passed (automated) |
+| TC-P7-100  | FR-062      | Every model errors, every model is slow, or returns no candidates (update 2026-11-13: until the whole limit passes) | Every model is tried more than once, a slow model doesn't use up the limit; then null, so the staff reply is sent | Passed (automated) |
+| TC-P7-101  | FR-059      | A typed question with Gemini on                                                                           | Gemini's reply with its buttons; no customer ID or name in the facts                              | Passed (automated) |
+| TC-P7-102  | FR-062      | A rider's order, an ice offer, then follow-ups in both chats                                              | "Our staff will confirm" for the rider, no reply for the offer, then quiet; Gemini never called   | Passed (automated) |
+| TC-P7-103  | FR-062      | Gemini says the staff should answer                                                                       | Its reply with the main buttons                                                                   | Passed (automated) |
+| TC-P7-104  | FR-062      | Gemini returns nothing or throws                                                                          | "Our staff will reply here soon"                                                                  | Passed (automated) |
+| TC-P7-105  | FR-062      | More typed questions than the limit                                                                       | Gemini is asked at most 8 times; the rest get the staff reply                                     | Passed (automated) |
+| TC-P7-106  | FR-059      | "open po kayo today?" with Gemini on                                                                      | "🟢 Yes, we're open now until 6 PM!" without Gemini                                                | Passed (automated) |
+| TC-P7-107  | FR-062      | `GEMINI_API_KEY` missing, blank or set                                                                    | Gemini off, off, on                                                                               | Passed (automated) |
+| TC-P7-108  | FR-062      | Models answer 503, 429 with a 30 s retry delay, 404 and empty, then a Gemma model answers in a code fence | Round 2 skips the 429 and 404 models and returns the Gemma answer; Gemma gets the instructions in the message; the next message skips the resting models | Passed (automated) |
+| MAN-P7-009 | FR-062      | From a tester account, send 👍, a photo, "open po?", "magkano takoyaki?" and an ice offer to the Page    | A hello with buttons, "staff will check", the open status, an answer with the price, and no reply to the offer | Pending            |
+
+## 54. Google Sign-In Cases (2026-11-13)
 
 Sign in and Create an Account use Google only (ADR-030). TC-P4-152, TC-P4-153, TC-P4-155, TC-P4-156, TC-P4-161 to TC-P4-167 and TC-P4-169 to TC-P4-171 tested the email and password forms and are Superseded by the cases below. TC-P4-168 and TC-P5-092 were rewritten for the Google pages.
 

@@ -778,3 +778,34 @@ A customer orders and tracks pickup orders inside the Messenger chat (FR-100 to 
 ### 24.7 Tests
 
 - `tests/unit/messenger-order-state.test.ts`, `tests/unit/messenger-order-flow.test.ts`, `tests/unit/messenger-deps.test.ts`, `tests/unit/messenger-replies.test.ts`, `tests/unit/messenger-events.test.ts` and `tests/unit/messenger-send.test.ts` cover TC-P7-052 to TC-P7-074, and `tests/database/messenger-order-status.test.ts` covers TC-P7-051 on PGlite against the real migrations. `tests/unit/privacy-page.test.tsx` covers TC-P5-097. Meta's requests, the content, the menu and the database are mocked, and the tests use made-up Page and customer IDs.
+
+## 25. Messenger Smart Replies (ADR-031, 2026-11-13)
+
+### 25.1 Order of checks
+
+`answerText` in `src/lib/messenger/events.ts` handles a typed message in this order:
+
+1. An order link, a mobile number for ordering, or a typed button name (§22.3, §24).
+2. A sender in a staff quiet period (30 minutes after "Talk to staff" or a staff topic) gets no reply. Buttons still work.
+3. `handoffTopic` (`src/lib/messenger/handoff.ts`): a partner or rider order, a bulk or event order or reservation, hiring, a lost item or a concern gets `handoffReply`, which adds when the shop opens if it is closed. An offer (ice and other supplies included) gets no reply and stays unread.
+4. `typedHoursQuestion` gets `openNowReply`: `openStatusText` (`src/lib/messenger/shop-time.ts`) in Manila time, then the hours and location.
+5. Otherwise `answerQuestion` asks Gemini through `deps.askAssistant`, or sends `questionForStaffReply` when there is no key, a limit is reached or Gemini fails.
+
+A like or sticker (`sticker_id` on the message or an attachment) gets `likeReply`, and another attachment gets `attachmentReply`. An empty message is still skipped.
+
+### 25.2 Gemini client
+
+- `createGeminiAssistant` in `src/lib/messenger/assistant.ts` posts to `https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent` with the key in the `x-goog-api-key` header, `no-store`, JSON output with a response schema, temperature 0.4 and at most 400 output tokens.
+- It goes round every model in `DEFAULT_GEMINI_MODELS` (15 models a free-tier key could use on 2026-11-13, `gemini-3.1-flash-lite` first; or the list in `GEMINI_MODELS`) until one gives a usable answer. A busy (503), rate-limited (429), failing, empty or slow (12 seconds) model is skipped. After each round it waits (0.5 s, doubling, at most 8 s, or the 429's retry delay) and starts again, all within 45 seconds. A model that answers 404 or 400 rests for a day, and a 429 model rests for its retry delay, so later messages skip it. Gemma models get the instructions in the message and their JSON is read out of a code fence. The webhook replies in `after()`, so Meta doesn't wait; the route allows 60 seconds.
+- `shopFacts` builds the facts from the saved site content (open status, closure, hours, notice, address and landmark, payments, rider partners, cat rules), the takeout box price, the menu with today's prices and sold-out items, and `SHOP_FAQ`. No shop fact is written in the code: the address and landmark come from the site content (FR-086).
+- `parseSmartAnswer` checks the JSON, removes links and markdown, cuts the reply to 600 characters and keeps at most three known buttons.
+- `smartReplyAssistant` in `deps.ts` turns Gemini on only when `GEMINI_API_KEY` is set. Both settings are server only.
+
+### 25.3 Limits
+
+- Gemini: 8 calls per customer in 10 minutes (`SMART_REPLY_LIMIT`) and 8 a minute for the Page (`SMART_REPLY_PAGE_LIMIT`), on top of the 20 replies per customer in 10 minutes (§22.2).
+- The limits and quiet periods are in each instance's memory and are reset with `resetMessengerState`.
+
+### 25.4 Tests
+
+- `tests/unit/messenger-smart-replies.test.ts`, `tests/unit/messenger-events.test.ts`, `tests/unit/messenger-replies.test.ts` and `tests/unit/messenger-deps.test.ts`. No test calls Gemini; each passes its own `fetch` or `askAssistant`.
