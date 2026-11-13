@@ -1872,3 +1872,14 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `feat/messenger-page-posts`.
 - **Known limitations:** posts are read when a customer asks (at most every 2 minutes), not pushed by a `feed` webhook; only an opening time or "closed today" changes the status, other notices are only quoted.
 - **Next action:** Run MAN-P7-011 on the live Page.
+
+## 2026-11-13 — The parade cats walk through, look cuter, and Luna lies the right way
+
+- **Phase:** Phase 9 (FR-099), fix.
+- **Task:** The lead developer reported that the cats halt in the middle of the walk, that their look was creepy rather than adorable, and that Luna lay the wrong way in the sleigh walking right.
+- **Summary:** Each lap is now one smooth walk; passing the middle the cats glance out at the visitor and the lead meows while still walking. The cats were redrawn as kittens: much less fur noise (smooth, plush shapes), a head 1.3 times bigger on a rounder, shorter body, big round eyes with round pupils and two glints in place of slit pupils, rosy cheeks, round shoulders and haunches over the legs, bean paws and a thicker tail. Luna is now turned (and mirrored when walking right) so her head leads and her face looks out of the screen both ways.
+- **Files:** `src/components/cats/{cat-model,cat-parade,parade-stage}.ts(x)`, `src/lib/cats/cats.ts`, `tests/unit/cat-characters.test.tsx`, `tests/e2e/cats.three.spec.ts`, `docs/{decisions,test-cases,development-log}.md`, `docs/evidence/phase-9/cat-characters/`.
+- **Testing:** see the pull request.
+- **Branch / PR:** `fix/cat-parade`.
+- **Known limitations:** the cats are still built from three.js shapes, not drawn sprites.
+- **Next action:** none.
