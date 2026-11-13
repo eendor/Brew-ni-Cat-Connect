@@ -53,6 +53,7 @@ import {
 } from "./intents";
 import { shopFacts, type AskAssistant } from "./assistant";
 import { handoffText, handoffTopic } from "./handoff";
+import { ASSISTANT_METADATA } from "./send";
 import {
   answerOrderTap,
   beginOrder,
@@ -99,6 +100,10 @@ export type MessengerDeps = OrderFlowDeps &
     send: (recipient: string, answer: Reply) => Promise<boolean>;
     /** Smart replies; missing when GEMINI_API_KEY isn't set. */
     askAssistant?: AskAssistant;
+    /** Saves that the staff replied in this chat by hand (FR-113). */
+    noteStaffReply?: (customer: string) => Promise<void>;
+    /** When the staff last replied in this chat by hand; null if never. */
+    readStaffReply?: (customer: string) => Promise<number | null>;
   }>;
 
 const MINUTE_MS = 60 * 1000;
@@ -107,6 +112,16 @@ export const EVENT_MAX_AGE_MS = 60 * MINUTE_MS;
 export const EVENT_MAX_SKEW_MS = 5 * MINUTE_MS;
 /** After "Talk to staff", typed messages are left to the staff this long. */
 export const STAFF_QUIET_MS = 30 * MINUTE_MS;
+/**
+ * After the staff reply in a chat by hand, typed messages, photos and
+ * stickers there are left to them this long. Buttons still answer (FR-113).
+ */
+export const STAFF_HANDLED_MS = 12 * 60 * MINUTE_MS;
+/**
+ * A photo sent this soon after a reply gets no reply of its own, so a
+ * greeting and a photo sent together get one reply, not two.
+ */
+export const PHOTO_AFTER_REPLY_MS = 2 * MINUTE_MS;
 export const LIMIT_WINDOW_MS = 10 * MINUTE_MS;
 export const SENDER_REPLY_LIMIT = 20;
 export const ORDER_LOOKUP_LIMIT = 5;
@@ -160,6 +175,8 @@ export function createRecentSet(capacity: number, ttlMs: number) {
 // retry that reaches another instance can get a second reply.
 const seenEvents = createRecentSet(2000, EVENT_MAX_AGE_MS);
 const askedForStaff = createRecentSet(5000, STAFF_QUIET_MS);
+const staffReplied = createRecentSet(5000, STAFF_HANDLED_MS);
+const justAnswered = createRecentSet(5000, PHOTO_AFTER_REPLY_MS);
 const replyLimiter = createRateLimiter(SENDER_REPLY_LIMIT, LIMIT_WINDOW_MS);
 const orderLookupLimiter = createRateLimiter(
   ORDER_LOOKUP_LIMIT,
@@ -173,6 +190,8 @@ const smartPageLimiter = createRateLimiter(SMART_REPLY_PAGE_LIMIT, MINUTE_MS);
 export function resetMessengerState(): void {
   seenEvents.clear();
   askedForStaff.clear();
+  staffReplied.clear();
+  justAnswered.clear();
   smartLimiter.reset();
   smartPageLimiter.reset();
   replyLimiter.reset();
@@ -237,6 +256,30 @@ function isSticker(message: Json): boolean {
         attachment.payload.sticker_id !== undefined,
     )
   );
+}
+
+/**
+ * A message the Page sent that the assistant didn't: the staff replied by
+ * hand from the Page inbox or the Business Suite (FR-113). Meta echoes every
+ * message the Page sends; the assistant's own carry its metadata.
+ */
+export function readStaffReply(
+  event: unknown,
+  pageId: unknown,
+): Readonly<{ customer: string; time: number }> | null {
+  if (!isRecord(event) || !isRecord(event.message)) return null;
+  const { message, recipient, sender } = event;
+  if (message.is_echo !== true || message.metadata === ASSISTANT_METADATA) {
+    return null;
+  }
+  if (!isRecord(sender) || sender.id !== pageId) return null;
+  if (!isRecord(recipient)) return null;
+  const customer = recipient.id;
+  if (typeof customer !== "string" || !PSID_PATTERN.test(customer)) {
+    return null;
+  }
+  const time = eventTime(event.timestamp);
+  return time === null ? null : { customer, time };
 }
 
 function readEvent(event: unknown, pageId: unknown): CustomerEvent | null {
@@ -477,11 +520,29 @@ async function answerQuestion(
     : smartReply(answer.reply, answer.buttons);
 }
 
-function answerEvent(
+/** True while the staff are handling this chat after replying by hand. */
+async function staffHandling(
+  sender: string,
+  deps: MessengerDeps,
+): Promise<boolean> {
+  const now = deps.now();
+  if (staffReplied.has(sender, now)) return true;
+  const at = await deps.readStaffReply?.(sender).catch(() => null);
+  if (typeof at !== "number" || now - at >= STAFF_HANDLED_MS) return false;
+  staffReplied.add(sender, at);
+  return true;
+}
+
+async function answerEvent(
   event: CustomerEvent,
   deps: MessengerDeps,
   facts: Facts,
-): Promise<Answer | null> | null {
+): Promise<Answer | null> {
+  // Buttons always answer. Anything typed or sent waits for the staff while
+  // they are handling the chat (FR-113).
+  if (event.input.kind !== "tap" && (await staffHandling(event.sender, deps))) {
+    return null;
+  }
   switch (event.input.kind) {
     case "tap":
       return answerTap(
@@ -500,7 +561,9 @@ function answerEvent(
     case "like":
       return Promise.resolve(plain(likeReply()));
     case "attachment":
-      // Often a payment screenshot or a photo for the staff.
+      // Often a payment screenshot or a photo for the staff. One sent with a
+      // greeting is answered by the greeting's reply.
+      if (justAnswered.has(event.sender, deps.now())) return null;
       return facts
         .content()
         .then((content) => plain(attachmentReply(content, deps.now())));
@@ -517,9 +580,16 @@ async function handleEvent(
   deps: MessengerDeps,
   facts: Facts,
 ): Promise<Outcome> {
+  const now = deps.now();
+  const staff = readStaffReply(raw, pageId);
+  if (staff) {
+    if (now - staff.time > EVENT_MAX_AGE_MS) return "skipped";
+    staffReplied.add(staff.customer, Math.min(staff.time, now));
+    await deps.noteStaffReply?.(staff.customer).catch(() => undefined);
+    return "skipped";
+  }
   const event = readEvent(raw, pageId);
   if (!event) return "skipped";
-  const now = deps.now();
   const age = now - event.time;
   if (age > EVENT_MAX_AGE_MS || -age > EVENT_MAX_SKEW_MS) return "skipped";
   if (seenEvents.has(event.key, now)) return "skipped";
@@ -531,6 +601,7 @@ async function handleEvent(
   if (!limiter.check(event.sender, now).allowed) return "skipped";
 
   if (!(await deps.send(event.sender, answer.reply))) return "failed";
+  justAnswered.add(event.sender, deps.now());
   return "replied";
 }
 

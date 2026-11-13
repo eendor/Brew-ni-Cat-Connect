@@ -536,3 +536,11 @@ File: `supabase/migrations/20261112120000_reviews.sql`. Undo: `supabase/rollback
 - Rollback drops `public.post_review`, `public.my_review`, `private.set_reviews_updated_at`, trigger `reviews_set_updated_at`, and table `public.reviews`.
 - TC-P5-170 to TC-P5-181 run on PGlite (`tests/database/reviews.test.ts`): public reading excludes `customer_id` and hidden reviews; staff can read and hide reviews; post_review works for guests and customers; customer edits their one review; guest cannot edit; database-wide guest flood limit; input validations.
 
+## 18. Messenger Staff Chats (Phase 7 — 2026-11-13)
+
+Migration `20261113130000_messenger_staff_chats.sql` (FR-113).
+
+- Table `private.messenger_staff_chats`: `chat` text primary key, checked `^[0-9a-f]{64}$` (an HMAC of the customer's Page-scoped ID with the Meta app secret); `replied_at` timestamptz not null default now(). RLS on, no grants.
+- `public.note_messenger_staff_reply(p_chat text)`: security definer, `set search_path = ''`. Refuses a bad code (22023), removes rows older than two days, and saves or updates the chat with now(). Granted to `anon` and `authenticated`.
+- `public.messenger_staff_replied_at(p_chat text)`: security definer, stable. The time the staff last replied in that chat, or null. Granted to `anon` and `authenticated`.
+- Undo: `supabase/rollbacks/20261113130000_messenger_staff_chats.sql` drops both functions and the table. TC-P7-114 to TC-P7-116 run on PGlite (`tests/database/messenger-staff-chats.test.ts`).

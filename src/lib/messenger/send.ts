@@ -34,6 +34,12 @@ export const GRAPH_API_VERSION = "v26.0";
 const GRAPH_API_ORIGIN = "https://graph.facebook.com";
 const SEND_TIMEOUT_MS = 8000;
 
+/**
+ * Sent with every reply and echoed back by Meta, so the webhook can tell the
+ * assistant's own messages from the staff's (FR-113).
+ */
+export const ASSISTANT_METADATA = "brew-ni-cat:assistant";
+
 type Message = Readonly<Record<string, unknown>>;
 
 export type SendApiBody = Readonly<{
@@ -123,10 +129,13 @@ export function sendApiBodies(recipient: string, answer: Reply): SendApiBody[] {
   return messages.map((message, index) => ({
     recipient: { id: recipient },
     messaging_type: "RESPONSE",
-    message:
-      index === last && quickReplies.length > 0
-        ? { ...message, quick_replies: quickReplies }
-        : message,
+    message: {
+      ...message,
+      ...(index === last && quickReplies.length > 0
+        ? { quick_replies: quickReplies }
+        : {}),
+      metadata: ASSISTANT_METADATA,
+    },
   }));
 }
 
