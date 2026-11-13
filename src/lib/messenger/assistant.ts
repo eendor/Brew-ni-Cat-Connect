@@ -24,6 +24,7 @@ import type { SiteContent } from "@/lib/site-content/types";
 import type { MenuCatalog } from "@/types/menu";
 
 import type { Intent } from "./intents";
+import { postedStatusText, postsFact, type PagePost } from "./page-posts";
 import { openStatusText } from "./shop-time";
 
 /** What the shop's staff told customers most often (Page chats since 2026-06-12). */
@@ -107,14 +108,21 @@ export function shopFacts(
     now: number;
     onlineOrdering: boolean;
     origin: string;
+    /** Today's posts on the Page (FR-114). */
+    posts?: readonly PagePost[];
   }>,
 ): string {
   const { content } = input;
+  const posts = input.posts ?? [];
+  const posted = content.closure.closed
+    ? null
+    : postedStatusText(posts, input.now);
   const riders = content.riders.partners.map((partner) => partner.name);
   const lines = [
     `Shop: Brew ni Cat, a small cat café. Website: ${input.origin}`,
-    `Right now: ${openStatusText(content, input.now)}`,
+    `Right now: ${posted ?? openStatusText(content, input.now)}`,
     closedTodayText(content.closure),
+    postsFact(posts),
     `Hours: ${hoursSentence(content.hours)} ${content.hours.note}`.trim(),
     content.notice.text.trim() ? `Notice: ${content.notice.text.trim()}` : null,
     `Address: ${fullAddress(content.address)}. ${content.address.landmark}`.trim(),

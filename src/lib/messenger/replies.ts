@@ -41,6 +41,7 @@ import {
   statusPayload,
   type Intent,
 } from "./intents";
+import { postedStatusText, postsNotice, type PagePost } from "./page-posts";
 import { openStatusText } from "./shop-time";
 
 /** Meta's limits for a text message and its quick replies. */
@@ -266,9 +267,17 @@ export function smartReply(text: string, buttons: readonly Intent[]): Reply {
 }
 
 /** "Are you open?" answered for right now, then the hours and the address. */
-export function openNowReply(content: SiteContent, now: number): Reply {
-  const answer = hoursLocationReply(content);
-  const status = openStatusText(content, now);
+export function openNowReply(
+  content: SiteContent,
+  now: number,
+  posts: readonly PagePost[] = [],
+): Reply {
+  const answer = hoursLocationReply(content, posts);
+  // A post about today ("We open at 1:00 pm today") wins (FR-114), unless
+  // the "closed today" switch is on.
+  const status =
+    (content.closure.closed ? null : postedStatusText(posts, now)) ??
+    openStatusText(content, now);
   // The "closed today" switch is already the first line of the status.
   const rest = answer.text.replace(
     `${closedTodayText(content.closure)}\n\n`,
@@ -308,7 +317,10 @@ export function questionForStaffReply(
 
 // Shop facts ----------------------------------------------------------------
 
-export function hoursLocationReply(content: SiteContent): Reply {
+export function hoursLocationReply(
+  content: SiteContent,
+  posts: readonly PagePost[] = [],
+): Reply {
   const { address, closure, hours, notice } = content;
   const landmark = address.landmark.trim()
     ? `, ${midSentence(address.landmark.trim())}`
@@ -316,6 +328,7 @@ export function hoursLocationReply(content: SiteContent): Reply {
   const parts = [
     closedTodayText(closure),
     `🕒 ${hoursNotice(hours)}`,
+    postsNotice(posts),
     notice.text.trim() ? `📢 Notice: ${notice.text.trim()}` : null,
     `📍 We're at ${fullAddress(address)}${landmark}.`,
   ];

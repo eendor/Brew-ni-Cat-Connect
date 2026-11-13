@@ -30,6 +30,8 @@ import {
   deriveTrackingToken,
 } from "./order-ids";
 import type { PlaceOrderInput } from "./order-flow";
+import { readTodaysPosts } from "./page-posts";
+import { createPictureReader } from "./picture-text";
 import { createGraphClient } from "./send";
 
 /** A slow database must not hold up the replies after it. */
@@ -238,6 +240,8 @@ export function createMessengerDeps(
   appSecret: string,
 ): MessengerDeps {
   const graph = createGraphClient(pageToken);
+  const geminiKey = process.env.GEMINI_API_KEY?.trim();
+  const readImageText = geminiKey ? createPictureReader(geminiKey) : undefined;
   return {
     origin,
     now: () => Date.now(),
@@ -256,6 +260,12 @@ export function createMessengerDeps(
     askAssistant: smartReplyAssistant(),
     noteStaffReply: (sender) => noteStaffReply(appSecret, sender),
     readStaffReply: (sender) => readStaffReply(appSecret, sender),
+    readTodaysPosts: () =>
+      readTodaysPosts({
+        listPosts: graph.listPosts,
+        readImageText,
+        now: () => Date.now(),
+      }),
   };
 }
 
