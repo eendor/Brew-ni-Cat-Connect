@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
 /**
- * The 3D cat parade itself (FR-099, ADR-032), with WebGL and motion on (the
+ * The pixel-art cat parade itself (FR-099, ADR-032), with motion on (the
  * chromium-3d project). Set CAPTURE_EVIDENCE=1 to refresh the screenshots in
  * docs/evidence/phase-9/cat-characters/.
  */
@@ -52,6 +52,11 @@ test("TC-P9-018 — the cats walk across the footer, free, and leave the page al
     timeout: 40_000,
   });
   expect((await page.request.get("/cats/kasper.webp")).status()).toBe(404);
+  for (const sheet of ["oreo", "latte", "kulas", "grey", "sleigh"]) {
+    const response = await page.request.get(`/cats/sprites/${sheet}.png`);
+    expect(response.status()).toBe(200);
+    expect(response.headers()["content-type"]).toBe("image/png");
+  }
   expect(errors).toEqual([]);
 });
 

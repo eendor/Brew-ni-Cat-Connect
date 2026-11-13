@@ -1883,3 +1883,14 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `fix/cat-parade`.
 - **Known limitations:** the cats are still built from three.js shapes, not drawn sprites.
 - **Next action:** none.
+
+## 2026-11-13 — The parade cats are pixel art drawn in Aseprite
+
+- **Phase:** Phase 9 (FR-099), change.
+- **Task:** The lead developer still found the 3D cats unappealing and asked for them to be made in Aseprite; they reviewed and approved preview sheets before the switch.
+- **Summary:** Aseprite 1.3.18 was built from source and runs an Lua script (`scripts/aseprite/cat-sprites.lua`) that draws each walker (Oreo, Latte, Kulas and the grey cat) as a 48 × 40 pixel-art kitten in the coat colours from `cats.ts`: six-frame walk, look and meow cycles, with festive versions in a red collar and gold bell, plus a 72 × 44 coffee-cup sleigh with Luna facing the visitor and her three kittens. `npm run cats:sprites` writes the editable `.aseprite` sources and frame data to `art/cats/` and the sheets to `public/cats/sprites/`. The footer parade now draws these sheets on a 2D canvas, crisp at a whole number of device pixels a sprite pixel and mirrored walking left, behind the same stage contract, so the anime.js laps, the glance and meow, the shared frame loop and reduced motion are unchanged. The three.js cat model was removed.
+- **Files:** `scripts/aseprite/cat-sprites.lua`, `scripts/cat-sprites.mts`, `package.json`, `tsconfig.json`, `art/cats/`, `public/cats/sprites/`, `src/lib/cats/{sprites,cats}.ts`, `src/components/cats/{parade-stage.ts,cat-parade.tsx}`, `src/components/cats/cat-model.ts` (removed), `tests/unit/cat-characters.test.tsx`, `tests/e2e/cats.three.spec.ts`, `docs/{decisions,test-cases,development-log}.md`, `docs/evidence/phase-9/cat-characters/`.
+- **Testing:** see the pull request.
+- **Branch / PR:** `feat/pixel-cats`.
+- **Known limitations:** regenerating the sprites needs Aseprite installed locally (it is not a project dependency); the art is drawn by script, not by hand.
+- **Next action:** none.

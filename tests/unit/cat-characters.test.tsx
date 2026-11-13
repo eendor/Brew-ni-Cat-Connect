@@ -1,11 +1,9 @@
+import { existsSync, readFileSync } from "node:fs";
+
 import { act, fireEvent, render, screen } from "@testing-library/react";
-import * as THREE from "three";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { buildCat } from "@/components/cats/cat-model";
-
 import { CatParade } from "@/components/cats/cat-parade";
-import { restLuna } from "@/components/cats/parade-stage";
 import { CatSoundsToggle } from "@/components/cats/cat-sounds-toggle";
 import {
   setCurtainCovering,
@@ -25,6 +23,21 @@ import {
   stripHeight,
   walkMs,
 } from "@/lib/cats/cats";
+import {
+  CAT_FRAME,
+  CAT_TAGS,
+  catRow,
+  catSheet,
+  pixelScale,
+  SLEIGH_FRAME,
+  SLEIGH_FRAMES,
+  SLEIGH_SHEET,
+  sleighFrame,
+  spriteSpan,
+  WALK_FRAME_MS,
+  WALK_FRAMES,
+  walkFrame,
+} from "@/lib/cats/sprites";
 import {
   CAT_SOUNDS_KEY,
   catSoundsOn,
@@ -110,7 +123,7 @@ describe("cat characters (FR-099)", () => {
     expect(strip).toHaveAttribute("aria-hidden", "true");
     expect(strip.querySelectorAll("img")).toHaveLength(0);
     expect(strip.querySelector("canvas")).not.toBeNull();
-    // without WebGL2 (as here) it never says it is ready, so CSS keeps it hidden
+    // without a 2D canvas (as here) it never says it is ready, so CSS keeps it hidden
     expect(strip.dataset.ready).toBeUndefined();
     expect(strip.dataset.walking).toBe("false");
   });
@@ -133,28 +146,6 @@ describe("cat characters (FR-099)", () => {
     }
   });
 
-  it("TC-P9-021 Luna lies head first, facing the visitor, whichever way the sleigh goes", () => {
-    const luna = buildCat(
-      SHOP_CATS.find((c) => c.id === SLEIGH_RIDER)!.look,
-      "lie",
-      77,
-    );
-    const head = new THREE.Vector3();
-    const face = new THREE.Vector3();
-    for (const dir of [1, -1] as const) {
-      restLuna(luna.root, dir);
-      luna.root.updateMatrixWorld(true);
-      // the model's head is at -x and its face looks toward +z
-      head.set(-1, 0, 0).applyMatrix4(luna.root.matrixWorld);
-      face.set(0, 0, 1).transformDirection(luna.root.matrixWorld);
-      // the sleigh is turned to face dir along x: the head leads
-      expect(Math.sign(head.z)).toBe(1);
-      // and the face points out of the screen, never away
-      expect(face.x * dir).toBeLessThan(0.01);
-      expect(Math.abs(face.x)).toBeGreaterThan(0.99);
-    }
-  });
-
   it("TC-P9-004 they walk about a body length a second and rest between laps", () => {
     expect(paradeSpeed(100)).toBe(95);
     expect(walkMs(950, 100)).toBe(10_000);
@@ -164,131 +155,90 @@ describe("cat characters (FR-099)", () => {
     expect(restMs(7)).toBe(12_000);
   });
 
-  it("TC-P9-016 each cat is built from three.js geometry, with no pictures, and comes alive", () => {
-    for (const [index, cat] of SHOP_CATS.entries()) {
-      const model = buildCat(cat.look, cat.pose, index + 1);
-      const meshes: THREE.Mesh[] = [];
-      model.root.traverse((o) => {
-        if ((o as THREE.Mesh).isMesh) meshes.push(o as THREE.Mesh);
+  it("TC-P9-016 each walker and the sleigh are Aseprite sprites, with editable sources and one tag a row", () => {
+    const size = (file: string) => {
+      const png = readFileSync(file);
+      // the PNG signature, then the IHDR width and height
+      expect(png.subarray(1, 4).toString()).toBe("PNG");
+      return [png.readUInt32BE(16), png.readUInt32BE(20)];
+    };
+    for (const id of PARADE_ORDER) {
+      expect(existsSync(`art/cats/${id}.aseprite`)).toBe(true);
+      expect(size(`public${catSheet(id)}`)).toEqual([
+        CAT_FRAME.width * WALK_FRAMES,
+        CAT_FRAME.height * CAT_TAGS.length,
+      ]);
+      const data = JSON.parse(readFileSync(`art/cats/${id}.json`, "utf8")) as {
+        frames: { duration: number }[];
+        meta: { frameTags: { name: string; from: number; to: number }[] };
+      };
+      // the tags are the sheet's rows, in order, a step cycle each
+      expect(data.meta.frameTags.map((t) => t.name)).toEqual([...CAT_TAGS]);
+      data.meta.frameTags.forEach((tag, row) => {
+        expect(tag.from).toBe(row * WALK_FRAMES);
+        expect(tag.to - tag.from + 1).toBe(WALK_FRAMES);
       });
-      expect(meshes.length).toBeGreaterThan(20);
-      for (const m of meshes) {
-        const material = m.material as THREE.MeshStandardMaterial;
-        expect(material.map ?? null).toBeNull();
-      }
-      // its coat colour is on the model
-      const colours = new Set(
-        meshes.map((m) =>
-          (m.material as THREE.MeshStandardMaterial).color.getHexString(),
-        ),
-      );
-      expect(colours).toContain(cat.look.coat.slice(1));
-      expect(colours).toContain(cat.look.eyeLeft.slice(1));
-      // a name tag only where the real cat wears one
-      expect(colours.has(cat.look.tag?.slice(1) ?? "-")).toBe(
-        Boolean(cat.look.tag),
-      );
-
-      // a sitting cat is taller than wide; the napping cat is wider than tall
-      model.update(0, 0, { x: 0, y: 0 });
-      const size = new THREE.Box3()
-        .setFromObject(model.root)
-        .getSize(new THREE.Vector3());
-      if (cat.pose !== "lie") expect(size.y).toBeGreaterThan(size.x);
-      else expect(size.x).toBeGreaterThan(size.y);
-
-      // over time it moves: breathing and the tail change the shape
-      const before = JSON.stringify(
-        meshes.map((m) => m.getWorldPosition(new THREE.Vector3()).toArray()),
-      );
-      model.update(0.5, 1.3, { x: 0.8, y: 0 });
-      const after = JSON.stringify(
-        meshes.map((m) => m.getWorldPosition(new THREE.Vector3()).toArray()),
-      );
-      expect(after).not.toBe(before);
-      model.dispose();
+      expect(data.frames.every((f) => f.duration === WALK_FRAME_MS)).toBe(true);
     }
-    // the walking cat stands on four legs and is longer than it is wide
-    const walker = buildCat(SHOP_CATS[4]!.look, "walk", 9);
-    walker.update(0, 0, { x: 0, y: 0 }, 0);
-    const size = new THREE.Box3()
-      .setFromObject(walker.root)
-      .getSize(new THREE.Vector3());
-    expect(size.z).toBeGreaterThan(size.x * 1.5);
-    walker.dispose();
+    expect(existsSync("art/cats/sleigh.aseprite")).toBe(true);
+    expect(size(`public${SLEIGH_SHEET}`)).toEqual([
+      SLEIGH_FRAME.width * SLEIGH_FRAMES,
+      SLEIGH_FRAME.height,
+    ]);
+    // no photo cut-outs or 3D models are shipped
+    expect(existsSync("src/components/cats/cat-model.ts")).toBe(false);
   });
 
-  it("TC-P9-017 the head turns toward the pointer, and a meow opens the mouth", () => {
-    const cat = SHOP_CATS[0]!;
-    const model = buildCat(cat.look, cat.pose, 1);
-    const head = () => {
-      let found: THREE.Object3D | null = null;
-      model.root.traverse((o) => {
-        if (!found && o.children.some((c) => c instanceof THREE.LineSegments))
-          found = o;
-      });
-      return found! as THREE.Object3D;
-    };
-    for (let i = 0; i < 60; i += 1)
-      model.update(1 / 30, i / 30, { x: 1, y: 0 });
-    const right = head().rotation.y;
-    for (let i = 0; i < 60; i += 1)
-      model.update(1 / 30, 2 + i / 30, { x: -1, y: 0 });
-    expect(head().rotation.y).toBeLessThan(right - 0.5);
-
-    const mouthHeight = () => {
-      let tallest = 0;
-      head().traverse((o) => {
-        const m = o as THREE.Mesh;
-        if (
-          m.isMesh &&
-          (m.material as THREE.MeshStandardMaterial).color.getHexString() ===
-            "5b2e33"
-        )
-          tallest = m.scale.y;
-      });
-      return tallest;
-    };
-    expect(mouthHeight()).toBeLessThan(0.1);
-    model.meow();
-    model.update(0.25, 5, { x: 0, y: 0 });
-    expect(mouthHeight()).toBeGreaterThan(0.5);
-    model.dispose();
+  it("TC-P9-017 the cats look ahead, glance out past halfway, open their mouths to meow, and wear bells in the holidays", () => {
+    expect(CAT_TAGS[catRow(0, false, false)]).toBe("walk");
+    expect(CAT_TAGS[catRow(0.3, false, false)]).toBe("walk");
+    expect(CAT_TAGS[catRow(0.8, false, false)]).toBe("look");
+    expect(CAT_TAGS[catRow(0, true, false)]).toBe("meow");
+    expect(CAT_TAGS[catRow(0, false, true)]).toBe("walk-festive");
+    expect(CAT_TAGS[catRow(1, false, true)]).toBe("look-festive");
+    expect(CAT_TAGS[catRow(1, true, true)]).toBe("meow-festive");
   });
 
-  it("TC-P9-013 a walking cat steps its legs; standing still, they stay put", () => {
-    const model = buildCat(SHOP_CATS[1]!.look, "walk", 3);
-    // a hip holds the upper leg, a capsule 0.068 across
-    const hips: THREE.Object3D[] = [];
-    model.root.traverse((o) => {
-      if (
-        o.children.some(
-          (c) =>
-            (c as THREE.Mesh).geometry instanceof THREE.CapsuleGeometry &&
-            ((c as THREE.Mesh).geometry as THREE.CapsuleGeometry).parameters
-              .radius === 0.068,
-        )
-      )
-        hips.push(o);
-    });
-    expect(hips).toHaveLength(4);
-    const legs = () => hips.map((hip) => hip.rotation.x);
-    for (let i = 0; i < 60; i += 1)
-      model.update(1 / 30, i / 30, { x: 0, y: 0 }, 0);
-    for (const turn of legs()) expect(Math.abs(turn)).toBeLessThan(0.01);
-    const snapshots: string[] = [];
-    for (let i = 0; i < 40; i += 1) {
-      model.update(1 / 30, 2 + i / 30, { x: 0, y: 0 }, 1);
-      if (i % 5 === 0)
-        snapshots.push(
-          legs()
-            .map((t) => t.toFixed(2))
-            .join(),
+  it("TC-P9-013 a walking cat steps through its cycle, out of step with the next; standing still, it stays put", () => {
+    const frames = (stride: number, index: number) =>
+      Array.from({ length: 12 }, (_, i) =>
+        walkFrame((i * WALK_FRAME_MS) / 1000, stride, index),
+      );
+    expect(new Set(frames(1, 0)).size).toBe(WALK_FRAMES);
+    expect(frames(1, 0)).not.toEqual(frames(1, 1));
+    expect(new Set(frames(0, 0))).toEqual(new Set([0]));
+    expect(sleighFrame(0.5, false)).toBe(0);
+    expect(
+      new Set(Array.from({ length: 8 }, (_, i) => sleighFrame(i * 0.18, true)))
+        .size,
+    ).toBe(SLEIGH_FRAMES);
+  });
+
+  it("TC-P9-021 the sprites stay crisp and the whole parade fits the strip and the screen", () => {
+    for (const [width, height, dpr] of [
+      [390, 84, 3],
+      [1440, 108, 1],
+      [1440, 108, 2],
+      [1920, 144, 1],
+      [3840, 150, 2],
+    ] as const) {
+      for (const festive of [true, false]) {
+        const cats = paradeWalkers(width).length;
+        const px = pixelScale(width, height, dpr, cats, festive);
+        // a whole number of device pixels a sprite pixel
+        expect(Number.isInteger(px)).toBe(true);
+        expect(px).toBeGreaterThanOrEqual(1);
+        // ears to the ground fit the strip, and the parade the screen
+        expect((42 * px) / dpr).toBeLessThanOrEqual(height);
+        expect((spriteSpan(cats, festive) * px) / dpr).toBeLessThanOrEqual(
+          width,
         );
+      }
     }
-    // the stride changes from frame to frame
-    expect(new Set(snapshots).size).toBeGreaterThan(4);
-    model.dispose();
+    // the cats stand most of the strip on a desktop
+    expect((40 * pixelScale(1440, 108, 1, 4, true)) / 1).toBeGreaterThanOrEqual(
+      80,
+    );
   });
 
   it("TC-P9-014 the footer's strip is part of the page, so it never covers anything", async () => {
