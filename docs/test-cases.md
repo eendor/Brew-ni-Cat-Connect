@@ -1590,3 +1590,16 @@ FR-114: the assistant reads today's posts on the Facebook Page, including the wo
 | TC-P7-123  | FR-114      | Reading a picture: a busy model, NONE, an HTML page, a link off Facebook, a network failure | The next model's words; ""; ""; nothing fetched; null | Passed (automated) |
 | TC-P7-124  | FR-114      | A typed "open po kayo today?" with a post from today, then with the posts unreadable | The posted opening time; the usual open status | Passed (automated) |
 | MAN-P7-011 | FR-114      | Post a picture saying the shop opens later today on the Page; ask "open po kayo?" in Messenger before that time | The reply gives the posted time and quotes the post | Pending |
+
+## 57. Café Jukebox Cases (2026-11-13)
+
+FR-115: soft French café music in the footer, only when a visitor presses play.
+
+| ID        | Requirement | Case | Expected result | Status |
+| --------- | ----------- | ---- | --------------- | ------ |
+| TC-P9-022 | FR-115      | Read the four songs | Each is traditional (public domain) or written for the shop; every bar has whole beats; every pitch and chord parses; the last song is followed by the first | Passed (automated) |
+| TC-P9-023 | FR-115      | `midi`, `frequency`, `chordNotes` | A4 is 69 and 440 Hz; Am is A, C, E and G7 is G, B, D, F; roots from E2 and chord tones from G3, within an octave | Passed (automated) |
+| TC-P9-024 | FR-115      | `arrange` each song | Every note inside the song's length; a bass note on beat one of every bar (and beat three in 4/4); chords; one melody note a written note | Passed (automated) |
+| TC-P9-025 | FR-115      | Render the footer control with a Web Audio stand-in; press play, Next song, wait out the song, press stop | No audio before the press; then playing, "Now playing" with the title and credit, the next song on skip and after the song ends; stopped and quiet | Passed (automated) |
+| TC-P9-026 | FR-115      | Render without Web Audio and press play | Nothing plays, no error, the button stays "Play café music" | Passed (automated) |
+| TC-P9-027 | FR-115 | Playwright, 1440 wide: `/menu` footer, press play, Next song, go to About, press stop | Idle and silent first; "Now playing: Valse du chat (Written for Brew ni Cat)"; then Au clair de la lune; still playing on About; stopped, Next song gone; no page errors | Passed (automated) |
