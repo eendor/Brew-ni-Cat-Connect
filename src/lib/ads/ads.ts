@@ -9,6 +9,16 @@ export const AD_WIDTH = 300;
 export const AD_HEIGHT = 250;
 export const AD_SCRIPT_HOST = "https://bauval.org/22/";
 export const AD_CONSENT_KEY = "bnc-ad-consent";
+/** The message the ad frame posts to this page once an ad has appeared. */
+export const AD_FILLED_MESSAGE = "bnc-ad-filled";
+/** How long to wait for an ad before showing a note instead of a blank box. */
+export const AD_FILL_TIMEOUT_MS = 8000;
+
+/**
+ * Runs inside the ad frame. It watches for an ad of real size and tells the
+ * parent page once, with no data beyond the message name.
+ */
+const FILL_REPORTER = `(function(){var sent=false;function check(){if(sent)return;var els=document.querySelectorAll("iframe,img,ins,a,canvas,video,div");for(var i=0;i<els.length;i++){var r=els[i].getBoundingClientRect();if(r.width>=100&&r.height>=50){sent=true;parent.postMessage("${AD_FILLED_MESSAGE}","*");return}}}new MutationObserver(check).observe(document.documentElement,{childList:true,subtree:true,attributes:true});setInterval(check,1000)})();`;
 
 /** Pages where an ad must never appear, even if a slot is placed there. */
 export const AD_FREE_PREFIXES = [
@@ -83,5 +93,5 @@ export function adDocument(key: string): string {
     width: AD_WIDTH,
     params: {},
   });
-  return `<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;padding:0;overflow:hidden;background:transparent}</style></head><body><script>atOptions = ${options};</script><script src="${AD_SCRIPT_HOST}${key}"></script></body></html>`;
+  return `<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;padding:0;overflow:hidden;background:transparent}</style></head><body><script>${FILL_REPORTER}</script><script>atOptions = ${options};</script><script src="${AD_SCRIPT_HOST}${key}"></script></body></html>`;
 }

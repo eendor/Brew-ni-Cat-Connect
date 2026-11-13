@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 
 import { AdSlot } from "@/components/ads/ad-slot";
 import { Container } from "@/components/ui/container";
 import { useAuth } from "@/context/auth-context";
+import { readWaitingOrder } from "@/lib/games/waiting-order";
 import {
   fetchGameStatus,
   type GameId,
@@ -43,6 +44,8 @@ type Load =
  * The mini-games page (FR-089, FR-090): two short games that earn loyalty
  * points, a few plays a day, and the site's only ad slot.
  */
+const noSubscribe = () => () => {};
+
 export function GamesView() {
   const { user, isLoading: isAuthLoading } = useAuth();
   const userId = user?.id ?? null;
@@ -105,12 +108,28 @@ export function GamesView() {
   const ready = load.state === "ready" ? load : null;
   const outOfPlays = ready ? ready.status.playsLeft <= 0 : true;
   const cannotPlay = !signedIn || outOfPlays;
+  const waitingOrder = useSyncExternalStore(
+    noSubscribe,
+    readWaitingOrder,
+    () => null,
+  );
   const games = ready?.status.games ?? [];
   const cups = games.find((g) => g.id === "cat-cups");
   const paw = games.find((g) => g.id === "lucky-paw");
 
   return (
     <Container className="max-w-4xl py-8 md:py-12">
+      {waitingOrder ? (
+        // a full page load: the order page reads its tracking token on load,
+        // and client navigation with a # link doubled the token
+        <a
+          href={waitingOrder}
+          data-testid="back-to-order"
+          className="mb-4 inline-flex text-sm font-semibold text-[var(--accent-strong)] underline-offset-4 hover:underline"
+        >
+          ← Back to your order
+        </a>
+      ) : null}
       <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
