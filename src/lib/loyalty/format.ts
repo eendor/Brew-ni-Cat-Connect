@@ -27,6 +27,8 @@ export function formatReason(
       return "Order completed";
     case "reward-redeemed":
       return "Reward redeemed";
+    case "mini-game":
+      return note && note.trim().length > 0 ? note.trim() : "Mini-game";
     case "adjustment":
       return note && note.trim().length > 0 ? note.trim() : "Points adjustment";
     default:
