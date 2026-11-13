@@ -7,8 +7,9 @@ import {
   AD_FILL_TIMEOUT_MS,
   AD_FILLED_MESSAGE,
   AD_HEIGHT,
+  AD_SANDBOX,
   AD_WIDTH,
-  adDocument,
+  adFrameSrc,
   adKey,
   isAdFreePath,
   readAdConsent,
@@ -158,8 +159,8 @@ function AdFrame({ adKey: key }: Readonly<{ adKey: string }>) {
         title="Advertisement"
         width={AD_WIDTH}
         height={AD_HEIGHT}
-        srcDoc={adDocument(key)}
-        sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox"
+        src={adFrameSrc(key)}
+        sandbox={AD_SANDBOX}
         referrerPolicy="no-referrer"
         className="relative max-w-full border-0"
       />

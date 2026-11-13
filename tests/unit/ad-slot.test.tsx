@@ -53,13 +53,14 @@ describe("Ads in the mini-game area (FR-090)", () => {
     render(<AdSlot />);
     fireEvent.click(screen.getByRole("button", { name: "Show ads" }));
     const frame = screen.getByTitle("Advertisement");
+    // Update 2026-11-13: allow-same-origin is on so the ad can draw into its
+    // inner frame; the data: URL keeps it on its own origin (TC-P9-052)
     expect(frame).toHaveAttribute(
       "sandbox",
-      "allow-scripts allow-popups allow-popups-to-escape-sandbox",
+      "allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox",
     );
     expect(frame.getAttribute("sandbox")).not.toContain("allow-top-navigation");
-    expect(frame.getAttribute("sandbox")).not.toContain("allow-same-origin");
-    expect(frame.getAttribute("srcdoc")).toContain(KEY);
+    expect(decodeURIComponent(frame.getAttribute("src") ?? "")).toContain(KEY);
     expect(window.localStorage.getItem(AD_CONSENT_KEY)).toBe("yes");
 
     fireEvent.click(screen.getByRole("button", { name: "Turn off ads" }));
@@ -159,6 +160,19 @@ describe("Ads in the mini-game area (FR-090)", () => {
     expect(html).toContain(`parent.postMessage("${AD_FILLED_MESSAGE}","*")`);
     expect(html.indexOf("MutationObserver")).toBeLessThan(
       html.indexOf("bauval.org"),
+    );
+  });
+
+  it("TC-P9-052 — the ad page is a data: URL and never srcdoc, so allow-same-origin can't give it this site's origin", () => {
+    window.localStorage.setItem(AD_CONSENT_KEY, "yes");
+    render(<AdSlot />);
+    const frame = screen.getByTitle("Advertisement");
+    expect(frame.getAttribute("src")).toMatch(
+      /^data:text\/html;charset=utf-8,/,
+    );
+    expect(frame.hasAttribute("srcdoc")).toBe(false);
+    expect(frame.getAttribute("src")).toBe(
+      `data:text/html;charset=utf-8,${encodeURIComponent(adDocument(KEY))}`,
     );
   });
 });
