@@ -16,10 +16,12 @@ import {
   LIMIT_WINDOW_MS,
   MAX_EVENTS_PER_DELIVERY,
   ORDER_LOOKUP_LIMIT,
+  PHOTO_AFTER_REPLY_MS,
   ORDER_STEP_LIMIT,
   processWebhook,
   resetMessengerState,
   SENDER_REPLY_LIMIT,
+  STAFF_HANDLED_MS,
   STAFF_QUIET_MS,
   SMART_REPLY_LIMIT,
   SMART_REPLY_PAGE_LIMIT,
@@ -27,6 +29,8 @@ import {
 } from "@/lib/messenger/events";
 import { CATEGORY_PAYLOAD_PREFIX, PAYLOADS } from "@/lib/messenger/intents";
 import { encodeOrderPayload, newOrder } from "@/lib/messenger/order-state";
+import { deriveStaffChat } from "@/lib/messenger/order-ids";
+import { ASSISTANT_METADATA } from "@/lib/messenger/send";
 import { orderPausedReply } from "@/lib/messenger/ordering";
 import {
   noOrdersReply,
@@ -232,13 +236,13 @@ describe("Messenger buttons (FR-059, FR-062)", () => {
       },
     };
     await expect(
-      processWebhook(delivery(sticker, photo), deps),
+      processWebhook(delivery(photo, sticker), deps),
     ).resolves.toEqual({ replied: 2, skipped: 0, failed: 0 });
-    expect(texts()[0]).toBe(likeReply().text);
-    expect(sent[0]?.answer.quickReplies[0]?.payload).toBe(PAYLOADS.order);
-    expect(texts()[1]).toMatch(
+    expect(texts()[0]).toMatch(
       /^Thanks! 📸 Our staff will check what you sent/,
     );
+    expect(texts()[1]).toBe(likeReply().text);
+    expect(sent[1]?.answer.quickReplies[0]?.payload).toBe(PAYLOADS.order);
     expect(deps.readMenu).not.toHaveBeenCalled();
   });
 
@@ -922,5 +926,136 @@ describe("Smart replies (ADR-031)", () => {
     await processWebhook(delivery(typed("open po kayo today?")), deps);
     expect(texts()[0]).toMatch(/^🟢 Yes, we're open now until 6 PM!/);
     expect(askAssistant).not.toHaveBeenCalled();
+  });
+});
+
+/** A message the Page sent, echoed back by Meta (FR-113). */
+function echo(text: string, metadata?: string, options: Options = {}) {
+  return {
+    sender: { id: PAGE },
+    recipient: { id: options.sender ?? CUSTOMER },
+    timestamp: "time" in options ? options.time : NOW,
+    message: {
+      is_echo: true,
+      mid: nextMid(),
+      text,
+      ...(metadata === undefined ? {} : { metadata }),
+    },
+  };
+}
+
+function photoFrom(options: Options = {}) {
+  return {
+    ...base(options),
+    message: {
+      mid: nextMid(),
+      attachments: [
+        { type: "image", payload: { url: "https://cdn.example/photo.jpg" } },
+      ],
+    },
+  };
+}
+
+describe("Messenger after the staff reply by hand (FR-113)", () => {
+  beforeEach(() => resetMessengerState());
+
+  it("TC-P7-110 — a staff reply quiets typed messages, photos and stickers in that chat, but buttons still answer", async () => {
+    const noteStaffReply = vi.fn<NonNullable<MessengerDeps["noteStaffReply"]>>(
+      async () => undefined,
+    );
+    const { deps, texts, advance } = setup({ noteStaffReply });
+    await expect(
+      processWebhook(delivery(echo("Hello po, ano po yun?")), deps),
+    ).resolves.toEqual({ replied: 0, skipped: 1, failed: 0 });
+    expect(noteStaffReply).toHaveBeenCalledWith(CUSTOMER);
+
+    advance(11 * 60 * 60 * 1000);
+    await processWebhook(
+      delivery(
+        typed("Good day", { time: NOW + 11 * 60 * 60 * 1000 }),
+        photoFrom({ time: NOW + 11 * 60 * 60 * 1000 }),
+      ),
+      deps,
+    );
+    expect(texts()).toEqual([]);
+
+    await processWebhook(
+      delivery(
+        postback(PAYLOADS["hours-location"], {
+          time: NOW + 11 * 60 * 60 * 1000,
+        }),
+      ),
+      deps,
+    );
+    expect(texts()).toHaveLength(1);
+
+    // Other customers are answered as usual.
+    await processWebhook(
+      delivery(
+        typed("hi", {
+          sender: OTHER_CUSTOMER,
+          time: NOW + 11 * 60 * 60 * 1000,
+        }),
+      ),
+      deps,
+    );
+    expect(texts()).toHaveLength(2);
+  });
+
+  it("TC-P7-111 — the assistant's own echoes don't quiet the chat, and a saved staff reply is read back after 12 hours ends", async () => {
+    const { deps, texts } = setup();
+    await processWebhook(delivery(echo("Hi!", ASSISTANT_METADATA)), deps);
+    await processWebhook(delivery(typed("hello")), deps);
+    expect(texts()).toHaveLength(1);
+
+    resetMessengerState();
+    const saved = setup({
+      readStaffReply: vi.fn(async () => NOW - 60 * 60 * 1000),
+    });
+    await processWebhook(delivery(typed("hello")), saved.deps);
+    expect(saved.texts()).toEqual([]);
+
+    resetMessengerState();
+    const old = setup({
+      readStaffReply: vi.fn(async () => NOW - STAFF_HANDLED_MS),
+    });
+    await processWebhook(delivery(typed("hello")), old.deps);
+    expect(old.texts()).toHaveLength(1);
+
+    // A database that can't be read doesn't stop the replies.
+    resetMessengerState();
+    const down = setup({
+      readStaffReply: vi.fn(async () => {
+        throw new Error("down");
+      }),
+    });
+    await processWebhook(delivery(typed("hello")), down.deps);
+    expect(down.texts()).toHaveLength(1);
+  });
+
+  it("TC-P7-112 — a greeting and a photo sent together get one reply", async () => {
+    const { deps, texts, advance } = setup();
+    await expect(
+      processWebhook(delivery(typed("Good day 😊"), photoFrom()), deps),
+    ).resolves.toEqual({ replied: 1, skipped: 1, failed: 0 });
+    expect(texts()).toHaveLength(1);
+
+    advance(PHOTO_AFTER_REPLY_MS);
+    await processWebhook(
+      delivery(photoFrom({ time: NOW + PHOTO_AFTER_REPLY_MS })),
+      deps,
+    );
+    expect(texts()[1]).toMatch(
+      /^Thanks! 📸 Our staff will check what you sent/,
+    );
+  });
+
+  it("TC-P7-113 — keeps the chat under a code made with the app secret, never the customer's ID", () => {
+    const chat = deriveStaffChat("test-app-secret", CUSTOMER);
+    expect(chat).toMatch(/^[0-9a-f]{64}$/);
+    expect(chat).not.toContain(CUSTOMER);
+    expect(deriveStaffChat("test-app-secret", CUSTOMER)).toBe(chat);
+    expect(deriveStaffChat("other-secret", CUSTOMER)).not.toBe(chat);
+    expect(deriveStaffChat("test-app-secret", OTHER_CUSTOMER)).not.toBe(chat);
   });
 });

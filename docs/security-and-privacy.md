@@ -591,3 +591,8 @@ Section 19 already belongs to the Phase 7 addendum on `main`, so this addendum t
   3. In Supabase, open Authentication → URL Configuration. Set the Site URL to the production address and add `https://<production-domain>/account/callback` and `http://localhost:3000/account/callback` to the redirect URLs.
 - Until step 2 is done, the Google button shows "We couldn't open Google sign-in." and nobody can sign in, so the change is not merged before then.
 
+## 26. Messenger Staff Replies Addendum (FR-113, 2026-11-13)
+
+- The webhook now receives `message_echoes`, so it sees every message the Page sends, including the staff's. It reads only who the echo went to and whether the assistant sent it; the staff's text is not read, stored or logged.
+- A chat the staff answered is saved as an HMAC-SHA256 of the customer's Page-scoped ID with the Meta app secret (64 hex characters) and the time. The ID itself is never stored, and without the app secret nobody can make a customer's code, so the open `anon` functions can't be used to quiet the assistant for someone else or to learn who wrote to the Page.
+- `private.messenger_staff_chats` has RLS on and no grants; only the two security definer functions touch it. Rows older than two days are removed whenever a new one is saved.

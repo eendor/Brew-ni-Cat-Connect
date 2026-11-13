@@ -56,3 +56,14 @@ export function deriveOrderIds(
     trackingToken: deriveTrackingToken(secret, sender),
   };
 }
+
+/**
+ * The name the database keeps a chat under when the staff reply in it by hand
+ * (FR-113): 64 hex characters, made from the customer's Page-scoped ID with
+ * the app secret, so the database never holds the ID itself.
+ */
+export function deriveStaffChat(secret: string, sender: string): string {
+  return createHmac("sha256", secret)
+    .update(`messenger-staff:chat:${sender}`)
+    .digest("hex");
+}

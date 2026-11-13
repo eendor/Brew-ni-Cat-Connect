@@ -1851,3 +1851,13 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Update 2026-11-13:** Google was switched on in Supabase through the Management API with the shop's OAuth web client (the secret is kept only in Supabase), branch previews were added to the allowed redirect URLs, and a real Google sign-in on the preview passed (MAN-P5-019; renumbered from MAN-P5-010, which the Phase 5 QA summary already used).
 - **Next action:** Repeat the sign-in on production after the merge; rotate the OAuth client secret.
 
+## 2026-11-13 — Messenger stays quiet after the staff reply by hand
+
+- **Phase:** Phase 7 (FR-113), fix.
+- **Task:** The lead developer asked to check how the bot handles new messages. A supplier who had been answered by hand the night before sent a greeting and a photo, and the bot sent the welcome buttons and "our staff will check what you sent". The lead developer turned on `message_echoes` in the Meta webhook and asked for the fix, and for the Gemini key to be added to Vercel.
+- **Summary:** Every message the assistant sends now carries `metadata`. An echo without it is a staff reply: the chat is saved (in memory and in Supabase, under an HMAC of the customer's ID) and typed messages, photos and stickers there get no automatic reply for 12 hours; buttons still answer. A photo sent within 2 minutes of a reply gets no reply of its own, so a greeting and a photo get one reply. `GEMINI_API_KEY` was added to Vercel (production and preview, encrypted), so smart replies start with the next deploy.
+- **Files:** `supabase/migrations/20261113130000_messenger_staff_chats.sql`, `supabase/rollbacks/20261113130000_messenger_staff_chats.sql`, `src/lib/messenger/{events,send,deps,order-ids}.ts`, `tests/unit/{messenger-events,messenger-send}.test.ts`, `tests/database/messenger-staff-chats.test.ts`, `tests/e2e/foundation.spec.ts`, `scripts/validate_phase0_docs.py`, `docs/{functional-requirements,test-cases,security-and-privacy,database-design}.md`.
+- **Testing:** unit and database tests: 1084 passed; lint and type check clean.
+- **Branch / PR:** `fix/messenger-staff-quiet`.
+- **CI on main:** the merge of #132 failed TC-P1-009 on time alone: it loads 8 pages at 5 widths, and those 40 loads went from 11 s to over the 30 s limit as pages grew. It now has 90 s (37.6 s locally).
+- **Next action:** Apply the migration to the live database after the merge, then run MAN-P7-010.
