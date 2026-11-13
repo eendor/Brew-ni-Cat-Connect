@@ -1,0 +1,50 @@
+{ "frames": [
+   {
+    "filename": "sleigh 0.aseprite",
+    "frame": { "x": 0, "y": 0, "w": 72, "h": 44 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 72, "h": 44 },
+    "sourceSize": { "w": 72, "h": 44 },
+    "duration": 180
+   },
+   {
+    "filename": "sleigh 1.aseprite",
+    "frame": { "x": 72, "y": 0, "w": 72, "h": 44 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 72, "h": 44 },
+    "sourceSize": { "w": 72, "h": 44 },
+    "duration": 180
+   },
+   {
+    "filename": "sleigh 2.aseprite",
+    "frame": { "x": 144, "y": 0, "w": 72, "h": 44 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 72, "h": 44 },
+    "sourceSize": { "w": 72, "h": 44 },
+    "duration": 180
+   },
+   {
+    "filename": "sleigh 3.aseprite",
+    "frame": { "x": 216, "y": 0, "w": 72, "h": 44 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 72, "h": 44 },
+    "sourceSize": { "w": 72, "h": 44 },
+    "duration": 180
+   }
+ ],
+ "meta": {
+  "app": "http://www.aseprite.org/",
+  "version": "1.3.18.6-dev",
+  "image": "sleigh.png",
+  "format": "RGBA8888",
+  "size": { "w": 288, "h": 44 },
+  "scale": "1",
+  "frameTags": [
+   { "name": "ride", "from": 0, "to": 3, "direction": "forward", "color": "#000000ff" }
+  ]
+ }
+}

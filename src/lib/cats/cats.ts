@@ -1,11 +1,12 @@
 /**
- * The shop's cats (FR-099, update 2026-11-13, ADR-032). Each cat is modelled
- * in three.js from simple geometry (no pictures), with its coat, markings and
- * eyes taken from the shop's own photos (`public/images/shop`): the four cats
- * on the opening poster, Oreo, a grey cat and Kasper napping. They stroll
- * across the top of the footer. In November and December they walk in single
- * file with bells and reins, pulling a cosy coffee-cup sleigh with Luna, a
- * mama cat soon, resting inside with her kittens.
+ * The shop's cats (FR-099, update 2026-11-13, ADR-032), with their coats,
+ * markings and eyes taken from the shop's own photos (`public/images/shop`):
+ * the four cats on the opening poster, Oreo, a grey cat and Kasper napping.
+ * Aseprite draws the walkers, the sleigh and the kittens as pixel art from
+ * these colours (`scripts/aseprite/cat-sprites.lua`). They stroll across the
+ * top of the footer. In November and December they wear bells, and a cosy
+ * coffee-cup sleigh follows with Luna, a mama cat soon, resting inside with
+ * her kittens.
  */
 
 export type CatPose = "sit" | "lie" | "walk";

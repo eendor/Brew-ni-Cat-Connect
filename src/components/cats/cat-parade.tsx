@@ -18,11 +18,11 @@ import type { ParadeStage, ParadeState } from "./parade-stage";
 /** How long the cats take to turn their heads to the visitor and back. */
 const GLANCE_MS = 700;
 
-/** WebGL2 without touching jsdom's unimplemented canvas API. */
-function canDraw3d() {
-  if (typeof window.WebGL2RenderingContext === "undefined") return false;
+/** A 2D canvas (jsdom has none, so the strip stays hidden in unit tests). */
+function canDraw() {
+  if (typeof window.CanvasRenderingContext2D === "undefined") return false;
   try {
-    return Boolean(document.createElement("canvas").getContext("webgl2"));
+    return Boolean(document.createElement("canvas").getContext("2d"));
   } catch {
     return false;
   }
@@ -37,14 +37,14 @@ function reducedMotion() {
 
 /**
  * The cat parade along the top of the footer (FR-099, ADR-032): the shop's
- * cats, built in three.js, walk across in single file. In November and
+ * cats, drawn as pixel art in Aseprite, walk across in single file. In November and
  * December they wear bells and pull a cosy coffee-cup sleigh with Luna, a mama
  * cat soon, resting inside with her kittens; from January they just stroll.
  * anime.js walks each lap in one smooth walk from one side to the other;
  * passing the middle the cats glance out and one meows. After a rest they
  * come back the other way. The strip has its own space in the footer, so it
  * never covers the page. With reduced motion the parade stands still in the
- * middle. Without WebGL2 the strip stays hidden. Page transitions get a soft
+ * middle. Without a 2D canvas the strip stays hidden. Page transitions get a soft
  * meow (switchable in the footer).
  */
 export function CatParade() {
@@ -63,7 +63,7 @@ export function CatParade() {
   useEffect(() => {
     const element = strip.current;
     const surface = canvas.current;
-    if (!element || !surface || !canDraw3d()) return;
+    if (!element || !surface || !canDraw()) return;
     const still = reducedMotion();
     const walkers = paradeWalkers(window.innerWidth);
     element.dataset.ready = "true";

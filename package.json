@@ -16,7 +16,8 @@
     "test:coverage": "vitest run --coverage",
     "test:e2e": "npm run build && playwright test",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "cats:sprites": "node scripts/cat-sprites.mts"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.112.3",
