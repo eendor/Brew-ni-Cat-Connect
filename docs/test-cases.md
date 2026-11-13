@@ -1659,3 +1659,45 @@ The customer Android app is a Trusted Web Activity over the live site (ADR-035).
 | TC-P8-027 | FR-066, NFR-036 | `./gradlew assembleRelease lintRelease`, then install the signed APK on an Android 15 Pixel 6 emulator and open it | Lint passes with warnings as errors; the APK is signed with the release key; the icon shows on the home screen and the app opens the live site | Passed 2026-11-13 (emulator; before `assetlinks.json` was live, so the address bar still showed) |
 | MAN-P8-007 | FR-066, NFR-036 | On a real Android phone with Chrome, install the APK from the release, then sign in, order, follow the order, play a game and open the profile | The app opens full screen with no address bar, and every journey works as on the website | Not run yet |
 | MAN-P8-008 | FR-068 | In the app on a real phone, turn on airplane mode and open a page, then try Place order | The offline page shows, and no order is reported as placed | Not run yet |
+
+## 61. Phase 8 Integrated QA Execution Summary
+
+Run on 2026-11-13 by Renier P. Apal, the integrated QA engineer, on `main` at `fd51c60` (branch `test/p8-integrated-qa-main`). Environment: Windows 11, Node.js 24.19.0, Chrome for Testing 151.0.7922.34 (Playwright Chromium). This run covers the merged installable web app and offline page (PR #105) and Android app (PR #146). Checks against the live site were read-only; no real order was placed and no live data was changed.
+
+| Check | Command | Result |
+| --- | --- | --- |
+| Dependency install | `npm ci` | Passed: added 479 packages. npm reported 13 audit findings (10 moderate, 3 high). |
+| Dependency audit | `npm run audit` | Exit 0: 0 vulnerabilities in production dependencies; the full development dependency report lists 13 (10 moderate, 3 high), with no critical findings. |
+| Format | `npm run format:check` | Passed: All matched files use Prettier code style! |
+| Docs validator | `python scripts/validate_phase0_docs.py` | Passed: `REQUIRED_ROOT=5`, `REQUIRED_DOCS=14`, `MARKDOWN_FILES_CHECKED=36`, `FR_IDS=115 (001-115)`, `NFR_IDS=40 (001-040)`, `ERRORS=0`, `PHASE0_DOC_VALIDATION=PASS`. |
+| Lint | `npm run lint` | Passed: exit 0, 0 errors and 0 warnings. |
+| Typecheck | `npm run typecheck` | Passed: route types generated; TypeScript exited 0. |
+| Unit and database tests | `npm run test` | Passed: Test Files 108 passed (108); Tests 1123 passed (1123). |
+| Production build | Set the CI placeholder `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `NEXT_PUBLIC_ONLINE_ORDERING` and `NEXT_PUBLIC_AD_KEY`, then `npm run build` | Passed: compiled successfully and generated all 27 static pages. The placeholder Supabase host could not return live content, so pages logged that they were showing the fallback. |
+| Browser tests | Set `CI=1`, the same four CI placeholder variables, and `PLAYWRIGHT_BROWSERS_PATH` to the temporary browser cache; run `npx playwright test --project=chromium` | Not fully verified. Two initial attempts could not launch Chromium because the headless-shell executable was missing. After Chromium was installed, all 76 test cases reported individual results (73 passed and 3 skipped), but the runner did not return its final summary and was stopped after it remained open. No test failure was reported in that final run; its aggregate result is unverified. |
+
+The browser-runner setup issue was `browserType.launch: Executable doesn't exist at ...chromium_headless_shell-1234...chrome-headless-shell.exe`. Installing Chromium into a temporary browser cache resolved that launch error. The final run still did not exit with a summary, so the browser suite must be rerun before calling the full suite verified. The three skipped tests are the existing screenshot capture checks that require `CAPTURE_EVIDENCE=1`.
+
+### Live and Manual Checks
+
+| ID | Check | Device | Result | Status |
+| --- | --- | --- | --- | --- |
+| — | GET `/manifest.webmanifest` | Live site | HTTP 200 JSON; name `Brew ni Cat Coffee Shop`, `start_url` `/`, display `standalone`, and three `any`/`maskable` icons | Passed |
+| — | HEAD `/sw.js` | Live site | HTTP 200; `Cache-Control: no-cache, no-store, must-revalidate` | Passed |
+| — | GET `/.well-known/assetlinks.json` | Live site | HTTP 200 JSON; package `com.brewnicat.connect` and one `handle_all_urls` statement | Passed |
+| — | Check the `v1.0.0` release and APK | GitHub release | GitHub returned 404 for the `v1.0.0` tag; the releases list was empty | Not merged yet (release not published) |
+| MAN-P8-020 | Install the live site from Android Chrome and open it from the home screen | Android phone | Awaiting Renier's result | Not run yet |
+| MAN-P8-021 | Install the live site from desktop Chrome and open it in its own window | Desktop browser | Awaiting Renier's result | Not run yet |
+| MAN-P8-022 | In the installed site, switch to airplane mode, confirm the offline page, reconnect and use Try again | Android phone | Awaiting Renier's result | Not run yet |
+| MAN-P8-023 | Install the v1.0.0 APK and verify full-screen launch, menu, cart, sign-in and order tracking | Android phone | The release is not published yet; no real order will be placed | Not run yet |
+| MAN-P8-024 | In the Android app, use airplane mode and verify the offline page never reports an order as placed | Android phone | The release is not published yet | Not run yet |
+
+**Phase 8 work covered:**
+
+- PR #105, `feat: installable web app with an offline page (FR-068 web part)` — merged; live manifest and service-worker checks passed.
+- PR #146, `feat(android): add the customer Android app as a Trusted Web Activity (FR-065 to FR-069)` — merged; live asset-links check passed.
+- Production deploy — live endpoints returned the expected responses.
+- `v1.0.0` release and APK — Not merged yet; the release has not been published.
+- FR-070 push notifications — Deferred; **TODO: Confirm with Brew ni Cat owner.**
+
+No screenshots were captured in this run. No live orders, reviews or data requests were submitted.
