@@ -13,6 +13,7 @@ import {
   TikTokIcon,
 } from "@/components/ui/icons";
 import { InstallAppButton } from "@/components/pwa/install-app-button";
+import { JukeboxControl } from "@/components/sound/jukebox-control";
 import { PRIVACY_POLICY_PATH } from "@/config/privacy";
 import { siteConfig } from "@/config/site";
 import {
@@ -162,6 +163,7 @@ export function SiteFooter({ content }: SiteFooterProps) {
             </Link>
           </div>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+            <JukeboxControl />
             <CatSoundsToggle />
             <InstallAppButton />
             <span>{joinList(content.payments.methods)} accepted</span>

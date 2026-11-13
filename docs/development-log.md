@@ -1894,3 +1894,14 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `feat/pixel-cats`.
 - **Known limitations:** regenerating the sprites needs Aseprite installed locally (it is not a project dependency); the art is drawn by script, not by hand.
 - **Next action:** none.
+
+## 2026-11-13 — Café music in the footer
+
+- **Phase:** Phase 9 (FR-115), feature.
+- **Task:** The team asked for French café music on the website.
+- **Summary:** A "Play café music" button in the footer plays four songs made in the browser with Web Audio as a musette accordion over an oom-pah bass: two traditional French folk songs in the public domain (*Au clair de la lune*, *Frère Jacques*) and two waltzes written for the shop. It never autoplays, names the song and its source while playing, skips with Next song, fades out with Stop music and carries on from page to page. Nothing is downloaded or licensed.
+- **Files:** `src/lib/sound/jukebox.ts`, `src/components/sound/jukebox-control.tsx`, `src/components/layout/site-footer.tsx`, `tests/unit/jukebox.test.tsx`, `tests/e2e/jukebox.spec.ts`, `scripts/validate_phase0_docs.py`, `docs/{functional-requirements,decisions,test-cases,development-log}.md`, `docs/evidence/phase-9/jukebox/`.
+- **Testing:** see the pull request.
+- **Branch / PR:** `feat/jukebox-music`.
+- **Known limitations:** synthesized, so it sounds like a simple accordion, not a recording; the songs are short and loop in turn.
+- **Next action:** none.
