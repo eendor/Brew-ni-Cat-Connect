@@ -1686,9 +1686,9 @@ The browser-runner setup issue was `browserType.launch: Executable doesn't exist
 | — | HEAD `/sw.js` | Live site | HTTP 200; `Cache-Control: no-cache, no-store, must-revalidate` | Passed |
 | — | GET `/.well-known/assetlinks.json` | Live site | HTTP 200 JSON; package `com.brewnicat.connect` and one `handle_all_urls` statement | Passed |
 | — | Check the `v1.0.0` release and APK | GitHub release | GitHub returned 404 for the `v1.0.0` tag; the releases list was empty | Not merged yet (release not published) |
-| MAN-P8-020 | Install the live site from Android Chrome and open it from the home screen | Android phone | Awaiting Renier's result | Not run yet |
-| MAN-P8-021 | Install the live site from desktop Chrome and open it in its own window | Desktop browser | Awaiting Renier's result | Not run yet |
-| MAN-P8-022 | In the installed site, switch to airplane mode, confirm the offline page, reconnect and use Try again | Android phone | Awaiting Renier's result | Not run yet |
+| MAN-P8-020 | Install the live site from Android Chrome and open it from the home screen | Android phone | Opened in standalone view with no browser address bar (`docs/evidence/phase-8/integrated-qa/android-install-standalone.jpg`) | Passed 2026-11-13 |
+| MAN-P8-021 | Install the live site from desktop Chrome and open it in its own window | Desktop browser | Opened in its own app window without browser tabs or address bar (`docs/evidence/phase-8/integrated-qa/desktop-install-window.png`) | Passed 2026-11-13 |
+| MAN-P8-022 | In the installed site, switch to airplane mode, confirm the offline page, reconnect and use Try again | Android phone | Screenshot shows airplane mode and the offline page with retry guidance (`docs/evidence/phase-8/integrated-qa/offline-page-airplane-mode.jpg`); two image placeholders are broken, and the reconnect/Try again result is not shown | Not run yet (retry result pending) |
 | MAN-P8-023 | Install the v1.0.0 APK and verify full-screen launch, menu, cart, sign-in and order tracking | Android phone | The release is not published yet; no real order will be placed | Not run yet |
 | MAN-P8-024 | In the Android app, use airplane mode and verify the offline page never reports an order as placed | Android phone | The release is not published yet | Not run yet |
 
@@ -1700,4 +1700,4 @@ The browser-runner setup issue was `browserType.launch: Executable doesn't exist
 - `v1.0.0` release and APK — Not merged yet; the release has not been published.
 - FR-070 push notifications — Deferred; **TODO: Confirm with Brew ni Cat owner.**
 
-No screenshots were captured in this run. No live orders, reviews or data requests were submitted.
+Screenshots for MAN-P8-020, MAN-P8-021 and MAN-P8-022 are in `docs/evidence/phase-8/integrated-qa/`. No live orders, reviews or data requests were submitted.
