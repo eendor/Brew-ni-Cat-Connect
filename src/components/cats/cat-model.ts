@@ -50,7 +50,7 @@ function fur(
   if (fluff <= 0) return geometry;
   const position = geometry.attributes.position as THREE.BufferAttribute;
   const v = new THREE.Vector3();
-  const amount = size * 0.06 * fluff;
+  const amount = size * 0.025 * fluff;
   for (let i = 0; i < position.count; i += 1) {
     v.fromBufferAttribute(position, i);
     const n = v.clone().sub(middle).normalize();
@@ -129,28 +129,36 @@ function mesh(
 /** One eye: iris, slit pupil, a glint, and a lid that closes for blinks. */
 function makeEye(iris: string, coat: string, side: number) {
   const eye = new THREE.Group();
-  const ball = new THREE.SphereGeometry(0.052, 20, 14);
-  eye.add(mesh(ball, paint(iris, 0.35), [0, 0, 0], [1, 1.05, 0.7]));
+  // big, round, friendly eyes: a wide round pupil and two glints
+  const ball = new THREE.SphereGeometry(0.064, 24, 16);
+  eye.add(mesh(ball, paint(iris, 0.3), [0, 0, 0], [1, 1.08, 0.62]));
   const pupil = mesh(
     ball,
-    paint("#111014", 0.3),
-    [0, 0, 0.022],
-    [0.32, 0.9, 0.5],
+    paint("#151217", 0.25),
+    [0, -0.004, 0.02],
+    [0.66, 0.78, 0.5],
   );
   eye.add(pupil);
-  const glint = mesh(
-    new THREE.SphereGeometry(0.012, 8, 6),
-    new THREE.MeshBasicMaterial({ color: "#ffffff" }),
-    [0.016 * side, 0.02, 0.04],
+  const shine = new THREE.MeshBasicMaterial({ color: "#ffffff" });
+  eye.add(
+    mesh(new THREE.SphereGeometry(0.019, 10, 8), shine, [
+      0.02 * side,
+      0.024,
+      0.045,
+    ]),
+    mesh(new THREE.SphereGeometry(0.009, 8, 6), shine, [
+      -0.016 * side,
+      -0.02,
+      0.046,
+    ]),
   );
-  eye.add(glint);
   // the lid: the top half of a sphere in the coat colour, rotated down to blink
   const lidPivot = new THREE.Group();
   const lid = mesh(
-    new THREE.SphereGeometry(0.058, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2),
+    new THREE.SphereGeometry(0.07, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2),
     paint(coat),
     [0, 0, 0],
-    [1, 1.05, 0.78],
+    [1, 1.08, 0.7],
   );
   lidPivot.add(lid);
   lidPivot.rotation.x = -1.25; // open: folded back, out of sight
@@ -188,7 +196,7 @@ function makeTail(look: CatCoat, fluff: number, segments = 11) {
     const joint = new THREE.Group();
     joint.position.y = i === 0 ? 0 : length;
     const t = i / (segments - 1);
-    const radius = (0.05 + 0.02 * fluff) * (1 - t * 0.35);
+    const radius = (0.058 + 0.022 * fluff) * (1 - t * 0.3);
     const color = t > 0.75 ? look.tailTip : look.tail;
     // capsules overlapping at every joint make one smooth tail
     joint.add(
@@ -298,8 +306,19 @@ function makeHead(look: CatCoat, seed: number) {
   // eyes
   const left = makeEye(look.eyeLeft, look.cap ?? look.coat, -1);
   const right = makeEye(look.eyeRight, look.cap ?? look.coat, 1);
-  left.eye.position.set(-0.098, 0.025, 0.2);
-  right.eye.position.set(0.098, 0.025, 0.2);
+  left.eye.position.set(-0.1, 0.01, 0.205);
+  right.eye.position.set(0.1, 0.01, 0.205);
+  // rosy cheeks
+  for (const side of [-1, 1]) {
+    const blush = mesh(
+      new THREE.SphereGeometry(0.036, 14, 10),
+      paint("#f2a7b0", 0.8),
+      [0.16 * side, -0.075, 0.19],
+      [1.2, 0.6, 0.3],
+    );
+    blush.rotation.y = 0.5 * side;
+    head.add(blush);
+  }
   left.eye.rotation.y = -0.28;
   right.eye.rotation.y = 0.28;
   head.add(left.eye, right.eye);
@@ -370,21 +389,22 @@ export function buildCat(look: CatCoat, pose: CatPose, seed: number): CatModel {
     offset: number;
   }[] = [];
   if (pose === "walk") {
-    // a long body on four legs, the head up in front, the tail held high
+    // a round, plush body on short legs, with a big head up in front and
+    // the tail held high: soft and chubby rather than lanky
     body.add(
       mesh(
         furSphere(0.3, fluff, seed + 4),
         coat,
-        [0, 0.5, -0.02],
-        [0.78, 0.72, 1.55],
+        [0, 0.44, -0.04],
+        [0.82, 0.78, 1.28],
       ),
     );
     body.add(
       mesh(
-        furSphere(0.15, fluff, seed + 6),
+        furSphere(0.17, fluff, seed + 6),
         paint(look.chest),
-        [0, 0.45, 0.3],
-        [1, 1.1, 0.8],
+        [0, 0.4, 0.24],
+        [1.05, 1.15, 0.85],
       ),
     );
     // diagonal pairs move together, the hind leg a little after the front
@@ -396,50 +416,59 @@ export function buildCat(look: CatCoat, pose: CatPose, seed: number): CatModel {
     ];
     for (const [front, side, offset] of order) {
       const hip = new THREE.Group();
-      hip.position.set(0.12 * side, 0.46, front ? 0.3 : -0.3);
-      if (!front)
-        hip.add(
-          mesh(
-            furSphere(0.13, fluff, seed + 7 + side),
-            coat,
-            [0.02 * side, 0, 0],
-            [0.75, 1, 1.15],
-          ),
-        );
+      hip.position.set(0.13 * side, 0.36, front ? 0.24 : -0.26);
+      // a round shoulder or haunch hides where the leg meets the body
+      hip.add(
+        mesh(
+          furSphere(front ? 0.1 : 0.13, fluff, seed + 7 + side),
+          front
+            ? paint(look.chest === look.paws ? look.chest : look.coat)
+            : coat,
+          [0.01 * side, 0.02, 0],
+          [0.8, 1, 1.1],
+        ),
+      );
       const legColour = paint(
         front && look.paws === look.chest ? look.paws : look.coat,
       );
       hip.add(
         mesh(
-          new THREE.CapsuleGeometry(0.058, 0.2, 6, 12),
+          new THREE.CapsuleGeometry(0.068, 0.12, 8, 14),
           legColour,
-          [0, -0.12, 0],
+          [0, -0.09, 0],
         ),
       );
       const knee = new THREE.Group();
-      knee.position.y = -0.24;
+      knee.position.y = -0.17;
+      // a ball at the joint, so the bent leg stays one smooth piece
       knee.add(
-        mesh(
-          new THREE.CapsuleGeometry(0.048, 0.14, 6, 12),
-          paint(front ? look.paws : look.coat),
-          [0, -0.08, 0],
-        ),
+        mesh(new THREE.SphereGeometry(0.066, 16, 12), legColour, [0, 0, 0]),
       );
       knee.add(
         mesh(
-          new THREE.SphereGeometry(0.058, 16, 10),
+          new THREE.CapsuleGeometry(0.062, 0.07, 8, 14),
+          paint(front ? look.paws : look.coat),
+          [0, -0.06, 0],
+        ),
+      );
+      // a round little bean of a paw
+      knee.add(
+        mesh(
+          new THREE.SphereGeometry(0.075, 18, 12),
           paint(look.paws),
-          [0, -0.19, 0.025],
-          [1, 0.6, 1.35],
+          [0, -0.13, 0.02],
+          [1, 0.62, 1.25],
         ),
       );
       hip.add(knee);
       body.add(hip);
       legs.push({ hip, knee, front, offset });
     }
-    neck.position.set(0, 0.68, 0.4);
-    head.position.set(0, 0.12, 0.08);
-    tail.base.position.set(0, 0.62, -0.42);
+    neck.position.set(0, 0.62, 0.32);
+    head.position.set(0, 0.14, 0.08);
+    // a big head is what makes a cat look like a kitten
+    head.scale.setScalar(1.3);
+    tail.base.position.set(0, 0.56, -0.38);
     tail.base.rotation.x = -0.75;
   } else if (pose === "sit") {
     // one pear-shaped body leaning forward a little, with a chest bib
@@ -573,9 +602,9 @@ export function buildCat(look: CatCoat, pose: CatPose, seed: number): CatModel {
         for (const leg of legs) {
           const a = step + leg.offset * Math.PI * 2;
           // forward and back from the hip; the knee folds while the paw is lifted
-          leg.hip.rotation.x = -Math.sin(a) * 0.45 * gait;
+          leg.hip.rotation.x = -Math.sin(a) * 0.38 * gait;
           const lift = Math.max(0, Math.cos(a)) * gait;
-          leg.knee.rotation.x = (leg.front ? 0.75 : -0.75) * lift;
+          leg.knee.rotation.x = (leg.front ? 0.6 : -0.6) * lift;
         }
         // the body bobs twice a cycle and rolls a little
         body.position.y = Math.abs(Math.sin(step)) * 0.018 * gait;

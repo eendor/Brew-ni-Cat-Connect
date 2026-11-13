@@ -24,6 +24,17 @@ test("TC-P9-018 — the cats walk across the footer, free, and leave the page al
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/menu");
   const strip = await toFooter(page);
+  // what the parade is doing when the cats glance out in the middle
+  const atGreeting = strip.evaluate(
+    (element: HTMLElement) =>
+      new Promise<string | undefined>((resolve) => {
+        new MutationObserver((_records, observer) => {
+          if (element.dataset.greeting !== "true") return;
+          observer.disconnect();
+          resolve(element.dataset.walking);
+        }).observe(element, { attributes: true });
+      }),
+  );
   await expect(strip).toHaveAttribute("data-cats", "oreo latte kulas grey");
   await expect(strip).toHaveAttribute("data-walking", "true", {
     timeout: 5_000,
@@ -34,6 +45,8 @@ test("TC-P9-018 — the cats walk across the footer, free, and leave the page al
   await page.waitForTimeout(700);
   const second = await strip.screenshot();
   expect(second.equals(first)).toBe(false);
+  // they keep walking through the middle: no halt (2026-11-13)
+  expect(await atGreeting).toBe("true");
   // a lap ends with the parade out of sight, then they come back the other way
   await expect(strip).toHaveAttribute("data-walking", "false", {
     timeout: 40_000,
@@ -68,11 +81,11 @@ for (const size of [
     await page.setViewportSize({ width: size.width, height: size.height });
     await page.goto("/about");
     const strip = await toFooter(page);
-    // wait for the stop in the middle, where the cats look out
-    await expect(strip).toHaveAttribute("data-walking", "stopped", {
+    // wait for the middle, where the cats glance out without stopping
+    await expect(strip).toHaveAttribute("data-greeting", "true", {
       timeout: 30_000,
     });
-    await page.waitForTimeout(1_000);
+    await expect(strip).toHaveAttribute("data-walking", "true");
     if (CAPTURE_EVIDENCE) {
       await strip.screenshot({
         path: `${EVIDENCE_DIR}/cat-parade-strip-${size.name}-${size.width}.png`,

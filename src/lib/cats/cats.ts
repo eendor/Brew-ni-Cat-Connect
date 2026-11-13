@@ -239,8 +239,8 @@ export function walkMs(distance: number, height: number): number {
 
 /**
  * One lap across the strip. `x` is where the lead cat's nose is: the lap
- * starts with the whole parade out of sight, stops once with the parade in the
- * middle (the cats look out and one meows), and ends out of sight again.
+ * starts with the whole parade out of sight, passes the middle (where the
+ * cats glance out and one meows, without stopping), and ends out of sight.
  */
 export function paradeLap(
   width: number,
@@ -251,9 +251,6 @@ export function paradeLap(
     ? { start: 0, stop: (width + span) / 2, end: width + span }
     : { start: width, stop: (width - span) / 2, end: -span };
 }
-
-/** The pause in the middle of a lap, in ms. */
-export const STOP_MS = 2_600;
 
 /** The rest between laps: 5 to 12 seconds. */
 export function restMs(random: number): number {
