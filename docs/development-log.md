@@ -1861,3 +1861,14 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `fix/messenger-staff-quiet`.
 - **CI on main:** the merge of #132 failed TC-P1-009 on time alone: it loads 8 pages at 5 widths, and those 40 loads went from 11 s to over the 30 s limit as pages grew. It now has 90 s (37.6 s locally).
 - **Next action:** Apply the migration to the live database after the merge, then run MAN-P7-010.
+
+## 2026-11-13 — Messenger reads today's Page posts
+
+- **Phase:** Phase 7 (FR-114), feature.
+- **Task:** The lead developer pointed out that the shop posts the day's changes on the Facebook Page, often as a picture only, and asked for the assistant to always check the posts.
+- **Summary:** A new Page token with `pages_read_engagement` (never expires) was saved to `.env.local` and to Vercel. The assistant lists the Page's 5 latest posts, keeps up to 2 from today in Manila time, and reads the words in a picture with Gemini when the caption is short or missing. A posted later opening time or "closed today" changes the open status in the hours and "are you open?" replies and in Gemini's facts, and the post is quoted. A live check read the Page's latest picture-only post correctly and answered with the posted opening time.
+- **Files:** `src/lib/messenger/{page-posts,picture-text,send,replies,assistant,events,deps}.ts`, `tests/unit/messenger-page-posts.test.ts`, `scripts/validate_phase0_docs.py`, `docs/{functional-requirements,test-cases,security-and-privacy,development-log}.md`.
+- **Testing:** see the pull request.
+- **Branch / PR:** `feat/messenger-page-posts`.
+- **Known limitations:** posts are read when a customer asks (at most every 2 minutes), not pushed by a `feed` webhook; only an opening time or "closed today" changes the status, other notices are only quoted.
+- **Next action:** Run MAN-P7-011 on the live Page.

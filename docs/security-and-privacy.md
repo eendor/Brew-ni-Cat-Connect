@@ -596,3 +596,10 @@ Section 19 already belongs to the Phase 7 addendum on `main`, so this addendum t
 - The webhook now receives `message_echoes`, so it sees every message the Page sends, including the staff's. It reads only who the echo went to and whether the assistant sent it; the staff's text is not read, stored or logged.
 - A chat the staff answered is saved as an HMAC-SHA256 of the customer's Page-scoped ID with the Meta app secret (64 hex characters) and the time. The ID itself is never stored, and without the app secret nobody can make a customer's code, so the open `anon` functions can't be used to quiet the assistant for someone else or to learn who wrote to the Page.
 - `private.messenger_staff_chats` has RLS on and no grants; only the two security definer functions touch it. Rows older than two days are removed whenever a new one is saved.
+
+## 27. Messenger Page Posts Addendum (FR-114, 2026-11-13)
+
+- The assistant reads the shop's own posts (`/me/posts`: id, time, caption and picture link) with the Page token, which now has `pages_read_engagement`. Comments, reactions and anything about the people who interact with the Page are not read.
+- Only a picture whose link is `https` on `*.fbcdn.net` or `*.facebook.com` is fetched (no redirects, at most 4 MB, JPEG, PNG or WebP), and it is sent to Gemini only to read its words. The words, cut to 300 characters with links removed, are kept in the server's memory for the day and are never stored or logged.
+- The post's words are the shop's own public text; they are quoted to customers and given to Gemini as shop facts. Gemini's system instruction still treats the customer's message as data.
+- A failed read logs only the Graph path and status, never the token or the post.

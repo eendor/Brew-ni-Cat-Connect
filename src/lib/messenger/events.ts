@@ -52,6 +52,7 @@ import {
   type Intent,
 } from "./intents";
 import { shopFacts, type AskAssistant } from "./assistant";
+import type { PagePost } from "./page-posts";
 import { handoffText, handoffTopic } from "./handoff";
 import { ASSISTANT_METADATA } from "./send";
 import {
@@ -104,6 +105,8 @@ export type MessengerDeps = OrderFlowDeps &
     noteStaffReply?: (customer: string) => Promise<void>;
     /** When the staff last replied in this chat by hand; null if never. */
     readStaffReply?: (customer: string) => Promise<number | null>;
+    /** Today's posts on the Page (FR-114); [] when none or unknown. */
+    readTodaysPosts?: () => Promise<readonly PagePost[]>;
   }>;
 
 const MINUTE_MS = 60 * 1000;
@@ -324,6 +327,8 @@ function readEvent(event: unknown, pageId: unknown): CustomerEvent | null {
 type Facts = Readonly<{
   content: () => Promise<SiteContent>;
   menu: () => Promise<MenuCatalog | null>;
+  /** Today's posts on the Page; [] when none or unknown. */
+  posts: () => Promise<readonly PagePost[]>;
 }>;
 
 /** Reads once per delivery, and only when a reply needs it. */
@@ -352,7 +357,9 @@ async function answerIntent(
     case "menu":
       return plain(menuReply(await facts.menu(), deps.origin));
     case "hours-location":
-      return plain(hoursLocationReply(await facts.content()));
+      return plain(
+        hoursLocationReply(await facts.content(), await facts.posts()),
+      );
     case "how-to-order":
       return plain(
         howToOrderReply(
@@ -477,7 +484,11 @@ async function answerText(
   // A short "are you open?" or hours question says whether the shop is open
   // right now, then the hours and location (2026-11-11, updated 2026-11-13).
   if (typedHoursQuestion(text)) {
-    return plain(openNowReply(await facts.content(), now));
+    const [content, posts] = await Promise.all([
+      facts.content(),
+      facts.posts(),
+    ]);
+    return plain(openNowReply(content, now, posts));
   }
   return plain(await answerQuestion(sender, text, deps, facts));
 }
@@ -499,9 +510,10 @@ async function answerQuestion(
   ) {
     return questionForStaffReply(content, now);
   }
-  const [menu, takeoutBoxPrice] = await Promise.all([
+  const [menu, takeoutBoxPrice, posts] = await Promise.all([
     facts.menu(),
     deps.readTakeoutBoxPrice().catch(() => null),
+    facts.posts(),
   ]);
   const answer = await ask(
     shopFacts({
@@ -511,6 +523,7 @@ async function answerQuestion(
       now,
       onlineOrdering: deps.onlineOrdering(),
       origin: deps.origin,
+      posts,
     }),
     text,
   ).catch(() => null);
@@ -641,6 +654,13 @@ export async function processWebhook(
   const facts: Facts = {
     content: once(deps.readContent),
     menu: once(() => deps.readMenu().catch(() => null)),
+    posts: once(async () => {
+      try {
+        return (await deps.readTodaysPosts?.()) ?? [];
+      } catch {
+        return [];
+      }
+    }),
   };
   for (const { event, pageId } of events) {
     try {

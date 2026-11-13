@@ -1573,3 +1573,19 @@ FR-113: when the staff answer a chat by hand, the assistant leaves it to them. T
 | TC-P7-115  | FR-113      | A Messenger ID, upper-case or short codes; a reply three days old when another is saved      | Refused; the old row is removed                                                                  | Passed (automated) |
 | TC-P7-116  | FR-113      | The rollback, then the migration again                                                       | Table and functions removed, then working again                                                  | Passed (automated) |
 | MAN-P7-010 | FR-113      | From a tester account, message the Page; reply by hand from the Page inbox; send "hi" and a photo; tap a button | No reply to "hi" or the photo; the button answers                                   | Pending            |
+
+## 56. Messenger Today's Page Posts Cases (2026-11-13)
+
+FR-114: the assistant reads today's posts on the Facebook Page, including the words in a picture, and uses them for the hours.
+
+| ID         | Requirement | Case | Expected result | Status |
+| ---------- | ----------- | ---- | --------------- | ------ |
+| TC-P7-117  | FR-114      | Three posts from today and one from late yesterday (Manila); a second read within 2 minutes, then after | The two newest of today's posts; the Page is read again only after 2 minutes | Passed (automated) |
+| TC-P7-118  | FR-114      | A picture-only post whose words can't be read yet, then can; a picture on another site | Retried on the next read, then read once and kept; the other site's picture is never fetched | Passed (automated) |
+| TC-P7-119  | FR-114      | Opening times and "closed today" in English and Tagalog; a post about tomorrow; Graph API times; long text and links | Found; the post about tomorrow changes nothing; `+0000` times parse; links removed, cut to 300 | Passed (automated) |
+| TC-P7-120  | FR-114      | "Are you open?" before and after a posted later opening time; a posted "closed today"; the Closed today switch on | The posted time, then the usual status, with the post quoted; closed; the switch's own message | Passed (automated) |
+| TC-P7-121  | FR-114      | Gemini's shop facts with and without a post from today | The posted status and the post are in the facts only when there is one | Passed (automated) |
+| TC-P7-122  | FR-114      | Listing the Page's posts, and a 403 | `/me/posts` with the 4 fields, limit 5 and the Page token; null and a log line with only the path and status | Passed (automated) |
+| TC-P7-123  | FR-114      | Reading a picture: a busy model, NONE, an HTML page, a link off Facebook, a network failure | The next model's words; ""; ""; nothing fetched; null | Passed (automated) |
+| TC-P7-124  | FR-114      | A typed "open po kayo today?" with a post from today, then with the posts unreadable | The posted opening time; the usual open status | Passed (automated) |
+| MAN-P7-011 | FR-114      | Post a picture saying the shop opens later today on the Page; ask "open po kayo?" in Messenger before that time | The reply gives the posted time and quotes the post | Pending |
