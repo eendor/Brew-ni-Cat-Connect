@@ -1949,3 +1949,14 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `fix/ad-fill-check`.
 - **Known limitations:** No ad shows until the ad page has its own address.
 - **Next action:** The lead developer chooses where the ad page lives.
+
+## 2026-11-13 — Live ads show: ad frame moved to a data: URL
+
+- **Phase:** Phase 9 (FR-090).
+- **Task:** The lead developer asked to loosen the ad frame's sandbox so ads show.
+- **Summary:** The frame now has `allow-same-origin`, which lets the Adsterra loader draw the ad in its inner frame. To keep the ad code away from the customer's sign-in session, the ad page is now loaded from a `data:` URL instead of `srcdoc`. A `data:` page always gets its own opaque origin, even with `allow-same-origin`, while `srcdoc` would have taken this site's origin. Checked with the real unit in a normal browser: both versions showed an ad, but from `srcdoc` the ad code could read a test value in the parent's storage, while from the `data:` URL both storage and the parent page were blocked (SecurityError). No separate ad address is needed.
+- **Files:** `src/lib/ads/ads.ts`, `src/components/ads/ad-slot.tsx`, `tests/unit/ad-slot.test.tsx`, `docs/test-cases.md`, `docs/development-log.md`.
+- **Testing:** see the PR.
+- **Branch / PR:** `fix/ad-frame-data-url`.
+- **Known limitations:** Ad content is chosen by Adsterra. Test ads included gambling and "Download" ads, which may need filtering in the Adsterra settings for a café audience.
+- **Next action:** The lead developer checks a live ad (MAN-P9-003) and reviews Adsterra's ad-category settings.
