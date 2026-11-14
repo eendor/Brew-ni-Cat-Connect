@@ -25,6 +25,15 @@ object Checkout {
     fun isValidPhone(phone: String): Boolean =
         Regex("^(09\\d{9}|\\+639\\d{9})$").matches(phone.replace(Regex("[\\s\\-()]"), ""))
 
+    fun normalizePhone(phone: String): String {
+        val cleaned = phone.replace(Regex("[\\s\\-()]"), "")
+        return if (cleaned.startsWith("09") && cleaned.length == 11) {
+            "+63" + cleaned.substring(1)
+        } else {
+            cleaned
+        }
+    }
+
     data class Details(val name: String, val phone: String, val notes: String, val paymentPreference: String)
 
     fun validate(details: Details): Map<String, String> = buildMap {

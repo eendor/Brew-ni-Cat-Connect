@@ -43,7 +43,13 @@ import com.brewnicat.connect.ui.theme.Brand
 /** Size, flavor, add-ons and quantity for one item, like the website's order dialog. */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
-fun ItemSheet(item: MenuItem, onAdd: (variantId: String, flavor: String?, quantity: Int) -> String?, onDismiss: () -> Unit) {
+fun ItemSheet(
+    item: MenuItem,
+    isFavorite: Boolean = false,
+    onToggleFavorite: (() -> Unit)? = null,
+    onAdd: (variantId: String, flavor: String?, quantity: Int) -> String?,
+    onDismiss: () -> Unit,
+) {
     val sheet = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var variantId by remember(item.id) { mutableStateOf(item.variants.firstOrNull()?.id) }
     var picked by remember(item.id) { mutableStateOf(listOf<String>()) }
@@ -65,7 +71,12 @@ fun ItemSheet(item: MenuItem, onAdd: (variantId: String, flavor: String?, quanti
                 Photo(photo, item.name, Modifier.fillMaxWidth().aspectRatio(1.6f).clip(MaterialTheme.shapes.large))
                 Spacer(Modifier.height(14.dp))
             }
-            Text(item.name, style = MaterialTheme.typography.headlineMedium, color = Brand.colors.ink)
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Text(item.name, style = MaterialTheme.typography.headlineMedium, color = Brand.colors.ink, modifier = Modifier.weight(1f))
+                onToggleFavorite?.let { toggle ->
+                    FavoriteHeartButton(isFavorite = isFavorite, itemName = item.name, onClick = toggle)
+                }
+            }
             variant?.description?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = Brand.colors.muted) }
 
             if (item.variants.size > 1) {

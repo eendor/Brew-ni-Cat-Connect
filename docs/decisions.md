@@ -552,3 +552,9 @@ This manual state is a temporary functional-verification condition, not a revisi
 - `assetlinks.json` stays, so website order links open in the app.
 - Website changes no longer reach the app automatically; app changes need a new APK.
 
+**Update 2026-11-15 — native Google sign-in, encrypted Keystore tokens, and account journeys (`feat/p8-native-auth`).** Phase 2 adds customer accounts natively without embedding a WebView (which Google blocks and which would weaken browser isolation) or weakening token storage:
+
+- **OAuth transport:** Google sign-in opens Supabase `/auth/v1/authorize` with `provider=google` and RFC 7636 PKCE (`S256`) in Chrome Custom Tabs (`androidx.browser.customtabs`) and returns the one-time authorization code to `com.brewnicat.connect://auth/callback` (registered in Supabase Auth's redirect allowlist alongside the existing web URLs), exchanged by the app directly with `/auth/v1/token?grant_type=pkce`.
+- **Token protection:** `AuthSession` JSON (access & refresh tokens) is encrypted at rest using an app-generated AES-256-GCM key stored in `AndroidKeyStore` (`KeystoreTokenCipher`), cleared on explicit sign-out or non-recoverable `400`/`401` refresh failure, with proactive expiry checks (`withValidToken`).
+- **Account journeys:** Native screens cover Account hub, Rewards & points history (`loyalty_rewards`, `loyalty_settings`, `redeem_reward` displaying `RWD-` counter codes), Order history with Reorder (re-validating live catalog availability & price changes via `Reorder.kt`), Favorites (`Menu` & `ItemSheet` hearts + `FavoritesScreen`), Profile prefill & edit (`09` / `+639` normalization), Shop reviews (`/api/reviews` for guests and signed-in customers), and Data Privacy Act correction/deletion requests (`data_requests`). Native mini-games and ads follow in phase 3.
+

@@ -12,8 +12,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.LocalCafe
 import androidx.compose.material.icons.automirrored.rounded.ReceiptLong
+import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.ShoppingBag
 import androidx.compose.material.icons.rounded.Storefront
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -35,13 +37,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.brewnicat.connect.data.MenuItem
 import com.brewnicat.connect.data.Pricing
+import com.brewnicat.connect.ui.screens.AccountScreen
 import com.brewnicat.connect.ui.screens.CartScreen
 import com.brewnicat.connect.ui.screens.CheckoutScreen
+import com.brewnicat.connect.ui.screens.DataRequestScreen
+import com.brewnicat.connect.ui.screens.FavoritesScreen
 import com.brewnicat.connect.ui.screens.HomeScreen
 import com.brewnicat.connect.ui.screens.ItemSheet
+import com.brewnicat.connect.ui.screens.LoyaltyHistoryScreen
 import com.brewnicat.connect.ui.screens.MenuScreen
+import com.brewnicat.connect.ui.screens.OrderHistoryScreen
 import com.brewnicat.connect.ui.screens.OrderScreen
 import com.brewnicat.connect.ui.screens.OrdersScreen
+import com.brewnicat.connect.ui.screens.ProfileScreen
+import com.brewnicat.connect.ui.screens.ReviewsScreen
+import com.brewnicat.connect.ui.screens.RewardsScreen
 import com.brewnicat.connect.ui.screens.VisitScreen
 import com.brewnicat.connect.ui.theme.Brand
 import kotlinx.coroutines.launch
@@ -52,6 +62,7 @@ private val tabs = listOf(
     Tab(Screen.Home, "Home", Icons.Rounded.Home),
     Tab(Screen.Menu, "Menu", Icons.Rounded.LocalCafe),
     Tab(Screen.Orders, "Orders", Icons.AutoMirrored.Rounded.ReceiptLong),
+    Tab(Screen.Account, "Account", Icons.Rounded.Person),
     Tab(Screen.Visit, "Visit", Icons.Rounded.Storefront),
 )
 
@@ -62,6 +73,17 @@ fun BrewApp(vm: AppViewModel) {
     var sheetItem by remember { mutableStateOf<MenuItem?>(null) }
     val snackbar = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+
+    fun promptFavoriteSignIn() {
+        sheetItem = null
+        scope.launch {
+            val res = snackbar.showSnackbar(
+                message = "Sign in on the Account tab to save favorites.",
+                actionLabel = "Sign in",
+            )
+            if (res == SnackbarResult.ActionPerformed) vm.selectTab(Screen.Account)
+        }
+    }
 
     BackHandler(enabled = vm.stack.size > 1 || screen != Screen.Home) { vm.back() }
 
@@ -90,7 +112,7 @@ fun BrewApp(vm: AppViewModel) {
                             selected = screen == tab.screen,
                             onClick = { vm.selectTab(tab.screen) },
                             icon = { Icon(tab.icon, contentDescription = null) },
-                            label = { Text(tab.label) },
+                            label = { Text(tab.label, maxLines = 1) },
                             colors = NavigationBarItemDefaults.colors(
                                 selectedIconColor = Brand.colors.accent, selectedTextColor = Brand.colors.accent,
                                 indicatorColor = Brand.colors.accentSurface,
@@ -106,12 +128,20 @@ fun BrewApp(vm: AppViewModel) {
             AnimatedContent(screen, transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "screen") { s ->
                 when (s) {
                     Screen.Home -> HomeScreen(vm) { sheetItem = it }
-                    Screen.Menu -> MenuScreen(vm) { sheetItem = it }
+                    Screen.Menu -> MenuScreen(vm, onNeedSignIn = ::promptFavoriteSignIn) { sheetItem = it }
                     Screen.Orders -> OrdersScreen(vm)
+                    Screen.Account -> AccountScreen(vm)
                     Screen.Visit -> VisitScreen(vm)
                     Screen.Cart -> CartScreen(vm)
                     Screen.Checkout -> CheckoutScreen(vm)
                     is Screen.Order -> OrderScreen(vm, s.reference)
+                    Screen.Profile -> ProfileScreen(vm)
+                    Screen.OrderHistory -> OrderHistoryScreen(vm)
+                    Screen.Favorites -> FavoritesScreen(vm) { sheetItem = it }
+                    Screen.Rewards -> RewardsScreen(vm)
+                    Screen.LoyaltyHistory -> LoyaltyHistoryScreen(vm)
+                    Screen.Reviews -> ReviewsScreen(vm)
+                    Screen.DataRequests -> DataRequestScreen(vm)
                 }
             }
         }
@@ -119,7 +149,9 @@ fun BrewApp(vm: AppViewModel) {
 
     sheetItem?.let { item ->
         ItemSheet(
-            item,
+            item = item,
+            isFavorite = item.id in vm.favoriteIds,
+            onToggleFavorite = { vm.toggleFavorite(item.id, ::promptFavoriteSignIn) },
             onAdd = { variantId, flavor, quantity ->
                 vm.addToCart(item.id, variantId, flavor, quantity).also { error ->
                     if (error == null) {

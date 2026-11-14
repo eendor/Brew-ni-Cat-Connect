@@ -42,7 +42,7 @@ import com.brewnicat.connect.ui.theme.Brand
 import kotlinx.coroutines.launch
 
 @Composable
-fun MenuScreen(vm: AppViewModel, onItem: (MenuItem) -> Unit) {
+fun MenuScreen(vm: AppViewModel, onNeedSignIn: () -> Unit = {}, onItem: (MenuItem) -> Unit) {
     Column(Modifier.fillMaxSize()) {
         BrandHeader()
         when (val m = vm.menu) {
@@ -50,13 +50,13 @@ fun MenuScreen(vm: AppViewModel, onItem: (MenuItem) -> Unit) {
             is Loadable.Failed -> MessageState("😿", "Menu unavailable", m.message, action = "Try again", onAction = vm::loadMenu)
             is Loadable.Ready -> if (m.value.categories.isEmpty()) {
                 MessageState("🐾", "Nothing on the menu yet", "Please check back soon.")
-            } else MenuList(m.value, vm, onItem)
+            } else MenuList(m.value, vm, onNeedSignIn, onItem)
         }
     }
 }
 
 @Composable
-private fun MenuList(catalog: MenuCatalog, vm: AppViewModel, onItem: (MenuItem) -> Unit) {
+private fun MenuList(catalog: MenuCatalog, vm: AppViewModel, onNeedSignIn: () -> Unit, onItem: (MenuItem) -> Unit) {
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
     // Index of each category header in the list: header + items per category.
@@ -88,13 +88,25 @@ private fun MenuList(catalog: MenuCatalog, vm: AppViewModel, onItem: (MenuItem) 
             item(key = "c-${category.id}") {
                 SectionTitle(category.name, Modifier.padding(top = 14.dp, bottom = 2.dp))
             }
-            items(category.items, key = { it.id }) { item -> MenuRow(item) { onItem(item) } }
+            items(category.items, key = { it.id }) { item ->
+                MenuRow(
+                    item = item,
+                    isFavorite = item.id in vm.favoriteIds,
+                    onToggleFavorite = { vm.toggleFavorite(item.id, onNeedSignIn) },
+                    onClick = { onItem(item) },
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun MenuRow(item: MenuItem, onClick: () -> Unit) {
+fun MenuRow(
+    item: MenuItem,
+    isFavorite: Boolean = false,
+    onToggleFavorite: (() -> Unit)? = null,
+    onClick: () -> Unit,
+) {
     val unavailable = item.availability != Availability.AVAILABLE
     Row(
         Modifier.fillMaxWidth().clip(MaterialTheme.shapes.large).background(Brand.colors.card)
@@ -122,6 +134,9 @@ private fun MenuRow(item: MenuItem, onClick: () -> Unit) {
                     )
                 }
             }
+        }
+        onToggleFavorite?.let { toggle ->
+            FavoriteHeartButton(isFavorite = isFavorite, itemName = item.name, onClick = toggle)
         }
         if (!unavailable) {
             Text("+", style = MaterialTheme.typography.headlineSmall, color = Brand.colors.onAccentFill,

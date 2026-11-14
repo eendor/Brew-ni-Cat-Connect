@@ -63,13 +63,17 @@ describe("Android app", () => {
     }
   });
 
-  it("TC-P8-023 — the app talks to the live site over HTTPS and claims only its order links", () => {
+  it("TC-P8-023 — the app talks to the live site over HTTPS and claims only order App Links and its OAuth callback", () => {
     const host = gradleValue("siteHost");
     expect(host).toBe("brew-ni-cat-connect.vercel.app");
     expect(gradle).toContain('val siteUrl = "https://$siteHost"');
     expect(androidManifest).toContain('android:host="${siteHost}"');
     expect(androidManifest).toContain('android:pathPrefix="/orders/"');
     expect(androidManifest).toContain('android:autoVerify="true"');
+    expect(androidManifest).toContain('android:scheme="com.brewnicat.connect"');
+    expect(androidManifest).toContain('android:host="auth"');
+    expect(androidManifest).toContain('android:pathPrefix="/callback"');
+    expect(androidManifest).toContain('android:launchMode="singleTask"');
     expect(androidManifest).not.toMatch(/android:scheme="http"/);
     // Plain HTTP (for the local mock backend) is allowed only in debug builds.
     expect(androidManifest).not.toMatch(
@@ -121,5 +125,70 @@ describe("Android app", () => {
     );
     expect(checkout).toContain("expectedSubtotal");
     expect(checkout).not.toMatch(/put\("unitPrice"/);
+  });
+
+  it("TC-P8-031 — Google sign-in uses PKCE S256 in Chrome Custom Tabs, never an embedded WebView", () => {
+    const auth = readFileSync(
+      "android/app/src/main/java/com/brewnicat/connect/data/Auth.kt",
+      "utf8",
+    );
+    const api = readFileSync(
+      "android/app/src/main/java/com/brewnicat/connect/data/Api.kt",
+      "utf8",
+    );
+    const accountScreen = readFileSync(
+      "android/app/src/main/java/com/brewnicat/connect/ui/screens/AccountScreen.kt",
+      "utf8",
+    );
+    expect(auth).toContain("com.brewnicat.connect://auth/callback");
+    expect(auth).toContain("code_challenge_method=S256");
+    expect(auth).toContain("provider=google");
+    expect(api).toContain("token?grant_type=pkce");
+    expect(api).toContain("token?grant_type=refresh_token");
+    expect(accountScreen).toContain("CustomTabsIntent");
+    expect(projectText).not.toMatch(/\bWebView\b/);
+  });
+
+  it("TC-P8-032 — session tokens are encrypted with AndroidKeyStore AES-256-GCM at rest", () => {
+    const auth = readFileSync(
+      "android/app/src/main/java/com/brewnicat/connect/data/Auth.kt",
+      "utf8",
+    );
+    const store = readFileSync(
+      "android/app/src/main/java/com/brewnicat/connect/data/Store.kt",
+      "utf8",
+    );
+    expect(auth).toContain("AndroidKeyStore");
+    expect(auth).toContain("AES/GCM/NoPadding");
+    expect(auth).toContain("KeyProperties.KEY_ALGORITHM_AES");
+    expect(auth).toContain("class KeystoreTokenCipher");
+    expect(store).toContain("cipher: TokenCipher = KeystoreTokenCipher()");
+    expect(store).toContain("cipher.encrypt");
+    expect(store).toContain("cipher.decrypt");
+  });
+
+  it("TC-P8-033 — account, loyalty, review and data-request calls match the website RLS contract", () => {
+    const api = readFileSync(
+      "android/app/src/main/java/com/brewnicat/connect/data/Api.kt",
+      "utf8",
+    );
+    for (const expected of [
+      "customer_profiles",
+      "online_orders",
+      "favorites",
+      "loyalty_transactions",
+      "rpc/loyalty_rewards",
+      "rpc/loyalty_settings",
+      "rpc/redeem_reward",
+      "reviews",
+      "rpc/my_review",
+      "/api/reviews",
+      "data_requests",
+    ]) {
+      expect(api).toContain(expected);
+    }
+    const submitSection = api.slice(api.indexOf("fun submitDataRequest"));
+    expect(submitSection).not.toContain('"customer_id"');
+    expect(submitSection).not.toContain('"status"');
   });
 });

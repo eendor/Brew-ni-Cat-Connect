@@ -42,6 +42,17 @@
                     android:host="${siteHost}"
                     android:pathPrefix="/orders/" />
             </intent-filter>
+
+            <!-- PKCE Google OAuth return deep link (com.brewnicat.connect://auth/callback?code=…). -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="com.brewnicat.connect"
+                    android:host="auth"
+                    android:pathPrefix="/callback" />
+            </intent-filter>
         </activity>
     </application>
 </manifest>
