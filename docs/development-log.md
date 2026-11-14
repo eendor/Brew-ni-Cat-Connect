@@ -1971,3 +1971,15 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `feat/p8-android-app`.
 - **Known limitations:** The address bar hides only after `assetlinks.json` is live. A real phone run (MAN-P8-007, MAN-P8-008) is still to do. Google Play needs a developer account and a closed test first; the APK is shared through GitHub for now.
 - **Next action:** Check full screen on the live site, then publish the v1.0.0 release with the APK once the lead developer agrees.
+
+## 2026-11-14 — Phase 8: native Android app (phase 1)
+
+- **Phase:** Phase 8 (FR-065 to FR-069, NFR-036).
+- **Task:** The lead developer installed the Trusted Web Activity, saw it was running on Chrome, and asked for a native app.
+- **Summary:** Replaced the Trusted Web Activity in `android/` with a native Kotlin and Jetpack Compose app (ADR-036). It has Home, Menu, Orders and Visit tabs, an item options sheet (sizes, flavors, fries flavor mixes, add-ons), a cart kept across restarts, checkout with the website's validation, and order tracking that polls `get_online_order`. Orders go through the website's `/api/orders`, so the server keeps pricing, opening hours and rate limits. Menu mapping, pricing, cart, checkout, order parsing, opening hours and API rules are ported from the website and covered by 32 JVM unit tests. The public Supabase values are read at build time and not committed. Menu photos and the logo are bundled as WebP. Minimum Android rises to 8.0 (API 26). A debug-only mock backend (`android/tools/mock_backend.py`) answers orders in memory so checkout can be tried without touching the live shop. CI now also runs the JVM tests.
+- **Files:** `android/**`, `.github/workflows/ci.yml`, `tests/unit/android-app.test.ts`, `docs/decisions.md`, `docs/functional-requirements.md`, `docs/non-functional-requirements.md`, `docs/test-cases.md`, `docs/development-log.md`, `docs/evidence/phase-8-verification.md`, `docs/evidence/phase-8/android-app/`, `README.md`.
+- **Testing:** see the PR.
+- **Branch / PR:** `feat/p8-native-android`.
+- **Known limitations:** No sign-in, loyalty, profile, favorites, reviews, mini-games or ads in the app yet; the Visit tab links to the website's account page. Tracking polls instead of using Realtime. A real phone run (MAN-P8-007, MAN-P8-008) is still to do.
+- **Next action:** Google sign-in and the account screens, then mini-games and ads on the order screens.
+

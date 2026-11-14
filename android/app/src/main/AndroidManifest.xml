@@ -1,26 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  The Brew ni Cat Connect Android app (FR-065 to FR-069). It is a Trusted Web
-  Activity: Chrome (or another browser that supports it) shows the live website
-  full screen, with no address bar, once the site's assetlinks.json proves the
-  app and the site belong together. The app holds no backend key and no
-  session of its own; sign-in stays in the browser's storage (ADR-035).
+  The Brew ni Cat Connect Android app (FR-065 to FR-069): a native Kotlin and
+  Jetpack Compose app for ordering pickup and following the order (ADR-036).
+  It reads the menu and orders with the website's public Supabase key, under the
+  same row-level security as the website, and places orders through the
+  website's /api/orders. It holds no secret key.
 -->
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
-
-    <queries>
-        <intent>
-            <action android:name="android.intent.action.VIEW" />
-            <category android:name="android.intent.category.BROWSABLE" />
-            <data android:scheme="https" />
-        </intent>
-        <intent>
-            <action android:name="android.support.customtabs.action.CustomTabsService" />
-        </intent>
-    </queries>
 
     <application
         android:allowBackup="false"
@@ -29,92 +17,31 @@
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:manageSpaceActivity="com.google.androidbrowserhelper.trusted.ManageDataLauncherActivity"
         android:supportsRtl="true"
-        android:theme="@android:style/Theme.Translucent.NoTitleBar">
-
-        <meta-data
-            android:name="asset_statements"
-            android:resource="@string/asset_statements" />
+        android:theme="@style/Theme.BrewNiCat.Splash">
 
         <activity
-            android:name="com.google.androidbrowserhelper.trusted.LauncherActivity"
+            android:name=".MainActivity"
             android:exported="true"
-            android:label="@string/launcher_name">
-
-            <meta-data
-                android:name="android.support.customtabs.trusted.DEFAULT_URL"
-                android:value="@string/default_url" />
-            <meta-data
-                android:name="android.support.customtabs.trusted.STATUS_BAR_COLOR"
-                android:resource="@color/brand_cream" />
-            <meta-data
-                android:name="android.support.customtabs.trusted.NAVIGATION_BAR_COLOR"
-                android:resource="@color/brand_cream" />
-            <meta-data
-                android:name="android.support.customtabs.trusted.SPLASH_IMAGE_DRAWABLE"
-                android:resource="@drawable/splash" />
-            <meta-data
-                android:name="android.support.customtabs.trusted.SPLASH_SCREEN_BACKGROUND_COLOR"
-                android:resource="@color/brand_cream" />
-            <meta-data
-                android:name="android.support.customtabs.trusted.SPLASH_SCREEN_FADE_OUT_DURATION"
-                android:value="300" />
-            <meta-data
-                android:name="android.support.customtabs.trusted.FILE_PROVIDER_AUTHORITY"
-                android:value="com.brewnicat.connect.fileprovider" />
-            <meta-data
-                android:name="android.support.customtabs.trusted.FALLBACK_STRATEGY"
-                android:value="customtabs" />
+            android:launchMode="singleTask"
+            android:windowSoftInputMode="adjustResize">
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <!-- Links to the site open in the app once Android verifies assetlinks.json. -->
+            <!-- Order links from the website (https://…/orders/BNC-…#token=…) open in
+                 the app once Android verifies the site's assetlinks.json. -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data
                     android:scheme="https"
-                    android:host="${siteHost}" />
+                    android:host="${siteHost}"
+                    android:pathPrefix="/orders/" />
             </intent-filter>
         </activity>
-
-        <!-- "Manage storage" in the app's settings opens the site's data in the browser,
-             where the customer's sign-in actually lives. LauncherActivity turns this on. -->
-        <activity
-            android:name="com.google.androidbrowserhelper.trusted.ManageDataLauncherActivity"
-            android:exported="false">
-            <meta-data
-                android:name="android.support.customtabs.trusted.MANAGE_SPACE_URL"
-                android:value="@string/default_url" />
-        </activity>
-
-        <service
-            android:name="com.google.androidbrowserhelper.trusted.DelegationService"
-            android:enabled="true"
-            android:exported="true"
-            tools:ignore="ExportedService">
-            <!-- The browser binds to this service to run the Trusted Web Activity,
-                 so it has to be exported; it only answers the TWA protocol. -->
-            <intent-filter>
-                <action android:name="android.support.customtabs.trusted.TRUSTED_WEB_ACTIVITY_SERVICE" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-        </service>
-
-        <!-- Hands the splash image to the browser, which shows it while the site loads. -->
-        <provider
-            android:name="androidx.core.content.FileProvider"
-            android:authorities="com.brewnicat.connect.fileprovider"
-            android:exported="false"
-            android:grantUriPermissions="true">
-            <meta-data
-                android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/filepaths" />
-        </provider>
     </application>
 </manifest>

@@ -524,7 +524,7 @@ This manual state is a temporary functional-verification condition, not a revisi
 
 **Decision:** The customer Android app (`android/`, package `com.brewnicat.connect`) is a Trusted Web Activity built with Google's androidbrowserhelper. It opens `https://brew-ni-cat-connect.vercel.app/` full screen in the phone's browser engine. The site's `/.well-known/assetlinks.json` lists the app's package and the SHA-256 fingerprint of its signing key, which is how the browser knows to hide the address bar.\
 **Date:** 2026-11-13\
-**Status:** Accepted and implemented (branch `feat/p8-android-app`).\
+**Status:** ~~Accepted and implemented (branch `feat/p8-android-app`).~~ Superseded 2026-11-14 by ADR-036: the lead developer asked for a native app instead.\
 **Context:** FR-065 to FR-069 ask for an Android app with the same journeys, data and rules as the website, secure sessions and safe offline behaviour. The website already does all of that, is installable (PR #105), and has an offline page and a safe Place order retry. The release was due the same day.\
 **Alternatives considered:** a native Kotlin app like the POS (rejected for now: it would rebuild every screen and keep two customer apps in step, taking weeks); a WebView wrapper (rejected: the session would live in the app's own WebView storage, Google sign-in is blocked in WebViews, and WebViews miss browser security updates); Capacitor (rejected: the same WebView limits, plus a JavaScript build to maintain).\
 **Consequences:**
@@ -534,3 +534,21 @@ This manual state is a temporary functional-verification condition, not a revisi
 - The app needs Chrome or another browser that supports Trusted Web Activities. Without one, the site opens in a Custom Tab with an address bar.
 - The signing key lives outside the repository (`android/README.md`). Losing it means phones won't accept updates. Publishing on Google Play with Play App Signing means adding Play's fingerprint to `assetlinks.json`.
 - Every website change reaches the app at once, with no app update.
+
+## ADR-036 — The Android App Is A Native Kotlin And Compose App
+
+**Decision:** The customer Android app (`android/`, package `com.brewnicat.connect`) is rebuilt as a native Kotlin and Jetpack Compose app, replacing the Trusted Web Activity of ADR-035. It reads the menu, opening hours and closures from Supabase REST with the website's public (publishable) key, places orders through the website's `POST /api/orders`, and tracks them with the `get_online_order` RPC (reference plus tracking token), polling while the order is open.\
+**Date:** 2026-11-14\
+**Status:** Accepted and in development (branch `feat/p8-native-android`).\
+**Context:** The Trusted Web Activity worked, but after installing it on a phone the lead developer said it was "running on Chrome" and that a native app was expected. The POS (`Brew-ni-Cat-POS`) is already a native Kotlin and Compose app, so the team knows the stack.\
+**Alternatives considered:** keep the Trusted Web Activity (rejected by the lead developer); a native app that talks to Supabase directly for everything, including inserting orders (rejected: it would duplicate the server's pricing, rate limit and opening-hours check, and need wider table grants); a WebView or Capacitor wrapper (rejected for the reasons in ADR-035).\
+**Consequences:**
+
+- Orders go through the same route as the website, so the server still prices every line, enforces opening hours and rate-limits; the app sends only `expectedSubtotal` and gets `price-changed` back if the menu moved (FR-065, FR-069).
+- Menu reads and order tracking use only what the anon role can already do on the website, under the same RLS. The app holds no secret key; the public Supabase values are read at build time from the environment or `.env.local` and never committed (FR-067).
+- The menu mapping, pricing, cart and checkout validation are ported from the website's TypeScript and covered by JVM unit tests, so they must be kept in step when the website's rules change.
+- Phase 1 covers home, menu, item options, cart, checkout, tracking, saved orders, order links and opening hours. Google sign-in, loyalty, profile, favorites, reviews, mini-games and ads follow in later pull requests; until then the app links to the website's account page.
+- Minimum Android version rises from 7.0 (API 24) to 8.0 (API 26), for `java.util.Base64` and simpler date handling (NFR-036).
+- `assetlinks.json` stays, so website order links open in the app.
+- Website changes no longer reach the app automatically; app changes need a new APK.
+
