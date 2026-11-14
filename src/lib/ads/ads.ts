@@ -1,9 +1,9 @@
 /**
- * Ads in the mini-game area only (FR-090).
+ * Ads in the mini-games and on waiting/completed orders (FR-090 update).
  *
  * The ad unit is an Adsterra 300x250 banner. Ads are off unless
  * NEXT_PUBLIC_AD_KEY is set, they load only after the customer agrees, and
- * they never show on the menu, cart, checkout, order or account pages.
+ * they never show on the menu, cart, checkout, or account pages.
  */
 export const AD_WIDTH = 300;
 export const AD_HEIGHT = 250;
@@ -27,10 +27,20 @@ export const AD_FREE_PREFIXES = [
   "/menu",
   "/cart",
   "/checkout",
-  "/order",
-  "/orders",
   "/account",
 ] as const;
+
+/** Order statuses where a banner ad slot may appear after customer consent. */
+const AD_ORDER_STATUSES: ReadonlySet<string> = new Set([
+  "pending",
+  "accepted",
+  "preparing",
+  "completed",
+]);
+
+export function shouldShowOrderAd(status: string): boolean {
+  return AD_ORDER_STATUSES.has(status);
+}
 
 export type AdConsent = "yes" | "no" | null;
 

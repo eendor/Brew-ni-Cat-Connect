@@ -52,6 +52,9 @@ mock_data_requests = [
     {"id": "dr-1", "kind": "export", "message": "Please send a copy of my saved account details.", "status": "open", "created_at": "2026-11-13T04:00:00+00:00"},
 ]
 mock_past_orders = []
+mock_daily_plays = 3
+mock_plays_today = 0
+mock_play_seq = 500
 
 
 def iso(ts):
@@ -125,6 +128,23 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         parsed = urllib.parse.urlparse(self.path)
+        if parsed.path.startswith("/mock-ad/"):
+            js = (
+                "(function(){setTimeout(function(){"
+                "var c=document.createElement('canvas');c.width=300;c.height=250;"
+                "var g=c.getContext('2d');g.fillStyle='#F6EEE1';g.fillRect(0,0,300,250);"
+                "g.strokeStyle='#1F6B45';g.lineWidth=4;g.strokeRect(4,4,292,242);"
+                "g.fillStyle='#1D2A21';g.font='bold 20px sans-serif';g.fillText('Brew ni Cat Ad Demo',38,110);"
+                "g.font='14px sans-serif';g.fillStyle='#5C665E';g.fillText('Sandboxed 300x250 Adsterra Slot',42,142);"
+                "document.body.appendChild(c);"
+                "},350);})();"
+            ).encode()
+            self.send_response(200)
+            self.send_header("Content-Type", "application/javascript; charset=utf-8")
+            self.send_header("Content-Length", str(len(js)))
+            self.end_headers()
+            self.wfile.write(js)
+            return
         if parsed.path == "/auth/v1/authorize":
             qs = urllib.parse.parse_qs(parsed.query)
             redirect_to = qs.get("redirect_to", ["com.brewnicat.connect://auth/callback"])[0]
@@ -197,7 +217,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send(404, {})
 
     def do_POST(self):
-        global mock_points, mock_my_review
+        global mock_points, mock_my_review, mock_plays_today, mock_play_seq
         parsed = urllib.parse.urlparse(self.path)
         if parsed.path == "/auth/v1/token":
             return self.send(200, {
@@ -264,12 +284,112 @@ class Handler(BaseHTTPRequestHandler):
                 "hidden": False, "created_at": now_s, "updated_at": now_s,
             }
             return self.send(201, {"ok": True, "review": mock_my_review})
-        if self.path == "/rest/v1/rpc/get_online_order":
-            b = self.body()
-            o = orders.get(b.get("p_reference"))
+        if parsed.path == "/rest/v1/rpc/mini_game_status":
             auth = self.headers.get("Authorization", "")
             signed_in = auth == "Bearer mock-access-token"
-            return self.send(200, view(o) if o and (signed_in or o["token"] == b.get("p_tracking_token")) else None)
+            played = mock_plays_today if signed_in else 0
+            return self.send(200, {
+                "dailyPlays": mock_daily_plays,
+                "playsToday": played,
+                "playsLeft": max(mock_daily_plays - played, 0),
+                "games": [
+                    {
+                        "id": "cat-cups",
+                        "name": "Cat cups",
+                        "description": "Oreo hides under one of three cups. Find him!",
+                        "choices": 3,
+                        "winPoints": 3,
+                        "tryPoints": 1,
+                        "maxPoints": 3,
+                    },
+                    {
+                        "id": "lucky-paw",
+                        "name": "Lucky paw",
+                        "description": "Shake the treat jar and see what Latte paws out.",
+                        "choices": 0,
+                        "winPoints": None,
+                        "tryPoints": None,
+                        "maxPoints": 5,
+                    },
+                ],
+            })
+        if parsed.path == "/rest/v1/rpc/play_mini_game":
+            auth = self.headers.get("Authorization", "")
+            if auth != "Bearer mock-access-token":
+                return self.send(200, {"ok": False, "error": "unauthorized"})
+            b = self.body()
+            game = b.get("p_game")
+            choice = b.get("p_choice")
+            if game not in ("cat-cups", "lucky-paw"):
+                return self.send(200, {"ok": False, "error": "unknown_game"})
+            if game == "cat-cups" and (choice is None or not isinstance(choice, int) or choice < 0 or choice >= 3):
+                return self.send(200, {"ok": False, "error": "invalid_choice"})
+            if game == "lucky-paw" and choice is not None:
+                return self.send(200, {"ok": False, "error": "invalid_choice"})
+            if mock_plays_today >= mock_daily_plays:
+                return self.send(200, {"ok": False, "error": "daily_limit_reached", "dailyPlays": mock_daily_plays, "playsLeft": 0})
+            mock_plays_today += 1
+            mock_play_seq += 1
+            if game == "cat-cups":
+                hidden = choice
+                won = True
+                pts = 3 if won else 1
+                outcome = {"hiddenUnder": hidden, "won": won}
+                note = "Mini-game: Cat cups"
+            else:
+                pts = 5
+                outcome = {"treat": pts}
+                note = "Mini-game: Lucky paw"
+            mock_points += pts
+            mock_loyalty_tx.insert(0, {
+                "id": mock_play_seq, "customer_id": MOCK_USER_ID, "points": pts,
+                "reason": "mini-game", "order_id": None, "note": note,
+                "created_at": iso(time.time()), "online_orders": None,
+            })
+            return self.send(200, {
+                "ok": True,
+                "playId": mock_play_seq,
+                "game": game,
+                "outcome": outcome,
+                "points": pts,
+                "playsLeft": max(mock_daily_plays - mock_plays_today, 0),
+                "balance": mock_points,
+            })
+        if self.path == "/rest/v1/rpc/get_online_order":
+            b = self.body()
+            ref = b.get("p_reference")
+            o = orders.get(ref)
+            auth = self.headers.get("Authorization", "")
+            signed_in = auth == "Bearer mock-access-token"
+            if o and (signed_in or o["token"] == b.get("p_tracking_token")):
+                return self.send(200, view(o))
+            self.ensure_past_orders()
+            past = next((p for p in mock_past_orders if p["reference"] == ref), None)
+            if past and signed_in:
+                return self.send(200, {
+                    "reference": past["reference"],
+                    "status": past["status"],
+                    "customerName": past["customer_name"],
+                    "paymentPreference": past["payment_preference"],
+                    "notes": past["notes"],
+                    "items": [{
+                        "itemName": it["item_name"],
+                        "variantName": it["variant_name"],
+                        "flavor": it.get("flavor"),
+                        "unitPrice": it["unit_price"],
+                        "quantity": it["quantity"],
+                        "lineTotal": it["line_total"],
+                    } for it in past["items"]],
+                    "subtotal": past["subtotal"],
+                    "itemCount": past["item_count"],
+                    "rejectionReason": past["rejection_reason"],
+                    "createdAt": past["created_at"],
+                    "statusHistory": [
+                        {"status": "pending", "changedAt": past["created_at"]},
+                        {"status": past["status"], "changedAt": past["created_at"]},
+                    ],
+                })
+            return self.send(200, None)
         if self.path == "/api/orders":
             b = self.body()
             c = b.get("customer", {})

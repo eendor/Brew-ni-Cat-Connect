@@ -140,13 +140,17 @@ describe("Android app", () => {
       "android/app/src/main/java/com/brewnicat/connect/ui/screens/AccountScreen.kt",
       "utf8",
     );
+    const mainActivity = readFileSync(
+      "android/app/src/main/java/com/brewnicat/connect/MainActivity.kt",
+      "utf8",
+    );
     expect(auth).toContain("com.brewnicat.connect://auth/callback");
     expect(auth).toContain("code_challenge_method=S256");
     expect(auth).toContain("provider=google");
     expect(api).toContain("token?grant_type=pkce");
     expect(api).toContain("token?grant_type=refresh_token");
     expect(accountScreen).toContain("CustomTabsIntent");
-    expect(projectText).not.toMatch(/\bWebView\b/);
+    expect(auth + accountScreen + mainActivity).not.toMatch(/\bWebView\b/);
   });
 
   it("TC-P8-032 — session tokens are encrypted with AndroidKeyStore AES-256-GCM at rest", () => {
@@ -190,5 +194,39 @@ describe("Android app", () => {
     const submitSection = api.slice(api.indexOf("fun submitDataRequest"));
     expect(submitSection).not.toContain('"customer_id"');
     expect(submitSection).not.toContain('"status"');
+  });
+
+  it("TC-P8-035 — native mini-games use server RPCs without awarding points on-device", () => {
+    const api = readFileSync(
+      "android/app/src/main/java/com/brewnicat/connect/data/Api.kt",
+      "utf8",
+    );
+    const games = readFileSync(
+      "android/app/src/main/java/com/brewnicat/connect/data/Games.kt",
+      "utf8",
+    );
+    expect(api).toContain("rpc/mini_game_status");
+    expect(api).toContain("rpc/play_mini_game");
+    expect(games).toContain('"pending"');
+    expect(games).toContain('"accepted"');
+    expect(games).toContain('"preparing"');
+  });
+
+  it("TC-P8-036 — native Adsterra ads load only after consent, on an isolated data: origin, only on waiting or completed orders", () => {
+    const ads = readFileSync(
+      "android/app/src/main/java/com/brewnicat/connect/data/Ads.kt",
+      "utf8",
+    );
+    const adCard = readFileSync(
+      "android/app/src/main/java/com/brewnicat/connect/ui/screens/AdCard.kt",
+      "utf8",
+    );
+    expect(gradle).toContain('publicConfig("NEXT_PUBLIC_AD_KEY")');
+    expect(ads).toContain("data:text/html;charset=utf-8,");
+    expect(ads).toContain('"pending"');
+    expect(ads).toContain('"completed"');
+    expect(ads).not.toContain('"ready"');
+    expect(adCard).toContain("allowFileAccess = false");
+    expect(adCard).toContain("allowContentAccess = false");
   });
 });

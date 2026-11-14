@@ -24,7 +24,11 @@ import org.json.JSONObject
  * Nothing here can do more than a browser on the website can.
  */
 
-class ApiException(message: String) : IOException(message)
+class ApiException(
+    message: String,
+    val statusCode: Int = 0,
+    val responseBody: String = "",
+) : IOException(message)
 class ApiAuthException(message: String = "http-401") : IOException(message)
 
 private data class ApiResponse(val body: String, val contentRange: String?)
@@ -62,7 +66,7 @@ class Api(
         http.newCall(request).execute().use { response ->
             val body = response.body?.string().orEmpty()
             if (response.code == 401) throw ApiAuthException("http-401")
-            if (!response.isSuccessful) throw ApiException("http-${response.code}")
+            if (!response.isSuccessful) throw ApiException("http-${response.code}", response.code, body)
             ApiResponse(body, response.header("Content-Range"))
         }
     }
@@ -360,6 +364,29 @@ class Api(
             .post(payload.toString().toRequestBody(JSON))
             .build()
         call(req)
+    }
+
+    // --- Mini-games (Phase 3) ---
+
+    suspend fun fetchMiniGameStatus(accessToken: String? = null): MiniGameStatus? = try {
+        val text = call(rest("rpc/mini_game_status", accessToken).post("{}".toRequestBody(JSON)).build())
+        GamesParsers.parseStatus(JSONObject(text))
+    } catch (e: ApiException) {
+        if (GamesParsers.isMissingFunctionError(e.statusCode, e.responseBody)) null else throw e
+    }
+
+    suspend fun playMiniGame(game: String, choice: Int?, accessToken: String): PlayMiniGameResult = try {
+        val payload = JSONObject()
+            .put("p_game", game)
+            .put("p_choice", choice ?: JSONObject.NULL)
+        val text = call(rest("rpc/play_mini_game", accessToken).post(payload.toString().toRequestBody(JSON)).build())
+        GamesParsers.parsePlayResult(JSONObject(text))
+    } catch (e: ApiException) {
+        if (GamesParsers.isMissingFunctionError(e.statusCode, e.responseBody)) {
+            PlayMiniGameResult.Failure("unavailable", GamesParsers.errorMessage("unavailable"))
+        } else {
+            PlayMiniGameResult.Failure("failed", GamesParsers.errorMessage("failed"))
+        }
     }
 
     private fun enc(value: String): String = URLEncoder.encode(value, StandardCharsets.UTF_8.name())

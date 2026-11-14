@@ -27,7 +27,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
+import com.brewnicat.connect.BuildConfig
+import com.brewnicat.connect.R
+import com.brewnicat.connect.data.AdConfig
+import com.brewnicat.connect.data.MiniGamesUiHelper
 import com.brewnicat.connect.data.OrderView
 import com.brewnicat.connect.data.Pricing
 import com.brewnicat.connect.ui.AppViewModel
@@ -93,10 +98,15 @@ fun OrderScreen(vm: AppViewModel, reference: String) {
             is Loadable.Ready -> OrderDetail(vm, state.value)
         }
     }
+    if (vm.gamesPopupOpen) {
+        MiniGamesDialog(vm)
+    }
 }
 
 @Composable
 private fun OrderDetail(vm: AppViewModel, order: OrderView) {
+    val waiting = MiniGamesUiHelper.isWaitingStatus(order.status)
+    val adKey = vm.adKey
     Column(Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 20.dp).padding(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
         if (vm.justPlaced == order.reference) {
             Notice("Order placed! Keep this app open or come back any time to see when it's ready.", warning = false)
@@ -114,6 +124,32 @@ private fun OrderDetail(vm: AppViewModel, order: OrderView) {
                 if (!order.isFinal) {
                     Spacer(Modifier.height(8.dp))
                     Text("Updates on its own every few seconds.", style = MaterialTheme.typography.bodySmall, color = Brand.colors.muted)
+                }
+            }
+        }
+        if (waiting) {
+            Card(Modifier.fillMaxWidth()) {
+                Row(
+                    Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    CatPixelSprite(R.drawable.cat_kulas, CatMode.LOOK, animating = false, size = DpSize(56.dp, 48.dp))
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text("Play while you wait", style = MaterialTheme.typography.titleMedium, color = Brand.colors.ink)
+                        Text(
+                            "Try Cat cups or Lucky paw for loyalty points.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Brand.colors.muted,
+                        )
+                    }
+                    androidx.compose.material3.Button(
+                        onClick = { vm.openGamesPopup() },
+                        colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                            containerColor = Brand.colors.accentFill,
+                            contentColor = Brand.colors.onAccentFill,
+                        ),
+                    ) { Text("Play") }
                 }
             }
         }
@@ -138,6 +174,14 @@ private fun OrderDetail(vm: AppViewModel, order: OrderView) {
                 Text("Paying by ${order.paymentPreference} · ${order.customerName}", style = MaterialTheme.typography.bodySmall, color = Brand.colors.muted)
                 if (order.notes.isNotBlank()) Text("Notes: ${order.notes}", style = MaterialTheme.typography.bodySmall, color = Brand.colors.muted)
             }
+        }
+        if (adKey != null && AdConfig.shouldShowOrderAd(order.status, adKey)) {
+            AdsterraAdCard(
+                adKey = adKey,
+                scriptHost = BuildConfig.AD_SCRIPT_HOST,
+                consent = vm.adConsent,
+                onConsentChange = { vm.setAdConsent(it) },
+            )
         }
     }
 }

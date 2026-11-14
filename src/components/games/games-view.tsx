@@ -25,6 +25,7 @@ import { LuckyPaw } from "./lucky-paw";
 function useReducedMotion(): boolean {
   const [reduced, setReduced] = useState(false);
   useEffect(() => {
+    if (typeof window.matchMedia !== "function") return;
     const query = window.matchMedia("(prefers-reduced-motion: reduce)");
     const update = () => setReduced(query.matches);
     update();
@@ -46,7 +47,12 @@ type Load =
  */
 const noSubscribe = () => () => {};
 
-export function GamesView() {
+type GamesViewProps = Readonly<{
+  /** Render compact game content for an order-page popup instead of the full page. */
+  embedded?: boolean;
+}>;
+
+export function GamesView({ embedded = false }: GamesViewProps = {}) {
   const { user, isLoading: isAuthLoading } = useAuth();
   const userId = user?.id ?? null;
   const reducedMotion = useReducedMotion();
@@ -117,9 +123,9 @@ export function GamesView() {
   const cups = games.find((g) => g.id === "cat-cups");
   const paw = games.find((g) => g.id === "lucky-paw");
 
-  return (
-    <Container className="max-w-4xl py-8 md:py-12">
-      {waitingOrder ? (
+  const content = (
+    <>
+      {!embedded && waitingOrder ? (
         // a full page load: the order page reads its tracking token on load,
         // and client navigation with a # link doubled the token
         <a
@@ -130,41 +136,57 @@ export function GamesView() {
           ← Back to your order
         </a>
       ) : null}
-      <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
-            Play for points
-          </p>
-          <h1 className="font-display text-3xl font-bold tracking-tight text-[var(--text-strong)]">
-            Cat games
-          </h1>
-          <p className="mt-2 max-w-prose text-sm text-[var(--text-muted)]">
-            Play with the café cats for loyalty points. Every play earns at
-            least one point, and you get a few plays each day.
-          </p>
-        </div>
-        {ready && signedIn ? (
-          <div
-            data-testid="games-summary"
-            className="ios-card flex shrink-0 gap-6 px-5 py-3 text-sm"
-          >
-            <div>
-              <p className="text-xs text-[var(--text-muted)]">Today</p>
-              <p className="font-semibold text-[var(--text-strong)]">
-                {playsLeftLabel(ready.status.playsLeft)}
-              </p>
-            </div>
-            {ready.balance !== null ? (
+      {!embedded ? (
+        <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
+              Play for points
+            </p>
+            <h1 className="font-display text-3xl font-bold tracking-tight text-[var(--text-strong)]">
+              Cat games
+            </h1>
+            <p className="mt-2 max-w-prose text-sm text-[var(--text-muted)]">
+              Play with the café cats for loyalty points. Every play earns at
+              least one point, and you get a few plays each day.
+            </p>
+          </div>
+          {ready && signedIn ? (
+            <div
+              data-testid="games-summary"
+              className="ios-card flex shrink-0 gap-6 px-5 py-3 text-sm"
+            >
               <div>
-                <p className="text-xs text-[var(--text-muted)]">Balance</p>
+                <p className="text-xs text-[var(--text-muted)]">Today</p>
                 <p className="font-semibold text-[var(--text-strong)]">
-                  {ready.balance} pts
+                  {playsLeftLabel(ready.status.playsLeft)}
                 </p>
               </div>
-            ) : null}
-          </div>
-        ) : null}
-      </header>
+              {ready.balance !== null ? (
+                <div>
+                  <p className="text-xs text-[var(--text-muted)]">Balance</p>
+                  <p className="font-semibold text-[var(--text-strong)]">
+                    {ready.balance} pts
+                  </p>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+        </header>
+      ) : ready && signedIn ? (
+        <div
+          data-testid="games-summary"
+          className="mb-4 flex items-center justify-between gap-4 rounded-[var(--shape-md)] bg-[var(--fill-secondary)] px-4 py-2.5 text-sm"
+        >
+          <span className="font-semibold text-[var(--text-strong)]">
+            {playsLeftLabel(ready.status.playsLeft)}
+          </span>
+          {ready.balance !== null ? (
+            <span className="font-semibold text-[var(--text-strong)]">
+              {ready.balance} pts
+            </span>
+          ) : null}
+        </div>
+      ) : null}
 
       {load.state === "loading" || isAuthLoading ? (
         <div
@@ -235,7 +257,10 @@ export function GamesView() {
 
           <div className="grid gap-6 md:grid-cols-2">
             {cups ? (
-              <section aria-labelledby="game-cat-cups" className="ios-card p-6">
+              <section
+                aria-labelledby="game-cat-cups"
+                className="ios-card min-w-0 p-4 sm:p-6"
+              >
                 <h2
                   id="game-cat-cups"
                   className="font-display text-xl font-semibold text-[var(--text-strong)]"
@@ -258,7 +283,7 @@ export function GamesView() {
             {paw ? (
               <section
                 aria-labelledby="game-lucky-paw"
-                className="ios-card p-6"
+                className="ios-card min-w-0 p-4 sm:p-6"
               >
                 <h2
                   id="game-lucky-paw"
@@ -290,9 +315,15 @@ export function GamesView() {
         </div>
       )}
 
-      <div className="mt-10">
-        <AdSlot />
-      </div>
-    </Container>
+      {!embedded ? (
+        <div className="mt-10">
+          <AdSlot />
+        </div>
+      ) : null}
+    </>
   );
+
+  if (embedded) return content;
+
+  return <Container className="max-w-4xl py-8 md:py-12">{content}</Container>;
 }

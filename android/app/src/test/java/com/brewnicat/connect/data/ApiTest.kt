@@ -324,5 +324,42 @@ class ApiTest {
         val reqs = api.fetchDataRequests("u-1", "acc-1")
         assertEquals(1, reqs.size)
         assertEquals("open", reqs.first().status)
+        server.takeRequest()
+    }
+
+    @Test
+    fun miniGamesStatusPlayMissingFunctionAnd401() = runTest {
+        server.enqueue(
+            MockResponse().setBody(
+                """{"dailyPlays":3,"playsToday":1,"playsLeft":2,"games":[{"id":"cat-cups","name":"Cat cups","description":"Oreo hides under one of three cups.","choices":3,"winPoints":3,"tryPoints":1,"maxPoints":3}]}""",
+            ),
+        )
+        val status = api.fetchMiniGameStatus("acc-1")
+        assertEquals(2, status?.playsLeft)
+        val statusReq = server.takeRequest()
+        assertEquals("/rest/v1/rpc/mini_game_status", statusReq.path)
+        assertEquals("Bearer acc-1", statusReq.getHeader("Authorization"))
+
+        server.enqueue(MockResponse().setResponseCode(404).setBody("""{"code":"PGRST202","message":"Could not find the function"}"""))
+        assertEquals(null, api.fetchMiniGameStatus())
+        server.takeRequest()
+
+        server.enqueue(
+            MockResponse().setBody(
+                """{"ok":true,"playId":77,"game":"cat-cups","outcome":{"hiddenUnder":1,"won":true},"points":3,"playsLeft":1,"balance":15}""",
+            ),
+        )
+        val play = api.playMiniGame("cat-cups", 1, "acc-1")
+        assertTrue(play is PlayMiniGameResult.CatCupsSuccess)
+        assertEquals(15, (play as PlayMiniGameResult.CatCupsSuccess).balance)
+        val playReq = server.takeRequest()
+        assertEquals("/rest/v1/rpc/play_mini_game", playReq.path)
+        val playBody = JSONObject(playReq.body.readUtf8())
+        assertEquals("cat-cups", playBody.getString("p_game"))
+        assertEquals(1, playBody.getInt("p_choice"))
+
+        server.enqueue(MockResponse().setResponseCode(401).setBody("""{"error":"Unauthorized"}"""))
+        val unauth = runCatching { api.playMiniGame("lucky-paw", null, "acc-expired") }.exceptionOrNull()
+        assertTrue(unauth is ApiAuthException)
     }
 }
