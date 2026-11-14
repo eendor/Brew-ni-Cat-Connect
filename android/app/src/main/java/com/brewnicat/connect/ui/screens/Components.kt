@@ -21,7 +21,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.Favorite
+import androidx.compose.material.icons.rounded.FavoriteBorder
 import androidx.compose.material.icons.rounded.Remove
+import androidx.compose.material.icons.rounded.Star
+import androidx.compose.material.icons.rounded.StarOutline
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -174,4 +178,52 @@ fun Notice(text: String, modifier: Modifier = Modifier, warning: Boolean = true)
         modifier = modifier.fillMaxWidth().clip(MaterialTheme.shapes.medium)
             .background(if (warning) Brand.colors.warm else Brand.colors.accentSurface).padding(14.dp),
     )
+}
+
+@Composable
+fun FavoriteHeartButton(
+    isFavorite: Boolean,
+    itemName: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    IconButton(onClick = onClick, modifier = modifier) {
+        Icon(
+            imageVector = if (isFavorite) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
+            contentDescription = if (isFavorite) "Remove $itemName from favorites" else "Save $itemName to favorites",
+            tint = if (isFavorite) Color(0xFFD64545) else Brand.colors.muted,
+        )
+    }
+}
+
+@Composable
+fun StarRow(
+    rating: Int,
+    modifier: Modifier = Modifier,
+    size: Dp = 18.dp,
+    onSelect: ((Int) -> Unit)? = null,
+) {
+    val activeColor = Color(0xFFE09F3E)
+    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
+        for (star in 1..5) {
+            val filled = star <= rating
+            if (onSelect != null) {
+                IconButton(onClick = { onSelect(star) }, modifier = Modifier.size(40.dp)) {
+                    Icon(
+                        imageVector = if (filled) Icons.Rounded.Star else Icons.Rounded.StarOutline,
+                        contentDescription = "$star star${if (star == 1) "" else "s"}",
+                        tint = if (filled) activeColor else Brand.colors.muted,
+                        modifier = Modifier.size(size),
+                    )
+                }
+            } else {
+                Icon(
+                    imageVector = if (filled) Icons.Rounded.Star else Icons.Rounded.StarOutline,
+                    contentDescription = null,
+                    tint = if (filled) activeColor else Brand.colors.muted,
+                    modifier = Modifier.size(size),
+                )
+            }
+        }
+    }
 }

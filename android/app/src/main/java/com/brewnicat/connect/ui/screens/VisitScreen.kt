@@ -67,12 +67,13 @@ fun VisitScreen(vm: AppViewModel) {
             }
             Card(Modifier.fillMaxWidth()) {
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text("Account and rewards", style = MaterialTheme.typography.titleLarge, color = Brand.colors.ink)
+                    Text("Account, loyalty and reviews", style = MaterialTheme.typography.titleLarge, color = Brand.colors.ink)
                     Text(
-                        "Signing in, loyalty points and reviews are coming to the app. For now you can use them on our website.",
+                        "Sign in with Google to earn loyalty points, redeem rewards, save favorites, and read or share shop reviews right here in the app.",
                         style = MaterialTheme.typography.bodyMedium, color = Brand.colors.muted,
                     )
-                    TextButton(onClick = { open(BuildConfig.SITE_URL + "/account") }) { Text("Open my account on the website", color = Brand.colors.accent) }
+                    TextButton(onClick = { vm.selectTab(com.brewnicat.connect.ui.Screen.Account) }) { Text("Open Account tab", color = Brand.colors.accent) }
+                    TextButton(onClick = { vm.open(com.brewnicat.connect.ui.Screen.Reviews) }) { Text("Shop reviews", color = Brand.colors.accent) }
                     TextButton(onClick = { open(BuildConfig.SITE_URL + "/privacy") }) { Text("Privacy notice", color = Brand.colors.accent) }
                 }
             }

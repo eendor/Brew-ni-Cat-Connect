@@ -11,7 +11,10 @@ import org.json.JSONObject
  * this phone with their tracking tokens. The tracking token is the secret part
  * of an order link, so it never leaves the app except to read that order.
  */
-class Store(context: Context) {
+class Store(
+    context: Context,
+    private val cipher: TokenCipher = KeystoreTokenCipher(),
+) {
     private val prefs = context.getSharedPreferences("brew-ni-cat", Context.MODE_PRIVATE)
 
     fun loadCart(): Cart = runCatching { Cart.fromJson(JSONArray(prefs.getString(CART, "[]"))) }.getOrDefault(Cart())
@@ -42,10 +45,40 @@ class Store(context: Context) {
         prefs.edit { putString(ORDERS, json.toString()) }
     }
 
+    fun loadSession(): AuthSession? {
+        val encoded = prefs.getString(AUTH_SESSION, null) ?: return null
+        val plain = cipher.decrypt(encoded)
+        val parsed = plain?.let { runCatching { AuthSession.fromJson(JSONObject(it)) }.getOrNull() }
+        if (parsed == null) prefs.edit { remove(AUTH_SESSION) }
+        return parsed
+    }
+
+    fun saveSession(session: AuthSession?) = prefs.edit {
+        if (session == null) {
+            remove(AUTH_SESSION)
+        } else {
+            val encrypted = cipher.encrypt(session.toJson().toString())
+            if (encrypted != null) putString(AUTH_SESSION, encrypted) else remove(AUTH_SESSION)
+        }
+    }
+
+    fun loadPendingPkceVerifier(): String? = prefs.getString(PENDING_PKCE, null)?.let { cipher.decrypt(it) }
+
+    fun savePendingPkceVerifier(verifier: String?) = prefs.edit {
+        if (verifier.isNullOrBlank()) {
+            remove(PENDING_PKCE)
+        } else {
+            val encrypted = cipher.encrypt(verifier)
+            if (encrypted != null) putString(PENDING_PKCE, encrypted) else remove(PENDING_PKCE)
+        }
+    }
+
     private companion object {
         const val CART = "cart"
         const val DETAILS = "details"
         const val ORDERS = "orders"
+        const val AUTH_SESSION = "auth_session_v1"
+        const val PENDING_PKCE = "pending_pkce_v1"
         const val MAX_ORDERS = 30
     }
 }

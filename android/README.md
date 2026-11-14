@@ -10,7 +10,18 @@ ADR-035). It uses the same backend as the website:
   limit, opening-hours check and server-side pricing. The app sends only the
   expected subtotal; the server prices every line.
 - **Order tracking:** the `get_online_order` RPC with the order reference and
-  its tracking token, polled while the order is open.
+  its tracking token, polled while the order is open (or with the signed-in
+  customer's bearer token from Order history).
+- **Customer account & sign-in:** Google OAuth via Supabase PKCE (`S256`) opened
+  in Chrome Custom Tabs (`androidx.browser.customtabs`), returning a one-time
+  code to `com.brewnicat.connect://auth/callback`. Access and refresh tokens are
+  encrypted on device with `AndroidKeyStore` AES-256-GCM (`KeystoreTokenCipher`)
+  before saving to private app preferences.
+- **Loyalty, favorites, profile, reviews & data requests:** Supabase REST/RPCs
+  under the customer's RLS policies (`customer_profiles`, `online_orders`,
+  `favorites`, `loyalty_transactions`, `loyalty_rewards`, `loyalty_settings`,
+  `redeem_reward`, `reviews`, `my_review`, `data_requests`) and `POST /api/reviews`
+  (works signed in or as a guest).
 
 Package `com.brewnicat.connect`; Android 8.0 (API 26) and later; compiled
 against and targeting API 36. It asks only for internet access and backs up
@@ -20,11 +31,12 @@ nothing. It holds no secret key.
 
 ```
 app/src/main/java/com/brewnicat/connect/
-  data/   Menu (mapping), Pricing, Cart, Checkout, Orders, ShopHours, Api, Store
+  data/   Menu (mapping), Pricing, Cart, Checkout, Orders, ShopHours, Auth,
+          Account, Reorder, Api, Store
   ui/     BrewApp (navigation), AppViewModel, theme/, screens/
-app/src/test/  JVM unit tests for the data layer
+app/src/test/  JVM unit tests for the data, auth and account layers
 app/src/debug/ debug-only network config for the local mock backend
-tools/mock_backend.py  stand-in backend for trying checkout without the live shop
+tools/mock_backend.py  stand-in backend for checkout, OAuth, loyalty, reviews
 ```
 
 ## Build

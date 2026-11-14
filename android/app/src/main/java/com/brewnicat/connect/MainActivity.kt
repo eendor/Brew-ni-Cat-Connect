@@ -27,9 +27,13 @@ class MainActivity : ComponentActivity() {
         handleLink(intent)
     }
 
-    /** https://<site>/orders/BNC-XXXXXX#token=<tracking token> */
+    /** Handles order App Links and Google OAuth PKCE return URIs. */
     private fun handleLink(intent: Intent?) {
         val uri = intent?.data ?: return
+        if (uri.scheme == "com.brewnicat.connect") {
+            vm.handleAuthCallback(uri.toString())
+            return
+        }
         if (uri.scheme != "https" || uri.host != BuildConfig.SITE_URL.removePrefix("https://")) return
         val segments = uri.pathSegments
         if (segments.size != 2 || segments[0] != "orders") return

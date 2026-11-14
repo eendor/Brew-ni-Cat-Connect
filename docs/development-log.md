@@ -1,7 +1,7 @@
 # Development Log
 
 **Document version:** 0.1 Draft\
-**Last updated:** 2026-11-13
+**Last updated:** 2026-11-15
 
 This log records completed work and observed evidence. Planned work is explicitly identified and is not reported as implemented or tested.
 
@@ -1982,4 +1982,15 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `feat/p8-native-android`.
 - **Known limitations:** No sign-in, loyalty, profile, favorites, reviews, mini-games or ads in the app yet; the Visit tab links to the website's account page. Tracking polls instead of using Realtime. A real phone run (MAN-P8-007, MAN-P8-008) is still to do.
 - **Next action:** Google sign-in and the account screens, then mini-games and ads on the order screens.
+
+## 2026-11-15 — Phase 8: native Android app (phase 2: auth, loyalty & account)
+
+- **Phase:** Phase 8 (FR-031 to FR-055, FR-065 to FR-069, FR-098, NFR-036).
+- **Task:** Implement native customer authentication and account journeys on top of the Phase 1 ordering app merged in PR #150.
+- **Summary:** Added Google OAuth PKCE (`S256`) sign-in via Chrome Custom Tabs returning to `com.brewnicat.connect://auth/callback`, `AndroidKeyStore` AES-256-GCM encrypted token storage (`KeystoreTokenCipher`), automatic token refresh / 401 handling, and a 5th **Account** bottom tab with full native journeys: Rewards & points (`RWD-` counter code redemption + points history), Order history (with live catalog/price Reorder validation & pagination), Favorites (Menu/ItemSheet heart toggles + Favorites list), Profile prefill/editing (`09`/`+639` phone normalization), Shop reviews (guest & signed-in composer + public paginated ratings), and Data Privacy Act correction/deletion requests. Added `AuthTest`, `AccountTest`, `ReorderTest`, and expanded `ApiTest` (46 JVM tests total) plus contract checks `TC-P8-031`–`TC-P8-033`. Extended debug `tools/mock_backend.py` and verified all signed-in & guest flows end-to-end (including cold-restart Keystore decryption and dark mode) on the `bnc_phone` Android 15 emulator. Added `com.brewnicat.connect://auth/callback` to Supabase Auth's redirect allowlist.
+- **Files:** `android/**`, `tests/unit/android-app.test.ts`, `README.md`, `docs/{decisions,functional-requirements,test-cases,development-log}.md`, `docs/evidence/phase-8-verification.md`, `docs/evidence/phase-8/android-app/`.
+- **Testing:** see the PR.
+- **Branch / PR:** `feat/p8-native-auth`.
+- **Known limitations:** Real Google OAuth consent (`MAN-P8-009`) needs an interactive Google account on device; native mini-games and ads follow in phase 3 (`feat/p8-native-games-ads`).
+- **Next action:** Phase 3 (mini-games popup and waiting/completed order ads for both Android and website).
 
