@@ -117,7 +117,7 @@ jobs:
           retention-days: 7
 
   android:
-    name: Android app (build and lint)
+    name: Android app (build, unit tests and lint)
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
@@ -132,12 +132,12 @@ jobs:
           java-version: 21
           cache: gradle
 
-      # The runner has the Android SDK. CI has no release key, so this builds an
-      # unsigned release APK; the signed one is built on the lead developer's
-      # machine (android/README.md).
-      - name: Build the release APK and run Android lint
+      # The runner has the Android SDK. CI has no release key or Supabase values,
+      # so this builds an unsigned release APK that shows the menu can't load;
+      # the signed one is built on the lead developer's machine (android/README.md).
+      - name: Run the app's unit tests, build the release APK and run Android lint
         working-directory: android
-        run: ./gradlew --no-daemon assembleRelease lintRelease
+        run: ./gradlew --no-daemon testDebugUnitTest assembleRelease lintRelease
 
       - name: Upload Android lint report
         if: ${{ failure() }}

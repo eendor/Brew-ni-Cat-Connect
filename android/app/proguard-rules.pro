@@ -1,3 +1,5 @@
-# androidbrowserhelper turns some of its own components on and off by class name
-# (for example ManageDataLauncherActivity), so its classes keep their names.
--keepnames class com.google.androidbrowserhelper.** { *; }
+# The app uses only AndroidX, Compose, OkHttp and the platform's org.json, which
+# ship their own R8 rules; nothing is looked up by reflection.
+-dontwarn org.bouncycastle.**
+-dontwarn org.conscrypt.**
+-dontwarn org.openjsse.**

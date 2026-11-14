@@ -12,7 +12,7 @@ None.
 
 ## Not merged yet
 
-- Rodnee: the Android app, branch `feat/p8-android-app` (FR-065 to FR-069), the production deploy, and the v1.0.0 release with the APK. Update 2026-11-13: the Android app pull request is open; see section 60 of `docs/test-cases.md`.
+- Rodnee: the Android app, branch `feat/p8-android-app` (FR-065 to FR-069, ADR-035, merged in [#146](https://github.com/eendor/Brew-ni-Cat-Connect/pull/146), superseded 2026-11-14 by the native Kotlin/Compose app in ADR-036 on `feat/p8-native-android`; phase 1 covers menu, cart, checkout, tracking and opening hours, with sign-in, loyalty, mini-games and ads in follow-up pull requests; see section 60 of `docs/test-cases.md`). The v1.0.0 release with the APK is on hold until the native app is complete.
 - Renier: Phase 8 integrated QA, branch `test/p8-integrated-qa-main` (a new section of `docs/test-cases.md`).
 - This docs closeout, PR #112: the Phase 8 status cells, section 23 of `docs/functional-requirements.md`, this register, the development log and the README.
 
