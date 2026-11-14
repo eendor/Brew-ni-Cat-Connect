@@ -10,6 +10,7 @@ import {
   adKey,
   isAdFreePath,
   resetAdConsentForTests,
+  shouldShowOrderAd,
 } from "@/lib/ads/ads";
 
 const navigation = vi.hoisted(() => ({ pathname: "/games" }));
@@ -78,22 +79,24 @@ describe("Ads in the mini-game area (FR-090)", () => {
     expect(screen.getByTitle("Advertisement")).toBeInTheDocument();
   });
 
-  it("TC-P9-011 — never shows on the menu, cart, checkout, order or account pages", () => {
+  it("TC-P9-011 — never shows on menu, cart, checkout or account pages, and gates order statuses", () => {
     window.localStorage.setItem(AD_CONSENT_KEY, "yes");
-    for (const path of [
-      "/menu",
-      "/cart",
-      "/checkout",
-      "/orders/abc",
-      "/account/rewards",
-    ]) {
+    for (const path of ["/menu", "/cart", "/checkout", "/account/rewards"]) {
       expect(isAdFreePath(path)).toBe(true);
       navigation.pathname = path;
       const { container, unmount } = render(<AdSlot />);
       expect(container).toBeEmptyDOMElement();
       unmount();
     }
+    expect(isAdFreePath("/orders/abc")).toBe(false);
     expect(isAdFreePath("/menus-and-games")).toBe(false);
+
+    for (const allowed of ["pending", "accepted", "preparing", "completed"]) {
+      expect(shouldShowOrderAd(allowed)).toBe(true);
+    }
+    for (const blocked of ["ready", "rejected", "cancelled"]) {
+      expect(shouldShowOrderAd(blocked)).toBe(false);
+    }
   });
 
   it("TC-P9-012 — the ad page only loads the Adsterra unit with the 300x250 options", () => {

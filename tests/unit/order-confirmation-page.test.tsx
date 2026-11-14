@@ -1,8 +1,41 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { resetAdConsentForTests } from "@/lib/ads/ads";
 
 const fetchOrder = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/orders/fetch-order", () => ({ fetchOrder }));
+
+vi.mock("@/lib/games/games", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/games/games")>();
+  return {
+    ...actual,
+    fetchGameStatus: vi.fn().mockResolvedValue({
+      dailyPlays: 3,
+      playsToday: 0,
+      playsLeft: 3,
+      games: [
+        {
+          id: "cat-cups",
+          name: "Cat cups",
+          description: "Oreo hides under one of three cups. Find him!",
+          choices: 3,
+          winPoints: 3,
+          tryPoints: 1,
+          maxPoints: 3,
+        },
+        {
+          id: "lucky-paw",
+          name: "Lucky paw",
+          description: "Shake the treat jar and see what Latte paws out.",
+          choices: 0,
+          winPoints: null,
+          tryPoints: null,
+          maxPoints: 5,
+        },
+      ],
+    }),
+  };
+});
 
 const mockAuth = vi.hoisted(() => ({
   user: null as null | { id: string; email: string },
@@ -46,6 +79,7 @@ vi.mock("@/lib/supabase/public-client", () => ({
 
 vi.mock("next/navigation", () => ({
   useParams: () => ({ reference: "BNC-7K2Q9F" }),
+  usePathname: () => "/orders/BNC-7K2Q9F",
 }));
 
 import OrderConfirmationPage from "@/app/orders/[reference]/page";
@@ -88,7 +122,13 @@ describe("Order confirmation page", () => {
     realtime.state.handler = null;
     realtime.state.topic = "";
     realtime.state.removed = 0;
+    window.localStorage.clear();
+    resetAdConsentForTests();
     window.location.hash = `#token=${TOKEN}`;
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   it("TC-P4-133 — shows a loading state, then the order", async () => {
@@ -254,5 +294,39 @@ describe("Order confirmation page", () => {
       expect(screen.queryByTestId("play-while-you-wait")).toBeNull();
       unmount();
     }
+  });
+
+  it("TC-P9-053 — opens the in-place mini-games popup on waiting orders and shows the ad slot on waiting and completed orders only (FR-089, FR-090 update)", async () => {
+    vi.stubEnv("NEXT_PUBLIC_AD_KEY", "0123456789abcdef0123456789abcdef");
+
+    for (const status of [
+      "pending",
+      "accepted",
+      "preparing",
+      "completed",
+    ] as const) {
+      fetchOrder.mockResolvedValueOnce({ ...ORDER, status });
+      const { unmount } = render(<OrderConfirmationPage />);
+      await screen.findByText("BNC-7K2Q9F");
+      expect(screen.getByTestId("ad-slot")).toBeInTheDocument();
+      unmount();
+    }
+
+    for (const status of ["ready", "cancelled", "rejected"] as const) {
+      fetchOrder.mockResolvedValueOnce({ ...ORDER, status });
+      const { unmount } = render(<OrderConfirmationPage />);
+      await screen.findByText("BNC-7K2Q9F");
+      expect(screen.queryByTestId("ad-slot")).toBeNull();
+      unmount();
+    }
+
+    fetchOrder.mockResolvedValueOnce({ ...ORDER, status: "preparing" });
+    render(<OrderConfirmationPage />);
+    fireEvent.click(await screen.findByRole("button", { name: "Play popup" }));
+    const dialog = await screen.findByTestId("play-games-popup");
+    expect(dialog).toHaveTextContent("Cat cups");
+    expect(dialog).toHaveTextContent("Lucky paw");
+    fireEvent.click(screen.getByRole("button", { name: "Close games popup" }));
+    expect(screen.queryByTestId("play-games-popup")).toBeNull();
   });
 });

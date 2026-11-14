@@ -9,6 +9,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.brewnicat.connect.BuildConfig
+import com.brewnicat.connect.data.AdConfig
 import com.brewnicat.connect.data.Api
 import com.brewnicat.connect.data.ApiAuthException
 import com.brewnicat.connect.data.AuthCallback
@@ -23,10 +24,13 @@ import com.brewnicat.connect.data.LoyaltyFormat
 import com.brewnicat.connect.data.LoyaltySettings
 import com.brewnicat.connect.data.LoyaltyTransaction
 import com.brewnicat.connect.data.MenuCatalog
+import com.brewnicat.connect.data.MiniGameStatus
+import com.brewnicat.connect.data.MiniGamesUiHelper
 import com.brewnicat.connect.data.OrderHistoryEntry
 import com.brewnicat.connect.data.OrderHistoryPage
 import com.brewnicat.connect.data.OrderView
 import com.brewnicat.connect.data.PlaceOrderResult
+import com.brewnicat.connect.data.PlayMiniGameResult
 import com.brewnicat.connect.data.PostReviewResult
 import com.brewnicat.connect.data.ProfileValidation
 import com.brewnicat.connect.data.RedeemResult
@@ -225,7 +229,17 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 null
             }
         }.fold(
-            { it?.let { o -> Loadable.Ready(o) } ?: Loadable.Failed("We couldn't find this order.") },
+            { loaded ->
+                if (loaded != null) {
+                    if (loaded.reference == justPlaced && MiniGamesUiHelper.isWaitingStatus(loaded.status) && autoPopupOrder != loaded.reference) {
+                        autoPopupOrder = loaded.reference
+                        openGamesPopup()
+                    }
+                    Loadable.Ready(loaded)
+                } else {
+                    Loadable.Failed("We couldn't find this order.")
+                }
+            },
             { orders[reference] as? Loadable.Ready ?: Loadable.Failed("We couldn't load this order. Check your connection.") },
         )
     }
@@ -301,6 +315,91 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     var dataRequestSubmitting by mutableStateOf(false); private set
     var dataRequestNotice by mutableStateOf<String?>(null); private set
     var dataRequestError by mutableStateOf<String?>(null); private set
+
+    // --- Mini-games & Adsterra banner ads (Phase 3) ---
+    val adKey: String? = AdConfig.adKey(BuildConfig.AD_KEY)
+    var adConsent by mutableStateOf(store.loadAdConsent()); private set
+    var gamesPopupOpen by mutableStateOf(false); private set
+    var gameStatus by mutableStateOf<Loadable<MiniGameStatus?>>(Loadable.Loading); private set
+    var gamePlaying by mutableStateOf(false); private set
+    private var autoPopupOrder: String? = null
+
+    fun setAdConsent(consent: Boolean) {
+        adConsent = consent
+        store.saveAdConsent(consent)
+    }
+
+    fun openGamesPopup() {
+        gamesPopupOpen = true
+        loadMiniGames()
+    }
+
+    fun closeGamesPopup() {
+        gamesPopupOpen = false
+    }
+
+    fun loadMiniGames() {
+        if (!api.isConfigured) {
+            gameStatus = Loadable.Failed(NOT_CONFIGURED)
+            return
+        }
+        if (gameStatus !is Loadable.Ready) gameStatus = Loadable.Loading
+        viewModelScope.launch {
+            val loaded = runCatching {
+                val active = session
+                if (active == null) api.fetchMiniGameStatus(null)
+                else withValidToken(active) { token -> api.fetchMiniGameStatus(token) }
+            }
+            gameStatus = loaded.fold(
+                { Loadable.Ready(it) },
+                { Loadable.Failed("We couldn't load the games right now. Check your connection and try again.") },
+            )
+            session?.let { active ->
+                runCatching { withValidToken(active) { token -> api.fetchLoyaltyBalance(active.userId, token) } }
+                    .onSuccess { loyaltyBalance = it }
+            }
+        }
+    }
+
+    suspend fun playCatCups(choice: Int): PlayMiniGameResult = playGame("cat-cups", choice)
+
+    suspend fun playLuckyPaw(): PlayMiniGameResult = playGame("lucky-paw", null)
+
+    private suspend fun playGame(game: String, choice: Int?): PlayMiniGameResult {
+        val active = session ?: return PlayMiniGameResult.Failure("unauthorized", com.brewnicat.connect.data.GamesParsers.errorMessage("unauthorized"))
+        if (gamePlaying) return PlayMiniGameResult.Failure("busy", "Finishing your previous turn…")
+        gamePlaying = true
+        return try {
+            val result = try {
+                withValidToken(active) { token -> api.playMiniGame(game, choice, token) }
+            } catch (_: ApiAuthException) {
+                return PlayMiniGameResult.Failure("unauthorized", "Your sign-in session expired. Sign in on Account and try again.")
+            } catch (_: Exception) {
+                return PlayMiniGameResult.Failure("failed", com.brewnicat.connect.data.GamesParsers.errorMessage("failed"))
+            }
+            when (result) {
+                is PlayMiniGameResult.CatCupsSuccess -> applyGameUpdate(result.playsLeft, result.balance)
+                is PlayMiniGameResult.LuckyPawSuccess -> applyGameUpdate(result.playsLeft, result.balance)
+                is PlayMiniGameResult.Failure -> if (result.error == "daily_limit_reached") {
+                    applyGameUpdate(0, loyaltyBalance)
+                }
+            }
+            result
+        } finally {
+            gamePlaying = false
+        }
+    }
+
+    private fun applyGameUpdate(playsLeft: Int, nextBalance: Int?) {
+        if (nextBalance != null) loyaltyBalance = nextBalance
+        val currentReady = (gameStatus as? Loadable.Ready)?.value ?: return
+        gameStatus = Loadable.Ready(
+            currentReady.copy(
+                playsLeft = playsLeft.coerceAtLeast(0),
+                playsToday = (currentReady.dailyPlays - playsLeft).coerceAtLeast(0),
+            ),
+        )
+    }
 
     fun startGoogleSignIn(): String {
         authError = null

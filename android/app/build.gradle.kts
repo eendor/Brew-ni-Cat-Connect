@@ -46,7 +46,7 @@ android {
         applicationId = "com.brewnicat.connect"
         minSdk = 26
         targetSdk = 36
-        versionCode = 2
+        versionCode = 3
         versionName = "1.0.0"
 
         buildConfigField("String", "SITE_URL", buildConfigString(siteUrl))
@@ -56,6 +56,8 @@ android {
             "SUPABASE_PUBLISHABLE_KEY",
             buildConfigString(publicConfig("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY")),
         )
+        buildConfigField("String", "AD_KEY", buildConfigString(publicConfig("NEXT_PUBLIC_AD_KEY")))
+        buildConfigField("String", "AD_SCRIPT_HOST", buildConfigString("https://bauval.org/22/"))
         manifestPlaceholders["siteHost"] = siteHost
     }
 
@@ -84,6 +86,10 @@ android {
             if (backend.isNotEmpty()) {
                 buildConfigField("String", "SITE_URL", buildConfigString(backend))
                 buildConfigField("String", "SUPABASE_URL", buildConfigString(backend))
+                buildConfigField("String", "AD_SCRIPT_HOST", buildConfigString("${backend.trimEnd('/')}/mock-ad/"))
+                if (publicConfig("NEXT_PUBLIC_AD_KEY").isEmpty()) {
+                    buildConfigField("String", "AD_KEY", buildConfigString("0123456789abcdef0123456789abcdef"))
+                }
             }
         }
         release {

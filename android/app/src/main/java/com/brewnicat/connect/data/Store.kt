@@ -73,12 +73,23 @@ class Store(
         }
     }
 
+    fun loadAdConsent(): Boolean? = when (prefs.getString(AD_CONSENT, null)) {
+        "yes" -> true
+        "no" -> false
+        else -> null
+    }
+
+    fun saveAdConsent(consent: Boolean) = prefs.edit {
+        putString(AD_CONSENT, if (consent) "yes" else "no")
+    }
+
     private companion object {
         const val CART = "cart"
         const val DETAILS = "details"
         const val ORDERS = "orders"
         const val AUTH_SESSION = "auth_session_v1"
         const val PENDING_PKCE = "pending_pkce_v1"
+        const val AD_CONSENT = "ad_consent_v1"
         const val MAX_ORDERS = 30
     }
 }

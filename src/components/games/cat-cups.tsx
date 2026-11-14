@@ -119,11 +119,11 @@ export function CatCups({ disabled, reducedMotion, onPlay }: CatCupsProps) {
 
   return (
     <div data-testid="cat-cups" className="flex flex-col items-center gap-4">
-      <div className="flex items-end justify-center gap-3 pt-16 sm:gap-6">
+      <div className="flex items-end justify-center gap-2 pt-14 sm:gap-6 sm:pt-16">
         {CUPS.map((i) => (
           <div
             key={i}
-            className="relative flex h-[88px] w-[88px] items-end justify-center"
+            className="relative flex h-[88px] w-20 items-end justify-center sm:w-[88px]"
           >
             {outcome?.hiddenUnder === i ? (
               <span className="absolute bottom-0" data-testid="oreo-found">

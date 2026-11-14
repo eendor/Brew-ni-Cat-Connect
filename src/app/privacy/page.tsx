@@ -235,12 +235,13 @@ export default async function PrivacyPage() {
                   above.
                 </li>
                 <li>
-                  <Term>Adsterra</Term> may show one ad in the mini-games,
-                  labeled &ldquo;Ad&rdquo;. It loads only if you tap Show ads,
-                  never on the menu, cart, checkout, order or account pages, and
-                  it may use its own cookies inside the ad. We don&apos;t send
-                  it your account, orders or contact details, and you can turn
-                  ads off at any time.
+                  <Term>Adsterra</Term> may show one ad in the mini-games and on
+                  waiting or completed orders (website and Android app), labeled
+                  &ldquo;Ad&rdquo;. It loads only if you tap Show ads, never on
+                  the menu, cart, checkout or account pages, and it may use its
+                  own cookies inside the ad. We don&apos;t send it your account,
+                  orders or contact details, and you can turn ads off at any
+                  time.
                 </li>
               </List>
               <p>We don&apos;t sell your data or share it for advertising.</p>
