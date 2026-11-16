@@ -1,7 +1,21 @@
 package com.brewnicat.connect.ui.screens
 
 import androidx.annotation.DrawableRes
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.composed
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -26,15 +40,10 @@ import androidx.compose.material.icons.rounded.FavoriteBorder
 import androidx.compose.material.icons.rounded.Remove
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.StarOutline
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -55,12 +64,24 @@ import com.brewnicat.connect.ui.theme.Brand
 
 @Composable
 fun BrandHeader(modifier: Modifier = Modifier, trailing: @Composable () -> Unit = {}) {
-    Row(modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-        Logo(48.dp)
+    Row(modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = 20.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+        Logo(44.dp)
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
-            Text("Brew ni Cat", style = MaterialTheme.typography.titleLarge, color = Brand.colors.ink)
+            Text("Brew ni Cat", style = MaterialTheme.typography.titleMedium, color = Brand.colors.ink)
             Text("Coffee Shop", style = MaterialTheme.typography.labelMedium, color = Brand.colors.accent)
+        }
+        trailing()
+    }
+}
+
+/** iOS-style large title that sits under the status bar on the main tabs. */
+@Composable
+fun LargeTitle(title: String, modifier: Modifier = Modifier, subtitle: String? = null, trailing: @Composable () -> Unit = {}) {
+    Row(modifier.fillMaxWidth().statusBarsPadding().padding(start = 22.dp, end = 16.dp, top = 14.dp, bottom = 8.dp), verticalAlignment = Alignment.Bottom) {
+        Column(Modifier.weight(1f)) {
+            if (subtitle != null) Text(subtitle.uppercase(), style = MaterialTheme.typography.labelMedium, color = Brand.colors.accent, letterSpacing = 1.sp)
+            Text(title, style = MaterialTheme.typography.displaySmall, color = Brand.colors.ink, modifier = Modifier.semantics { heading() })
         }
         trailing()
     }
@@ -70,16 +91,31 @@ fun BrandHeader(modifier: Modifier = Modifier, trailing: @Composable () -> Unit 
 fun Logo(size: Dp) {
     Image(
         painterResource(R.drawable.brand_logo), contentDescription = "Brew ni Cat logo",
-        modifier = Modifier.size(size).clip(CircleShape).background(Color.White).border(2.dp, Color.White, CircleShape),
+        modifier = Modifier.size(size).shadow(8.dp, CircleShape, spotColor = Brand.colors.shadow.copy(alpha = 0.25f)).clip(CircleShape).background(Color.White).border(2.dp, Color.White, CircleShape),
         contentScale = ContentScale.Crop,
     )
 }
 
+/** Springy press feedback (iOS-like): shrinks slightly while held. */
+fun Modifier.pressable(enabled: Boolean = true, onClick: () -> Unit): Modifier = composed {
+    val source = remember { MutableInteractionSource() }
+    val pressed by source.collectIsPressedAsState()
+    val scale by animateFloatAsState(if (pressed) 0.96f else 1f, spring(dampingRatio = 0.55f, stiffness = 500f), label = "press")
+    this.graphicsLayer { scaleX = scale; scaleY = scale }
+        .clickable(interactionSource = source, indication = null, enabled = enabled, onClick = onClick)
+}
+
 @Composable
 fun TopBar(title: String, onBack: () -> Unit, trailing: @Composable () -> Unit = {}) {
-    Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-        IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back", tint = Brand.colors.ink) }
-        Text(title, style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f).semantics { heading() }, color = Brand.colors.ink)
+    Row(Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = 16.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+        Box(
+            Modifier.size(42.dp).shadow(6.dp, CircleShape, spotColor = Brand.colors.shadow.copy(alpha = 0.18f)).clip(CircleShape)
+                .background(Brand.colors.glass).border(0.8.dp, Brand.colors.rim, CircleShape).pressable(onClick = onBack)
+                .semantics { contentDescription = "Back" },
+            contentAlignment = Alignment.Center,
+        ) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = null, tint = Brand.colors.ink, modifier = Modifier.size(22.dp)) }
+        Spacer(Modifier.width(14.dp))
+        Text(title, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.weight(1f).semantics { heading() }, color = Brand.colors.ink, maxLines = 1)
         trailing()
     }
 }
@@ -90,13 +126,11 @@ fun SectionTitle(text: String, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun Card(modifier: Modifier = Modifier, padding: PaddingValues = PaddingValues(16.dp), content: @Composable () -> Unit) {
-    Surface(
-        modifier = modifier,
-        shape = MaterialTheme.shapes.large,
-        color = Brand.colors.card,
-        border = androidx.compose.foundation.BorderStroke(1.dp, Brand.colors.border),
-        shadowElevation = 1.dp,
+fun Card(modifier: Modifier = Modifier, padding: PaddingValues = PaddingValues(18.dp), content: @Composable () -> Unit) {
+    val shape = MaterialTheme.shapes.large
+    Box(
+        modifier.shadow(14.dp, shape, ambientColor = Brand.colors.shadow.copy(alpha = 0.10f), spotColor = Brand.colors.shadow.copy(alpha = 0.16f))
+            .clip(shape).background(Brand.colors.card).border(0.8.dp, Brand.colors.rim, shape),
     ) { Box(Modifier.padding(padding)) { content() } }
 }
 
@@ -126,31 +160,43 @@ fun Pill(text: String, color: Color, background: Color, modifier: Modifier = Mod
 
 @Composable
 fun PrimaryButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true, busy: Boolean = false) {
-    Button(
-        onClick = onClick, enabled = enabled && !busy, modifier = modifier.height(54.dp),
-        shape = RoundedCornerShape(50),
-        colors = ButtonDefaults.buttonColors(containerColor = Brand.colors.accentFill, contentColor = Brand.colors.onAccentFill),
+    val c = Brand.colors
+    val on = enabled && !busy
+    Row(
+        modifier.height(56.dp).shadow(if (on) 14.dp else 0.dp, RoundedCornerShape(50), spotColor = c.accentFill.copy(alpha = 0.5f))
+            .clip(RoundedCornerShape(50))
+            .background(Brush.verticalGradient(listOf(c.accentFill.copy(alpha = if (on) 0.92f else 0.35f), c.accentFill.copy(alpha = if (on) 1f else 0.35f))))
+            .border(0.8.dp, Color.White.copy(alpha = 0.28f), RoundedCornerShape(50))
+            .pressable(enabled = on, onClick = onClick).padding(horizontal = 24.dp),
+        horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically,
     ) {
         if (busy) {
-            CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp, color = Brand.colors.onAccentFill)
+            CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp, color = c.onAccentFill)
             Spacer(Modifier.width(10.dp))
         }
-        Text(text, style = MaterialTheme.typography.labelLarge)
+        Text(text, style = MaterialTheme.typography.labelLarge, color = c.onAccentFill)
     }
 }
 
 @Composable
 fun Stepper(quantity: Int, onChange: (Int) -> Unit, label: String, min: Int = 0, max: Int = 99) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        val colors = IconButtonDefaults.filledTonalIconButtonColors(containerColor = Brand.colors.warm, contentColor = Brand.colors.ink)
-        FilledTonalIconButton(onClick = { onChange(quantity - 1) }, enabled = quantity > min, colors = colors, modifier = Modifier.size(38.dp)) {
-            Icon(Icons.Rounded.Remove, contentDescription = "One less $label")
-        }
-        Text("$quantity", style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center, modifier = Modifier.width(36.dp), color = Brand.colors.ink)
-        FilledTonalIconButton(onClick = { onChange(quantity + 1) }, enabled = quantity < max, colors = colors, modifier = Modifier.size(38.dp)) {
-            Icon(Icons.Rounded.Add, contentDescription = "One more $label")
-        }
+    Row(
+        Modifier.clip(RoundedCornerShape(50)).background(Brand.colors.warm).padding(3.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        StepperButton(Icons.Rounded.Remove, "One less $label", quantity > min) { onChange(quantity - 1) }
+        Text("$quantity", style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center, modifier = Modifier.width(34.dp), color = Brand.colors.ink)
+        StepperButton(Icons.Rounded.Add, "One more $label", quantity < max) { onChange(quantity + 1) }
     }
+}
+
+@Composable
+private fun StepperButton(icon: androidx.compose.ui.graphics.vector.ImageVector, description: String, enabled: Boolean, onClick: () -> Unit) {
+    Box(
+        Modifier.size(36.dp).clip(CircleShape).background(Brand.colors.card.copy(alpha = if (enabled) 1f else 0.4f))
+            .pressable(enabled = enabled, onClick = onClick).semantics { contentDescription = description },
+        contentAlignment = Alignment.Center,
+    ) { Icon(icon, contentDescription = null, tint = Brand.colors.ink.copy(alpha = if (enabled) 1f else 0.35f), modifier = Modifier.size(18.dp)) }
 }
 
 @Composable

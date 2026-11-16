@@ -51,7 +51,7 @@ import com.brewnicat.connect.ui.theme.Brand
 fun AccountScreen(vm: AppViewModel) {
     val context = LocalContext.current
     val session = vm.session
-    val bottomPad = if (vm.cart.isEmpty) 24.dp else 88.dp
+    val bottomPad = if (vm.cart.isEmpty) 124.dp else 190.dp
 
     LaunchedEffect(session?.userId) {
         if (session != null) vm.loadAccountSummary()
@@ -63,7 +63,7 @@ fun AccountScreen(vm: AppViewModel) {
             .verticalScroll(rememberScrollState())
             .padding(bottom = bottomPad),
     ) {
-        BrandHeader {
+        LargeTitle("Account", subtitle = "Brew ni Cat") {
             if (session != null) {
                 TextButton(onClick = vm::signOut) {
                     Text("Sign out", color = Brand.colors.muted)

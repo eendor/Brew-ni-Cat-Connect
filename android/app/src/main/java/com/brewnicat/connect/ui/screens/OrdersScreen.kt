@@ -26,6 +26,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
@@ -47,18 +48,18 @@ import java.util.Date
 fun OrdersScreen(vm: AppViewModel) {
     LaunchedEffect(Unit) { vm.refreshOrderList() }
     Column(Modifier.fillMaxSize()) {
-        BrandHeader()
-        Text("Your orders", style = MaterialTheme.typography.headlineMedium, color = Brand.colors.ink, modifier = Modifier.padding(horizontal = 20.dp))
+        LargeTitle("Orders")
         if (vm.savedOrders.isEmpty()) {
             MessageState("🧾", "No orders yet", "Orders you place in the app show up here so you can follow them.", action = "Browse the menu") { vm.selectTab(Screen.Menu) }
             return
         }
-        LazyColumn(contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        LazyColumn(contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 130.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             items(vm.savedOrders, key = { it.reference }) { saved ->
                 val view = (vm.orders[saved.reference] as? Loadable.Ready)?.value
                 Row(
-                    Modifier.fillMaxWidth().clip(MaterialTheme.shapes.large).background(Brand.colors.card)
-                        .clickable { vm.open(Screen.Order(saved.reference)) }.padding(16.dp),
+                    Modifier.fillMaxWidth().shadow(12.dp, MaterialTheme.shapes.large, ambientColor = Brand.colors.shadow.copy(alpha = 0.08f), spotColor = Brand.colors.shadow.copy(alpha = 0.16f))
+                        .clip(MaterialTheme.shapes.large).background(Brand.colors.card)
+                        .pressable { vm.open(Screen.Order(saved.reference)) }.padding(18.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Column(Modifier.weight(1f)) {

@@ -34,6 +34,9 @@ data class BrandColors(
     val border: Color,
     val success: Color,
     val danger: Color,
+    val rim: Color,
+    val glass: Color,
+    val shadow: Color,
 )
 
 private val Light = BrandColors(
@@ -50,6 +53,9 @@ private val Light = BrandColors(
     border = Color(0x1A1D2A21),
     success = Color(0xFF1F6B45),
     danger = Color(0xFFB3261E),
+    rim = Color(0xCCFFFFFF),
+    glass = Color(0xE6FFFBF5),
+    shadow = Color(0xFF3B2A12),
 )
 
 private val Dark = BrandColors(
@@ -66,6 +72,9 @@ private val Dark = BrandColors(
     border = Color(0x1AF6EEE1),
     success = Color(0xFF7DCFA0),
     danger = Color(0xFFF2B8B5),
+    rim = Color(0x24F6EEE1),
+    glass = Color(0xE61F1C18),
+    shadow = Color(0xFF000000),
 )
 
 val LocalBrand = staticCompositionLocalOf { Light }
@@ -88,7 +97,7 @@ private fun scheme(c: BrandColors, dark: Boolean): ColorScheme {
 }
 
 private val type = Typography(
-    displaySmall = TextStyle(fontWeight = FontWeight.ExtraBold, fontSize = 34.sp, lineHeight = 38.sp, letterSpacing = (-0.8).sp),
+    displaySmall = TextStyle(fontWeight = FontWeight.Bold, fontSize = 34.sp, lineHeight = 40.sp, letterSpacing = (-0.9).sp),
     headlineMedium = TextStyle(fontWeight = FontWeight.ExtraBold, fontSize = 26.sp, lineHeight = 31.sp, letterSpacing = (-0.4).sp),
     headlineSmall = TextStyle(fontWeight = FontWeight.Bold, fontSize = 22.sp, lineHeight = 27.sp, letterSpacing = (-0.2).sp),
     titleLarge = TextStyle(fontWeight = FontWeight.Bold, fontSize = 19.sp, lineHeight = 24.sp),
@@ -102,10 +111,10 @@ private val type = Typography(
 )
 
 private val shapes = Shapes(
-    small = RoundedCornerShape(12.dp),
-    medium = RoundedCornerShape(18.dp),
-    large = RoundedCornerShape(26.dp),
-    extraLarge = RoundedCornerShape(32.dp),
+    small = RoundedCornerShape(14.dp),
+    medium = RoundedCornerShape(22.dp),
+    large = RoundedCornerShape(28.dp),
+    extraLarge = RoundedCornerShape(38.dp),
 )
 
 @Composable

@@ -22,6 +22,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.draw.rotate
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.offset
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -38,7 +43,7 @@ import com.brewnicat.connect.ui.theme.Brand
 
 @Composable
 fun HomeScreen(vm: AppViewModel, onItem: (MenuItem) -> Unit) {
-    val bottomPad = if (vm.cart.isEmpty) 24.dp else 88.dp
+    val bottomPad = if (vm.cart.isEmpty) 124.dp else 190.dp
     Column(Modifier.verticalScroll(rememberScrollState()).padding(bottom = bottomPad)) {
         BrandHeader()
         Hero(vm)
@@ -48,7 +53,7 @@ fun HomeScreen(vm: AppViewModel, onItem: (MenuItem) -> Unit) {
         val latestView = latest?.let { (vm.orders[it.reference] as? Loadable.Ready)?.value }
         if (latest != null && latestView != null && !latestView.isFinal) {
             Spacer(Modifier.height(14.dp))
-            Card(Modifier.padding(horizontal = 20.dp).fillMaxWidth().clickable { vm.open(Screen.Order(latest.reference)) }) {
+            Card(Modifier.padding(horizontal = 20.dp).fillMaxWidth().pressable { vm.open(Screen.Order(latest.reference)) }) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("🧋", style = MaterialTheme.typography.headlineMedium)
                     Spacer(Modifier.width(12.dp))
@@ -86,24 +91,29 @@ fun HomeScreen(vm: AppViewModel, onItem: (MenuItem) -> Unit) {
 
 @Composable
 private fun Hero(vm: AppViewModel) {
+    val shape = MaterialTheme.shapes.extraLarge
     Box(
-        Modifier.padding(horizontal = 20.dp).fillMaxWidth().clip(MaterialTheme.shapes.extraLarge)
-            .background(Brush.linearGradient(listOf(Brand.colors.accentFill, Color(0xFF14492F)))),
+        Modifier.padding(horizontal = 20.dp).fillMaxWidth().shadow(20.dp, shape, spotColor = Brand.colors.accentFill.copy(alpha = 0.45f))
+            .clip(shape).background(Brush.linearGradient(listOf(Color(0xFF2A8156), Color(0xFF123F29)))),
     ) {
+        Box(
+            Modifier.align(Alignment.TopEnd).offset(x = 48.dp, y = (-36).dp).size(190.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.07f)),
+        )
         Photo(
             R.drawable.menu_lucky_green_neko_matcha, null,
-            Modifier.align(Alignment.CenterEnd).padding(end = 0.dp).size(170.dp).clip(CircleShape),
+            Modifier.align(Alignment.BottomEnd).offset(x = 28.dp, y = 28.dp).size(150.dp).rotate(-6f).clip(CircleShape).border(3.dp, Color.White.copy(alpha = 0.55f), CircleShape),
         )
-        Column(Modifier.padding(22.dp).fillMaxWidth(0.62f)) {
-            Text("Purr-fectly brewed, made for you", style = MaterialTheme.typography.headlineMedium, color = Color.White)
-            Spacer(Modifier.height(8.dp))
-            Text("Order ahead and pick it up in Kabacan.", style = MaterialTheme.typography.bodyMedium, color = Color(0xFFE3ECE2))
-            Spacer(Modifier.height(16.dp))
+        Column(Modifier.padding(24.dp).fillMaxWidth(0.66f)) {
+            Text("PICKUP IN KABACAN", style = MaterialTheme.typography.labelMedium, color = Color(0xFFBFE3CE), letterSpacing = 1.2.sp)
+            Spacer(Modifier.height(6.dp))
+            Text("Purr-fectly brewed, made for you", style = MaterialTheme.typography.headlineSmall.copy(fontSize = 25.sp, lineHeight = 29.sp), color = Color.White)
+            Spacer(Modifier.height(18.dp))
             Text(
-                "Order now", style = MaterialTheme.typography.labelLarge, color = Color(0xFF1D2A21),
-                modifier = Modifier.clip(CircleShape).background(Color(0xFFF6EEE1)).clickable { vm.selectTab(Screen.Menu) }
-                    .padding(horizontal = 20.dp, vertical = 12.dp),
+                "Order now", style = MaterialTheme.typography.labelLarge, color = Color(0xFF123F29),
+                modifier = Modifier.clip(CircleShape).background(Color(0xFFFFFBF5)).pressable { vm.selectTab(Screen.Menu) }
+                    .padding(horizontal = 22.dp, vertical = 13.dp),
             )
+            Spacer(Modifier.height(16.dp))
         }
     }
 }
@@ -128,7 +138,11 @@ fun OpenStatus(hours: ShopHours?, modifier: Modifier = Modifier) {
 
 @Composable
 private fun FavoriteCard(item: MenuItem, onClick: () -> Unit) {
-    Column(Modifier.width(150.dp).clip(MaterialTheme.shapes.large).background(Brand.colors.card).clickable(onClick = onClick)) {
+    val shape = MaterialTheme.shapes.large
+    Column(
+        Modifier.width(156.dp).shadow(12.dp, shape, ambientColor = Brand.colors.shadow.copy(alpha = 0.08f), spotColor = Brand.colors.shadow.copy(alpha = 0.18f))
+            .clip(shape).background(Brand.colors.card).border(0.8.dp, Brand.colors.rim, shape).pressable(onClick = onClick),
+    ) {
         Photo(MenuImages.forItem(item.name), item.name, Modifier.fillMaxWidth().aspectRatio(1f))
         Column(Modifier.padding(12.dp)) {
             Text(item.name, style = MaterialTheme.typography.titleSmall, color = Brand.colors.ink, maxLines = 2)

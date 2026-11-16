@@ -44,7 +44,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun MenuScreen(vm: AppViewModel, onNeedSignIn: () -> Unit = {}, onItem: (MenuItem) -> Unit) {
     Column(Modifier.fillMaxSize()) {
-        BrandHeader()
+        LargeTitle("Menu", subtitle = "Brew ni Cat")
         when (val m = vm.menu) {
             Loadable.Loading -> LoadingState()
             is Loadable.Failed -> MessageState("😿", "Menu unavailable", m.message, action = "Try again", onAction = vm::loadMenu)
@@ -81,7 +81,7 @@ private fun MenuList(catalog: MenuCatalog, vm: AppViewModel, onNeedSignIn: () ->
             )
         }
     }
-    val bottomPad = if (vm.cart.isEmpty) 24.dp else 88.dp
+    val bottomPad = if (vm.cart.isEmpty) 124.dp else 190.dp
     LazyColumn(state = listState, contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = bottomPad), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item { OpenStatus(vm.hours, Modifier.padding(top = 4.dp)) }
         catalog.categories.forEach { category ->

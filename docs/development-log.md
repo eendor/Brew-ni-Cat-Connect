@@ -2005,3 +2005,14 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Known limitations:** Real Adsterra ads load only when `NEXT_PUBLIC_AD_KEY` is configured at build time and a non-headless browser/device accepts the consent prompt (`MAN-P9-003`). Real phone release installation (`MAN-P8-007`) and live Google OAuth consent (`MAN-P8-009`) remain manual.
 - **Next action:** Open PR for `feat/p8-native-games-ads`, verify CI checks, squash-merge into `main`, and await owner/lead approval before publishing the v1.0.0 GitHub release with `BrewNiCatConnect.apk`.
 
+## 2026-11-16 — Phase 8: Android UI redesign
+
+- **Phase:** Phase 8 (FR-066, NFR-036).
+- **Task:** The lead developer found the native app's look generic and not close to a current iOS feel. Redesign it without changing any behaviour.
+- **Summary:** Added large bold screen titles, a floating pill tab bar (tinted translucent fill with a light rim and soft shadow, animated selection, haptics) with a fade behind it, a floating cart pill, round glass back buttons, soft shadowed cards, capsule steppers, gradient primary buttons, a spring press scale on tappable rows and a warm radial background glow. Real backdrop blur needs Android 12 and the app supports Android 8, so the glass is a tinted fill, not a blur. Screens fade and scale between destinations. No data, API or navigation logic changed.
+- **Files:** `android/app/src/main/java/com/brewnicat/connect/ui/{BrewApp.kt,theme/Theme.kt,screens/{Components,HomeScreen,MenuScreen,OrdersScreen,VisitScreen,AccountScreen}.kt}`, `docs/{functional-requirements,test-cases,development-log}.md`.
+- **Testing:** see the PR.
+- **Branch / PR:** `feat/android-ui-redesign`.
+- **Known limitations:** Real blur is not used below Android 12. The website has no matching redesign yet.
+- **Next action:** Free-play arcade games for the waiting popup (separate PR).
+

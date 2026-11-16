@@ -31,11 +31,10 @@ private const val MAP_URL = "https://www.google.com/maps/search/?api=1&query=7.1
 fun VisitScreen(vm: AppViewModel) {
     val context = LocalContext.current
     fun open(url: String) = runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, url.toUri())) }
-    val bottomPad = if (vm.cart.isEmpty) 24.dp else 88.dp
+    val bottomPad = if (vm.cart.isEmpty) 124.dp else 190.dp
     Column(Modifier.verticalScroll(rememberScrollState()).padding(bottom = bottomPad)) {
-        BrandHeader()
+        LargeTitle("Visit", subtitle = "Find us")
         Column(Modifier.padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            Text("Visit us", style = MaterialTheme.typography.headlineMedium, color = Brand.colors.ink)
             OpenStatus(vm.hours)
             Card(Modifier.fillMaxWidth()) {
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
