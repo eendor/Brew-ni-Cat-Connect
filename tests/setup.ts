@@ -17,7 +17,7 @@ delete process.env.NEXT_PUBLIC_ONLINE_ORDERING;
 const dom = (globalThis as { jsdom?: { window: Window } }).jsdom;
 if (dom) {
   for (const name of ["localStorage", "sessionStorage"] as const) {
-    if (!(globalThis as Partial<Window>)[name]) {
+    if (!Reflect.get(globalThis, name)) {
       Object.defineProperty(globalThis, name, {
         configurable: true,
         value: dom.window[name],
