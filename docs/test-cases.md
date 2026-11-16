@@ -1343,6 +1343,33 @@ Run on 2026-11-10: `NODE_OPTIONS=--no-experimental-webstorage npx vitest run` wi
 | TC-P7-080 | FR-101 | The phone number button sends a number that isn't a Philippine mobile (a foreign or landline number on the Facebook account) | Update 2026-11-11: the same reply as TC-P7-075 asks the customer to type "order 09XXXXXXXXX"; the button is not offered again | Passed (automated) |
 | TC-P7-081 | FR-101 | The phone number button sends a number the bot can't use, or a number written as 0063 9XX XXX XXXX | Update 2026-11-11: the log shows only the format (digits as d, letters as a) and the length, never the number; 0063 numbers are accepted | Passed (automated) |
 
+## 46. Phase 7 Integrated QA Execution Summary
+
+Run on 2026-11-11 by the integrated QA engineer, on `main` at `f82be0d` (branch `test/p7-integrated-qa-main`, PR #147). Environment: Windows (win32), Node.js, Next.js 16 production build, Vitest for unit and database tests, and Playwright for browser tests. No live orders were placed, and no production database or POS data changed during the run. The Messenger checks used a test Facebook Page chat.
+
+Update 2026-11-17 (PR #147 review): this section first landed inside §52, and its manual checks reused MAN-P7-001 to MAN-P7-008, which §44b, §47 and §51 already use for other checks. The checks below are renumbered QA-P7-01 to QA-P7-08; their wording and results are unchanged.
+
+### Live and Manual Checks
+
+| ID | Check | Device | Result | Status |
+| --- | --- | --- | --- | --- |
+| LIVE-P7-01 | Verification request with wrong token | Live API (`/api/messenger`) | HTTP 403 Forbidden | Passed |
+| LIVE-P7-02 | Message without valid signature | Live API (`/api/messenger`) | HTTP 401 Unauthorized | Passed |
+| QA-P7-01 | Automated assistant greeting & quick replies | Test Facebook Page chat | Assistant identifies as automated assistant and shows quick replies | Passed |
+| QA-P7-02 | Asking for the menu | Test Facebook Page chat | Menu and prices match the website catalog | Passed |
+| QA-P7-03 | Asking for the hours | Test Facebook Page chat | Opening hours match the Contact page | Passed |
+| QA-P7-04 | Asking how to order | Test Facebook Page chat | Explains pickup on website and customer-arranged rider delivery | Passed |
+| QA-P7-05 | Asking for order status & proof verification | Test Facebook Page chat | Requires proof first; wrong reference/proof displays safe refusal | Passed |
+| QA-P7-06 | Asking for a person (staff handoff) | Test Facebook Page chat | Successfully hands chat over to staff | Passed |
+| QA-P7-07 | Tagalog message handling | Test Facebook Page chat | Tagalog inquiry receives accurate Tagalog response | Passed |
+| QA-P7-08 | Unknown message fallback | Test Facebook Page chat | Helpful fallback message displayed with quick reply choices | Passed |
+
+**Phase 7 PRs Covered:**
+
+- #106: `feat/p7-messenger` — Messenger assistant webhook with button replies (FR-058 to FR-063) - MERGED
+- FR-064 (recommendations) - Deferred.
+- Waiting PRs: None.
+
 ## 47. Closed Today Switch Cases (2026-11-11)
 
 The owner asked for a switch in the POS app to close the shop for the day (FR-111). §46 is kept for the Phase 8 QA cases.
