@@ -11,6 +11,21 @@ delete process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 // Place order is off unless a test turns it on.
 delete process.env.NEXT_PUBLIC_ONLINE_ORDERING;
 
+// Node 25 and later have their own localStorage, which is empty without a
+// --localstorage-file and hides jsdom's. The project runs on Node 24 (.nvmrc,
+// CI), but put jsdom's storage back so the tests also run on newer Node.
+const dom = (globalThis as { jsdom?: { window: Window } }).jsdom;
+if (dom) {
+  for (const name of ["localStorage", "sessionStorage"] as const) {
+    if (!(globalThis as Partial<Window>)[name]) {
+      Object.defineProperty(globalThis, name, {
+        configurable: true,
+        value: dom.window[name],
+      });
+    }
+  }
+}
+
 afterEach(() => {
   cleanup();
 });
