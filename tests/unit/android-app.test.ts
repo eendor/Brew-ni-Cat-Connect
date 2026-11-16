@@ -229,4 +229,15 @@ describe("Android app", () => {
     expect(adCard).toContain("allowFileAccess = false");
     expect(adCard).toContain("allowContentAccess = false");
   });
+
+  it("TC-P8-042 — the ad WebView opens a link only after a tap, never on an automatic redirect", () => {
+    const adCard = readFileSync(
+      "android/app/src/main/java/com/brewnicat/connect/ui/screens/AdCard.kt",
+      "utf8",
+    );
+    expect(adCard).toMatch(
+      /if \(request\.hasGesture\(\) && \(uri\.scheme == "https"/,
+    );
+    expect(adCard).toContain("return true");
+  });
 });
