@@ -28,6 +28,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,8 +38,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.dp
+import com.brewnicat.connect.data.AppUpdate
 import com.brewnicat.connect.data.MenuItem
 import com.brewnicat.connect.data.Pricing
+import com.brewnicat.connect.ui.kit.Alert
 import com.brewnicat.connect.ui.kit.Icon
 import com.brewnicat.connect.ui.kit.Kit
 import com.brewnicat.connect.ui.kit.KitIcons
@@ -201,6 +204,24 @@ fun BrewApp(vm: AppViewModel) {
                 },
                 onDismiss = { sheetItem = null; sheetOpen = false },
             )
+        }
+
+        // In-app update (FR-117): Android shows its own install confirmation after this.
+        val update = vm.availableUpdate
+        if (update != null && vm.updatePromptOpen) {
+            val size = AppUpdate.sizeLabel(update.size)?.let { " ($it)" }.orEmpty()
+            val notes = update.notes.takeIf { it.isNotEmpty() }?.let { "\n\n$it" }.orEmpty()
+            Alert(
+                title = "Update available",
+                message = "Brew ni Cat ${update.versionName} is ready to download from the shop's website$size.$notes",
+                primary = "Update",
+                onPrimary = vm::startUpdate,
+                secondary = "Later",
+                onDismiss = vm::snoozeUpdate,
+            )
+        }
+        LaunchedEffect(vm.updateMessage) {
+            vm.updateMessage?.let { overlays.toast(it, KitIcons.RefreshCw); vm.clearUpdateMessage() }
         }
     }
 }

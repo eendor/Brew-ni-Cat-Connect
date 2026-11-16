@@ -22,6 +22,11 @@ class MainActivity : ComponentActivity() {
         setContent { KitTheme { BrewApp(vm) } }
     }
 
+    override fun onResume() {
+        super.onResume()
+        vm.resumePendingUpdate()
+    }
+
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         handleLink(intent)

@@ -1,0 +1,9 @@
+{
+  "versionCode": 4,
+  "versionName": "1.0.1",
+  "url": "/android/brew-ni-cat-connect-1.0.1.apk",
+  "sha256": "750fe18febba3e285a7a3ad06025da1aa130e3b22c13e45b795e206ede2fc43e",
+  "size": 2725388,
+  "minAndroid": "8.0",
+  "notes": "Updates now arrive inside the app. Combos & Packages highlight in the menu."
+}

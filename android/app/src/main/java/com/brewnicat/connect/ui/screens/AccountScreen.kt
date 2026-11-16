@@ -182,6 +182,19 @@ fun AccountScreen(vm: AppViewModel) {
                     trailing = { Icon(KitIcons.ArrowUpRight, null, tint = c.label3, size = 18.dp) },
                     onClick = { runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, (BuildConfig.SITE_URL + "/privacy").toUri())) } },
                 )
+                val update = vm.availableUpdate
+                val progress = vm.updateProgress
+                ListRow(
+                    "App version ${BuildConfig.VERSION_NAME}",
+                    subtitle = when {
+                        progress != null -> "Downloading the update… ${(progress * 100).toInt()}%"
+                        vm.updateChecking -> "Checking for updates…"
+                        update != null -> "Version ${update.versionName} is ready. Tap to update."
+                        else -> "Tap to check for updates."
+                    },
+                    leading = { IconTile(KitIcons.RefreshCw, c.orange) },
+                    onClick = { if (update != null) vm.startUpdate() else vm.checkForUpdate(manual = true) },
+                )
             }
         }
         if (session != null) {

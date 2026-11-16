@@ -18,6 +18,23 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        // The app checks this for updates (FR-117), so it must never be stale.
+        source: "/android/latest.json",
+        headers: [{ key: "Cache-Control", value: "no-cache, max-age=0" }],
+      },
+      {
+        // Each build has its own file name, so the APK itself can be cached.
+        source: "/android/:file*.apk",
+        headers: [
+          {
+            key: "Content-Type",
+            value: "application/vnd.android.package-archive",
+          },
+          { key: "Content-Disposition", value: "attachment" },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+        ],
+      },
+      {
         source: "/sw.js",
         headers: [
           {

@@ -33,7 +33,8 @@ describe("Site footer", () => {
     // Update 2026-11-10 (FR-099): the cat drawings are not icons; their strip is aria-hidden.
     const icons = container.querySelectorAll("svg:not(.cat-figure)");
     // Update 2026-11-13 (FR-115): plus the jukebox's music note.
-    expect(icons).toHaveLength(7);
+    // Update 2026-11-17 (FR-116): plus the Android app link.
+    expect(icons).toHaveLength(8);
     icons.forEach((icon) => {
       expect(icon).toHaveAttribute("aria-hidden", "true");
       expect(icon).toHaveAttribute("focusable", "false");

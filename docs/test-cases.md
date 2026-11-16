@@ -1778,3 +1778,14 @@ FR-112 update. Migration `20261117130000_counter_active_today.sql`.
 | TC-P9-066 | FR-112      | Status line on Monday at 2 PM (open 10 to 6) with no sale, at 11 AM with no sale, with a sale, unknown, and after closing; the Gemini facts with no sale | "We should be open now until 6 PM, but the counter hasn't had an order yet today…" only at 2 PM with no sale; the facts carry the same line | Passed (automated) |
 | TC-P9-067 | FR-112      | "close kayo ngayon?" with no sale today; "open po kayo today?" with a sale and with the check failing | The careful answer with Talk to staff; the plain "Yes, we're open now until 6 PM!" both times | Passed (automated) |
 
+## 64. Android App From The Website, With In-App Updates (2026-11-17)
+
+FR-116, FR-117, ADR-038. Android 1.0.1 (version code 4).
+
+| ID         | Requirement    | Case | Expected result | Status |
+| ---------- | -------------- | ---- | --------------- | ------ |
+| TC-P9-068  | FR-116, FR-117 | Read `public/android/latest.json`, the APK it names and the Android project | The APK's SHA-256 and size match; the version code and name match `build.gradle.kts`; only the current APK is in `public/android` | Passed (automated) |
+| TC-P9-069  | FR-116         | Render the home section and the footer; read the site headers | "Download for Android" and "Android app" link to the APK with `download`; the version, size and "Android 8.0 or newer"; `latest.json` is never cached; the APK is sent as an Android package | Passed (automated) |
+| TC-P9-070  | FR-117         | JVM: read `latest.json` with a relative APK; with another host, plain http, a non-APK path, a short hash, version 0 and HTML; decide whether to ask after Later | Only the first is accepted; it asks for a newer version, not again within a day of Later, again after a day, and at once for a build newer than the one put off | Passed (automated) |
+| TC-P9-071  | FR-117         | JVM with a mock site: fetch `latest.json`, then a 404; download the APK, then a changed APK, then a 500 | The release, then none; the APK is kept and old files removed, with progress reaching 100%; the changed APK is deleted; the failed download gives none | Passed (automated) |
+| MAN-P9-005 | FR-116, FR-117 | On a phone with 1.0.0, download and install 1.0.1 from the home page; later publish 1.0.2 and open the app | 1.0.1 installs over 1.0.0 and keeps the sign-in; with 1.0.2 published the app shows Update available, asks once to allow installs, and Android installs it | Not run yet (needs a newer build after 1.0.1) |

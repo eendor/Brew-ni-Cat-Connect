@@ -87,7 +87,18 @@ class Store(
         putString(AD_CONSENT, if (consent) "yes" else "no")
     }
 
+    /** The version the customer put off with Later, and when (FR-117). */
+    fun updateSnooze(): Pair<Int, Long>? =
+        if (prefs.contains(UPDATE_SNOOZE_CODE)) prefs.getInt(UPDATE_SNOOZE_CODE, 0) to prefs.getLong(UPDATE_SNOOZE_AT, 0L) else null
+
+    fun saveUpdateSnooze(versionCode: Int, atMs: Long) = prefs.edit {
+        putInt(UPDATE_SNOOZE_CODE, versionCode)
+        putLong(UPDATE_SNOOZE_AT, atMs)
+    }
+
     private companion object {
+        const val UPDATE_SNOOZE_CODE = "update_snooze_code"
+        const val UPDATE_SNOOZE_AT = "update_snooze_at"
         const val CART = "cart"
         const val DETAILS = "details"
         const val ORDERS = "orders"

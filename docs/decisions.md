@@ -575,3 +575,17 @@ This manual state is a temporary functional-verification condition, not a revisi
 - The website keeps working before the migration: the new fields are optional and a missing codes table shows no codes. The Android app ignores the new fields until it is updated.
 - Prizes are food and drinks given at the counter for free plays, which keeps the games points-based for customers (ADR-017). The owner should still check whether a promo permit is needed before adding many prizes.
 
+## ADR-038 — The Android App Is Hosted On The Website And Updates Itself From It
+
+**Decision:** The signed Android APK is served from the website (`public/android/`), with `public/android/latest.json` giving its version, size and SHA-256. The app reads `latest.json` when it opens and when the customer asks in Account, and offers a newer version; it downloads the APK from the same site, checks the SHA-256 and hands it to Android's installer.\
+**Date:** 2026-11-17\
+**Status:** Accepted. Shipped in Android 1.0.1.\
+**Context:** The app isn't on Google Play yet, and the Samsung and Huawei stores need accounts the lead is still making. Until now the APK was only attached to a GitHub release, which customers don't find, and 1.0.0 had no way to tell anyone about a new version.\
+**Alternatives considered:** waiting for an app store (no date); the GitHub release only (hard to find, no updates); a separate download host (another account and another key to keep); Google Play's in-app updates (only for apps installed from Play).\
+**Consequences:**
+
+- The app asks for `REQUEST_INSTALL_PACKAGES`. Android asks the customer once to allow installs from the app, and confirms every install, so the app can't install anything silently.
+- Android refuses an update that isn't signed with the same key as the installed app, so a changed APK on the site can't replace the app. The SHA-256 check and the same-site rule catch a broken or swapped download before Android sees it. Losing the release key would stop all updates, so it must be backed up (android/README.md).
+- Customers on 1.0.0 have to install 1.0.1 by hand once; from 1.0.1 on, updates are offered in the app.
+- Each release commits a new APK of about 3 MB to the repository and removes the old one. If the store builds come, they update through their own stores and this check only offers the website build to website installs.
+

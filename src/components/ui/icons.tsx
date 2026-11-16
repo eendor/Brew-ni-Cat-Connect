@@ -165,6 +165,25 @@ export function WalletIcon({ className }: IconProps) {
   );
 }
 
+export function SmartphoneIcon({ className }: IconProps) {
+  return (
+    <StrokeIcon className={className}>
+      <rect width="14" height="20" x="5" y="2" rx="2" ry="2" />
+      <path d="M12 18h.01" />
+    </StrokeIcon>
+  );
+}
+
+export function DownloadIcon({ className }: IconProps) {
+  return (
+    <StrokeIcon className={className}>
+      <path d="M12 15V3" />
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <path d="m7 10 5 5 5-5" />
+    </StrokeIcon>
+  );
+}
+
 export function PackageIcon({ className }: IconProps) {
   return (
     <StrokeIcon className={className}>

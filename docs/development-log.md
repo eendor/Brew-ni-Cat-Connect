@@ -2085,3 +2085,17 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Known limitations:** The migration needs the lead's OK before it is applied live; until then the replies are unchanged. Turning on the Closed today switch, or posting on the Page that the shop is closed, is still the sure way.
 - **Next action:** Apply the migration.
 
+## 2026-11-17 — Android app on the website, with in-app updates
+
+- **Phase:** Phase 9 (FR-116, FR-117, ADR-038).
+- **Task:** Host the Android app on the website itself and let it update itself.
+- **Summary:**
+  - Website: the signed APK and `latest.json` are in `public/android/`; the home page has an Android app section with Download for Android, and the footer an Android app link. `latest.json` is never cached.
+  - Android 1.0.1 (version code 4): checks `latest.json` when it opens and from Account → App version, shows Update available with Update and Later, downloads the APK from the same site, checks its SHA-256 and opens Android's installer. It asks once for permission to install updates and finishes when the customer comes back.
+  - Built with the same release key as 1.0.0 (same certificate digest).
+- **Files:** `public/android/*`, `src/config/android-app.ts`, `src/components/android/android-app-section.tsx`, `src/components/ui/icons.tsx`, `src/components/layout/site-footer.tsx`, `src/app/page.tsx`, `next.config.ts`, `android/app/src/main/java/com/brewnicat/connect/data/{AppUpdate,AppInstaller,Store}.kt`, `ui/{AppViewModel,BrewApp}.kt`, `ui/screens/AccountScreen.kt`, `MainActivity.kt`, `AndroidManifest.xml`, `res/xml/update_paths.xml`, `android/README.md`, tests, docs.
+- **Testing:** TC-P9-068 to TC-P9-071; TC-P8-024 and TC-P4-030 updated; `gradlew testDebugUnitTest lintRelease`; `vitest`, `tsc`, `eslint`, docs validator.
+- **Branch / PR:** `feat/android-self-update`.
+- **Known limitations:** Phones on 1.0.0 must install 1.0.1 by hand once. MAN-P9-005 needs a later build to update to.
+- **Next action:** For each release, follow android/README.md → Release.
+

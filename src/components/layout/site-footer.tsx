@@ -10,8 +10,10 @@ import {
   MailIcon,
   MapPinIcon,
   PhoneIcon,
+  SmartphoneIcon,
   TikTokIcon,
 } from "@/components/ui/icons";
+import { androidRelease } from "@/config/android-app";
 import { InstallAppButton } from "@/components/pwa/install-app-button";
 import { JukeboxControl } from "@/components/sound/jukebox-control";
 import { PRIVACY_POLICY_PATH } from "@/config/privacy";
@@ -141,6 +143,17 @@ export function SiteFooter({ content }: SiteFooterProps) {
                 </ExternalLink>
               </li>
             ) : null}
+            <li>
+              <a
+                href={androidRelease.url}
+                download
+                type="application/vnd.android.package-archive"
+                className={footerLinkClass}
+              >
+                <SmartphoneIcon className={footerIconClass} />
+                Android app
+              </a>
+            </li>
           </ul>
           <p className="mt-3 flex gap-2 text-sm leading-6 text-[var(--footer-muted)]">
             <ClockIcon className={`mt-1 ${footerIconClass}`} />
