@@ -5,10 +5,8 @@ import com.brewnicat.connect.data.MenuItem
 import com.brewnicat.connect.ui.AppViewModel
 import com.brewnicat.connect.ui.kit.Page
 
-@Composable fun OrdersScreen(vm: AppViewModel) = Page("Orders") {}
 @Composable fun AccountScreen(vm: AppViewModel) = Page("Account") {}
 @Composable fun VisitScreen(vm: AppViewModel) = Page("Visit") {}
-@Composable fun OrderScreen(vm: AppViewModel, reference: String) = Page("Order $reference", onBack = { vm.back() }) {}
 @Composable fun ProfileScreen(vm: AppViewModel) = Page("Profile", onBack = { vm.back() }) {}
 @Composable fun OrderHistoryScreen(vm: AppViewModel) = Page("Order history", onBack = { vm.back() }) {}
 @Composable fun FavoritesScreen(vm: AppViewModel, onItem: (MenuItem) -> Unit) = Page("Favorites", onBack = { vm.back() }) {}
