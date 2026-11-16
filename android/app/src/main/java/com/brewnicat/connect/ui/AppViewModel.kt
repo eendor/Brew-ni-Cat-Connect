@@ -790,7 +790,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    fun submitReview(rating: Int, body: String) {
+    fun submitReview(rating: Int, body: String, showPhoto: Boolean = true) {
         val check = ReviewValidation.validate(rating, body)
         if (!check.isValid) {
             reviewError = check.ratingError ?: check.bodyError
@@ -805,7 +805,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             runCatching {
                 val active = session
                 if (active == null) api.postReview(rating, check.trimmedBody!!, null)
-                else withValidToken(active) { token -> api.postReview(rating, check.trimmedBody!!, token) }
+                else withValidToken(active) { token -> api.postReview(rating, check.trimmedBody!!, token, showPhoto) }
             }.fold(
                 onSuccess = { res ->
                     reviewSubmitting = false

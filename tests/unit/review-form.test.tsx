@@ -95,6 +95,7 @@ describe("ReviewForm component (FR-098)", () => {
       rating: 4,
       body: "My previous review",
       hidden: false,
+      avatarUrl: null,
       createdAt: "2026-11-08T10:00:00Z",
       updatedAt: "2026-11-08T10:00:00Z",
     });
@@ -160,6 +161,7 @@ describe("ReviewForm component (FR-098)", () => {
         rating: 4,
         body: "Nice matcha!",
         hidden: false,
+        avatarUrl: null,
         createdAt: "2026-11-09T12:00:00Z",
         updatedAt: "2026-11-09T12:00:00Z",
       },
@@ -180,6 +182,7 @@ describe("ReviewForm component (FR-098)", () => {
       rating: 5,
       body: "Great cat cafe!",
       hidden: false,
+      avatarUrl: null,
       createdAt: "2026-11-09T12:00:00Z",
       updatedAt: "2026-11-09T12:00:00Z",
     };

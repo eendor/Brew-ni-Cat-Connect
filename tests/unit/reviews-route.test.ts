@@ -177,6 +177,7 @@ describe("POST /api/reviews (FR-098)", () => {
     expect(mockRpc).toHaveBeenCalledWith("post_review", {
       p_rating: 5,
       p_body: "Best latte in town",
+      p_show_photo: true,
     });
   });
 

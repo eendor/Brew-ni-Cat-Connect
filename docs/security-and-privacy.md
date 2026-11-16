@@ -617,3 +617,9 @@ Section 19 already belongs to the Phase 7 addendum on `main`, so this addendum t
 - **The customer decides:** `REQUEST_INSTALL_PACKAGES` lets the app open Android's installer; Android asks once to allow it and confirms each install. Later puts the question off for a day. The update check sends no account or device data: it is a plain GET of `/android/latest.json`.
 - **POS updates (FR-118):** `public.app_release.sha256` publishes each POS build's hash. From build 10150 the POS refuses an APK whose hash differs or that has no published hash, before Android's installer sees it. Android still requires the same signing key.
 
+## 30. Google Profile Photos Addendum (FR-119, 2026-11-17)
+
+- **Address from Auth only:** `post_review` reads the photo address from `auth.users.raw_user_meta_data` through `private.google_avatar_url`, which guests can't call. The request can only say whether to show it. The column check `reviews_avatar_url_google` and the same rule in the website and app accept only `https://lh3.googleusercontent.com/` addresses, so a review can't point readers at another site.
+- **The customer decides:** the photo is on reviews only while "Show my Google photo" is on; posting with it off clears it. Guest reviews never carry one.
+- **No referrer, no copy:** the website loads the photo with `referrerPolicy="no-referrer"`, and the app fetches it without cookies or redirects, capped at 512 KB, kept only in memory. We store the address, not the picture.
+

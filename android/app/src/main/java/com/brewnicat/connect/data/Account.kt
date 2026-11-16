@@ -201,6 +201,8 @@ data class ReviewItem(
     val hidden: Boolean,
     val createdAt: String,
     val updatedAt: String,
+    /** Google profile photo, only when the customer chose to show it (FR-119). */
+    val avatarUrl: String? = null,
 )
 
 data class ReviewsPage(
@@ -411,6 +413,7 @@ object AccountParsers {
             hidden = json.optBoolean("hidden", false),
             createdAt = json.optString("created_at"),
             updatedAt = json.optString("updated_at"),
+            avatarUrl = ProfilePhoto.safe(json.optString("avatar_url").takeIf { it != "null" }),
         )
     }
 

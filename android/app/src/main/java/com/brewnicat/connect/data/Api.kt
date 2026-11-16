@@ -299,7 +299,7 @@ class Api(
         val safeSize = pageSize.coerceAtLeast(1)
         val offset = safePage * safeSize
         val pageRes = callRaw(
-            rest("reviews?hidden=eq.false&select=id,display_name,rating,body,hidden,created_at,updated_at&order=created_at.desc&limit=$safeSize&offset=$offset")
+            rest("reviews?hidden=eq.false&select=id,display_name,rating,body,hidden,avatar_url,created_at,updated_at&order=created_at.desc&limit=$safeSize&offset=$offset")
                 .header("Prefer", "count=exact")
                 .get()
                 .build(),
@@ -326,9 +326,10 @@ class Api(
         rating: Int,
         body: String,
         accessToken: String? = null,
+        showPhoto: Boolean = true,
     ): PostReviewResult = withContext(Dispatchers.IO) {
         try {
-            val payload = JSONObject().put("rating", rating).put("body", body)
+            val payload = JSONObject().put("rating", rating).put("body", body).put("showPhoto", showPhoto)
             val builder = Request.Builder()
                 .url(siteUrl.trimEnd('/') + "/api/reviews")
                 .header("Accept", "application/json")

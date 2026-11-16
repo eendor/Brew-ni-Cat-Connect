@@ -505,6 +505,7 @@ File: `supabase/migrations/20261112120000_reviews.sql`. Undo: `supabase/rollback
 - `rating`: smallint not null, checked between 1 and 5.
 - `body`: text not null, checked between 1 and 500 characters, trimmed.
 - `hidden`: boolean not null default false. Hidden reviews are omitted from public reading; shop staff can toggle this column from the POS app.
+- `avatar_url`: text null (2026-11-17, FR-119, migration `20261117150000_google_profile_photos.sql`). The reviewer's Google profile photo address, set by `post_review` from Supabase Auth when "Show my Google photo" is on. Checked by `reviews_avatar_url_google` to be on `https://lh3.googleusercontent.com/` and at most 600 characters. Readable by everyone; never written directly.
 - `created_at`: timestamptz not null default now().
 - `updated_at`: timestamptz not null default now().
 - A partial unique index `reviews_customer_id_unique_idx` on `customer_id` where `customer_id IS NOT NULL` guarantees one review per signed-in customer, which they can update.

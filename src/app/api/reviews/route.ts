@@ -154,6 +154,7 @@ export async function POST(request: Request): Promise<Response> {
     const answer = await supabase.rpc("post_review", {
       p_rating: validation.data.rating,
       p_body: validation.data.body,
+      p_show_photo: validation.data.showPhoto !== false,
     });
     if (answer.error) {
       logFailure(correlationId, answer.error.code || "rpc-error");

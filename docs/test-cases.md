@@ -1799,3 +1799,22 @@ FR-118, ADR-038. Migration `20261117140000_app_release_sha256.sql` (applied live
 | TC-P9-072  | FR-118      | PGlite: add releases with a lowercase hash and none, then an upper-case hash and a short one; read as a guest; a guest changes a hash; apply the rollback | The first two are kept and readable; the others are refused by `app_release_sha256_format`; the guest's change does nothing; the column is gone after the rollback | Passed (automated) |
 | TC-P9-073  | FR-118      | POS JVM: hash "abc"; compare a hash with itself, in upper case with spaces, with a changed file, with no published hash and with a short one | The standard SHA-256 of "abc"; only the first two match | Passed (automated) |
 | MAN-P9-006 | FR-118      | A tablet on 10149 updates to 10150; then a test row with a wrong hash is published briefly for a newer code | 10150 installs; with the wrong hash the tablet shows "Update failed … didn't match" and nothing is installed | Not run yet |
+
+## 66. Google Profile Photos On Accounts And Reviews (2026-11-17)
+
+FR-119. Migration `20261117150000_google_profile_photos.sql`. Android 1.0.2 (versionCode 5).
+
+| ID         | Requirement | Case | Expected result | Status |
+| ---------- | ----------- | ---- | --------------- | ------ |
+| TC-P9-074  | FR-119      | PGlite: a customer with `avatar_url`, one with only `picture`, and a guest post reviews; read them as a guest | Both customers' reviews carry the Google photo; the guest's has none; guests can read `avatar_url` | Passed (automated) |
+| TC-P9-075  | FR-119      | PGlite: post again with the photo off; post as a customer whose metadata points at another site; change `avatar_url` directly; call the helper as a guest | The photo is cleared (also in `my_review`); the other site is ignored; `reviews_avatar_url_google` and the grants refuse the direct changes; the helper can't be called | Passed (automated) |
+| TC-P9-076  | FR-119      | PGlite: apply the rollback, then post with two arguments | The two-argument `post_review` works again and `avatar_url` is gone | Passed (automated) |
+| TC-P9-077  | FR-119      | Unit: photo addresses on Google, plain http, look-alike hosts, query strings and non-strings; initials; the account name | Only `https://lh3.googleusercontent.com/` addresses are used | Passed (automated) |
+| TC-P9-078  | FR-119      | Unit: the avatar with a photo, after the photo fails, and with another site's address | An `img` with `referrerpolicy="no-referrer"` and empty alt; initials after an error or for another site | Passed (automated) |
+| TC-P9-079  | FR-119      | Unit: a review card with and without a photo | The photo, or the first initial | Passed (automated) |
+| TC-P9-080  | FR-119      | Unit: a signed-in customer with a Google photo turns "Show my Google photo with my review" off and posts | The switch starts on; `submitReview` gets `showPhoto: false` | Passed (automated) |
+| TC-P9-081  | FR-119      | Unit: the review form for a guest and for an account without a Google photo | No photo switch | Passed (automated) |
+| TC-P9-082  | FR-119      | Unit: `validateReviewInput` with no `showPhoto` and with `false` | true, then false; the route passes `p_show_photo` | Passed (automated) |
+| TC-P9-083  | FR-119      | Android JVM: photo address checks, initials, a sign-in response with `avatar_url` saved and read back, reviews with and without `avatar_url` | The session and review keep only the Google photo | Passed (automated) |
+| MAN-P9-007 | FR-119      | Sign in with Google on the website and in Android 1.0.2; post a review with the photo on, then off | The photo shows on the account, the header menu and the review, then the review shows initials | Not run yet |
+

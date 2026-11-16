@@ -3,7 +3,9 @@
 import { useEffect, useId, useState, type FormEvent } from "react";
 
 import { StarRatingPicker } from "@/components/reviews/star-rating";
+import { Avatar } from "@/components/ui/avatar";
 import { useAuth } from "@/context/auth-context";
+import { googlePhotoFromMetadata } from "@/lib/account/avatar";
 import { fetchCustomerProfile } from "@/lib/account/profile";
 import {
   REVIEW_ERROR_MESSAGES,
@@ -20,12 +22,17 @@ export type ReviewFormProps = Readonly<{
 export function ReviewForm({ onReviewPosted, initialReview }: ReviewFormProps) {
   const { user, session } = useAuth();
   const textareaId = useId();
+  const photoToggleId = useId();
+  const googlePhoto = googlePhotoFromMetadata(user?.user_metadata);
 
   const [rating, setRating] = useState<number>(initialReview?.rating ?? 0);
   const [body, setBody] = useState<string>(initialReview?.body ?? "");
   const [firstName, setFirstName] = useState<string>("");
   const [existingReviewId, setExistingReviewId] = useState<string | null>(
     initialReview?.id ?? null,
+  );
+  const [showPhoto, setShowPhoto] = useState<boolean>(
+    initialReview ? initialReview.avatarUrl !== null : true,
   );
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
@@ -67,6 +74,7 @@ export function ReviewForm({ onReviewPosted, initialReview }: ReviewFormProps) {
             setExistingReviewId(existing.id);
             setRating(existing.rating);
             setBody(existing.body);
+            setShowPhoto(existing.avatarUrl !== null);
           }
         })
         .catch(() => {
@@ -111,7 +119,7 @@ export function ReviewForm({ onReviewPosted, initialReview }: ReviewFormProps) {
 
     try {
       const result = await submitReview(
-        { rating, body: trimmed },
+        { rating, body: trimmed, showPhoto },
         session?.access_token,
       );
 
@@ -148,13 +156,38 @@ export function ReviewForm({ onReviewPosted, initialReview }: ReviewFormProps) {
         </h3>
         <div className="mt-2 text-sm">
           {user ? (
-            <p className="text-[var(--text-strong)]">
-              Posting as{" "}
-              <span className="font-semibold text-[var(--accent-solid)]">
-                {currentFirstName}
-              </span>
-              {isEditing ? " • Editing your existing review" : ""}
-            </p>
+            <div className="space-y-2">
+              <p className="flex items-center gap-2 text-[var(--text-strong)]">
+                <Avatar
+                  name={currentFirstName}
+                  photoUrl={googlePhoto && showPhoto ? googlePhoto : null}
+                  size={28}
+                />
+                <span>
+                  Posting as{" "}
+                  <span className="font-semibold text-[var(--accent-solid)]">
+                    {currentFirstName}
+                  </span>
+                  {isEditing ? " • Editing your existing review" : ""}
+                </span>
+              </p>
+              {googlePhoto ? (
+                <label
+                  htmlFor={photoToggleId}
+                  className="flex min-h-11 cursor-pointer items-center gap-2 text-sm text-[var(--text-muted)]"
+                >
+                  <input
+                    id={photoToggleId}
+                    type="checkbox"
+                    checked={showPhoto}
+                    onChange={(e) => setShowPhoto(e.target.checked)}
+                    disabled={isSubmitting}
+                    className="size-4 accent-[var(--accent-solid)]"
+                  />
+                  Show my Google photo with my review
+                </label>
+              ) : null}
+            </div>
           ) : (
             <div className="space-y-1">
               <p className="font-medium text-[var(--text-strong)]">
