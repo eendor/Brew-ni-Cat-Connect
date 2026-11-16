@@ -16,7 +16,9 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -94,7 +96,11 @@ fun Page(
     val edge by animateFloatAsState(if (scrolled) 1f else 0f, label = "scrollEdge")
     val edgeHeight by animateDpAsState(statusBar + barHeight + (if (pinned != null && stuck) pinnedHeight else 0.dp) + 20.dp, label = "edgeHeight")
     val inlineTitle by animateFloatAsState(if (titleGone) 1f else 0f, label = "inlineTitle")
-    val bottom = if (bottomBar != null) with(density) { footerPx.toDp() } else LocalBottomInset.current.coerceAtLeast(navBar)
+    // While the keyboard is open the bar steps aside, so it never covers the field being typed in.
+    @OptIn(ExperimentalLayoutApi::class)
+    val keyboardOpen = WindowInsets.isImeVisible
+    val showBottomBar = bottomBar != null && !keyboardOpen
+    val bottom = if (showBottomBar) with(density) { footerPx.toDp() } else if (keyboardOpen) 0.dp else LocalBottomInset.current.coerceAtLeast(navBar)
 
     Box(Modifier.fillMaxSize().background(c.grouped).imePadding()) {
         LazyColumn(
@@ -154,7 +160,7 @@ fun Page(
                     ) { pinned() }
                 }
             }
-            if (bottomBar != null) {
+            if (showBottomBar && bottomBar != null) {
                 val shape = RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp)
                 Column(
                     Modifier.align(Alignment.BottomCenter).fillMaxWidth().onSizeChanged { footerPx = it.height }

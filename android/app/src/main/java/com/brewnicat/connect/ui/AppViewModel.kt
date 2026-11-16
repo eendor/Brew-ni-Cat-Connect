@@ -74,6 +74,9 @@ sealed interface Screen {
 
 class AppViewModel(app: Application) : AndroidViewModel(app) {
     private val store = Store(app)
+    private val arcadeBests = androidx.compose.runtime.mutableStateMapOf<String, Int>().apply {
+        com.brewnicat.connect.data.Arcade.GAMES.forEach { g -> store.arcadeBest(g.id)?.let { put(g.id, it) } }
+    }
     val api = Api(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_PUBLISHABLE_KEY, BuildConfig.SITE_URL)
 
     // Navigation: a small back stack, with a tab always at the bottom.
@@ -328,6 +331,25 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         adConsent = consent
         store.saveAdConsent(consent)
     }
+
+    /** Personal best for a free-play arcade game. */
+    fun arcadeBest(gameId: String): Int? = arcadeBests[gameId]
+
+    /** Records a finished arcade game; true when it is a new personal best. */
+    fun recordArcade(gameId: String, score: Int): Boolean {
+        if (!com.brewnicat.connect.data.Arcade.isBetter(gameId, score, arcadeBests[gameId])) return false
+        arcadeBests[gameId] = score
+        store.saveArcadeBest(gameId, score)
+        return true
+    }
+
+    /** Latest order's status for the arcade banner: label and whether it is ready or done. */
+    val gamesOrderBanner: Pair<String, Boolean>?
+        get() {
+            val ref = savedOrders.firstOrNull()?.reference ?: return null
+            val view = (orders[ref] as? Loadable.Ready)?.value ?: return null
+            return OrderView.label(view.status) to (view.status == "ready" || view.status == "completed")
+        }
 
     fun openGamesPopup() {
         gamesPopupOpen = true

@@ -2014,4 +2014,16 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Testing:** `testDebugUnitTest`, `assembleRelease` and `lintRelease` pass (0 errors, 0 warnings); `tests/unit/android-app.test.ts` passes. On the `bnc_phone` emulator (Android 15) with `tools/mock_backend.py`, every screen was walked in light and dark mode, an order was placed, the games sheet opened and Cat cups was won (TC-P8-038). A duplicate-key crash in Order history (two history rows with the same id) was found and fixed during the walk.
 - **Branch / PR:** `feat/android-ui-redesign`, PR #153.
 - **Known limitations:** Below Android 12 the glass is a tinted fill, not a blur. The website has no matching redesign yet (follow-up).
-- **Next action:** Free-play arcade games for the waiting popup (separate PR).
+- **Next action:** Free-play arcade games for the waiting popup (separate PR, `feat/android-arcade`).
+
+## 2026-11-17 — Phase 8: Android arcade games
+
+- **Phase:** Phase 8 (FR-066, NFR-036).
+- **Task:** The lead developer found the waiting-order mini-games "so simple and too repetitive" and asked for more games that are fun to play.
+- **Summary:** Added five free-play arcade games under **Just for fun** in the games sheet: Treat Catcher (drag the cat to catch fish and milk tea, dodge chilis), Whack-a-Mouse (golden mice and combos), Cup Stack (drop sliding cups, the tower narrows on every miss), Paw Says (repeat a growing pattern) and Cat Match (16-card memory, fewest moves wins). Each opens full screen on the iOS 27 kit with the order status kept on top, freezes while the app is in the background, and keeps a personal best on the device. They send nothing to the server and award no points; Cat cups and Lucky paw stay the only points games (FR-089). The game rules are plain Kotlin in `data/Arcade.kt` so they are unit tested on the JVM. A score of zero never counts as a new best.
+- **Also fixed:** on pages with a glass bottom bar (Checkout, Profile), the bar covered the form fields while the keyboard was open, so the next field could not be tapped. `Page` now hides the bar while the keyboard is open (TC-P8-041).
+- **Files:** `android/app/src/main/java/com/brewnicat/connect/{data/Arcade.kt,data/Store.kt,ui/AppViewModel.kt,ui/games/*,ui/screens/GamesDialog.kt,ui/screens/OrdersScreen.kt,ui/kit/Page.kt}`, `android/app/src/test/java/com/brewnicat/connect/data/ArcadeTest.kt`, `android/README.md`, `docs/{functional-requirements,test-cases,development-log}.md`, `docs/evidence/phase-8/android-app/arcade-*.png`.
+- **Testing:** `testDebugUnitTest` (including 16 `ArcadeTest` cases), `assembleRelease` and `lintRelease` pass. On the `bnc_phone` emulator (Android 15) with `tools/mock_backend.py`, an order was placed and all five games were played in light and dark mode (TC-P8-040), and Checkout was filled in with the keyboard open (TC-P8-041).
+- **Branch / PR:** `feat/android-arcade`.
+- **Known limitations:** Personal bests stay on the device and are not synced to the account. The website has no arcade yet.
+- **Next action:** Ask the owner and lead before publishing the v1.0.0 GitHub release with `BrewNiCatConnect.apk`.
