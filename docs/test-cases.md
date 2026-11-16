@@ -1702,3 +1702,47 @@ The customer Android app was first a Trusted Web Activity over the live site (AD
 | TC-P8-040 | FR-066, NFR-036 | Emulator (`bnc_phone`, Android 15) with `tools/mock_backend.py`: place an order, scroll the auto-opened games sheet to **Just for fun**, play each of the five arcade games, finish a Cup Stack round, background and resume the app mid-game (light and dark mode) | The five games list with a coloured tile and **Play** or **Best N**; each opens full screen with the order status on top; play is smooth; the game freezes while the app is in the background; a non-zero score above the saved best shows **New best!** and updates the list; nothing is sent to the server and no points change | Passed 2026-11-17 (emulator, light and dark; evidence `docs/evidence/phase-8/android-app/arcade-*.png`) |
 | TC-P8-041 | FR-066, NFR-036 | Emulator (`bnc_phone`, Android 15): on Checkout, tap Full name and then Mobile number with the on-screen keyboard open | The glass bottom bar (notice and **Place order**) steps aside while the keyboard is open, so the focused field stays visible and the next field can be tapped; the bar returns when the keyboard closes | Passed 2026-11-17 (emulator) |
 | MAN-P8-009 | FR-031, FR-066 | Real Google OAuth consent round-trip on Android device/emulator against live Supabase Auth (`com.brewnicat.connect://auth/callback` allowlisted) | Tapping Continue with Google completes Google consent in Chrome Custom Tabs and signs into the real Supabase session | Not run yet (requires interactive Google account credentials; Supabase `uri_allow_list` updated 2026-11-14) |
+
+## 61. Phase 8 Integrated QA Execution Summary
+
+Run on 2026-11-13 by the integrated QA engineer, on `main` at `fd51c60` (branch `test/p8-integrated-qa-main`, PR #148). Environment: Windows 11, Node.js 24.19.0, Chrome for Testing 151.0.7922.34 (Playwright Chromium). This run covers the merged installable web app and offline page (PR #105) and Android app (PR #146). Checks against the live site were read-only; no real order was placed and no live data was changed.
+
+| Check | Command | Result |
+| --- | --- | --- |
+| Dependency install | `npm ci` | Passed: added 479 packages. npm reported 13 audit findings (10 moderate, 3 high). |
+| Dependency audit | `npm run audit` | Exit 0: 0 vulnerabilities in production dependencies; the full development dependency report lists 13 (10 moderate, 3 high), with no critical findings. |
+| Format | `npm run format:check` | Passed: All matched files use Prettier code style! |
+| Docs validator | `python scripts/validate_phase0_docs.py` | Passed: `REQUIRED_ROOT=5`, `REQUIRED_DOCS=14`, `MARKDOWN_FILES_CHECKED=36`, `FR_IDS=115 (001-115)`, `NFR_IDS=40 (001-040)`, `ERRORS=0`, `PHASE0_DOC_VALIDATION=PASS`. |
+| Lint | `npm run lint` | Passed: exit 0, 0 errors and 0 warnings. |
+| Typecheck | `npm run typecheck` | Passed: route types generated; TypeScript exited 0. |
+| Unit and database tests | `npm run test` | Passed: Test Files 108 passed (108); Tests 1123 passed (1123). |
+| Production build | Set the CI placeholder `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `NEXT_PUBLIC_ONLINE_ORDERING` and `NEXT_PUBLIC_AD_KEY`, then `npm run build` | Passed: compiled successfully and generated all 27 static pages. The placeholder Supabase host could not return live content, so pages logged that they were showing the fallback. |
+| Browser tests | Set `CI=1`, the same four CI placeholder variables, and `PLAYWRIGHT_BROWSERS_PATH` to the temporary browser cache; run `npx playwright test --project=chromium` | Not fully verified. Two initial attempts could not launch Chromium because the headless-shell executable was missing. After Chromium was installed, all 76 test cases reported individual results (73 passed and 3 skipped), but the runner did not return its final summary and was stopped after it remained open. No test failure was reported in that final run; its aggregate result is unverified. |
+
+The browser-runner setup issue was `browserType.launch: Executable doesn't exist at ...chromium_headless_shell-1234...chrome-headless-shell.exe`. Installing Chromium into a temporary browser cache resolved that launch error. The final run still did not exit with a summary, so the browser suite must be rerun before calling the full suite verified. The three skipped tests are the existing screenshot capture checks that require `CAPTURE_EVIDENCE=1`.
+
+Update 2026-11-17 (PR #148 review): this run tested the Trusted Web Activity build from PR #146. ADR-036 has since replaced it with the native Kotlin app (PRs #149 onward, the iOS 27 kit in #153 and the arcade in #154), so the live and automated results above are a historical record of `fd51c60`. Since then, CI has run the browser suite to completion on every merged PR, so that row's open question is settled for current `main`. MAN-P8-023 and MAN-P8-024 now apply to the native app and stay Not run yet until the v1.0.0 APK is published. MAN-P8-007 to MAN-P8-009 in §60 track the same release checks.
+
+### Live and Manual Checks
+
+| ID | Check | Device | Result | Status |
+| --- | --- | --- | --- | --- |
+| — | GET `/manifest.webmanifest` | Live site | HTTP 200 JSON; name `Brew ni Cat Coffee Shop`, `start_url` `/`, display `standalone`, and three `any`/`maskable` icons | Passed |
+| — | HEAD `/sw.js` | Live site | HTTP 200; `Cache-Control: no-cache, no-store, must-revalidate` | Passed |
+| — | GET `/.well-known/assetlinks.json` | Live site | HTTP 200 JSON; package `com.brewnicat.connect` and one `handle_all_urls` statement | Passed |
+| — | Check the `v1.0.0` release and APK | GitHub release | GitHub returned 404 for the `v1.0.0` tag; the releases list was empty | Not merged yet (release not published) |
+| MAN-P8-020 | Install the live site from Android Chrome and open it from the home screen | Android phone | Opened in standalone view with no browser address bar (`docs/evidence/phase-8/integrated-qa/android-install-standalone.jpg`) | Passed 2026-11-13 |
+| MAN-P8-021 | Install the live site from desktop Chrome and open it in its own window | Desktop browser | Opened in its own app window without browser tabs or address bar (`docs/evidence/phase-8/integrated-qa/desktop-install-window.png`) | Passed 2026-11-13 |
+| MAN-P8-022 | In the installed site, switch to airplane mode, confirm the offline page, reconnect and use Try again | Android phone | Screenshot shows airplane mode and the offline page with retry guidance (`docs/evidence/phase-8/integrated-qa/offline-page-airplane-mode.jpg`); reconnecting and using Try again loaded the page. Two image placeholders were broken while offline. | Passed 2026-11-13 |
+| MAN-P8-023 | Install the v1.0.0 APK and verify full-screen launch, menu, cart, sign-in and order tracking | Android phone | The release is not published yet; no real order will be placed | Not run yet |
+| MAN-P8-024 | In the Android app, use airplane mode and verify the offline page never reports an order as placed | Android phone | The release is not published yet | Not run yet |
+
+**Phase 8 work covered:**
+
+- PR #105, `feat: installable web app with an offline page (FR-068 web part)` — merged; live manifest and service-worker checks passed.
+- PR #146, `feat(android): add the customer Android app as a Trusted Web Activity (FR-065 to FR-069)` — merged; live asset-links check passed.
+- Production deploy — live endpoints returned the expected responses.
+- `v1.0.0` release and APK — Not merged yet; the release has not been published.
+- FR-070 push notifications — Deferred; **TODO: Confirm with Brew ni Cat owner.**
+
+Screenshots for MAN-P8-020, MAN-P8-021 and MAN-P8-022 are in `docs/evidence/phase-8/integrated-qa/`. No live orders, reviews or data requests were submitted.
