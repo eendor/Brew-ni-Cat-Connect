@@ -46,7 +46,7 @@ describe("Privacy Policy page", () => {
     ).toBeInTheDocument();
     const updated = container.querySelector("time");
     expect(updated).toHaveAttribute("datetime", PRIVACY_POLICY_UPDATED);
-    expect(updated).toHaveTextContent("November 13, 2026");
+    expect(updated).toHaveTextContent("November 15, 2026");
 
     for (const [id, title] of SECTIONS) {
       const section = container.querySelector(`section#${id}`);
@@ -107,6 +107,7 @@ describe("Privacy Policy page", () => {
     // no tracking, and passwords only in Supabase Auth
     // update 2026-11-10: ads only in the mini-games, after the customer agrees (FR-090)
     expect(text).toMatch(/no analytics or tracking cookies/);
+    expect(text).toMatch(/mini-games and on waiting or completed orders/);
     expect(text).toMatch(/It loads only if you tap Show ads/);
     expect(text).toMatch(/scrambled \(hashed\) form/);
     // the order link's token stays out of the server (security §18.3)

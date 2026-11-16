@@ -100,13 +100,30 @@ test.describe("Play while you wait", () => {
     const card = page.getByTestId("play-while-you-wait");
     await expect(card).toBeVisible();
     await expect(card).toContainText("Play while you wait");
-    // the order page never shows ads
-    await expect(page.getByTestId("ad-slot")).toHaveCount(0);
+    if (process.env.NEXT_PUBLIC_AD_KEY) {
+      await expect(page.getByTestId("ad-slot")).toBeVisible();
+    } else {
+      await expect(page.getByTestId("ad-slot")).toHaveCount(0);
+    }
     const overflow = await page.evaluate(
       () => document.documentElement.scrollWidth - window.innerWidth,
     );
     expect(overflow).toBeLessThanOrEqual(0);
     await capture(page, "order-play-while-you-wait-phone");
+
+    // In-place popup offers mini-games without leaving the order screen.
+    await page.getByRole("button", { name: "Play popup" }).click();
+    const popup = page.getByTestId("play-games-popup");
+    await expect(popup).toBeVisible();
+    await expect(popup).toContainText("Cat cups");
+    await expect(popup).toContainText("Lucky paw");
+    const popupOverflow = await popup.evaluate(
+      (el) => el.scrollWidth - el.clientWidth,
+    );
+    expect(popupOverflow).toBeLessThanOrEqual(0);
+    await capture(page, "order-games-popup-phone");
+    await page.getByRole("button", { name: "Close games popup" }).click();
+    await expect(popup).toHaveCount(0);
 
     await page.getByRole("link", { name: "Play cat games" }).click();
     await expect(page).toHaveURL(/\/games$/);
@@ -119,7 +136,31 @@ test.describe("Play while you wait", () => {
       new RegExp(`/orders/${REFERENCE}#token=${TOKEN}$`),
     );
     await expect(page.getByTestId("order-status-tracker")).toBeVisible();
+
     expect(errors).toEqual([]);
+  });
+
+  test("TC-P9-053 — completed orders keep the Adsterra slot without the games card, while ready orders hide ads", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    let status = "completed";
+    await page.route("**/rest/v1/rpc/get_online_order*", (route) =>
+      route.fulfill({ json: makeOrder(status) }),
+    );
+    await page.goto(`/orders/${REFERENCE}#token=${TOKEN}`);
+    await expect(page.getByTestId("order-status-tracker")).toBeVisible();
+    await expect(page.getByTestId("play-while-you-wait")).toHaveCount(0);
+    if (process.env.NEXT_PUBLIC_AD_KEY) {
+      await expect(page.getByTestId("ad-slot")).toBeVisible();
+    } else {
+      await expect(page.getByTestId("ad-slot")).toHaveCount(0);
+    }
+
+    status = "ready";
+    await page.reload();
+    await expect(page.getByTestId("order-status-tracker")).toBeVisible();
+    await expect(page.getByTestId("ad-slot")).toHaveCount(0);
   });
 
   test("TC-P9-051 — the ad slot shows Loading ad, then the ad, or a short note when no ad comes", async ({

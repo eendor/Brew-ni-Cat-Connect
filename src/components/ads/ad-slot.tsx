@@ -18,8 +18,9 @@ import {
 } from "@/lib/ads/ads";
 
 /**
- * One labeled ad for the mini-game area (FR-090). It asks first, and the ad
- * runs in a sandboxed frame so it can't move or cover this page.
+ * One labeled ad for the mini-games and waiting/completed orders (FR-090 update).
+ * It asks first, and the ad runs in a sandboxed frame so it can't move or cover
+ * this page.
  */
 export function AdSlot() {
   const pathname = usePathname() ?? "/";
@@ -67,7 +68,8 @@ export function AdSlot() {
         <>
           <p className="text-sm">
             Show an ad here? Ads help support the shop. They come from the
-            Adsterra ad network and appear only in the games.
+            Adsterra ad network and appear in the games and on waiting or
+            completed orders.
           </p>
           <div className="flex gap-2">
             <button

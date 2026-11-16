@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- The app keeps nothing of its own worth backing up; sign-in lives in the browser. -->
+<!-- Nothing is backed up or moved: the cart and order tracking tokens stay on this phone. -->
 <data-extraction-rules>
     <cloud-backup>
         <exclude domain="root" />

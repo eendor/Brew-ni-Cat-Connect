@@ -2,4 +2,4 @@
 export const PRIVACY_POLICY_PATH = "/privacy";
 
 /** The policy's version: change it whenever the policy's wording changes. */
-export const PRIVACY_POLICY_UPDATED = "2026-11-13";
+export const PRIVACY_POLICY_UPDATED = "2026-11-15";
