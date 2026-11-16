@@ -1,3 +1,4 @@
+import { Avatar } from "@/components/ui/avatar";
 import { StarDisplay } from "@/components/reviews/star-rating";
 import { formatReviewDate } from "@/lib/reviews/service";
 import type { Review } from "@/lib/reviews/types";
@@ -8,6 +9,11 @@ export function ReviewCard({ review }: { review: Review }) {
       <div>
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--separator)] pb-3">
           <div className="flex items-center gap-2">
+            <Avatar
+              name={review.displayName}
+              photoUrl={review.avatarUrl}
+              size={32}
+            />
             <span className="font-medium text-[var(--text-strong)]">
               {review.displayName}
             </span>

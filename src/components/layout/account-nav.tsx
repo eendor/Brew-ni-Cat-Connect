@@ -3,7 +3,12 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
+import { Avatar } from "@/components/ui/avatar";
 import { useAuth } from "@/context/auth-context";
+import {
+  accountDisplayName,
+  googlePhotoFromMetadata,
+} from "@/lib/account/avatar";
 
 export function AccountNav() {
   const { user, signOut, isLoading } = useAuth();
@@ -62,10 +67,15 @@ export function AccountNav() {
         ref={buttonRef}
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
-        className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-[var(--glass-stroke)] bg-[var(--glass-fill-strong)] px-4 py-2 text-sm font-semibold text-[var(--text-strong)] shadow-[var(--glass-rim),var(--glass-shadow)] transition-colors hover:bg-[var(--glass-hover)]"
+        className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-[var(--glass-stroke)] bg-[var(--glass-fill-strong)] py-1.5 pl-1.5 pr-4 text-sm font-semibold text-[var(--text-strong)] shadow-[var(--glass-rim),var(--glass-shadow)] transition-colors hover:bg-[var(--glass-hover)]"
         aria-expanded={isOpen}
         aria-label="Account menu"
       >
+        <Avatar
+          name={accountDisplayName(user)}
+          photoUrl={googlePhotoFromMetadata(user.user_metadata)}
+          size={30}
+        />
         <span>Account</span>
         <svg
           className={`size-3.5 text-[var(--text-muted)] transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}

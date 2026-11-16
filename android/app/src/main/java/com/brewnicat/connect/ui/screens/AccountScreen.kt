@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import com.brewnicat.connect.BuildConfig
 import com.brewnicat.connect.ui.AppViewModel
+import com.brewnicat.connect.ui.ProfileAvatar
 import com.brewnicat.connect.ui.Screen
 import com.brewnicat.connect.ui.kit.ButtonRow
 import com.brewnicat.connect.ui.kit.Cell
@@ -110,12 +111,7 @@ fun AccountScreen(vm: AppViewModel) {
                         Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Box(
-                            Modifier.size(60.dp).clip(CircleShape).background(Brush.linearGradient(listOf(Color(0xFF2A8156), Color(0xFF123F29)))),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Text(greetingName.trim().take(1).uppercase(), style = KitType.title2.semibold, color = Color.White)
-                        }
+                        ProfileAvatar(greetingName, session.photoUrl, 60.dp, textStyle = KitType.title2.semibold)
                         Column(Modifier.weight(1f).padding(start = 14.dp)) {
                             Text("Hi, $greetingName", style = KitType.title3.semibold, color = c.label, maxLines = 2)
                             if (session.email.isNotBlank()) Text(session.email, style = KitType.subhead, color = c.label2, maxLines = 1)

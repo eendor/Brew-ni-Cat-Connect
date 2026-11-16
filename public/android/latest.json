@@ -1,9 +1,9 @@
 {
-  "versionCode": 4,
-  "versionName": "1.0.1",
-  "url": "/android/brew-ni-cat-connect-1.0.1.apk",
-  "sha256": "750fe18febba3e285a7a3ad06025da1aa130e3b22c13e45b795e206ede2fc43e",
+  "versionCode": 5,
+  "versionName": "1.0.2",
+  "url": "/android/brew-ni-cat-connect-1.0.2.apk",
+  "sha256": "1cc7d1ef3501c8ea7f2e5386bed97e3dfc80f15a24b12c8745fdb2e60ec97ddb",
   "size": 2725388,
   "minAndroid": "8.0",
-  "notes": "Updates now arrive inside the app. Combos & Packages highlight in the menu."
+  "notes": "Your Google profile photo on your account, and on your review if you choose."
 }

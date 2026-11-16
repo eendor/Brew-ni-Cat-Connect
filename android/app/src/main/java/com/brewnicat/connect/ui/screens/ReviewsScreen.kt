@@ -20,6 +20,7 @@ import com.brewnicat.connect.data.LoyaltyFormat
 import com.brewnicat.connect.data.ReviewValidation
 import com.brewnicat.connect.ui.AppViewModel
 import com.brewnicat.connect.ui.Loadable
+import com.brewnicat.connect.ui.ProfileAvatar
 import com.brewnicat.connect.ui.kit.ButtonRow
 import com.brewnicat.connect.ui.kit.Cell
 import com.brewnicat.connect.ui.kit.EmptyState
@@ -36,6 +37,7 @@ import com.brewnicat.connect.ui.kit.Section
 import com.brewnicat.connect.ui.kit.SectionHeader
 import com.brewnicat.connect.ui.kit.StarRow
 import com.brewnicat.connect.ui.kit.Text
+import com.brewnicat.connect.ui.kit.ToggleRow
 import com.brewnicat.connect.ui.kit.bold
 import com.brewnicat.connect.ui.kit.groupItems
 import com.brewnicat.connect.ui.kit.semibold
@@ -46,6 +48,7 @@ fun ReviewsScreen(vm: AppViewModel) {
     val c = Kit.colors
     var rating by remember(vm.myReview?.id) { mutableIntStateOf(vm.myReview?.rating ?: 0) }
     var body by remember(vm.myReview?.id) { mutableStateOf(vm.myReview?.body.orEmpty()) }
+    var showPhoto by remember(vm.myReview?.id) { mutableStateOf(vm.myReview?.let { it.avatarUrl != null } ?: true) }
 
     LaunchedEffect(vm.session?.userId) { vm.loadReviews(reset = true) }
     LaunchedEffect(vm.myReview?.id, vm.myReview?.updatedAt) {
@@ -102,6 +105,12 @@ fun ReviewsScreen(vm: AppViewModel) {
                     "${ReviewValidation.MAX_LENGTH - body.length} characters left", style = KitType.footnote, color = c.label3,
                     modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 12.dp),
                 )
+                if (vm.session?.photoUrl != null) {
+                    ToggleRow(
+                        "Show my Google photo", showPhoto, { showPhoto = it },
+                        subtitle = "Shown next to your review",
+                    )
+                }
             }
         }
         vm.reviewError?.let { e -> item(key = "error") { Notice(e, Modifier.padding(horizontal = Gutter).padding(top = 16.dp), warning = true) } }
@@ -109,7 +118,7 @@ fun ReviewsScreen(vm: AppViewModel) {
         item(key = "submit") {
             val isEditing = vm.session != null && vm.myReview != null
             KitButton(
-                if (isEditing) "Update review" else "Post review", { vm.submitReview(rating, body) },
+                if (isEditing) "Update review" else "Post review", { vm.submitReview(rating, body, showPhoto) },
                 Modifier.fillMaxWidth().padding(horizontal = Gutter).padding(top = 16.dp),
                 busy = vm.reviewSubmitting,
             )
@@ -129,6 +138,7 @@ fun ReviewsScreen(vm: AppViewModel) {
                     groupItems(items, key = { it.id }) { review ->
                         Cell {
                             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                                ProfileAvatar(review.displayName, review.avatarUrl, 32.dp, Modifier.padding(end = 10.dp))
                                 Text(review.displayName, style = KitType.body.semibold, color = c.label, modifier = Modifier.weight(1f))
                                 StarRow(rating = review.rating, size = 14.dp)
                             }

@@ -17,6 +17,7 @@ const review = (n: number, rating: number): Review => ({
   rating,
   body: `Test review ${n}`,
   hidden: false,
+  avatarUrl: null,
   createdAt: "2026-11-10T08:00:00Z",
   updatedAt: "2026-11-10T08:00:00Z",
 });

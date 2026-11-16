@@ -16,6 +16,7 @@ import type {
   Review,
   ReviewsData,
 } from "@/lib/reviews/types";
+import { safeGooglePhotoUrl } from "@/lib/account/avatar";
 import { getPublicSupabaseClient } from "@/lib/supabase/public-client";
 
 export function normalizeReview(row: RawReviewRow): Review {
@@ -25,6 +26,7 @@ export function normalizeReview(row: RawReviewRow): Review {
     rating: row.rating,
     body: row.body,
     hidden: row.hidden,
+    avatarUrl: safeGooglePhotoUrl(row.avatar_url),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -58,7 +60,7 @@ export function validateReviewInput(input: unknown): ReviewInputValidation {
     };
   }
 
-  const { rating, body } = input as Record<string, unknown>;
+  const { rating, body, showPhoto } = input as Record<string, unknown>;
 
   if (
     typeof rating !== "number" ||
@@ -103,6 +105,7 @@ export function validateReviewInput(input: unknown): ReviewInputValidation {
     data: {
       rating,
       body: trimmed,
+      showPhoto: showPhoto !== false,
     },
   };
 }
@@ -127,9 +130,12 @@ export async function fetchReviews({
     error,
   } = await supabase
     .from("reviews")
-    .select("id, display_name, rating, body, hidden, created_at, updated_at", {
-      count: "exact",
-    })
+    .select(
+      "id, display_name, rating, body, hidden, avatar_url, created_at, updated_at",
+      {
+        count: "exact",
+      },
+    )
     .eq("hidden", false)
     .order("created_at", { ascending: false })
     .range(start, end);

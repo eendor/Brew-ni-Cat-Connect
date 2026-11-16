@@ -3,8 +3,13 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { Avatar } from "@/components/ui/avatar";
 import { Container } from "@/components/ui/container";
 import { useAuth } from "@/context/auth-context";
+import {
+  accountDisplayName,
+  googlePhotoFromMetadata,
+} from "@/lib/account/avatar";
 import { formatPrice } from "@/lib/menu/format-price";
 import {
   fetchCustomerOrders,
@@ -110,14 +115,31 @@ export function AccountHomeView() {
 
   return (
     <Container className="py-8 md:py-12 max-w-4xl">
-      <header className="mb-8">
-        <h1 className="font-display text-3xl font-bold text-[var(--text-strong)] tracking-tight">
-          My Account
-        </h1>
-        <p className="mt-2 text-sm text-[var(--text-muted)]">
-          Your orders, favorites, rewards, profile and data requests in one
-          place.
-        </p>
+      <header className="mb-8 flex items-center gap-4">
+        {user ? (
+          <Avatar
+            name={accountDisplayName(user)}
+            photoUrl={googlePhotoFromMetadata(user.user_metadata)}
+            size={56}
+          />
+        ) : null}
+        <div className="min-w-0">
+          <h1 className="font-display text-3xl font-bold text-[var(--text-strong)] tracking-tight">
+            My Account
+          </h1>
+          {user && accountDisplayName(user) ? (
+            <p
+              className="mt-1 truncate text-sm font-medium text-[var(--text-strong)]"
+              data-testid="account-home-name"
+            >
+              {accountDisplayName(user)}
+            </p>
+          ) : null}
+          <p className="mt-2 text-sm text-[var(--text-muted)]">
+            Your orders, favorites, rewards, profile and data requests in one
+            place.
+          </p>
+        </div>
       </header>
 
       <nav aria-label="Account pages">

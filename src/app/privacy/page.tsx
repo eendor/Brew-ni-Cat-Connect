@@ -94,7 +94,9 @@ export default async function PrivacyPage() {
                 <li>
                   <Term>Browsing.</Term> You can use every public page without
                   an account. The site has no analytics or tracking cookies, and
-                  its fonts and pictures come from our own site.
+                  its fonts and pictures come from our own site. The only
+                  exception is Google profile photos, described below, which
+                  load from Google.
                 </li>
                 <li>
                   <Term>Your account.</Term> If you create one, we keep your
@@ -103,6 +105,16 @@ export default async function PrivacyPage() {
                   never see it. We use your email to sign you in, to confirm the
                   address and to send a password reset link when you ask for
                   one.
+                </li>
+                <li>
+                  <Term>Your Google photo.</Term> If you sign in with Google,
+                  Google tells us the address of your profile photo. We show it
+                  on your account and, if you leave &ldquo;Show my Google
+                  photo&rdquo; on, next to your review. We keep only that
+                  address, never the picture, and your browser or the app loads
+                  the photo straight from Google without saying which page it is
+                  on. Turn the switch off and post your review again to remove
+                  the photo from it.
                 </li>
                 <li>
                   <Term>Your profile.</Term> You can add your name and a

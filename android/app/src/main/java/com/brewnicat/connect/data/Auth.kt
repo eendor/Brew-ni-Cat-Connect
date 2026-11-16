@@ -30,6 +30,8 @@ data class AuthSession(
     val userId: String,
     val email: String,
     val displayName: String?,
+    /** Google profile photo address (FR-119), already checked by ProfilePhoto.safe. */
+    val photoUrl: String? = null,
 ) {
     fun isExpired(
         nowEpochSeconds: Long = System.currentTimeMillis() / 1000L,
@@ -45,6 +47,7 @@ data class AuthSession(
         .put("userId", userId)
         .put("email", email)
         .put("displayName", displayName ?: JSONObject.NULL)
+        .put("photoUrl", photoUrl ?: JSONObject.NULL)
 
     companion object {
         fun fromJson(json: JSONObject): AuthSession? = runCatching {
@@ -63,6 +66,7 @@ data class AuthSession(
                 userId = userId,
                 email = json.optString("email"),
                 displayName = display,
+                photoUrl = ProfilePhoto.safe(json.optString("photoUrl").takeIf { it != "null" }),
             )
         }.getOrNull()
 
@@ -88,6 +92,7 @@ data class AuthSession(
                 userId = userId,
                 email = user.optString("email"),
                 displayName = name,
+                photoUrl = ProfilePhoto.fromMetadata(meta),
             )
         }.getOrNull()
     }

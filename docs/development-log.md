@@ -1,7 +1,7 @@
 # Development Log
 
 **Document version:** 0.1 Draft\
-**Last updated:** 2026-11-15
+**Last updated:** 2026-11-17
 
 This log records completed work and observed evidence. Planned work is explicitly identified and is not reported as implemented or tested.
 
@@ -2109,4 +2109,11 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `feat/app-release-sha256` (Connect), `feat/update-sha256` (POS).
 - **Known limitations:** Tablets on 10149 and older don't check the hash; they update to 10150 as before, and check from then on. Every new `app_release` row must carry `sha256` or the tablets on 10150+ won't install it.
 - **Next action:** Run MAN-P9-006.
+
+## 2026-11-17 — Google profile photos on accounts and reviews (FR-119)
+
+- The account home, the header account menu and the review form show the customer's Google profile photo, with initials when there is none.
+- Reviews can show the photo. "Show my Google photo with my review" is on by default; posting with it off clears the photo. `post_review` reads the address from Supabase Auth, never from the request, and keeps it only when it is on `lh3.googleusercontent.com` (migration `20261117150000_google_profile_photos.sql`, rollback included). The old two-argument call still works.
+- Android 1.0.2 (versionCode 5) shows the photo on the Account tab and on reviews, with the same switch, through a small loader limited to Google's photo server and 512 KB. Published in `public/android/` so installed apps offer the update.
+- Privacy policy updated (2026-11-17). Tests TC-P9-074 to TC-P9-083 pass; MAN-P9-007 is left for a real Google account.
 
