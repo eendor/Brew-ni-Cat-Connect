@@ -38,6 +38,19 @@ val keystoreProps = Properties().apply {
 }
 val hasReleaseKey = keystoreProps.getProperty("storeFile")?.isNotBlank() == true
 
+// A signed release without the Supabase settings installs fine but can't sign in
+// or load the menu (1.0.2 shipped that way). Refuse to build one.
+val buildsRelease = gradle.startParameter.taskNames.any { it.contains("Release", ignoreCase = true) }
+if (hasReleaseKey && buildsRelease) {
+    val missing = listOf("NEXT_PUBLIC_SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY").filter { publicConfig(it).isEmpty() }
+    if (missing.isNotEmpty()) {
+        throw GradleException(
+            "Signed release build without ${missing.joinToString()}. Build from a checkout with .env.local, " +
+                "or set them in the environment.",
+        )
+    }
+}
+
 android {
     namespace = "com.brewnicat.connect"
     compileSdk = 36
@@ -46,8 +59,8 @@ android {
         applicationId = "com.brewnicat.connect"
         minSdk = 26
         targetSdk = 36
-        versionCode = 5
-        versionName = "1.0.2"
+        versionCode = 6
+        versionName = "1.0.3"
 
         buildConfigField("String", "SITE_URL", buildConfigString(siteUrl))
         buildConfigField("String", "SUPABASE_URL", buildConfigString(publicConfig("NEXT_PUBLIC_SUPABASE_URL")))

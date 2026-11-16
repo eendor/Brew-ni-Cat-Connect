@@ -1,9 +1,9 @@
 {
-  "versionCode": 5,
-  "versionName": "1.0.2",
-  "url": "/android/brew-ni-cat-connect-1.0.2.apk",
-  "sha256": "1cc7d1ef3501c8ea7f2e5386bed97e3dfc80f15a24b12c8745fdb2e60ec97ddb",
+  "versionCode": 6,
+  "versionName": "1.0.3",
+  "url": "/android/brew-ni-cat-connect-1.0.3.apk",
+  "sha256": "076ac1bc0912393f9100a6e13fea46df5ed28538f4a2a330982e0df80082b15d",
   "size": 2725388,
   "minAndroid": "8.0",
-  "notes": "Your Google profile photo on your account, and on your review if you choose."
+  "notes": "Fixes sign-in and the menu, which 1.0.2 couldn't load. Includes Google profile photos."
 }
