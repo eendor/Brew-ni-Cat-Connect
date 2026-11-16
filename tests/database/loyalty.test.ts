@@ -397,41 +397,24 @@ describe("Loyalty points earning and transactions (FR-050 to FR-054)", () => {
     expect(ids).toContain("reward-spanish-latte");
     expect(ids).toContain("reward-buldak-carbonara");
 
-    // Update 2026-11-11: all 11 rewards are active, so the filter is checked
-    // with a test catalog that has one inactive reward. The real settings
-    // function is put back afterwards.
-    const saved = await db.query<{ def: string }>(
-      "select pg_get_functiondef('private.loyalty_settings()'::regprocedure) as def",
+    // Update 2026-11-17: the catalog is now the shop_rewards table, which
+    // the owner edits in the POS (FR-088), so the filter is checked by turning
+    // one reward off there and back on.
+    await db.query(
+      "update public.shop_rewards set active = false where id = 'reward-kiwi-soda'",
     );
-    const original = saved.rows[0]?.def;
-    if (!original) throw new Error("could not read loyalty_settings()");
-    try {
-      await db.exec(`
-        create or replace function private.loyalty_settings()
-        returns jsonb language sql immutable set search_path = '' as $$
-          select jsonb_build_object(
-            'currency_step', 50,
-            'points_per_currency_unit', 1,
-            'weekly_limit', 2,
-            'rewards', jsonb_build_array(
-              jsonb_build_object('id', 'test-on', 'name', 'On', 'description', 'Shown', 'points', 10, 'active', true),
-              jsonb_build_object('id', 'test-off', 'name', 'Off', 'description', 'Hidden', 'points', 10, 'active', false)
-            )
-          );
-        $$;
-      `);
-      const filtered = await runAs<{ r: Answer[] }>(
-        db,
-        ANON,
-        "select public.loyalty_rewards() as r",
-      );
-      if (!filtered.ok) throw new Error(filtered.message);
-      expect((filtered.rows[0]?.r ?? []).map((r: Answer) => r.id)).toEqual([
-        "test-on",
-      ]);
-    } finally {
-      await db.exec(original);
-    }
+    const filtered = await runAs<{ r: Answer[] }>(
+      db,
+      ANON,
+      "select public.loyalty_rewards() as r",
+    );
+    if (!filtered.ok) throw new Error(filtered.message);
+    const shown = (filtered.rows[0]?.r ?? []).map((r: Answer) => r.id);
+    expect(shown).toHaveLength(10);
+    expect(shown).not.toContain("reward-kiwi-soda");
+    await db.query(
+      "update public.shop_rewards set active = true where id = 'reward-kiwi-soda'",
+    );
     const restored = await runAs<{ r: Answer[] }>(
       db,
       ANON,
@@ -492,7 +475,9 @@ describe("Reward redemption stretch goal (FR-055)", () => {
     expect(r1.ok).toBe(true);
     if (!r1.ok) throw new Error(r1.message);
     expect(r1.rows[0]?.result.ok).toBe(true);
-    expect(String(r1.rows[0]?.result.code)).toMatch(/^RWD-[A-Z0-9]{6}$/);
+    // Update 2026-11-17: codes are 8 characters and stored for staff to
+    // check (FR-091).
+    expect(String(r1.rows[0]?.result.code)).toMatch(/^RWD-[A-Z0-9]{8}$/);
 
     // 2nd redemption (50 pts): OK
     const r2 = await commitAs<{ result: Answer }>(

@@ -20,11 +20,31 @@ export type GameInfo = Readonly<{
   maxPoints: number;
 }>;
 
+/** A prize the owner set for the games (FR-088). */
+export type GamePrize = Readonly<{
+  id: string;
+  name: string;
+  description: string;
+  /** Out of 1000 plays. */
+  winChance: number;
+  available: boolean;
+}>;
+
 export type GameStatus = Readonly<{
   dailyPlays: number;
   playsToday: number;
   playsLeft: number;
   games: readonly GameInfo[];
+  /** Missing before the prizes migration is on the database. */
+  prizes?: readonly GamePrize[];
+}>;
+
+/** A prize won on a play, with its one-time code (FR-091). */
+export type WonPrize = Readonly<{
+  id: string;
+  name: string;
+  code: string;
+  expiresAt: string;
 }>;
 
 export type CatCupsOutcome = Readonly<{ hiddenUnder: number; won: boolean }>;
@@ -38,6 +58,8 @@ export type PlaySuccess = Readonly<{
   points: number;
   playsLeft: number;
   balance: number;
+  /** A won prize, or null; missing before the prizes migration. */
+  prize?: WonPrize | null;
 }>;
 
 export type PlayError =
@@ -110,6 +132,13 @@ export function playErrorMessage(error: PlayError): string {
     default:
       return "Something went wrong. Your play wasn't used. Try again.";
   }
+}
+
+/** "1 in 50 plays" for a chance out of 1000. */
+export function prizeChanceLabel(winChance: number): string {
+  if (winChance >= 1000) return "Every play";
+  const oneIn = Math.round(1000 / Math.max(winChance, 1));
+  return `About 1 in ${oneIn} plays`;
 }
 
 export function pointsLabel(points: number): string {

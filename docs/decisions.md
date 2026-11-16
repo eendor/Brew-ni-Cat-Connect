@@ -559,3 +559,19 @@ This manual state is a temporary functional-verification condition, not a revisi
 - **Account journeys:** Native screens cover Account hub, Rewards & points history (`loyalty_rewards`, `loyalty_settings`, `redeem_reward` displaying `RWD-` counter codes), Order history with Reorder (re-validating live catalog availability & price changes via `Reorder.kt`), Favorites (`Menu` & `ItemSheet` hearts + `FavoritesScreen`), Profile prefill & edit (`09` / `+639` normalization), Shop reviews (`/api/reviews` for guests and signed-in customers), and Data Privacy Act correction/deletion requests (`data_requests`).
 - **Mini-games & ads (phase 3, `feat/p8-native-games-ads`):** Waiting orders (`pending`, `accepted`, `preparing`) offer native **Cat cups** (Oreo sprite) and **Lucky paw** (Latte sprite) in `MiniGamesDialog` (backed by `mini_game_status` & `play_mini_game` RPCs), auto-opening once right after placing a waiting order. Waiting and `completed` order views render the consent-gated 300x250 Adsterra banner (`AdsterraAdCard`) inside an opaque `data:` URL `WebView` with `@JavascriptInterface` fill detection; `ready`, `rejected`, `cancelled`, menu, cart, checkout, and account screens never show ads.
 
+## ADR-037 — Rewards And Prizes In A Table The POS Edits, With One-Time Codes
+
+**Decision:** The rewards catalog and the game prizes move from SQL settings to one table, `public.shop_rewards`, that only staff accounts can write, and the owner edits it in a Rewards screen of the POS web app. Each redeemed reward and won prize gets a one-time code in `public.reward_codes` that staff check and mark used through `public.verify_reward_code()` in the same screen.\
+**Date:** 2026-11-17\
+**Status:** Accepted. Built in Connect (migration, website) and in `Brew-ni-Cat-POS` (Rewards screen). The migration is not applied to the live database yet.\
+**Context:** FR-088 asks that the owner manage rewards and prizes with a cost, stock and daily limit; FR-091 asks for codes that work once. ADR-017 keeps owner writes in the POS. Until now the catalog was written in `private.loyalty_settings()`, so a change needed a migration, and the `RWD-` codes lived only in the points history note, so staff had nothing to check them against. The owner left the reward rules to the team.\
+**Alternatives considered:** an owner area in Connect (ruled out by ADR-017); keeping the catalog in SQL settings (needs a developer for each change); separate tables for rewards and prizes (the same fields and rules twice); codes that never expire (old screenshots could be used for months); a prize chosen by the browser (the server must decide every result, ADR-034).\
+**Consequences:**
+
+- Staff accounts are the owner's accounts in the POS, so any staff account can change rewards. `updated_by` records who did.
+- The team chose: a reward code lasts 30 days, a prize code 7 days, and codes are 8 characters without look-alike letters. They are in `private.reward_code_settings()` and can change without touching the tables.
+- A prize's chance is out of 1000 plays. A prize that is sold out or at its daily limit still uses its chance, so the other prizes keep the odds the owner set. The POS screen warns when the chances add up to more than 1000.
+- Stock and the daily limit are counted under a row lock, so two customers can't take the last one.
+- The website keeps working before the migration: the new fields are optional and a missing codes table shows no codes. The Android app ignores the new fields until it is updated.
+- Prizes are food and drinks given at the counter for free plays, which keeps the games points-based for customers (ADR-017). The owner should still check whether a promo permit is needed before adding many prizes.
+
