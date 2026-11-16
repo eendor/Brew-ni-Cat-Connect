@@ -1,49 +1,28 @@
 # Contributing to Brew ni Cat Connect
 
-## Before changing code or documentation
+There is no required format for branches, commits or pull requests. Write them
+however explains the change best.
 
-1. Read the relevant requirement IDs and architecture decisions.
-2. Confirm the work belongs to the current roadmap phase.
-3. Check `git status` and start from an up-to-date `main` branch.
-4. Create a focused branch for a meaningful feature, test, documentation set, or fix.
+## Rules
 
-Suggested branch prefixes are `feat/`, `fix/`, `docs/`, `test/`, and `integration/`.
+- Start from an up-to-date `main` and keep each branch to one change.
+- Never commit credentials, keys, the Android signing key, personal customer
+  data or production exports.
+- Don't invent business information. Write `TODO: Confirm with Brew ni Cat owner.`
+  and label fixtures `MOCK DATA — FOR DEVELOPMENT ONLY`.
+- Add tests for important business logic. Run the checks before merging
+  (CI runs them too), and report only the commands you actually ran.
+- Update the affected documentation and the development log.
+- Database changes need a migration and a matching rollback in `supabase/`.
+- Use your own Git identity. Don't add automated co-author trailers.
 
-## Change requirements
+## Reviews
 
-- Do not invent business information. Use `TODO: Confirm with Brew ni Cat owner.`
-- Label and isolate fixtures as `MOCK DATA — FOR DEVELOPMENT ONLY`.
-- Never commit credentials, personal customer data, or production exports.
-- Keep functionality traceable to requirements.
-- Update affected documentation and the development log.
-- Add tests for important business logic and report only commands that were actually run.
-- Run formatting, linting, type checking, tests, and a production build when the application foundation exists.
+The lead developer may approve their own pull requests; say so in a comment on
+the pull request. A teammate's pull request needs a review before it is merged.
 
-## Commits
+## Releases
 
-Use an imperative, meaningful subject, for example:
-
-```text
-docs: document ordering execution paths
-feat: add accessible mobile navigation
-test: cover cart total calculation
-fix: reject invalid order transitions
-```
-
-Use only the contributor's configured Git identity. Do not add automated co-author trailers.
-
-## Pull requests
-
-A review-ready pull request should include:
-
-- Summary
-- Requirement IDs addressed
-- Changes
-- Testing commands and literal results
-- Screenshots for visible UI changes, when applicable
-- Security/privacy impact
-- Known limitations
-- Documentation updated
-- Checklist
-
-Self-approval is allowed for the lead developer's own pull requests; record the approval in the pull request. Teammate pull requests still need a review before merge. Do not mark a module reviewed without an identifiable review record.
+- **Android app:** follow the Release steps in `android/README.md`. Install
+  the signed build and sign in once before publishing it.
+- **Website:** merging to `main` deploys it.
