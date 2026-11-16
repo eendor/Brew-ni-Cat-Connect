@@ -2099,3 +2099,14 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Known limitations:** Phones on 1.0.0 must install 1.0.1 by hand once. MAN-P9-005 needs a later build to update to.
 - **Next action:** For each release, follow android/README.md → Release.
 
+## 2026-11-17 — POS updates checked against a published SHA-256
+
+- **Phase:** Phase 9 (FR-118, ADR-038).
+- **Task:** The POS installed whatever file `app_release.apk_url` pointed at.
+- **Summary:** Migration `20261117140000_app_release_sha256.sql` adds `public.app_release.sha256` (lowercase hex, checked). POS build 10150 (`Brew-ni-Cat-POS`) hashes the APK while downloading and installs it only when it matches; a mismatch or a missing hash deletes the file and says so. Applied live with the lead's OK.
+- **Files:** `supabase/{migrations,rollbacks}/20261117140000_app_release_sha256.sql`, `tests/database/app-release-sha.test.ts`, docs; POS: `service/{ApkChecksum,AppUpdateManager}.kt`, `domain/model/UpdateInfo.kt`, `ui/components/AppUpdateGate.kt`, `ApkChecksumTest.kt`, `RELEASE_INSTRUCTIONS.md`.
+- **Testing:** TC-P9-072, TC-P9-073; POS `testDebugUnitTest`; docs validator.
+- **Branch / PR:** `feat/app-release-sha256` (Connect), `feat/update-sha256` (POS).
+- **Known limitations:** Tablets on 10149 and older don't check the hash; they update to 10150 as before, and check from then on. Every new `app_release` row must carry `sha256` or the tablets on 10150+ won't install it.
+- **Next action:** Run MAN-P9-006.
+
