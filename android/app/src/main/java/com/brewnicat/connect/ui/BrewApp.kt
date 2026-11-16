@@ -1,230 +1,186 @@
 package com.brewnicat.connect.ui
 
-import androidx.activity.compose.BackHandler
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Home
-import androidx.compose.material.icons.rounded.LocalCafe
-import androidx.compose.material.icons.automirrored.rounded.ReceiptLong
-import androidx.compose.material.icons.rounded.Person
-import androidx.compose.material.icons.rounded.ShoppingBag
-import androidx.compose.material.icons.rounded.Storefront
-import androidx.compose.material3.SnackbarResult
-import androidx.compose.material3.Icon
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.scaleIn
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.selected
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.brewnicat.connect.ui.screens.pressable
-import androidx.compose.ui.graphics.vector.ImageVector
-import com.brewnicat.connect.data.MenuItem
-import com.brewnicat.connect.data.Pricing
-import com.brewnicat.connect.ui.screens.AccountScreen
-import com.brewnicat.connect.ui.screens.CartScreen
-import com.brewnicat.connect.ui.screens.CheckoutScreen
-import com.brewnicat.connect.ui.screens.DataRequestScreen
-import com.brewnicat.connect.ui.screens.FavoritesScreen
-import com.brewnicat.connect.ui.screens.HomeScreen
-import com.brewnicat.connect.ui.screens.ItemSheet
-import com.brewnicat.connect.ui.screens.LoyaltyHistoryScreen
-import com.brewnicat.connect.ui.screens.MenuScreen
-import com.brewnicat.connect.ui.screens.OrderHistoryScreen
-import com.brewnicat.connect.ui.screens.OrderScreen
-import com.brewnicat.connect.ui.screens.OrdersScreen
-import com.brewnicat.connect.ui.screens.ProfileScreen
-import com.brewnicat.connect.ui.screens.ReviewsScreen
-import com.brewnicat.connect.ui.screens.RewardsScreen
-import com.brewnicat.connect.ui.screens.VisitScreen
-import com.brewnicat.connect.ui.theme.Brand
-import kotlinx.coroutines.launch
+import com.brewnicat.connect.R
+import com.brewnicat.connect.ui.kit.Alert
+import com.brewnicat.connect.ui.kit.Badge
+import com.brewnicat.connect.ui.kit.BarAction
+import com.brewnicat.connect.ui.kit.Block
+import com.brewnicat.connect.ui.kit.ButtonRow
+import com.brewnicat.connect.ui.kit.ButtonSize
+import com.brewnicat.connect.ui.kit.ButtonStyle
+import com.brewnicat.connect.ui.kit.CapsuleTabs
+import com.brewnicat.connect.ui.kit.CheckRow
+import com.brewnicat.connect.ui.kit.EmptyState
+import com.brewnicat.connect.ui.kit.FieldRow
+import com.brewnicat.connect.ui.kit.Gutter
+import com.brewnicat.connect.ui.kit.IconTile
+import com.brewnicat.connect.ui.kit.Kit
+import com.brewnicat.connect.ui.kit.KitButton
+import com.brewnicat.connect.ui.kit.KitIcons
+import com.brewnicat.connect.ui.kit.ListRow
+import com.brewnicat.connect.ui.kit.LocalBackdrop
+import com.brewnicat.connect.ui.kit.LocalBottomInset
+import com.brewnicat.connect.ui.kit.LocalOverlayHost
+import com.brewnicat.connect.ui.kit.Notice
+import com.brewnicat.connect.ui.kit.OverlayHost
+import com.brewnicat.connect.ui.kit.OverlayLayer
+import com.brewnicat.connect.ui.kit.Page
+import com.brewnicat.connect.ui.kit.Photo
+import com.brewnicat.connect.ui.kit.Section
+import com.brewnicat.connect.ui.kit.Segmented
+import com.brewnicat.connect.ui.kit.Sheet
+import com.brewnicat.connect.ui.kit.Spinner
+import com.brewnicat.connect.ui.kit.StarRow
+import com.brewnicat.connect.ui.kit.Stepper
+import com.brewnicat.connect.ui.kit.TabBar
+import com.brewnicat.connect.ui.kit.TabBarGap
+import com.brewnicat.connect.ui.kit.TabBarHeight
+import com.brewnicat.connect.ui.kit.TabItem
+import com.brewnicat.connect.ui.kit.Toggle
+import com.brewnicat.connect.ui.kit.groupItems
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.rememberHazeState
 
-private data class Tab(val screen: Screen, val label: String, val icon: ImageVector)
-
-private val tabs = listOf(
-    Tab(Screen.Home, "Home", Icons.Rounded.Home),
-    Tab(Screen.Menu, "Menu", Icons.Rounded.LocalCafe),
-    Tab(Screen.Orders, "Orders", Icons.AutoMirrored.Rounded.ReceiptLong),
-    Tab(Screen.Account, "Account", Icons.Rounded.Person),
-    Tab(Screen.Visit, "Visit", Icons.Rounded.Storefront),
+private val Tabs = listOf(
+    TabItem("Home", KitIcons.House), TabItem("Menu", KitIcons.Coffee), TabItem("Orders", KitIcons.ReceiptText),
+    TabItem("Account", KitIcons.UserRound), TabItem("Visit", KitIcons.Store),
 )
 
+/** Temporary: a gallery of the kit, to check it on a device before the screens move onto it. */
 @Composable
-fun BrewApp(vm: AppViewModel) {
-    val screen = vm.current
-    val isTab = tabs.any { it.screen == screen }
-    var sheetItem by remember { mutableStateOf<MenuItem?>(null) }
-    val snackbar = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
-
-    fun promptFavoriteSignIn() {
-        sheetItem = null
-        scope.launch {
-            val res = snackbar.showSnackbar(
-                message = "Sign in on the Account tab to save favorites.",
-                actionLabel = "Sign in",
-            )
-            if (res == SnackbarResult.ActionPerformed) vm.selectTab(Screen.Account)
-        }
-    }
-
-    BackHandler(enabled = vm.stack.size > 1 || screen != Screen.Home) { vm.back() }
-
-    val c = Brand.colors
-    Box(
-        Modifier.fillMaxSize().background(c.canvas)
-            .drawBehind {
-                drawRect(Brush.radialGradient(listOf(c.accent.copy(alpha = 0.16f), Color.Transparent), Offset(size.width * 0.95f, -40f), size.width * 0.95f))
-                drawRect(Brush.radialGradient(listOf(c.strong.copy(alpha = 0.10f), Color.Transparent), Offset(-40f, size.height * 0.78f), size.width * 0.9f))
-            },
-    ) {
-        Box(Modifier.fillMaxSize().navigationBarsPaddingIf(!isTab)) {
-            AnimatedContent(
-                screen,
-                transitionSpec = { (fadeIn(tween(220)) + scaleIn(tween(260), initialScale = 0.98f)) togetherWith fadeOut(tween(120)) },
-                label = "screen",
-            ) { s ->
-                when (s) {
-                    Screen.Home -> HomeScreen(vm) { sheetItem = it }
-                    Screen.Menu -> MenuScreen(vm, onNeedSignIn = ::promptFavoriteSignIn) { sheetItem = it }
-                    Screen.Orders -> OrdersScreen(vm)
-                    Screen.Account -> AccountScreen(vm)
-                    Screen.Visit -> VisitScreen(vm)
-                    Screen.Cart -> CartScreen(vm)
-                    Screen.Checkout -> CheckoutScreen(vm)
-                    is Screen.Order -> OrderScreen(vm, s.reference)
-                    Screen.Profile -> ProfileScreen(vm)
-                    Screen.OrderHistory -> OrderHistoryScreen(vm)
-                    Screen.Favorites -> FavoritesScreen(vm) { sheetItem = it }
-                    Screen.Rewards -> RewardsScreen(vm)
-                    Screen.LoyaltyHistory -> LoyaltyHistoryScreen(vm)
-                    Screen.Reviews -> ReviewsScreen(vm)
-                    Screen.DataRequests -> DataRequestScreen(vm)
-                }
-            }
-        }
-
-        if (isTab) {
-            Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(150.dp).background(Brush.verticalGradient(listOf(Color.Transparent, c.canvas.copy(alpha = 0.92f)))))
-            Column(Modifier.align(Alignment.BottomCenter).fillMaxWidth().navigationBarsPadding().padding(horizontal = 16.dp, vertical = 12.dp)) {
-                if (screen != Screen.Orders && !vm.cart.isEmpty) {
-                    CartPill(count = vm.cart.itemCount, total = Pricing.formatPeso(vm.cart.subtotal), onClick = { vm.open(Screen.Cart) })
-                    Spacer(Modifier.height(10.dp))
-                }
-                GlassTabBar(screen) { vm.selectTab(it) }
-            }
-        }
-        SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).navigationBarsPadding().padding(bottom = if (isTab) (if (vm.cart.isEmpty) 96.dp else 152.dp) else 100.dp))
-    }
-
-    sheetItem?.let { item ->
-        ItemSheet(
-            item = item,
-            isFavorite = item.id in vm.favoriteIds,
-            onToggleFavorite = { vm.toggleFavorite(item.id, ::promptFavoriteSignIn) },
-            onAdd = { variantId, flavor, quantity ->
-                vm.addToCart(item.id, variantId, flavor, quantity).also { error ->
-                    if (error == null) {
-                        sheetItem = null
-                        scope.launch { snackbar.showSnackbar("Added ${quantity}× ${item.name} to your cart") }
+fun BrewApp(@Suppress("UNUSED_PARAMETER") vm: AppViewModel) {
+    val c = Kit.colors
+    val overlays = remember { OverlayHost() }
+    val backdrop = rememberHazeState()
+    var tab by remember { mutableIntStateOf(0) }
+    val navBar = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+    CompositionLocalProvider(LocalOverlayHost provides overlays) {
+        Box(Modifier.fillMaxSize().background(c.grouped)) {
+            Box(Modifier.fillMaxSize().hazeSource(backdrop).then(if (overlays.modal) Modifier.clearAndSetSemantics {} else Modifier)) {
+                CompositionLocalProvider(LocalBottomInset provides navBar + TabBarGap + TabBarHeight) {
+                    when (tab) {
+                        0 -> GalleryControls()
+                        1 -> GalleryList()
+                        else -> Page("Empty") {
+                            item { EmptyState(KitIcons.ReceiptText, "No orders yet", "Orders you place in the app show up here so you can follow them.", Modifier.fillParentMaxHeight(0.75f), "Browse the menu", {}) }
+                        }
                     }
                 }
-            },
-            onDismiss = { sheetItem = null },
-        )
-    }
-}
-
-private fun Modifier.navigationBarsPaddingIf(on: Boolean): Modifier = if (on) this.navigationBarsPadding() else this
-
-@Composable
-private fun CartPill(count: Int, total: String, onClick: () -> Unit) {
-    val c = Brand.colors
-    Row(
-        Modifier.fillMaxWidth().height(54.dp)
-            .shadow(14.dp, RoundedCornerShape(50), spotColor = c.accentFill.copy(alpha = 0.55f))
-            .clip(RoundedCornerShape(50))
-            .background(Brush.verticalGradient(listOf(c.accentFill.copy(alpha = 0.92f), c.accentFill)))
-            .border(0.8.dp, Color.White.copy(alpha = 0.28f), RoundedCornerShape(50))
-            .pressable(onClick = onClick).padding(horizontal = 22.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Icon(Icons.Rounded.ShoppingBag, contentDescription = null, tint = c.onAccentFill)
-        Spacer(Modifier.width(10.dp))
-        Text("View cart", style = MaterialTheme.typography.labelLarge, color = c.onAccentFill, modifier = Modifier.weight(1f))
-        Text("$count · $total", style = MaterialTheme.typography.labelLarge, color = c.onAccentFill)
-    }
-}
-
-/** Floating, rounded tab bar. Real backdrop blur needs API 31+ (minSdk is 26), so the glass is a tinted translucent fill with a light rim. */
-@Composable
-private fun GlassTabBar(selected: Screen, onSelect: (Screen) -> Unit) {
-    val c = Brand.colors
-    val haptic = LocalHapticFeedback.current
-    val shape = RoundedCornerShape(36.dp)
-    Row(
-        Modifier.fillMaxWidth().height(68.dp)
-            .shadow(22.dp, shape, ambientColor = c.shadow.copy(alpha = 0.14f), spotColor = c.shadow.copy(alpha = 0.28f))
-            .clip(shape).background(c.glass).border(0.8.dp, c.rim, shape).padding(6.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        tabs.forEach { tab ->
-            val on = selected == tab.screen
-            val bg by animateColorAsState(if (on) c.accentSurface else Color.Transparent, tween(220), label = "tabBg")
-            val tint by animateColorAsState(if (on) c.accent else c.muted, tween(220), label = "tabTint")
-            Column(
-                Modifier.weight(1f).fillMaxHeight().clip(RoundedCornerShape(30.dp)).background(bg)
-                    .pressable { haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove); onSelect(tab.screen) }
-                    .semantics { contentDescription = tab.label; role = Role.Tab; this.selected = on },
-                horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center,
-            ) {
-                Icon(tab.icon, contentDescription = null, tint = tint, modifier = Modifier.size(24.dp))
-                Text(tab.label, style = MaterialTheme.typography.labelMedium.copy(fontSize = 11.sp), color = tint, maxLines = 1)
             }
+            CompositionLocalProvider(LocalBackdrop provides backdrop) {
+                Box(Modifier.align(Alignment.BottomCenter).padding(start = 24.dp, end = 24.dp, bottom = navBar + TabBarGap)) {
+                    TabBar(Tabs, tab, { tab = it })
+                }
+                OverlayLayer(overlays)
+            }
+        }
+    }
+}
+
+@Composable
+private fun GalleryControls() {
+    val overlays = LocalOverlayHost.current
+    var on by remember { mutableStateOf(true) }
+    var seg by remember { mutableIntStateOf(0) }
+    var qty by remember { mutableIntStateOf(1) }
+    var name by remember { mutableStateOf("") }
+    var notes by remember { mutableStateOf("") }
+    var pick by remember { mutableIntStateOf(0) }
+    var sheet by remember { mutableStateOf(false) }
+    var alert by remember { mutableStateOf(false) }
+    var cat by remember { mutableIntStateOf(0) }
+    Page(
+        "Rewards & points", onBack = {}, trailing = { BarAction("History", {}) },
+        pinned = { CapsuleTabs(listOf("Coffee", "Matcha", "Frappe", "Snacks", "Noodles", "Add-ons"), cat, { cat = it }, Modifier.padding(horizontal = Gutter, vertical = 6.dp)) },
+        bottomBar = { KitButton("Place order · ₱245.00", {}, Modifier.fillMaxWidth()) },
+    ) {
+        item {
+            Section(header = "Preview", prominentHeader = true, headerAction = { KitButton("Action", {}, style = ButtonStyle.Plain, size = ButtonSize.Small) }) {
+                ListRow("Title", detail = "Detail", chevron = true, onClick = {})
+                ListRow("Title", subtitle = "Subtitle", leading = { IconTile(KitIcons.Gift, Kit.colors.orange) }, chevron = true, onClick = {})
+                ListRow("Label", trailing = { Toggle(on, { on = it }) })
+                ListRow("Quantity", trailing = { Stepper(qty, { qty = it }, "drink") })
+                ButtonRow("Open sheet", { sheet = true })
+                ButtonRow("Open alert", { alert = true })
+                ButtonRow("Show toast", { overlays.toast("Added 2× Caramel Matcha Tail to your cart", actionLabel = "Sign in", onAction = {}) })
+            }
+        }
+        item {
+            Section(header = "Your details", footer = "Enter a valid mobile number.", footerColor = Kit.colors.red) {
+                FieldRow("Full name", name, { name = it }, placeholder = "Juan dela Cruz")
+                FieldRow("Notes for the shop (optional)", notes, { notes = it }, placeholder = "Less ice, extra sauce…", singleLine = false, minLines = 3)
+            }
+        }
+        item {
+            Section(header = "How will you pay at pickup?") {
+                listOf("Cash", "GCash", "Maya").forEachIndexed { i, label -> CheckRow(label, pick == i, { pick = i }) }
+            }
+        }
+        item {
+            Block {
+                Segmented(listOf("Correction", "Deletion"), seg, { seg = it })
+                Row(Modifier.padding(top = 14.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Badge("Preparing"); Badge("Ready", color = Kit.colors.green, solid = true); Badge("Rejected", color = Kit.colors.red); Spinner(); StarRow(4)
+                }
+                Notice("Order placed! Keep this app open or come back any time to see when it's ready.", Modifier.padding(top = 14.dp))
+                Notice("The shop is closed right now. Opens tomorrow at 9:00 AM.", Modifier.padding(top = 10.dp), warning = true)
+                Row(Modifier.padding(top = 14.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    KitButton("Tinted", {}, style = ButtonStyle.Tinted, size = ButtonSize.Medium, icon = KitIcons.Play)
+                    KitButton("Gray", {}, style = ButtonStyle.Gray, size = ButtonSize.Medium)
+                    KitButton("Busy", {}, size = ButtonSize.Medium, busy = true)
+                }
+            }
+        }
+        item { Section { ButtonRow("Sign out", {}, destructive = true, centered = true) } }
+    }
+    if (sheet) {
+        Sheet(onDismiss = { sheet = false }, title = "Caramel Matcha Tail", footer = { dismiss -> KitButton("Add to cart · ₱120.00", dismiss, Modifier.fillMaxWidth()) }) {
+            Photo(R.drawable.menu_caramel_matcha_tail, null, Modifier.padding(horizontal = 16.dp).fillMaxWidth().size(220.dp).clip(RoundedCornerShape(26.dp)))
+            Section(header = "Choose size") {
+                listOf("16 oz", "22 oz").forEachIndexed { i, label -> CheckRow(label, pick == i, { pick = i }, detail = "₱${95 + i * 25}") }
+            }
+            Section(header = "Quantity") { ListRow("How many?", trailing = { Stepper(qty, { qty = it }, "drink", min = 1) }) }
+            Section(header = "Add-ons") {
+                (1..6).forEach { ListRow("Add-on $it", detail = "+₱15.00", trailing = { Toggle(on, { on = it }) }) }
+            }
+        }
+    }
+    if (alert) {
+        Alert("Redeem Free Iced Latte?", "This spends 120 loyalty points and gives you a verification code to show at the café counter.", "Confirm", { alert = false }, "Cancel", { alert = false })
+    }
+}
+
+@Composable
+private fun GalleryList() {
+    var cat by remember { mutableIntStateOf(0) }
+    Page("Menu", pinned = { CapsuleTabs(listOf("Coffee", "Matcha", "Frappe", "Snacks", "Noodles", "Add-ons"), cat, { cat = it }, Modifier.padding(horizontal = Gutter, vertical = 6.dp)) }) {
+        item { Block { com.brewnicat.connect.ui.kit.SectionHeader("Matcha") } }
+        groupItems((1..30).toList(), key = { it }) { n ->
+            ListRow("Lucky Green Neko Matcha $n", subtitle = "16 oz · 22 oz", detail = "From ₱95.00", leading = { Photo(R.drawable.menu_lucky_green_neko_matcha, null, Modifier.size(56.dp).clip(RoundedCornerShape(14.dp))) }, onClick = {})
         }
     }
 }

@@ -19,6 +19,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -111,7 +112,7 @@ private val Light = KitColors(
     tintFill = Color(0xFF1F6B45),
     onTint = Color.White,
     glass = Color(0x99FFFFFF),
-    glassFallback = Color(0xF0FAFAFC),
+    glassFallback = Color(0xFAF9F9FB),
     glassRimTop = Color(0xE6FFFFFF),
     glassRimBottom = Color(0x33FFFFFF),
     shadow = Color(0x24000000),
@@ -148,7 +149,7 @@ private val Dark = KitColors(
     tintFill = Color(0xFF25764B),
     onTint = Color.White,
     glass = Color(0x8C1C1C1E),
-    glassFallback = Color(0xF21C1C1E),
+    glassFallback = Color(0xFA1C1C1E),
     glassRimTop = Color(0x38FFFFFF),
     glassRimBottom = Color(0x0FFFFFFF),
     shadow = Color(0x66000000),
@@ -159,6 +160,7 @@ private val Dark = KitColors(
 internal fun KitColors.elevated(): KitColors =
     if (dark) copy(grouped = Color(0xFF1C1C1E), cell = Color(0xFF2C2C2E), cellInner = Color(0xFF3A3A3C), glassFallback = Color(0xFF3A3A3C)) else this
 
+@OptIn(ExperimentalTextApi::class)
 private fun inter(weight: Int, opticalSize: Float) = Font(
     R.font.inter,
     weight = FontWeight(weight),
@@ -168,7 +170,11 @@ private fun inter(weight: Int, opticalSize: Float) = Font(
 private val InterText = FontFamily(listOf(400, 500, 600, 700).map { inter(it, 14f) })
 private val InterDisplay = FontFamily(listOf(400, 600, 700, 800).map { inter(it, 32f) })
 
-/** The kit's text styles (sizes, leading and tracking in points). */
+/**
+ * The kit's text styles: its sizes, leading and weights, in points. Tracking is the
+ * kit's for body sizes; the three titles are set slightly tighter than the kit's SF
+ * Pro values because Inter runs wider at display sizes.
+ */
 object KitType {
     private fun style(size: Int, leading: Int, tracking: Double, weight: FontWeight = FontWeight.Normal, display: Boolean = false) = TextStyle(
         fontFamily = if (display) InterDisplay else InterText,

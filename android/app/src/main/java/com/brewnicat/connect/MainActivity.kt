@@ -9,7 +9,7 @@ import androidx.activity.viewModels
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.brewnicat.connect.ui.AppViewModel
 import com.brewnicat.connect.ui.BrewApp
-import com.brewnicat.connect.ui.theme.BrewTheme
+import com.brewnicat.connect.ui.kit.KitTheme
 
 class MainActivity : ComponentActivity() {
     private val vm: AppViewModel by viewModels()
@@ -19,7 +19,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         if (savedInstanceState == null) handleLink(intent)
-        setContent { BrewTheme { BrewApp(vm) } }
+        setContent { KitTheme { BrewApp(vm) } }
     }
 
     override fun onNewIntent(intent: Intent) {

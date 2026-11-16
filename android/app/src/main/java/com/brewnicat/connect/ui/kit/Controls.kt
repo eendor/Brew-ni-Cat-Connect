@@ -45,6 +45,7 @@ import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 
@@ -73,9 +74,9 @@ fun KitButton(
     }
     val active = enabled && !busy
     Row(
-        modifier.defaultMinSize(minHeight = size.height).alpha(if (enabled) 1f else 0.42f)
+        modifier.pressable(enabled = active, onClick = onClick)
+            .defaultMinSize(minHeight = size.height).alpha(if (enabled) 1f else 0.42f)
             .clip(CircleShape).background(background)
-            .pressable(enabled = active, onClick = onClick)
             .padding(horizontal = if (style == ButtonStyle.Plain) 8.dp else size.pad, vertical = 6.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically,
@@ -98,8 +99,8 @@ fun KitButton(
 fun GlassIconButton(icon: ImageVector, contentDescription: String, onClick: () -> Unit, modifier: Modifier = Modifier, tint: Color = Kit.colors.label, prominent: Boolean = false) {
     val c = Kit.colors
     Box(
-        modifier.size(44.dp).glass(CircleShape, tint = if (prominent) c.tintFill else null).pressable(onClick = onClick)
-            .semantics { this.contentDescription = contentDescription },
+        modifier.pressable(scale = 0.9f, onClick = onClick).semantics { this.contentDescription = contentDescription }
+            .size(44.dp).glass(CircleShape, tint = if (prominent) c.tintFill else null),
         contentAlignment = Alignment.Center,
     ) { Icon(icon, null, tint = if (prominent) c.onTint else tint, size = 22.dp) }
 }
@@ -123,7 +124,7 @@ fun Toggle(checked: Boolean, onCheckedChange: (Boolean) -> Unit, modifier: Modif
         modifier.size(64.dp, 28.dp).clip(CircleShape).background(track)
             .toggleable(checked, role = Role.Switch, onValueChange = onCheckedChange, interactionSource = null, indication = null),
     ) {
-        Box(Modifier.offset(x = x, y = 2.dp).size(39.dp, 24.dp).softShadow(CircleShape, Color(0x29000000), 6.dp, 2.dp).clip(CircleShape).background(Color.White))
+        Box(Modifier.offset { IntOffset(x.roundToPx(), 2.dp.roundToPx()) }.size(39.dp, 24.dp).softShadow(CircleShape, Color(0x29000000), 6.dp, 2.dp).clip(CircleShape).background(Color.White))
     }
 }
 
@@ -136,7 +137,7 @@ fun Segmented(options: List<String>, selected: Int, onSelect: (Int) -> Unit, mod
         val x by animateDpAsState(segment * selected.coerceAtLeast(0), spring(dampingRatio = 0.78f, stiffness = Spring.StiffnessMediumLow), label = "segment")
         if (selected >= 0) {
             Box(
-                Modifier.offset(x = x).width(segment).fillMaxHeight().softShadow(CircleShape, Color(0x1F000000), 8.dp, 2.dp)
+                Modifier.offset { IntOffset(x.roundToPx(), 0) }.width(segment).fillMaxHeight().softShadow(CircleShape, Color(0x1F000000), 8.dp, 2.dp)
                     .clip(CircleShape).background(if (c.dark) Color(0xFF636366) else Color.White),
             )
         }
@@ -202,7 +203,7 @@ fun Spinner(modifier: Modifier = Modifier, size: Dp = 22.dp, color: Color = Kit.
 
 /** A small capsule label: tinted text on a wash of the same colour. */
 @Composable
-fun Badge(text: String, color: Color = Kit.colors.tint, modifier: Modifier = Modifier, solid: Boolean = false) {
+fun Badge(text: String, modifier: Modifier = Modifier, color: Color = Kit.colors.tint, solid: Boolean = false) {
     Text(
         text, style = KitType.caption1.semibold, color = if (solid) Color.White else color, maxLines = 1,
         modifier = modifier.clip(CircleShape).background(if (solid) color else color.copy(alpha = 0.15f)).padding(horizontal = 9.dp, vertical = 4.dp),

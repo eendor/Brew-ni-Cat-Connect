@@ -1,5 +1,6 @@
 package com.brewnicat.connect.ui.kit
 
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.LazyColumn
@@ -33,7 +36,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -43,7 +45,11 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import dev.chrisbanes.haze.HazeStyle
+import dev.chrisbanes.haze.HazeTint
+import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
 
@@ -74,12 +80,19 @@ fun Page(
     val navBar = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
     val barHeight: Dp = if (onBack != null || trailing != null) 52.dp else 44.dp
     var pinnedPx by remember { mutableIntStateOf(0) }
+    var titlePx by remember { mutableIntStateOf(0) }
     var footerPx by remember { mutableIntStateOf(0) }
     val scrolled by remember(state) { derivedStateOf { state.firstVisibleItemIndex > 0 || state.firstVisibleItemScrollOffset > 4 } }
     val titleGone by remember(state, largeTitle) {
         derivedStateOf { !largeTitle || state.firstVisibleItemIndex > 0 || state.firstVisibleItemScrollOffset > with(density) { 34.dp.toPx() } }
     }
+    // The pinned slot rides under the large title, then sticks below the bar.
+    val stuck by remember(state, largeTitle) {
+        derivedStateOf { !largeTitle || state.firstVisibleItemIndex > 0 || state.firstVisibleItemScrollOffset >= titlePx }
+    }
+    val pinnedHeight = with(density) { pinnedPx.toDp() }
     val edge by animateFloatAsState(if (scrolled) 1f else 0f, label = "scrollEdge")
+    val edgeHeight by animateDpAsState(statusBar + barHeight + (if (pinned != null && stuck) pinnedHeight else 0.dp) + 20.dp, label = "edgeHeight")
     val inlineTitle by animateFloatAsState(if (titleGone) 1f else 0f, label = "inlineTitle")
     val bottom = if (bottomBar != null) with(density) { footerPx.toDp() } else LocalBottomInset.current.coerceAtLeast(navBar)
 
@@ -88,24 +101,37 @@ fun Page(
             Modifier.fillMaxSize().hazeSource(backdrop),
             state = state,
             contentPadding = PaddingValues(
-                top = statusBar + barHeight + with(density) { pinnedPx.toDp() },
+                top = statusBar + barHeight + (if (largeTitle) 0.dp else pinnedHeight),
                 bottom = bottom + 28.dp,
             ),
         ) {
             if (largeTitle) {
+                // Always exactly one leading item, so callers can count on their own items starting at index 1.
                 item(key = "page-title") {
-                    Text(title, style = KitType.largeTitle, color = c.label, modifier = Modifier.padding(start = Gutter + 4.dp, end = Gutter, top = 4.dp).semantics { heading() })
+                    Column {
+                        Text(
+                            title, style = KitType.largeTitle, color = c.label,
+                            modifier = Modifier.onSizeChanged { titlePx = it.height }.padding(start = Gutter + 4.dp, end = Gutter, top = 4.dp, bottom = 6.dp).semantics { heading() },
+                        )
+                        if (pinned != null) Spacer(Modifier.height(pinnedHeight))
+                    }
                 }
             }
             content()
         }
 
         CompositionLocalProvider(LocalBackdrop provides backdrop) {
-            // Scroll edge: content fades out under the bar instead of meeting a hard line.
-            val fadeHeight = statusBar + barHeight + with(density) { pinnedPx.toDp() } + 18.dp
+            // Scroll edge: content blurs and fades out under the bar instead of meeting a hard line.
             Box(
-                Modifier.fillMaxWidth().height(fadeHeight).graphicsLayer { alpha = edge }.drawBehind {
-                    drawRect(Brush.verticalGradient(0f to c.grouped.copy(alpha = 0.96f), 0.62f to c.grouped.copy(alpha = 0.82f), 1f to Color.Transparent))
+                Modifier.fillMaxWidth().height(edgeHeight).hazeEffect(
+                    backdrop,
+                    HazeStyle(
+                        backgroundColor = c.grouped, tint = HazeTint(c.grouped.copy(alpha = 0.76f)), blurRadius = 16.dp, noiseFactor = 0f,
+                        fallbackTint = HazeTint(c.grouped),
+                    ),
+                ) {
+                    alpha = edge
+                    mask = Brush.verticalGradient(0f to Color.Black, 0.7f to Color.Black, 1f to Color.Transparent)
                 },
             )
             Column(Modifier.fillMaxWidth().padding(top = statusBar)) {
@@ -119,7 +145,14 @@ fun Page(
                         Row(Modifier.align(Alignment.CenterEnd), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically, content = trailing)
                     }
                 }
-                if (pinned != null) Box(Modifier.fillMaxWidth().onSizeChanged { pinnedPx = it.height }) { pinned() }
+                if (pinned != null) {
+                    Box(
+                        Modifier.fillMaxWidth().offset {
+                            val rest = if (!largeTitle || state.firstVisibleItemIndex > 0) 0 else (titlePx - state.firstVisibleItemScrollOffset).coerceAtLeast(0)
+                            IntOffset(0, rest)
+                        }.onSizeChanged { pinnedPx = it.height },
+                    ) { pinned() }
+                }
             }
             if (bottomBar != null) {
                 val shape = RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp)
@@ -137,7 +170,7 @@ fun Page(
 @Composable
 fun BarAction(text: String, onClick: () -> Unit, destructive: Boolean = false) {
     val c = Kit.colors
-    Box(Modifier.height(44.dp).glass().pressable(onClick = onClick).padding(horizontal = 16.dp), contentAlignment = Alignment.Center) {
+    Box(Modifier.pressable(onClick = onClick).height(44.dp).glass().padding(horizontal = 16.dp), contentAlignment = Alignment.Center) {
         Text(text, style = KitType.body.medium, color = if (destructive) c.red else c.label, maxLines = 1)
     }
 }

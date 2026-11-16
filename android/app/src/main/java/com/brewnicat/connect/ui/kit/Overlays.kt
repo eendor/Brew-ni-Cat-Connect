@@ -44,6 +44,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -172,7 +173,7 @@ fun Sheet(
         val scope = rememberCoroutineScope()
         val shown = remember { Animatable(0f) }
         val drag = remember { Animatable(0f) }
-        var heightPx by remember { mutableStateOf(0) }
+        var heightPx by remember { mutableIntStateOf(0) }
         var leaving by remember { mutableStateOf(false) }
         val latestDismiss by rememberUpdatedState(onDismiss)
         val dismiss: () -> Unit = {
