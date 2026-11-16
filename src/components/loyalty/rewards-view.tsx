@@ -5,18 +5,34 @@ import { useEffect, useState } from "react";
 
 import { Container } from "@/components/ui/container";
 import { useAuth } from "@/context/auth-context";
-import { formatEarningRule, formatWeeklyLimit } from "@/lib/loyalty/format";
+import {
+  formatEarningRule,
+  formatLoyaltyDate,
+  formatRedeemError,
+  formatRewardAvailability,
+  formatWeeklyLimit,
+  rewardCodeStatus,
+} from "@/lib/loyalty/format";
 import {
   fetchLoyaltyBalance,
   fetchLoyaltyRewards,
   fetchLoyaltySettings,
+  fetchRewardCodes,
   redeemReward,
 } from "@/lib/loyalty/loyalty-client";
 import type {
   LoyaltyProgramSettings,
   RedeemResult,
+  RewardCode,
+  RewardCodeStatus,
   RewardItem,
 } from "@/lib/loyalty/types";
+
+const CODE_STATUS_LABEL: Record<RewardCodeStatus, string> = {
+  ready: "Ready to use",
+  used: "Used",
+  expired: "Expired",
+};
 
 export function RewardsView() {
   const { user, isLoading: isAuthLoading } = useAuth();
@@ -25,6 +41,7 @@ export function RewardsView() {
   const [balance, setBalance] = useState<number>(0);
   const [rewards, setRewards] = useState<readonly RewardItem[]>([]);
   const [settings, setSettings] = useState<LoyaltyProgramSettings | null>(null);
+  const [codes, setCodes] = useState<readonly RewardCode[]>([]);
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -63,6 +80,14 @@ export function RewardsView() {
         setIsLoading(false);
       });
 
+    // The codes list is extra: it loads on its own so a slow or missing
+    // table never holds up the points and rewards.
+    fetchRewardCodes({ userId })
+      .then((rewardCodes) => {
+        if (active) setCodes(rewardCodes);
+      })
+      .catch(() => undefined);
+
     return () => {
       active = false;
     };
@@ -93,19 +118,17 @@ export function RewardsView() {
         // Refresh the balance after successful redemption
         setRefreshIndex((prev) => prev + 1);
       } else {
-        if (result.error === "weekly_limit_reached") {
-          setRedeemError(
-            `You have reached your weekly redemption limit (${result.weeklyLimit ?? 2} per week). Please try again next week.`,
-          );
-        } else if (result.error === "insufficient_points") {
-          setRedeemError(
-            `Insufficient points. You need ${result.required ?? selectedReward.points} points for this reward.`,
-          );
-        } else {
-          setRedeemError(
-            result.error ||
-              "Redemption could not be processed. Please try again.",
-          );
+        setRedeemError(
+          formatRedeemError(result.error, {
+            weeklyLimit: result.weeklyLimit,
+            required: result.required ?? selectedReward.points,
+          }),
+        );
+        if (
+          result.error === "out_of_stock" ||
+          result.error === "daily_limit_reached"
+        ) {
+          setRefreshIndex((prev) => prev + 1);
         }
       }
     } catch {
@@ -231,6 +254,8 @@ export function RewardsView() {
                 {rewards.map((reward) => {
                   const hasEnough = balance >= reward.points;
                   const neededPoints = reward.points - balance;
+                  const availability = formatRewardAvailability(reward);
+                  const canRedeem = hasEnough && !reward.unavailable;
 
                   return (
                     <div
@@ -250,6 +275,18 @@ export function RewardsView() {
                         <p className="mt-1.5 text-xs text-[var(--text-muted)] leading-relaxed">
                           {reward.description}
                         </p>
+                        {availability ? (
+                          <p
+                            data-testid={`reward-availability-${reward.id}`}
+                            className={`mt-2 text-xs font-semibold ${
+                              reward.unavailable
+                                ? "text-[var(--danger)]"
+                                : "text-[var(--accent-solid)]"
+                            }`}
+                          >
+                            {availability}
+                          </p>
+                        ) : null}
                       </div>
 
                       <div className="mt-5 flex items-center justify-between gap-3 border-t border-[var(--separator)] pt-4">
@@ -268,10 +305,10 @@ export function RewardsView() {
                         <button
                           type="button"
                           onClick={() => handleStartRedeem(reward)}
-                          disabled={!hasEnough}
+                          disabled={!canRedeem}
                           aria-label={`Redeem ${reward.name} for ${reward.points} points`}
                           className={
-                            hasEnough
+                            canRedeem
                               ? "button-primary"
                               : "button-secondary cursor-not-allowed opacity-50"
                           }
@@ -285,6 +322,60 @@ export function RewardsView() {
               </div>
             )}
           </section>
+
+          {codes.length > 0 ? (
+            <section aria-labelledby="codes-heading">
+              <h2
+                id="codes-heading"
+                className="mb-1 font-display text-2xl font-bold text-[var(--text-strong)] tracking-tight"
+              >
+                My codes
+              </h2>
+              <p className="mb-4 text-sm text-[var(--text-muted)]">
+                Show a code at the counter. Each code works once.
+              </p>
+              <ul className="ios-card divide-y divide-[var(--separator)]">
+                {codes.map((item) => {
+                  const status = rewardCodeStatus(item);
+                  return (
+                    <li
+                      key={item.code}
+                      data-testid={`reward-code-${item.code}`}
+                      className="flex items-center justify-between gap-4 p-4"
+                    >
+                      <div className="min-w-0">
+                        <p className="font-semibold text-[var(--text-strong)]">
+                          {item.rewardName}
+                        </p>
+                        <p className="text-xs text-[var(--text-muted)]">
+                          {item.source === "mini-game"
+                            ? "Won in a game"
+                            : "Redeemed with points"}
+                          {status === "ready"
+                            ? ` · Use by ${formatLoyaltyDate(item.expiresAt)}`
+                            : null}
+                        </p>
+                      </div>
+                      <div className="shrink-0 text-right">
+                        <p
+                          className={`font-mono text-base font-bold tracking-wider ${
+                            status === "ready"
+                              ? "text-[var(--accent-solid)]"
+                              : "text-[var(--text-muted)] line-through"
+                          }`}
+                        >
+                          {item.code}
+                        </p>
+                        <p className="text-xs text-[var(--text-muted)]">
+                          {CODE_STATUS_LABEL[status]}
+                        </p>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          ) : null}
         </div>
       )}
 
@@ -378,6 +469,15 @@ export function RewardsView() {
                   <p>
                     New balance: <strong>{redeemResult.newBalance} pts</strong>
                   </p>
+                  {redeemResult.expiresAt ? (
+                    <p>
+                      Use by:{" "}
+                      <strong>
+                        {formatLoyaltyDate(redeemResult.expiresAt)}
+                      </strong>{" "}
+                      · works once
+                    </p>
+                  ) : null}
                 </div>
 
                 <div className="mt-6">

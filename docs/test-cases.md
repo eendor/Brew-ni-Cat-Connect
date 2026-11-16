@@ -1748,3 +1748,23 @@ Update 2026-11-17 (PR #148 review): this run tested the Trusted Web Activity bui
 - FR-070 push notifications — Deferred; **TODO: Confirm with Brew ni Cat owner.**
 
 Screenshots for MAN-P8-020, MAN-P8-021 and MAN-P8-022 are in `docs/evidence/phase-8/integrated-qa/`. No live orders, reviews or data requests were submitted.
+
+## 62. Owner Rewards, Prizes and One-Time Codes (2026-11-17)
+
+FR-088: rewards and game prizes the owner manages, with cost, stock and a daily limit. FR-091: one-time codes that staff check at the counter. Migration `20261117120000_shop_rewards_and_codes.sql`.
+
+| ID         | Requirement            | Case | Expected result | Status |
+| ---------- | ---------------------- | ---- | --------------- | ------ |
+| TC-P9-054  | FR-088                 | PGlite: read the catalog; staff change a cost, stock and daily limit, turn one reward off and add one; customers and guests read, write and delete; staff add a reward with a chance instead of a cost | The 11 rewards come from `shop_rewards`; the changes show and record the staff account; the hidden reward is invisible to customers and guests but not staff; customer writes change nothing or are denied (42501); the bad row is refused | Passed (automated) |
+| TC-P9-055  | FR-088, FR-091         | PGlite: redeem a reward with a stock of 1, again by another customer; then a daily limit of 1, then 2; a customer reads, forges and changes codes | An `RWD-` code of 8 characters valid for 30 days; then `out_of_stock`, then `daily_limit_reached`, then success; customers see only their own codes and can't add or change one | Passed (automated) |
+| TC-P9-056  | FR-088, FR-089, FR-091 | PGlite: staff add a prize won on every play with a stock of 1; a customer reads the status and plays twice; staff turn prizes off and the customer plays | The status lists the prize; the first play wins a `PRZ-` code valid for 7 days linked to the play; the second pays points only; with prizes off there is no prize | Passed (automated) |
+| TC-P9-057  | FR-091                 | PGlite: staff check a code typed in lower case with a space, use it, then use and check it again | Valid with the reward's name; then used, recording the staff account; then `already_redeemed` both times | Passed (automated) |
+| TC-P9-058  | FR-091                 | PGlite: an unknown code, text that isn't a code, an expired code; a customer and a guest check a code | `unknown_code` twice; `expired` and the code stays unused; the customer gets `forbidden`; the guest is denied (42501) | Passed (automated) |
+| TC-P9-059  | FR-091                 | PGlite: a reward redeemed two days before the migration, then the migration | The old `RWD-` code from the points history becomes a code for the right reward, with 28 days left | Passed (automated) |
+| TC-P9-060  | FR-088, FR-091         | PGlite: apply the rollback | The catalog is read from the settings again; the tables are gone; plays work with no prize; the check function is gone | Passed (automated) |
+| TC-P9-061  | FR-088, FR-091         | Render the rewards page with a sold-out reward, one claimed today, one with 3 left, and a ready, a used and an expired code | "Sold out", "All claimed today" and "Only 3 left"; only the last can be redeemed; My codes shows "Won in a game", "Ready to use", "Used" and "Expired" | Passed (automated) |
+| TC-P9-062  | FR-088, FR-091         | Redeem a reward that sold out meanwhile, then one that works | "just sold out. Your points weren't used."; then the code with "Use by: Jan 31, 2099 · works once" | Passed (automated) |
+| TC-P9-063  | FR-088, FR-091         | Render `/games` with two prizes, one all won; win a prize on Lucky paw | "About 1 in 50 plays" and "All won for now"; the prize, its code and "It works once" | Passed (automated) |
+| TC-P9-064  | FR-088, FR-091         | Wording helpers | Code states ready, expired and used; availability only for low stock; refusal messages; prize chance wording | Passed (automated) |
+| MAN-P9-004 | FR-088, FR-091         | After the migration is applied: the owner sets a stock on a reward and adds a prize in the POS Rewards screen; a customer redeems and wins on the live site; staff check and use both codes in the POS, then try again | The stock, prize and codes show; each code is accepted once and refused the second time | Not run yet (needs the live migration) |
+

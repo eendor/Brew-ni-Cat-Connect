@@ -15,7 +15,10 @@ import {
   playMiniGame,
   playsLeftLabel,
   type PlayResult,
+  prizeChanceLabel,
+  type WonPrize,
 } from "@/lib/games/games";
+import { formatLoyaltyDate } from "@/lib/loyalty/format";
 import { fetchLoyaltyBalance } from "@/lib/loyalty/loyalty-client";
 
 import { CatCups } from "./cat-cups";
@@ -57,6 +60,7 @@ export function GamesView({ embedded = false }: GamesViewProps = {}) {
   const userId = user?.id ?? null;
   const reducedMotion = useReducedMotion();
   const [load, setLoad] = useState<Load>({ state: "loading" });
+  const [wonPrize, setWonPrize] = useState<WonPrize | null>(null);
 
   useEffect(() => {
     if (isAuthLoading) return;
@@ -87,6 +91,7 @@ export function GamesView({ embedded = false }: GamesViewProps = {}) {
   const play = useCallback(
     async (game: GameId, choice: number | null): Promise<PlayResult> => {
       const result = await playMiniGame(game, choice);
+      if (result.ok && result.prize) setWonPrize(result.prize);
       setLoad((current) => {
         if (current.state !== "ready") return current;
         if (result.ok) {
@@ -255,6 +260,33 @@ export function GamesView({ embedded = false }: GamesViewProps = {}) {
             </p>
           ) : null}
 
+          {wonPrize ? (
+            <section
+              role="status"
+              data-testid="games-prize"
+              className="ios-card border-2 border-[var(--accent-solid)] p-5 text-center"
+            >
+              <p className="text-xs font-semibold uppercase tracking-wider text-[var(--accent-solid)]">
+                You won a prize!
+              </p>
+              <p className="mt-1 font-display text-xl font-bold text-[var(--text-strong)]">
+                {wonPrize.name}
+              </p>
+              <p className="my-3 font-mono text-2xl font-black tracking-widest text-[var(--accent-solid)]">
+                {wonPrize.code}
+              </p>
+              <p className="text-xs text-[var(--text-muted)]">
+                Show this code at the counter by{" "}
+                {formatLoyaltyDate(wonPrize.expiresAt)}. It works once and is
+                saved in{" "}
+                <Link href="/account/rewards" className="underline">
+                  My codes
+                </Link>
+                .
+              </p>
+            </section>
+          ) : null}
+
           <div className="grid gap-6 md:grid-cols-2">
             {cups ? (
               <section
@@ -304,6 +336,44 @@ export function GamesView({ embedded = false }: GamesViewProps = {}) {
               </section>
             ) : null}
           </div>
+          {ready && (ready.status.prizes ?? []).length > 0 ? (
+            <section aria-labelledby="games-prizes" className="ios-card p-5">
+              <h2
+                id="games-prizes"
+                className="font-display text-lg font-semibold text-[var(--text-strong)]"
+              >
+                Prizes you can win
+              </h2>
+              <p className="mt-1 text-xs text-[var(--text-muted)]">
+                Any play can also win one of these, on top of its points.
+              </p>
+              <ul className="mt-3 space-y-2">
+                {(ready.status.prizes ?? []).map((prize) => (
+                  <li
+                    key={prize.id}
+                    data-testid={`game-prize-${prize.id}`}
+                    className="flex items-start justify-between gap-3 text-sm"
+                  >
+                    <span>
+                      <span className="font-semibold text-[var(--text-strong)]">
+                        {prize.name}
+                      </span>
+                      {prize.description ? (
+                        <span className="block text-xs text-[var(--text-muted)]">
+                          {prize.description}
+                        </span>
+                      ) : null}
+                    </span>
+                    <span className="shrink-0 text-xs text-[var(--text-muted)]">
+                      {prize.available
+                        ? prizeChanceLabel(prize.winChance)
+                        : "All won for now"}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
           <p className="text-center text-xs text-[var(--text-muted)]">
             The café decides every result fairly on its server. Points from
             games show in your{" "}

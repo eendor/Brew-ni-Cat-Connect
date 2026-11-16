@@ -13,6 +13,7 @@ import type {
   LoyaltyReason,
   LoyaltyTransaction,
   RedeemResult,
+  RewardCode,
   RewardItem,
 } from "./types";
 
@@ -161,4 +162,54 @@ export async function redeemReward(
   }
 
   return data as RedeemResult;
+}
+
+type RawCodeRow = {
+  code: string;
+  reward_name: string;
+  source: "points" | "mini-game";
+  created_at: string;
+  expires_at: string;
+  redeemed_at: string | null;
+};
+
+/** PostgREST answers PGRST205 (or 42P01) when a table doesn't exist. */
+function isMissingTable(error: { code?: string; message?: string }): boolean {
+  return (
+    error.code === "PGRST205" ||
+    error.code === "42P01" ||
+    /could not find the table/i.test(error.message ?? "")
+  );
+}
+
+/**
+ * The customer's reward and prize codes, newest first (FR-091). Before the
+ * codes migration is on the database there are none to show.
+ */
+export async function fetchRewardCodes({
+  userId,
+  client,
+}: UserQueryOptions): Promise<readonly RewardCode[]> {
+  const supabase = client ?? getAuthSupabaseClient();
+
+  const { data, error } = await supabase
+    .from("reward_codes")
+    .select("code, reward_name, source, created_at, expires_at, redeemed_at")
+    .eq("customer_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(50);
+
+  if (error) {
+    if (isMissingTable(error)) return [];
+    throw new Error(`Failed to load your codes: ${error.message}`);
+  }
+
+  return ((data ?? []) as RawCodeRow[]).map((row) => ({
+    code: row.code,
+    rewardName: row.reward_name,
+    source: row.source,
+    createdAt: row.created_at,
+    expiresAt: row.expires_at,
+    redeemedAt: row.redeemed_at,
+  }));
 }

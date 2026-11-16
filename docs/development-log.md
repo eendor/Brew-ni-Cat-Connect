@@ -2058,3 +2058,19 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `docs/v1.0.0-release`.
 - **Known limitations:** The app is not on Google Play yet, so updates come from GitHub releases signed with the same key. There are no push notifications (FR-070 is deferred).
 - **Next action:** Run MAN-P8-007 to MAN-P8-009, MAN-P8-023 and MAN-P8-024 on a real Android phone with the released APK.
+
+## 2026-11-17 — Phase 9: owner-managed rewards and prizes, one-time codes
+
+- **Phase:** Phase 9 (FR-088, FR-091; FR-055, FR-089 updated).
+- **Task:** Finish Phase 9. The owner left the reward rules to the team.
+- **Summary:**
+  - Migration `20261117120000_shop_rewards_and_codes.sql`: rewards and prizes are rows of `public.shop_rewards`, which only staff can write, with a cost or a chance out of 1000, an optional stock and an optional daily limit. The 11 rewards are carried over unchanged.
+  - Redeemed rewards (30 days) and won prizes (7 days) get one-time codes in `public.reward_codes`. Staff check and use them with `public.verify_reward_code()`, which refuses used, expired and unknown codes. Old codes from the points history are carried over.
+  - Website: the rewards page shows sold-out, claimed-today and low-stock rewards and a My codes list; `/games` lists the prizes and shows a won prize's code. Both still work before the migration is applied.
+  - The owner's Rewards screen and the code check are in the POS web app (`Brew-ni-Cat-POS`), per ADR-017 and ADR-037.
+- **Files:** `supabase/{migrations,rollbacks}/20261117120000_shop_rewards_and_codes.sql`, `src/lib/loyalty/{types,format,loyalty-client}.ts`, `src/lib/games/games.ts`, `src/components/loyalty/rewards-view.tsx`, `src/components/games/games-view.tsx`, `tests/database/{shop-rewards,loyalty}.test.ts`, `tests/unit/{reward-codes,loyalty-view}.test.tsx`, `docs/{functional-requirements,test-cases,database-design,decisions,development-log}.md`.
+- **Testing:** `npx vitest run tests/database` (TC-P9-054 to TC-P9-060, plus TC-P5-106 and TC-P5-108 updated for the table and the longer codes); `npx vitest run tests/unit/reward-codes.test.tsx` (TC-P9-061 to TC-P9-064); `tsc`, `eslint`, docs validator.
+- **Branch / PR:** `feat/phase9-rewards-codes`.
+- **Known limitations:** The migration is not applied to the live database yet; it needs the lead's OK. The Android app shows the rewards and games as before and doesn't list codes or prizes yet. MAN-P9-004 needs the live migration.
+- **Next action:** Apply the migration with the lead's OK, then run MAN-P9-004 with the POS Rewards screen.
+

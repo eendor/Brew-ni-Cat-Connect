@@ -26,6 +26,8 @@ vi.mock("@/lib/loyalty/loyalty-client", () => ({
   fetchLoyaltyHistory: vi.fn(),
   fetchLoyaltyRewards: vi.fn(),
   fetchLoyaltySettings: vi.fn(),
+  // Update 2026-11-17: the rewards page also lists the customer's codes
+  fetchRewardCodes: vi.fn().mockResolvedValue([]),
   redeemReward: vi.fn(),
 }));
 
