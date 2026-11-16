@@ -1,22 +1,11 @@
 package com.brewnicat.connect.ui.screens
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,48 +15,63 @@ import com.brewnicat.connect.data.Pricing
 import com.brewnicat.connect.ui.AppViewModel
 import com.brewnicat.connect.ui.MenuImages
 import com.brewnicat.connect.ui.Screen
-import com.brewnicat.connect.ui.theme.Brand
+import com.brewnicat.connect.ui.kit.ButtonRow
+import com.brewnicat.connect.ui.kit.EmptyState
+import com.brewnicat.connect.ui.kit.Gutter
+import com.brewnicat.connect.ui.kit.Kit
+import com.brewnicat.connect.ui.kit.KitButton
+import com.brewnicat.connect.ui.kit.KitIcons
+import com.brewnicat.connect.ui.kit.KitType
+import com.brewnicat.connect.ui.kit.Notice
+import com.brewnicat.connect.ui.kit.Page
+import com.brewnicat.connect.ui.kit.Photo
+import com.brewnicat.connect.ui.kit.Section
+import com.brewnicat.connect.ui.kit.Stepper
+import com.brewnicat.connect.ui.kit.Text
+import com.brewnicat.connect.ui.kit.groupItems
+import com.brewnicat.connect.ui.kit.semibold
 
 @Composable
 fun CartScreen(vm: AppViewModel) {
-    Column(Modifier.fillMaxSize()) {
-        TopBar("Your cart", { vm.back() })
-        val cart = vm.cart
-        if (cart.isEmpty) {
-            MessageState("🛒", "Your cart is empty", "Add something tasty from the menu.", action = "Browse the menu") { vm.selectTab(Screen.Menu) }
-            return
-        }
-        LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            vm.cartNotice?.let { n -> item { Notice(n) } }
-            items(cart.lines, key = { it.key }) { line ->
-                Row(
-                    Modifier.fillMaxWidth().clip(MaterialTheme.shapes.large).background(Brand.colors.card).padding(12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    val flavorPart = Pricing.splitAddOns(line.flavor).flavor
-                    Photo(MenuImages.forItem(line.itemName, flavorPart), null, Modifier.size(64.dp).clip(MaterialTheme.shapes.medium))
-                    Spacer(Modifier.width(12.dp))
+    val c = Kit.colors
+    val cart = vm.cart
+    Page(
+        "Your cart", onBack = { vm.back() },
+        bottomBar = if (cart.isEmpty) null else {
+            {
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
-                        Text(line.itemName, style = MaterialTheme.typography.titleMedium, color = Brand.colors.ink)
-                        val detail = listOfNotNull(line.variantName.takeIf { it.isNotBlank() && it.lowercase() != "regular" }, line.flavor).joinToString(" · ")
-                        if (detail.isNotEmpty()) Text(detail, style = MaterialTheme.typography.bodySmall, color = Brand.colors.muted)
-                        Text(Pricing.formatPeso(line.lineTotal), style = MaterialTheme.typography.titleSmall, color = Brand.colors.accent)
-                        Stepper(line.quantity, { vm.setQuantity(line.key, it) }, line.itemName, min = 0, max = Pricing.MAX_QUANTITY)
+                        Text("Subtotal (${cart.itemCount} ${if (cart.itemCount == 1) "item" else "items"})", style = KitType.subhead, color = c.label2)
+                        Text("Pickup only. You pay at the counter.", style = KitType.footnote, color = c.label2)
                     }
+                    Text(Pricing.formatPeso(cart.subtotal), style = KitType.title2.semibold, color = c.label)
                 }
+                KitButton("Checkout", { vm.cartNotice = null; vm.open(Screen.Checkout) }, Modifier.fillMaxWidth().padding(top = 12.dp))
             }
+        },
+    ) {
+        if (cart.isEmpty) {
             item {
-                TextButton(onClick = { vm.selectTab(Screen.Menu) }) { Text("+ Add more items", color = Brand.colors.accent) }
+                EmptyState(KitIcons.ShoppingBag, "Your cart is empty", "Add something tasty from the menu.", Modifier.fillParentMaxHeight(0.7f), "Browse the menu", { vm.selectTab(Screen.Menu) })
+            }
+            return@Page
+        }
+        vm.cartNotice?.let { n -> item(key = "notice") { Notice(n, Modifier.padding(horizontal = Gutter).padding(top = 8.dp), warning = true) } }
+        item(key = "gap") { Column(Modifier.padding(top = 12.dp)) {} }
+        groupItems(cart.lines, key = { it.key }) { line ->
+            Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                Photo(MenuImages.forItem(line.itemName, Pricing.splitAddOns(line.flavor).flavor), null, Modifier.size(60.dp).clip(RoundedCornerShape(14.dp)))
+                Column(Modifier.weight(1f).padding(start = 12.dp, end = 8.dp)) {
+                    Text(line.itemName, style = KitType.body.semibold, color = c.label, maxLines = 2)
+                    val detail = lineDetail(line.variantName, line.flavor)
+                    if (detail.isNotEmpty()) Text(detail, style = KitType.footnote, color = c.label2, maxLines = 2)
+                    Text(Pricing.formatPeso(line.lineTotal), style = KitType.subhead.semibold, color = c.label, modifier = Modifier.padding(top = 2.dp))
+                }
+                Stepper(line.quantity, { vm.setQuantity(line.key, it) }, line.itemName, min = 0, max = Pricing.MAX_QUANTITY)
             }
         }
-        Column(Modifier.fillMaxWidth().background(Brand.colors.warm).padding(20.dp)) {
-            Row {
-                Text("Subtotal (${cart.itemCount} ${if (cart.itemCount == 1) "item" else "items"})", style = MaterialTheme.typography.titleMedium, color = Brand.colors.ink, modifier = Modifier.weight(1f))
-                Text(Pricing.formatPeso(cart.subtotal), style = MaterialTheme.typography.titleLarge, color = Brand.colors.ink)
-            }
-            Text("Pickup only. You pay at the counter.", style = MaterialTheme.typography.bodySmall, color = Brand.colors.muted)
-            Spacer(Modifier.height(12.dp))
-            PrimaryButton("Checkout", { vm.cartNotice = null; vm.open(Screen.Checkout) }, Modifier.fillMaxWidth())
+        item(key = "more") {
+            Section { ButtonRow("Add more items", { vm.selectTab(Screen.Menu) }) }
         }
     }
 }

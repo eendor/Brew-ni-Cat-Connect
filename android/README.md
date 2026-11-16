@@ -32,13 +32,19 @@ Package `com.brewnicat.connect`; Android 8.0 (API 26) and later; compiled
 against and targeting API 36. It asks only for internet access and backs up
 nothing. It holds no secret key.
 
+The interface follows Apple's iOS 27 UI Kit (large titles, inset grouped lists,
+a floating glass tab bar, sheets and alerts) and is drawn entirely with
+Compose Foundation. It does not use Material. Inter stands in for SF Pro and
+Lucide icons stand in for SF Symbols; see `THIRD_PARTY_NOTICES.md`.
+
 ## Layout
 
 ```
 app/src/main/java/com/brewnicat/connect/
   data/   Menu (mapping), Pricing, Cart, Checkout, Orders, ShopHours, Auth,
           Account, Reorder, Games, Ads, Api, Store
-  ui/     BrewApp (navigation), AppViewModel, theme/, screens/ (incl. GamesDialog, AdCard)
+  ui/     BrewApp (navigation, tab bar), AppViewModel, kit/ (the iOS 27-style design
+          system: theme, type, icons, glass, lists, controls, sheets), screens/
 app/src/test/  JVM unit tests for the data, auth, account, game and ad layers
 app/src/debug/ debug-only network config for the local mock backend
 tools/mock_backend.py  stand-in backend for checkout, OAuth, loyalty, reviews, games & mock ads

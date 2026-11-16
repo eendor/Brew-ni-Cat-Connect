@@ -1,149 +1,153 @@
 package com.brewnicat.connect.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.brewnicat.connect.R
 import com.brewnicat.connect.data.MenuItem
+import com.brewnicat.connect.data.OrderView
 import com.brewnicat.connect.data.Pricing
-import com.brewnicat.connect.data.ShopHours
 import com.brewnicat.connect.ui.AppViewModel
 import com.brewnicat.connect.ui.Loadable
 import com.brewnicat.connect.ui.MenuImages
 import com.brewnicat.connect.ui.Screen
-import com.brewnicat.connect.ui.theme.Brand
+import com.brewnicat.connect.ui.kit.ButtonSize
+import com.brewnicat.connect.ui.kit.Gutter
+import com.brewnicat.connect.ui.kit.IconTile
+import com.brewnicat.connect.ui.kit.Kit
+import com.brewnicat.connect.ui.kit.KitButton
+import com.brewnicat.connect.ui.kit.ButtonStyle
+import com.brewnicat.connect.ui.kit.KitIcons
+import com.brewnicat.connect.ui.kit.KitType
+import com.brewnicat.connect.ui.kit.ListRow
+import com.brewnicat.connect.ui.kit.Logo
+import com.brewnicat.connect.ui.kit.Page
+import com.brewnicat.connect.ui.kit.Photo
+import com.brewnicat.connect.ui.kit.Section
+import com.brewnicat.connect.ui.kit.SectionHeader
+import com.brewnicat.connect.ui.kit.Text
+import com.brewnicat.connect.ui.kit.bold
+import com.brewnicat.connect.ui.kit.pressable
+import com.brewnicat.connect.ui.kit.semibold
+import com.brewnicat.connect.ui.kit.softShadow
 
 @Composable
 fun HomeScreen(vm: AppViewModel, onItem: (MenuItem) -> Unit) {
-    val bottomPad = if (vm.cart.isEmpty) 24.dp else 88.dp
-    Column(Modifier.verticalScroll(rememberScrollState()).padding(bottom = bottomPad)) {
-        BrandHeader()
-        Hero(vm)
-        Spacer(Modifier.height(20.dp))
-        OpenStatus(vm.hours, Modifier.padding(horizontal = 20.dp))
+    val c = Kit.colors
+    Page("Brew ni Cat", trailing = { Logo(36.dp) }) {
+        item(key = "hero") { Hero { vm.selectTab(Screen.Menu) } }
+        item(key = "status") { OpenStatus(vm.hours, Modifier.padding(start = Gutter + 4.dp, end = Gutter, top = 14.dp)) }
+
         val latest = vm.savedOrders.firstOrNull()
         val latestView = latest?.let { (vm.orders[it.reference] as? Loadable.Ready)?.value }
         if (latest != null && latestView != null && !latestView.isFinal) {
-            Spacer(Modifier.height(14.dp))
-            Card(Modifier.padding(horizontal = 20.dp).fillMaxWidth().clickable { vm.open(Screen.Order(latest.reference)) }) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("🧋", style = MaterialTheme.typography.headlineMedium)
-                    Spacer(Modifier.width(12.dp))
-                    Column(Modifier.weight(1f)) {
-                        Text("Your order ${latest.reference}", style = MaterialTheme.typography.titleMedium, color = Brand.colors.ink)
-                        Text(com.brewnicat.connect.data.OrderView.label(latestView.status), style = MaterialTheme.typography.bodyMedium, color = Brand.colors.accent)
-                    }
-                    Text("Track ›", style = MaterialTheme.typography.labelLarge, color = Brand.colors.accent)
+            item(key = "active") {
+                Section(header = "Your order") {
+                    ListRow(
+                        "Order ${latest.reference}", subtitle = OrderView.label(latestView.status),
+                        leading = { IconTile(statusIcon(latestView.status), if (latestView.status == "ready") c.green else c.tint) },
+                        detail = "Track", chevron = true,
+                    ) { vm.open(Screen.Order(latest.reference)) }
                 }
             }
         }
-        Spacer(Modifier.height(26.dp))
+
         val catalog = (vm.menu as? Loadable.Ready)?.value
-        if (catalog != null) {
-            val favorites = catalog.categories.flatMap { it.items }.filter { MenuImages.forItem(it.name) != null }
-            if (favorites.isNotEmpty()) {
-                SectionTitle("Customer favorites", Modifier.padding(horizontal = 20.dp))
-                Spacer(Modifier.height(12.dp))
-                Row(Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 20.dp), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                    favorites.forEach { item -> FavoriteCard(item) { onItem(item) } }
+        val favorites = catalog?.categories?.flatMap { it.items }?.filter { MenuImages.forItem(it.name) != null }.orEmpty()
+        if (favorites.isNotEmpty()) {
+            item(key = "favorites") {
+                Column(Modifier.padding(top = 26.dp)) {
+                    Box(Modifier.padding(horizontal = Gutter)) {
+                        SectionHeader("Customer favorites", prominent = true, action = {
+                            KitButton("See all", { vm.selectTab(Screen.Menu) }, style = ButtonStyle.Plain, size = ButtonSize.Small)
+                        })
+                    }
+                    LazyRow(contentPadding = PaddingValues(horizontal = Gutter), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        items(favorites, key = { it.id }) { item -> FavoriteCard(item) { onItem(item) } }
+                    }
                 }
             }
         }
-        Spacer(Modifier.height(26.dp))
-        Card(Modifier.padding(horizontal = 20.dp).fillMaxWidth()) {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("How ordering works", style = MaterialTheme.typography.titleLarge, color = Brand.colors.ink)
-                Step("1", "Pick your drinks and snacks from the menu.")
-                Step("2", "Place your order. No account needed.")
-                Step("3", "Follow it here until it's ready, then pick it up and pay at the counter.")
+
+        item(key = "how") {
+            Section(header = "How ordering works") {
+                Step(KitIcons.Coffee, c.brown, "Pick your drinks and snacks from the menu.")
+                Step(KitIcons.ShoppingBag, c.tint, "Place your order. No account needed.")
+                Step(KitIcons.BellRing, c.orange, "Follow it here until it's ready, then pick it up and pay at the counter.")
             }
         }
     }
 }
 
 @Composable
-private fun Hero(vm: AppViewModel) {
+private fun Hero(onOrder: () -> Unit) {
+    val shape = RoundedCornerShape(30.dp)
     Box(
-        Modifier.padding(horizontal = 20.dp).fillMaxWidth().clip(MaterialTheme.shapes.extraLarge)
-            .background(Brush.linearGradient(listOf(Brand.colors.accentFill, Color(0xFF14492F)))),
+        Modifier.padding(horizontal = Gutter).padding(top = 6.dp).fillMaxWidth()
+            .softShadow(shape, Color(0x40123F29), 26.dp, 10.dp)
+            .clip(shape).background(Brush.linearGradient(listOf(Color(0xFF2A8156), Color(0xFF123F29)))),
     ) {
+        Box(Modifier.align(Alignment.TopEnd).offset(x = 48.dp, y = (-36).dp).size(190.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.07f)))
         Photo(
             R.drawable.menu_lucky_green_neko_matcha, null,
-            Modifier.align(Alignment.CenterEnd).padding(end = 0.dp).size(170.dp).clip(CircleShape),
+            Modifier.align(Alignment.BottomEnd).offset(x = 28.dp, y = 28.dp).size(150.dp).rotate(-6f).clip(CircleShape)
+                .border(3.dp, Color.White.copy(alpha = 0.55f), CircleShape),
         )
-        Column(Modifier.padding(22.dp).fillMaxWidth(0.62f)) {
-            Text("Purr-fectly brewed, made for you", style = MaterialTheme.typography.headlineMedium, color = Color.White)
-            Spacer(Modifier.height(8.dp))
-            Text("Order ahead and pick it up in Kabacan.", style = MaterialTheme.typography.bodyMedium, color = Color(0xFFE3ECE2))
-            Spacer(Modifier.height(16.dp))
+        Column(Modifier.padding(22.dp).fillMaxWidth(0.66f)) {
+            Text("PICKUP IN KABACAN", style = KitType.caption1.semibold.copy(letterSpacing = 1.2.sp), color = Color(0xFFBFE3CE))
+            Spacer(Modifier.height(6.dp))
+            Text("Purr-fectly brewed, made for you", style = KitType.title2.bold, color = Color.White, modifier = Modifier.semantics { heading() })
+            Spacer(Modifier.height(18.dp))
             Text(
-                "Order now", style = MaterialTheme.typography.labelLarge, color = Color(0xFF1D2A21),
-                modifier = Modifier.clip(CircleShape).background(Color(0xFFF6EEE1)).clickable { vm.selectTab(Screen.Menu) }
-                    .padding(horizontal = 20.dp, vertical = 12.dp),
+                "Order now", style = KitType.subhead.semibold, color = Color(0xFF123F29),
+                modifier = Modifier.pressable(onClick = onOrder).clip(CircleShape).background(Color.White).padding(horizontal = 20.dp, vertical = 11.dp),
             )
+            Spacer(Modifier.height(10.dp))
         }
-    }
-}
-
-@Composable
-fun OpenStatus(hours: ShopHours?, modifier: Modifier = Modifier) {
-    if (hours == null) return
-    val status = hours.status()
-    Row(modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        val open = status is ShopHours.Status.Open
-        Box(Modifier.size(10.dp).clip(CircleShape).background(if (open) Brand.colors.success else Brand.colors.strong))
-        Spacer(Modifier.width(8.dp))
-        Text(
-            when (status) {
-                is ShopHours.Status.Open -> "Open now · until ${ShopHours.formatTime(status.closes)}"
-                is ShopHours.Status.Closed -> status.message
-            },
-            style = MaterialTheme.typography.bodyMedium, color = Brand.colors.ink,
-        )
     }
 }
 
 @Composable
 private fun FavoriteCard(item: MenuItem, onClick: () -> Unit) {
-    Column(Modifier.width(150.dp).clip(MaterialTheme.shapes.large).background(Brand.colors.card).clickable(onClick = onClick)) {
+    val c = Kit.colors
+    val shape = RoundedCornerShape(22.dp)
+    Column(Modifier.width(150.dp).pressable(onClick = onClick).clip(shape).background(c.cell)) {
         Photo(MenuImages.forItem(item.name), item.name, Modifier.fillMaxWidth().aspectRatio(1f))
-        Column(Modifier.padding(12.dp)) {
-            Text(item.name, style = MaterialTheme.typography.titleSmall, color = Brand.colors.ink, maxLines = 2)
-            Pricing.fromPrice(item)?.let { Text("From ${Pricing.formatPeso(it)}", style = MaterialTheme.typography.bodySmall, color = Brand.colors.accent) }
+        Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
+            Text(item.name, style = KitType.subhead.semibold, color = c.label, maxLines = 2, minLines = 2)
+            Pricing.fromPrice(item)?.let { Text("From ${Pricing.formatPeso(it)}", style = KitType.footnote, color = c.label2, modifier = Modifier.padding(top = 2.dp)) }
         }
     }
 }
 
 @Composable
-private fun Step(n: String, text: String) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(Modifier.size(28.dp).clip(CircleShape).background(Brand.colors.accentSurface), contentAlignment = Alignment.Center) {
-            Text(n, style = MaterialTheme.typography.labelLarge, color = Brand.colors.accent)
-        }
-        Spacer(Modifier.width(12.dp))
-        Text(text, style = MaterialTheme.typography.bodyMedium, color = Brand.colors.ink)
-    }
+private fun Step(icon: androidx.compose.ui.graphics.vector.ImageVector, color: Color, text: String) {
+    ListRow(text, leading = { IconTile(icon, color) })
 }
+

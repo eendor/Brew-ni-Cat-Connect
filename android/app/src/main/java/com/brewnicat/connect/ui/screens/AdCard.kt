@@ -15,12 +15,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -35,7 +31,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.brewnicat.connect.data.AdConfig
-import com.brewnicat.connect.ui.theme.Brand
+import com.brewnicat.connect.ui.kit.Badge
+import com.brewnicat.connect.ui.kit.ButtonSize
+import com.brewnicat.connect.ui.kit.ButtonStyle
+import com.brewnicat.connect.ui.kit.Cell
+import com.brewnicat.connect.ui.kit.Group
+import com.brewnicat.connect.ui.kit.Kit
+import com.brewnicat.connect.ui.kit.KitButton
+import com.brewnicat.connect.ui.kit.KitType
+import com.brewnicat.connect.ui.kit.Spinner
+import com.brewnicat.connect.ui.kit.Text
 import kotlinx.coroutines.delay
 
 private class AdBridge(private val onFilled: () -> Unit) {
@@ -59,51 +64,32 @@ fun AdsterraAdCard(
     scriptHost: String,
     consent: Boolean?,
     onConsentChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
-    Card(Modifier.fillMaxWidth()) {
-        Column(
-            Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            Pill(
-                text = "Ad",
-                color = Brand.colors.muted,
-                background = Brand.colors.warm,
-            )
-
-            when (consent) {
-                null -> {
-                    Text(
-                        "Show an ad here? Ads help support the shop. They come from Adsterra and appear only in the games and on waiting or completed orders.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Brand.colors.ink,
-                        textAlign = TextAlign.Center,
-                    )
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        OutlinedButton(onClick = { onConsentChange(false) }) {
-                            Text("No thanks", color = Brand.colors.ink)
-                        }
-                        PrimaryButton(
-                            text = "Show ads",
-                            onClick = { onConsentChange(true) },
+    val c = Kit.colors
+    Group(modifier) {
+        Cell {
+            Column(
+                Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                Badge("Ad", color = c.gray)
+                when (consent) {
+                    null -> {
+                        Text(
+                            "Show an ad here? Ads help support the shop. They come from Adsterra and appear only in the games and on waiting or completed orders.",
+                            style = KitType.subhead,
+                            color = c.label2,
+                            textAlign = TextAlign.Center,
                         )
+                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.padding(top = 4.dp)) {
+                            KitButton("No thanks", { onConsentChange(false) }, Modifier.weight(1f), style = ButtonStyle.Gray, size = ButtonSize.Medium)
+                            KitButton("Show ads", { onConsentChange(true) }, Modifier.weight(1f), size = ButtonSize.Medium)
+                        }
                     }
-                }
-                false -> {
-                    TextButton(onClick = { onConsentChange(true) }) {
-                        Text("Show ads to support the shop", color = Brand.colors.accent)
-                    }
-                }
-                true -> {
-                    AdFrameContent(
-                        adKey = adKey,
-                        scriptHost = scriptHost,
-                        onTurnOff = { onConsentChange(false) },
-                    )
+                    false -> KitButton("Show ads to support the shop", { onConsentChange(true) }, style = ButtonStyle.Plain, size = ButtonSize.Small)
+                    true -> AdFrameContent(adKey = adKey, scriptHost = scriptHost, onTurnOff = { onConsentChange(false) })
                 }
             }
         }
@@ -116,6 +102,7 @@ private fun AdFrameContent(
     scriptHost: String,
     onTurnOff: () -> Unit,
 ) {
+    val c = Kit.colors
     var reloadNonce by remember { mutableIntStateOf(0) }
     var fillState by remember(reloadNonce) { mutableStateOf(AdFillState.LOADING) }
 
@@ -126,19 +113,10 @@ private fun AdFrameContent(
     }
 
     if (fillState == AdFillState.EMPTY) {
-        Text(
-            "No ad to show right now.",
-            style = MaterialTheme.typography.bodySmall,
-            color = Brand.colors.muted,
-            textAlign = TextAlign.Center,
-        )
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            OutlinedButton(onClick = { reloadNonce++ }) {
-                Text("Try again", color = Brand.colors.accent)
-            }
-            TextButton(onClick = onTurnOff) {
-                Text("Turn off ads", color = Brand.colors.muted)
-            }
+        Text("No ad to show right now.", style = KitType.subhead, color = c.label2, textAlign = TextAlign.Center)
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            KitButton("Try again", { reloadNonce++ }, style = ButtonStyle.Tinted, size = ButtonSize.Small)
+            KitButton("Turn off ads", onTurnOff, style = ButtonStyle.Gray, size = ButtonSize.Small)
         }
         return
     }
@@ -154,18 +132,13 @@ private fun AdFrameContent(
             onFilled = { fillState = AdFillState.FILLED },
         )
         if (fillState == AdFillState.LOADING) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp, color = Brand.colors.accent)
-                Text("Loading ad…", style = MaterialTheme.typography.bodySmall, color = Brand.colors.muted)
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Spinner(size = 16.dp)
+                Text("Loading ad…", style = KitType.footnote, color = c.label2)
             }
         }
     }
-    TextButton(onClick = onTurnOff) {
-        Text("Turn off ads", color = Brand.colors.muted)
-    }
+    KitButton("Turn off ads", onTurnOff, style = ButtonStyle.Plain, size = ButtonSize.Small)
 }
 
 @SuppressLint("SetJavaScriptEnabled")
