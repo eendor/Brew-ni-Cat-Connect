@@ -2027,3 +2027,18 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `feat/android-arcade`.
 - **Known limitations:** Personal bests stay on the device and are not synced to the account. The website has no arcade yet.
 - **Next action:** Ask the owner and lead before publishing the v1.0.0 GitHub release with `BrewNiCatConnect.apk`.
+
+## 2026-11-17 — Phase 8: Android ad links open only on a tap
+
+- **Phase:** Phase 8 (FR-090, NFR-036).
+- **Task:** The lead's review of the Android code on `main` (`Auth.kt`, `Account.kt`, `AdCard.kt`).
+- **Summary:** The ad WebView opened every `http(s)` navigation in Chrome Custom Tabs, including redirects an ad fires by itself without a tap. Such an ad could keep pushing the customer out of the app. Now only a navigation that comes from a tap (`WebResourceRequest.hasGesture()`) opens a page, and any other navigation is blocked. The rest of the review found no issues:
+  - Sign-in exchanges a code only with the PKCE verifier kept encrypted on the device, so a forged callback link cannot sign anyone in.
+  - Account calls go through Supabase REST under RLS.
+  - The JavaScript bridge only reports that an ad filled the frame.
+  - File and content access stay off.
+- **Files:** `android/app/src/main/java/com/brewnicat/connect/ui/screens/AdCard.kt`, `tests/unit/android-app.test.ts`, `docs/{test-cases,development-log}.md`.
+- **Testing:** `npx vitest run tests/unit/android-app.test.ts` (TC-P8-042); `./gradlew testDebugUnitTest assembleRelease lintRelease`.
+- **Branch / PR:** `fix/android-ad-tap-only`.
+- **Known limitations:** On the website's offline page, the logo and footer images show as broken because they are not cached (seen in PR #148's MAN-P8-022 screenshot). This is a web follow-up.
+- **Next action:** Ask the owner and lead before publishing the v1.0.0 GitHub release with `BrewNiCatConnect.apk`.

@@ -177,7 +177,9 @@ private fun AdWebView(
                     override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
                         val uri = request?.url ?: return false
                         if (uri.scheme == "data" || uri.scheme == "about") return false
-                        if (uri.scheme == "https" || uri.scheme == "http") {
+                        // Only a tap on the ad may open a page. An ad that redirects on its own
+                        // (no user gesture) is blocked instead of throwing the customer into a browser.
+                        if (request.hasGesture() && (uri.scheme == "https" || uri.scheme == "http")) {
                             runCatching { CustomTabsIntent.Builder().build().launchUrl(context, uri) }
                                 .onFailure { runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, uri)) } }
                         }
