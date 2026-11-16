@@ -110,6 +110,8 @@ export function shopFacts(
     origin: string;
     /** Today's posts on the Page (FR-114). */
     posts?: readonly PagePost[];
+    /** Whether the POS has a sale today; null or missing when unknown. */
+    counterActive?: boolean | null;
   }>,
 ): string {
   const { content } = input;
@@ -120,7 +122,7 @@ export function shopFacts(
   const riders = content.riders.partners.map((partner) => partner.name);
   const lines = [
     `Shop: Brew ni Cat, a small cat café. Website: ${input.origin}`,
-    `Right now: ${posted ?? openStatusText(content, input.now)}`,
+    `Right now: ${posted ?? openStatusText(content, input.now, input.counterActive)}`,
     closedTodayText(content.closure),
     postsFact(posts),
     `Hours: ${hoursSentence(content.hours)} ${content.hours.note}`.trim(),

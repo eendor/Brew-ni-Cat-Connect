@@ -67,6 +67,23 @@ async function readTakeoutBoxPrice(): Promise<number | null> {
   }
 }
 
+/**
+ * Whether the POS has rung up a sale today (FR-112 update, 2026-11-17); null
+ * when it can't be read, so the reply falls back to the hours alone.
+ */
+export async function readCounterActiveToday(): Promise<boolean | null> {
+  try {
+    const answer = await getPublicSupabaseClient(null)
+      .rpc("shop_counter_active_today")
+      .abortSignal(AbortSignal.timeout(READ_TIMEOUT_MS));
+    return !answer.error && typeof answer.data === "boolean"
+      ? answer.data
+      : null;
+  } catch {
+    return null;
+  }
+}
+
 /** Placing an order may take longer than a read. */
 const PLACE_TIMEOUT_MS = 10_000;
 
@@ -260,6 +277,7 @@ export function createMessengerDeps(
     askAssistant: smartReplyAssistant(),
     noteStaffReply: (sender) => noteStaffReply(appSecret, sender),
     readStaffReply: (sender) => readStaffReply(appSecret, sender),
+    readCounterActiveToday,
     readTodaysPosts: () =>
       readTodaysPosts({
         listPosts: graph.listPosts,

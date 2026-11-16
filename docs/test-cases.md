@@ -1768,3 +1768,13 @@ FR-088: rewards and game prizes the owner manages, with cost, stock and a daily 
 | TC-P9-064  | FR-088, FR-091         | Wording helpers | Code states ready, expired and used; availability only for low stock; refusal messages; prize chance wording | Passed (automated) |
 | MAN-P9-004 | FR-088, FR-091         | After the migration is applied: the owner sets a stock on a reward and adds a prize in the POS Rewards screen; a customer redeems and wins on the live site; staff check and use both codes in the POS, then try again | The stock, prize and codes show; each code is accepted once and refused the second time | Not run yet (needs the live migration) |
 
+## 63. Messenger Knows When The Counter Is Quiet (2026-11-17)
+
+FR-112 update. Migration `20261117130000_counter_active_today.sql`.
+
+| ID        | Requirement | Case | Expected result | Status |
+| --------- | ----------- | ---- | --------------- | ------ |
+| TC-P9-065 | FR-112      | PGlite: ask as a guest with no sale, a sale just before Manila midnight, a voided sale today, then a sale today; apply the rollback | No, no, no, then yes; the function is gone after the rollback | Passed (automated) |
+| TC-P9-066 | FR-112      | Status line on Monday at 2 PM (open 10 to 6) with no sale, at 11 AM with no sale, with a sale, unknown, and after closing; the Gemini facts with no sale | "We should be open now until 6 PM, but the counter hasn't had an order yet today…" only at 2 PM with no sale; the facts carry the same line | Passed (automated) |
+| TC-P9-067 | FR-112      | "close kayo ngayon?" with no sale today; "open po kayo today?" with a sale and with the check failing | The careful answer with Talk to staff; the plain "Yes, we're open now until 6 PM!" both times | Passed (automated) |
+

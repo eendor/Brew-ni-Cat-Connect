@@ -927,6 +927,26 @@ describe("Smart replies (ADR-031)", () => {
     expect(texts()[0]).toMatch(/^🟢 Yes, we're open now until 6 PM!/);
     expect(askAssistant).not.toHaveBeenCalled();
   });
+
+  it("TC-P9-067 — with no sale at the counter today it says 'should be open' and offers the staff; an unknown counter keeps the plain answer", async () => {
+    const quiet = setup({
+      readCounterActiveToday: vi.fn().mockResolvedValue(false),
+    });
+    await processWebhook(delivery(typed("close kayo ngayon?")), quiet.deps);
+    expect(quiet.texts()[0]).toMatch(
+      /^🟢 We should be open now until 6 PM, but the counter hasn't had an order yet today\./,
+    );
+    expect(quiet.texts()[0]).toContain("Talk to staff");
+
+    for (const read of [
+      vi.fn().mockResolvedValue(true),
+      vi.fn().mockRejectedValue(new Error("down")),
+    ]) {
+      const { deps, texts } = setup({ readCounterActiveToday: read });
+      await processWebhook(delivery(typed("open po kayo today?")), deps);
+      expect(texts()[0]).toMatch(/^🟢 Yes, we're open now until 6 PM!/);
+    }
+  });
 });
 
 /** A message the Page sent, echoed back by Meta (FR-113). */

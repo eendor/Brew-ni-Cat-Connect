@@ -107,6 +107,8 @@ export type MessengerDeps = OrderFlowDeps &
     readStaffReply?: (customer: string) => Promise<number | null>;
     /** Today's posts on the Page (FR-114); [] when none or unknown. */
     readTodaysPosts?: () => Promise<readonly PagePost[]>;
+    /** Whether the POS has a sale today; null when unknown (2026-11-17). */
+    readCounterActiveToday?: () => Promise<boolean | null>;
   }>;
 
 const MINUTE_MS = 60 * 1000;
@@ -329,6 +331,8 @@ type Facts = Readonly<{
   menu: () => Promise<MenuCatalog | null>;
   /** Today's posts on the Page; [] when none or unknown. */
   posts: () => Promise<readonly PagePost[]>;
+  /** Whether the POS has a sale today; null when unknown. */
+  counterActive: () => Promise<boolean | null>;
 }>;
 
 /** Reads once per delivery, and only when a reply needs it. */
@@ -484,11 +488,12 @@ async function answerText(
   // A short "are you open?" or hours question says whether the shop is open
   // right now, then the hours and location (2026-11-11, updated 2026-11-13).
   if (typedHoursQuestion(text)) {
-    const [content, posts] = await Promise.all([
+    const [content, posts, counterActive] = await Promise.all([
       facts.content(),
       facts.posts(),
+      facts.counterActive(),
     ]);
-    return plain(openNowReply(content, now, posts));
+    return plain(openNowReply(content, now, posts, counterActive));
   }
   return plain(await answerQuestion(sender, text, deps, facts));
 }
@@ -510,10 +515,11 @@ async function answerQuestion(
   ) {
     return questionForStaffReply(content, now);
   }
-  const [menu, takeoutBoxPrice, posts] = await Promise.all([
+  const [menu, takeoutBoxPrice, posts, counterActive] = await Promise.all([
     facts.menu(),
     deps.readTakeoutBoxPrice().catch(() => null),
     facts.posts(),
+    facts.counterActive(),
   ]);
   const answer = await ask(
     shopFacts({
@@ -524,6 +530,7 @@ async function answerQuestion(
       onlineOrdering: deps.onlineOrdering(),
       origin: deps.origin,
       posts,
+      counterActive,
     }),
     text,
   ).catch(() => null);
@@ -659,6 +666,13 @@ export async function processWebhook(
         return (await deps.readTodaysPosts?.()) ?? [];
       } catch {
         return [];
+      }
+    }),
+    counterActive: once(async () => {
+      try {
+        return (await deps.readCounterActiveToday?.()) ?? null;
+      } catch {
+        return null;
       }
     }),
   };
