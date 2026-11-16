@@ -10,6 +10,10 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.brewnicat.connect.BuildConfig
 import com.brewnicat.connect.data.AdConfig
+import com.brewnicat.connect.data.AppInstaller
+import com.brewnicat.connect.data.AppRelease
+import com.brewnicat.connect.data.AppUpdate
+import com.brewnicat.connect.data.AppUpdateClient
 import com.brewnicat.connect.data.Api
 import com.brewnicat.connect.data.ApiAuthException
 import com.brewnicat.connect.data.AuthCallback
@@ -862,9 +866,82 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    // In-app updates from the shop's website (FR-117)
+    private val updateClient = AppUpdateClient(BuildConfig.SITE_URL)
+    private val installer = AppInstaller(app)
+    private var pendingApk: java.io.File? = null
+
+    /** A newer build on the website, once checked. */
+    var availableUpdate by mutableStateOf<AppRelease?>(null); private set
+    var updatePromptOpen by mutableStateOf(false); private set
+    var updateChecking by mutableStateOf(false); private set
+    /** 0 to 1 while the APK downloads, otherwise null. */
+    var updateProgress by mutableStateOf<Float?>(null); private set
+    /** A one-off message for a toast. */
+    var updateMessage by mutableStateOf<String?>(null); private set
+
+    fun checkForUpdate(manual: Boolean = false) {
+        if (updateChecking || updateProgress != null) return
+        updateChecking = true
+        viewModelScope.launch {
+            val latest = updateClient.latest()
+            updateChecking = false
+            availableUpdate = latest?.takeIf { AppUpdate.isNewer(it, BuildConfig.VERSION_CODE) }
+            if (manual) {
+                when {
+                    availableUpdate != null -> updatePromptOpen = true
+                    latest == null -> updateMessage = "We couldn't check for updates. Check your connection and try again."
+                    else -> updateMessage = "You have the latest version."
+                }
+            } else {
+                val snooze = store.updateSnooze()
+                if (AppUpdate.shouldPrompt(latest, BuildConfig.VERSION_CODE, snooze?.first, snooze?.second ?: 0L, System.currentTimeMillis())) {
+                    updatePromptOpen = true
+                }
+            }
+        }
+    }
+
+    fun snoozeUpdate() {
+        updatePromptOpen = false
+        availableUpdate?.let { store.saveUpdateSnooze(it.versionCode, System.currentTimeMillis()) }
+    }
+
+    fun startUpdate() {
+        val release = availableUpdate ?: return
+        updatePromptOpen = false
+        if (updateProgress != null) return
+        updateProgress = 0f
+        viewModelScope.launch {
+            val apk = updateClient.download(release, installer.downloadDir) { updateProgress = it }
+            updateProgress = null
+            when {
+                apk == null -> updateMessage = "The update didn't download completely. Please try again."
+                installer.canInstall() -> { if (!installer.install(apk)) updateMessage = "Android couldn't open the installer." }
+                else -> {
+                    // Android asks once for permission to install updates; finish when the customer comes back.
+                    pendingApk = apk
+                    updateMessage = "Allow Brew ni Cat to install updates, then come back to finish."
+                    installer.openInstallSetting()
+                }
+            }
+        }
+    }
+
+    /** Called when the app comes back to the front, after the install permission screen. */
+    fun resumePendingUpdate() {
+        val apk = pendingApk ?: return
+        if (!installer.canInstall()) return
+        pendingApk = null
+        if (apk.exists()) installer.install(apk)
+    }
+
+    fun clearUpdateMessage() { updateMessage = null }
+
     init {
         loadMenu()
         if (session != null) loadAccountSummary()
+        checkForUpdate()
     }
 
     companion object {

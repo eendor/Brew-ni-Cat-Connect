@@ -123,4 +123,7 @@ keytool -list -v -keystore connect-release.jks -alias connect | grep SHA256
 1. Raise `versionCode` (and `versionName`) in `app/build.gradle.kts`.
 2. Build the signed APK as above.
 3. Check it: `apksigner verify --print-certs app/build/outputs/apk/release/app-release.apk`.
-4. Attach it to the GitHub release as `BrewNiCatConnect.apk`.
+4. Publish it on the website (FR-116, FR-117, ADR-038): replace the APK in `public/android/` with `brew-ni-cat-connect-<versionName>.apk` (delete the old one), and update `public/android/latest.json` with the new `versionCode`, `versionName`, `url`, `size` (`stat -c %s`), `sha256` (`sha256sum`) and short `notes`. TC-P9-068 checks they match. Once merged and deployed, installed apps offer the update.
+5. Also attach it to the GitHub release as `BrewNiCatConnect.apk`.
+
+The app installs an update only when it is signed with the same key, so always build releases with the key in `~/.config/brew-ni-cat/android/` (`BNC_ANDROID_KEYSTORE_PROPERTIES`) and keep a backup of it.

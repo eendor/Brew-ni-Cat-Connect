@@ -84,7 +84,7 @@ describe("Android app", () => {
     ).toBe(false);
   });
 
-  it("TC-P8-024 — the Android project commits no backend key or address and asks only for internet access", () => {
+  it("TC-P8-024 — the Android project commits no backend key or address and asks only for internet access and installing its own updates", () => {
     expect(projectText).not.toMatch(/https:\/\/[a-z0-9]{20}\.supabase\.co/);
     expect(projectText).not.toMatch(/service_role|sb_secret_|sb_publishable_/i);
     expect(projectText).not.toMatch(/eyJ[A-Za-z0-9_-]{20,}/);
@@ -97,7 +97,11 @@ describe("Android app", () => {
     const permissions = [
       ...androidManifest.matchAll(/uses-permission android:name="([^"]+)"/g),
     ].map((match) => match[1]);
-    expect(permissions).toEqual(["android.permission.INTERNET"]);
+    // Update 2026-11-17 (FR-117): installing updates from the shop's website.
+    expect(permissions).toEqual([
+      "android.permission.INTERNET",
+      "android.permission.REQUEST_INSTALL_PACKAGES",
+    ]);
     expect(androidManifest).toContain('android:allowBackup="false"');
   });
 

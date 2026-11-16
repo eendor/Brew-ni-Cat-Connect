@@ -74,8 +74,9 @@ describe("Home page", () => {
     expect(maps).toHaveAttribute("rel", "noopener noreferrer");
 
     // four fact labels, the address pin and the Maps button
+    // Update 2026-11-17 (FR-116): plus the Android section's phone and download icons.
     const icons = container.querySelectorAll("svg");
-    expect(icons).toHaveLength(6);
+    expect(icons).toHaveLength(8);
     icons.forEach((icon) => {
       expect(icon).toHaveAttribute("aria-hidden", "true");
       expect(icon).toHaveAttribute("focusable", "false");
