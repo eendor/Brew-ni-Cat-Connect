@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import { AdSlot } from "@/components/ads/ad-slot";
 import { PlayWhileYouWait } from "@/components/games/play-while-you-wait";
+import { shouldShowOrderAd } from "@/lib/ads/ads";
 import { isWaitingForShop } from "@/lib/games/waiting-order";
 import { OrderStatusTracker } from "@/components/orders/order-status-tracker";
 import { siteConfig } from "@/config/site";
@@ -253,6 +255,9 @@ export default function OrderConfirmationPage() {
 
         {/* Cat games while the shop works on the order (FR-089) */}
         {isWaitingForShop(order.status) && <PlayWhileYouWait />}
+
+        {/* Consent-gated banner ad while waiting or once completed (FR-090 update) */}
+        {shouldShowOrderAd(order.status) && <AdSlot />}
 
         {/* Customer Details Card */}
         <div className="ios-card p-6">

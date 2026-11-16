@@ -94,6 +94,11 @@ function toneMapped(c: THREE.Color) {
 }
 
 describe("Daylight Glass theme (TC-P4-199 – TC-P4-203)", () => {
+  it("keeps the home hero text scrim present when the 3D scene falls back", () => {
+    expect(css).toContain(".showcase__sticky::after {");
+    expect(css).not.toContain(".showcase--3d .showcase__sticky::after {");
+  });
+
   it("TC-P4-199 — a backdrop color sent through tone mapping comes out as designed", () => {
     for (const hex of [
       STUDIO.canvas,

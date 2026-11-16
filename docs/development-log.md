@@ -1,7 +1,7 @@
 # Development Log
 
 **Document version:** 0.1 Draft\
-**Last updated:** 2026-11-13
+**Last updated:** 2026-11-15
 
 This log records completed work and observed evidence. Planned work is explicitly identified and is not reported as implemented or tested.
 
@@ -1971,3 +1971,47 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `feat/p8-android-app`.
 - **Known limitations:** The address bar hides only after `assetlinks.json` is live. A real phone run (MAN-P8-007, MAN-P8-008) is still to do. Google Play needs a developer account and a closed test first; the APK is shared through GitHub for now.
 - **Next action:** Check full screen on the live site, then publish the v1.0.0 release with the APK once the lead developer agrees.
+
+## 2026-11-14 — Phase 8: native Android app (phase 1)
+
+- **Phase:** Phase 8 (FR-065 to FR-069, NFR-036).
+- **Task:** The lead developer installed the Trusted Web Activity, saw it was running on Chrome, and asked for a native app.
+- **Summary:** Replaced the Trusted Web Activity in `android/` with a native Kotlin and Jetpack Compose app (ADR-036). It has Home, Menu, Orders and Visit tabs, an item options sheet (sizes, flavors, fries flavor mixes, add-ons), a cart kept across restarts, checkout with the website's validation, and order tracking that polls `get_online_order`. Orders go through the website's `/api/orders`, so the server keeps pricing, opening hours and rate limits. Menu mapping, pricing, cart, checkout, order parsing, opening hours and API rules are ported from the website and covered by 32 JVM unit tests. The public Supabase values are read at build time and not committed. Menu photos and the logo are bundled as WebP. Minimum Android rises to 8.0 (API 26). A debug-only mock backend (`android/tools/mock_backend.py`) answers orders in memory so checkout can be tried without touching the live shop. CI now also runs the JVM tests.
+- **Files:** `android/**`, `.github/workflows/ci.yml`, `tests/unit/android-app.test.ts`, `docs/decisions.md`, `docs/functional-requirements.md`, `docs/non-functional-requirements.md`, `docs/test-cases.md`, `docs/development-log.md`, `docs/evidence/phase-8-verification.md`, `docs/evidence/phase-8/android-app/`, `README.md`.
+- **Testing:** see the PR.
+- **Branch / PR:** `feat/p8-native-android`.
+- **Known limitations:** No sign-in, loyalty, profile, favorites, reviews, mini-games or ads in the app yet; the Visit tab links to the website's account page. Tracking polls instead of using Realtime. A real phone run (MAN-P8-007, MAN-P8-008) is still to do.
+- **Next action:** Google sign-in and the account screens, then mini-games and ads on the order screens.
+
+## 2026-11-15 — Phase 8: native Android app (phase 2: auth, loyalty & account)
+
+- **Phase:** Phase 8 (FR-031 to FR-055, FR-065 to FR-069, FR-098, NFR-036).
+- **Task:** Implement native customer authentication and account journeys on top of the Phase 1 ordering app merged in PR #150.
+- **Summary:** Added Google OAuth PKCE (`S256`) sign-in via Chrome Custom Tabs returning to `com.brewnicat.connect://auth/callback`, `AndroidKeyStore` AES-256-GCM encrypted token storage (`KeystoreTokenCipher`), automatic token refresh / 401 handling, and a 5th **Account** bottom tab with full native journeys: Rewards & points (`RWD-` counter code redemption + points history), Order history (with live catalog/price Reorder validation & pagination), Favorites (Menu/ItemSheet heart toggles + Favorites list), Profile prefill/editing (`09`/`+639` phone normalization), Shop reviews (guest & signed-in composer + public paginated ratings), and Data Privacy Act correction/deletion requests. Added `AuthTest`, `AccountTest`, `ReorderTest`, and expanded `ApiTest` (46 JVM tests total) plus contract checks `TC-P8-031`–`TC-P8-033`. Extended debug `tools/mock_backend.py` and verified all signed-in & guest flows end-to-end (including cold-restart Keystore decryption and dark mode) on the `bnc_phone` Android 15 emulator. Added `com.brewnicat.connect://auth/callback` to Supabase Auth's redirect allowlist.
+- **Files:** `android/**`, `tests/unit/android-app.test.ts`, `README.md`, `docs/{decisions,functional-requirements,test-cases,development-log}.md`, `docs/evidence/phase-8-verification.md`, `docs/evidence/phase-8/android-app/`.
+- **Testing:** see the PR.
+- **Branch / PR:** `feat/p8-native-auth`.
+- **Known limitations:** Real Google OAuth consent (`MAN-P8-009`) needs an interactive Google account on device; native mini-games and ads follow in phase 3 (`feat/p8-native-games-ads`).
+- **Next action:** Phase 3 (mini-games popup and waiting/completed order ads for both Android and website).
+
+## 2026-11-15 — Phase 8 & 9: waiting mini-games popup and waiting/completed order ads
+
+- **Phase:** Phase 8 & Phase 9 (FR-065, FR-066, FR-089, FR-090).
+- **Task:** Add in-place mini-games popups for waiting orders (`pending`, `accepted`, `preparing`) and show consent-gated 300x250 Adsterra ads only in mini-games and on waiting or `completed` order views across both the website and native Android app.
+- **Summary:** On the website, `PlayWhileYouWait` adds a **Play popup** button opening a viewport-portal modal (`createPortal` with `<GamesView embedded />`) alongside the `/games` link, `src/lib/ads/ads.ts` removes `/orders` from `AD_FREE_PREFIXES` and adds `shouldShowOrderAd(status)`, `src/app/orders/[reference]/page.tsx` renders `<AdSlot />` on waiting and `completed` orders only, and `PRIVACY_POLICY_UPDATED` bumps to `2026-11-15`. On native Android, bundled Aseprite cat sprite sheets (`cat_oreo.png`, `cat_latte.png`, `cat_kulas.png`) power crisp pixel art (`FilterQuality.None`) in `MiniGamesDialog` (backed by `mini_game_status` and `play_mini_game` RPCs), which auto-opens once for newly placed waiting orders, and `AdsterraAdCard` renders inside an opaque `data:` URL `WebView` with `@JavascriptInterface` fill detection (retained via R8 keep rule in `proguard-rules.pro`) only on waiting and `completed` orders. Extended `tools/mock_backend.py` (`/mock-ad/`, mini-game RPCs, `BNC-PAST23`) and verified all waiting, ready, completed, light/dark, and consent toggle flows end-to-end on the `bnc_phone` Android 15 emulator (`TC-P8-037`) plus Chromium Playwright (`TC-P9-050`, `TC-P9-053`) and JVM/Vitest tests (`TC-P8-035`, `TC-P8-036`).
+- **Files:** `src/{lib/ads/ads.ts,components/ads/ad-slot.tsx,components/games/{games-view.tsx,play-while-you-wait.tsx,cat-cups.tsx},app/orders/[reference]/page.tsx,config/privacy.ts}`, `android/{app/build.gradle.kts,app/proguard-rules.pro,app/src/main/res/drawable-nodpi/cat_{oreo,latte,kulas}.png,app/src/main/java/com/brewnicat/connect/{data/{Ads,Games,Store,Api}.kt,ui/{AppViewModel.kt,screens/{AdCard,GamesDialog,OrdersScreen}.kt}},tools/mock_backend.py,app/src/test/...}`, `tests/{unit/{ad-slot,privacy-page,order-confirmation-page,android-app}.test.*,e2e/play-while-waiting.spec.ts}`, `README.md`, `android/README.md`, `docs/{decisions,functional-requirements,security-and-privacy,test-cases,development-log}.md`, `docs/evidence/phase-8-verification.md`, `docs/evidence/{phase-8/android-app,phase-9/play-while-waiting}/`.
+- **Testing:** see the PR.
+- **Branch / PR:** `feat/p8-native-games-ads`.
+- **Known limitations:** Real Adsterra ads load only when `NEXT_PUBLIC_AD_KEY` is configured at build time and a non-headless browser/device accepts the consent prompt (`MAN-P9-003`). Real phone release installation (`MAN-P8-007`) and live Google OAuth consent (`MAN-P8-009`) remain manual.
+- **Next action:** Open PR for `feat/p8-native-games-ads`, verify CI checks, squash-merge into `main`, and await owner/lead approval before publishing the v1.0.0 GitHub release with `BrewNiCatConnect.apk`.
+
+## 2026-11-16 — Phase 8: Android UI redesign
+
+- **Phase:** Phase 8 (FR-066, NFR-036).
+- **Task:** The lead developer found the native app generic and "still a stock Material app" and asked for it to be rebuilt on Apple's iOS 27 UI Kit (Sketch community file). Change the look without changing any behaviour.
+- **Summary:** Removed Material 3 completely and added a small Compose Foundation design system in `ui/kit` that follows the iOS 27 kit: system colours and grouped backgrounds (light `#F2F2F7`, dark `#000`/`#1C1C1E`), the brand green as the tint, the kit's type scale with title tracking tuned for Inter, large titles that collapse into a glass navigation bar, inset grouped lists and cells, capsule buttons, segmented controls, steppers, switches, bottom sheets and alerts, and a floating glass tab bar with a cart pill. Glass uses Haze (real blur on Android 12+, a tinted fill below). Every screen was rebuilt on the kit: Home, Menu (capsule category tabs), item sheet, Cart, Checkout, Orders, order tracking, the mini-games sheet, the ad consent card, Account (Settings-style), Order history, Favorites, Profile, Rewards, Points history, Shop reviews, Data requests and Visit. Inter stands in for SF Pro and Lucide for SF Symbols (`android/THIRD_PARTY_NOTICES.md`). No data, API or navigation logic changed; Custom Tabs sign-in and the ad WebView isolation are unchanged.
+- **Files:** `android/app/src/main/java/com/brewnicat/connect/ui/{BrewApp.kt,kit/*,screens/*}`, `android/app/src/main/res/font/inter.ttf`, `android/app/build.gradle.kts`, `android/{README,THIRD_PARTY_NOTICES}.md`, `docs/{functional-requirements,test-cases,development-log}.md`, `docs/evidence/phase-8/android-app/redesign-*.png`.
+- **Testing:** `testDebugUnitTest`, `assembleRelease` and `lintRelease` pass (0 errors, 0 warnings); `tests/unit/android-app.test.ts` passes. On the `bnc_phone` emulator (Android 15) with `tools/mock_backend.py`, every screen was walked in light and dark mode, an order was placed, the games sheet opened and Cat cups was won (TC-P8-038). A duplicate-key crash in Order history (two history rows with the same id) was found and fixed during the walk.
+- **Branch / PR:** `feat/android-ui-redesign`, PR #153.
+- **Known limitations:** Below Android 12 the glass is a tinted fill, not a blur. The website has no matching redesign yet (follow-up).
+- **Next action:** Free-play arcade games for the waiting popup (separate PR).

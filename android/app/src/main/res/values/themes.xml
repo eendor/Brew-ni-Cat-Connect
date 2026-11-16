@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Shown while the app starts: the round logo on the brand canvas. -->
+    <style name="Theme.BrewNiCat.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/brand_cream</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_foreground</item>
+        <item name="postSplashScreenTheme">@style/Theme.BrewNiCat</item>
+    </style>
+
+    <style name="Theme.BrewNiCat" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/brand_cream</item>
+    </style>
+</resources>
