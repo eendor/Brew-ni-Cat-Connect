@@ -2123,3 +2123,7 @@ This log records completed work and observed evidence. Planned work is explicitl
 - 1.0.3 (versionCode 6) is the same code built with the settings. 1.0.2 can still read `latest.json` from the website, so it offers 1.0.3 itself.
 - `app/build.gradle.kts` now refuses a signed release build when `NEXT_PUBLIC_SUPABASE_URL` or `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` is missing. The release steps in `android/README.md` now include installing the build and signing in once before publishing.
 
+## 2026-11-17 — Phase 9 manual checks
+
+- MAN-P9-004 (POS Rewards & Codes) and MAN-P9-007 (Google profile photos) passed, run by the lead developer.
+- MAN-P9-005 and MAN-P9-006 partly passed: in-app updates to Connect 1.0.2 and 1.0.3 and to POS 10150 worked on real devices. Installing over 1.0.0 from the home page and the wrong-hash refusal were not run.
