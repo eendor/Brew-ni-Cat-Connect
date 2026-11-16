@@ -1343,6 +1343,33 @@ Run on 2026-11-10: `NODE_OPTIONS=--no-experimental-webstorage npx vitest run` wi
 | TC-P7-080 | FR-101 | The phone number button sends a number that isn't a Philippine mobile (a foreign or landline number on the Facebook account) | Update 2026-11-11: the same reply as TC-P7-075 asks the customer to type "order 09XXXXXXXXX"; the button is not offered again | Passed (automated) |
 | TC-P7-081 | FR-101 | The phone number button sends a number the bot can't use, or a number written as 0063 9XX XXX XXXX | Update 2026-11-11: the log shows only the format (digits as d, letters as a) and the length, never the number; 0063 numbers are accepted | Passed (automated) |
 
+## 46. Phase 7 Integrated QA Execution Summary
+
+Run on 2026-11-11 by the integrated QA engineer, on `main` at `f82be0d` (branch `test/p7-integrated-qa-main`, PR #147). Environment: Windows (win32), Node.js, Next.js 16 production build, Vitest for unit and database tests, and Playwright for browser tests. No live orders were placed, and no production database or POS data changed during the run. The Messenger checks used a test Facebook Page chat.
+
+Update 2026-11-17 (PR #147 review): this section first landed inside §52, and its manual checks reused MAN-P7-001 to MAN-P7-008, which §44b, §47 and §51 already use for other checks. The checks below are renumbered QA-P7-01 to QA-P7-08; their wording and results are unchanged.
+
+### Live and Manual Checks
+
+| ID | Check | Device | Result | Status |
+| --- | --- | --- | --- | --- |
+| LIVE-P7-01 | Verification request with wrong token | Live API (`/api/messenger`) | HTTP 403 Forbidden | Passed |
+| LIVE-P7-02 | Message without valid signature | Live API (`/api/messenger`) | HTTP 401 Unauthorized | Passed |
+| QA-P7-01 | Automated assistant greeting & quick replies | Test Facebook Page chat | Assistant identifies as automated assistant and shows quick replies | Passed |
+| QA-P7-02 | Asking for the menu | Test Facebook Page chat | Menu and prices match the website catalog | Passed |
+| QA-P7-03 | Asking for the hours | Test Facebook Page chat | Opening hours match the Contact page | Passed |
+| QA-P7-04 | Asking how to order | Test Facebook Page chat | Explains pickup on website and customer-arranged rider delivery | Passed |
+| QA-P7-05 | Asking for order status & proof verification | Test Facebook Page chat | Requires proof first; wrong reference/proof displays safe refusal | Passed |
+| QA-P7-06 | Asking for a person (staff handoff) | Test Facebook Page chat | Successfully hands chat over to staff | Passed |
+| QA-P7-07 | Tagalog message handling | Test Facebook Page chat | Tagalog inquiry receives accurate Tagalog response | Passed |
+| QA-P7-08 | Unknown message fallback | Test Facebook Page chat | Helpful fallback message displayed with quick reply choices | Passed |
+
+**Phase 7 PRs Covered:**
+
+- #106: `feat/p7-messenger` — Messenger assistant webhook with button replies (FR-058 to FR-063) - MERGED
+- FR-064 (recommendations) - Deferred.
+- Waiting PRs: None.
+
 ## 47. Closed Today Switch Cases (2026-11-11)
 
 The owner asked for a switch in the POS app to close the shop for the day (FR-111). §46 is kept for the Phase 8 QA cases.
@@ -1465,9 +1492,6 @@ Customers often type "open po ba kayo?" instead of tapping a button, and it got 
 | TC-P7-089  | FR-059      | One delivery with "Hello po, open po ba kayo today?" and "pa order po bukas"                                  | One reply with the automated notice, the hours and the address; the other message is skipped | Passed (automated) |
 | MAN-P7-008 | FR-059      | From a tester account, send "open po ba kayo?" to the Page                                                    | The assistant replies with the hours and location within a few seconds                     | Pending            |
 
-## 46. Phase 7 Integrated QA Execution Summary
-
-Run on 2026-11-11 by Renier P. Apal, the integrated QA engineer, on `main` at `f82be0d` (branch `test/p7-integrated-qa-main`). Environment: Windows (win32), Node.js, Next.js 16 production build, Vitest for unit and database tests, and Playwright for browser tests. No live orders were placed, and no production database or POS data changed during the run.
 ## 52. Phase 5 Integrated QA Execution Summary
 
 Run on 2026-11-11 by Renier P. Apal, the integrated QA engineer, on `main` at `f82be0d` (branch `test/p5-integrated-qa-main`). Environment: Windows (win32), Node.js, Next.js 16 production build, Vitest for unit and database tests, and Playwright for browser tests. No live orders were placed, and no production database or POS data changed during the run.
@@ -1476,7 +1500,7 @@ Run on 2026-11-11 by Renier P. Apal, the integrated QA engineer, on `main` at `f
 | --- | --- | --- |
 | Dependency audit | `npm run audit` | Passed: 0 vulnerabilities in production packages. |
 | Docs validator | `python scripts/validate_phase0_docs.py` | `PHASE0_DOC_VALIDATION=PASS` |
-| Unit and database tests | `$env:NODE_OPTIONS="--no-experimental-webstorage --max-old-space-size=4096"; npx vitest run --maxWorkers=2` | 96 test files passed, 1015 tests passed. |
+| Unit and database tests | `$env:NODE_OPTIONS="--no-experimental-webstorage"; npx vitest run` | 96 test files passed, 1015 tests passed. |
 | Typecheck | `npm run typecheck` | Passed |
 | Lint | `npm run lint` | Passed with 0 errors and 0 warnings |
 | Format | `npm run format:check` | Passed |
@@ -1487,21 +1511,6 @@ Run on 2026-11-11 by Renier P. Apal, the integrated QA engineer, on `main` at `f
 
 | ID | Check | Device | Result | Status |
 | --- | --- | --- | --- | --- |
-| LIVE-P7-01 | Verification request with wrong token | Live API (`/api/messenger`) | HTTP 403 Forbidden | Passed |
-| LIVE-P7-02 | Message without valid signature | Live API (`/api/messenger`) | HTTP 401 Unauthorized | Passed |
-| MAN-P7-001 | Automated assistant greeting & quick replies | Test Facebook Page chat | Assistant identifies as automated assistant and shows quick replies | Passed |
-| MAN-P7-002 | Asking for the menu | Test Facebook Page chat | Menu and prices match the website catalog | Passed |
-| MAN-P7-003 | Asking for the hours | Test Facebook Page chat | Opening hours match the Contact page | Passed |
-| MAN-P7-004 | Asking how to order | Test Facebook Page chat | Explains pickup on website and customer-arranged rider delivery | Passed |
-| MAN-P7-005 | Asking for order status & proof verification | Test Facebook Page chat | Requires proof first; wrong reference/proof displays safe refusal | Passed |
-| MAN-P7-006 | Asking for a person (staff handoff) | Test Facebook Page chat | Successfully hands chat over to staff | Passed |
-| MAN-P7-007 | Tagalog message handling | Test Facebook Page chat | Tagalog inquiry receives accurate Tagalog response | Passed |
-| MAN-P7-008 | Unknown message fallback | Test Facebook Page chat | Helpful fallback message displayed with quick reply choices | Passed |
-
-**Phase 7 PRs Covered:**
-- #106: `feat/p7-messenger` — Messenger assistant webhook with button replies (FR-058 to FR-063) - MERGED
-- FR-064 (recommendations) - Deferred.
-- Waiting PRs: None.
 | LIVE-01 | GET `/account/rewards` | Live site (`/account/rewards`) | HTTP 200 OK | Passed |
 | LIVE-02 | GET `/account` | Live site (`/account`) | HTTP 200 OK | Passed |
 | LIVE-03 | GET `/account/data-request` | Live site (`/account/data-request`) | HTTP 404 Not Found (handled via privacy policy / contact) | ~~Not run yet~~ Superseded 2026-11-13: PR #130 adds this route after the run, so the 404 is a historical result. Re-check after the next production deploy. |
