@@ -2117,3 +2117,9 @@ This log records completed work and observed evidence. Planned work is explicitl
 - Android 1.0.2 (versionCode 5) shows the photo on the Account tab and on reviews, with the same switch, through a small loader limited to Google's photo server and 512 KB. Published in `public/android/` so installed apps offer the update.
 - Privacy policy updated (2026-11-17). Tests TC-P9-074 to TC-P9-083 pass; MAN-P9-007 is left for a real Google account.
 
+## 2026-11-17 — Android 1.0.3: release build without its Supabase settings
+
+- 1.0.2 was built in a clean worktree without `.env.local`, so it shipped with no Supabase address or key. It installed and updated, but sign-in was greyed out and the menu showed as unavailable. Found when the lead's phone updated.
+- 1.0.3 (versionCode 6) is the same code built with the settings. 1.0.2 can still read `latest.json` from the website, so it offers 1.0.3 itself.
+- `app/build.gradle.kts` now refuses a signed release build when `NEXT_PUBLIC_SUPABASE_URL` or `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` is missing. The release steps in `android/README.md` now include installing the build and signing in once before publishing.
+

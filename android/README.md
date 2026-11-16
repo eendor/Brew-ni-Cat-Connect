@@ -122,7 +122,7 @@ keytool -list -v -keystore connect-release.jks -alias connect | grep SHA256
 
 1. Raise `versionCode` (and `versionName`) in `app/build.gradle.kts`.
 2. Build the signed APK as above.
-3. Check it: `apksigner verify --print-certs app/build/outputs/apk/release/app-release.apk`.
+3. Check it: `apksigner verify --print-certs app/build/outputs/apk/release/app-release.apk`. A signed release build stops if the Supabase settings are missing; in a separate worktree, export `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (and `NEXT_PUBLIC_AD_KEY`) from the main checkout's `.env.local` first. Then install it and sign in once before publishing.
 4. Publish it on the website (FR-116, FR-117, ADR-038): replace the APK in `public/android/` with `brew-ni-cat-connect-<versionName>.apk` (delete the old one), and update `public/android/latest.json` with the new `versionCode`, `versionName`, `url`, `size` (`stat -c %s`), `sha256` (`sha256sum`) and short `notes`. TC-P9-068 checks they match. Once merged and deployed, installed apps offer the update.
 5. Also attach it to the GitHub release as `BrewNiCatConnect.apk`.
 
