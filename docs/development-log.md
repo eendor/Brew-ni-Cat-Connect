@@ -2042,3 +2042,19 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Branch / PR:** `fix/android-ad-tap-only`.
 - **Known limitations:** On the website's offline page, the logo and footer images show as broken because they are not cached (seen in PR #148's MAN-P8-022 screenshot). This is a web follow-up.
 - **Next action:** Ask the owner and lead before publishing the v1.0.0 GitHub release with `BrewNiCatConnect.apk`.
+
+## 2026-11-17 — Phase 8: Android app v1.0.0 released
+
+- **Phase:** Phase 8 (FR-065 to FR-069, NFR-036).
+- **Task:** The lead approved publishing the v1.0.0 GitHub release.
+- **Summary:**
+  - Built the signed release APK from `main` at `b19bf70` with the release key, which is kept outside the repository.
+  - Checked that its certificate SHA-256 matches the live `assetlinks.json`.
+  - Installed it on a freshly wiped emulator: it showed the live menu and opening hours.
+  - Published [v1.0.0](https://github.com/eendor/Brew-ni-Cat-Connect/releases/tag/v1.0.0) with `BrewNiCatConnect.apk` (2.7 MB, SHA-256 `35f1a44f…8e6166`), then downloaded the asset again and compared its checksum (TC-P8-043).
+  - The README now links the download. The Phase 8 QA rows that waited on the release are updated.
+- **Files:** `README.md`, `docs/{test-cases,development-log}.md`.
+- **Testing:** `apksigner verify --print-certs`; `./gradlew testDebugUnitTest assembleRelease lintRelease`; emulator smoke test (Home, Menu); checksum of the downloaded asset.
+- **Branch / PR:** `docs/v1.0.0-release`.
+- **Known limitations:** The app is not on Google Play yet, so updates come from GitHub releases signed with the same key. There are no push notifications (FR-070 is deferred).
+- **Next action:** Run MAN-P8-007 to MAN-P8-009, MAN-P8-023 and MAN-P8-024 on a real Android phone with the released APK.
