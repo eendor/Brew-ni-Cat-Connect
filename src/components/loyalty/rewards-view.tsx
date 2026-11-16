@@ -61,15 +61,12 @@ export function RewardsView() {
       fetchLoyaltyBalance({ userId }),
       fetchLoyaltyRewards(),
       fetchLoyaltySettings(),
-      // the codes list is extra: the page still works if it can't load
-      fetchRewardCodes({ userId }).catch(() => [] as readonly RewardCode[]),
     ])
-      .then(([userBalance, activeRewards, programSettings, rewardCodes]) => {
+      .then(([userBalance, activeRewards, programSettings]) => {
         if (!active) return;
         setBalance(userBalance);
         setRewards(activeRewards);
         setSettings(programSettings);
-        setCodes(rewardCodes);
         setError(null);
         setIsLoading(false);
       })
@@ -82,6 +79,14 @@ export function RewardsView() {
         );
         setIsLoading(false);
       });
+
+    // The codes list is extra: it loads on its own so a slow or missing
+    // table never holds up the points and rewards.
+    fetchRewardCodes({ userId })
+      .then((rewardCodes) => {
+        if (active) setCodes(rewardCodes);
+      })
+      .catch(() => undefined);
 
     return () => {
       active = false;

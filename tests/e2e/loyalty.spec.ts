@@ -154,6 +154,10 @@ async function mockLoyaltyBackend(
   );
 
   // Mock loyalty_settings RPC
+  await page.route("**/rest/v1/reward_codes*", (route) =>
+    route.fulfill({ json: [] }),
+  );
+
   await page.route("**/rest/v1/rpc/loyalty_settings*", (route) =>
     route.fulfill({ json: mockSettings }),
   );
