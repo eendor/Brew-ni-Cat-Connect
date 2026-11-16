@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -42,6 +43,7 @@ import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.error
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
@@ -217,16 +219,20 @@ fun FieldRow(
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     singleLine: Boolean = true,
     minLines: Int = 1,
+    error: String? = null,
 ) {
     val c = Kit.colors
     val source = remember { MutableInteractionSource() }
     val focused by source.collectIsFocusedAsState()
     Row(modifier.fillMaxWidth().heightIn(min = 60.dp).padding(start = 16.dp, end = 6.dp, top = 9.dp, bottom = 9.dp), verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {
-            Text(label, style = KitType.footnote, color = if (focused) c.tint else c.label2)
+            Text(label, style = KitType.footnote, color = if (error != null) c.redText else if (focused) c.tint else c.label2)
             BasicTextField(
                 value, onValueChange,
-                modifier = Modifier.fillMaxWidth().padding(top = 2.dp).semantics { contentDescription = label },
+                modifier = Modifier.fillMaxWidth().padding(top = 2.dp).semantics {
+                    contentDescription = label
+                    if (error != null) error(error)
+                },
                 textStyle = KitType.body.copy(color = c.label),
                 keyboardOptions = keyboardOptions,
                 singleLine = singleLine,
@@ -240,6 +246,7 @@ fun FieldRow(
                     }
                 },
             )
+            if (error != null) Text(error, style = KitType.footnote, color = c.redText, modifier = Modifier.padding(top = 3.dp, end = 10.dp))
         }
         if (focused && value.isNotEmpty() && singleLine) {
             Box(Modifier.size(40.dp).pressable(scale = 0.85f) { onValueChange("") }.semantics { contentDescription = "Clear $label" }, contentAlignment = Alignment.Center) {
@@ -250,6 +257,24 @@ fun FieldRow(
         } else {
             Spacer(Modifier.width(10.dp))
         }
+    }
+}
+
+/** A cell with a switch. The whole row toggles, so it is one stop for a screen reader. */
+@Composable
+fun ToggleRow(title: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit, modifier: Modifier = Modifier, subtitle: String? = null) {
+    val c = Kit.colors
+    Row(
+        modifier.fillMaxWidth()
+            .toggleable(checked, interactionSource = null, indication = null, role = Role.Switch, onValueChange = onCheckedChange)
+            .heightIn(min = 52.dp).padding(horizontal = 16.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(title, style = KitType.body, color = c.label)
+            if (subtitle != null) Text(subtitle, style = KitType.subhead, color = c.label2, modifier = Modifier.padding(top = 1.dp))
+        }
+        Toggle(checked, null, Modifier.padding(start = 12.dp))
     }
 }
 

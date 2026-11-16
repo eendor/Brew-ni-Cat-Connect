@@ -116,13 +116,15 @@ fun IconButton(icon: ImageVector, contentDescription: String, onClick: () -> Uni
 
 /** The kit's switch: a 64 x 28 capsule, green when on, with a wide white knob. */
 @Composable
-fun Toggle(checked: Boolean, onCheckedChange: (Boolean) -> Unit, modifier: Modifier = Modifier) {
+fun Toggle(checked: Boolean, onCheckedChange: ((Boolean) -> Unit)?, modifier: Modifier = Modifier) {
     val c = Kit.colors
     val track by animateColorAsState(if (checked) c.green else c.fill, label = "toggleTrack")
     val x by animateDpAsState(if (checked) 23.dp else 2.dp, spring(dampingRatio = 0.7f, stiffness = Spring.StiffnessMediumLow), label = "toggleKnob")
     Box(
-        modifier.size(64.dp, 28.dp).clip(CircleShape).background(track)
-            .toggleable(checked, role = Role.Switch, onValueChange = onCheckedChange, interactionSource = null, indication = null),
+        modifier.size(64.dp, 28.dp).clip(CircleShape).background(track).then(
+            // Without a handler the switch only shows the state; the row that holds it does the toggling.
+            if (onCheckedChange != null) Modifier.toggleable(checked, role = Role.Switch, onValueChange = onCheckedChange, interactionSource = null, indication = null) else Modifier,
+        ),
     ) {
         Box(Modifier.offset { IntOffset(x.roundToPx(), 2.dp.roundToPx()) }.size(39.dp, 24.dp).softShadow(CircleShape, Color(0x29000000), 6.dp, 2.dp).clip(CircleShape).background(Color.White))
     }

@@ -1,186 +1,222 @@
 package com.brewnicat.connect.ui
 
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.dp
-import com.brewnicat.connect.R
-import com.brewnicat.connect.ui.kit.Alert
-import com.brewnicat.connect.ui.kit.Badge
-import com.brewnicat.connect.ui.kit.BarAction
-import com.brewnicat.connect.ui.kit.Block
-import com.brewnicat.connect.ui.kit.ButtonRow
-import com.brewnicat.connect.ui.kit.ButtonSize
-import com.brewnicat.connect.ui.kit.ButtonStyle
-import com.brewnicat.connect.ui.kit.CapsuleTabs
-import com.brewnicat.connect.ui.kit.CheckRow
-import com.brewnicat.connect.ui.kit.EmptyState
-import com.brewnicat.connect.ui.kit.FieldRow
-import com.brewnicat.connect.ui.kit.Gutter
-import com.brewnicat.connect.ui.kit.IconTile
+import com.brewnicat.connect.data.MenuItem
+import com.brewnicat.connect.data.Pricing
+import com.brewnicat.connect.ui.kit.Icon
 import com.brewnicat.connect.ui.kit.Kit
-import com.brewnicat.connect.ui.kit.KitButton
 import com.brewnicat.connect.ui.kit.KitIcons
-import com.brewnicat.connect.ui.kit.ListRow
+import com.brewnicat.connect.ui.kit.KitType
 import com.brewnicat.connect.ui.kit.LocalBackdrop
 import com.brewnicat.connect.ui.kit.LocalBottomInset
 import com.brewnicat.connect.ui.kit.LocalOverlayHost
-import com.brewnicat.connect.ui.kit.Notice
 import com.brewnicat.connect.ui.kit.OverlayHost
 import com.brewnicat.connect.ui.kit.OverlayLayer
-import com.brewnicat.connect.ui.kit.Page
-import com.brewnicat.connect.ui.kit.Photo
-import com.brewnicat.connect.ui.kit.Section
-import com.brewnicat.connect.ui.kit.Segmented
-import com.brewnicat.connect.ui.kit.Sheet
-import com.brewnicat.connect.ui.kit.Spinner
-import com.brewnicat.connect.ui.kit.StarRow
-import com.brewnicat.connect.ui.kit.Stepper
 import com.brewnicat.connect.ui.kit.TabBar
 import com.brewnicat.connect.ui.kit.TabBarGap
 import com.brewnicat.connect.ui.kit.TabBarHeight
 import com.brewnicat.connect.ui.kit.TabItem
-import com.brewnicat.connect.ui.kit.Toggle
-import com.brewnicat.connect.ui.kit.groupItems
+import com.brewnicat.connect.ui.kit.Text
+import com.brewnicat.connect.ui.kit.glass
+import com.brewnicat.connect.ui.kit.pressable
+import com.brewnicat.connect.ui.kit.semibold
+import com.brewnicat.connect.ui.screens.AccountScreen
+import com.brewnicat.connect.ui.screens.CartScreen
+import com.brewnicat.connect.ui.screens.CheckoutScreen
+import com.brewnicat.connect.ui.screens.DataRequestScreen
+import com.brewnicat.connect.ui.screens.FavoritesScreen
+import com.brewnicat.connect.ui.screens.HomeScreen
+import com.brewnicat.connect.ui.screens.ItemSheet
+import com.brewnicat.connect.ui.screens.LoyaltyHistoryScreen
+import com.brewnicat.connect.ui.screens.MenuScreen
+import com.brewnicat.connect.ui.screens.OrderHistoryScreen
+import com.brewnicat.connect.ui.screens.OrderScreen
+import com.brewnicat.connect.ui.screens.OrdersScreen
+import com.brewnicat.connect.ui.screens.ProfileScreen
+import com.brewnicat.connect.ui.screens.ReviewsScreen
+import com.brewnicat.connect.ui.screens.RewardsScreen
+import com.brewnicat.connect.ui.screens.VisitScreen
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
 
-private val Tabs = listOf(
-    TabItem("Home", KitIcons.House), TabItem("Menu", KitIcons.Coffee), TabItem("Orders", KitIcons.ReceiptText),
-    TabItem("Account", KitIcons.UserRound), TabItem("Visit", KitIcons.Store),
+private val tabScreens = listOf(Screen.Home, Screen.Menu, Screen.Orders, Screen.Account, Screen.Visit)
+private val tabItems = listOf(
+    TabItem("Home", KitIcons.House),
+    TabItem("Menu", KitIcons.Coffee),
+    TabItem("Orders", KitIcons.ReceiptText),
+    TabItem("Account", KitIcons.UserRound),
+    TabItem("Visit", KitIcons.Store),
 )
 
-/** Temporary: a gallery of the kit, to check it on a device before the screens move onto it. */
+private data class NavState(val screen: Screen, val depth: Int)
+
+private val CartPillHeight = 52.dp
+private val CartPillGap = 10.dp
+
+/**
+ * The app shell, built from Apple's iOS 27 UI Kit: screens push and pop like a
+ * navigation stack, tab roots float a Liquid Glass tab bar (and the cart capsule)
+ * over their content, and sheets, alerts and banners draw above everything.
+ */
 @Composable
-fun BrewApp(@Suppress("UNUSED_PARAMETER") vm: AppViewModel) {
-    val c = Kit.colors
+fun BrewApp(vm: AppViewModel) {
     val overlays = remember { OverlayHost() }
     val backdrop = rememberHazeState()
-    var tab by remember { mutableIntStateOf(0) }
+    val screen = vm.current
+    val depth = vm.stack.size
+    val onTabRoot = depth == 1 && screen in tabScreens
+    val showCart = onTabRoot && screen != Screen.Orders && !vm.cart.isEmpty
+    var sheetItem by remember { mutableStateOf<MenuItem?>(null) }
+    var sheetOpen by remember { mutableStateOf(false) }
+    val saveable = rememberSaveableStateHolder()
+
+    fun showItem(item: MenuItem) { sheetItem = item; sheetOpen = true }
+    fun promptFavoriteSignIn() {
+        sheetOpen = false
+        overlays.toast("Sign in on the Account tab to save favorites.", KitIcons.Heart, "Sign in") { vm.selectTab(Screen.Account) }
+    }
+
+    BackHandler(enabled = depth > 1 || screen != Screen.Home) { vm.back() }
+
     val navBar = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+    val bottomInset = if (onTabRoot) navBar + TabBarGap + TabBarHeight + (if (showCart) CartPillHeight + CartPillGap else 0.dp) else navBar
+
     CompositionLocalProvider(LocalOverlayHost provides overlays) {
-        Box(Modifier.fillMaxSize().background(c.grouped)) {
-            Box(Modifier.fillMaxSize().hazeSource(backdrop).then(if (overlays.modal) Modifier.clearAndSetSemantics {} else Modifier)) {
-                CompositionLocalProvider(LocalBottomInset provides navBar + TabBarGap + TabBarHeight) {
-                    when (tab) {
-                        0 -> GalleryControls()
-                        1 -> GalleryList()
-                        else -> Page("Empty") {
-                            item { EmptyState(KitIcons.ReceiptText, "No orders yet", "Orders you place in the app show up here so you can follow them.", Modifier.fillParentMaxHeight(0.75f), "Browse the menu", {}) }
+        Box(Modifier.fillMaxSize().background(Kit.colors.grouped)) {
+            Box(
+                Modifier.fillMaxSize().hazeSource(backdrop)
+                    .then(if (overlays.modal) Modifier.clearAndSetSemantics {} else Modifier),
+            ) {
+                CompositionLocalProvider(LocalBottomInset provides bottomInset) {
+                    AnimatedContent(
+                        NavState(screen, depth),
+                        transitionSpec = {
+                            val ease = tween<androidx.compose.ui.unit.IntOffset>(380, easing = FastOutSlowInEasing)
+                            when {
+                                targetState.depth > initialState.depth ->
+                                    slideInHorizontally(ease) { it } togetherWith (slideOutHorizontally(ease) { -it / 3 } + fadeOut(tween(380)))
+                                targetState.depth < initialState.depth ->
+                                    (slideInHorizontally(ease) { -it / 3 } + fadeIn(tween(380))) togetherWith slideOutHorizontally(ease) { it }
+                                else -> fadeIn(tween(200)) togetherWith fadeOut(tween(160))
+                            }.apply { targetContentZIndex = targetState.depth.toFloat() }
+                        },
+                        contentKey = { it.screen },
+                        label = "nav",
+                    ) { state ->
+                        saveable.SaveableStateProvider(state.screen.toString()) {
+                            Box(Modifier.fillMaxSize().background(Kit.colors.grouped)) {
+                                when (val s = state.screen) {
+                                    Screen.Home -> HomeScreen(vm, ::showItem)
+                                    Screen.Menu -> MenuScreen(vm, onNeedSignIn = ::promptFavoriteSignIn, onItem = ::showItem)
+                                    Screen.Orders -> OrdersScreen(vm)
+                                    Screen.Account -> AccountScreen(vm)
+                                    Screen.Visit -> VisitScreen(vm)
+                                    Screen.Cart -> CartScreen(vm)
+                                    Screen.Checkout -> CheckoutScreen(vm)
+                                    is Screen.Order -> OrderScreen(vm, s.reference)
+                                    Screen.Profile -> ProfileScreen(vm)
+                                    Screen.OrderHistory -> OrderHistoryScreen(vm)
+                                    Screen.Favorites -> FavoritesScreen(vm, ::showItem)
+                                    Screen.Rewards -> RewardsScreen(vm)
+                                    Screen.LoyaltyHistory -> LoyaltyHistoryScreen(vm)
+                                    Screen.Reviews -> ReviewsScreen(vm)
+                                    Screen.DataRequests -> DataRequestScreen(vm)
+                                }
+                            }
                         }
                     }
                 }
             }
+
             CompositionLocalProvider(LocalBackdrop provides backdrop) {
-                Box(Modifier.align(Alignment.BottomCenter).padding(start = 24.dp, end = 24.dp, bottom = navBar + TabBarGap)) {
-                    TabBar(Tabs, tab, { tab = it })
+                AnimatedVisibility(
+                    onTabRoot,
+                    Modifier.align(Alignment.BottomCenter),
+                    enter = slideInVertically(tween(300)) { it } + fadeIn(tween(200)),
+                    exit = slideOutVertically(tween(260)) { it } + fadeOut(tween(160)),
+                ) {
+                    Column(
+                        Modifier.fillMaxWidth().padding(start = 24.dp, end = 24.dp, bottom = navBar + TabBarGap),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        AnimatedVisibility(showCart, enter = fadeIn() + slideInVertically { it / 2 }, exit = fadeOut() + slideOutVertically { it / 2 }) {
+                            CartPill(vm.cart.itemCount, Pricing.formatPeso(vm.cart.subtotal)) { vm.open(Screen.Cart) }
+                        }
+                        TabBar(tabItems, tabScreens.indexOf(screen), { vm.selectTab(tabScreens[it]) })
+                    }
                 }
                 OverlayLayer(overlays)
             }
         }
+
+        sheetItem?.let { item ->
+            ItemSheet(
+                item = item,
+                open = sheetOpen,
+                isFavorite = item.id in vm.favoriteIds,
+                onToggleFavorite = { vm.toggleFavorite(item.id, ::promptFavoriteSignIn) },
+                onAdd = { variantId, flavor, quantity ->
+                    vm.addToCart(item.id, variantId, flavor, quantity).also { error ->
+                        if (error == null) {
+                            sheetOpen = false
+                            overlays.toast("Added $quantity× ${item.name} to your cart", KitIcons.ShoppingBag)
+                        }
+                    }
+                },
+                onDismiss = { sheetItem = null; sheetOpen = false },
+            )
+        }
     }
 }
 
+/** The cart, floating above the tab bar as a tinted Liquid Glass capsule. */
 @Composable
-private fun GalleryControls() {
-    val overlays = LocalOverlayHost.current
-    var on by remember { mutableStateOf(true) }
-    var seg by remember { mutableIntStateOf(0) }
-    var qty by remember { mutableIntStateOf(1) }
-    var name by remember { mutableStateOf("") }
-    var notes by remember { mutableStateOf("") }
-    var pick by remember { mutableIntStateOf(0) }
-    var sheet by remember { mutableStateOf(false) }
-    var alert by remember { mutableStateOf(false) }
-    var cat by remember { mutableIntStateOf(0) }
-    Page(
-        "Rewards & points", onBack = {}, trailing = { BarAction("History", {}) },
-        pinned = { CapsuleTabs(listOf("Coffee", "Matcha", "Frappe", "Snacks", "Noodles", "Add-ons"), cat, { cat = it }, Modifier.padding(horizontal = Gutter, vertical = 6.dp)) },
-        bottomBar = { KitButton("Place order · ₱245.00", {}, Modifier.fillMaxWidth()) },
+private fun CartPill(count: Int, total: String, onClick: () -> Unit) {
+    val c = Kit.colors
+    Row(
+        Modifier.padding(bottom = CartPillGap).widthIn(max = 430.dp).fillMaxWidth().pressable(onClickLabel = "Open cart", onClick = onClick)
+            .height(CartPillHeight).glass(CircleShape, tint = c.tintFill, tintAlpha = 0.9f).padding(horizontal = 20.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        item {
-            Section(header = "Preview", prominentHeader = true, headerAction = { KitButton("Action", {}, style = ButtonStyle.Plain, size = ButtonSize.Small) }) {
-                ListRow("Title", detail = "Detail", chevron = true, onClick = {})
-                ListRow("Title", subtitle = "Subtitle", leading = { IconTile(KitIcons.Gift, Kit.colors.orange) }, chevron = true, onClick = {})
-                ListRow("Label", trailing = { Toggle(on, { on = it }) })
-                ListRow("Quantity", trailing = { Stepper(qty, { qty = it }, "drink") })
-                ButtonRow("Open sheet", { sheet = true })
-                ButtonRow("Open alert", { alert = true })
-                ButtonRow("Show toast", { overlays.toast("Added 2× Caramel Matcha Tail to your cart", actionLabel = "Sign in", onAction = {}) })
-            }
-        }
-        item {
-            Section(header = "Your details", footer = "Enter a valid mobile number.", footerColor = Kit.colors.red) {
-                FieldRow("Full name", name, { name = it }, placeholder = "Juan dela Cruz")
-                FieldRow("Notes for the shop (optional)", notes, { notes = it }, placeholder = "Less ice, extra sauce…", singleLine = false, minLines = 3)
-            }
-        }
-        item {
-            Section(header = "How will you pay at pickup?") {
-                listOf("Cash", "GCash", "Maya").forEachIndexed { i, label -> CheckRow(label, pick == i, { pick = i }) }
-            }
-        }
-        item {
-            Block {
-                Segmented(listOf("Correction", "Deletion"), seg, { seg = it })
-                Row(Modifier.padding(top = 14.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Badge("Preparing"); Badge("Ready", color = Kit.colors.green, solid = true); Badge("Rejected", color = Kit.colors.red); Spinner(); StarRow(4)
-                }
-                Notice("Order placed! Keep this app open or come back any time to see when it's ready.", Modifier.padding(top = 14.dp))
-                Notice("The shop is closed right now. Opens tomorrow at 9:00 AM.", Modifier.padding(top = 10.dp), warning = true)
-                Row(Modifier.padding(top = 14.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    KitButton("Tinted", {}, style = ButtonStyle.Tinted, size = ButtonSize.Medium, icon = KitIcons.Play)
-                    KitButton("Gray", {}, style = ButtonStyle.Gray, size = ButtonSize.Medium)
-                    KitButton("Busy", {}, size = ButtonSize.Medium, busy = true)
-                }
-            }
-        }
-        item { Section { ButtonRow("Sign out", {}, destructive = true, centered = true) } }
-    }
-    if (sheet) {
-        Sheet(onDismiss = { sheet = false }, title = "Caramel Matcha Tail", footer = { dismiss -> KitButton("Add to cart · ₱120.00", dismiss, Modifier.fillMaxWidth()) }) {
-            Photo(R.drawable.menu_caramel_matcha_tail, null, Modifier.padding(horizontal = 16.dp).fillMaxWidth().size(220.dp).clip(RoundedCornerShape(26.dp)))
-            Section(header = "Choose size") {
-                listOf("16 oz", "22 oz").forEachIndexed { i, label -> CheckRow(label, pick == i, { pick = i }, detail = "₱${95 + i * 25}") }
-            }
-            Section(header = "Quantity") { ListRow("How many?", trailing = { Stepper(qty, { qty = it }, "drink", min = 1) }) }
-            Section(header = "Add-ons") {
-                (1..6).forEach { ListRow("Add-on $it", detail = "+₱15.00", trailing = { Toggle(on, { on = it }) }) }
-            }
-        }
-    }
-    if (alert) {
-        Alert("Redeem Free Iced Latte?", "This spends 120 loyalty points and gives you a verification code to show at the café counter.", "Confirm", { alert = false }, "Cancel", { alert = false })
-    }
-}
-
-@Composable
-private fun GalleryList() {
-    var cat by remember { mutableIntStateOf(0) }
-    Page("Menu", pinned = { CapsuleTabs(listOf("Coffee", "Matcha", "Frappe", "Snacks", "Noodles", "Add-ons"), cat, { cat = it }, Modifier.padding(horizontal = Gutter, vertical = 6.dp)) }) {
-        item { Block { com.brewnicat.connect.ui.kit.SectionHeader("Matcha") } }
-        groupItems((1..30).toList(), key = { it }) { n ->
-            ListRow("Lucky Green Neko Matcha $n", subtitle = "16 oz · 22 oz", detail = "From ₱95.00", leading = { Photo(R.drawable.menu_lucky_green_neko_matcha, null, Modifier.size(56.dp).clip(RoundedCornerShape(14.dp))) }, onClick = {})
-        }
+        Icon(KitIcons.ShoppingBag, null, tint = c.onTint, size = 20.dp)
+        Text("View cart", style = KitType.headline, color = c.onTint, modifier = Modifier.weight(1f))
+        Text("$count · $total", style = KitType.subhead.semibold, color = c.onTint)
     }
 }

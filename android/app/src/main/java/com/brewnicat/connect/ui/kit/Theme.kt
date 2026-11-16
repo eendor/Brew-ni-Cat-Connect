@@ -160,6 +160,13 @@ private val Dark = KitColors(
 internal fun KitColors.elevated(): KitColors =
     if (dark) copy(grouped = Color(0xFF1C1C1E), cell = Color(0xFF2C2C2E), cellInner = Color(0xFF3A3A3C), glassFallback = Color(0xFF3A3A3C)) else this
 
+/**
+ * The kit's red and orange are too light to read as small text on white, so text
+ * in light mode uses these darker shades. Dark mode keeps the kit's own.
+ */
+val KitColors.redText: Color get() = if (dark) red else Color(0xFFC9252D)
+val KitColors.orangeText: Color get() = if (dark) orange else Color(0xFFB25000)
+
 @OptIn(ExperimentalTextApi::class)
 private fun inter(weight: Int, opticalSize: Float) = Font(
     R.font.inter,
@@ -224,12 +231,13 @@ fun Text(
     style: TextStyle = KitType.body,
     textAlign: TextAlign? = null,
     maxLines: Int = Int.MAX_VALUE,
+    minLines: Int = 1,
 ) {
     val resolved = if (color != Color.Unspecified) color else if (style.color != Color.Unspecified) style.color else LocalContentColor.current
     BasicText(
         text, modifier,
         style = style.merge(color = resolved, textAlign = textAlign ?: TextAlign.Unspecified),
-        overflow = TextOverflow.Ellipsis, maxLines = maxLines,
+        overflow = TextOverflow.Ellipsis, maxLines = maxLines, minLines = minLines,
     )
 }
 

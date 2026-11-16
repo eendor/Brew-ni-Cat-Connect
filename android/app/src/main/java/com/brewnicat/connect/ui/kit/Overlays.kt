@@ -158,12 +158,14 @@ private fun ToastBanner(host: OverlayHost) {
  * The kit's sheet: a floating Liquid Glass panel inset from the screen edges, with a
  * grabber, a glass close button, a centred title and an optional pinned footer.
  * [content] and [footer] receive `dismiss`, which animates the sheet away and then
- * calls [onDismiss]. Dragging down, tapping outside and Back all dismiss.
+ * calls [onDismiss]. Dragging down, tapping outside and Back all dismiss, and so
+ * does setting [open] to false.
  */
 @Composable
 fun Sheet(
     onDismiss: () -> Unit,
     title: String? = null,
+    open: Boolean = true,
     trailing: (@Composable (dismiss: () -> Unit) -> Unit)? = null,
     footer: (@Composable ColumnScope.(dismiss: () -> Unit) -> Unit)? = null,
     content: @Composable ColumnScope.(dismiss: () -> Unit) -> Unit,
@@ -186,6 +188,8 @@ fun Sheet(
             }
         }
         LaunchedEffect(Unit) { shown.animateTo(1f, spring(dampingRatio = 0.86f, stiffness = Spring.StiffnessMediumLow)) }
+        // Lets the owner close the sheet with the same animation as the close button.
+        LaunchedEffect(open) { if (!open) dismiss() }
         BackHandler(onBack = dismiss)
 
         fun settle(velocity: Float) {
