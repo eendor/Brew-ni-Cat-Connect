@@ -331,3 +331,36 @@ describe("Gemini smart replies (ADR-031)", () => {
     expect(String(next.mock.calls[0]?.[0])).toContain("/a:generateContent");
   });
 });
+
+describe("A quiet counter (FR-112 update, 2026-11-17)", () => {
+  it("TC-P9-066 — with no sale today, 90 minutes or more after opening, says 'should be open'; otherwise the plain answer", () => {
+    expect(openStatusText(content, NOW, false)).toBe(
+      "🟢 We should be open now until 6 PM, but the counter hasn't had an order yet today. If you're coming over, tap Talk to staff and we'll confirm first.",
+    );
+    // 11:00 AM is only an hour after opening at 10.
+    expect(openStatusText(content, at(-3), false)).toBe(
+      "🟢 Yes, we're open now until 6 PM!",
+    );
+    expect(openStatusText(content, NOW, true)).toBe(
+      "🟢 Yes, we're open now until 6 PM!",
+    );
+    expect(openStatusText(content, NOW, null)).toBe(
+      openStatusText(content, NOW),
+    );
+    // Closed times don't change.
+    expect(openStatusText(content, at(5), false)).toBe(
+      openStatusText(content, at(5)),
+    );
+    expect(
+      shopFacts({
+        content,
+        menu: catalog,
+        takeoutBoxPrice: null,
+        now: NOW,
+        onlineOrdering: false,
+        origin: ORIGIN,
+        counterActive: false,
+      }),
+    ).toContain("Right now: 🟢 We should be open now until 6 PM");
+  });
+});

@@ -2074,3 +2074,14 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Known limitations:** The migration is not applied to the live database yet; it needs the lead's OK. The Android app shows the rewards and games as before and doesn't list codes or prizes yet. MAN-P9-004 needs the live migration.
 - **Next action:** Apply the migration with the lead's OK, then run MAN-P9-004 with the POS Rewards screen.
 
+## 2026-11-17 — Messenger: careful "are you open?" when the counter is quiet
+
+- **Phase:** Phase 7 follow-up (FR-112).
+- **Task:** On days the shop closed without the Closed today switch (for example after selling out), the assistant told customers it was open.
+- **Summary:** New `public.shop_counter_active_today()` says whether the POS has a sale today (Manila). Live data showed a sale on every open day and none on the closed ones. With no sale 90 minutes or more after opening, the open-now reply and the Gemini facts say "We should be open now until …, but the counter hasn't had an order yet today" and point to Talk to staff. If the check fails, the answer is the same as before.
+- **Files:** `supabase/{migrations,rollbacks}/20261117130000_counter_active_today.sql`, `src/lib/messenger/{shop-time,replies,assistant,events,deps}.ts`, `tests/database/counter-active.test.ts`, `tests/unit/messenger-{events,smart-replies}.test.ts`, docs.
+- **Testing:** TC-P9-065 to TC-P9-067; all messenger unit tests (395) pass; `tsc`, `eslint`, docs validator.
+- **Branch / PR:** `feat/messenger-counter-aware`.
+- **Known limitations:** The migration needs the lead's OK before it is applied live; until then the replies are unchanged. Turning on the Closed today switch, or posting on the Page that the shop is closed, is still the sure way.
+- **Next action:** Apply the migration.
+

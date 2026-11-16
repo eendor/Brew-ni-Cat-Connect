@@ -271,13 +271,14 @@ export function openNowReply(
   content: SiteContent,
   now: number,
   posts: readonly PagePost[] = [],
+  counterActive: boolean | null = null,
 ): Reply {
   const answer = hoursLocationReply(content, posts);
   // A post about today ("We open at 1:00 pm today") wins (FR-114), unless
   // the "closed today" switch is on.
   const status =
     (content.closure.closed ? null : postedStatusText(posts, now)) ??
-    openStatusText(content, now);
+    openStatusText(content, now, counterActive);
   // The "closed today" switch is already the first line of the status.
   const rest = answer.text.replace(
     `${closedTodayText(content.closure)}\n\n`,

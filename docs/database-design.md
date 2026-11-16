@@ -569,3 +569,7 @@ Migration `20261117120000_shop_rewards_and_codes.sql` (FR-088, FR-091, ADR-037).
 - `public.verify_reward_code(p_code text, p_redeem boolean default false)`: security definer, granted to `authenticated`, answers `forbidden` to anyone who isn't staff. It ignores case, spaces and dashes; locks the row; refuses `unknown_code`, `already_redeemed` and `expired`; and with `p_redeem` sets `redeemed_at` and `redeemed_by`.
 - Undo: `supabase/rollbacks/20261117120000_shop_rewards_and_codes.sql` puts back the earlier versions of the four functions, drops the check function, the helpers and both tables. Points already spent stay spent. TC-P9-054 to TC-P9-060 run on PGlite (`tests/database/shop-rewards.test.ts`).
 
+## 21. Counter Active Today (2026-11-17)
+
+Migration `20261117130000_counter_active_today.sql` (FR-112 update). `public.shop_counter_active_today()` is security definer and granted to `anon` and `authenticated`. It returns true when `public.orders` has a sale that isn't voided since midnight in Manila. It reveals only that yes or no, not counts or totals. The Messenger assistant uses it to word "are you open?" carefully on days the staff close without the Closed today switch. Undo: `supabase/rollbacks/20261117130000_counter_active_today.sql` drops the function. TC-P9-065.
+

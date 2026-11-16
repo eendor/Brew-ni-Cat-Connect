@@ -67,8 +67,23 @@ function nextOpenDay(
   return null;
 }
 
-/** One line: open now until …, opening later today, or when it opens next. */
-export function openStatusText(content: SiteContent, now: number): string {
+/**
+ * How long after opening a day with no sale at the counter makes the answer
+ * careful. The first sale usually comes within two hours of opening.
+ */
+export const QUIET_COUNTER_MINUTES = 90;
+
+/**
+ * One line: open now until …, opening later today, or when it opens next.
+ * Update 2026-11-17: `counterActive` is whether the POS has a sale today.
+ * When it is false well into opening hours, the shop may have closed without
+ * the switch, so the answer says "should be open" and offers the staff.
+ */
+export function openStatusText(
+  content: SiteContent,
+  now: number,
+  counterActive: boolean | null = null,
+): string {
   const { days } = content.hours;
   const clock = shopClock(now);
   const today = days[clock.day];
@@ -90,6 +105,12 @@ export function openStatusText(content: SiteContent, now: number): string {
     return `⏰ We open today at ${formatTime(today.opens)} until ${formatTime(today.closes)}.`;
   }
   if (clock.minutes < closes) {
+    if (
+      counterActive === false &&
+      clock.minutes >= opens + QUIET_COUNTER_MINUTES
+    ) {
+      return `🟢 We should be open now until ${formatTime(today.closes)}, but the counter hasn't had an order yet today. If you're coming over, tap Talk to staff and we'll confirm first.`;
+    }
     return `🟢 Yes, we're open now until ${formatTime(today.closes)}!`;
   }
   return `🌙 We're closed for today (we close at ${formatTime(today.closes)}).${next ? ` ${next}` : ""}`;
