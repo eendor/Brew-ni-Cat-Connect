@@ -17,6 +17,10 @@ class Store(
 ) {
     private val prefs = context.getSharedPreferences("brew-ni-cat", Context.MODE_PRIVATE)
 
+    /** Personal best for a free-play arcade game (stays on this phone). */
+    fun arcadeBest(gameId: String): Int? = if (prefs.contains("arcade_$gameId")) prefs.getInt("arcade_$gameId", 0) else null
+    fun saveArcadeBest(gameId: String, score: Int) = prefs.edit { putInt("arcade_$gameId", score) }
+
     fun loadCart(): Cart = runCatching { Cart.fromJson(JSONArray(prefs.getString(CART, "[]"))) }.getOrDefault(Cart())
     fun saveCart(cart: Cart) = prefs.edit { putString(CART, cart.toJson().toString()) }
 

@@ -47,12 +47,15 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.brewnicat.connect.R
+import com.brewnicat.connect.data.ArcadeGame
 import com.brewnicat.connect.data.GamesParsers
 import com.brewnicat.connect.data.MiniGameInfo
 import com.brewnicat.connect.data.PlayMiniGameResult
 import com.brewnicat.connect.ui.AppViewModel
 import com.brewnicat.connect.ui.Loadable
 import com.brewnicat.connect.ui.Screen
+import com.brewnicat.connect.ui.games.ArcadeDialog
+import com.brewnicat.connect.ui.games.ArcadeList
 import com.brewnicat.connect.ui.kit.Badge
 import com.brewnicat.connect.ui.kit.ButtonSize
 import com.brewnicat.connect.ui.kit.ButtonStyle
@@ -117,6 +120,7 @@ fun CatPixelSprite(
 fun MiniGamesDialog(vm: AppViewModel) {
     val statusState = vm.gameStatus
     val signedIn = vm.session != null
+    var playing by remember { mutableStateOf<ArcadeGame?>(null) }
 
     Sheet(onDismiss = { vm.closeGamesPopup() }, title = "Play while you wait") {
         val c = Kit.colors
@@ -126,7 +130,10 @@ fun MiniGamesDialog(vm: AppViewModel) {
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             CatPixelSprite(R.drawable.cat_kulas, CatMode.LOOK, animating = true, size = DpSize(64.dp, 54.dp))
-            Text("Earn loyalty points while the shop prepares your order.", style = KitType.subhead, color = c.label2, modifier = Modifier.weight(1f))
+            Text("Games to enjoy while the shop prepares your order.", style = KitType.subhead, color = c.label2, modifier = Modifier.weight(1f))
+        }
+        vm.gamesOrderBanner?.takeIf { it.second }?.let { (label, _) ->
+            Notice("$label! Head to the counter to pick it up.", Modifier.padding(horizontal = 16.dp).padding(top = 12.dp), warning = true)
         }
 
         when (statusState) {
@@ -163,10 +170,22 @@ fun MiniGamesDialog(vm: AppViewModel) {
                     status.games.find { it.id == "lucky-paw" }?.let { info ->
                         LuckyPawCard(info = info, disabled = outOfPlays || vm.gamePlaying) { vm.playLuckyPaw() }
                     }
-                    SheetSpacer()
                 }
             }
         }
+
+        ArcadeList(bestOf = vm::arcadeBest) { playing = it }
+        SheetSpacer()
+    }
+
+    playing?.let { game ->
+        ArcadeDialog(
+            game = game,
+            best = vm.arcadeBest(game.id),
+            orderBanner = vm.gamesOrderBanner,
+            onResult = { score -> vm.recordArcade(game.id, score) },
+            onClose = { playing = null },
+        )
     }
 }
 

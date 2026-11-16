@@ -27,6 +27,9 @@ ADR-035). It uses the same backend as the website:
   `mini_game_status` and `play_mini_game` RPCs. Waiting and `completed` order
   views show the 300x250 Adsterra banner (`AdsterraAdCard`) after explicit
   consent inside an opaque `data:` URL `WebView`.
+- **Arcade (free play):** the games popup also offers five on-device games
+  (Treat Catcher, Whack-a-Mouse, Cup Stack, Paw Says, Cat Match). They award no
+  points and send nothing; personal bests stay in app preferences.
 
 Package `com.brewnicat.connect`; Android 8.0 (API 26) and later; compiled
 against and targeting API 36. It asks only for internet access and backs up
@@ -44,7 +47,8 @@ app/src/main/java/com/brewnicat/connect/
   data/   Menu (mapping), Pricing, Cart, Checkout, Orders, ShopHours, Auth,
           Account, Reorder, Games, Ads, Api, Store
   ui/     BrewApp (navigation, tab bar), AppViewModel, kit/ (the iOS 27-style design
-          system: theme, type, icons, glass, lists, controls, sheets), screens/
+          system: theme, type, icons, glass, lists, controls, sheets), games/
+          (free-play arcade), screens/
 app/src/test/  JVM unit tests for the data, auth, account, game and ad layers
 app/src/debug/ debug-only network config for the local mock backend
 tools/mock_backend.py  stand-in backend for checkout, OAuth, loyalty, reviews, games & mock ads
