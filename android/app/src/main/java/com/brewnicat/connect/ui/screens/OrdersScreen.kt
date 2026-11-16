@@ -62,7 +62,7 @@ fun KitColors.statusColor(status: String) = when (status) {
     "ready" -> green
     "completed" -> gray
     "preparing" -> brown
-    else -> tint
+    else -> tintFill
 }
 
 @Composable
@@ -125,7 +125,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.orderDetail(vm: AppVi
         Section {
             Cell {
                 Column(Modifier.fillMaxWidth().padding(vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                    IconCircle(statusIcon(order.status), c.statusColor(order.status), size = 72.dp)
+                    IconCircle(statusIcon(order.status), c.statusColor(order.status).let { if (it == c.tintFill) c.tint else it }, size = 72.dp)
                     Text(
                         OrderView.label(order.status), style = KitType.title1.bold, color = c.label,
                         modifier = Modifier.padding(top = 14.dp).semantics { heading() },
