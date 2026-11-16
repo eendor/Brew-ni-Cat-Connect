@@ -64,7 +64,16 @@ fun MenuScreen(vm: AppViewModel, onNeedSignIn: () -> Unit = {}, onItem: (MenuIte
         catalog?.categories.orEmpty().map { c -> i.also { i += 1 + c.items.size } }
     }
     val active by remember(headerIndex) {
-        derivedStateOf { headerIndex.indexOfLast { it <= listState.firstVisibleItemIndex + 1 }.coerceAtLeast(0) }
+        derivedStateOf {
+            val atTop = headerIndex.indexOfLast { it <= listState.firstVisibleItemIndex + 1 }.coerceAtLeast(0)
+            // The last categories are often too short to scroll their header to the top. At the end of
+            // the list, pick the lowest header on screen so tapping "Combos & Packages" highlights it.
+            if (listState.canScrollForward) atTop
+            else {
+                val shown = listState.layoutInfo.visibleItemsInfo.map { it.index }.toSet()
+                maxOf(atTop, headerIndex.indexOfLast { it in shown })
+            }
+        }
     }
     val categories = catalog?.categories.orEmpty()
 
