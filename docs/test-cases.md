@@ -1766,7 +1766,7 @@ FR-088: rewards and game prizes the owner manages, with cost, stock and a daily 
 | TC-P9-062  | FR-088, FR-091         | Redeem a reward that sold out meanwhile, then one that works | "just sold out. Your points weren't used."; then the code with "Use by: Jan 31, 2099 · works once" | Passed (automated) |
 | TC-P9-063  | FR-088, FR-091         | Render `/games` with two prizes, one all won; win a prize on Lucky paw | "About 1 in 50 plays" and "All won for now"; the prize, its code and "It works once" | Passed (automated) |
 | TC-P9-064  | FR-088, FR-091         | Wording helpers | Code states ready, expired and used; availability only for low stock; refusal messages; prize chance wording | Passed (automated) |
-| MAN-P9-004 | FR-088, FR-091         | After the migration is applied: the owner sets a stock on a reward and adds a prize in the POS Rewards screen; a customer redeems and wins on the live site; staff check and use both codes in the POS, then try again | The stock, prize and codes show; each code is accepted once and refused the second time | Not run yet (needs the live migration) |
+| MAN-P9-004 | FR-088, FR-091         | After the migration is applied: the owner sets a stock on a reward and adds a prize in the POS Rewards screen; a customer redeems and wins on the live site; staff check and use both codes in the POS, then try again | The stock, prize and codes show; each code is accepted once and refused the second time | Passed 2026-11-17 by the lead developer (POS web dashboard and the live site) |
 
 ## 63. Messenger Knows When The Counter Is Quiet (2026-11-17)
 
@@ -1788,7 +1788,7 @@ FR-116, FR-117, ADR-038. Android 1.0.1 (version code 4).
 | TC-P9-069  | FR-116         | Render the home section and the footer; read the site headers | "Download for Android" and "Android app" link to the APK with `download`; the version, size and "Android 8.0 or newer"; `latest.json` is never cached; the APK is sent as an Android package | Passed (automated) |
 | TC-P9-070  | FR-117         | JVM: read `latest.json` with a relative APK; with another host, plain http, a non-APK path, a short hash, version 0 and HTML; decide whether to ask after Later | Only the first is accepted; it asks for a newer version, not again within a day of Later, again after a day, and at once for a build newer than the one put off | Passed (automated) |
 | TC-P9-071  | FR-117         | JVM with a mock site: fetch `latest.json`, then a 404; download the APK, then a changed APK, then a 500 | The release, then none; the APK is kept and old files removed, with progress reaching 100%; the changed APK is deleted; the failed download gives none | Passed (automated) |
-| MAN-P9-005 | FR-116, FR-117 | On a phone with 1.0.0, download and install 1.0.1 from the home page; later publish 1.0.2 and open the app | 1.0.1 installs over 1.0.0 and keeps the sign-in; with 1.0.2 published the app shows Update available, asks once to allow installs, and Android installs it | Not run yet (needs a newer build after 1.0.1) |
+| MAN-P9-005 | FR-116, FR-117 | On a phone with 1.0.0, download and install 1.0.1 from the home page; later publish 1.0.2 and open the app | 1.0.1 installs over 1.0.0 and keeps the sign-in; with 1.0.2 published the app shows Update available, asks once to allow installs, and Android installs it | Partly passed 2026-11-17: on the lead's phone the app offered and installed 1.0.2, then 1.0.3, in the app. Installing 1.0.1 over 1.0.0 from the home page was not observed |
 
 ## 65. POS Updates Checked Against A Published Hash (2026-11-17)
 
@@ -1798,7 +1798,7 @@ FR-118, ADR-038. Migration `20261117140000_app_release_sha256.sql` (applied live
 | ---------- | ----------- | ---- | --------------- | ------ |
 | TC-P9-072  | FR-118      | PGlite: add releases with a lowercase hash and none, then an upper-case hash and a short one; read as a guest; a guest changes a hash; apply the rollback | The first two are kept and readable; the others are refused by `app_release_sha256_format`; the guest's change does nothing; the column is gone after the rollback | Passed (automated) |
 | TC-P9-073  | FR-118      | POS JVM: hash "abc"; compare a hash with itself, in upper case with spaces, with a changed file, with no published hash and with a short one | The standard SHA-256 of "abc"; only the first two match | Passed (automated) |
-| MAN-P9-006 | FR-118      | A tablet on 10149 updates to 10150; then a test row with a wrong hash is published briefly for a newer code | 10150 installs; with the wrong hash the tablet shows "Update failed … didn't match" and nothing is installed | Not run yet |
+| MAN-P9-006 | FR-118      | A tablet on 10149 updates to 10150; then a test row with a wrong hash is published briefly for a newer code | 10150 installs; with the wrong hash the tablet shows "Update failed … didn't match" and nothing is installed | Partly passed 2026-11-17: the tablet updated to 10150. The wrong-hash step was not run |
 
 ## 66. Google Profile Photos On Accounts And Reviews (2026-11-17)
 
@@ -1816,5 +1816,5 @@ FR-119. Migration `20261117150000_google_profile_photos.sql`. Android 1.0.2 (ver
 | TC-P9-081  | FR-119      | Unit: the review form for a guest and for an account without a Google photo | No photo switch | Passed (automated) |
 | TC-P9-082  | FR-119      | Unit: `validateReviewInput` with no `showPhoto` and with `false` | true, then false; the route passes `p_show_photo` | Passed (automated) |
 | TC-P9-083  | FR-119      | Android JVM: photo address checks, initials, a sign-in response with `avatar_url` saved and read back, reviews with and without `avatar_url` | The session and review keep only the Google photo | Passed (automated) |
-| MAN-P9-007 | FR-119      | Sign in with Google on the website and in Android 1.0.2; post a review with the photo on, then off | The photo shows on the account, the header menu and the review, then the review shows initials | Not run yet |
+| MAN-P9-007 | FR-119      | Sign in with Google on the website and in Android 1.0.2; post a review with the photo on, then off | The photo shows on the account, the header menu and the review, then the review shows initials | Passed 2026-11-17 by the lead developer on Android 1.0.3: sign-in and profile photos work |
 
