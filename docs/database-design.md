@@ -153,6 +153,7 @@ Three migrations in `supabase/migrations/` add the data for Phase 4 (online orde
 The POS and this site use one Supabase database. `20261024011051_restore_rls.sql` closes it again:
 
 - Everyone can read `categories`, `items` and `app_release`. The site's menu and the POS update check read them with the publishable key.
+- `app_release.sha256` (2026-11-17, FR-118) is the lowercase hex SHA-256 of the APK at `apk_url`; POS builds from 10150 install only a file that matches it.
 - Everything else, and every change, needs a staff account: a signed-in user whose `app_metadata` has `"role": "staff"`. `private.is_staff()` reads `auth.users` on each call, so marking or unmarking an account works at once, without a new sign-in. Banned, deleted and anonymous users are never staff.
 - Only SQL or the service role can change `app_metadata`, so a customer can't make themselves staff.
 - The old policies pinned one account id. The migration drops every policy on the POS tables, so only the new ones apply.

@@ -1789,3 +1789,13 @@ FR-116, FR-117, ADR-038. Android 1.0.1 (version code 4).
 | TC-P9-070  | FR-117         | JVM: read `latest.json` with a relative APK; with another host, plain http, a non-APK path, a short hash, version 0 and HTML; decide whether to ask after Later | Only the first is accepted; it asks for a newer version, not again within a day of Later, again after a day, and at once for a build newer than the one put off | Passed (automated) |
 | TC-P9-071  | FR-117         | JVM with a mock site: fetch `latest.json`, then a 404; download the APK, then a changed APK, then a 500 | The release, then none; the APK is kept and old files removed, with progress reaching 100%; the changed APK is deleted; the failed download gives none | Passed (automated) |
 | MAN-P9-005 | FR-116, FR-117 | On a phone with 1.0.0, download and install 1.0.1 from the home page; later publish 1.0.2 and open the app | 1.0.1 installs over 1.0.0 and keeps the sign-in; with 1.0.2 published the app shows Update available, asks once to allow installs, and Android installs it | Not run yet (needs a newer build after 1.0.1) |
+
+## 65. POS Updates Checked Against A Published Hash (2026-11-17)
+
+FR-118, ADR-038. Migration `20261117140000_app_release_sha256.sql` (applied live 2026-11-17). POS build 10150.
+
+| ID         | Requirement | Case | Expected result | Status |
+| ---------- | ----------- | ---- | --------------- | ------ |
+| TC-P9-072  | FR-118      | PGlite: add releases with a lowercase hash and none, then an upper-case hash and a short one; read as a guest; a guest changes a hash; apply the rollback | The first two are kept and readable; the others are refused by `app_release_sha256_format`; the guest's change does nothing; the column is gone after the rollback | Passed (automated) |
+| TC-P9-073  | FR-118      | POS JVM: hash "abc"; compare a hash with itself, in upper case with spaces, with a changed file, with no published hash and with a short one | The standard SHA-256 of "abc"; only the first two match | Passed (automated) |
+| MAN-P9-006 | FR-118      | A tablet on 10149 updates to 10150; then a test row with a wrong hash is published briefly for a newer code | 10150 installs; with the wrong hash the tablet shows "Update failed … didn't match" and nothing is installed | Not run yet |
