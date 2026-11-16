@@ -62,7 +62,7 @@ describe("POS update hash (FR-118)", () => {
     const after = await db.query<{ sha256: string }>(
       "select sha256 from public.app_release where version_code = 20001",
     );
-    expect(after.rows[0].sha256).toBe(HASH);
+    expect(after.rows[0]?.sha256).toBe(HASH);
   });
 
   it("TC-P9-072 — the rollback removes the column", async () => {
