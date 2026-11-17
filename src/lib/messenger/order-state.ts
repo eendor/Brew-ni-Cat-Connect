@@ -67,7 +67,7 @@ export type OrderLine = Readonly<{
 }>;
 
 export type OrderState = Readonly<{
-  /** Local form, 09XXXXXXXXX. */
+  /** Local form, 09XXXXXXXXX, or "" when the customer gave none (optional since 2026-11-17). */
   phone: string;
   lines: readonly OrderLine[];
   payment: Payment | null;
@@ -86,7 +86,7 @@ export type OrderTap = Readonly<{
 
 const ID_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;
 const NONCE_PATTERN = /^[A-Za-z0-9]{8,32}$/;
-const PHONE_PATTERN = /^09\d{9}$/;
+const PHONE_PATTERN = /^(?:09\d{9})?$/;
 const MAX_TEXT = 200;
 
 export function newOrder(phone: string): OrderState {

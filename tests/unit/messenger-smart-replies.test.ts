@@ -176,6 +176,31 @@ describe("Gemini smart replies (ADR-031)", () => {
     ).toHaveLength(600);
   });
 
+  it("TC-P7-124 — a typed order in the answer is read strictly", () => {
+    expect(
+      parseSmartAnswer({
+        handoff: false,
+        reply: "Here is your order po!",
+        buttons: ["order"],
+        order: [
+          { item: " Nachos ", size: "", flavors: ["Cheese", 5], quantity: 2 },
+          { item: "", size: "", flavors: [], quantity: 1 },
+          { item: "Fries", size: "", flavors: [], quantity: 500 },
+          "nonsense",
+        ],
+        payment: "GCash",
+        pickup: "later",
+      })?.order,
+    ).toEqual({
+      lines: [{ item: "Nachos", size: "", flavors: ["Cheese"], quantity: 2 }],
+      payment: "GCash",
+      pickup: null,
+    });
+    expect(
+      parseSmartAnswer({ handoff: false, reply: "Hi", buttons: [], order: [] }),
+    ).toEqual({ handoff: false, reply: "Hi", buttons: [] });
+  });
+
   it("TC-P7-099 — tries the next model when one is busy, and sends the key only in a header", async () => {
     const request = vi
       .fn<typeof fetch>()

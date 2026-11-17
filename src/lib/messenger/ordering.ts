@@ -31,7 +31,7 @@ import type { PlaceOrderSuccess } from "@/lib/orders/types";
 import {
   closedTodayText,
   hoursSummary,
-  takeoutBoxText,
+  orderTotal,
 } from "@/lib/site-content/format";
 import {
   shopClosedMessage,
@@ -695,13 +695,23 @@ export function reviewReply(
 ): Reply {
   const { content } = details;
   const notice = content?.notice.text.trim();
+  // The takeout box is part of the order (2026-11-17).
+  const total = orderTotal(order.subtotal, details.takeoutBoxPrice);
   return buildReply(
     join(
       lead,
       "📝 Please check your order",
-      `👤 ${details.name}\n📱 ${state.phone}`,
-      order.lines.map(lineText).join("\n"),
-      `Subtotal: ${formatPrice(order.subtotal)}\n💳 Pay ${formatPrice(order.subtotal)} via ${state.payment ?? "Cash"} at the counter. The ${takeoutBoxText(details.takeoutBoxPrice)} is not included in that amount.\n⏰ Pickup: ${state.pickup ? PICKUP_TEXT[state.pickup] : "as soon as possible"}`,
+      state.phone
+        ? `👤 ${details.name}\n📱 ${state.phone}`
+        : `👤 ${details.name}`,
+      [
+        ...order.lines.map(lineText),
+        details.takeoutBoxPrice !== null &&
+          `📦 1 × Takeout box — ${formatPrice(details.takeoutBoxPrice)}`,
+      ]
+        .filter(Boolean)
+        .join("\n"),
+      `Total: ${formatPrice(total)}\n💳 Pay ${formatPrice(total)} via ${state.payment ?? "Cash"} at the counter.${details.takeoutBoxPrice === null ? " The shop adds the takeout box to that." : ""}\n⏰ Pickup: ${state.pickup ? PICKUP_TEXT[state.pickup] : "as soon as possible"}`,
       needsFlavorChoice(order) &&
         '💬 Staff will ask you here for the "Any flavor" choices in your combo.',
       content && `🕒 ${hoursSummary(content.hours)}`,

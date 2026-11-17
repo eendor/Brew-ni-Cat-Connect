@@ -8,6 +8,7 @@
  * so the shop's POS app shows it like any online order.
  */
 
+import { findMenuItem } from "@/lib/menu/menu-facts";
 import { createRateLimiter } from "@/lib/orders/rate-limit";
 import type {
   OrderCustomer,
@@ -23,6 +24,7 @@ import {
   MAX_MIXED_FLAVORS,
   resolveVariantUnitPrice,
 } from "@/lib/ordering/cart-pricing";
+import { orderTotal } from "@/lib/site-content/format";
 import { shopStatus } from "@/lib/site-content/open-now";
 import type { SiteContent } from "@/lib/site-content/types";
 import type { MenuCatalog, MenuItem, MenuVariant } from "@/types/menu";
@@ -44,6 +46,7 @@ import {
   withPayment,
   withPickup,
   withReview,
+  type OrderLine,
   type OrderState,
   type OrderTap,
   type Pickup,
@@ -64,9 +67,6 @@ import {
   orderOutsideHoursReply,
   orderPausedReply,
   paymentReply,
-  phoneAskReply,
-  phoneMissingReply,
-  phoneRetryReply,
   pickReply,
   pickupReply,
   placedReply,
@@ -77,6 +77,7 @@ import {
   reviewReply,
   type PricedOrder,
 } from "./ordering";
+import type { TypedOrder, TypedOrderLine } from "./assistant";
 import { menuUnavailableReply, type Reply } from "./replies";
 
 export type PlaceOrderInput = Readonly<{
@@ -139,13 +140,20 @@ const minutesOf = (ms: number) => Math.floor(ms / MINUTE_MS);
 
 // Starting ------------------------------------------------------------------
 
-/** "Order here": asks for the number, or says ordering is paused. */
+/**
+ * "Order here": the categories straight away, or says ordering is paused.
+ * The mobile number is optional since 2026-11-17: the shop replies in the
+ * chat.
+ */
 export async function orderIntentReply(
   deps: OrderFlowDeps,
   facts: OrderFacts,
 ): Promise<Reply> {
-  return (await stopReply(deps, facts)) ?? phoneAskReply();
+  return beginOrder("", deps, facts);
 }
+
+export const typedOrderTip =
+  '✍️ You can also just type your order, like "2 Nachos and 1 Iced Latte".';
 
 /** Ordering is off, the owner closed the shop for today (FR-111), or the shop is outside its hours (FR-112). */
 async function stopReply(
@@ -166,19 +174,26 @@ async function stopReply(
     : orderOutsideHoursReply(status, content.hours);
 }
 
-/** The customer gave a mobile number (or it wasn't a usable one). */
+/**
+ * Starts an order, with the mobile number the customer gave or none (null
+ * or "": the phone button had no number to share, which no longer stops
+ * the order).
+ */
 export async function beginOrder(
   phone: string | null,
   deps: OrderFlowDeps,
   facts: OrderFacts,
-  noNumberShared = false,
 ): Promise<Reply> {
   const stop = await stopReply(deps, facts);
   if (stop) return stop;
-  if (!phone) return noNumberShared ? phoneMissingReply() : phoneRetryReply();
   const catalog = await facts.menu();
   if (!catalog) return menuUnavailableReply(deps.origin);
-  return categoriesReply(catalog, deps.origin, newOrder(phone));
+  return categoriesReply(
+    catalog,
+    deps.origin,
+    newOrder(phone ?? ""),
+    typedOrderTip,
+  );
 }
 
 // Reading a button's choices ------------------------------------------------
@@ -357,6 +372,101 @@ export async function answerOrderTap(
   }
 }
 
+// Typed orders --------------------------------------------------------------
+
+const sameName = (a: string, b: string) =>
+  a.trim().toLowerCase().replace(/\s+/g, " ") ===
+  b.trim().toLowerCase().replace(/\s+/g, " ");
+
+/**
+ * One thing the customer typed, as an order line the live menu really
+ * sells; null when the item, size or flavors don't match, or are missing.
+ */
+export function matchTypedLine(
+  catalog: MenuCatalog,
+  wanted: TypedOrderLine,
+): OrderLine | null {
+  const item = findMenuItem(catalog, [wanted.item]);
+  if (!item || !isOrderable(item)) return null;
+  const [only] = item.variants;
+  const variant =
+    item.variants.find(
+      (entry) => wanted.size && sameName(entry.name, wanted.size),
+    ) ?? (item.variants.length === 1 ? only : undefined);
+  if (!variant) return null;
+  const flavors = wanted.flavors.map(
+    (name) => item.flavors.find((flavor) => sameName(flavor, name)) ?? null,
+  );
+  if (
+    flavors.some((flavor) => flavor === null) ||
+    (item.flavors.length > 0 && flavors.length === 0) ||
+    flavors.length > (allowsFlavorMix(item) ? MAX_MIXED_FLAVORS : 1) ||
+    !isUnique(flavors as string[])
+  ) {
+    return null;
+  }
+  const flavor = encodeLineFlavor(joinFlavorMix(flavors as string[]), []);
+  if (!resolveVariantUnitPrice(item, variant, flavor).ok) return null;
+  return {
+    itemId: item.id,
+    variantId: variant.id,
+    flavor,
+    quantity: Math.min(MAX_LINE_QUANTITY, Math.max(1, wanted.quantity)),
+  };
+}
+
+/**
+ * An order the customer typed, read by Gemini (added 2026-11-17): every
+ * line is checked against the live menu and priced, then the summary is
+ * shown with Place order, so it takes one tap. What can't be matched is
+ * named, and Edit order opens the usual buttons.
+ */
+export async function typedOrderReply(
+  sender: string,
+  typed: TypedOrder,
+  deps: OrderFlowDeps,
+  facts: OrderFacts,
+): Promise<Reply> {
+  const stop = await stopReply(deps, facts);
+  if (stop) return stop;
+  const catalog = await facts.menu();
+  if (!catalog) return menuUnavailableReply(deps.origin);
+  let state = newOrder("");
+  const missed: string[] = [];
+  for (const wanted of typed.lines) {
+    const line = matchTypedLine(catalog, wanted);
+    const next = line ? addLine(state, line) : null;
+    if (next) state = next;
+    else missed.push(wanted.item);
+  }
+  const notAdded =
+    missed.length > 0
+      ? `🤔 I couldn't add ${[...new Set(missed)].join(", ")}: please tap Edit order and pick the size or flavor with the buttons.`
+      : null;
+  if (state.lines.length === 0) {
+    return categoriesReply(
+      catalog,
+      deps.origin,
+      state,
+      "🤔 I couldn't match that to our menu. Please pick from here, or type it again with the names on the menu.",
+    );
+  }
+  const ready = withPickup(
+    withPayment(state, typed.payment ?? "Cash"),
+    typed.pickup ?? "asap",
+  );
+  return showReview(
+    sender,
+    ready,
+    deps,
+    facts,
+    catalog,
+    ["📝 Here's the order I got from your message.", notAdded]
+      .filter(Boolean)
+      .join("\n"),
+  );
+}
+
 // Checking and placing ------------------------------------------------------
 
 /** The summary to check, with a new number so it can be placed once. */
@@ -434,8 +544,11 @@ async function placeOrderStep(
     return cartReply(order, removedLead(order));
   }
 
-  const name =
-    (await deps.readCustomerName(sender).catch(() => null)) ?? FALLBACK_NAME;
+  const [profileName, takeoutBoxPrice] = await Promise.all([
+    deps.readCustomerName(sender).catch(() => null),
+    deps.readTakeoutBoxPrice().catch(() => null),
+  ]);
+  const name = profileName ?? FALLBACK_NAME;
   const input = (customerName: string): PlaceOrderInput => ({
     customer: {
       name: customerName,
@@ -449,7 +562,9 @@ async function placeOrderStep(
       flavor: line.flavor,
       quantity: line.quantity,
     })),
-    expectedSubtotal: order.subtotal,
+    // The database adds the takeout box, so the total the customer saw
+    // includes it (2026-11-17).
+    expectedSubtotal: orderTotal(order.subtotal, takeoutBoxPrice),
   });
 
   let result = await deps

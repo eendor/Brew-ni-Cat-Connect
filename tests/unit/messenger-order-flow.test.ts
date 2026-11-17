@@ -3,9 +3,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   answerOrderTap,
   beginOrder,
+  matchTypedLine,
   orderIntentReply,
   PLACE_ORDER_LIMIT,
   resetOrderFlow,
+  typedOrderReply,
   type OrderFacts,
   type OrderFlowDeps,
 } from "@/lib/messenger/order-flow";
@@ -22,8 +24,6 @@ import {
   fullLead,
   orderClosedReply,
   orderPausedReply,
-  phoneAskReply,
-  phoneRetryReply,
   placeFailedReply,
   placeLimitReply,
 } from "@/lib/messenger/ordering";
@@ -188,23 +188,26 @@ beforeEach(() => {
 });
 
 describe("Starting an order in Messenger (FR-100, FR-101)", () => {
-  it("TC-P7-064 — Order here asks for the phone number, or says ordering is paused", async () => {
+  it("TC-P7-064 — Order here goes straight to the menu with no phone number, or says ordering is paused", async () => {
     const ctx = setup();
-    await expect(orderIntentReply(ctx.deps, ctx.facts)).resolves.toEqual(
-      phoneAskReply(),
+    const reply = await orderIntentReply(ctx.deps, ctx.facts);
+    expect(reply.askPhone).toBeUndefined();
+    expect(reply.text).toContain("just type your order");
+    expect(reply.cards?.length).toBeGreaterThan(0);
+    const tap = decodeOrderPayload(
+      payloadOf(reply, "🥤 Cat-Tastic Drinks › 👀 See items"),
     );
-    expect((await orderIntentReply(ctx.deps, ctx.facts)).askPhone).toBe(true);
+    expect(tap).toMatchObject({ op: "cat", state: { phone: "", lines: [] } });
     const paused = setup({ onlineOrdering: () => false });
     await expect(orderIntentReply(paused.deps, paused.facts)).resolves.toEqual(
       orderPausedReply(),
     );
   });
 
-  it("TC-P7-064 — a number we can't use asks again; a paused shop and an unreadable menu are told so", async () => {
+  it("TC-P7-064 — no usable number still starts the order; a paused shop and an unreadable menu are told so", async () => {
     const ctx = setup();
-    await expect(beginOrder(null, ctx.deps, ctx.facts)).resolves.toEqual(
-      phoneRetryReply(),
-    );
+    const reply = await beginOrder(null, ctx.deps, ctx.facts);
+    expect(reply.cards?.length).toBeGreaterThan(0);
     await expect(
       beginOrder(PHONE, setup({ onlineOrdering: () => false }).deps, ctx.facts),
     ).resolves.toEqual(orderPausedReply());
@@ -234,21 +237,6 @@ describe("Starting an order in Messenger (FR-100, FR-101)", () => {
       state: { phone: PHONE, lines: [] },
       args: ["cat_drinks"],
     });
-  });
-});
-
-describe("A phone number button with no number (FR-101)", () => {
-  it("TC-P7-075 — asks the customer to type the number, without the button that can't work", async () => {
-    const ctx = setup();
-    const reply = await beginOrder(null, ctx.deps, ctx.facts, true);
-    expect(reply.text).toContain(
-      "couldn't get a Philippine mobile number from your Facebook account",
-    );
-    expect(reply.text).toContain("order 09XXXXXXXXX");
-    expect(reply.askPhone).toBeUndefined();
-
-    const retry = await beginOrder(null, ctx.deps, ctx.facts);
-    expect(retry.askPhone).toBe(true);
   });
 });
 
@@ -654,8 +642,8 @@ describe("Checking the order before placing it (FR-102, FR-106, FR-108)", () => 
       [
         "📝 Please check your order",
         "👤 Maria Santos\n📱 09171234567",
-        "1. 1 × Iced Latte (16oz) — ₱49",
-        "Subtotal: ₱49\n💳 Pay ₱49 via Cash at the counter. The ₱10 takeout box is not included in that amount.\n⏰ Pickup: as soon as possible",
+        "1. 1 × Iced Latte (16oz) — ₱49\n📦 1 × Takeout box — ₱10",
+        "Total: ₱59\n💳 Pay ₱59 via Cash at the counter.\n⏰ Pickup: as soon as possible",
         "🕒 Open Mon–Fri 10 AM – 6 PM and Sun 12 PM – 5 PM. Closed every Saturday.",
         "📢 Notice: Closed on June 12 for a holiday.",
         "Tap Place order to send it to the shop. 🛍",
@@ -704,7 +692,7 @@ describe("Checking the order before placing it (FR-102, FR-106, FR-108)", () => 
       expect(title.length).toBeLessThanOrEqual(20);
     }
     const summary = await press(when, "🕑 In 1 hour", ctx);
-    expect(summary.text).toContain("Pay ₱118 via GCash at the counter");
+    expect(summary.text).toContain("Pay ₱128 via GCash at the counter");
     expect(summary.text).toContain("⏰ Pickup: in about 1 hour");
   });
 
@@ -786,7 +774,8 @@ describe("Placing the order (FR-100, FR-107, FR-108)", () => {
           quantity: 1,
         },
       ],
-      expectedSubtotal: 49,
+      // The total the customer saw: the items and the ₱10 takeout box.
+      expectedSubtotal: 59,
     });
     expect(placed.text).toBe(
       [
@@ -857,7 +846,7 @@ describe("Placing the order (FR-100, FR-107, FR-108)", () => {
     const later = setup({ placeOrder: ctx.deps.placeOrder }, dearer);
     await press(summary, "✅ Place order", later);
     expect(vi.mocked(ctx.deps.placeOrder).mock.calls[0]?.[2]).toMatchObject({
-      expectedSubtotal: 55,
+      expectedSubtotal: 65,
     });
   });
 
@@ -1133,8 +1122,105 @@ describe("The owner's Closed today switch (FR-111)", () => {
       ...ctx.facts,
       content: async () => Promise.reject(new Error("down")),
     };
-    await expect(orderIntentReply(ctx.deps, unreadable)).resolves.toEqual(
-      phoneAskReply(),
+    const reply = await orderIntentReply(ctx.deps, unreadable);
+    expect(reply.cards?.length).toBeGreaterThan(0);
+  });
+});
+
+describe("Typed orders (added 2026-11-17)", () => {
+  it("TC-P7-120 — a typed order becomes a priced summary placed with one tap, with no phone number", async () => {
+    const ctx = setup();
+    const summary = await typedOrderReply(
+      CUSTOMER,
+      {
+        lines: [
+          { item: "iced latte", size: "22oz", flavors: [], quantity: 2 },
+          { item: "Fries", size: "", flavors: ["cheese"], quantity: 1 },
+        ],
+        payment: "GCash",
+        pickup: null,
+      },
+      ctx.deps,
+      ctx.facts,
     );
+    expect(summary.text).toContain("Here's the order I got from your message.");
+    expect(summary.text).toContain("2 × Iced Latte (22oz) — ₱118");
+    expect(summary.text).toContain("📦 1 × Takeout box — ₱10");
+    expect(summary.text).toContain("Pay ₱173 via GCash at the counter");
+    expect(summary.text).not.toContain("📱");
+    expect(titles(summary)[0]).toBe("✅ Place order");
+
+    await press(summary, "✅ Place order", ctx);
+    const [, , input] = vi.mocked(ctx.deps.placeOrder).mock.calls[0] ?? [];
+    expect(input?.customer.phone).toBe("");
+    expect(input?.customer.paymentPreference).toBe("GCash");
+    expect(input?.expectedSubtotal).toBe(173);
+    expect(input?.lines).toHaveLength(2);
+  });
+
+  it("TC-P7-121 — what can't be matched is named, and nothing matched shows the menu", async () => {
+    const ctx = setup();
+    const partly = await typedOrderReply(
+      CUSTOMER,
+      {
+        lines: [
+          { item: "Iced Latte", size: "16oz", flavors: [], quantity: 1 },
+          { item: "Pizza", size: "", flavors: [], quantity: 1 },
+        ],
+        payment: null,
+        pickup: null,
+      },
+      ctx.deps,
+      ctx.facts,
+    );
+    expect(partly.text).toContain("I couldn't add Pizza");
+    expect(partly.text).toContain("Pay ₱59 via Cash");
+
+    const none = await typedOrderReply(
+      CUSTOMER,
+      {
+        lines: [{ item: "Pizza", size: "", flavors: [], quantity: 1 }],
+        payment: null,
+        pickup: null,
+      },
+      ctx.deps,
+      ctx.facts,
+    );
+    expect(none.text).toContain("I couldn't match that to our menu");
+    expect(none.cards?.length).toBeGreaterThan(0);
+
+    const paused = setup({ onlineOrdering: () => false });
+    await expect(
+      typedOrderReply(
+        CUSTOMER,
+        { lines: [], payment: null, pickup: null },
+        paused.deps,
+        paused.facts,
+      ),
+    ).resolves.toEqual(orderPausedReply());
+  });
+
+  it("TC-P7-122 — a size, flavor or item the menu doesn't sell is never guessed", () => {
+    const line = (item: string, size: string, flavors: string[]) =>
+      matchTypedLine(menu, { item, size, flavors, quantity: 1 });
+    // two sizes and none named
+    expect(line("Iced Latte", "", [])).toBeNull();
+    expect(line("Iced Latte", "30oz", [])).toBeNull();
+    // a flavored item needs a flavor from its list
+    expect(line("Fries", "", [])).toBeNull();
+    expect(line("Fries", "", ["Ube"])).toBeNull();
+    // sold out today
+    expect(
+      matchTypedLine(rawCatalog, {
+        item: "Snack Combo",
+        size: "Fries+Drink",
+        flavors: [],
+        quantity: 1,
+      }),
+    ).toBeNull();
+    expect(line("Matcha", "", ["mango"])).toMatchObject({
+      flavor: "Mango",
+      quantity: 1,
+    });
   });
 });

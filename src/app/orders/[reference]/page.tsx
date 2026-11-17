@@ -13,6 +13,7 @@ import { useCart } from "@/context/cart-context";
 import { useShopFacts } from "@/context/shop-facts-context";
 import { fetchPublicMenu } from "@/lib/menu/fetch-public-menu";
 import { formatPrice } from "@/lib/menu/format-price";
+import { isTakeoutBoxName } from "@/lib/menu/menu-facts";
 import {
   localityLine,
   streetLine,
@@ -160,6 +161,8 @@ export default function OrderConfirmationPage() {
   }
 
   const { order } = state;
+  // Orders since the box was counted carry it as a line of the order.
+  const hasBox = order.items.some((item) => isTakeoutBoxName(item.itemName));
 
   return (
     <div className="container mx-auto max-w-3xl px-4 py-12">
@@ -327,7 +330,7 @@ export default function OrderConfirmationPage() {
 
           <div className="mt-2 flex items-center justify-between border-t border-[var(--separator)] pt-5 text-xl font-bold">
             <span className="text-base font-semibold text-[var(--text-strong)]">
-              Subtotal
+              {hasBox ? "Total" : "Subtotal"}
             </span>
             <span className="text-[var(--text-strong)] tabular-nums">
               {formatPrice(order.subtotal)}
@@ -350,8 +353,10 @@ export default function OrderConfirmationPage() {
               </li>
               <li>
                 Pay {formatPrice(order.subtotal)} via {order.paymentPreference}{" "}
-                at the counter. The {takeoutBoxText(takeoutBoxPrice)} is not
-                included in that amount.
+                at the counter.
+                {hasBox
+                  ? null
+                  : ` The ${takeoutBoxText(takeoutBoxPrice)} is not included in that amount.`}
               </li>
             </ul>
           </div>

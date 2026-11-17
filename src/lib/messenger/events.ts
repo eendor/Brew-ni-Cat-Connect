@@ -59,6 +59,7 @@ import {
   answerOrderTap,
   beginOrder,
   orderIntentReply,
+  typedOrderReply,
   resetOrderFlow,
   type OrderFlowDeps,
 } from "./order-flow";
@@ -398,9 +399,7 @@ async function answerTap(
     case "order":
       return ordering(await answerOrderTap(sender, tap.tap, deps, facts));
     case "phone":
-      return ordering(
-        await beginOrder(tap.phone, deps, facts, tap.missing === true),
-      );
+      return ordering(await beginOrder(tap.phone, deps, facts));
     case "status":
       return plain(await checkOrder(sender, tap.reference, tap.token, deps));
   }
@@ -495,16 +494,16 @@ async function answerText(
     ]);
     return plain(openNowReply(content, now, posts, counterActive));
   }
-  return plain(await answerQuestion(sender, text, deps, facts));
+  return answerQuestion(sender, text, deps, facts);
 }
 
-/** A smart reply, or "our staff will reply" when one can't be written. */
+/** A smart reply, a typed order's summary, or "our staff will reply" when one can't be written. */
 async function answerQuestion(
   sender: string,
   text: string,
   deps: MessengerDeps,
   facts: Facts,
-): Promise<Reply> {
+): Promise<Answer> {
   const now = deps.now();
   const content = await facts.content();
   const ask = deps.askAssistant;
@@ -513,7 +512,7 @@ async function answerQuestion(
     !smartLimiter.check(sender, now).allowed ||
     !smartPageLimiter.check("page", now).allowed
   ) {
-    return questionForStaffReply(content, now);
+    return plain(questionForStaffReply(content, now));
   }
   const [menu, takeoutBoxPrice, posts, counterActive] = await Promise.all([
     facts.menu(),
@@ -534,10 +533,13 @@ async function answerQuestion(
     }),
     text,
   ).catch(() => null);
-  if (!answer) return questionForStaffReply(content, now);
-  return answer.handoff
-    ? handoffReply(answer.reply, content, now)
-    : smartReply(answer.reply, answer.buttons);
+  if (!answer) return plain(questionForStaffReply(content, now));
+  if (answer.handoff) return plain(handoffReply(answer.reply, content, now));
+  // A typed order becomes a summary to place with one tap (2026-11-17).
+  if (answer.order && deps.onlineOrdering()) {
+    return ordering(await typedOrderReply(sender, answer.order, deps, facts));
+  }
+  return plain(smartReply(answer.reply, answer.buttons));
 }
 
 /** True while the staff are handling this chat after replying by hand. */

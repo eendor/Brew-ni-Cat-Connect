@@ -10,7 +10,11 @@ import { useCart } from "@/context/cart-context";
 import { useShopFacts } from "@/context/shop-facts-context";
 import { useFocusTrap } from "@/lib/accessibility/focus-trap";
 import { formatPrice } from "@/lib/menu/format-price";
-import { joinList, takeoutBoxText } from "@/lib/site-content/format";
+import {
+  joinList,
+  orderTotal,
+  takeoutBoxText,
+} from "@/lib/site-content/format";
 import { usePreparedSummary } from "@/lib/ordering/prepared-summary";
 
 import { CartLineItem } from "./cart-line-item";
@@ -243,22 +247,21 @@ export function CartDrawer() {
               <div className="flex items-center justify-between">
                 <div>
                   <span className="block text-sm font-semibold text-[var(--text-strong)]">
-                    Subtotal
+                    Total
                   </span>
                   <span className="block text-xs text-[var(--text-subtle)]">
-                    Exact catalog pricing
+                    Includes the {takeoutBoxText(takeoutBoxPrice)}
                   </span>
                 </div>
                 <span className="text-2xl font-bold text-[var(--accent-strong)] tabular-nums">
-                  {formatPrice(subtotal)}
+                  {formatPrice(orderTotal(subtotal, takeoutBoxPrice))}
                 </span>
               </div>
 
               <p className="text-xs leading-5 text-[var(--text-muted)]">
                 Pick up at {address.street} and pay{" "}
                 {joinList(payments.methods, "or")} at the shop, or have a local
-                rider order and deliver it. The{" "}
-                {takeoutBoxText(takeoutBoxPrice)} is not in the subtotal.
+                rider order and deliver it.
               </p>
 
               <div className="grid gap-2">

@@ -17,6 +17,7 @@ import {
   localityLine,
   streetLine,
   takeoutPriceText,
+  orderTotal,
 } from "@/lib/site-content/format";
 import { usePreparedSummary } from "@/lib/ordering/prepared-summary";
 import type { MenuCatalog } from "@/types/menu";
@@ -47,6 +48,7 @@ export function CartPageView() {
     setFulfillment,
     clearCart,
   } = useCart();
+  const total = orderTotal(subtotal, takeoutBoxPrice);
   // a summary made at checkout holds the order the cart gave up (ADR-020)
   const savedSummary = usePreparedSummary();
 
@@ -319,23 +321,21 @@ export function CartPageView() {
                     <div className="flex justify-between gap-4 text-[var(--text-muted)]">
                       <span>Takeout box</span>
                       <span className="text-right text-xs font-semibold text-[var(--text-subtle)]">
-                        {fulfillment === "pickup"
-                          ? `${takeoutPriceText(takeoutBoxPrice)}, paid at the shop · not in subtotal`
-                          : `${takeoutPriceText(takeoutBoxPrice)} · not in subtotal`}
+                        {takeoutPriceText(takeoutBoxPrice)}
                       </span>
                     </div>
 
                     <div className="flex items-baseline justify-between border-t border-[var(--separator)] pt-3">
                       <div>
                         <span className="block text-base font-semibold text-[var(--text-strong)]">
-                          Subtotal
+                          Total
                         </span>
                         <span className="block text-xs text-[var(--text-subtle)]">
                           PHP (₱)
                         </span>
                       </div>
                       <span className="text-3xl font-bold text-[var(--accent-strong)] tabular-nums">
-                        {formatPrice(subtotal)}
+                        {formatPrice(total)}
                       </span>
                     </div>
                   </div>

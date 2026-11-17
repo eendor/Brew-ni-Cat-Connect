@@ -219,8 +219,8 @@ export type OnlineOrder = Readonly<{
   customer: OrderCustomer;
   items: readonly OrderItemSnapshot[];
   /**
-   * Sum of the line totals, in pesos. As at checkout, the takeout box charge
-   * is not included.
+   * Sum of the line totals, in pesos. Since 2026-11-17 the database adds a
+   * pickup order's takeout box as a line, so this is the total to pay.
    */
   subtotal: number;
   /** Total quantity across all lines. */
@@ -288,6 +288,11 @@ export type PlaceOrderRequest = Readonly<{
   fulfillment: OnlineOrderFulfillment;
   customer: OrderCustomer;
   lines: readonly CartItemSelection[];
+  /**
+   * "messenger" lets the order leave the mobile number out: the shop answers
+   * in the chat. The website's API route always drops it.
+   */
+  channel?: "messenger";
   /**
    * The subtotal the customer saw, in pesos. The server only compares it: if
    * the menu price changed, it answers `price-changed` with the new subtotal,

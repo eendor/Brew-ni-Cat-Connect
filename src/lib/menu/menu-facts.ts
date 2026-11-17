@@ -32,15 +32,18 @@ export function findMenuItem(
 export const lowestPrice = (item: MenuItem | null) =>
   item ? getLowestItemPrice(getItemPrices(item)) : null;
 
+/** True for the "Take-out Box" item, however its name is spelled. */
+export const isTakeoutBoxName = (name: string) =>
+  name.toLowerCase().replace(/[^a-z]/g, "") === "takeoutbox";
+
 /**
  * The takeout box is an item on the POS menu, so its price is the owner's
  * (FR-084): the "Take-out Box" item, however it is spelled.
  */
 export function findTakeoutBoxPrice(catalog: MenuCatalog): number | null {
-  const compact = (name: string) => name.toLowerCase().replace(/[^a-z]/g, "");
   for (const category of catalog.categories) {
     for (const item of category.items) {
-      if (compact(item.name) === "takeoutbox") return lowestPrice(item);
+      if (isTakeoutBoxName(item.name)) return lowestPrice(item);
     }
   }
   return null;
