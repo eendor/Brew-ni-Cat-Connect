@@ -197,6 +197,14 @@ export function formatDate(date: string, style: "day" | "month" = "day") {
 export const takeoutBoxText = (price: number | null) =>
   price === null ? "takeout box" : `${formatPrice(price)} takeout box`;
 
+/**
+ * What a pickup order costs: the items plus one takeout box, which the
+ * database adds to every order. Rounded to centavos so it compares equal to
+ * the database's total.
+ */
+export const orderTotal = (subtotal: number, boxPrice: number | null) =>
+  Math.round((subtotal + (boxPrice ?? 0)) * 100) / 100;
+
 /** "₱10", or "priced by the shop" while the menu can't be read. */
 export const takeoutPriceText = (price: number | null) =>
   price === null ? "priced by the shop" : formatPrice(price);

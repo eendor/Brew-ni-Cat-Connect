@@ -752,11 +752,14 @@ describe("Messenger order status in the chat (FR-110)", () => {
 });
 
 describe("Messenger ordering entry points (FR-100)", () => {
-  it("TC-P7-057 — Order here asks for the phone number with Messenger's phone button", async () => {
+  // Update 2026-11-17: the mobile number is optional, so Order here goes
+  // straight to the categories.
+  it("TC-P7-057 — Order here shows the categories without asking for a number", async () => {
     const { deps, sent } = setup();
     await processWebhook(delivery(postback(PAYLOADS.order)), deps);
-    expect(sent[0]?.answer.askPhone).toBe(true);
-    expect(sent[0]?.answer.text).toContain("mobile number");
+    expect(sent[0]?.answer.askPhone).toBeFalsy();
+    expect(sent[0]?.answer.cards).toHaveLength(2);
+    expect(sent[0]?.answer.text).toContain("just type your order");
   });
 
   it("TC-P7-057 — the phone button's number starts the order and shows the categories", async () => {
@@ -828,6 +831,43 @@ describe("Smart replies (ADR-031)", () => {
       buttons: ["order", "menu"],
     },
   ) => vi.fn<AskAssistant>(async () => answer);
+
+  it("TC-P7-123 — a typed order comes back as a summary to place with one tap", async () => {
+    const askAssistant = smart({
+      handoff: false,
+      reply: "Here is your order po!",
+      buttons: ["order"],
+      order: {
+        lines: [{ item: "Iced Latte", size: "16oz", flavors: [], quantity: 2 }],
+        payment: null,
+        pickup: null,
+      },
+    });
+    const { deps, sent } = setup({ askAssistant });
+    await processWebhook(delivery(typed("2 iced latte 16oz po")), deps);
+    expect(sent[0]?.answer.text).toContain("2 × Iced Latte (16oz)");
+    expect(sent[0]?.answer.quickReplies[0]?.title).toBe("✅ Place order");
+    expect(deps.placeOrder).not.toHaveBeenCalled();
+  });
+
+  it("TC-P7-123 — with ordering paused, a typed order gets the plain reply", async () => {
+    const askAssistant = smart({
+      handoff: false,
+      reply: "Opo!",
+      buttons: [],
+      order: {
+        lines: [{ item: "Iced Latte", size: "16oz", flavors: [], quantity: 1 }],
+        payment: null,
+        pickup: null,
+      },
+    });
+    const { deps, texts } = setup({
+      askAssistant,
+      onlineOrdering: () => false,
+    });
+    await processWebhook(delivery(typed("1 iced latte")), deps);
+    expect(texts()[0]).toBe("Opo!");
+  });
 
   it("TC-P7-101 — a typed question gets the shop's own answer and the buttons it picked", async () => {
     const askAssistant = smart();

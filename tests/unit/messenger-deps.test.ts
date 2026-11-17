@@ -87,6 +87,8 @@ describe("Placing a Messenger order in the database (FR-107)", () => {
       customer: input.customer,
       lines: input.lines,
       expectedSubtotal: 49,
+      // lets the order leave the mobile number out (2026-11-17)
+      channel: "messenger",
     });
     expect(args.p_correlation_id).toMatch(/^[0-9a-f-]{36}$/);
     expect(mocks.getClient).toHaveBeenCalledWith(null);

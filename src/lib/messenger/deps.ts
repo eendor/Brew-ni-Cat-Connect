@@ -58,7 +58,7 @@ export async function readWebsiteMenu(): Promise<MenuCatalog | null> {
   }
 }
 
-/** The take-out box price the order summary says is not in the total. */
+/** The take-out box price, which the order's total includes. */
 async function readTakeoutBoxPrice(): Promise<number | null> {
   try {
     return (await loadMenuFacts()).takeoutBoxPrice;
@@ -124,6 +124,7 @@ export async function placeMessengerOrder(
     customer: order.customer,
     lines: order.lines,
     expectedSubtotal: order.expectedSubtotal,
+    channel: "messenger",
   };
 
   let supabase: ReturnType<typeof getPublicSupabaseClient>;

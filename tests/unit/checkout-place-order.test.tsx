@@ -325,6 +325,7 @@ describe("Place order at checkout", () => {
         ok: false,
         reason: "price-changed",
         message: PLACE_ORDER_MESSAGES["price-changed"],
+        // no takeout box price is known here, so the total is the items'
         subtotal: 255,
       })
       .mockImplementation(async (request) => placed(request));
@@ -341,9 +342,7 @@ describe("Place order at checkout", () => {
     const notice = await screen.findByText(
       PLACE_ORDER_MESSAGES["price-changed"],
     );
-    expect(notice.closest("[role=alert]")).toHaveTextContent(
-      "New subtotal: ₱255",
-    );
+    expect(notice.closest("[role=alert]")).toHaveTextContent("New total: ₱255");
     // the cart is refreshed from the menu, so the review shows the new price
     await waitFor(() => expect(loadMenu).toHaveBeenCalledTimes(2));
     expect((await screen.findAllByText("₱255")).length).toBeGreaterThan(0);

@@ -48,6 +48,7 @@ import {
   streetLine,
   takeoutBoxText,
   takeoutPriceText,
+  orderTotal,
 } from "@/lib/site-content/format";
 import type { ShopFacts } from "@/lib/site-content/types";
 import { isOnlineOrderingEnabled } from "@/lib/orders/online-ordering";
@@ -116,11 +117,12 @@ export function formatOrderSummaryText(
     summary.customer.notes ? `Notes: ${summary.customer.notes}` : null,
     `Items:`,
     itemsText,
-    `Subtotal: ${formatPrice(summary.subtotal)}`,
+    facts.takeoutBoxPrice === null
+      ? `Total: ${formatPrice(summary.subtotal)} (the shop adds the takeout box)`
+      : `Total: ${formatPrice(summary.subtotal)} (includes the ${takeoutBoxText(facts.takeoutBoxPrice)})`,
     isRiderDelivery
       ? `Payment and delivery fee: agreed with the rider`
       : `Payment preference: ${summary.customer.paymentPreference} at counter`,
-    `Takeout box: ${takeoutPriceText(facts.takeoutBoxPrice)}, not included in the subtotal (the shop confirms it).`,
   ]
     .filter(Boolean)
     .join("\n");
@@ -180,6 +182,7 @@ export function CheckoutView({
     clearCart,
     restoreCart,
   } = useCart();
+  const total = orderTotal(subtotal, takeoutBoxPrice);
 
   const [formStep, setStep] = useState<CheckoutStep>("details");
   // The generated summary survives a refresh; while one is stored the page
@@ -401,7 +404,7 @@ export function CheckoutView({
       customer: isRiderDelivery ? customer : { ...customer, address: "" },
       fulfillment,
       lines: [...lines],
-      subtotal,
+      subtotal: total,
       itemCount,
     };
 
@@ -484,7 +487,7 @@ export function CheckoutView({
     const draft = buildOrderDraft(
       customer,
       lines,
-      newSubtotal?.selection === selection ? newSubtotal.subtotal : subtotal,
+      newSubtotal?.selection === selection ? newSubtotal.subtotal : total,
     );
     const draftJson = JSON.stringify(draft);
     if (attemptRef.current?.draft !== draftJson) {
@@ -538,7 +541,7 @@ export function CheckoutView({
         setNewSubtotal({ selection, subtotal: result.subtotal });
         setPlaceNotice({
           message: result.message,
-          details: [`New subtotal: ${formatPrice(result.subtotal)}`],
+          details: [`New total: ${formatPrice(result.subtotal)}`],
         });
         void refreshCartFromMenu();
         return;
@@ -1170,16 +1173,14 @@ export function CheckoutView({
                     <div className="flex justify-between gap-4 text-[var(--text-muted)]">
                       <span>Takeout box</span>
                       <span className="text-right text-xs font-semibold text-[var(--text-subtle)]">
-                        {isRiderDelivery
-                          ? `${takeoutPriceText(takeoutBoxPrice)} · not in subtotal`
-                          : `${takeoutPriceText(takeoutBoxPrice)}, paid at the shop · not in subtotal`}
+                        {takeoutPriceText(takeoutBoxPrice)}
                       </span>
                     </div>
 
                     <div className="pt-3 border-t border-[var(--border-soft)] flex items-baseline justify-between">
                       <div>
                         <span className="block text-base font-semibold text-[var(--text-strong)]">
-                          Subtotal
+                          Total
                         </span>
                         <span className="block text-xs text-[var(--text-subtle)]">
                           {isRiderDelivery
@@ -1188,7 +1189,7 @@ export function CheckoutView({
                         </span>
                       </div>
                       <span className="text-3xl font-bold text-[var(--accent-strong)] tabular-nums">
-                        {formatPrice(subtotal)}
+                        {formatPrice(total)}
                       </span>
                     </div>
                   </div>
@@ -1197,8 +1198,7 @@ export function CheckoutView({
                     <strong className="block font-semibold text-[var(--text-strong)]">
                       Shop Hours & Takeout Note
                     </strong>
-                    {hoursNotice(hours)} The {takeoutBox} is not included in the
-                    subtotal.{" "}
+                    {hoursNotice(hours)} The total includes the {takeoutBox}.{" "}
                     {isRiderDelivery
                       ? "The shop confirms it when your rider orders. Delivery fee and payment are agreed with your rider."
                       : `The shop confirms it when you order. Payment is settled via ${paymentList} directly with the shop.`}
@@ -1377,16 +1377,14 @@ export function CheckoutView({
                     <div className="flex justify-between gap-4 text-[var(--text-muted)]">
                       <span>Takeout box</span>
                       <span className="text-right text-xs font-semibold text-[var(--text-subtle)]">
-                        {isRiderDelivery
-                          ? `${takeoutPriceText(takeoutBoxPrice)} · not in subtotal`
-                          : `${takeoutPriceText(takeoutBoxPrice)}, paid at the shop · not in subtotal`}
+                        {takeoutPriceText(takeoutBoxPrice)}
                       </span>
                     </div>
 
                     <div className="pt-3 border-t border-[var(--border-soft)] flex items-baseline justify-between">
                       <div>
                         <span className="block text-base font-semibold text-[var(--text-strong)]">
-                          Subtotal
+                          Total
                         </span>
                         <span className="block text-xs text-[var(--text-subtle)]">
                           {isRiderDelivery
@@ -1395,7 +1393,7 @@ export function CheckoutView({
                         </span>
                       </div>
                       <span className="text-3xl font-bold text-[var(--accent-strong)] tabular-nums">
-                        {formatPrice(subtotal)}
+                        {formatPrice(total)}
                       </span>
                     </div>
                   </div>
@@ -1660,8 +1658,7 @@ export function CheckoutView({
                             {formatPrice(preparedSummary.subtotal)}
                           </strong>{" "}
                           via {preparedSummary.customer.paymentPreference} at
-                          the counter. The {takeoutBox} is not included in that
-                          amount; the shop confirms it when you order.
+                          the counter. That includes the {takeoutBox}.
                         </li>
                       </ol>
                       {preparedSummary.customer.paymentPreference === "GCash" &&
@@ -1703,11 +1700,11 @@ export function CheckoutView({
                             "your address"}
                         </strong>
                         . Delivery fee and payment are agreed with the rider;
-                        the {takeoutBox} is not included in the{" "}
+                        the{" "}
                         <strong className="text-[var(--text-strong)]">
                           {formatPrice(preparedSummary.subtotal)}
                         </strong>{" "}
-                        subtotal.
+                        total includes the {takeoutBox}.
                       </li>
                     </ol>
                   )}

@@ -208,8 +208,8 @@ describe("Checkout Flow & Step Transitions", () => {
       }),
     ).toBeInTheDocument();
 
-    // Summary displays subtotal (190 + 45 = 235)
-    expect(screen.getByText("₱235")).toBeInTheDocument();
+    // Summary displays the total: 190 + 45 = 235, and the ₱10 takeout box
+    expect(screen.getByText("₱245")).toBeInTheDocument();
     expect(screen.getAllByText("3").length).toBeGreaterThan(0); // total items: 2 + 1
   });
 
@@ -343,7 +343,7 @@ describe("Checkout Flow & Step Transitions", () => {
     expect(screen.getByText("Takoyaki")).toBeInTheDocument();
     expect(screen.getAllByText("₱190").length).toBeGreaterThan(0);
     expect(screen.getAllByText("₱45").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("₱235").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("₱245").length).toBeGreaterThan(0);
 
     // Verify customer info in review list
     expect(screen.getByText("Maria Clara")).toBeInTheDocument();
@@ -436,7 +436,7 @@ describe("Checkout Flow & Step Transitions", () => {
     expect(window.localStorage.getItem(SUMMARY_KEY)).toBeNull();
     expect(screen.getByTestId("cart-count")).toHaveTextContent("0");
     expect(
-      screen.getByText(/Takeout box: ₱10, not included in the subtotal/),
+      screen.getByText(/Total: ₱245 \(includes the ₱10 takeout box\)/),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: "Return to Home" }),
@@ -602,9 +602,7 @@ describe("Checkout Flow & Step Transitions", () => {
     expect(screen.queryByRole("img", { name: /QR code/i })).toBeNull();
     // the menu's Take-out Box price is unknown, so none is quoted
     expect(
-      screen.getByText(
-        /Takeout box: priced by the shop, not included in the subtotal/,
-      ),
+      screen.getByText(/Total: ₱235 \(the shop adds the takeout box\)/),
     ).toBeInTheDocument();
     expect(document.body.textContent).not.toMatch(/Takeout box: ₱/);
     unmount();
@@ -621,7 +619,7 @@ describe("Checkout Flow & Step Transitions", () => {
     await reachSendStep(user);
     expect(screen.queryByRole("img", { name: /QR code/i })).toBeNull();
     expect(
-      screen.getByText(/Takeout box: ₱12, not included in the subtotal/),
+      screen.getByText(/Total: ₱247 \(includes the ₱12 takeout box\)/),
     ).toBeInTheDocument();
   });
 
@@ -880,8 +878,8 @@ describe("Checkout Flow & Step Transitions", () => {
       Promise.resolve(mockCatalog),
     );
 
-    // The subtotal should revalidate to ₱95, not ₱1
-    expect(await screen.findByText("₱95")).toBeInTheDocument();
+    // The total should revalidate to ₱95 and the ₱10 box, not ₱1
+    expect(await screen.findByText("₱105")).toBeInTheDocument();
   });
 
   it("TC-P3-061 — the progress bar marks only the current step with aria-current", async () => {

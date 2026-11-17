@@ -131,7 +131,9 @@ export async function POST(request: Request): Promise<Response> {
   let data: unknown;
   try {
     const answer = await supabase.rpc("place_online_order", {
-      p_request: body.request,
+      // Only the Messenger assistant may leave the number out ("channel");
+      // a browser's request never carries that.
+      p_request: { ...body.request, channel: undefined },
       p_correlation_id: correlationId,
     });
     if (answer.error) {

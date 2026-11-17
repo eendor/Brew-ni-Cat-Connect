@@ -7,6 +7,7 @@
  */
 
 import { formatPrice } from "@/lib/menu/format-price";
+import { isTakeoutBoxName } from "@/lib/menu/menu-facts";
 import {
   findCatalogItem,
   findCatalogVariant,
@@ -57,6 +58,8 @@ export function reorderItems(
   const priceChangedItems: ReorderNotice[] = [];
 
   for (const item of items) {
+    // Every order gets its own take-out box, so the old one isn't carried over.
+    if (isTakeoutBoxName(item.itemName)) continue;
     const catalogItem = findCatalogItem(catalog, item.itemId);
     if (!catalogItem) {
       unavailableItems.push({
