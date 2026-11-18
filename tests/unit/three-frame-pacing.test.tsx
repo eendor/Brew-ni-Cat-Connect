@@ -16,6 +16,7 @@ import { useScene } from "@/components/three/canvas/use-scene";
 import { addFrame } from "@/components/three/engine/loop";
 import {
   makeRenderer,
+  pixelSteps,
   shadowPacer,
   warmUp,
 } from "@/components/three/engine/renderer";
@@ -293,7 +294,7 @@ describe("3D frame pacing (TC-P4-180 – TC-P4-186, TC-P4-191 – TC-P4-196)", (
     ]);
   });
 
-  it("TC-P4-186 — a canvas drawn through post-processing doesn't multisample; other desktop canvases do, phone canvases never", () => {
+  it("TC-P4-186 — a canvas drawn through post-processing doesn't multisample; every other canvas does, phones included", () => {
     const phone: Quality = {
       mobile: true,
       maxDpr: 1,
@@ -310,7 +311,7 @@ describe("3D frame pacing (TC-P4-180 – TC-P4-186, TC-P4-191 – TC-P4-196)", (
     expect(antialias(desktop)).toBe(true);
     expect(antialias(desktop, true)).toBe(false);
     expect(antialias({ ...desktop, maxDpr: 1, lite: true })).toBe(true);
-    expect(antialias(phone)).toBe(false);
+    expect(antialias(phone)).toBe(true);
     expect(antialias(phone, true)).toBe(false);
   });
 
@@ -323,7 +324,7 @@ describe("3D frame pacing (TC-P4-180 – TC-P4-186, TC-P4-191 – TC-P4-196)", (
     expect(slow.level).toBe(1);
     expect(getQuality().lite).toBe(false);
     frames(slow, 90, 40);
-    expect(getQuality()).toMatchObject({ lite: true, maxDpr: 1 });
+    expect(getQuality()).toMatchObject({ lite: true, maxDpr: 1.5 });
 
     // a later visit on this device
     resetFrameBudgets();
@@ -491,5 +492,27 @@ describe("3D frame pacing (TC-P4-180 – TC-P4-186, TC-P4-191 – TC-P4-196)", (
 
     vi.stubEnv("NODE_ENV", "development");
     expect(make().debug.checkShaderErrors).toBe(true);
+  });
+
+  it("TC-P4-278 — a slow scene lowers its pixel ratio a step at a time and never below 1×", () => {
+    let ratio = 2;
+    const renderer = {
+      getPixelRatio: () => ratio,
+      setPixelRatio: (next: number) => {
+        ratio = next;
+      },
+    };
+    const resize = vi.fn();
+    const steps = pixelSteps(renderer, resize);
+    expect(steps).toHaveLength(3);
+    const seen = steps.map((step) => {
+      step();
+      return ratio;
+    });
+    expect(seen).toEqual([1.5, 1.25, 1]);
+    expect(resize).toHaveBeenCalledTimes(3);
+
+    // a 1× laptop screen has nothing to lower: it stays sharp
+    expect(pixelSteps(renderer, resize)).toEqual([]);
   });
 });

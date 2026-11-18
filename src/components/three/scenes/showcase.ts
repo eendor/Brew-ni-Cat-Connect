@@ -7,6 +7,7 @@ import {
   disposeScene,
   loadImage,
   makeRenderer,
+  pixelSteps,
   shadowPacer,
   studioEnvironment,
   warmUp,
@@ -425,26 +426,21 @@ export async function initShowcase(
   const post = lite
     ? null
     : makePost(renderer, scene, camera, quality, { focus: 11 });
-  // slow frames switch off the heaviest effects first, then draw fewer
-  // pixels; the lite tier has nothing left to switch off, so only the second
-  const fewerPixels = () => {
-    renderer.setPixelRatio(0.75);
-    resize();
-  };
+  // slow frames switch off the heaviest effects first, then lower the pixel
+  // ratio a step at a time, down to 1× at most (the lite tier has only those)
   const budget = new FrameBudget(
     FRAME_BUDGET_MS,
     post
       ? [
           () => {
             post.degrade();
-            renderer.setPixelRatio(1);
             renderer.transmissionResolutionScale = 0.5;
             shadows.slowDown();
             resize();
           },
-          fewerPixels,
+          ...pixelSteps(renderer, resize),
         ]
-      : [fewerPixels],
+      : pixelSteps(renderer, resize),
     quality.forceHigh,
   );
 

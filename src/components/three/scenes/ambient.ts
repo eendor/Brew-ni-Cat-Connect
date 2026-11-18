@@ -4,6 +4,7 @@ import { makePost } from "../engine/post";
 import {
   disposeScene,
   makeRenderer,
+  pixelSteps,
   studioEnvironment,
   warmUp,
 } from "../engine/renderer";
@@ -163,22 +164,19 @@ export async function initAmbient(
         aperture: 0.0012,
         bloom: 0.3,
       });
-  const fewerPixels = () => {
-    renderer.setPixelRatio(0.75);
-    resize();
-  };
+  // slow frames switch off the heaviest effects first, then lower the pixel
+  // ratio a step at a time, down to 1× at most (the lite tier has only those)
   const budget = new FrameBudget(
     FRAME_BUDGET_MS,
     post
       ? [
           () => {
             post.degrade();
-            renderer.setPixelRatio(1);
             resize();
           },
-          fewerPixels,
+          ...pixelSteps(renderer, resize),
         ]
-      : [fewerPixels],
+      : pixelSteps(renderer, resize),
     quality.forceHigh,
   );
 

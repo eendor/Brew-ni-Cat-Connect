@@ -19,7 +19,8 @@ export type Quality = Readonly<{
    * The light GPU tier (ADR-014): phones, integrated and software GPUs, and
    * devices that ran the full tier too slowly before. Scenes draw straight
    * to the canvas with no post effects, shadows or refraction, light with
-   * the half-size HDRI and draw at 1×.
+   * the half-size HDRI on phones. They keep the screen's sharpness (up to 2×
+   * on phones) and antialiasing.
    */
   lite: boolean;
 }>;
@@ -125,7 +126,10 @@ export function getQuality(): Quality {
     (!forceHigh && (mobile || lightGpu(gpuName) || rememberedLite()));
   return {
     mobile,
-    maxDpr: lite ? 1 : mobile ? 1.25 : 1.5,
+    // sharp on every tier: phone screens are 2–3×, and drawing them at 1×
+    // looked blurry. Slow devices step the pixel ratio down while they run
+    // (`pixelSteps`), never below 1×.
+    maxDpr: mobile ? 2 : 1.5,
     forceHigh,
     lite,
   };

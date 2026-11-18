@@ -2152,3 +2152,12 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Summary:** Ran it once inside a transaction that was rolled back, then applied it and recorded it in `supabase_migrations.schema_migrations`. The live About content says June 8, 2026, and the live About page shows it once the 60-second cache refreshed. No other app (Android, POS) stores the opening date.
 - **Testing:** live query of `public.site_content` (`openedOn` 2026-06-08, story updated, audit row written); the user checked the live site.
 - **Next action:** none.
+
+## 2026-11-18 — Sharper 3D on phones and laptops
+
+- **Phase:** Phase 4 (NFR-001), polish.
+- **Task:** The user said the 3D looked blurry and low resolution on phones and on the laptop; keep the speed but not at that cost.
+- **Summary:** Lite-tier phones drew at 1× with no antialiasing, and a slow scene on any tier could drop to 0.75×. Now phones draw at up to 2× and other devices at up to 1.5×, canvases without post-processing are antialiased on phones too, laptops on the lite tier use the full-size HDRI, and slow scenes step the pixel ratio down gradually (`pixelSteps`) and never below 1×. The lite tier still skips post effects, shadows and refraction. ADR-014 has a dated note.
+- **Files:** `src/components/three/engine/{runtime,renderer}.ts`, `src/components/three/scenes/{menu-hero,showcase,ambient}.ts`, `tests/unit/three-{frame-pacing,phone-tier}.test.ts*`, `docs/{decisions,test-cases,development-log}.md`.
+- **Testing:** TC-P4-278 (new), TC-P4-186 and the tier checks updated; the 3D unit tests, `npm run typecheck`, `npm run lint`, `npm run build`.
+- **Known limitations:** Frame rates at the higher pixel ratio were not measured on a phone; the frame budget steps down if they drop.

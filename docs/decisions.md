@@ -200,6 +200,7 @@ This manual state is a temporary functional-verification condition, not a revisi
 
 ---
 - Tone mapping (2026-10-30, PR #70): ACES filmic is replaced by Khronos PBR Neutral, which keeps product colors on the light studio (ADR-022).
+- Sharp lite tier (2026-11-18): the 3D looked blurry on phones and on the lead's laptop (Intel UHD, 1080p). Phones drew at 1× on 2–3× screens without antialiasing, and a slow scene on the lite tier dropped to 0.75×. Every tier now draws at the screen's pixel ratio up to 2× on phones and 1.5× elsewhere, every canvas not drawn through post-processing is antialiased, laptops on the lite tier light with the full-size HDRI (phones keep the half-size one), and a slow scene drops its effects first and then lowers the pixel ratio a step at a time (1.5×, 1.25×, 1×), never below 1×.
 
 ## ADR-015 — Cinematic Motion Layer on GSAP
 

@@ -14,8 +14,8 @@ export const STUDIO_HDRI_SMALL = "/three/hdri/studio_small_09_512.hdr";
 /** The renderer living on each canvas, so a failed start can still free it. */
 const renderers = new WeakMap<HTMLCanvasElement, THREE.WebGLRenderer>();
 const freed = new WeakSet<THREE.WebGLRenderer>();
-/** Renderers made for the lite tier; they light scenes with the small HDRI. */
-const liteRenderers = new WeakSet<THREE.WebGLRenderer>();
+/** Phone renderers on the lite tier; they light scenes with the small HDRI. */
+const smallHdriRenderers = new WeakSet<THREE.WebGLRenderer>();
 
 export function makeRenderer(
   canvas: HTMLCanvasElement,
@@ -25,13 +25,14 @@ export function makeRenderer(
   const renderer = new THREE.WebGLRenderer({
     canvas,
     // a scene drawn through post-processing is antialiased in the effects'
-    // own target, so its canvas doesn't multisample on top of that
-    antialias: !quality.mobile && !options.post,
+    // own target, so its canvas doesn't multisample on top of that; every
+    // other canvas does, phones included, so edges don't look jagged
+    antialias: !options.post,
     alpha: options.alpha ?? false,
     powerPreference: "high-performance",
   });
   renderers.set(canvas, renderer);
-  if (quality.lite) liteRenderers.add(renderer);
+  if (quality.lite && quality.mobile) smallHdriRenderers.add(renderer);
   canvas.dataset.tier = quality.lite ? "lite" : "full";
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, quality.maxDpr));
   renderer.toneMapping = TONE_MAPPING;
@@ -50,6 +51,27 @@ export function makeRenderer(
     renderer.shadowMap.type = THREE.PCFShadowMap;
   }
   return renderer;
+}
+
+/** Pixel ratios a slow scene steps down through, sharpest first. */
+const PIXEL_RATIO_STEPS = [1.5, 1.25, 1];
+
+/**
+ * Frame-budget steps that lower the pixel ratio a little at a time, from
+ * where the renderer starts down to 1×, never lower: below that the scene
+ * looks blurry. A renderer already at 1× gets none.
+ */
+export function pixelSteps(
+  renderer: Pick<THREE.WebGLRenderer, "getPixelRatio" | "setPixelRatio">,
+  resize: () => void,
+): Array<() => void> {
+  const start = renderer.getPixelRatio();
+  return PIXEL_RATIO_STEPS.filter((ratio) => ratio < start - 0.01).map(
+    (ratio) => () => {
+      renderer.setPixelRatio(ratio);
+      resize();
+    },
+  );
 }
 
 /**
@@ -141,7 +163,9 @@ const envCache = new WeakMap<THREE.WebGLRenderer, Promise<THREE.Texture>>();
 export function studioEnvironment(renderer: THREE.WebGLRenderer) {
   let env = envCache.get(renderer);
   if (!env) {
-    const src = liteRenderers.has(renderer) ? STUDIO_HDRI_SMALL : STUDIO_HDRI;
+    const src = smallHdriRenderers.has(renderer)
+      ? STUDIO_HDRI_SMALL
+      : STUDIO_HDRI;
     let data = hdrData.get(src);
     if (!data) {
       data = new HDRLoader().loadAsync(src).catch((error) => {

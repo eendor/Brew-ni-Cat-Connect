@@ -224,19 +224,19 @@ describe("Phone and integrated GPU tier (TC-P4-124 – TC-P4-126, TC-P4-190)", (
 
     expect(device(true, "Adreno (TM) 610")).toEqual({
       mobile: true,
-      maxDpr: 1,
+      maxDpr: 2,
       forceHigh: false,
       lite: true,
     });
     expect(device(true, "Adreno (TM) 610", "?quality=high")).toEqual({
       mobile: true,
-      maxDpr: 1.25,
+      maxDpr: 2,
       forceHigh: true,
       lite: false,
     });
     expect(device(false, intel)).toEqual({
       mobile: false,
-      maxDpr: 1,
+      maxDpr: 1.5,
       forceHigh: false,
       lite: true,
     });
@@ -254,7 +254,7 @@ describe("Phone and integrated GPU tier (TC-P4-124 – TC-P4-126, TC-P4-190)", (
     });
     expect(device(false, nvidia, "?quality=lite")).toEqual({
       mobile: false,
-      maxDpr: 1,
+      maxDpr: 1.5,
       forceHigh: false,
       lite: true,
     });
