@@ -2133,4 +2133,9 @@ This log records completed work and observed evidence. Planned work is explicitl
 - Added `promo/`, a Remotion project that renders a 44-second ad in landscape (1920×1080) and vertical (1080×1920). It shows the menu photos, the live website, the Android app and its arcade games, the café cats, and ends with the website address and location.
 - It has its own `package.json` and is excluded from the website's TypeScript, ESLint and Prettier checks, so the website build is unchanged. Rendered MP4s stay out of Git (`promo/out/`).
 - **Testing:** `npx tsc -p promo`, both compositions rendered and checked frame by frame.
-- **Known limitations:** No soundtrack. The app screenshots come from the mock backend, so the small "Open now · until 11:59 PM" line in them shows mock hours.
+- **Known limitations:** The app screenshots come from the mock backend, so the small "Open now · until 11:59 PM" line in them shows mock hours.
+
+## 2026-11-18 — Promo video soundtrack
+
+- The promo video now has music and sound effects, all synthesised by `promo/scripts/make-audio.py`, so there is nothing to license. The music drops on the "Now on Android" scene; the effects follow the animations (`promo/src/Soundtrack.tsx`).
+- **Testing:** `npx tsc -p promo`; rendered both compositions and checked the audio track (no clipping, about −14 dB RMS).

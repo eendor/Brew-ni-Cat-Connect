@@ -19,6 +19,7 @@ import {
   WebHero,
   WebTour,
 } from "./scenes";
+import { Soundtrack } from "./Soundtrack";
 
 const T = 16;
 const springy = springTiming({ config: { damping: 200 }, durationInFrames: T });
@@ -50,20 +51,31 @@ const transitions: TransitionPresentation<any>[] = [
 export const PROMO_FRAMES =
   SCENES.reduce((n, s) => n + s.frames, 0) - T * (SCENES.length - 1);
 
+/** Frame at which each scene starts (it overlaps the previous transition). */
+export const SCENE_START = Object.fromEntries(
+  SCENES.map((s, i) => [
+    s.id,
+    SCENES.slice(0, i).reduce((n, p) => n + p.frames - T, 0),
+  ]),
+) as Record<(typeof SCENES)[number]["id"], number>;
+
 export const Promo: React.FC = () => (
-  <TransitionSeries>
-    {SCENES.map(({ id, C, frames }, i) => (
-      <React.Fragment key={id}>
-        <TransitionSeries.Sequence durationInFrames={frames}>
-          <C />
-        </TransitionSeries.Sequence>
-        {i < SCENES.length - 1 ? (
-          <TransitionSeries.Transition
-            presentation={transitions[i]!}
-            timing={i % 2 ? linearTiming({ durationInFrames: T }) : springy}
-          />
-        ) : null}
-      </React.Fragment>
-    ))}
-  </TransitionSeries>
+  <>
+    <Soundtrack />
+    <TransitionSeries>
+      {SCENES.map(({ id, C, frames }, i) => (
+        <React.Fragment key={id}>
+          <TransitionSeries.Sequence durationInFrames={frames}>
+            <C />
+          </TransitionSeries.Sequence>
+          {i < SCENES.length - 1 ? (
+            <TransitionSeries.Transition
+              presentation={transitions[i]!}
+              timing={i % 2 ? linearTiming({ durationInFrames: T }) : springy}
+            />
+          ) : null}
+        </React.Fragment>
+      ))}
+    </TransitionSeries>
+  </>
 );
