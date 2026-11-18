@@ -16,8 +16,8 @@ export type Quality = Readonly<{
   /** `?quality=high` keeps every effect on, even on slow GPUs (captures). */
   forceHigh: boolean;
   /**
-   * The light GPU tier (ADR-014): phones, integrated and software GPUs, and
-   * devices that ran the full tier too slowly before. Scenes draw straight
+   * The light GPU tier (ADR-014): software renderers and devices that ran
+   * the full tier too slowly even with every step taken. Scenes draw straight
    * to the canvas with no post effects, shadows or refraction, light with
    * the half-size HDRI on phones. They keep the screen's sharpness (up to 2×
    * on phones) and antialiasing.
@@ -65,18 +65,11 @@ export function webglAvailable(): boolean {
   return webglCache;
 }
 
-/**
- * Integrated, phone and software GPUs, by the name the browser reports:
- * Intel graphics, AMD's built-in Radeon graphics, Mali, Adreno, PowerVR and
- * software renderers. Discrete cards (NVIDIA, Radeon RX, Intel Arc A-series)
- * and Apple silicon keep the full tier.
- */
-const LIGHT_GPU =
-  /intel|radeon(?:\(tm\))?\s+(?:graphics|vega\b|\d{3}m\b)|mali|adreno|powervr|swiftshader|llvmpipe|lavapipe|softpipe|basic render/i;
-const DISCRETE_GPU = /\barc(?:\(tm\))?\s+a\d{3}/i;
+/** Drawn by the CPU, by the name the browser reports: too slow for any effect. */
+const SOFTWARE_GPU = /swiftshader|llvmpipe|lavapipe|softpipe|basic render/i;
 
-export function lightGpu(name: string): boolean {
-  return LIGHT_GPU.test(name) && !DISCRETE_GPU.test(name);
+export function softwareGpu(name: string): boolean {
+  return SOFTWARE_GPU.test(name);
 }
 
 /** Where a device that ran the full tier too slowly is remembered. */
@@ -121,9 +114,12 @@ export function getQuality(): Quality {
   const forced = new URLSearchParams(window.location.search).get("quality");
   const forceHigh = forced === "high";
   webglAvailable();
+  // every device starts with full effects; the frame budget steps them down
+  // while one runs slowly. Only software renderers, and devices still too
+  // slow with every step taken, start lite.
   const lite =
     forced === "lite" ||
-    (!forceHigh && (mobile || lightGpu(gpuName) || rememberedLite()));
+    (!forceHigh && (softwareGpu(gpuName) || rememberedLite()));
   return {
     mobile,
     // sharp on every tier: phone screens are 2–3×, and drawing them at 1×

@@ -164,17 +164,15 @@ export async function initAmbient(
         aperture: 0.0012,
         bloom: 0.3,
       });
-  // slow frames switch off the heaviest effects first, then lower the pixel
-  // ratio a step at a time, down to 1× at most (the lite tier has only those)
+  // slow frames give up the depth of field first, then lower the pixel ratio
+  // a step at a time (never below 1×), and only then the glow
   const budget = new FrameBudget(
     FRAME_BUDGET_MS,
     post
       ? [
-          () => {
-            post.degrade();
-            resize();
-          },
+          () => post.dropDepthOfField(),
           ...pixelSteps(renderer, resize),
+          () => post.degrade(),
         ]
       : pixelSteps(renderer, resize),
     quality.forceHigh,

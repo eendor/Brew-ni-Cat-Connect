@@ -426,19 +426,21 @@ export async function initShowcase(
   const post = lite
     ? null
     : makePost(renderer, scene, camera, quality, { focus: 11 });
-  // slow frames switch off the heaviest effects first, then lower the pixel
-  // ratio a step at a time, down to 1× at most (the lite tier has only those)
+  // slow frames give up the effects that show least first, then lower the
+  // pixel ratio a step at a time (never below 1×), and only then the glow
   const budget = new FrameBudget(
     FRAME_BUDGET_MS,
     post
       ? [
+          // first what hardly shows: shadows redrawn less often and the
+          // glass refraction drawn at half size
           () => {
-            post.degrade();
             renderer.transmissionResolutionScale = 0.5;
             shadows.slowDown();
-            resize();
           },
+          () => post.dropDepthOfField(),
           ...pixelSteps(renderer, resize),
+          () => post.degrade(),
         ]
       : pixelSteps(renderer, resize),
     quality.forceHigh,

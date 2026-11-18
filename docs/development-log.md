@@ -2153,11 +2153,11 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Testing:** live query of `public.site_content` (`openedOn` 2026-06-08, story updated, audit row written); the user checked the live site.
 - **Next action:** none.
 
-## 2026-11-18 — Sharper 3D on phones and laptops
+## 2026-11-18 — Full 3D effects on every device, smooth and sharp
 
 - **Phase:** Phase 4 (NFR-001), polish.
-- **Task:** The user said the 3D looked blurry and low resolution on phones and on the laptop; keep the speed but not at that cost.
-- **Summary:** Lite-tier phones drew at 1× with no antialiasing, and a slow scene on any tier could drop to 0.75×. Now phones draw at up to 2× and other devices at up to 1.5×, canvases without post-processing are antialiased on phones too, laptops on the lite tier use the full-size HDRI, and slow scenes step the pixel ratio down gradually (`pixelSteps`) and never below 1×. The lite tier still skips post effects, shadows and refraction. ADR-014 has a dated note.
-- **Files:** `src/components/three/engine/{runtime,renderer}.ts`, `src/components/three/scenes/{menu-hero,showcase,ambient}.ts`, `tests/unit/three-{frame-pacing,phone-tier}.test.ts*`, `docs/{decisions,test-cases,development-log}.md`.
-- **Testing:** TC-P4-278 (new), TC-P4-186 and the tier checks updated; the 3D unit tests, `npm run typecheck`, `npm run lint`, `npm run build`.
-- **Known limitations:** Frame rates at the higher pixel ratio were not measured on a phone; the frame budget steps down if they drop.
+- **Task:** The user saw blurry, plain 3D on phones and on the laptop but full effects on the PC, and asked for full effects on all devices with a smooth frame rate.
+- **Summary:** Phones and integrated GPUs got the lite tier: no effects and 1× pixels (0.75× when slow). Measured on the Intel UHD laptop at 1080p, the full tier ran at 12–22 fps, and switching each effect off showed 4× MSAA on the post-processing target cost the most. It is replaced by an SMAA pass (Home 22 → 46 fps, Menu 18 → 35 with every effect on). Every device except software renderers now starts on the full tier at up to 2× on phones and 1.5× elsewhere. Slow scenes give up shadows' redraw rate and refraction size first, then depth of field, then the pixel ratio a step at a time (`pixelSteps`, never below 1×), and the glow last. With that, Home runs at 53–55 fps, Menu 58, About and Gallery 75 (the screen's maximum) on the laptop with full effects. ADR-014 has a dated note.
+- **Files:** `src/components/three/engine/{runtime,renderer,post}.ts`, `src/components/three/scenes/{menu-hero,showcase,ambient}.ts`, `tests/unit/three-{frame-pacing,phone-tier}.test.ts*`, `docs/{decisions,test-cases,development-log}.md`.
+- **Testing:** TC-P4-278 (new), TC-P4-186 and TC-P4-190 updated; the 3D unit tests, `npm run typecheck`, `npm run lint`, `npm run build`; frame rates measured in Chromium on the laptop's GPU with a production build.
+- **Known limitations:** Not measured on a phone yet; there the frame budget steps effects down if frames run slow.
