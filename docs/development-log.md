@@ -1882,6 +1882,7 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Testing:** see the pull request.
 - **Branch / PR:** `fix/cat-parade`.
 - **Known limitations:** the cats are still built from three.js shapes, not drawn sprites.
+- **Phase 9:** with these checks, FR-088 to FR-091 are all implemented and checked on the live site, so I marked FR-088, FR-090 and FR-091 Implemented (FR-089 already was) and MAN-P9-001 superseded by MAN-P9-003. The owner left the prizes and limits to us. The Android app shows reward codes when redeeming but doesn't show won prizes or a My codes list; customers see those on the website.
 - **Next action:** none.
 
 ## 2026-11-13 — The parade cats are pixel art drawn in Aseprite

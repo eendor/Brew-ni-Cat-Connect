@@ -1481,7 +1481,7 @@ The mini-games will show one labeled ad (FR-090). The ad slot is built before th
 | TC-P9-010 | FR-090 | The customer taps No thanks | No ad shows, and "Show ads to support the shop" lets them change their mind | Passed (automated) |
 | TC-P9-011 | FR-090 | The slot is placed on menu, cart, checkout, account, or `ready`/`rejected`/`cancelled` order pages (updated 2026-11-15 to allow `/games` and waiting or `completed` orders) | It shows nothing outside `/games` and waiting/completed orders, even after the customer agreed | Passed (automated) |
 | TC-P9-012 | FR-090 | The page inside the ad frame | Loads only the Adsterra 300x250 banner unit | Passed (automated) |
-| MAN-P9-001 | FR-090 | With the real key set on a preview, open the games page on a phone and tap Show ads | A real 300x250 ad shows with the "Ad" label, and tapping it opens the advertiser's page in a new tab without leaving the site | Not run (the games page is built; needs the real key on a preview) |
+| MAN-P9-001 | FR-090 | With the real key set on a preview, open the games page on a phone and tap Show ads | A real 300x250 ad shows with the "Ad" label, and tapping it opens the advertiser's page in a new tab without leaving the site | Not run (the games page is built; needs the real key on a preview). Superseded 2026-11-19 by MAN-P9-003, which passed with the real key on the live site on a phone |
 
 ## 51. Messenger Hours Question Cases (2026-11-11)
 
