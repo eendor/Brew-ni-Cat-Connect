@@ -37,8 +37,26 @@ Website captures in `public/web/` were taken from the live site on 2026-11-18.
 App screenshots come from `docs/evidence/phase-8/android-app/` and were taken
 against the mock backend, so the opening hours shown in them are mock values.
 
-There is no soundtrack. To add one, put a licensed track in `public/` and add
-`<Audio src={staticFile("music.mp3")} />` inside `Promo` in `src/Promo.tsx`.
+## Sound
+
+The music and sound effects in `public/audio/` are synthesised by
+`scripts/make-audio.py` (numpy only), so there is nothing to license. The music
+is a 120 BPM track in F major: a soft intro, a groove for the website, a
+build-up that drops on "Now on Android", a lighter section for the cats and a
+final chord on the call to action. `src/Soundtrack.tsx` places the effects
+(whooshes on scene changes, pops, chimes on the checkmarks, taps on the app
+screens, a coin for rewards, 8-bit blips for the games, a sparkle on the URL)
+and sets the volumes.
+
+To change the music, edit the script and run:
+
+```bash
+python3 scripts/make-audio.py
+npx remotion ffmpeg -y -i public/audio/music.wav -b:a 192k public/audio/music.mp3
+rm public/audio/music.wav
+```
+
+To use a licensed track instead, replace `public/audio/music.mp3`.
 
 Remotion is free for individuals and companies of up to three people; see its
 [license](https://www.remotion.dev/license).
