@@ -8,8 +8,8 @@ import {
   useVideoConfig,
 } from "remotion";
 import {
-  Browser,
-  Check,
+  Burst,
+  CatPeek,
   Chip,
   clamp,
   easeInOut,
@@ -19,8 +19,12 @@ import {
   Logo,
   Paws,
   Phone,
+  Rays,
   RiseText,
+  Shockwave,
+  Sparkles,
   usePop,
+  useShake,
   useVertical,
   Washes,
 } from "./components";
@@ -38,12 +42,21 @@ export const Intro: React.FC = () => {
     easing: easeOut,
   });
   const letters = "BREW NI CAT".split("");
-  const { fps } = useVideoConfig();
+  const { fps, width, height } = useVideoConfig();
   const zoomOut = interpolate(frame, [0, 120], [1.06, 1], clamp);
+  const shake = useShake(6, 22);
+  const logoY = vertical ? "40%" : "33%";
   return (
-    <AbsoluteFill>
+    <AbsoluteFill style={{ transform: shake }}>
       <Washes />
       <Paws seed={3} />
+      <Rays
+        y={logoY}
+        color="rgba(31,107,69,0.10)"
+        opacity={interpolate(frame, [4, 24], [0, 1], clamp)}
+      />
+      <Shockwave at={6} y={logoY} color="rgba(31,107,69,0.5)" size={1800} />
+      <Shockwave at={10} y={logoY} color="rgba(233,160,110,0.6)" size={1300} />
       <AbsoluteFill
         style={{
           alignItems: "center",
@@ -123,6 +136,21 @@ export const Intro: React.FC = () => {
           Coffee Shop{vertical ? <br /> : " · "}Kabacan, Cotabato
         </div>
       </AbsoluteFill>
+      <Burst
+        at={6}
+        x={width / 2}
+        y={height * (vertical ? 0.4 : 0.33)}
+        kind="paw"
+        color={c.action}
+        count={14}
+        speed={40}
+        gravity={0.6}
+        size={50}
+        seed={3}
+        life={40}
+      />
+      <Sparkles seed={5} count={14} from={30} color="#f2c27a" />
+      <CatPeek at={56} x={vertical ? 820 : 1620} size={vertical ? 300 : 260} />
       <div style={{ display: "none" }}>{fps}</div>
     </AbsoluteFill>
   );
@@ -229,197 +257,6 @@ export const Taste: React.FC = () => {
   );
 };
 
-/* 3. Website hero --------------------------------------------------------- */
-export const WebHero: React.FC = () => {
-  const frame = useCurrentFrame();
-  const vertical = useVertical();
-  const enter = usePop(0, 16, 1);
-  const rotY = interpolate(frame, [0, 180], [-18, -6]);
-  const mix1 = interpolate(frame, [75, 95], [0, 1], {
-    ...clamp,
-    easing: easeInOut,
-  });
-  const zoom = interpolate(frame, [0, 75], [1, 1.08], clamp);
-  const bw = vertical ? 900 : 1180;
-  const chips = [
-    "Full menu with live prices",
-    "Order ahead for pickup",
-    "Track your order live",
-  ];
-  return (
-    <AbsoluteFill>
-      <Washes />
-      <AbsoluteFill
-        style={{
-          flexDirection: vertical ? "column" : "row",
-          alignItems: vertical ? "flex-start" : "center",
-          justifyContent: "center",
-          padding: pad(vertical),
-          gap: vertical ? 80 : 40,
-        }}
-      >
-        <div
-          style={{
-            width: vertical ? "100%" : 640,
-            display: "flex",
-            flexDirection: "column",
-            gap: 26,
-            zIndex: 2,
-          }}
-        >
-          <Kicker delay={6}>The website</Kicker>
-          <Headline
-            text={"Order ahead\nonline."}
-            delay={10}
-            size={vertical ? 150 : 140}
-          />
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "flex-start",
-              gap: 16,
-              marginTop: 10,
-            }}
-          >
-            {chips.map((t, i) => (
-              <Chip
-                key={t}
-                delay={36 + i * 10}
-                icon={<Check />}
-                size={vertical ? 36 : 30}
-              >
-                {t}
-              </Chip>
-            ))}
-          </div>
-        </div>
-        <div style={{ perspective: 2400, alignSelf: "center" }}>
-          <Browser
-            src="web/home-desktop-top.jpg"
-            next="web/menu-items.jpg"
-            mix={mix1}
-            zoom={zoom}
-            width={bw}
-            style={{
-              transform: `translateX(${(1 - enter) * 600}px) rotateY(${rotY}deg) rotateX(4deg)`,
-              opacity: enter,
-            }}
-          />
-        </div>
-        {vertical ? (
-          <div
-            style={{
-              position: "absolute",
-              right: 90,
-              bottom: 110,
-              transform: `translateY(${(1 - usePop(30, 14)) * 900}px) rotate(5deg)`,
-            }}
-          >
-            <Phone src="web/home-phone-top.jpg" height={720} />
-          </div>
-        ) : null}
-      </AbsoluteFill>
-    </AbsoluteFill>
-  );
-};
-
-/* 4. Website tour: games, gallery, phone ---------------------------------- */
-export const WebTour: React.FC = () => {
-  const frame = useCurrentFrame();
-  const vertical = useVertical();
-  const { width, height } = useVideoConfig();
-  const pan = interpolate(frame, [0, 180], [0, -1], {
-    ...clamp,
-    easing: easeInOut,
-  });
-  const cards = [
-    { src: "web/games-desktop-top.jpg", label: "Cat games for points" },
-    { src: "web/home-community.jpg", label: "Gallery of the café" },
-    { src: "web/home-app.jpg", label: "Get the Android app" },
-  ];
-  const bw = vertical ? 820 : 700;
-  const phoneP = usePop(40, 14);
-  return (
-    <AbsoluteFill>
-      <Washes />
-      <Paws seed={7} count={6} />
-      <div
-        style={{
-          position: "absolute",
-          left: pad(vertical),
-          top: vertical ? 120 : 90,
-          zIndex: 3,
-        }}
-      >
-        <Kicker delay={4}>Everything in one place</Kicker>
-        <div style={{ height: 20 }} />
-        <Headline
-          text={
-            vertical ? "Menu, games\nand gallery" : "Menu · Games · Gallery"
-          }
-          delay={8}
-          size={110}
-        />
-      </div>
-      {cards.map((card, i) => {
-        const p = usePop(10 + i * 9, 15);
-        const x = vertical
-          ? width / 2 - bw / 2 + (i - 1) * 60 + pan * 120
-          : 90 + i * 330 + pan * 60;
-        const y = vertical ? 600 + i * 380 : 310 + i * 130;
-        const rot = (i - 1) * 4;
-        return (
-          <div
-            key={card.src}
-            style={{
-              position: "absolute",
-              left: x,
-              top: y + (1 - p) * 200,
-              transform: `rotate(${rot}deg) scale(${0.9 + 0.1 * p})`,
-              opacity: p,
-              zIndex: i,
-            }}
-          >
-            <Browser src={card.src} width={bw} />
-            <div
-              style={{
-                position: "absolute",
-                left: 30,
-                top: -30,
-                padding: "14px 26px",
-                borderRadius: 999,
-                background: c.action,
-                color: c.white,
-                fontFamily: body,
-                fontWeight: 700,
-                fontSize: vertical ? 34 : 28,
-                boxShadow: "0 14px 30px rgba(31,107,69,0.35)",
-              }}
-            >
-              {card.label}
-            </div>
-          </div>
-        );
-      })}
-      {!vertical ? (
-        <div
-          style={{
-            position: "absolute",
-            right: 90,
-            top: height - 140 - 700 * phoneP + (1 - phoneP) * 300,
-            zIndex: 5,
-            transform: `rotate(${6 - 6 * phoneP}deg)`,
-          }}
-        >
-          <Phone src="web/home-phone-top.jpg" height={760} />
-          <div style={{ marginTop: -8 }} />
-        </div>
-      ) : null}
-    </AbsoluteFill>
-  );
-};
-
 /* 5. App reveal ----------------------------------------------------------- */
 export const AppReveal: React.FC = () => {
   const frame = useCurrentFrame();
@@ -432,10 +269,24 @@ export const AppReveal: React.FC = () => {
   ];
   const ph = vertical ? 1080 : 780;
   const float = Math.sin(frame / 20) * 8;
+  const shake = useShake(8, 24, 16);
+  const flash = interpolate(frame, [0, 3, 14], [0, 0.55, 0], clamp);
   return (
-    <AbsoluteFill>
+    <AbsoluteFill style={{ transform: shake }}>
       <Washes dark />
+      <Rays
+        y={vertical ? "70%" : "75%"}
+        color="rgba(125,207,160,0.16)"
+        size={3200}
+      />
       <Paws color="rgba(255,255,255,0.07)" seed={5} />
+      <Shockwave
+        at={8}
+        y={vertical ? "70%" : "75%"}
+        color="rgba(125,207,160,0.8)"
+        size={2200}
+        len={28}
+      />
       <div
         style={{
           position: "absolute",
@@ -480,6 +331,22 @@ export const AppReveal: React.FC = () => {
           </div>
         );
       })}
+      <Burst
+        at={8}
+        x={width / 2}
+        y={height * (vertical ? 0.62 : 0.7)}
+        kind="star"
+        color={c.mint}
+        count={24}
+        speed={44}
+        size={46}
+        seed={6}
+        life={48}
+      />
+      <Sparkles seed={8} count={16} from={20} color={c.mint} />
+      <AbsoluteFill
+        style={{ background: c.white, opacity: flash, pointerEvents: "none" }}
+      />
     </AbsoluteFill>
   );
 };
@@ -507,7 +374,7 @@ const FEATURES = [
     src: "app/redesign-orders-light.png",
   },
 ];
-const STEP = 58;
+export const STEP = 52;
 
 export const AppFeatures: React.FC = () => {
   const frame = useCurrentFrame();
@@ -637,10 +504,34 @@ export const AppFeatures: React.FC = () => {
             mix={mix}
             push
             height={ph}
+            glareAt={step * STEP + 8}
             shadow="0 60px 120px rgba(0,0,0,0.45), inset 0 0 0 2px rgba(255,255,255,0.14)"
           />
         </div>
       </AbsoluteFill>
+      <Burst
+        at={2 * STEP + 8}
+        x={vertical ? 540 : 1340}
+        y={vertical ? 1100 : 520}
+        kind="coin"
+        count={22}
+        speed={36}
+        size={58}
+        seed={7}
+        life={46}
+      />
+      <Burst
+        at={STEP + 8}
+        x={vertical ? 540 : 1340}
+        y={vertical ? 1100 : 520}
+        kind="star"
+        color={c.mint}
+        count={12}
+        speed={28}
+        size={36}
+        seed={9}
+        life={34}
+      />
     </AbsoluteFill>
   );
 };
@@ -703,10 +594,33 @@ export const Arcade: React.FC = () => {
               zIndex: 10 - Math.abs(Math.round(off * 2)),
             }}
           >
-            <Phone src={s} height={ph} />
+            <Phone src={s} height={ph} glareAt={30 + i * 8} />
           </div>
         );
       })}
+      {[0, 1, 2, 3, 4].map((i) => (
+        <Burst
+          key={i}
+          at={50 + i * 6}
+          x={width / 2 + (i - 2) * (vertical ? 180 : 300)}
+          y={height - (vertical ? 190 : 80)}
+          kind="star"
+          color={["#f2b632", "#7dcfa0", "#e9a06e", "#ef7f8f", "#9ad0f5"][i]}
+          count={8}
+          speed={22}
+          size={30}
+          seed={20 + i}
+          life={30}
+          spread={160}
+        />
+      ))}
+      <CatPeek
+        at={86}
+        x={vertical ? 180 : 210}
+        size={vertical ? 260 : 230}
+        tilt={10}
+        color="#e9e2d6"
+      />
       <div
         style={{
           position: "absolute",
@@ -831,6 +745,33 @@ export const Cats: React.FC = () => {
           />
         </div>
       </AbsoluteFill>
+      <Burst
+        at={30}
+        x={width / 2}
+        y={vertical ? 330 : height / 2}
+        kind="heart"
+        color="#ef7f8f"
+        count={20}
+        speed={38}
+        gravity={-0.25}
+        size={52}
+        seed={11}
+        life={60}
+      />
+      <Sparkles seed={13} count={14} from={10} color="#ffe2ec" />
+      <CatPeek
+        at={40}
+        x={vertical ? 230 : 330}
+        size={vertical ? 280 : 240}
+        tilt={-10}
+      />
+      <CatPeek
+        at={52}
+        x={vertical ? 850 : 1600}
+        size={vertical ? 240 : 210}
+        tilt={8}
+        color="#d9a066"
+      />
     </AbsoluteFill>
   );
 };
@@ -842,9 +783,12 @@ export const Outro: React.FC = () => {
   const logo = usePop(2, 12);
   const url = usePop(30, 14);
   const shine = interpolate(frame, [40, 80], [-30, 130], clamp);
+  const { width, height } = useVideoConfig();
+  const shake = useShake(30, 10, 10);
   return (
-    <AbsoluteFill>
+    <AbsoluteFill style={{ transform: shake }}>
       <Washes dark />
+      <Rays color="rgba(255,236,190,0.10)" size={3400} />
       <Paws color="rgba(255,255,255,0.07)" seed={9} />
       <AbsoluteFill
         style={{
@@ -936,6 +880,25 @@ export const Outro: React.FC = () => {
           Pulido Eatery
         </div>
       </AbsoluteFill>
+      <Burst
+        at={30}
+        x={width / 2}
+        y={height * 0.62}
+        kind="confetti"
+        count={60}
+        speed={52}
+        gravity={0.9}
+        size={56}
+        seed={21}
+        life={80}
+      />
+      <Sparkles seed={17} count={18} from={36} color="#fff1c4" />
+      <CatPeek
+        at={92}
+        x={vertical ? 860 : 1640}
+        size={vertical ? 300 : 260}
+        stay={80}
+      />
     </AbsoluteFill>
   );
 };

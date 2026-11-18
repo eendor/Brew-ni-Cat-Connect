@@ -2170,3 +2170,12 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Files:** `src/components/three/engine/{runtime,renderer,post}.ts`, `src/components/three/scenes/{menu-hero,showcase,ambient}.ts`, `tests/unit/three-{frame-pacing,phone-tier}.test.ts*`, `docs/{decisions,test-cases,development-log}.md`.
 - **Testing:** TC-P4-278 and TC-P4-279 (new), TC-P4-186, TC-P4-190 and TC-P4-191 updated; all 955 unit tests; the 3D unit tests, `npm run typecheck`, `npm run lint`, `npm run build`; frame rates measured in Chromium on the laptop's GPU with a production build.
 - **Known limitations:** Not measured on a phone yet; there the frame budget steps effects down if frames run slow.
+
+## 2026-11-19 — Promo video, version 2
+
+- **Phase:** Marketing (promo video).
+- **Task:** I wanted the first Remotion promo enhanced instead of a new style: website screenshots only (no recorded navigation), cooler animations and transitions, more cat sound effects and more effects, Remotion only.
+- **Summary:** I dropped the HyperFrames showcase and the website tour I had tried and closed PR #174 without merging. This change goes through a pull request like the others. The promo is now 48 seconds with ten scenes. Three new website scenes use single frames from the mocked demo recordings: "Order ahead online", "Pick it. Build it. Track it." and the perks (rewards, cat games, gallery, where to find us). Scenes change with Remotion's shader transitions plus a clock wipe. I added light leaks, film grain, a vignette, glare sweeps, light rays, shockwaves, camera shake on hits, and bursts of paws, coins, hearts, stars and confetti. A drawn cat peeks up in the intro, the games, the cats and the end card. `make-audio.py` now also synthesises a meow, kitten mew, chirp, trill, purr, paw pats, coins, a boing and a bigger swoosh, and the music is retimed so the drop still lands on "Now on Android". The first version stays in `out/` as `-v1` and in git history.
+- **Files:** `promo/src/{Promo,Soundtrack,components,scenes,web-scenes}.tsx`, `promo/scripts/make-audio.py`, `promo/public/{audio,web}/`, `promo/.gitignore`, `promo/README.md`, `docs/development-log.md`.
+- **Testing:** `npx tsc --noEmit`, `npx prettier --check`; test stills rendered at several frames in both sizes and checked; `npm run render` and `npm run render:vertical`.
+- **Known limitations:** The shader transitions need Remotion's Chrome Headless Shell (the default); another browser may not render them.

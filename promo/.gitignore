@@ -5,3 +5,5 @@ public/app/
 public/shop/
 public/menu/
 public/brand/
+# local screen recordings of the mocked demo; the stills in public/web/ come from them
+public/demo/

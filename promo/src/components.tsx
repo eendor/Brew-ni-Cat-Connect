@@ -303,9 +303,25 @@ export const Browser: React.FC<{
   next?: string;
   mix?: number;
   zoom?: number;
-}> = ({ src, width, style, next, mix = 0, zoom = 1 }) => {
+  /** Height / width of the capture (1440 x 900 by default). */
+  aspect?: number;
+  /** Frame at which a glare sweeps across the glass. */
+  glareAt?: number;
+  /** Point the zoom moves toward. */
+  origin?: string;
+}> = ({
+  src,
+  width,
+  style,
+  next,
+  mix = 0,
+  zoom = 1,
+  aspect = 900 / 1440,
+  glareAt,
+  origin = "50% 30%",
+}) => {
   const bar = width * 0.036;
-  const shotH = (width * 900) / 1440;
+  const shotH = width * aspect;
   return (
     <div
       style={{
@@ -381,7 +397,7 @@ export const Browser: React.FC<{
             objectFit: "cover",
             objectPosition: "top",
             transform: `scale(${zoom})`,
-            transformOrigin: "50% 30%",
+            transformOrigin: origin,
           }}
         />
         {next ? (
@@ -399,6 +415,7 @@ export const Browser: React.FC<{
             }}
           />
         ) : null}
+        {glareAt !== undefined ? <Glare at={glareAt} /> : null}
       </div>
     </div>
   );
@@ -414,10 +431,23 @@ export const Phone: React.FC<{
   /** Slide direction for `next`: the new screen pushes in from the right. */
   push?: boolean;
   shadow?: string;
-}> = ({ src, height, style, next, mix = 0, push, shadow }) => {
+  /** Height / width of the capture (540 x 1200 app captures by default). */
+  aspect?: number;
+  glareAt?: number;
+}> = ({
+  src,
+  height,
+  style,
+  next,
+  mix = 0,
+  push,
+  shadow,
+  aspect = 1200 / 540,
+  glareAt,
+}) => {
   const bezel = height * 0.016;
   const screenH = height - bezel * 2;
-  const screenW = (screenH * 540) / 1200;
+  const screenW = screenH / aspect;
   const radius = height * 0.06;
   const shot = (s: string, extra: React.CSSProperties) => (
     <Img
@@ -471,6 +501,7 @@ export const Phone: React.FC<{
               })
             : shot(next, { opacity: mix })
           : null}
+        {glareAt !== undefined ? <Glare at={glareAt} /> : null}
       </div>
     </div>
   );
@@ -504,3 +535,454 @@ export const Logo: React.FC<{ size: number; style?: React.CSSProperties }> = ({
 /** A fade-in for the first frames of a scene, so cuts never look abrupt. */
 export const fadeIn = (frame: number, len = 10) =>
   interpolate(frame, [0, len], [0, 1], clamp);
+
+/* --- visual effects ------------------------------------------------------- */
+
+/** Deterministic pseudo-random number in [0, 1) for particle `i`. */
+export const rand = (i: number, n: number, seed = 1) => {
+  const x = Math.sin((i + 1) * 12.9898 * seed + n * 78.233) * 43758.5453;
+  return x - Math.floor(x);
+};
+
+/** A bright diagonal glare that sweeps across a screen once. */
+export const Glare: React.FC<{ at: number; len?: number }> = ({
+  at,
+  len = 26,
+}) => {
+  const frame = useCurrentFrame();
+  const p = interpolate(frame - at, [0, len], [-40, 140], clamp);
+  if (frame < at || frame > at + len) return null;
+  return (
+    <div
+      style={{
+        position: "absolute",
+        inset: 0,
+        pointerEvents: "none",
+        background: `linear-gradient(115deg, transparent ${p - 18}%, rgba(255,255,255,0.55) ${p}%, transparent ${p + 18}%)`,
+        mixBlendMode: "screen",
+      }}
+    />
+  );
+};
+
+/** Camera shake that dies away after an impact at frame `at`. */
+export const useShake = (at: number, strength = 18, len = 14) => {
+  const frame = useCurrentFrame();
+  const t = frame - at;
+  if (t < 0 || t > len) return "translate(0px, 0px)";
+  const d = strength * (1 - t / len) ** 2;
+  return `translate(${(rand(t, 1, 3) - 0.5) * 2 * d}px, ${(rand(t, 2, 3) - 0.5) * 2 * d}px)`;
+};
+
+const Star: React.FC<{ size: number; color: string }> = ({ size, color }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    style={{ display: "block" }}
+  >
+    <path
+      d="M12 0C13 8 16 11 24 12C16 13 13 16 12 24C11 16 8 13 0 12C8 11 11 8 12 0Z"
+      fill={color}
+    />
+  </svg>
+);
+
+const Heart: React.FC<{ size: number; color: string }> = ({ size, color }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    style={{ display: "block" }}
+  >
+    <path
+      d="M12 21s-8-5.2-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.8-8 11-8 11z"
+      fill={color}
+    />
+  </svg>
+);
+
+const Coin: React.FC<{ size: number }> = ({ size }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    style={{ display: "block" }}
+  >
+    <circle
+      cx="12"
+      cy="12"
+      r="11"
+      fill="#f2b632"
+      stroke="#c8861a"
+      strokeWidth="2"
+    />
+    <circle
+      cx="12"
+      cy="12"
+      r="6.5"
+      fill="none"
+      stroke="#fbe08a"
+      strokeWidth="1.6"
+    />
+    <ellipse cx="8.5" cy="7.5" rx="2.2" ry="1.3" fill="#fff6d0" opacity="0.8" />
+  </svg>
+);
+
+/** Twinkling four-point stars scattered over an area. */
+export const Sparkles: React.FC<{
+  count?: number;
+  seed?: number;
+  color?: string;
+  from?: number;
+  area?: [x: number, y: number, w: number, h: number];
+  size?: number;
+}> = ({
+  count = 14,
+  seed = 1,
+  color = "#fff6d8",
+  from = 0,
+  area,
+  size = 34,
+}) => {
+  const frame = useCurrentFrame();
+  const { width, height } = useVideoConfig();
+  const [ax, ay, aw, ah] = area ?? [0, 0, width, height];
+  return (
+    <AbsoluteFill style={{ pointerEvents: "none" }}>
+      {Array.from({ length: count }).map((_, i) => {
+        const period = 30 + rand(i, 3, seed) * 40;
+        const t = frame - from - rand(i, 4, seed) * period;
+        if (t < 0) return null;
+        const tw = Math.sin((t / period) * Math.PI) ** 2;
+        const s = size * (0.4 + rand(i, 5, seed) * 0.8) * tw;
+        return (
+          <div
+            key={i}
+            style={{
+              position: "absolute",
+              left: ax + rand(i, 1, seed) * aw,
+              top: ay + rand(i, 2, seed) * ah,
+              transform: `translate(-50%, -50%) rotate(${t * 2}deg)`,
+              filter: `drop-shadow(0 0 ${s * 0.4}px ${color})`,
+            }}
+          >
+            <Star size={s} color={color} />
+          </div>
+        );
+      })}
+    </AbsoluteFill>
+  );
+};
+
+export type BurstKind = "paw" | "coin" | "heart" | "star" | "confetti";
+const CONFETTI = [
+  "#1f6b45",
+  "#7dcfa0",
+  "#e9a06e",
+  "#9e451e",
+  "#f2b632",
+  "#ffffff",
+];
+
+/** Particles thrown out from (x, y) at frame `at`, then falling. */
+export const Burst: React.FC<{
+  at: number;
+  x: number;
+  y: number;
+  kind?: BurstKind;
+  count?: number;
+  speed?: number;
+  gravity?: number;
+  size?: number;
+  seed?: number;
+  life?: number;
+  color?: string;
+  /** Spread in degrees around straight up (360 = all directions). */
+  spread?: number;
+}> = ({
+  at,
+  x,
+  y,
+  kind = "star",
+  count = 18,
+  speed = 26,
+  gravity = 1.1,
+  size = 44,
+  seed = 1,
+  life = 45,
+  color = "#fff6d8",
+  spread = 360,
+}) => {
+  const frame = useCurrentFrame();
+  const t = frame - at;
+  if (t < 0 || t > life) return null;
+  return (
+    <AbsoluteFill style={{ pointerEvents: "none", overflow: "visible" }}>
+      {Array.from({ length: count }).map((_, i) => {
+        const a = ((-90 + (rand(i, 1, seed) - 0.5) * spread) * Math.PI) / 180;
+        const v = speed * (0.45 + rand(i, 2, seed) * 0.75);
+        const drag = (1 - Math.exp(-t / 9)) * 9;
+        const px = x + Math.cos(a) * v * drag;
+        const py = y + Math.sin(a) * v * drag + 0.5 * gravity * t * t * 0.35;
+        const fade = interpolate(t, [life * 0.6, life], [1, 0], clamp);
+        const pop = interpolate(t, [0, 5], [0.2, 1], clamp);
+        const s = size * (0.6 + rand(i, 3, seed) * 0.7);
+        const rot = (rand(i, 4, seed) - 0.5) * 40 * t;
+        const col =
+          kind === "confetti" ? CONFETTI[i % CONFETTI.length]! : color;
+        return (
+          <div
+            key={i}
+            style={{
+              position: "absolute",
+              left: px,
+              top: py,
+              opacity: fade,
+              transform: `translate(-50%, -50%) rotate(${rot}deg) scale(${pop})`,
+            }}
+          >
+            {kind === "paw" ? (
+              <PawIcon color={col} size={s} />
+            ) : kind === "coin" ? (
+              <Coin size={s} />
+            ) : kind === "heart" ? (
+              <Heart size={s} color={col} />
+            ) : kind === "confetti" ? (
+              <div
+                style={{
+                  width: s * 0.5,
+                  height: s * 0.28,
+                  borderRadius: 3,
+                  background: col,
+                  transform: `rotateX(${t * 25 + i * 40}deg)`,
+                }}
+              />
+            ) : (
+              <Star size={s} color={col} />
+            )}
+          </div>
+        );
+      })}
+    </AbsoluteFill>
+  );
+};
+
+/** Slowly turning light rays behind a hero element. */
+export const Rays: React.FC<{
+  x?: string;
+  y?: string;
+  color?: string;
+  size?: number;
+  opacity?: number;
+}> = ({
+  x = "50%",
+  y = "50%",
+  color = "rgba(255,255,255,0.5)",
+  size = 2600,
+  opacity = 1,
+}) => {
+  const frame = useCurrentFrame();
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: x,
+        top: y,
+        width: size,
+        height: size,
+        transform: `translate(-50%, -50%) rotate(${frame * 0.35}deg)`,
+        background: `repeating-conic-gradient(${color} 0deg 7deg, transparent 7deg 22deg)`,
+        maskImage: "radial-gradient(circle, black 0%, transparent 62%)",
+        WebkitMaskImage: "radial-gradient(circle, black 0%, transparent 62%)",
+        opacity,
+        pointerEvents: "none",
+      }}
+    />
+  );
+};
+
+/** A ring that rushes outward from a point at frame `at`. */
+export const Shockwave: React.FC<{
+  at: number;
+  x?: string;
+  y?: string;
+  color?: string;
+  size?: number;
+  len?: number;
+}> = ({
+  at,
+  x = "50%",
+  y = "50%",
+  color = "rgba(255,255,255,0.9)",
+  size = 1400,
+  len = 24,
+}) => {
+  const frame = useCurrentFrame();
+  const t = frame - at;
+  if (t < 0 || t > len) return null;
+  const p = interpolate(t, [0, len], [0, 1], { ...clamp, easing: easeOut });
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: x,
+        top: y,
+        width: size * p,
+        height: size * p,
+        transform: "translate(-50%, -50%)",
+        borderRadius: "50%",
+        border: `${Math.max(1, 26 * (1 - p))}px solid ${color}`,
+        opacity: 1 - p,
+        pointerEvents: "none",
+      }}
+    />
+  );
+};
+
+/** Film grain over everything (changes every frame). */
+export const Grain: React.FC<{ opacity?: number }> = ({ opacity = 0.07 }) => {
+  const frame = useCurrentFrame();
+  return (
+    <AbsoluteFill
+      style={{ pointerEvents: "none", opacity, mixBlendMode: "overlay" }}
+    >
+      <svg width="100%" height="100%">
+        <filter id="grain">
+          <feTurbulence
+            type="fractalNoise"
+            baseFrequency="0.85"
+            numOctaves="2"
+            seed={frame % 12}
+            stitchTiles="stitch"
+          />
+          <feColorMatrix type="saturate" values="0" />
+        </filter>
+        <rect width="100%" height="100%" filter="url(#grain)" />
+      </svg>
+    </AbsoluteFill>
+  );
+};
+
+/** A warm light leak that flares across the frame around frame `at`. */
+export const LightLeak: React.FC<{
+  at: number;
+  len?: number;
+  flip?: boolean;
+}> = ({ at, len = 30, flip }) => {
+  const frame = useCurrentFrame();
+  const t = frame - (at - len / 2);
+  if (t < 0 || t > len) return null;
+  const p = t / len;
+  const o = Math.sin(p * Math.PI) ** 1.5;
+  const x = flip ? 110 - p * 80 : -10 + p * 80;
+  return (
+    <AbsoluteFill
+      style={{
+        pointerEvents: "none",
+        mixBlendMode: "screen",
+        opacity: o * 0.85,
+        background: `radial-gradient(ellipse 55% 75% at ${x}% 40%, rgba(255,170,90,0.85), transparent 70%),
+          radial-gradient(ellipse 35% 50% at ${x + 18}% 70%, rgba(255,110,140,0.55), transparent 70%),
+          radial-gradient(ellipse 25% 35% at ${x - 10}% 15%, rgba(255,240,180,0.7), transparent 70%)`,
+      }}
+    />
+  );
+};
+
+/** Soft dark edges, like a lens. */
+export const Vignette: React.FC = () => (
+  <AbsoluteFill
+    style={{
+      pointerEvents: "none",
+      background:
+        "radial-gradient(ellipse 80% 80% at 50% 50%, transparent 60%, rgba(16,32,24,0.28) 100%)",
+    }}
+  />
+);
+
+/** A drawn cat that peeks up from the bottom edge, blinks and ducks away. */
+export const CatPeek: React.FC<{
+  at: number;
+  x: number;
+  size?: number;
+  stay?: number;
+  color?: string;
+  tilt?: number;
+  /** Peek from the top edge instead, upside down. */
+  bottom?: number;
+}> = ({
+  at,
+  x,
+  size = 260,
+  stay = 50,
+  color = "#2b2f2c",
+  tilt = -8,
+  bottom = 0,
+}) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const t = frame - at;
+  if (t < 0 || t > stay + 30) return null;
+  const up = spring({ frame: t, fps, config: { damping: 11, mass: 0.7 } });
+  const down = spring({ frame: t - stay, fps, config: { damping: 18 } });
+  const rise = up - down;
+  const blink = t % 40 > 33 && t % 40 < 37 ? 0.1 : 1;
+  const look = Math.sin(t / 9) * 4;
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: x,
+        bottom: bottom - size * 0.12,
+        width: size,
+        height: size,
+        transform: `translate(-50%, ${(1 - rise) * 105}%) rotate(${tilt * rise}deg)`,
+        pointerEvents: "none",
+        zIndex: 40,
+      }}
+    >
+      <svg width={size} height={size} viewBox="0 0 100 100">
+        <path d="M18 48 L22 12 L42 32 Z" fill={color} />
+        <path d="M82 48 L78 12 L58 32 Z" fill={color} />
+        <path d="M24 40 L25 22 L36 33 Z" fill="#e9a0a0" />
+        <path d="M76 40 L75 22 L64 33 Z" fill="#e9a0a0" />
+        <ellipse cx="50" cy="62" rx="38" ry="34" fill={color} />
+        {[36, 64].map((cx) => (
+          <g key={cx}>
+            <ellipse cx={cx} cy="58" rx="8.5" ry={9 * blink} fill="#f4e7a1" />
+            <ellipse
+              cx={cx + look * 0.5}
+              cy="58"
+              rx="3.2"
+              ry={8 * blink}
+              fill="#111"
+            />
+            <circle cx={cx + 2.5} cy="54.5" r={1.8 * blink} fill="#fff" />
+          </g>
+        ))}
+        <path d="M46 69 L54 69 L50 73 Z" fill="#e9a0a0" />
+        <path
+          d="M50 73 Q46 78 42 76 M50 73 Q54 78 58 76"
+          stroke="#111"
+          strokeWidth="1.6"
+          fill="none"
+          strokeLinecap="round"
+        />
+        {[-1, 1].map((d) => (
+          <g
+            key={d}
+            stroke="rgba(255,255,255,0.65)"
+            strokeWidth="1"
+            strokeLinecap="round"
+          >
+            <path d={`M${50 + d * 14} 72 L${50 + d * 38} 68`} />
+            <path d={`M${50 + d * 14} 75 L${50 + d * 38} 76`} />
+          </g>
+        ))}
+        <ellipse cx="24" cy="98" rx="10" ry="7" fill={color} />
+        <ellipse cx="76" cy="98" rx="10" ry="7" fill={color} />
+      </svg>
+    </div>
+  );
+};

@@ -1,13 +1,20 @@
 import React from "react";
 import {
   linearTiming,
-  springTiming,
   TransitionSeries,
   type TransitionPresentation,
 } from "@remotion/transitions";
-import { fade } from "@remotion/transitions/fade";
-import { slide } from "@remotion/transitions/slide";
-import { wipe } from "@remotion/transitions/wipe";
+import { bookFlip } from "@remotion/transitions/book-flip";
+import { clockWipe } from "@remotion/transitions/clock-wipe";
+import { crossZoom } from "@remotion/transitions/cross-zoom";
+import { crosswarp } from "@remotion/transitions/crosswarp";
+import { dreamyZoom } from "@remotion/transitions/dreamy-zoom";
+import { filmBurn } from "@remotion/transitions/film-burn";
+import { ripple } from "@remotion/transitions/ripple";
+import { swap } from "@remotion/transitions/swap";
+import { zoomBlur } from "@remotion/transitions/zoom-blur";
+import { AbsoluteFill, useVideoConfig } from "remotion";
+import { easeInOut, Grain, LightLeak, Vignette } from "./components";
 import {
   AppFeatures,
   AppReveal,
@@ -15,37 +22,50 @@ import {
   Cats,
   Intro,
   Outro,
+  STEP,
   Taste,
-  WebHero,
-  WebTour,
 } from "./scenes";
 import { Soundtrack } from "./Soundtrack";
+import {
+  ORDER_BEAT,
+  PERK_BEAT,
+  WebHero,
+  WebOrder,
+  WebPerks,
+} from "./web-scenes";
 
 const T = 16;
-const springy = springTiming({ config: { damping: 200 }, durationInFrames: T });
 
 export const SCENES = [
   { id: "intro", C: Intro, frames: 110 },
-  { id: "taste", C: Taste, frames: 150 },
-  { id: "web-hero", C: WebHero, frames: 180 },
-  { id: "web-tour", C: WebTour, frames: 170 },
-  { id: "app-reveal", C: AppReveal, frames: 140 },
-  { id: "app-features", C: AppFeatures, frames: 4 * 58 + 10 },
-  { id: "arcade", C: Arcade, frames: 150 },
+  { id: "taste", C: Taste, frames: 130 },
+  { id: "web-hero", C: WebHero, frames: 150 },
+  { id: "web-order", C: WebOrder, frames: 3 * ORDER_BEAT + 20 },
+  { id: "web-perks", C: WebPerks, frames: 4 * PERK_BEAT + 10 },
+  { id: "app-reveal", C: AppReveal, frames: 120 },
+  { id: "app-features", C: AppFeatures, frames: 4 * STEP + 10 },
+  { id: "arcade", C: Arcade, frames: 130 },
   { id: "cats", C: Cats, frames: 120 },
-  { id: "outro", C: Outro, frames: 180 },
+  { id: "outro", C: Outro, frames: 186 },
 ] as const;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const transitions: TransitionPresentation<any>[] = [
-  slide({ direction: "from-bottom" }),
-  wipe({ direction: "from-left" }),
-  slide({ direction: "from-right" }),
-  wipe({ direction: "from-bottom" }),
-  fade(),
-  slide({ direction: "from-right" }),
-  wipe({ direction: "from-top-left" }),
-  fade(),
+// Shader transitions render the two scenes into a canvas and mix them on the
+// GPU. They need the HTML-in-canvas support that ships with Remotion's
+// Chrome Headless Shell.
+const transitions = (
+  width: number,
+  height: number,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+): TransitionPresentation<any>[] => [
+  zoomBlur({}),
+  crossZoom({ strength: 0.5 }),
+  swap({}),
+  ripple({ amplitude: 80 }),
+  filmBurn({ seed: 3 }), // the drop: "Now on Android"
+  dreamyZoom({}),
+  bookFlip({}),
+  clockWipe({ width, height }),
+  crosswarp({}),
 ];
 
 export const PROMO_FRAMES =
@@ -59,23 +79,39 @@ export const SCENE_START = Object.fromEntries(
   ]),
 ) as Record<(typeof SCENES)[number]["id"], number>;
 
-export const Promo: React.FC = () => (
-  <>
-    <Soundtrack />
-    <TransitionSeries>
-      {SCENES.map(({ id, C, frames }, i) => (
-        <React.Fragment key={id}>
-          <TransitionSeries.Sequence durationInFrames={frames}>
-            <C />
-          </TransitionSeries.Sequence>
-          {i < SCENES.length - 1 ? (
-            <TransitionSeries.Transition
-              presentation={transitions[i]!}
-              timing={i % 2 ? linearTiming({ durationInFrames: T }) : springy}
-            />
-          ) : null}
-        </React.Fragment>
+const timing = linearTiming({ durationInFrames: T, easing: easeInOut });
+
+export const Promo: React.FC = () => {
+  const { width, height } = useVideoConfig();
+  const list = transitions(width, height);
+  return (
+    <AbsoluteFill>
+      <Soundtrack />
+      <TransitionSeries>
+        {SCENES.map(({ id, C, frames }, i) => (
+          <React.Fragment key={id}>
+            <TransitionSeries.Sequence durationInFrames={frames}>
+              <C />
+            </TransitionSeries.Sequence>
+            {i < SCENES.length - 1 ? (
+              <TransitionSeries.Transition
+                presentation={list[i]!}
+                timing={timing}
+              />
+            ) : null}
+          </React.Fragment>
+        ))}
+      </TransitionSeries>
+      {/* A warm light leak flares over every scene change. */}
+      {SCENES.slice(1).map((s, i) => (
+        <LightLeak
+          key={s.id}
+          at={SCENE_START[s.id] + T / 2}
+          flip={i % 2 === 1}
+        />
       ))}
-    </TransitionSeries>
-  </>
-);
+      <Vignette />
+      <Grain />
+    </AbsoluteFill>
+  );
+};

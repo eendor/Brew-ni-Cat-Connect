@@ -2,10 +2,15 @@
 
     python3 scripts/make-audio.py      # needs numpy; writes public/audio/*.wav
 
-The music is 120 BPM, so one beat is 15 video frames at 30 fps. The grid
-starts at video frame 6 so that bar 9 lands on the "Now on Android" scene
-(frame 546). Change SCENES in src/Promo.tsx and the drop moves with it only if
-you update BAR0 / DROP_BAR here too.
+The music is 120 BPM, so one beat is 15 video frames at 30 fps and a bar is 60.
+The grid starts at video frame 2 so that bar 12 lands on the "Now on Android"
+scene (frame 722), bar 19 on the café cats (1142) and the final chord (bar 23)
+on frame 1382 of the end card. If you change SCENES in src/Promo.tsx, update TOTAL_FRAMES, BAR0 and
+the *_BAR numbers here too.
+
+The cat sounds (meows, a trill, a purr, paw pats) are synthesised as well: a
+pitch contour drives a stack of harmonics shaped by moving formants, so they
+sound like a voice and not a beep.
 """
 
 from __future__ import annotations
@@ -17,11 +22,11 @@ import numpy as np
 
 SR = 44100
 FPS = 30
-TOTAL_FRAMES = 1314
+TOTAL_FRAMES = 1432
 BPM = 120
 BEAT = 60 / BPM
 BAR = 4 * BEAT
-BAR0 = 6 / FPS  # seconds: video frame 6
+BAR0 = 2 / FPS  # seconds: video frame 2
 OUT = os.path.join(os.path.dirname(__file__), "..", "public", "audio")
 rng = np.random.default_rng(7)
 
@@ -198,9 +203,9 @@ MELODY = [  # (beat in 4-bar cycle, midi, beats)
     (8, 74, 1), (9, 77, 0.5), (9.5, 74, 0.5), (10, 70, 1), (11, 72, 0.5), (11.5, 74, 0.5),
     (12, 76, 1.5), (13.5, 79, 0.5), (14, 76, 0.5), (14.5, 74, 0.5), (15, 72, 1),
 ]
-DROP_BAR = 9  # frame 546: "Now on Android"
-CATS_BAR = 17  # frame 1026: the café cats (lighter)
-END_BAR = 21  # frame 1266: final chord
+DROP_BAR = 12  # frame 722: "Now on Android"
+CATS_BAR = 19  # frame 1142: the café cats (lighter)
+END_BAR = 23  # frame 1382: final chord
 
 
 def music() -> np.ndarray:
@@ -395,6 +400,93 @@ def impact() -> np.ndarray:
     return boom + 0.4 * np.pad(pop(700), (0, len(t) - len(pop(700))))
 
 
+# --- cat sounds -------------------------------------------------------------
+def voice(dur: float, f0_pts: list[tuple[float, float]], formants: list[list[tuple[float, float]]],
+          breath: float = 0.012, vib: float = 0.012, am: tuple[float, float] = (0.0, 0.0)) -> np.ndarray:
+    """A voiced sound: harmonics of a gliding pitch, shaped by moving formants.
+
+    f0_pts and each formant track are (time 0..1, Hz) points; am is
+    (rate Hz, depth) for a trill's flutter."""
+    t = tt(dur)
+    p = t / dur
+    f0 = np.interp(p, *zip(*f0_pts)) * (1 + vib * np.sin(2 * np.pi * 5.5 * t))
+    tracks = [np.interp(p, *zip(*fm)) for fm in formants]
+    gains = (1.0, 0.7, 0.35)
+    x = np.zeros_like(t)
+    phase = 2 * np.pi * np.cumsum(f0) / SR
+    for k in range(1, 40):
+        fk = k * f0
+        if np.min(fk) > 9000:
+            break
+        a = np.zeros_like(t)
+        for g, F in zip(gains, tracks):
+            a += g * np.exp(-((np.log2(fk) - np.log2(F)) ** 2) / (2 * 0.22**2))
+        x += a * np.sin(k * phase) / k**0.4 * (fk < 10000)
+    x += breath * band(rng.standard_normal(len(t)), 2000, 6000) * np.exp(-((p - 0.3) ** 2) / 0.1)
+    if am[0]:
+        x *= 1 - am[1] * (0.5 + 0.5 * np.sin(2 * np.pi * am[0] * t))
+    return x * env(dur, 0.035, 10, 1, min(0.18, dur * 0.35))
+
+
+def meow() -> np.ndarray:  # "mi-aaa-ow"
+    return voice(0.75, [(0, 520), (0.25, 780), (0.5, 720), (1, 430)],
+                 [[(0, 420), (0.3, 950), (0.75, 800), (1, 550)],
+                  [(0, 1400), (0.3, 2000), (0.7, 1500), (1, 1000)],
+                  [(0, 3000), (1, 2900)]])
+
+
+def mew() -> np.ndarray:  # a short, high kitten mew
+    return voice(0.38, [(0, 820), (0.3, 1050), (1, 760)],
+                 [[(0, 600), (0.4, 1200), (1, 900)], [(0, 1800), (0.4, 2400), (1, 1900)], [(0, 3400), (1, 3300)]],
+                 breath=0.01)
+
+
+def chirp() -> np.ndarray:  # a rising "mrrp?"
+    return voice(0.32, [(0, 480), (0.6, 620), (1, 900)],
+                 [[(0, 450), (1, 900)], [(0, 1300), (1, 2100)], [(0, 2800), (1, 3100)]],
+                 breath=0.006, am=(32, 0.8))
+
+
+def trill() -> np.ndarray:  # a happy rolling "brrrrt"
+    return voice(0.55, [(0, 560), (0.5, 700), (1, 640)],
+                 [[(0, 500), (0.5, 800), (1, 650)], [(0, 1500), (0.5, 1900), (1, 1700)], [(0, 3000), (1, 3000)]],
+                 breath=0.004, am=(27, 0.9))
+
+
+def purr(dur: float = 1.6) -> np.ndarray:
+    t = tt(dur)
+    pulse = np.maximum(0, np.sin(2 * np.pi * 24 * t)) ** 3
+    breath = 0.65 + 0.35 * np.sin(2 * np.pi * t / 1.1)  # in and out
+    x = band(rng.standard_normal(len(t)), 60, 900) * 0.8 + np.sin(2 * np.pi * 48 * t) + 0.4 * np.sin(2 * np.pi * 96 * t)
+    return np.tanh(2 * x * pulse * breath) * env(dur, 0.15, 10, 1, 0.3)
+
+
+def pat() -> np.ndarray:  # a soft paw step
+    t = tt(0.12)
+    return np.sin(2 * np.pi * (120 + 80 * np.exp(-t / 0.01)) * t) * np.exp(-t / 0.03) + 0.3 * band(
+        rng.standard_normal(len(t)), 300, 2500) * np.exp(-t / 0.012)
+
+
+def coins() -> np.ndarray:  # a little shower of coins
+    out = np.zeros(int(1.0 * SR))
+    for i in range(7):
+        c = coin() * (0.9 - i * 0.09)
+        i0 = int((i * 0.075 + rng.uniform(0, 0.02)) * SR)
+        out[i0 : i0 + len(c)] += c[: len(out) - i0]
+    return out
+
+
+def boing() -> np.ndarray:
+    t = tt(0.45)
+    f = 180 + 260 * np.exp(-t / 0.08) * (1 + 0.3 * np.sin(2 * np.pi * 14 * t))
+    return np.sin(2 * np.pi * np.cumsum(f) / SR) * np.exp(-t / 0.15)
+
+
+def swoosh_big() -> np.ndarray:  # a fuller whoosh for the shader transitions
+    w = whoosh(0.8, 200, 3500) + 0.5 * riser(0.8)[: int(0.8 * SR)] * np.linspace(1, 0, int(0.8 * SR))
+    return w
+
+
 if __name__ == "__main__":
     write("music.wav", music(), peak=0.95)
     write("whoosh.wav", reverb(stereo_sweep(whoosh()), 0.8, 0.2))
@@ -411,3 +503,12 @@ if __name__ == "__main__":
     write("paper.wav", paper())
     write("sparkle.wav", reverb(np.stack([sparkle()] * 2), 1.2, 0.3))
     write("impact.wav", reverb(np.stack([impact()] * 2), 1.4, 0.2))
+    write("meow.wav", reverb(np.stack([meow()] * 2), 0.9, 0.18))
+    write("mew.wav", reverb(np.stack([mew()] * 2), 0.8, 0.18))
+    write("chirp.wav", reverb(np.stack([chirp()] * 2), 0.7, 0.15))
+    write("trill.wav", reverb(np.stack([trill()] * 2), 0.8, 0.15))
+    write("purr.wav", purr())
+    write("pat.wav", pat())
+    write("coins.wav", coins())
+    write("boing.wav", boing())
+    write("swoosh.wav", reverb(stereo_sweep(swoosh_big()), 0.9, 0.25))
