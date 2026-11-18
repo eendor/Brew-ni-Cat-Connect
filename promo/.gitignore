@@ -1,0 +1,7 @@
+node_modules/
+out/
+# copied from the site and the docs by `npm run assets`
+public/app/
+public/shop/
+public/menu/
+public/brand/

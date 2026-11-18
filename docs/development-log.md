@@ -1,7 +1,7 @@
 # Development Log
 
 **Document version:** 0.1 Draft\
-**Last updated:** 2026-11-17
+**Last updated:** 2026-11-18
 
 This log records completed work and observed evidence. Planned work is explicitly identified and is not reported as implemented or tested.
 
@@ -2127,3 +2127,10 @@ This log records completed work and observed evidence. Planned work is explicitl
 
 - MAN-P9-004 (POS Rewards & Codes) and MAN-P9-007 (Google profile photos) passed, run by the lead developer.
 - MAN-P9-005 and MAN-P9-006 partly passed: in-app updates to Connect 1.0.2 and 1.0.3 and to POS 10150 worked on real devices. Installing over 1.0.0 from the home page and the wrong-hash refusal were not run.
+
+## 2026-11-18 — Promo video for the website and the app
+
+- Added `promo/`, a Remotion project that renders a 44-second ad in landscape (1920×1080) and vertical (1080×1920). It shows the menu photos, the live website, the Android app and its arcade games, the café cats, and ends with the website address and location.
+- It has its own `package.json` and is excluded from the website's TypeScript, ESLint and Prettier checks, so the website build is unchanged. Rendered MP4s stay out of Git (`promo/out/`).
+- **Testing:** `npx tsc -p promo`, both compositions rendered and checked frame by frame.
+- **Known limitations:** No soundtrack. The app screenshots come from the mock backend, so the small "Open now · until 11:59 PM" line in them shows mock hours.

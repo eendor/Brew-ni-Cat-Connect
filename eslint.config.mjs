@@ -16,6 +16,7 @@ const eslintConfig = defineConfig([
     "test-results/**",
     "next-env.d.ts",
     ".agents/**",
+    "promo/**",
     ".cursor/**",
     ".opencode/**",
     ".github/**",
