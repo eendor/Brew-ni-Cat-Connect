@@ -60,3 +60,49 @@ To use a licensed track instead, replace `public/audio/music.mp3`.
 
 Remotion is free for individuals and companies of up to three people; see its
 [license](https://www.remotion.dev/license).
+
+## Website tour
+
+`tour/` is a separate, friendly walk-through of the website, made with
+[HyperFrames](https://github.com/heygen-com/hyperframes) (HTML to MP4). It
+plays screen recordings of the real site, inside a browser window on a soft
+café background. A caption card under each clip says what is on screen.
+
+| Project          | Size      | Output                              |
+| ---------------- | --------- | ----------------------------------- |
+| `tour/landscape` | 1920×1080 | `out/brew-ni-cat-tour.mp4`          |
+| `tour/vertical`  | 1080×1920 | `out/brew-ni-cat-tour-vertical.mp4` |
+
+It has nine sections:
+
+1. Home
+2. Order online
+3. Rider delivery
+4. Sign in and rewards
+5. Cat games
+6. Reviews
+7. About and gallery
+8. Contact
+9. The Android app, shown as screenshots in a phone frame
+
+The music is cheerful, synthesised by `tour/make_music.py`, and fitted to the
+sections.
+
+The clips must be recorded first, because `public/demo/` is not in Git. The
+recorder's README explains how, and that nothing reaches the live shop.
+
+```bash
+# with the site built and running on port 3200 (see scripts/record-demos/README.md)
+node scripts/record-demos/scenes.mjs desk
+node scripts/record-demos/scenes.mjs phone
+cd tour
+npm run build            # copies the clips, writes both pages, makes the music
+npm run check            # HyperFrames lint and layout checks
+npm run render           # out/brew-ni-cat-tour.mp4
+npm run render:vertical  # out/brew-ni-cat-tour-vertical.mp4
+```
+
+Rendering needs Node 22 or newer. It extracts every clip's frames first, so it
+needs a few GB of temporary space; if `/tmp` is small, set `TMPDIR` to a
+folder on disk. Set `HYPERFRAMES_NO_TELEMETRY=1` to turn off HyperFrames'
+usage statistics.

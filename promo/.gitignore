@@ -5,3 +5,5 @@ public/app/
 public/shop/
 public/menu/
 public/brand/
+# feature demos recorded by scripts/record-demos (a few hundred MB)
+public/demo/

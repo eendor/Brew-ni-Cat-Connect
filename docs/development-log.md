@@ -1136,7 +1136,7 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Testing:** Vitest 412/412 in 47 files (new TC-P4-206 – TC-P4-222; the database cases run on PGlite with every migration). Playwright with the CI settings: `chromium` 22 passed and 1 skipped (TC-P4-173); `chromium-3d` 20 passed, and TC-P4-021 failed only on the placeholder key's 401s from the cart's menu read, then passed against a build with the real key. Before and after screenshots are in `docs/evidence/phase-4/live-site-content/`.
 - **Branch / PR:** `feat/live-site-content`, PR #69.
 - **Known limitations:** The migration isn't applied to the live database yet, so the site shows its fallback copy (the same facts as before) until it is. Owner changes go through the Supabase dashboard until the POS Shop settings screen (Stage 3); "owner only" means staff accounts for now. Photos must be ones that ship with the site under `/images/`. Menu price changes aren't in the history table yet; that comes with the POS work. While the table is missing, the server logs one fallback line per render.
-- **Next action:** Apply the migration on the live database once approved, then the washed-out 3D and footer text fixes the user reported, then the iOS 27 restyle.
+- **Next action:** Apply the migration on the live database once approved, then fix the washed-out 3D and footer text I found, then the iOS 27 restyle.
 
 ## 2026-10-30 — Washed-out 3D colors and the footer's dark text
 
@@ -1201,7 +1201,7 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Files:** `supabase/migrations/20261031120000_item_icon_and_image.sql`, `supabase/rollbacks/20261031120000_item_icon_and_image.sql`, `tests/database/item-icon-and-image.test.ts`, `docs/database-design.md`, `docs/functional-requirements.md`, `docs/test-cases.md`, `docs/development-log.md`, `README.md`.
 - **Testing:** Vitest 444/444 in 50 files (`npm test`), `python3 -I scripts/validate_phase0_docs.py` (PASS), `npm run format:check` (PASS), `npm run lint` (PASS), `npm run typecheck` (PASS).
 - **Branch / PR:** `feat/pos-item-icon-columns`, PR #75.
-- **Known limitations:** The migration is not applied to the live database until approved by the user.
+- **Known limitations:** The migration is not applied to the live database until it is approved.
 - **Next action:** Build the Android POS product and category editor behind the owner PIN with the icon picker and safe menu seeding, then the web POS product editor icon picker, then the Android Supabase config cleanup.
 
 ## 2026-10-31 — Stage 3 POS product and category editor, 30-icon picker, and Android BuildConfig cleanup (POS PRs #4, #5, #6)
@@ -1215,13 +1215,13 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Files:** In `Brew-ni-Cat-POS`: `app/build.gradle.kts`, `app/src/main/java/com/example/cattasticpos/data/local/*`, `data/repository/*`, `data/remote/AppUpdateManager.kt`, `domain/model/MenuModels.kt`, `domain/repository/MenuRepository.kt`, `sync/SyncWorker.kt`, `ui/components/FluentIcons.kt`, `ui/components/ParallaxNavigation.kt`, `ui/dashboard/*`, `ui/history/HistoryScreen.kt`, `ui/inventory/InventoryScreen.kt`, `ui/menu/MenuEditorScreen.kt`, `ui/menu/MenuEditorViewModel.kt`, `ui/pin/PinScreen.kt`, `MainActivity.kt`, `app/src/test/java/com/example/cattasticpos/MenuCatalogEditorTest.kt`, `web/src/lib/product-icons.ts`, `web/src/components/product-icon.tsx`, `web/src/app/page.tsx`, `web/tests/product-icons.test.mjs`, `docs/screenshots/web-product-icon-picker/`, `README.md`. In `Brew-ni-Cat-Connect`: `docs/functional-requirements.md`, `docs/system-architecture.md`, `docs/test-cases.md`, `docs/development-log.md`, `README.md`.
 - **Testing:** In `Brew-ni-Cat-POS`: `bash gradlew testDebugUnitTest` (PASS, `TC-P4-248` to `TC-P4-250`) and in `web/`: `npm test` (7/7 passed, `TC-P4-240` to `TC-P4-242` and `TC-P4-251`), `npm run lint` (0 warnings), `npm run build` (PASS). In `Brew-ni-Cat-Connect`: `python3 -I scripts/validate_phase0_docs.py` (PASS) and `npm run format:check` (PASS).
 - **Branch / PR:** `Brew-ni-Cat-POS` `feat/android-product-editor` (POS PR #4), `feat/web-product-icon-picker` (POS PR #5), `chore/android-supabase-buildconfig` (POS PR #6), and `Brew-ni-Cat-Connect` `docs/stage3-pos-product-editor-evidence` (Connect PR #76).
-- **Known limitations:** `20261031120000_item_icon_and_image.sql` remains unapplied on the live database until approved by the user; both POS apps automatically fall back if the remote `icon` column is absent.
-- **Next action:** Ask the user before applying `20261031120000_item_icon_and_image.sql` to live Supabase or publishing a new Android POS APK release.
+- **Known limitations:** `20261031120000_item_icon_and_image.sql` remains unapplied on the live database until it is approved; both POS apps automatically fall back if the remote `icon` column is absent.
+- **Next action:** Get approval before applying `20261031120000_item_icon_and_image.sql` to live Supabase or publishing a new Android POS APK release.
 
 ## 2026-11-01 — Live migrations applied and Android POS build 10136 released (FR-027, FR-093)
 
 - **Phase:** Phase 9 (Stage 3 release).
-- **Task:** With the user's approval, apply the two pending migrations to the live database and send the new Android POS build to the shop tablet.
+- **Task:** With approval, apply the two pending migrations to the live database and send the new Android POS build to the shop tablet.
 - **Summary:** Applied `20261028153552_online_order_status.sql` and `20261031120000_item_icon_and_image.sql` to the live database; both are recorded in `supabase_migrations.schema_migrations`. Released Android POS build 10136 (version 1.1.0) with the product and category editor (`Brew-ni-Cat-POS` PR #7), uploaded the signed APK to the 1.1.0 GitHub release, and added the matching `public.app_release` row so the tablet shows an optional update prompt. Updated the POS README badge (`Brew-ni-Cat-POS` PR #8).
 - **Files:** `docs/database-design.md`, `docs/development-log.md`. In `Brew-ni-Cat-POS`: `app/build.gradle.kts`, `README.md`.
 - **Testing:** The live `items` table has the `icon` and `image_url` columns, `public.set_online_order_status` exists, and the public menu read returns 200. The update feed returns build 10136 to the publishable key, the same request the tablet makes. `gradlew :app:testDebugUnitTest :app:assembleRelease` passes. The Room 19 → 20 upgrade only adds columns with defaults and has no destructive fallback, so unsynced tablet sales are kept.
@@ -1237,7 +1237,7 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Files:** `src/lib/ordering/cart-pricing.ts`, `src/components/menu/menu-item-order-dialog.tsx`, `supabase/migrations/20261101120000_mixed_flavors.sql`, `supabase/rollbacks/20261101120000_mixed_flavors.sql`, `tests/unit/mixed-flavors.test.ts`, `tests/database/mixed-flavors.test.ts`, `docs/*`. In `Brew-ni-Cat-POS`: `CartLineSelection.kt`, `MenuModels.kt`, `RecipeDeductionResolver.kt`, `DashboardScreen.kt`, `MixedFlavorTest.kt`.
 - **Testing:** TC-P4-252 to TC-P4-256 pass; the full Vitest suite, type check, lint, Prettier and the docs validator pass.
 - **Branch / PR:** `feat/mix-flavors-online`; `Brew-ni-Cat-POS` PR #11.
-- **Known limitations:** Each flavor in a mix deducts a full recipe portion from stock. The migration is applied to the live database with the user's approval after merge.
+- **Known limitations:** Each flavor in a mix deducts a full recipe portion from stock. The migration is applied to the live database after merge, once approved.
 - **Next action:** After screenshots of the POS mix option once build 10138 is on the tablet.
 
 ## 2026-11-01 — Noodle add-ons online and fries-only mixing (FR-027, FR-082)
@@ -1567,7 +1567,7 @@ This log records completed work and observed evidence. Planned work is explicitl
 ## 2026-11-10 — Buttons inside Messenger replies and a clearer sign-up screen
 
 - **Phase:** Phase 7 (Messenger) and Phase 4 (accounts).
-- **Task:** The user found the Messenger buttons showing only as quick replies under the latest reply, and asked for them inside the replies. The user also found that signing up with an email that already has an account showed "Confirm your email", as if the account were new.
+- **Task:** I found the Messenger buttons showing only as quick replies under the latest reply, and wanted them inside the replies. I also found that signing up with an email that already has an account showed "Confirm your email", as if the account were new.
 - **Summary:** `sendApiBody` now sends a reply of up to 640 characters as Meta's button message, with its first three choices as postback buttons and the rest as quick replies. Longer replies stay as text with quick replies. The sign-up screen still doesn't say whether an account exists (FR-031, FR-032), but its wording now covers both cases and links to the password reset.
 - **Files:** `src/lib/messenger/send.ts`, `src/components/account/sign-up-view.tsx`, `tests/unit/messenger-send.test.ts`, `tests/unit/account-forms.test.tsx`, `docs/test-cases.md` (section 42).
 - **Testing:** `NODE_OPTIONS=--no-experimental-webstorage npx vitest run`: 80 test files, 730 tests, all passed. `npx eslint . --max-warnings=0`, `npx tsc --noEmit -p .` and `npx prettier --check .` passed.
@@ -1578,7 +1578,7 @@ This log records completed work and observed evidence. Planned work is explicitl
 ## 2026-11-10 — Ordering and order status inside Messenger (FR-100 to FR-110)
 
 - **Phase:** Phase 7 (Messenger).
-- **Task:** The user asked for an ordering system of its own inside Messenger, with pictures and buttons, a button (not a pasted link) for the website, and a notification in the POS app. The user then said it must be standalone, not dependent on the browser or the website, and that the order status must be handled in the chat, not with a website order number.
+- **Task:** Build an ordering system of its own inside Messenger, with pictures and buttons, a button (not a pasted link) for the website, and a notification in the POS app. It must be standalone, not dependent on the browser or the website, and that the order status must be handled in the chat, not with a website order number.
 - **Summary:** "🛒 Order here" now takes a pickup order in the chat: the phone number (Messenger's phone-number button, or the typed words "order 09XXXXXXXXX"), a category with its menu board, item cards with photos, a size, flavors (up to three for fries), add-ons and a quantity, a payment preference and a pickup time, then a summary with the total, the saved hours and any shop notice, and Place order. The order so far travels in the buttons' payloads, so nothing is saved before Place order. Place order calls the website's `place_online_order` database function as a guest, so the order lands in the same queue the POS app already listens to, and a double tap returns the same order. "📦 Order status" lists the customer's last three Messenger orders, found by who is asking (a token made from their Messenger ID and the app secret) through the new `list_online_orders_by_token` function, with no order number or link to type. The Messenger ID is never stored. Website links are buttons, the five menu boards are shown with a note that their prices may be older, each Cat Association option's contents are spelled out, and the replies use emojis. Pasting a website order link still works. The privacy policy page and its date say what a Messenger order keeps. The docs validator now expects FR-001 to FR-110.
 - **Files:** `src/lib/messenger/` (`order-flow.ts`, `order-ids.ts`, `order-state.ts`, `ordering.ts`, `deps.ts`, `events.ts`, `intents.ts`, `profile.ts`, `replies.ts`, `send.ts`), `src/config/menu-boards.ts`, `src/app/api/messenger/route.ts`, `src/app/privacy/page.tsx`, `src/config/privacy.ts`, `public/images/messenger/no-photo.jpg`, `supabase/migrations/20261110120000_messenger_order_status.sql` and its rollback, `scripts/validate_phase0_docs.py`, `tests/unit/messenger-*.test.ts`, `tests/unit/privacy-page.test.tsx`, `tests/database/messenger-order-status.test.ts`, and the docs (functional requirements FR-100 to FR-110, ADR-029, database design §15, system architecture §24, security and privacy §21, test cases section 44, software and APIs, SRS, execution paths, the business content register and the Phase 2 evidence note). Section 43 of the test cases is left free for the Phase 7 integrated QA.
 - **Testing:**
@@ -1593,7 +1593,7 @@ This log records completed work and observed evidence. Planned work is explicitl
 ## 2026-11-10 — Messenger order choice fixes
 
 - **Phase:** Phase 7 (Messenger).
-- **Task:** The user tried the order steps on a phone and reported cut-off choice names, a "No flavor" choice on drinks that need one, no Back button on the flavor step, and Buldak & Sedaap inside the Menu reply next to Full menu and Order here. A tap on the phone-number button also showed the welcome again.
+- **Task:** I tried the order steps on a phone and found cut-off choice names, a "No flavor" choice on drinks that need one, no Back button on the flavor step, and Buldak & Sedaap inside the Menu reply next to Full menu and Order here. A tap on the phone-number button also showed the welcome again.
 - **Summary:** When any choice name is longer than a Messenger button (20 characters), the choices are numbered in the message with their full names and prices, and the buttons show the numbers. "No flavor" is gone. The flavor, extras and how-many steps all have "🔙 Back" (to the sizes, or to the category when there is one size). The Menu and category replies keep only Full menu and Order here inside the message. A phone-number tap without a usable number now asks for the number again.
 - **Files:** `src/lib/messenger/` (`ordering.ts`, `order-flow.ts`, `intents.ts`, `replies.ts`, `send.ts`), `tests/unit/messenger-{order-flow,send,intents,replies}.test.ts`, `docs/test-cases.md` §45.
 - **Testing:**
@@ -1605,7 +1605,7 @@ This log records completed work and observed evidence. Planned work is explicitl
 ## 2026-11-10 — Phone number button with no number, and the order status migration applied
 
 - **Phase:** Phase 7 (Messenger).
-- **Task:** On a phone, the phone number button showed "Phone number" and its tap gave no number, so the chat asked again with the same button. The user also approved applying the order status migration and re-applying the Page's menu.
+- **Task:** On a phone, the phone number button showed "Phone number" and its tap gave no number, so the chat asked again with the same button. Also apply the approved order status migration and re-apply the Page's menu.
 - **Summary:** A tap without a number now gets its own reply: Messenger didn't share a number, so type "order 09XXXXXXXXX". The button isn't offered again there. Separately, `20261110120000_messenger_order_status.sql` was applied to the live database on 2026-11-10 (database design §8.7): first with its checks and a forced rollback, then for real, and recorded in `supabase_migrations.schema_migrations`. A guest call to `list_online_orders_by_token` with an unknown token returned `[]`. The Page's persistent menu was re-applied with Order here first; Meta's API no longer accepts the greeting, so it stays as set in Business Suite.
 - **Files:** `src/lib/messenger/` (`intents.ts`, `events.ts`, `order-flow.ts`, `ordering.ts`), `tests/unit/messenger-{intents,order-flow}.test.ts`, `docs/test-cases.md` §45.
 - **Testing:** `NODE_OPTIONS=--no-experimental-webstorage npx vitest run` with the CI settings: 84 test files, 921 tests, all passed. `npx tsc --noEmit` reported nothing.
@@ -1818,7 +1818,7 @@ This log records completed work and observed evidence. Planned work is explicitl
   - `npx tsc --noEmit -p .` and `npx eslint src tests/unit`: no errors.
 - **Branch / PR:** `feat/messenger-smart-replies`.
 - **Known limitations:** `GEMINI_API_KEY` is not in Vercel yet (needs the team's OK, and the key should be rotated first). The new greeting needs the Messenger Profile API after the merge. Only people with a role on the Meta app get replies until App Review. The free tier may use prompts to improve Google's products; the owner hasn't confirmed the policy wording. MAN-P7-009 is Pending.
-- **Update 2026-11-13 (Rodnee asked to loop every Gemini model until one answers, on the free tier):** `DEFAULT_GEMINI_MODELS` now lists every Gemini and Gemma text model the free-tier key can use (15, from the models list on 2026-11-13; `gemini-2.5-*` answer 404 "no longer available to new users" and were left out). The assistant goes round them until one answers: busy (503), rate-limited (429), failing, empty and slow models are skipped, with a short wait between rounds, within 45 seconds in all and 12 per model. A model that answers 404 or 400 rests for a day and a 429 model for its retry delay. Gemma gets its instructions in the message. The webhook route allows 60 seconds (`maxDuration`). A live run with the real key answered three questions on `gemini-3.1-flash-lite` in 5.4 seconds; in the probe before it, eight of the models were busy (503) or timed out. TC-P7-099 and TC-P7-100 updated, TC-P7-108 added. Also fixed TC-P5-088, which still expected the old policy date (CI failure).
+- **Update 2026-11-13 (loop every Gemini model until one answers, on the free tier):** `DEFAULT_GEMINI_MODELS` now lists every Gemini and Gemma text model the free-tier key can use (15, from the models list on 2026-11-13; `gemini-2.5-*` answer 404 "no longer available to new users" and were left out). The assistant goes round them until one answers: busy (503), rate-limited (429), failing, empty and slow models are skipped, with a short wait between rounds, within 45 seconds in all and 12 per model. A model that answers 404 or 400 rests for a day and a 429 model for its retry delay. Gemma gets its instructions in the message. The webhook route allows 60 seconds (`maxDuration`). A live run with the real key answered three questions on `gemini-3.1-flash-lite` in 5.4 seconds; in the probe before it, eight of the models were busy (503) or timed out. TC-P7-099 and TC-P7-100 updated, TC-P7-108 added. Also fixed TC-P5-088, which still expected the old policy date (CI failure).
 
 ## 2026-11-13 — Reviews on their own page
 
@@ -2148,9 +2148,9 @@ This log records completed work and observed evidence. Planned work is explicitl
 
 ## 2026-11-18 — Opening date applied to the live database
 
-- **Task:** With the user's approval, apply `20261118120000_opening_date_june_8.sql` live.
+- **Task:** With approval, apply `20261118120000_opening_date_june_8.sql` live.
 - **Summary:** Ran it once inside a transaction that was rolled back, then applied it and recorded it in `supabase_migrations.schema_migrations`. The live About content says June 8, 2026, and the live About page shows it once the 60-second cache refreshed. No other app (Android, POS) stores the opening date.
-- **Testing:** live query of `public.site_content` (`openedOn` 2026-06-08, story updated, audit row written); the user checked the live site.
+- **Testing:** live query of `public.site_content` (`openedOn` 2026-06-08, story updated, audit row written); I checked the live site.
 - **Next action:** none.
 
 ## 2026-11-18 — Next.js 16.4.5 security update
@@ -2165,8 +2165,27 @@ This log records completed work and observed evidence. Planned work is explicitl
 ## 2026-11-18 — Full 3D effects on every device, smooth and sharp
 
 - **Phase:** Phase 4 (NFR-001), polish.
-- **Task:** The user saw blurry, plain 3D on phones and on the laptop but full effects on the PC, and asked for full effects on all devices with a smooth frame rate.
+- **Task:** I saw blurry, plain 3D on phones and on the laptop but full effects on the PC, and wanted full effects on all devices with a smooth frame rate.
 - **Summary:** Phones and integrated GPUs got the lite tier: no effects and 1× pixels (0.75× when slow). Measured on the Intel UHD laptop at 1080p, the full tier ran at 12–22 fps, and switching each effect off showed 4× MSAA on the post-processing target cost the most. It is replaced by an SMAA pass (Home 22 → 46 fps, Menu 18 → 35 with every effect on). Every device now gets the full tier (the lead's call), phones with depth of field too, at up to 2× on phones and 1.5× elsewhere; lite is only `?quality=lite`, and lite notes saved by older versions are cleared (that note kept the lead's laptop on lite after the first fix). Slow scenes give up shadows' redraw rate and refraction size first, then depth of field, then the pixel ratio a step at a time (`pixelSteps`, never below 1×), and the glow last; still slow, a scene keeps what it has left. With that, the laptop runs Home at 57 fps, Menu 42, About 67 and Gallery 60 with full effects. ADR-014 has a dated note.
 - **Files:** `src/components/three/engine/{runtime,renderer,post}.ts`, `src/components/three/scenes/{menu-hero,showcase,ambient}.ts`, `tests/unit/three-{frame-pacing,phone-tier}.test.ts*`, `docs/{decisions,test-cases,development-log}.md`.
 - **Testing:** TC-P4-278 and TC-P4-279 (new), TC-P4-186, TC-P4-190 and TC-P4-191 updated; all 955 unit tests; the 3D unit tests, `npm run typecheck`, `npm run lint`, `npm run build`; frame rates measured in Chromium on the laptop's GPU with a production build.
 - **Known limitations:** Not measured on a phone yet; there the frame budget steps effects down if frames run slow.
+
+## 2026-11-18 — Friendly website tour video (HyperFrames)
+
+- **Phase:** Promotion (outside the website build).
+- **Task:** Make a video that walks through every feature of the website. I dropped a first cut in a cinematic trailer style because it looked awkward and too dark, and its drawn cursor looked like it was jumping. Instead I made a friendly, quick tour that just navigates the site with no cursor, with joyous promotional music, using HyperFrames.
+- **Summary:**
+  - Added `promo/tour/`, two HyperFrames projects (`landscape` 1920×1080 and `vertical` 1080×1920) written by `build.py`. Recordings of the real site play inside a browser window on a soft café background, with a caption card for each step and a section pill (for example "2/9 Order online"). The Android app section shows the app's screenshots in a phone frame.
+  - Added `promo/tour/make_music.py`, a synthesised, cheerful soundtrack (ukulele strums, glockenspiel, claps, 126 BPM in G major) that starts a new phrase with each section.
+  - Added `promo/scripts/record-demos/`, which records the clips with a headless Chromium. The cursor is hidden, and frames that arrive out of order are dropped, because headless Chrome sometimes sends a stale frame.
+  - The dropped trailer was never committed.
+- **Privacy and safety:**
+  - Every write in the recordings is mocked in the browser, or else blocked. This covers orders, sign-in, the account, points, rewards, games and the review. Both recording runs reported an empty blocked list.
+  - The review shown being posted is fake, and its caption says so.
+  - The gallery scene stays on the cat photo ring. The photo grid, which includes customers, never comes into view.
+  - The clips and the generated pages are kept out of Git (`promo/public/demo/`, `promo/tour/assets`).
+- **Files:**
+  - `promo/tour/`: `build.py`, `make_music.py`, `package.json`, `.gitignore`, `landscape/` and `vertical/` (`hyperframes.json`, `meta.json`)
+  - `promo/scripts/record-demos/`: `scenes.mjs`, `lib.mjs`, `README.md`
+  - `promo/README.md`, `promo/.gitignore`, `docs/development-log.md`
