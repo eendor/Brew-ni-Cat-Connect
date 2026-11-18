@@ -3,10 +3,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "python3 build.py",
+    "build": "python3 build.py && python3 showcase.py",
     "dev": "npx --yes hyperframes@0.9.9 preview landscape",
-    "check": "npx --yes hyperframes@0.9.9 check landscape && npx --yes hyperframes@0.9.9 check vertical",
+    "check": "npx --yes hyperframes@0.9.9 check landscape && npx --yes hyperframes@0.9.9 check vertical && npx --yes hyperframes@0.9.9 check showcase-landscape && npx --yes hyperframes@0.9.9 check showcase-vertical",
     "render": "npx --yes hyperframes@0.9.9 render landscape -o ../out/brew-ni-cat-tour.mp4",
-    "render:vertical": "npx --yes hyperframes@0.9.9 render vertical -o ../out/brew-ni-cat-tour-vertical.mp4"
+    "render:vertical": "npx --yes hyperframes@0.9.9 render vertical -o ../out/brew-ni-cat-tour-vertical.mp4",
+    "render:showcase": "npx --yes hyperframes@0.9.9 render showcase-landscape -o ../out/brew-ni-cat-showcase.mp4",
+    "render:showcase-vertical": "npx --yes hyperframes@0.9.9 render showcase-vertical -o ../out/brew-ni-cat-showcase-vertical.mp4"
   }
 }

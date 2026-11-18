@@ -102,6 +102,28 @@ npm run render           # out/brew-ni-cat-tour.mp4
 npm run render:vertical  # out/brew-ni-cat-tour-vertical.mp4
 ```
 
+### Short showcase (under a minute)
+
+`tour/showcase.py` cuts the same recordings into a 54-second highlight video
+in a different look from the first promo. Each scene has its own bright colour,
+the clips sit in tilted sticker cards, the captions are outlined stickers, and
+scenes change with a circle wipe. It shows nine website moments (3D home,
+ordering, live tracking, riders, points, cat games, a demo review, the cat
+gallery and the open sign), then three beats of the Android app. Every cut lands
+on the music's beat.
+
+| Project                   | Size      | Output                                  |
+| ------------------------- | --------- | --------------------------------------- |
+| `tour/showcase-landscape` | 1920×1080 | `out/brew-ni-cat-showcase.mp4`          |
+| `tour/showcase-vertical`  | 1080×1920 | `out/brew-ni-cat-showcase-vertical.mp4` |
+
+```bash
+cd tour
+npm run build                     # also writes the showcase pages and music
+npm run render:showcase
+npm run render:showcase-vertical
+```
+
 Rendering needs Node 22 or newer. It extracts every clip's frames first, so it
 needs a few GB of temporary space; if `/tmp` is small, set `TMPDIR` to a
 folder on disk. Set `HYPERFRAMES_NO_TELEMETRY=1` to turn off HyperFrames'

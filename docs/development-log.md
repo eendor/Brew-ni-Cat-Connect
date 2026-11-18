@@ -2199,3 +2199,19 @@ This log records completed work and observed evidence. Planned work is explicitl
   - The order tracker in the recordings shows "Offline (polling)", because realtime is turned off while recording.
   - The app section uses still screenshots, not recordings.
   - The vertical version's music is about 4 dB quieter than the landscape version's.
+
+## 2026-11-18 — Short showcase video (under a minute)
+
+- **Phase:** Promotion (outside the website build).
+- **Task:** I wanted a promo under one minute that shows off both the website and the app, like the first promo but in a different style. I kept the old videos.
+- **Summary:**
+  - Added `promo/tour/showcase.py`, which writes two more HyperFrames projects (`showcase-landscape` and `showcase-vertical`) from the clips I had already recorded. It needed no new recordings and no server.
+  - The video is 54 seconds long. It shows nine website moments (3D home, ordering, live tracking, riders, points, cat games, a demo review, the cat gallery and the open sign), then three beats of the Android app, then an end card with the site address.
+  - To set it apart from the first promo's green and cream look, every scene has its own bright colour, the clips sit in tilted sticker cards, the captions are outlined stickers in a rounded font (Fredoka), and scenes change with a circle wipe. Every scene is two bars of the music, so the cuts land on the beat.
+  - The music comes from the tour's `make_music.py`, fitted to the new length.
+- **Privacy and safety:** It only uses the same mocked recordings as the tour. The tracking, points, games and review scenes carry a "Demo" tag, and the review caption says it is not a real customer. The About photo is not in this cut.
+- **Files:** `promo/tour/showcase.py`, `promo/tour/showcase-landscape/` and `promo/tour/showcase-vertical/` (`hyperframes.json`, `meta.json`), `promo/tour/package.json`, `promo/README.md`, `docs/development-log.md`. I also ran Prettier on the recorder scripts and the tour's `meta.json` files, because the format check failed on PR #174.
+- **Testing:**
+  - Ran `npx hyperframes@0.9.9 lint` on both projects (0 errors) and checked snapshots.
+  - Rendered `promo/out/brew-ni-cat-showcase.mp4` (1920×1080, 30 fps, 0:54, 18 MB) and `promo/out/brew-ni-cat-showcase-vertical.mp4` (1080×1920, 30 fps, 0:54, 23 MB), about 4 minutes each. Checked contact sheets of both renders. Audio is peak −2.3 dB and mean −15.6 dB in both.
+- **Known limitations:** The app scenes use still screenshots, and the rider and contact moments are mostly still pages.

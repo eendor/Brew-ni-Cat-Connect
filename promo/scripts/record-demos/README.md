@@ -8,7 +8,7 @@ captions under the clip.
 
 | Scene     | What it shows                                                                    |
 | --------- | -------------------------------------------------------------------------------- |
-| `home`    | 3D hero, featured items, every home section, footer, café music, night mode     |
+| `home`    | 3D hero, featured items, every home section, footer, café music, night mode      |
 | `order`   | Menu categories, item options, cart, checkout, place order, live tracking, games |
 | `rider`   | Rider delivery checkout, the six local riders, the order summary for the rider   |
 | `signin`  | Sign in with Google, account, points, rewards catalog, redeeming, favourites     |
