@@ -36,7 +36,7 @@ export type Post = ReturnType<typeof makePost>;
 
 /**
  * Render → subtle depth of field → bloom (studio rim glow) → tone mapping
- * → grain. DOF and bloom drop out on mobile or when frames run slow.
+ * → SMAA → grain, on every device. DOF and bloom drop out when frames run slow.
  */
 export function makePost(
   renderer: THREE.WebGLRenderer,
@@ -60,7 +60,7 @@ export function makePost(
     aperture: options.aperture ?? 0.00055,
     maxblur: 0.0045,
   });
-  bokeh.enabled = !quality.mobile;
+  // on every device, phones too; a slow one gives it up first
   composer.addPass(bokeh);
   const bloom = new UnrealBloomPass(
     new THREE.Vector2(256, 256),

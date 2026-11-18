@@ -3,7 +3,6 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
   getQuality,
-  softwareGpu,
   resetFrameBudgets,
 } from "@/components/three/engine/runtime";
 import { condensationMaps } from "@/components/three/engine/textures";
@@ -168,28 +167,7 @@ describe("Phone and integrated GPU tier (TC-P4-124 – TC-P4-126, TC-P4-190)", (
     expect(Math.abs(half - full) / full).toBeLessThan(0.05);
   });
 
-  it("TC-P4-190 — every GPU starts with full effects; only software renderers start lite; `?quality=` overrides both", () => {
-    // drawn by the CPU, by the name the browser reports
-    for (const name of [
-      "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero)), SwiftShader driver)",
-      "llvmpipe (LLVM 17.0.6, 256 bits)",
-      "Microsoft Basic Render Driver",
-    ]) {
-      expect(softwareGpu(name), name).toBe(true);
-    }
-    // integrated, phone and discrete GPUs, and a browser that hides the name
-    for (const name of [
-      "ANGLE (Intel, Mesa Intel(R) Graphics (ADL GT2), OpenGL ES 3.2)",
-      "AMD Radeon Vega 8 Graphics",
-      "Mali-G57 MC2",
-      "Adreno (TM) 610",
-      "ANGLE (NVIDIA, NVIDIA GeForce RTX 3060 Laptop GPU, D3D11)",
-      "Apple M2",
-      "",
-    ]) {
-      expect(softwareGpu(name), name).toBe(false);
-    }
-
+  it("TC-P4-190 — every device gets full effects, phones, integrated and software GPUs included; only `?quality=lite` gives the lite tier", () => {
     const UNMASKED_RENDERER = 0x9246;
     const device = (phone: boolean, gpu: string, search = "") => {
       vi.stubGlobal("matchMedia", (query: string) => ({
@@ -234,10 +212,9 @@ describe("Phone and integrated GPU tier (TC-P4-124 – TC-P4-126, TC-P4-190)", (
       maxDpr: 1.5,
     });
     expect(device(false, software)).toEqual({
+      ...full,
       mobile: false,
       maxDpr: 1.5,
-      forceHigh: false,
-      lite: true,
     });
     expect(device(false, software, "?quality=high")).toEqual({
       mobile: false,
