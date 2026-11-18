@@ -2185,7 +2185,17 @@ This log records completed work and observed evidence. Planned work is explicitl
   - The review shown being posted is fake, and its caption says so.
   - The gallery scene stays on the cat photo ring. The photo grid, which includes customers, never comes into view.
   - The clips and the generated pages are kept out of Git (`promo/public/demo/`, `promo/tour/assets`).
+  - The About section shows the About page's own photo of two people in Brew ni Cat aprons, as it appears on the live site.
 - **Files:**
   - `promo/tour/`: `build.py`, `make_music.py`, `package.json`, `.gitignore`, `landscape/` and `vertical/` (`hyperframes.json`, `meta.json`)
   - `promo/scripts/record-demos/`: `scenes.mjs`, `lib.mjs`, `README.md`
   - `promo/README.md`, `promo/.gitignore`, `docs/development-log.md`
+- **Testing:**
+  - Recorded all 9 scenes in both layouts against a local production build with online ordering enabled. Both runs reported an empty blocked list and no failed scenes.
+  - Checked contact sheets of every new clip: no cursor, and the gallery shows cats only.
+  - Ran `npx hyperframes@0.9.9 lint` on both projects (0 errors) and checked snapshots of the intro, recordings, app section and outro.
+  - Rendered `promo/out/brew-ni-cat-tour.mp4` (1920×1080, 30 fps, 5:24) and `promo/out/brew-ni-cat-tour-vertical.mp4` (1080×1920, 30 fps, 5:31), about 18 minutes each. Checked contact sheets of both renders and the audio levels: peak −2.1 dB and −6.2 dB, mean −16.2 dB and −19.9 dB.
+- **Known limitations:**
+  - The order tracker in the recordings shows "Offline (polling)", because realtime is turned off while recording.
+  - The app section uses still screenshots, not recordings.
+  - The vertical version's music is about 4 dB quieter than the landscape version's.
