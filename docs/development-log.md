@@ -2145,3 +2145,10 @@ This log records completed work and observed evidence. Planned work is explicitl
 - The owner said the shop opened on June 8, 2026, not June 12. The About content now says June 8: the website's copy (`fallback-pages.ts`) and migration `20261118120000_opening_date_june_8.sql` (rollback included), which changes only the date and the "opened on" sentence, and nothing if the owner already changed the date.
 - Notes about the Facebook Page's chats "since 2026-06-12" are about the Page and were left as they are.
 - **Testing:** TC-P9-084, TC-P9-085; site-content and About page tests.
+
+## 2026-11-18 — Opening date applied to the live database
+
+- **Task:** With the user's approval, apply `20261118120000_opening_date_june_8.sql` live.
+- **Summary:** Ran it once inside a transaction that was rolled back, then applied it and recorded it in `supabase_migrations.schema_migrations`. The live About content says June 8, 2026, and the live About page shows it once the 60-second cache refreshed. No other app (Android, POS) stores the opening date.
+- **Testing:** live query of `public.site_content` (`openedOn` 2026-06-08, story updated, audit row written); the user checked the live site.
+- **Next action:** none.
