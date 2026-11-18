@@ -2153,6 +2153,15 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Testing:** live query of `public.site_content` (`openedOn` 2026-06-08, story updated, audit row written); the user checked the live site.
 - **Next action:** none.
 
+## 2026-11-18 — Next.js 16.4.5 security update
+
+- **Phase:** Maintenance (security).
+- **Task:** The build warned about Next.js security issues; the lead approved the upgrade.
+- **Summary:** `npm audit` flagged Next.js 16.4.2 for two moderate advisories (GHSA-mfr8-8qww-v76h and GHSA-vc7v-qv4w-wrv8, cache leaks across root params with `use cache`; this app doesn't use `use cache` or `unstable_cache`). Upgraded `next` and `eslint-config-next` to 16.4.5, the first fixed patch release that is more than two weeks old (16.4.6 came out 9 days ago). The production audit now finds no vulnerabilities. 19 dev-only advisories (test and build tools) remain, none critical; they were there before and are separate work.
+- **Files:** `package.json`, `package-lock.json`, `docs/development-log.md`.
+- **Testing:** `npm run audit`, `npm run typecheck`, `npm run lint`, all 1169 unit tests, `npm run build`; the built app served `/`, `/menu`, `/about`, `/gallery` and `/games`.
+- **Known limitations:** None.
+
 ## 2026-11-18 — Full 3D effects on every device, smooth and sharp
 
 - **Phase:** Phase 4 (NFR-001), polish.
