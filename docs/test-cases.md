@@ -1816,5 +1816,7 @@ FR-119. Migration `20261117150000_google_profile_photos.sql`. Android 1.0.2 (ver
 | TC-P9-081  | FR-119      | Unit: the review form for a guest and for an account without a Google photo | No photo switch | Passed (automated) |
 | TC-P9-082  | FR-119      | Unit: `validateReviewInput` with no `showPhoto` and with `false` | true, then false; the route passes `p_show_photo` | Passed (automated) |
 | TC-P9-083  | FR-119      | Android JVM: photo address checks, initials, a sign-in response with `avatar_url` saved and read back, reviews with and without `avatar_url` | The session and review keep only the Google photo | Passed (automated) |
+| TC-P9-084  | FR-087      | Database: migration `20261118120000_opening_date_june_8.sql` on the shipped About content | `openedOn` is 2026-06-08 and the story says "opened on June 8, 2026", the same as the website's copy | Passed (automated) |
+| TC-P9-085  | FR-087      | Database: the rollback, then the migration again after the owner changed other wording, then after the owner changed the date | Rollback restores June 12; the owner's wording stays; a date the owner already changed is left alone | Passed (automated) |
 | MAN-P9-007 | FR-119      | Sign in with Google on the website and in Android 1.0.2; post a review with the photo on, then off | The photo shows on the account, the header menu and the review, then the review shows initials | Passed 2026-11-17 by the lead developer on Android 1.0.3: sign-in and profile photos work |
 

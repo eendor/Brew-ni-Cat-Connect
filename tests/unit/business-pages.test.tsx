@@ -52,7 +52,7 @@ describe("About page", () => {
     expect(
       screen.getByRole("heading", { level: 1, name: "About Brew ni Cat" }),
     ).toBeInTheDocument();
-    expect(screen.getAllByText("June 12, 2026").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("June 8, 2026").length).toBeGreaterThan(0);
     expect(screen.getAllByText(/Kabacan, Cotabato/).length).toBeGreaterThan(0);
     expect(
       screen.getByText("Drinks, snacks, noodles, and combos"),

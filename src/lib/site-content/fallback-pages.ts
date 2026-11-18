@@ -8,7 +8,7 @@ import type { AboutContent, GalleryContent } from "./types";
  * the browser bundle.
  */
 export const fallbackAbout: AboutContent = {
-  openedOn: "2026-06-12",
+  openedOn: "2026-06-08",
   heroTitle: "Coffee, comfort, and a little cat energy.",
   heroText:
     "Settle in at Brew ni Cat for drinks, snacks, noodles, combos, and cozy community moments in the heart of Kabacan.",
@@ -23,7 +23,7 @@ export const fallbackAbout: AboutContent = {
     "Brew ni Cat Coffee Shop is a local Kabacan café with warm spaces, a playful cat-inspired personality, and a menu made for everyday catch-ups and snack breaks.",
   storyTitle: "Rooted in Kabacan, shaped by its community.",
   story: [
-    "Brew ni Cat opened on June 12, 2026 in Poblacion, Kabacan. The shop serves drinks, snacks, noodles, combos, and cat-themed menu choices in a relaxed local café setting.",
+    "Brew ni Cat opened on June 8, 2026 in Poblacion, Kabacan. The shop serves drinks, snacks, noodles, combos, and cat-themed menu choices in a relaxed local café setting.",
     "Its public website supports the business’s digitalization by making current menu and visit information easier to find. The café experience itself remains simple: come by, choose something from the menu, and enjoy the shop’s cozy character.",
   ],
   photos: [

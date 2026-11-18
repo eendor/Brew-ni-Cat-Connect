@@ -2139,3 +2139,9 @@ This log records completed work and observed evidence. Planned work is explicitl
 
 - The promo video now has music and sound effects, all synthesised by `promo/scripts/make-audio.py`, so there is nothing to license. The music drops on the "Now on Android" scene; the effects follow the animations (`promo/src/Soundtrack.tsx`).
 - **Testing:** `npx tsc -p promo`; rendered both compositions and checked the audio track (no clipping, about −14 dB RMS).
+
+## 2026-11-18 — Opening date corrected to June 8, 2026
+
+- The owner said the shop opened on June 8, 2026, not June 12. The About content now says June 8: the website's copy (`fallback-pages.ts`) and migration `20261118120000_opening_date_june_8.sql` (rollback included), which changes only the date and the "opened on" sentence, and nothing if the owner already changed the date.
+- Notes about the Facebook Page's chats "since 2026-06-12" are about the Page and were left as they are.
+- **Testing:** TC-P9-084, TC-P9-085; site-content and About page tests.

@@ -63,7 +63,7 @@ test("TC-P2-023 — About page uses confirmed factual business content", async (
   await page.goto("/about");
 
   await expect(
-    page.getByText("June 12, 2026", { exact: true }).first(),
+    page.getByText("June 8, 2026", { exact: true }).first(),
   ).toBeVisible();
   await expect(
     page.getByText("Kabacan, Cotabato", { exact: true }),
