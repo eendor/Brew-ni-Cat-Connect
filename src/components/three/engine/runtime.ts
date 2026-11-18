@@ -16,10 +16,10 @@ export type Quality = Readonly<{
   /** `?quality=high` keeps every effect on, even on slow GPUs (captures). */
   forceHigh: boolean;
   /**
-   * The light GPU tier (ADR-014): phones, integrated and software GPUs, and
-   * devices that ran the full tier too slowly before. Scenes draw straight
+   * The light tier (ADR-014), only with `?quality=lite`. Scenes draw straight
    * to the canvas with no post effects, shadows or refraction, light with
-   * the half-size HDRI and draw at 1×.
+   * the half-size HDRI on phones. They keep the screen's sharpness (up to 2×
+   * on phones) and antialiasing.
    */
   lite: boolean;
 }>;
@@ -33,8 +33,6 @@ export function prefersReducedMotion(): boolean {
 }
 
 let webglCache: boolean | null = null;
-/** The GPU name the browser reports, "" when it keeps it hidden. */
-let gpuName = "";
 
 /** WebGL2 support without touching jsdom's unimplemented canvas API. */
 export function webglAvailable(): boolean {
@@ -50,13 +48,6 @@ export function webglAvailable(): boolean {
     const canvas = document.createElement("canvas");
     const gl = canvas.getContext("webgl2");
     webglCache = Boolean(gl);
-    if (gl) {
-      const info = gl.getExtension("WEBGL_debug_renderer_info");
-      gpuName = String(
-        gl.getParameter(info ? info.UNMASKED_RENDERER_WEBGL : gl.RENDERER) ??
-          "",
-      );
-    }
     gl?.getExtension("WEBGL_lose_context")?.loseContext();
   } catch {
     webglCache = false;
@@ -65,46 +56,18 @@ export function webglAvailable(): boolean {
 }
 
 /**
- * Integrated, phone and software GPUs, by the name the browser reports:
- * Intel graphics, AMD's built-in Radeon graphics, Mali, Adreno, PowerVR and
- * software renderers. Discrete cards (NVIDIA, Radeon RX, Intel Arc A-series)
- * and Apple silicon keep the full tier.
+ * Notes older versions saved for devices they put on the lite tier. Every
+ * device gets full effects now (2026-11-18), so they are cleared once.
  */
-const LIGHT_GPU =
-  /intel|radeon(?:\(tm\))?\s+(?:graphics|vega\b|\d{3}m\b)|mali|adreno|powervr|swiftshader|llvmpipe|lavapipe|softpipe|basic render/i;
-const DISCRETE_GPU = /\barc(?:\(tm\))?\s+a\d{3}/i;
-
-export function lightGpu(name: string): boolean {
-  return LIGHT_GPU.test(name) && !DISCRETE_GPU.test(name);
-}
-
-/** Where a device that ran the full tier too slowly is remembered. */
-const LITE_KEY = "bnc-3d-lite";
-/** How long that is remembered: a busy day shouldn't last forever. */
-const LITE_REMEMBER_MS = 7 * 24 * 60 * 60 * 1000;
-/** Set once a scene ran too slowly at its lightest full-tier step. */
-let liteForVisit = false;
-
-function rememberedLite(): boolean {
-  if (liteForVisit) return true;
+const OLD_LITE_KEYS = ["bnc-3d-lite", "bnc-3d-lite-v2"];
+let oldNotesCleared = false;
+function clearOldLiteNotes() {
+  if (oldNotesCleared) return;
+  oldNotesCleared = true;
   try {
-    const since = Number(window.localStorage.getItem(LITE_KEY));
-    return since > 0 && Date.now() - since < LITE_REMEMBER_MS;
+    for (const key of OLD_LITE_KEYS) window.localStorage.removeItem(key);
   } catch {
-    return false;
-  }
-}
-
-/**
- * A scene still ran too slowly with every effect stepped down: the next
- * scenes in this visit, and the next visits on this device, start lite.
- */
-export function rememberLite() {
-  liteForVisit = true;
-  try {
-    window.localStorage.setItem(LITE_KEY, String(Date.now()));
-  } catch {
-    // private windows and blocked storage remember it for this visit only
+    // blocked storage: nothing to clear
   }
 }
 
@@ -119,13 +82,17 @@ export function getQuality(): Quality {
   ).matches;
   const forced = new URLSearchParams(window.location.search).get("quality");
   const forceHigh = forced === "high";
-  webglAvailable();
-  const lite =
-    forced === "lite" ||
-    (!forceHigh && (mobile || lightGpu(gpuName) || rememberedLite()));
+  clearOldLiteNotes();
+  // every device gets full effects (the lead's call, 2026-11-18); a slow one
+  // eases the least visible effects while it runs (`FrameBudget`). The lite
+  // tier is only for `?quality=lite`.
+  const lite = forced === "lite";
   return {
     mobile,
-    maxDpr: lite ? 1 : mobile ? 1.25 : 1.5,
+    // sharp on every tier: phone screens are 2–3×, and drawing them at 1×
+    // looked blurry. Slow devices step the pixel ratio down while they run
+    // (`pixelSteps`), never below 1×.
+    maxDpr: mobile ? 2 : 1.5,
     forceHigh,
     lite,
   };
@@ -206,8 +173,8 @@ let visitLevel = 0;
  * After each step it lets the cheaper settings settle before it checks
  * again. A scene that starts later in the same visit begins at the step
  * earlier scenes reached, so a slow device doesn't stutter through the same
- * steps on every page. Still slow with every step taken, it remembers the
- * device for the lite tier (`rememberLite`). `disabled` (`?quality=high`)
+ * steps on every page. Still slow with every step taken, it stops checking:
+ * the scene keeps the effects it has left. `disabled` (`?quality=high`)
  * keeps every effect on.
  */
 export class FrameBudget {
@@ -216,7 +183,7 @@ export class FrameBudget {
   private frames = 0;
   private slow = 0;
   private settle = SETTLE_FRAMES;
-  private remembered = false;
+  private done = false;
   constructor(
     private readonly limitMs: number,
     private readonly steps: ReadonlyArray<() => void>,
@@ -224,7 +191,7 @@ export class FrameBudget {
   ) {}
 
   push(dtMs: number) {
-    if (this.disabled || this.remembered) return;
+    if (this.disabled || this.done) return;
     while (this.level < Math.min(visitLevel, this.steps.length)) {
       this.stepDown();
     }
@@ -244,8 +211,7 @@ export class FrameBudget {
       visitLevel = Math.max(visitLevel, this.level);
       return;
     }
-    this.remembered = true;
-    rememberLite();
+    this.done = true;
   }
 
   private stepDown() {
@@ -261,9 +227,8 @@ export class FrameBudget {
 /** Forgets what this visit learned about the device (for tests). */
 export function resetFrameBudgets() {
   visitLevel = 0;
-  liteForVisit = false;
+  oldNotesCleared = false;
   webglCache = null;
-  gpuName = "";
 }
 
 /**

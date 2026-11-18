@@ -16,6 +16,7 @@ import { useScene } from "@/components/three/canvas/use-scene";
 import { addFrame } from "@/components/three/engine/loop";
 import {
   makeRenderer,
+  pixelSteps,
   shadowPacer,
   warmUp,
 } from "@/components/three/engine/renderer";
@@ -293,7 +294,7 @@ describe("3D frame pacing (TC-P4-180 – TC-P4-186, TC-P4-191 – TC-P4-196)", (
     ]);
   });
 
-  it("TC-P4-186 — a canvas drawn through post-processing doesn't multisample; other desktop canvases do, phone canvases never", () => {
+  it("TC-P4-186 — a canvas drawn through post-processing doesn't multisample; every other canvas does, phones included", () => {
     const phone: Quality = {
       mobile: true,
       maxDpr: 1,
@@ -310,40 +311,18 @@ describe("3D frame pacing (TC-P4-180 – TC-P4-186, TC-P4-191 – TC-P4-196)", (
     expect(antialias(desktop)).toBe(true);
     expect(antialias(desktop, true)).toBe(false);
     expect(antialias({ ...desktop, maxDpr: 1, lite: true })).toBe(true);
-    expect(antialias(phone)).toBe(false);
+    expect(antialias(phone)).toBe(true);
     expect(antialias(phone, true)).toBe(false);
   });
 
-  it("TC-P4-191 — a device still too slow with every step taken starts lite on later scenes and visits for 7 days", () => {
+  it("TC-P4-191 — a device still too slow with every step taken keeps the effects it has left and never switches to the lite tier", () => {
     desktopScreen();
-    expect(getQuality().lite).toBe(false);
-
-    const slow = new FrameBudget(FRAME_BUDGET_MS, [vi.fn()]);
-    frames(slow, 90, 40);
+    const step = vi.fn();
+    const slow = new FrameBudget(FRAME_BUDGET_MS, [step]);
+    for (let i = 0; i < 6; i++) frames(slow, 90, 40);
+    expect(step).toHaveBeenCalledTimes(1);
     expect(slow.level).toBe(1);
     expect(getQuality().lite).toBe(false);
-    frames(slow, 90, 40);
-    expect(getQuality()).toMatchObject({ lite: true, maxDpr: 1 });
-
-    // a later visit on this device
-    resetFrameBudgets();
-    expect(getQuality().lite).toBe(true);
-    // a week later it gets the full tier again
-    const eightDays = 8 * 24 * 60 * 60 * 1000;
-    window.localStorage.setItem("bnc-3d-lite", String(Date.now() - eightDays));
-    expect(getQuality().lite).toBe(false);
-
-    // with storage blocked it is remembered for this visit only
-    window.localStorage.clear();
-    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
-      throw new Error("blocked");
-    });
-    vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
-      throw new Error("blocked");
-    });
-    const blocked = new FrameBudget(FRAME_BUDGET_MS, []);
-    frames(blocked, 90, 40);
-    expect(getQuality().lite).toBe(true);
     resetFrameBudgets();
     expect(getQuality().lite).toBe(false);
   });
@@ -491,5 +470,36 @@ describe("3D frame pacing (TC-P4-180 – TC-P4-186, TC-P4-191 – TC-P4-196)", (
 
     vi.stubEnv("NODE_ENV", "development");
     expect(make().debug.checkShaderErrors).toBe(true);
+  });
+
+  it("TC-P4-278 — a slow scene lowers its pixel ratio a step at a time and never below 1×", () => {
+    let ratio = 2;
+    const renderer = {
+      getPixelRatio: () => ratio,
+      setPixelRatio: (next: number) => {
+        ratio = next;
+      },
+    };
+    const resize = vi.fn();
+    const steps = pixelSteps(renderer, resize);
+    expect(steps).toHaveLength(3);
+    const seen = steps.map((step) => {
+      step();
+      return ratio;
+    });
+    expect(seen).toEqual([1.5, 1.25, 1]);
+    expect(resize).toHaveBeenCalledTimes(3);
+
+    // a 1× laptop screen has nothing to lower: it stays sharp
+    expect(pixelSteps(renderer, resize)).toEqual([]);
+  });
+
+  it("TC-P4-279 — a device older versions remembered as slow gets full effects, and the old note is cleared", () => {
+    desktopScreen();
+    window.localStorage.setItem("bnc-3d-lite", String(Date.now()));
+    window.localStorage.setItem("bnc-3d-lite-v2", String(Date.now()));
+    expect(getQuality().lite).toBe(false);
+    expect(window.localStorage.getItem("bnc-3d-lite")).toBeNull();
+    expect(window.localStorage.getItem("bnc-3d-lite-v2")).toBeNull();
   });
 });

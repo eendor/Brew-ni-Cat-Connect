@@ -4,6 +4,7 @@ import { makePost } from "../engine/post";
 import {
   disposeScene,
   makeRenderer,
+  pixelSteps,
   studioEnvironment,
   warmUp,
 } from "../engine/renderer";
@@ -163,22 +164,17 @@ export async function initAmbient(
         aperture: 0.0012,
         bloom: 0.3,
       });
-  const fewerPixels = () => {
-    renderer.setPixelRatio(0.75);
-    resize();
-  };
+  // slow frames give up the depth of field first, then lower the pixel ratio
+  // a step at a time (never below 1×), and only then the glow
   const budget = new FrameBudget(
     FRAME_BUDGET_MS,
     post
       ? [
-          () => {
-            post.degrade();
-            renderer.setPixelRatio(1);
-            resize();
-          },
-          fewerPixels,
+          () => post.dropDepthOfField(),
+          ...pixelSteps(renderer, resize),
+          () => post.degrade(),
         ]
-      : [fewerPixels],
+      : pixelSteps(renderer, resize),
     quality.forceHigh,
   );
 

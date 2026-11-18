@@ -4,6 +4,7 @@ import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
+import { SMAAPass } from "three/addons/postprocessing/SMAAPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 
 import type { Quality } from "./runtime";
@@ -35,7 +36,7 @@ export type Post = ReturnType<typeof makePost>;
 
 /**
  * Render → subtle depth of field → bloom (studio rim glow) → tone mapping
- * → grain. DOF and bloom drop out on mobile or when frames run slow.
+ * → SMAA → grain, on every device. DOF and bloom drop out when frames run slow.
  */
 export function makePost(
   renderer: THREE.WebGLRenderer,
@@ -44,11 +45,13 @@ export function makePost(
   quality: Quality,
   options: { focus: number; aperture?: number; bloom?: number } = { focus: 10 },
 ) {
-  // MSAA on the composer targets: without it, edges of refracting ice and
-  // cups alias once post-processing takes over from the canvas antialias
+  // Edges are smoothed by SMAA after tone mapping, not by multisampling the
+  // composer's half-float target: 4× MSAA there cost an integrated laptop GPU
+  // more than half its frame rate (22 → 46 fps on Home, 18 → 35 on Menu,
+  // Intel UHD at 1080p) for edges that look the same.
   const target = new THREE.WebGLRenderTarget(1, 1, {
     type: THREE.HalfFloatType,
-    samples: quality.mobile ? 0 : 4,
+    samples: 0,
   });
   const composer = new EffectComposer(renderer, target);
   composer.addPass(new RenderPass(scene, camera));
@@ -57,7 +60,7 @@ export function makePost(
     aperture: options.aperture ?? 0.00055,
     maxblur: 0.0045,
   });
-  bokeh.enabled = !quality.mobile;
+  // on every device, phones too; a slow one gives it up first
   composer.addPass(bokeh);
   const bloom = new UnrealBloomPass(
     new THREE.Vector2(256, 256),
@@ -69,6 +72,8 @@ export function makePost(
   );
   composer.addPass(bloom);
   composer.addPass(new OutputPass());
+  const smaa = new SMAAPass();
+  composer.addPass(smaa);
   const grain = new ShaderPass(GrainShader);
   composer.addPass(grain);
 
@@ -81,6 +86,10 @@ export function makePost(
       composer.setPixelRatio(renderer.getPixelRatio());
       composer.setSize(width, height);
       bloom.resolution.set(width / 2, height / 2);
+    },
+    /** The first effect a slow device gives up: the subtle depth of field. */
+    dropDepthOfField() {
+      bokeh.enabled = false;
     },
     degrade() {
       bokeh.enabled = false;

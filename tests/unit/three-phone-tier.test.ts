@@ -3,7 +3,6 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
   getQuality,
-  lightGpu,
   resetFrameBudgets,
 } from "@/components/three/engine/runtime";
 import { condensationMaps } from "@/components/three/engine/textures";
@@ -168,34 +167,7 @@ describe("Phone and integrated GPU tier (TC-P4-124 – TC-P4-126, TC-P4-190)", (
     expect(Math.abs(half - full) / full).toBeLessThan(0.05);
   });
 
-  it("TC-P4-190 — phones, integrated and software GPUs get the lite tier at 1×; discrete and Apple GPUs keep the full tier; `?quality=` overrides both", () => {
-    // integrated, phone and software GPUs, by the name the browser reports
-    for (const name of [
-      "ANGLE (Intel, Mesa Intel(R) Graphics (ADL GT2), OpenGL ES 3.2)",
-      "ANGLE (Intel, Intel(R) UHD Graphics 620 Direct3D11 vs_5_0 ps_5_0, D3D11)",
-      "ANGLE (AMD, AMD Radeon(TM) Graphics Direct3D11 vs_5_0 ps_5_0, D3D11)",
-      "AMD Radeon Vega 8 Graphics",
-      "AMD Radeon 780M Graphics (radeonsi, gfx1103_r1)",
-      "Mali-G57 MC2",
-      "Adreno (TM) 610",
-      "PowerVR Rogue GE8320",
-      "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero)), SwiftShader driver)",
-      "llvmpipe (LLVM 17.0.6, 256 bits)",
-      "Microsoft Basic Render Driver",
-    ]) {
-      expect(lightGpu(name), name).toBe(true);
-    }
-    // discrete cards, Apple silicon, and a browser that hides the name
-    for (const name of [
-      "ANGLE (NVIDIA, NVIDIA GeForce RTX 3060 Laptop GPU Direct3D11 vs_5_0 ps_5_0, D3D11)",
-      "ANGLE (AMD, AMD Radeon RX 6600 XT Direct3D11 vs_5_0 ps_5_0, D3D11)",
-      "ANGLE (Intel, Intel(R) Arc(TM) A770 Graphics Direct3D11 vs_5_0 ps_5_0, D3D11)",
-      "ANGLE (Apple, ANGLE Metal Renderer: Apple M2, Unspecified Version)",
-      "",
-    ]) {
-      expect(lightGpu(name), name).toBe(false);
-    }
-
+  it("TC-P4-190 — every device gets full effects, phones, integrated and software GPUs included; only `?quality=lite` gives the lite tier", () => {
     const UNMASKED_RENDERER = 0x9246;
     const device = (phone: boolean, gpu: string, search = "") => {
       vi.stubGlobal("matchMedia", (query: string) => ({
@@ -221,40 +193,38 @@ describe("Phone and integrated GPU tier (TC-P4-124 – TC-P4-126, TC-P4-190)", (
     const intel =
       "ANGLE (Intel, Mesa Intel(R) Graphics (ADL GT2), OpenGL ES 3.2)";
     const nvidia = "ANGLE (NVIDIA, NVIDIA GeForce RTX 3060 Laptop GPU, D3D11)";
+    const software = "llvmpipe (LLVM 17.0.6, 256 bits)";
+    const full = { forceHigh: false, lite: false };
 
     expect(device(true, "Adreno (TM) 610")).toEqual({
+      ...full,
       mobile: true,
-      maxDpr: 1,
-      forceHigh: false,
-      lite: true,
-    });
-    expect(device(true, "Adreno (TM) 610", "?quality=high")).toEqual({
-      mobile: true,
-      maxDpr: 1.25,
-      forceHigh: true,
-      lite: false,
+      maxDpr: 2,
     });
     expect(device(false, intel)).toEqual({
+      ...full,
       mobile: false,
-      maxDpr: 1,
-      forceHigh: false,
-      lite: true,
+      maxDpr: 1.5,
     });
-    expect(device(false, intel, "?quality=high")).toEqual({
+    expect(device(false, nvidia)).toEqual({
+      ...full,
+      mobile: false,
+      maxDpr: 1.5,
+    });
+    expect(device(false, software)).toEqual({
+      ...full,
+      mobile: false,
+      maxDpr: 1.5,
+    });
+    expect(device(false, software, "?quality=high")).toEqual({
       mobile: false,
       maxDpr: 1.5,
       forceHigh: true,
-      lite: false,
-    });
-    expect(device(false, nvidia)).toEqual({
-      mobile: false,
-      maxDpr: 1.5,
-      forceHigh: false,
       lite: false,
     });
     expect(device(false, nvidia, "?quality=lite")).toEqual({
       mobile: false,
-      maxDpr: 1,
+      maxDpr: 1.5,
       forceHigh: false,
       lite: true,
     });
