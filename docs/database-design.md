@@ -577,7 +577,7 @@ Migration `20261117130000_counter_active_today.sql` (FR-112 update). `public.sho
 
 ## 22. Ratings For Each Menu Item (2026-11-19)
 
-Migration `20261119120000_item_ratings.sql` (FR-121). **Not applied to the live database yet.** Undo: `supabase/rollbacks/20261119120000_item_ratings.sql` drops the functions and the table.
+Migration `20261119120000_item_ratings.sql` (FR-121). Applied to the live database on 2026-11-19 and recorded in `supabase_migrations.schema_migrations`. Undo: `supabase/rollbacks/20261119120000_item_ratings.sql` drops the functions and the table.
 
 - Table `public.item_ratings`: `customer_id` uuid references `auth.users(id)` on delete cascade; `item_id` text references `public.items(id)` on delete cascade; `rating` smallint checked 1 to 5; `created_at` and `updated_at` (kept by `private.stamp_row`). Primary key `(customer_id, item_id)`, so one rating per customer per item.
 - RLS is on. A signed-in customer reads only their own rows; `authenticated` may select `customer_id, item_id, rating, updated_at` and nothing else. No one inserts, updates or deletes directly; `anon` has no access.

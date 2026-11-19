@@ -1833,7 +1833,7 @@ FR-120. `/terms`, with the same section layout as the Privacy Policy.
 
 ## 68. Ratings For Each Menu Item (2026-11-19)
 
-FR-121. Migration `20261119120000_item_ratings.sql` (not applied live yet).
+FR-121. Migration `20261119120000_item_ratings.sql` (applied live 2026-11-19).
 
 | ID         | Requirement | Case | Expected result | Status |
 | ---------- | ----------- | ---- | --------------- | ------ |
@@ -1845,4 +1845,4 @@ FR-121. Migration `20261119120000_item_ratings.sql` (not applied live yet).
 | TC-P9-093  | FR-121      | Unit: the menu with one rated item, then with ratings failing to load | "Rated 4.5 out of 5 by 12 customers" on that item only; the menu still shows, with no stars | Passed (automated) |
 | TC-P9-094  | FR-121      | Unit: order history with a completed order (latte, mocha, take-out box, bottled water, tuna bites) and an order still preparing; tap 4 stars on the latte | Stars only for the latte and mocha in the completed order; the mocha shows the customer's earlier 3; the latte saves 4 and shows it | Passed (automated) |
 | TC-P9-095  | FR-121      | Unit: a rating the server refuses | An alert with the message; the stars stay unchanged | Passed (automated) |
-| MAN-P9-008 | FR-121      | After the migration is applied live: rate an item from a completed order on the website, then open the menu signed out | The stars save; the menu shows the item's average and count; no stars on the take-out box, bottled water or cat treats | Not run |
+| MAN-P9-008 | FR-121      | After the migration is applied live: rate an item from a completed order on the website, then open the menu signed out | The stars save; the menu shows the item's average and count; no stars on the take-out box, bottled water or cat treats | Not run. The migration is applied; this needs a customer with a completed order |
