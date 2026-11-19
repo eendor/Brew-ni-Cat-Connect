@@ -2215,3 +2215,13 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Testing:** TC-P9-088 to TC-P9-095 (new); all 98 unit test files (961 tests) and all 22 database test files (218 tests); `npm run typecheck`, `npm run lint`, `npx prettier --check .`, `npm run build`, `python3 -I scripts/validate_phase0_docs.py`.
 - **Known limitations:** The migration is not applied live yet, so the live site shows no stars and rating answers with an error until it is. The Android app doesn't show or take item ratings yet. MAN-P9-008 is not run.
 
+---
+
+## 2026-11-19 — Item ratings applied to the live database
+
+- **Task:** As the lead, apply `20261119120000_item_ratings.sql` live.
+- **Summary:** I checked the live database first: no `item_ratings` table yet, `private.stamp_row` present, 17 items. I ran the migration once in a transaction that was rolled back. In that run, exactly three live items were blocked from rating: Cat Treats, Bottled Water and Take-out Box. The other 14 were rateable, a call with no signed-in customer answered `unauthorized`, and RLS was on. I then applied it, recorded it in `supabase_migrations.schema_migrations` with its rollback, and reloaded the PostgREST schema cache.
+- **Testing:** live queries confirmed the table exists and the migration is recorded. Through the public REST API as a guest, `item_rating_summary` answered 200 with `[]`, `rate_item` was refused (42501), and reading `item_ratings` was refused (42501).
+- **Known limitations:** MAN-P9-008 still needs a customer with a completed order to rate an item on the live site.
+- **Next action:** Run MAN-P9-008 after the next completed online order.
+
