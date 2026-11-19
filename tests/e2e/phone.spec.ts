@@ -48,6 +48,9 @@ async function mockMenu(page: Page) {
   await page.route("**/rest/v1/reviews*", (route) =>
     route.fulfill({ json: [] }),
   );
+  await page.route("**/rest/v1/rpc/item_rating_summary*", (route) =>
+    route.fulfill({ json: [] }),
+  );
 }
 
 function collectErrors(page: Page) {
