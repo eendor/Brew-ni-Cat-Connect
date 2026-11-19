@@ -171,4 +171,4 @@ Use focused branches (`feat/`, `fix/`, `docs/`, `test/`, or `integration/`), com
 
 ## License
 
-This repository currently uses an interim proprietary, all-rights-reserved license while client and academic distribution terms are confirmed. See [`LICENSE`](LICENSE) and ADR-005 in [`docs/decisions.md`](docs/decisions.md).
+This repository uses a proprietary, all-rights-reserved license; the copyright is held by the Brew ni Cat Connect project contributors. See [`LICENSE`](LICENSE) and ADR-005 in [`docs/decisions.md`](docs/decisions.md).

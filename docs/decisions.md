@@ -70,12 +70,12 @@ Statuses used here are `Proposed`, `Accepted`, `Superseded`, and `Deferred`. Acc
 
 **Decision:** Keep the private client-associated repository under an interim proprietary, all-rights-reserved license until source ownership and distribution are confirmed.\
 **Date:** 2026-08-18\
-**Status:** Accepted as interim\
+**Status:** ~~Accepted as interim~~ Accepted (final, 2026-11-19)\
 **Context:** A license file is required, but the project is for a real business and no permission to publish or grant open-source rights has been documented. Academic submission access may differ from public distribution.\
 **Options considered:** MIT immediately; no license file; interim proprietary terms followed by an explicit later decision.\
 **Chosen approach:** Interim proprietary terms. Revisit before public release or client deployment.\
 **Reason:** This avoids granting distribution rights without confirmed authority while making the current terms explicit.\
-**Consequences:** Public reuse/distribution is not permitted under the interim file. Final ownership and licensing are **TODO: Confirm with Brew ni Cat owner.** Dependency licenses remain independently applicable.
+**Consequences:** Public reuse/distribution is not permitted under the interim file. ~~Final ownership and licensing are **TODO: Confirm with Brew ni Cat owner.**~~ Superseded 2026-11-19: final. The shop owner approved the Terms of Use and left the license to the lead developer, who kept the proprietary, all-rights-reserved terms with the copyright held by the Brew ni Cat Connect project contributors; the "Interim" label and the TODO were removed from `LICENSE`. Dependency licenses remain independently applicable.
 
 ---
 
