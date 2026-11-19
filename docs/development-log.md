@@ -2166,7 +2166,7 @@ This log records completed work and observed evidence. Planned work is explicitl
 ## 2026-11-18 — Full 3D effects on every device, smooth and sharp
 
 - **Phase:** Phase 4 (NFR-001), polish.
-- **Task:** The user saw blurry, plain 3D on phones and on the laptop but full effects on the PC, and asked for full effects on all devices with a smooth frame rate.
+- **Task:** I saw blurry, plain 3D on phones and on the laptop but full effects on the PC, and asked for full effects on all devices with a smooth frame rate.
 - **Summary:** Phones and integrated GPUs got the lite tier: no effects and 1× pixels (0.75× when slow). Measured on the Intel UHD laptop at 1080p, the full tier ran at 12–22 fps, and switching each effect off showed 4× MSAA on the post-processing target cost the most. It is replaced by an SMAA pass (Home 22 → 46 fps, Menu 18 → 35 with every effect on). Every device now gets the full tier (the lead's call), phones with depth of field too, at up to 2× on phones and 1.5× elsewhere; lite is only `?quality=lite`, and lite notes saved by older versions are cleared (that note kept the lead's laptop on lite after the first fix). Slow scenes give up shadows' redraw rate and refraction size first, then depth of field, then the pixel ratio a step at a time (`pixelSteps`, never below 1×), and the glow last; still slow, a scene keeps what it has left. With that, the laptop runs Home at 57 fps, Menu 42, About 67 and Gallery 60 with full effects. ADR-014 has a dated note.
 - **Files:** `src/components/three/engine/{runtime,renderer,post}.ts`, `src/components/three/scenes/{menu-hero,showcase,ambient}.ts`, `tests/unit/three-{frame-pacing,phone-tier}.test.ts*`, `docs/{decisions,test-cases,development-log}.md`.
 - **Testing:** TC-P4-278 and TC-P4-279 (new), TC-P4-186, TC-P4-190 and TC-P4-191 updated; all 955 unit tests; the 3D unit tests, `npm run typecheck`, `npm run lint`, `npm run build`; frame rates measured in Chromium on the laptop's GPU with a production build.
@@ -2224,4 +2224,14 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Testing:** live queries confirmed the table exists and the migration is recorded. Through the public REST API as a guest, `item_rating_summary` answered 200 with `[]`, `rate_item` was refused (42501), and reading `item_ratings` was refused (42501).
 - **Known limitations:** MAN-P9-008 still needs a customer with a completed order to rate an item on the live site.
 - **Next action:** Run MAN-P9-008 after the next completed online order.
+
+---
+
+## 2026-11-19 — Live check of item ratings (MAN-P9-008, partly)
+
+- **Task:** Run MAN-P9-008 on the live site.
+- **Summary:** The only completed online order on the live database is a guest order, so no customer can rate yet. I checked the server side in a live transaction that was rolled back. I added a temporary completed order with a rateable item and Cat Treats for an existing customer and acted as that customer. Rating 4, then 5, left one rating of 5. The customer read back only that rating, and a guest saw an average of 5.0 from 1. Cat Treats answered `not_rateable` and an item never ordered answered `not_ordered`. Afterwards no ratings and no temporary order were left. The live `/menu` loads the summary (200), shows 14 items with no stars yet and none of the shop-only items, and logs no console errors on a phone or a desktop. I also changed the 2026-11-18 3D entry to first person.
+- **Testing:** live SQL through the Management API; headless Chromium against `https://brew-ni-cat-connect.vercel.app/menu` at 390×844 and 1440×900.
+- **Known limitations:** A signed-in customer tapping stars on the live site is still not observed.
+- **Next action:** Rate an item after the next completed online order from a signed-in customer.
 
