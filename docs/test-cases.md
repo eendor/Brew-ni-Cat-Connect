@@ -1865,3 +1865,12 @@ FR-122. The shop owner's drawing: points at the top, six tiles, one swipe row pe
 | TC-P9-098 | FR-122      | JVM: build the home rows from a menu with a drinks category (matcha with repeated and padded flavors; a sold-out latte with two sizes), an empty category and a bites category | Two rows in menu order, the empty category skipped; "Dirty Neko, Vanilla Matcha Meow" from ₱120; the latte shows "16 oz · 22 oz" and is sold out; fries have no flavor line and are not sold out | Passed (automated) |
 | TC-P9-099 | FR-122      | JVM: the points chip label signed out, signed in before the balance loads, with 1 point and with 25 points | "Sign in to earn points", "Your points", "1 point", "25 points" | Passed (automated) |
 
+## 71. Arcade Games On The Website (2026-11-19)
+
+FR-123. The Android app's five free-play arcade games, on the games page and in the order page's games popup.
+
+| ID        | Requirement | Case | Expected result | Status |
+| --------- | ----------- | ---- | --------------- | ------ |
+| TC-P9-100 | FR-123      | Unit (`arcade.test.ts`): the rules of Treat Catcher, Whack-a-Mouse, Cup Stack, Paw Says and Cat Match with a fixed random source, `isBetter`, `amount` and the saved bests | Catch keeps the cat on the board, scores fish 1 and milk tea 3, loses a life on a chili, spawns a chili on a low roll and ends on time or lives; Whack spawns a mouse, scores 1 then 3 for every 7th (golden) mouse, resets the streak on an empty hole or a missed mouse, shortens a mouse's time to 600 ms by the end and ends after 30 s; Stack bounces off the edge, keeps a perfect drop's width plus 1%, trims a misaligned cup and ends on a miss; Paw Says grows the pattern and ends on a wrong pad; Cat Match deals 8 pairs, counts moves, locks the board while a mismatch shows and clears it; fewer moves is better for Cat Match, more for the rest, and a zero never counts; "1 cup", "3 cups"; a bad saved value reads as no best | Passed (automated) |
+| TC-P9-101 | FR-123      | Unit (`arcade-section.test.tsx`): open the arcade with a saved Cat Match best of 14; play Cat Match to the end in 8 moves; play again with one mismatch (9 moves); go back to the list | Five games, **Best 14** on Cat Match and **Play** on the rest; **New best!**, "You got 8 moves." and the best saved as 8; then **Nice try!** with the best still 8; the list shows **Best 8** | Passed (automated) |
+

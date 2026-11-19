@@ -178,6 +178,7 @@ export default async function PrivacyPage() {
                   tab.
                 </li>
                 <li>Your day or night theme choice.</li>
+                <li>Your best score in each arcade game.</li>
                 <li>
                   Whether this device should show lighter 3D scenes, for up to 7
                   days.

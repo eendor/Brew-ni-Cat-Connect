@@ -46,7 +46,7 @@ describe("Privacy Policy page", () => {
     ).toBeInTheDocument();
     const updated = container.querySelector("time");
     expect(updated).toHaveAttribute("datetime", PRIVACY_POLICY_UPDATED);
-    expect(updated).toHaveTextContent("November 17, 2026");
+    expect(updated).toHaveTextContent("November 19, 2026");
 
     for (const [id, title] of SECTIONS) {
       const section = container.querySelector(`section#${id}`);
