@@ -3,6 +3,10 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 
 import { fetchPublicMenu } from "@/lib/menu/fetch-public-menu";
+import {
+  fetchItemRatings,
+  type ItemRatingSummary,
+} from "@/lib/menu/item-ratings";
 import { isCatTreatsCategory } from "@/lib/menu/map-menu-catalog";
 import type { MenuCatalog as MenuCatalogModel } from "@/types/menu";
 import { glowForCategory } from "./category-glow";
@@ -11,8 +15,11 @@ import { MenuState } from "./menu-state";
 
 type MenuLoader = (signal?: AbortSignal) => Promise<MenuCatalogModel>;
 
+type RatingsLoader = () => Promise<Map<string, ItemRatingSummary>>;
+
 type MenuCatalogProps = Readonly<{
   loadMenu?: MenuLoader;
+  loadRatings?: RatingsLoader;
 }>;
 
 type ViewState =
@@ -44,8 +51,14 @@ function allowsMotion() {
   );
 }
 
-export function MenuCatalog({ loadMenu = fetchPublicMenu }: MenuCatalogProps) {
+export function MenuCatalog({
+  loadMenu = fetchPublicMenu,
+  loadRatings = fetchItemRatings,
+}: MenuCatalogProps) {
   const [viewState, setViewState] = useState<ViewState>({ status: "loading" });
+  const [ratings, setRatings] = useState<
+    ReadonlyMap<string, ItemRatingSummary>
+  >(() => new Map());
   const [requestVersion, setRequestVersion] = useState(0);
   const [activeCategory, setActiveCategory] = useState(0);
   const rootRef = useRef<HTMLDivElement | null>(null);
@@ -68,6 +81,19 @@ export function MenuCatalog({ loadMenu = fetchPublicMenu }: MenuCatalogProps) {
 
     return () => controller.abort();
   }, [loadMenu, requestVersion]);
+
+  // Ratings are extras: if they can't load, the menu shows without stars.
+  useEffect(() => {
+    let active = true;
+    loadRatings()
+      .then((next) => {
+        if (active) setRatings(next);
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, [loadRatings]);
 
   // Scroll spy. The active category is the last section whose top has
   // passed the reading line, a third of the way down the space under the
@@ -332,6 +358,7 @@ export function MenuCatalog({ loadMenu = fetchPublicMenu }: MenuCatalogProps) {
                     item={item}
                     catalog={viewState.catalog}
                     categoryName={category.name}
+                    rating={ratings.get(item.id)}
                   />
                 ))}
               </div>
