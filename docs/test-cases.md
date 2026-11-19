@@ -1856,3 +1856,12 @@ FR-091 (Android). The app shows a prize won on a play and lists the customer's c
 | TC-P9-096 | FR-091      | JVM: parse a Cat Cups play that won a prize, a Lucky Paw play with `"prize": null`, a missing prize and a prize without a code | The prize's id, name, code and expiry; the result line "You won Free cookie! Code RWD-ABCD2345 · Use by Nov 26, 2026"; no prize and no extra line in the other cases | Passed (automated) |
 | TC-P9-097 | FR-091      | JVM: parse four `reward_codes` rows (ready game prize, used, expired with no name, no code) and check each status at a fixed time | Three codes, the one without a code dropped and the blank name shown as "Reward"; Ready to use, Used, Expired; expired exactly at the expiry time; "Won in a game" and "Redeemed with points"; "Nov 26, 2026" | Passed (automated) |
 
+## 70. Foodpanda-Style Home Screen In The Android App (2026-11-19)
+
+FR-122. The shop owner's drawing: points at the top, six tiles, one swipe row per category.
+
+| ID        | Requirement | Case | Expected result | Status |
+| --------- | ----------- | ---- | --------------- | ------ |
+| TC-P9-098 | FR-122      | JVM: build the home rows from a menu with a drinks category (matcha with repeated and padded flavors; a sold-out latte with two sizes), an empty category and a bites category | Two rows in menu order, the empty category skipped; "Dirty Neko, Vanilla Matcha Meow" from ₱120; the latte shows "16 oz · 22 oz" and is sold out; fries have no flavor line and are not sold out | Passed (automated) |
+| TC-P9-099 | FR-122      | JVM: the points chip label signed out, signed in before the balance loads, with 1 point and with 25 points | "Sign in to earn points", "Your points", "1 point", "25 points" | Passed (automated) |
+

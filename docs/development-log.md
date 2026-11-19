@@ -2247,3 +2247,15 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Known limitations:** The app version is still 1.0.3; this reaches phones with the next APK release.
 - **Next action:** Merge, then include it in the next Android release.
 
+---
+
+## 2026-11-19 — Android: foodpanda-style home screen (owner's drawing)
+
+- **Phase:** Phase 9 (FR-122, new).
+- **Task:** Trello "Owner: foodpanda-style home screen (his drawing)". I built it in the Android app first, since the drawing is a phone app layout.
+- **Summary:** The home screen now follows the drawing. At the top is a points chip ("Sign in to earn points" or the balance) that opens Rewards, or Account when signed out. Below it are six large tiles: The Menu, About, Gallery, Games, Contact and Reviews. The Menu opens the Menu tab, Games opens the games sheet, Contact opens Visit, Reviews opens the reviews, and About and Gallery open those pages on the website. Then comes one swipe row per menu category, in menu order: each product card has the photo, the name, its flavors (or its sizes when it has no flavors), "From ₱…" and a "Sold out" badge when the shop marks it unavailable; tapping it opens the item's options. The order tracker row and "How ordering works" stay. The old hero banner and the "Customer favorites" row are replaced by the tiles and the category rows. The bottom tab bar already has Home and Orders, so it is unchanged.
+- **Files:** `android/app/src/main/java/com/brewnicat/connect/data/HomeRows.kt` (new), `android/app/src/main/java/com/brewnicat/connect/ui/screens/HomeScreen.kt`, `android/app/src/test/java/com/brewnicat/connect/data/HomeRowsTest.kt` (new), `scripts/validate_phase0_docs.py` (FR-122), `docs/{functional-requirements,test-cases,development-log}.md`.
+- **Testing:** `./gradlew -q testDebugUnitTest lintDebug` with JDK 21 (lint clean, TC-P9-098 and TC-P9-099 pass); a debug build on the `bnc_phone` emulator against the live menu, where I checked the screenshots of the tiles and the category rows and that the Games tile opens the games sheet.
+- **Known limitations:** The top shows loyalty points, not coins, until the coins card is done. Products without a bundled photo show the logo until the photos card is done. The website home screen is not changed. The app version is still 1.0.3.
+- **Next action:** Merge; add coins and product photos when those cards are done; include it in the next Android release.
+
