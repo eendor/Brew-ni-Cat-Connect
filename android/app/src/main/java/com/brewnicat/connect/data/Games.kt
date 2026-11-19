@@ -25,6 +25,14 @@ data class MiniGameStatus(
     val games: List<MiniGameInfo>,
 )
 
+/** A prize won on a play, with its one-time code to show at the counter (FR-091). */
+data class WonPrize(
+    val id: String,
+    val name: String,
+    val code: String,
+    val expiresAt: String,
+)
+
 sealed interface PlayMiniGameResult {
     data class CatCupsSuccess(
         val playId: Long,
@@ -33,6 +41,7 @@ sealed interface PlayMiniGameResult {
         val points: Int,
         val playsLeft: Int,
         val balance: Int,
+        val prize: WonPrize? = null,
     ) : PlayMiniGameResult
 
     data class LuckyPawSuccess(
@@ -41,6 +50,7 @@ sealed interface PlayMiniGameResult {
         val points: Int,
         val playsLeft: Int,
         val balance: Int,
+        val prize: WonPrize? = null,
     ) : PlayMiniGameResult
 
     data class Failure(
@@ -104,6 +114,22 @@ object GamesParsers {
         )
     }.getOrNull()
 
+    /** The words added after a play's result when it won a prize, or "" when it didn't. */
+    fun prizeLine(prize: WonPrize?): String =
+        if (prize == null) "" else "\nYou won ${prize.name}! Code ${prize.code} · Use by ${LoyaltyFormat.formatDate(prize.expiresAt)}. It's saved in Rewards under My codes."
+
+    /** A won prize, or null when there is none or it has no code. */
+    fun parsePrize(json: JSONObject?): WonPrize? {
+        if (json == null) return null
+        val code = json.optString("code").takeIf { it.isNotBlank() && it != "null" } ?: return null
+        return WonPrize(
+            id = json.optString("id"),
+            name = json.optString("name").ifBlank { "Prize" },
+            code = code,
+            expiresAt = json.optString("expiresAt"),
+        )
+    }
+
     fun parsePlayResult(json: JSONObject): PlayMiniGameResult {
         if (!json.optBoolean("ok", false)) {
             val code = json.optString("error").ifBlank { "failed" }
@@ -116,6 +142,7 @@ object GamesParsers {
         val points = json.optInt("points", 1)
         val playsLeft = json.optInt("playsLeft", 0).coerceAtLeast(0)
         val balance = json.optInt("balance", 0).coerceAtLeast(0)
+        val prize = parsePrize(json.optJSONObject("prize"))
 
         return when (game) {
             "cat-cups" -> PlayMiniGameResult.CatCupsSuccess(
@@ -125,6 +152,7 @@ object GamesParsers {
                 points = points,
                 playsLeft = playsLeft,
                 balance = balance,
+                prize = prize,
             )
             "lucky-paw" -> PlayMiniGameResult.LuckyPawSuccess(
                 playId = playId,
@@ -132,6 +160,7 @@ object GamesParsers {
                 points = points,
                 playsLeft = playsLeft,
                 balance = balance,
+                prize = prize,
             )
             else -> PlayMiniGameResult.Failure("unknown_game", errorMessage("unknown_game"))
         }

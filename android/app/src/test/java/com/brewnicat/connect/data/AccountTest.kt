@@ -94,4 +94,31 @@ class AccountTest {
         assertNotNull(DataRequestValidation.validate("x".repeat(1001)))
         assertNull(DataRequestValidation.validate("Please update my contact number."))
     }
+
+    @Test
+    fun parsesRewardCodesAndTellsReadyUsedAndExpired() {
+        val codes = AccountParsers.parseRewardCodes(
+            JSONArray(
+                """[
+                  {"code":"RWD-READY234","reward_name":"Free cookie","source":"mini-game","created_at":"2026-11-19T02:00:00+00:00","expires_at":"2026-11-26T15:59:59+00:00","redeemed_at":null},
+                  {"code":"RWD-USED2345","reward_name":"Free latte","source":"points","created_at":"2026-11-18T02:00:00+00:00","expires_at":"2026-11-25T15:59:59+00:00","redeemed_at":"2026-11-18T05:00:00+00:00"},
+                  {"code":"RWD-OLD23456","reward_name":"","source":"points","created_at":"2026-11-01T02:00:00+00:00","expires_at":"2026-11-08T15:59:59+00:00","redeemed_at":null},
+                  {"code":"","reward_name":"Broken","source":"points","created_at":"","expires_at":"","redeemed_at":null}
+                ]""",
+            ),
+        )
+        assertEquals(listOf("RWD-READY234", "RWD-USED2345", "RWD-OLD23456"), codes.map { it.code })
+        assertEquals("Reward", codes[2].rewardName)
+        assertNull(codes[0].redeemedAt)
+
+        val now = java.time.Instant.parse("2026-11-19T04:00:00Z")
+        assertEquals(listOf(RewardCodeStatus.READY, RewardCodeStatus.USED, RewardCodeStatus.EXPIRED), codes.map { LoyaltyFormat.codeStatus(it, now) })
+        assertEquals("Ready to use", RewardCodeStatus.READY.label)
+        // Expiry is exclusive: a code is expired at its expiry time.
+        assertEquals(RewardCodeStatus.EXPIRED, LoyaltyFormat.codeStatus(codes[0], java.time.Instant.parse("2026-11-26T15:59:59Z")))
+
+        assertEquals("Won in a game", LoyaltyFormat.codeSourceLabel(codes[0]))
+        assertEquals("Redeemed with points", LoyaltyFormat.codeSourceLabel(codes[1]))
+        assertEquals("Nov 26, 2026", LoyaltyFormat.formatDate(codes[0].expiresAt))
+    }
 }
