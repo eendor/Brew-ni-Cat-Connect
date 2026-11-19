@@ -1,4 +1,10 @@
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { resetAdConsentForTests } from "@/lib/ads/ads";
 
@@ -189,7 +195,11 @@ describe("Order confirmation page", () => {
 
     render(<OrderConfirmationPage />);
     expect((await screen.findAllByText("pending")).length).toBeGreaterThan(0);
-    expect(realtime.state.topic).toBe(ORDER.realtimeTopic);
+    // The page can render before its subscription effect runs, so wait for it
+    await waitFor(() => {
+      expect(realtime.state.topic).toBe(ORDER.realtimeTopic);
+      expect(realtime.state.handler).not.toBeNull();
+    });
 
     await act(async () => {
       realtime.state.handler?.();
