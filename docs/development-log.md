@@ -2170,3 +2170,12 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Files:** `src/components/three/engine/{runtime,renderer,post}.ts`, `src/components/three/scenes/{menu-hero,showcase,ambient}.ts`, `tests/unit/three-{frame-pacing,phone-tier}.test.ts*`, `docs/{decisions,test-cases,development-log}.md`.
 - **Testing:** TC-P4-278 and TC-P4-279 (new), TC-P4-186, TC-P4-190 and TC-P4-191 updated; all 955 unit tests; the 3D unit tests, `npm run typecheck`, `npm run lint`, `npm run build`; frame rates measured in Chromium on the laptop's GPU with a production build.
 - **Known limitations:** Not measured on a phone yet; there the frame budget steps effects down if frames run slow.
+
+## 2026-11-19 — Fix the flaky order page test TC-P5-064
+
+- **Task:** Trello "Fix flaky web test TC-P5-064". It failed once in CI on PR #156 with `expected '' to be 'order:…'`.
+- **Summary:** The test checked the realtime channel name as soon as "pending" showed, but the page can render before its subscription effect runs. It also called the status handler with `?.()`, which does nothing if the subscription isn't set up yet. The test now waits until the channel name and the handler are both set before it simulates the shop's status changes. The page code is unchanged.
+- **Files:** `tests/unit/order-confirmation-page.test.tsx`, `docs/development-log.md`.
+- **Testing:** `npx vitest run tests/unit/order-confirmation-page.test.tsx` 10 times in a row (11 of 11 passed each time); `eslint`, `prettier --check` and `tsc --noEmit`.
+- **Known limitations:** The failure was never reproduced locally, so the fix follows from reading the test, not from a failing run.
+- **Next action:** Watch CI on this PR and the next few.
