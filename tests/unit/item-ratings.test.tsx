@@ -96,7 +96,7 @@ const line = (itemId: string, itemName: string) => ({
 
 const order = (
   id: string,
-  status: string,
+  status: CustomerOrderHistoryEntry["status"],
   items: CustomerOrderHistoryEntry["items"],
 ): CustomerOrderHistoryEntry => ({
   id,
