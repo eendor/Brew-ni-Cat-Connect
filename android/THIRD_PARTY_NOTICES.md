@@ -2,11 +2,14 @@
 
 The Android app bundles or compiles in the following third-party material.
 
-| Component                         | Where                             | Licence                   |
-| --------------------------------- | --------------------------------- | ------------------------- |
-| Inter typeface (Rasmus Andersson) | `app/src/main/res/font/inter.ttf` | SIL Open Font License 1.1 |
-| Lucide icons                      | path data in `ui/kit/Icons.kt`    | ISC License               |
-| Haze (`dev.chrisbanes.haze:haze`) | Gradle dependency, glass blur     | Apache License 2.0        |
+| Component                            | Where                                 | Licence                   |
+| ------------------------------------ | ------------------------------------- | ------------------------- |
+| Inter typeface (Rasmus Andersson)    | `app/src/main/res/font/inter.ttf`     | SIL Open Font License 1.1 |
+| Lucide icons                         | path data in `ui/kit/Icons.kt`        | ISC License               |
+| Tabler Icons                         | path data in `ui/kit/PictureIcons.kt` | MIT License               |
+| Lucide icons (cup-soda, utensils)    | path data in `ui/kit/PictureIcons.kt` | ISC License               |
+| Material Design Icons (french-fries) | path data in `ui/kit/PictureIcons.kt` | Apache License 2.0        |
+| Haze (`dev.chrisbanes.haze:haze`)    | Gradle dependency, glass blur         | Apache License 2.0        |
 
 Inter stands in for SF Pro and Lucide stands in for SF Symbols, because Apple's
 fonts and symbols may only be used on Apple platforms. The layout follows
@@ -161,3 +164,38 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
+
+## Tabler Icons: MIT License
+
+From https://tabler.io/icons, used for menu items that have no photo yet.
+
+```text
+MIT License
+
+Copyright (c) 2020-2026 Paweł Kuna
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
+## Material Design Icons: Apache License 2.0
+
+The "french-fries" icon from Material Design Icons by Pictogrammers
+(https://pictogrammers.com), licensed under the Apache License 2.0
+(https://www.apache.org/licenses/LICENSE-2.0). The path data is copied
+unchanged.

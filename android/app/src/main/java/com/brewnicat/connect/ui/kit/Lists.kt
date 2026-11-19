@@ -32,6 +32,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
@@ -337,18 +339,46 @@ fun Logo(size: Dp, modifier: Modifier = Modifier) {
     )
 }
 
-/** A menu photo, or the shop's logo on a quiet fill when the item has none yet. */
+/**
+ * A menu photo or, when the item has none yet, a 2D icon for what it is
+ * (noodles, fries, coffee, …) on a soft tint of its colour.
+ */
 @Composable
-fun Photo(@DrawableRes res: Int?, contentDescription: String?, modifier: Modifier = Modifier) {
+fun Photo(@DrawableRes res: Int?, contentDescription: String?, modifier: Modifier = Modifier, placeholderFor: String? = null) {
     if (res != null) {
         Image(painterResource(res), contentDescription, modifier = modifier, contentScale = ContentScale.Crop)
     } else {
-        Box(modifier.background(Kit.colors.fill3), contentAlignment = Alignment.Center) {
-            Image(
-                painterResource(R.drawable.brand_logo), contentDescription,
-                modifier = Modifier.fillMaxSize(0.62f).clip(CircleShape).alpha(0.9f),
-                contentScale = ContentScale.Crop,
-            )
+        val (icon, color) = placeholderIcon(com.brewnicat.connect.data.MenuPlaceholder.kind(placeholderFor ?: contentDescription.orEmpty()))
+        Box(
+            modifier.background(Brush.linearGradient(listOf(color.copy(alpha = 0.10f), color.copy(alpha = 0.26f))))
+                .then(if (contentDescription != null) Modifier.semantics { this.contentDescription = contentDescription } else Modifier),
+            contentAlignment = Alignment.Center,
+        ) {
+            BoxWithConstraints(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                val side = minOf(maxWidth, maxHeight)
+                Box(
+                    Modifier.size(side * 0.56f).clip(CircleShape).background(Color.White.copy(alpha = if (Kit.colors.dark) 0.10f else 0.72f)),
+                    contentAlignment = Alignment.Center,
+                ) { Icon(icon, null, tint = color, size = side * 0.3f) }
+            }
         }
+    }
+}
+
+@Composable
+private fun placeholderIcon(kind: com.brewnicat.connect.data.MenuPlaceholder.Kind): Pair<androidx.compose.ui.graphics.vector.ImageVector, Color> {
+    val c = Kit.colors
+    return when (kind) {
+        com.brewnicat.connect.data.MenuPlaceholder.Kind.Noodles -> PictureIcons.Noodles to c.red
+        com.brewnicat.connect.data.MenuPlaceholder.Kind.Fries -> PictureIcons.Fries to c.orange
+        com.brewnicat.connect.data.MenuPlaceholder.Kind.Nachos -> PictureIcons.Nachos to c.orange
+        com.brewnicat.connect.data.MenuPlaceholder.Kind.CatTreats -> PictureIcons.Paw to c.pink
+        com.brewnicat.connect.data.MenuPlaceholder.Kind.Water -> PictureIcons.Bottle to c.blue
+        com.brewnicat.connect.data.MenuPlaceholder.Kind.Soda -> PictureIcons.Soda to c.indigo
+        com.brewnicat.connect.data.MenuPlaceholder.Kind.Coffee -> PictureIcons.Coffee to c.brown
+        com.brewnicat.connect.data.MenuPlaceholder.Kind.MilkTea -> PictureIcons.BubbleTea to c.green
+        com.brewnicat.connect.data.MenuPlaceholder.Kind.Combo -> PictureIcons.Combo to c.purple
+        com.brewnicat.connect.data.MenuPlaceholder.Kind.TakeOut -> PictureIcons.TakeOut to c.brown
+        com.brewnicat.connect.data.MenuPlaceholder.Kind.Food -> PictureIcons.Utensils to c.gray
     }
 }

@@ -9,10 +9,10 @@ object MenuImages {
         listOf("takoyaki", "pawsome balls").forEach { put(it, R.drawable.menu_takoyaki_pawsome_balls) }
         put("buldak carbo", R.drawable.menu_buldak_carbo)
         put("buldak cheese", R.drawable.menu_buldak_cheese)
-        listOf("fries", "cat claws").forEach { put(it, R.drawable.menu_fries_cat_claws) }
         put("cat-feine", R.drawable.menu_cat_feine_iced_latte)
         listOf("matcha", "the lucky green neko", "lucky green neko").forEach { put(it, R.drawable.menu_lucky_green_neko_matcha) }
         listOf("oreo", "the tuxedo cat", "tuxedo cat").forEach { put(it, R.drawable.menu_vanilla_oreo_whisker) }
+        listOf("soda", "fizzy felines").forEach { put(it, R.drawable.menu_blueberry_bite_soda) }
     }
 
     private val byFlavor: Map<String, Int> = buildMap {
@@ -22,7 +22,15 @@ object MenuImages {
             put("$it|vanilla matcha meow", R.drawable.menu_vanilla_matcha_meow)
             put("$it|caramel matcha tail", R.drawable.menu_caramel_matcha_tail)
         }
-        listOf("oreo", "the tuxedo cat", "tuxedo cat").forEach { put("$it|vanilla oreo whisker", R.drawable.menu_vanilla_oreo_whisker) }
+        listOf("oreo", "the tuxedo cat", "tuxedo cat").forEach {
+            put("$it|vanilla oreo whisker", R.drawable.menu_vanilla_oreo_whisker)
+            put("$it|caramel oreo kitten", R.drawable.menu_caramel_oreo_kitten)
+        }
+        listOf("cat-feine", "classic coffee").forEach { put("$it|siamese latte", R.drawable.menu_siamese_latte) }
+        listOf("soda", "fizzy felines").forEach {
+            put("$it|blueberry bite", R.drawable.menu_blueberry_bite_soda)
+            put("$it|passion fruit purr", R.drawable.menu_passion_fruit_purr_soda)
+        }
     }
 
     private fun normalize(value: String) = value.trim().lowercase().replace(Regex("\\s+"), " ")

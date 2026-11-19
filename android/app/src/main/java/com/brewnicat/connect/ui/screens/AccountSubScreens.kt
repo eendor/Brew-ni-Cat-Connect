@@ -72,7 +72,7 @@ fun OrderHistoryScreen(vm: AppViewModel) {
                     item(key = "empty") {
                         EmptyState(
                             KitIcons.ReceiptText, "No past orders yet", "Orders you place while signed in will appear here.",
-                            Modifier.fillParentMaxHeight(0.7f), "Browse the menu", { vm.selectTab(Screen.Menu) },
+                            Modifier.fillParentMaxHeight(0.7f), "Browse the menu", { vm.showMenu() },
                         )
                     }
                 } else {
@@ -138,7 +138,7 @@ fun FavoritesScreen(vm: AppViewModel, onItem: (MenuItem) -> Unit) {
                     item(key = "empty") {
                         EmptyState(
                             KitIcons.Heart, "No favorites yet", "Tap the heart on any menu item to save it here with its live price.",
-                            Modifier.fillParentMaxHeight(0.7f), "Browse menu", { vm.selectTab(Screen.Menu) },
+                            Modifier.fillParentMaxHeight(0.7f), "Browse menu", { vm.showMenu() },
                         )
                     }
                 } else {

@@ -94,6 +94,10 @@ class Api(
         )
     }
 
+    /** The About and Gallery pages, from the same rows the website shows. */
+    suspend fun fetchSitePages(): SitePages =
+        SitePagesParser.parse(JSONArray(call(rest("site_content?select=section,content&section=in.(about,gallery)").get().build())).objects())
+
     /** The order, or null when no order matches this reference/token or signed-in owner. */
     suspend fun fetchOrder(
         reference: String,

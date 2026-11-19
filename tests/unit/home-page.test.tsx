@@ -75,8 +75,9 @@ describe("Home page", () => {
 
     // four fact labels, the address pin and the Maps button
     // Update 2026-11-17 (FR-116): plus the Android section's phone and download icons.
+    // Update 2026-11-19: plus the fries icon that stands in for the old fries photo.
     const icons = container.querySelectorAll("svg");
-    expect(icons).toHaveLength(8);
+    expect(icons).toHaveLength(9);
     icons.forEach((icon) => {
       expect(icon).toHaveAttribute("aria-hidden", "true");
       expect(icon).toHaveAttribute("focusable", "false");

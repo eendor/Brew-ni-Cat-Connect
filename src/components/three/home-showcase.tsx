@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useCallback, useRef, useState, type CSSProperties } from "react";
 
 import { useCurtainHold } from "@/components/motion/use-curtain-hold";
+import { FriesIcon } from "@/components/ui/icons";
 import { formatPrice } from "@/lib/menu/format-price";
 
 import { showcaseItems, type ShowcasePrices } from "./showcase-data";
@@ -173,13 +174,23 @@ export function HomeShowcase({
                 className="showcase__static-item"
                 style={{ "--c": item.glow } as CSSProperties}
               >
-                <Image
-                  src={item.photo}
-                  alt={item.alt}
-                  width={600}
-                  height={800}
-                  sizes="(max-width: 639px) 45vw, (max-width: 1023px) 30vw, 230px"
-                />
+                {item.photo ? (
+                  <Image
+                    src={item.photo}
+                    alt={item.alt}
+                    width={600}
+                    height={800}
+                    sizes="(max-width: 639px) 45vw, (max-width: 1023px) 30vw, 230px"
+                  />
+                ) : (
+                  <span
+                    className="showcase__static-icon"
+                    role="img"
+                    aria-label={item.alt}
+                  >
+                    <FriesIcon className="size-1/3" />
+                  </span>
+                )}
                 <div>
                   <p className="showcase__static-name">{item.name}</p>
                   <p className="showcase__static-nick">{item.nickname}</p>

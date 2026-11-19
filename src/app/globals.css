@@ -1412,6 +1412,21 @@ textarea:focus-visible {
   object-fit: cover;
 }
 
+/* An item with no photo yet: its icon on a soft wash of its glow color. */
+.showcase__static-icon {
+  display: flex;
+  aspect-ratio: 3 / 4;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--c) 14%, transparent),
+    color-mix(in srgb, var(--c) 34%, transparent)
+  );
+  color: color-mix(in srgb, var(--c) 55%, var(--text-strong));
+}
+
 .showcase__static-item div {
   padding: 0.9rem 1rem 1.1rem;
 }

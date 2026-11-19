@@ -59,7 +59,9 @@ import com.brewnicat.connect.ui.kit.Text
 import com.brewnicat.connect.ui.kit.glass
 import com.brewnicat.connect.ui.kit.pressable
 import com.brewnicat.connect.ui.kit.semibold
+import com.brewnicat.connect.ui.screens.AboutScreen
 import com.brewnicat.connect.ui.screens.AccountScreen
+import com.brewnicat.connect.ui.screens.GalleryScreen
 import com.brewnicat.connect.ui.screens.CartScreen
 import com.brewnicat.connect.ui.screens.CheckoutScreen
 import com.brewnicat.connect.ui.screens.DataRequestScreen
@@ -67,7 +69,6 @@ import com.brewnicat.connect.ui.screens.FavoritesScreen
 import com.brewnicat.connect.ui.screens.HomeScreen
 import com.brewnicat.connect.ui.screens.ItemSheet
 import com.brewnicat.connect.ui.screens.LoyaltyHistoryScreen
-import com.brewnicat.connect.ui.screens.MenuScreen
 import com.brewnicat.connect.ui.screens.OrderHistoryScreen
 import com.brewnicat.connect.ui.screens.OrderScreen
 import com.brewnicat.connect.ui.screens.OrdersScreen
@@ -78,10 +79,9 @@ import com.brewnicat.connect.ui.screens.VisitScreen
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
 
-private val tabScreens = listOf(Screen.Home, Screen.Menu, Screen.Orders, Screen.Account, Screen.Visit)
+private val tabScreens = listOf(Screen.Home, Screen.Orders, Screen.Account, Screen.Visit)
 private val tabItems = listOf(
     TabItem("Home", KitIcons.House),
-    TabItem("Menu", KitIcons.Coffee),
     TabItem("Orders", KitIcons.ReceiptText),
     TabItem("Account", KitIcons.UserRound),
     TabItem("Visit", KitIcons.Store),
@@ -146,7 +146,6 @@ fun BrewApp(vm: AppViewModel) {
                             Box(Modifier.fillMaxSize().background(Kit.colors.grouped)) {
                                 when (val s = state.screen) {
                                     Screen.Home -> HomeScreen(vm, ::showItem)
-                                    Screen.Menu -> MenuScreen(vm, onNeedSignIn = ::promptFavoriteSignIn, onItem = ::showItem)
                                     Screen.Orders -> OrdersScreen(vm)
                                     Screen.Account -> AccountScreen(vm)
                                     Screen.Visit -> VisitScreen(vm)
@@ -160,6 +159,8 @@ fun BrewApp(vm: AppViewModel) {
                                     Screen.LoyaltyHistory -> LoyaltyHistoryScreen(vm)
                                     Screen.Reviews -> ReviewsScreen(vm)
                                     Screen.DataRequests -> DataRequestScreen(vm)
+                                    Screen.About -> AboutScreen(vm)
+                                    Screen.Gallery -> GalleryScreen(vm)
                                 }
                             }
                         }

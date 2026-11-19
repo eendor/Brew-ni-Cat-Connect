@@ -52,7 +52,7 @@ fun CartScreen(vm: AppViewModel) {
     ) {
         if (cart.isEmpty) {
             item {
-                EmptyState(KitIcons.ShoppingBag, "Your cart is empty", "Add something tasty from the menu.", Modifier.fillParentMaxHeight(0.7f), "Browse the menu", { vm.selectTab(Screen.Menu) })
+                EmptyState(KitIcons.ShoppingBag, "Your cart is empty", "Add something tasty from the menu.", Modifier.fillParentMaxHeight(0.7f), "Browse the menu", { vm.showMenu() })
             }
             return@Page
         }
@@ -60,7 +60,7 @@ fun CartScreen(vm: AppViewModel) {
         item(key = "gap") { Column(Modifier.padding(top = 12.dp)) {} }
         groupItems(cart.lines, key = { it.key }) { line ->
             Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                Photo(MenuImages.forItem(line.itemName, Pricing.splitAddOns(line.flavor).flavor), null, Modifier.size(60.dp).clip(RoundedCornerShape(14.dp)))
+                Photo(MenuImages.forItem(line.itemName, Pricing.splitAddOns(line.flavor).flavor), null, placeholderFor = line.itemName, modifier = Modifier.size(60.dp).clip(RoundedCornerShape(14.dp)))
                 Column(Modifier.weight(1f).padding(start = 12.dp, end = 8.dp)) {
                     Text(line.itemName, style = KitType.body.semibold, color = c.label, maxLines = 2)
                     val detail = lineDetail(line.variantName, line.flavor)
@@ -71,7 +71,7 @@ fun CartScreen(vm: AppViewModel) {
             }
         }
         item(key = "more") {
-            Section { ButtonRow("Add more items", { vm.selectTab(Screen.Menu) }) }
+            Section { ButtonRow("Add more items", { vm.showMenu() }) }
         }
     }
 }

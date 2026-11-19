@@ -50,4 +50,12 @@ class HomeRowsTest {
         assertEquals("25 coins", HomeRows.pointsLabel(true, 25.0))
         assertEquals("12.5 coins", HomeRows.pointsLabel(true, 12.5))
     }
+
+    @Test
+    fun keepsTheCoinsPillShort() {
+        assertEquals("Earn", HomeRows.coinsPill(false, 40.0))
+        assertEquals("Coins", HomeRows.coinsPill(true, null))
+        assertEquals("25", HomeRows.coinsPill(true, 25.0))
+        assertEquals("2.5", HomeRows.coinsPill(true, 2.46))
+    }
 }

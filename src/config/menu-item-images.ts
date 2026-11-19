@@ -3,6 +3,11 @@ export type MenuItemImage = Readonly<{
   alt: string;
 }>;
 
+const blueberryBiteSoda: MenuItemImage = {
+  src: "/images/menu/items/blueberry-bite-soda.jpg",
+  alt: "Blueberry Bite soda, a fizzy purple-red drink over ice in a clear cup",
+};
+
 const vanillaOreoWhisker: MenuItemImage = {
   src: "/images/menu/items/vanilla-oreo-whisker.jpg",
   alt: "Vanilla Oreo Whisker iced drink with cookie crumbs in a clear cup",
@@ -44,13 +49,6 @@ const menuItemImages = [
     },
   },
   {
-    names: ["fries", "cat claws"],
-    image: {
-      src: "/images/menu/items/fries-cat-claws.jpg",
-      alt: "Fries served in a wire cone in front of the Brew ni Cat logo wall",
-    },
-  },
-  {
     names: ["cat-feine"],
     image: {
       src: "/images/menu/items/cat-feine-iced-latte.jpg",
@@ -67,6 +65,10 @@ const menuItemImages = [
   {
     names: ["oreo", "the tuxedo cat", "tuxedo cat"],
     image: vanillaOreoWhisker,
+  },
+  {
+    names: ["soda", "fizzy felines"],
+    image: blueberryBiteSoda,
   },
 ] as const satisfies ReadonlyArray<{
   names: ReadonlyArray<string>;
@@ -107,6 +109,35 @@ const menuFlavorImages = [
     names: ["oreo", "the tuxedo cat", "tuxedo cat"],
     flavor: "vanilla oreo whisker",
     image: vanillaOreoWhisker,
+  },
+  {
+    names: ["oreo", "the tuxedo cat", "tuxedo cat"],
+    flavor: "caramel oreo kitten",
+    image: {
+      src: "/images/menu/items/caramel-oreo-kitten.jpg",
+      alt: "Caramel Oreo Kitten iced drink with cookie bits and caramel down the cup",
+    },
+  },
+  {
+    names: ["cat-feine", "classic coffee"],
+    flavor: "siamese latte",
+    image: {
+      src: "/images/menu/items/siamese-latte.jpg",
+      alt: "Siamese Latte iced coffee with milk in a clear cup",
+    },
+  },
+  {
+    names: ["soda", "fizzy felines"],
+    flavor: "blueberry bite",
+    image: blueberryBiteSoda,
+  },
+  {
+    names: ["soda", "fizzy felines"],
+    flavor: "passion fruit purr",
+    image: {
+      src: "/images/menu/items/passion-fruit-purr-soda.jpg",
+      alt: "Passion Fruit Purr soda, a fizzy yellow drink over ice in a clear cup",
+    },
   },
 ] as const satisfies ReadonlyArray<{
   names: ReadonlyArray<string>;

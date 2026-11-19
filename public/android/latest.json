@@ -1,9 +1,9 @@
 {
-  "versionCode": 7,
-  "versionName": "1.0.4",
-  "url": "/android/brew-ni-cat-connect-1.0.4.apk",
-  "sha256": "1c26d73709549fa3d05ca7df52dc992ed79053eaa2c9ec263b9164e045670614",
-  "size": 2741772,
+  "versionCode": 8,
+  "versionName": "1.0.5",
+  "url": "/android/brew-ni-cat-connect-1.0.5.apk",
+  "sha256": "af1d372d3fb097ff872ffe952b261d410fb6ff2d5b684e55114c027566590bc6",
+  "size": 2848155,
   "minAndroid": "8.0",
-  "notes": "Points are now coins, and the games can be played any time. Adds the new home screen, won prizes and My codes."
+  "notes": "About and Gallery open in the app, the menu is on Home, and coins sit at the top. Adds new drink photos, and items without a photo show an icon."
 }
