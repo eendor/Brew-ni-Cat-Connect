@@ -2179,3 +2179,14 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Files:** `docs/test-cases.md`, `docs/development-log.md`.
 - **Testing:** manual checks on real devices and the live database, done by me.
 - **Next action:** none.
+
+---
+
+## 2026-11-19 — Fix the flaky order page test TC-P5-064
+
+- **Task:** Trello "Fix flaky web test TC-P5-064". It failed once in CI on PR #156 with `expected '' to be 'order:…'`.
+- **Summary:** The test checked the realtime channel name as soon as "pending" showed, but the page can render before its subscription effect runs. It also called the status handler with `?.()`, which does nothing if the subscription isn't set up yet. The test now waits until the channel name and the handler are both set before it simulates the shop's status changes. The page code is unchanged.
+- **Files:** `tests/unit/order-confirmation-page.test.tsx`, `docs/development-log.md`.
+- **Testing:** `npx vitest run tests/unit/order-confirmation-page.test.tsx` 10 times in a row (11 of 11 passed each time); `eslint`, `prettier --check` and `tsc --noEmit`.
+- **Known limitations:** The failure was never reproduced locally, so the fix follows from reading the test, not from a failing run.
+- **Next action:** Watch CI on this PR and the next few.
