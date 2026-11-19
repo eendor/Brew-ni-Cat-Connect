@@ -149,7 +149,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.orderDetail(vm: AppVi
             Section {
                 ListRow(
                     "Play while you wait",
-                    subtitle = "Earn points with Cat cups and Lucky paw, or try five arcade games.",
+                    subtitle = "Earn coins with Cat cups and Lucky paw, or try five arcade games.",
                     leading = { CatPixelSprite(R.drawable.cat_kulas, CatMode.LOOK, animating = false, size = DpSize(48.dp, 40.dp)) },
                     trailing = { KitButton("Play", { vm.openGamesPopup() }, size = ButtonSize.Small) },
                 )

@@ -35,11 +35,10 @@ object HomeRows {
         return if (sizes.size > 1) sizes.joinToString(" · ") else null
     }
 
-    /** The label on the points chip at the top of the home screen. */
-    fun pointsLabel(signedIn: Boolean, balance: Int?): String = when {
-        !signedIn -> "Sign in to earn points"
-        balance == null -> "Your points"
-        balance == 1 -> "1 point"
-        else -> "$balance points"
+    /** The label on the coins chip at the top of the home screen (FR-124). */
+    fun pointsLabel(signedIn: Boolean, balance: Double?): String = when {
+        !signedIn -> "Sign in to earn coins"
+        balance == null -> "Your coins"
+        else -> Coins.label(balance)
     }
 }

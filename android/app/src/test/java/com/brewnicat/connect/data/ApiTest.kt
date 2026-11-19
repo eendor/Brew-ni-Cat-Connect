@@ -217,8 +217,8 @@ class ApiTest {
         assertEquals("DELETE", delReq.method)
         assertTrue(delReq.path!!.contains("item_id=eq.i-carbo"))
 
-        server.enqueue(MockResponse().setBody("""[{"points":150},{"points":-50},{"points":25}]"""))
-        assertEquals(125, api.fetchLoyaltyBalance("u-1", "acc-1"))
+        server.enqueue(MockResponse().setBody("""[{"points":150},{"points":-50},{"points":24.9},{"points":0.1}]"""))
+        assertEquals(125.0, api.fetchLoyaltyBalance("u-1", "acc-1"), 0.0)
         server.takeRequest()
 
         server.enqueue(
@@ -261,7 +261,7 @@ class ApiTest {
         )
         val redeemed = api.redeemReward("rw-1", "acc-1") as RedeemResult.Success
         assertEquals("RWD-K9M2", redeemed.code)
-        assertEquals(25, redeemed.newBalance)
+        assertEquals(25.0, redeemed.newBalance, 0.0)
         val redeemReq = server.takeRequest()
         assertEquals("/rest/v1/rpc/redeem_reward", redeemReq.path)
         assertEquals("rw-1", JSONObject(redeemReq.body.readUtf8()).getString("p_reward_id"))
@@ -351,7 +351,7 @@ class ApiTest {
         )
         val play = api.playMiniGame("cat-cups", 1, "acc-1")
         assertTrue(play is PlayMiniGameResult.CatCupsSuccess)
-        assertEquals(15, (play as PlayMiniGameResult.CatCupsSuccess).balance)
+        assertEquals(15.0, (play as PlayMiniGameResult.CatCupsSuccess).balance, 0.0)
         val playReq = server.takeRequest()
         assertEquals("/rest/v1/rpc/play_mini_game", playReq.path)
         val playBody = JSONObject(playReq.body.readUtf8())

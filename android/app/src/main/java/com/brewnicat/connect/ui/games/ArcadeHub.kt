@@ -89,7 +89,7 @@ private fun GameTile(game: ArcadeGame, size: Int) {
 @Composable
 fun ArcadeList(bestOf: (String) -> Int?, onPlay: (ArcadeGame) -> Unit) {
     val c = Kit.colors
-    Section(header = "Just for fun", footer = "Free play, no points. Beat your own best!") {
+    Section(header = "Just for fun", footer = "Free play, no coins. Beat your own best!") {
         Arcade.GAMES.forEach { game ->
             val best = bestOf(game.id)
             ListRow(

@@ -26,6 +26,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import com.brewnicat.connect.BuildConfig
+import com.brewnicat.connect.data.Coins
 import com.brewnicat.connect.ui.AppViewModel
 import com.brewnicat.connect.ui.ProfileAvatar
 import com.brewnicat.connect.ui.Screen
@@ -81,7 +82,7 @@ fun AccountScreen(vm: AppViewModel) {
                             Text("Customer account", style = KitType.footnote.semibold, color = c.label2, modifier = Modifier.padding(top = 14.dp))
                             Text("Sign in with Google", style = KitType.title2.bold, color = c.label, modifier = Modifier.padding(top = 2.dp).semantics { heading() })
                             Text(
-                                "Sign in to earn loyalty points on every completed order, redeem café rewards, save favorite drinks and food, view past orders, and prefill checkout.",
+                                "Sign in to earn coins on every completed order, redeem café rewards, save favorite drinks and food, view past orders, and prefill checkout.",
                                 style = KitType.subhead, color = c.label2, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 6.dp),
                             )
                             KitButton(
@@ -129,8 +130,8 @@ fun AccountScreen(vm: AppViewModel) {
                     ) {
                         Column(Modifier.weight(1f)) {
                             Text("Loyalty balance", style = KitType.footnote.semibold, color = Color.White.copy(alpha = 0.78f))
-                            Text("${vm.loyaltyBalance ?: 0} pts", style = KitType.largeTitle, color = Color.White, modifier = Modifier.padding(top = 2.dp))
-                            Text("Tap to browse rewards & points history", style = KitType.footnote, color = Color.White.copy(alpha = 0.78f))
+                            Text(Coins.label(vm.loyaltyBalance ?: 0.0), style = KitType.largeTitle, color = Color.White, modifier = Modifier.padding(top = 2.dp))
+                            Text("Tap to browse rewards & coins history", style = KitType.footnote, color = Color.White.copy(alpha = 0.78f))
                         }
                         Icon(KitIcons.ChevronRight, null, tint = Color.White.copy(alpha = 0.8f), size = 20.dp)
                     }
@@ -139,7 +140,7 @@ fun AccountScreen(vm: AppViewModel) {
             item(key = "links") {
                 Section {
                     ListRow(
-                        "Rewards & points", subtitle = "Redeem points for café favorites and view point history.",
+                        "Rewards & coins", subtitle = "Redeem coins for café favorites and view your coins history.",
                         leading = { IconTile(KitIcons.Gift, c.orange) }, chevron = true, onClick = { vm.open(Screen.Rewards) },
                     )
                     ListRow(

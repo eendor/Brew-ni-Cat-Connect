@@ -47,7 +47,7 @@ type Bests = Partial<Record<ArcadeGameId, number>>;
 
 /**
  * Free-play arcade (FR-123): the same five games as the Android app. Nothing
- * is sent to the server and no points are earned; each game's best score is
+ * is sent to the server and no coins are earned; each game's best score is
  * kept only in this browser.
  */
 export function ArcadeSection({
@@ -91,7 +91,7 @@ export function ArcadeSection({
         Arcade
       </h2>
       <p className="mt-1 text-sm text-[var(--text-muted)]">
-        Free play, no points. Beat your own best!
+        Free play, no coins. Beat your own best!
       </p>
 
       {open ? (

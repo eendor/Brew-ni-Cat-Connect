@@ -294,7 +294,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     var favoritesLoading by mutableStateOf(false); private set
     var favoritesError by mutableStateOf<String?>(null); private set
 
-    var loyaltyBalance by mutableStateOf<Int?>(null); private set
+    var loyaltyBalance by mutableStateOf<Double?>(null); private set
     var rewards by mutableStateOf<List<RewardItem>>(emptyList()); private set
     var loyaltySettings by mutableStateOf(LoyaltySettings()); private set
     var loyaltyHistory by mutableStateOf<List<LoyaltyTransaction>>(emptyList()); private set
@@ -406,10 +406,10 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 return PlayMiniGameResult.Failure("failed", com.brewnicat.connect.data.GamesParsers.errorMessage("failed"))
             }
             when (result) {
-                is PlayMiniGameResult.CatCupsSuccess -> applyGameUpdate(result.playsLeft, result.balance)
-                is PlayMiniGameResult.LuckyPawSuccess -> applyGameUpdate(result.playsLeft, result.balance)
+                is PlayMiniGameResult.CatCupsSuccess -> applyGameUpdate(result.playsLeft, result.balance, result.coinsLeft, played = true)
+                is PlayMiniGameResult.LuckyPawSuccess -> applyGameUpdate(result.playsLeft, result.balance, result.coinsLeft, played = true)
                 is PlayMiniGameResult.Failure -> if (result.error == "daily_limit_reached") {
-                    applyGameUpdate(0, loyaltyBalance)
+                    applyGameUpdate(0, loyaltyBalance, null, played = false)
                 }
             }
             result
@@ -418,13 +418,24 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    private fun applyGameUpdate(playsLeft: Int, nextBalance: Int?) {
+    private fun applyGameUpdate(playsLeft: Int, nextBalance: Double?, coinsLeft: Double?, played: Boolean) {
         if (nextBalance != null) loyaltyBalance = nextBalance
         val currentReady = (gameStatus as? Loadable.Ready)?.value ?: return
+        val daily = currentReady.dailyCoins
         gameStatus = Loadable.Ready(
             currentReady.copy(
                 playsLeft = playsLeft.coerceAtLeast(0),
-                playsToday = (currentReady.dailyPlays - playsLeft).coerceAtLeast(0),
+                playsToday = if (currentReady.unlimited) {
+                    currentReady.playsToday + if (played) 1 else 0
+                } else {
+                    (currentReady.dailyPlays - playsLeft).coerceAtLeast(0)
+                },
+                coinsLeft = coinsLeft ?: currentReady.coinsLeft,
+                coinsToday = if (coinsLeft != null && daily != null) {
+                    com.brewnicat.connect.data.Coins.round(daily - coinsLeft)
+                } else {
+                    currentReady.coinsToday
+                },
             ),
         )
     }
@@ -677,7 +688,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 },
                 onFailure = {
                     rewardsLoading = false
-                    rewardsError = "Unable to load rewards and points. Please try again later."
+                    rewardsError = "Unable to load rewards and coins. Please try again later."
                 },
             )
         }
@@ -695,7 +706,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 },
                 onFailure = {
                     rewardsLoading = false
-                    rewardsError = "Unable to load points history. Please try again later."
+                    rewardsError = "Unable to load your coins history. Please try again later."
                 },
             )
         }

@@ -1,6 +1,6 @@
 /**
  * Free-play arcade games (the same five games and rules as the Android app's
- * Arcade.kt). They are played for fun only: no points, nothing sent to the
+ * Arcade.kt). They are played for fun only: no coins, nothing sent to the
  * server. The loyalty-point games stay server-decided (games.ts). Every rule
  * is a pure function of its state and an injected random number source, so it
  * is covered by plain unit tests.

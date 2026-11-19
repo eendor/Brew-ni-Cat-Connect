@@ -13,16 +13,25 @@ data class MiniGameInfo(
     val name: String,
     val description: String,
     val choices: Int,
-    val winPoints: Int?,
-    val tryPoints: Int?,
-    val maxPoints: Int,
+    val winPoints: Double?,
+    val tryPoints: Double?,
+    val maxPoints: Double,
 )
 
+/**
+ * Under the coins rules (FR-124) plays never run out ([unlimited]), and
+ * [dailyPlays] / [playsLeft] count only the plays that can still win a prize.
+ * Without the coins migration on the database, [playsLeft] is the play limit.
+ */
 data class MiniGameStatus(
     val dailyPlays: Int,
     val playsToday: Int,
     val playsLeft: Int,
     val games: List<MiniGameInfo>,
+    val unlimited: Boolean = false,
+    val dailyCoins: Double? = null,
+    val coinsToday: Double? = null,
+    val coinsLeft: Double? = null,
 )
 
 /** A prize won on a play, with its one-time code to show at the counter (FR-091). */
@@ -38,19 +47,21 @@ sealed interface PlayMiniGameResult {
         val playId: Long,
         val hiddenUnder: Int,
         val won: Boolean,
-        val points: Int,
+        val points: Double,
         val playsLeft: Int,
-        val balance: Int,
+        val balance: Double,
         val prize: WonPrize? = null,
+        val coinsLeft: Double? = null,
     ) : PlayMiniGameResult
 
     data class LuckyPawSuccess(
         val playId: Long,
-        val treat: Int,
-        val points: Int,
+        val treat: Double,
+        val points: Double,
         val playsLeft: Int,
-        val balance: Int,
+        val balance: Double,
         val prize: WonPrize? = null,
+        val coinsLeft: Double? = null,
     ) : PlayMiniGameResult
 
     data class Failure(
@@ -67,7 +78,23 @@ object MiniGamesUiHelper {
 }
 
 object GamesParsers {
-    fun pointsLabel(points: Int): String = if (points == 1) "1 point" else "$points points"
+    fun pointsLabel(points: Double): String = Coins.label(points)
+
+    /** Whether the customer can still play: always, under the coins rules. */
+    fun canPlay(status: MiniGameStatus): Boolean = status.unlimited || status.playsLeft > 0
+
+    fun coinsLeftLabel(coinsLeft: Double): String =
+        if (Coins.round(coinsLeft) <= 0.0) "Today's coins earned" else "${Coins.label(coinsLeft)} left today"
+
+    /** Coins left today under the coins rules; plays left on an older database. */
+    fun todayLabel(status: MiniGameStatus): String {
+        val left = status.coinsLeft
+        return if (status.unlimited && left != null) coinsLeftLabel(left) else playsLeftLabel(status.playsLeft)
+    }
+
+    /** "+0.2 coins", or at the daily cap, that the play was just for fun. */
+    fun earnedLine(points: Double): String =
+        if (Coins.round(points) > 0.0) "+${pointsLabel(points)}" else "You've earned today's coins, so this one's for fun"
 
     fun playsLeftLabel(playsLeft: Int): String = when {
         playsLeft <= 0 -> "No plays left today"
@@ -76,7 +103,7 @@ object GamesParsers {
     }
 
     fun errorMessage(error: String): String = when (error) {
-        "unauthorized" -> "Please sign in with Google to play for points."
+        "unauthorized" -> "Please sign in with Google to play for coins."
         "daily_limit_reached" -> "You've used all your plays for today. Come back tomorrow!"
         "unavailable" -> "The mini-games aren't open yet."
         "invalid_choice", "unknown_game" -> "That play couldn't be sent. Try picking again."
@@ -101,9 +128,9 @@ object GamesParsers {
                 name = g.optString("name"),
                 description = g.optString("description"),
                 choices = g.optInt("choices", 0),
-                winPoints = if (g.isNull("winPoints")) null else g.optInt("winPoints"),
-                tryPoints = if (g.isNull("tryPoints")) null else g.optInt("tryPoints"),
-                maxPoints = g.optInt("maxPoints", 0),
+                winPoints = Coins.readOrNull(g, "winPoints"),
+                tryPoints = Coins.readOrNull(g, "tryPoints"),
+                maxPoints = Coins.read(g, "maxPoints"),
             )
         } ?: emptyList()
         MiniGameStatus(
@@ -111,6 +138,10 @@ object GamesParsers {
             playsToday = json.optInt("playsToday", 0),
             playsLeft = json.optInt("playsLeft", 0).coerceAtLeast(0),
             games = games,
+            unlimited = json.optBoolean("unlimited", false),
+            dailyCoins = Coins.readOrNull(json, "dailyCoins"),
+            coinsToday = Coins.readOrNull(json, "coinsToday"),
+            coinsLeft = Coins.readOrNull(json, "coinsLeft")?.coerceAtLeast(0.0),
         )
     }.getOrNull()
 
@@ -139,9 +170,10 @@ object GamesParsers {
         val playId = json.optLong("playId", 0L)
         val game = json.optString("game")
         val outcome = json.optJSONObject("outcome") ?: JSONObject()
-        val points = json.optInt("points", 1)
+        val points = Coins.read(json, "points").coerceAtLeast(0.0)
         val playsLeft = json.optInt("playsLeft", 0).coerceAtLeast(0)
-        val balance = json.optInt("balance", 0).coerceAtLeast(0)
+        val balance = Coins.read(json, "balance").coerceAtLeast(0.0)
+        val coinsLeft = Coins.readOrNull(json, "coinsLeft")?.coerceAtLeast(0.0)
         val prize = parsePrize(json.optJSONObject("prize"))
 
         return when (game) {
@@ -153,14 +185,16 @@ object GamesParsers {
                 playsLeft = playsLeft,
                 balance = balance,
                 prize = prize,
+                coinsLeft = coinsLeft,
             )
             "lucky-paw" -> PlayMiniGameResult.LuckyPawSuccess(
                 playId = playId,
-                treat = outcome.optInt("treat", points),
+                treat = Coins.read(outcome, "treat", points),
                 points = points,
                 playsLeft = playsLeft,
                 balance = balance,
                 prize = prize,
+                coinsLeft = coinsLeft,
             )
             else -> PlayMiniGameResult.Failure("unknown_game", errorMessage("unknown_game"))
         }

@@ -48,6 +48,7 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.brewnicat.connect.R
 import com.brewnicat.connect.data.ArcadeGame
+import com.brewnicat.connect.data.Coins
 import com.brewnicat.connect.data.GamesParsers
 import com.brewnicat.connect.data.MiniGameInfo
 import com.brewnicat.connect.data.PlayMiniGameResult
@@ -148,22 +149,22 @@ fun MiniGamesDialog(vm: AppViewModel) {
                         Section {
                             Cell {
                                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                    Text("Sign in with Google on Account to earn points when you play.", style = KitType.subhead, color = c.label, modifier = Modifier.weight(1f))
+                                    Text("Sign in with Google on Account to earn coins when you play.", style = KitType.subhead, color = c.label, modifier = Modifier.weight(1f))
                                     KitButton("Sign in", { vm.closeGamesPopup(); vm.selectTab(Screen.Account) }, style = ButtonStyle.Tinted, size = ButtonSize.Small)
                                 }
                             }
                         }
                     } else {
                         Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(top = 14.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Badge(GamesParsers.playsLeftLabel(status.playsLeft))
-                            vm.loyaltyBalance?.let { bal -> Badge("$bal pts", color = c.orange) }
+                            Badge(GamesParsers.todayLabel(status))
+                            vm.loyaltyBalance?.let { bal -> Badge(Coins.label(bal), color = c.orange) }
                         }
-                        if (status.playsLeft <= 0) {
+                        if (!GamesParsers.canPlay(status)) {
                             Notice("You've played all your games for today. Your plays reset tomorrow.", Modifier.padding(horizontal = 16.dp).padding(top = 12.dp))
                         }
                     }
 
-                    val outOfPlays = !signedIn || status.playsLeft <= 0
+                    val outOfPlays = !signedIn || !GamesParsers.canPlay(status)
                     status.games.find { it.id == "cat-cups" }?.let { info ->
                         CatCupsCard(info = info, disabled = outOfPlays || vm.gamePlaying) { choice -> vm.playCatCups(choice) }
                     }
@@ -223,7 +224,7 @@ private fun CatCupsCard(
         buildString {
             append(info.description)
             if (info.winPoints != null && info.tryPoints != null) {
-                append(" ${info.winPoints} pts for a find, ${info.tryPoints} pt for trying.")
+                append(" ${Coins.label(info.winPoints)} for a find, ${Coins.label(info.tryPoints)} for trying.")
             }
         },
     ) {
@@ -256,9 +257,10 @@ private fun CatCupsCard(
                                         hiddenUnder = res.hiddenUnder
                                         won = res.won
                                         statusMessage = if (res.won) {
-                                            "You found Oreo! +${GamesParsers.pointsLabel(res.points)}"
+                                            "You found Oreo! ${GamesParsers.earnedLine(res.points)}"
                                         } else {
-                                            "Oreo was under cup ${res.hiddenUnder + 1}. +${GamesParsers.pointsLabel(res.points)} for playing"
+                                            "Oreo was under cup ${res.hiddenUnder + 1}. ${GamesParsers.earnedLine(res.points)}" +
+                                                if (res.points > 0.0) " for playing" else ""
                                         } + GamesParsers.prizeLine(res.prize)
                                     }
                                     is PlayMiniGameResult.Failure -> {
@@ -328,7 +330,7 @@ private fun LuckyPawCard(
     val c = Kit.colors
     val scope = rememberCoroutineScope()
     val shakeAngle = remember { Animatable(0f) }
-    var treat by remember { mutableStateOf<Int?>(null) }
+    var treat by remember { mutableStateOf<Double?>(null) }
     var statusMessage by remember { mutableStateOf<String?>(null) }
     var busy by remember { mutableStateOf(false) }
 
@@ -368,7 +370,13 @@ private fun LuckyPawCard(
                     when (val res = onShake()) {
                         is PlayMiniGameResult.LuckyPawSuccess -> {
                             treat = res.treat
-                            statusMessage = "Latte pawed out ${GamesParsers.pointsLabel(res.treat)}!" + GamesParsers.prizeLine(res.prize)
+                            statusMessage = (
+                                if (res.points > 0.0) {
+                                    "Latte pawed out ${GamesParsers.pointsLabel(res.points)}!"
+                                } else {
+                                    "Latte pawed out a treat! You've earned today's coins, so this one's for fun."
+                                }
+                                ) + GamesParsers.prizeLine(res.prize)
                         }
                         is PlayMiniGameResult.Failure -> statusMessage = res.message
                         else -> Unit

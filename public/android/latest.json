@@ -1,9 +1,9 @@
 {
-  "versionCode": 6,
-  "versionName": "1.0.3",
-  "url": "/android/brew-ni-cat-connect-1.0.3.apk",
-  "sha256": "076ac1bc0912393f9100a6e13fea46df5ed28538f4a2a330982e0df80082b15d",
-  "size": 2725388,
+  "versionCode": 7,
+  "versionName": "1.0.4",
+  "url": "/android/brew-ni-cat-connect-1.0.4.apk",
+  "sha256": "1c26d73709549fa3d05ca7df52dc992ed79053eaa2c9ec263b9164e045670614",
+  "size": 2741772,
   "minAndroid": "8.0",
-  "notes": "Fixes sign-in and the menu, which 1.0.2 couldn't load. Includes Google profile photos."
+  "notes": "Points are now coins, and the games can be played any time. Adds the new home screen, won prizes and My codes."
 }

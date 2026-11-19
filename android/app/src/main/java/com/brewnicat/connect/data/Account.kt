@@ -119,7 +119,8 @@ data class LoyaltySettings(
 data class LoyaltyTransaction(
     val id: Long,
     val customerId: String,
-    val points: Int,
+    /** Coins, to 0.1 (FR-124). */
+    val points: Double,
     val reason: String,
     val orderId: String?,
     val orderReference: String?,
@@ -149,12 +150,12 @@ sealed interface RedeemResult {
         val code: String,
         val rewardName: String,
         val pointsSpent: Int,
-        val newBalance: Int,
+        val newBalance: Double,
     ) : RedeemResult
 
     data class Failure(
         val error: String,
-        val balance: Int? = null,
+        val balance: Double? = null,
         val required: Int? = null,
         val weeklyLimit: Int? = null,
         val redeemedThisWeek: Int? = null,
@@ -162,23 +163,19 @@ sealed interface RedeemResult {
 }
 
 object LoyaltyFormat {
-    fun pointsDelta(points: Int): String = when {
-        points > 0 -> "+$points"
-        points < 0 -> "\u2212${kotlin.math.abs(points)}"
-        else -> "0"
-    }
+    fun pointsDelta(points: Double): String = Coins.delta(points)
 
     fun reasonLabel(reason: String, note: String?): String = when (reason) {
         "order-completed" -> "Order completed"
         "reward-redeemed" -> note?.trim()?.takeIf { it.isNotEmpty() } ?: "Reward redeemed"
         "mini-game" -> note?.trim()?.takeIf { it.isNotEmpty() } ?: "Mini-game"
-        "adjustment" -> note?.trim()?.takeIf { it.isNotEmpty() } ?: "Points adjustment"
-        else -> "Points update"
+        "adjustment" -> note?.trim()?.takeIf { it.isNotEmpty() } ?: "Coins adjustment"
+        else -> "Coins update"
     }
 
     fun earningRule(currencyStep: Double, pointsPerStep: Int): String {
-        val label = if (pointsPerStep == 1) "point" else "points"
-        return "Earn $pointsPerStep $label for every ${Pricing.formatPeso(currencyStep)} spent on completed orders."
+        val label = if (pointsPerStep == 1) "coin" else "coins"
+        return "Earn $pointsPerStep $label for every ${Pricing.formatPeso(currencyStep)} spent on completed orders, counted to 0.1 of a coin."
     }
 
     fun weeklyLimitNote(weeklyLimit: Int): String {
@@ -193,9 +190,9 @@ object LoyaltyFormat {
             val need = failure.required
             val bal = failure.balance
             if (need != null && bal != null) {
-                "You need $need points for this reward, and your current balance is $bal."
+                "You need ${Coins.label(need.toDouble())} for this reward, and your current balance is ${Coins.label(bal)}."
             } else {
-                "You don't have enough points for this reward yet."
+                "You don't have enough coins for this reward yet."
             }
         }
         "unauthorized" -> "Your session expired. Please sign in again."
@@ -219,7 +216,7 @@ object LoyaltyFormat {
     }
 
     fun codeSourceLabel(code: RewardCode): String =
-        if (code.source == "mini-game") "Won in a game" else "Redeemed with points"
+        if (code.source == "mini-game") "Won in a game" else "Redeemed with coins"
 
     fun formatDateTime(iso: String): String = runCatching {
         OffsetDateTime.parse(iso).atZoneSameInstant(ShopHours.MANILA).format(DATE_FMT)
@@ -408,7 +405,7 @@ object AccountParsers {
         LoyaltyTransaction(
             id = id,
             customerId = o.optString("customer_id"),
-            points = o.optInt("points", 0),
+            points = Coins.read(o, "points"),
             reason = o.optString("reason"),
             orderId = o.optString("order_id").takeIf { it.isNotBlank() && it != "null" },
             orderReference = orderRef,
@@ -435,12 +432,12 @@ object AccountParsers {
                 code = json.optString("code"),
                 rewardName = json.optString("rewardName"),
                 pointsSpent = json.optInt("pointsSpent", 0),
-                newBalance = json.optInt("newBalance", 0),
+                newBalance = Coins.read(json, "newBalance"),
             )
         }
         return RedeemResult.Failure(
             error = json.optString("error").ifBlank { "failed" },
-            balance = if (json.has("balance") && !json.isNull("balance")) json.optInt("balance") else null,
+            balance = Coins.readOrNull(json, "balance"),
             required = if (json.has("required") && !json.isNull("required")) json.optInt("required") else null,
             weeklyLimit = if (json.has("weeklyLimit") && !json.isNull("weeklyLimit")) json.optInt("weeklyLimit") else null,
             redeemedThisWeek = if (json.has("redeemedThisWeek") && !json.isNull("redeemedThisWeek")) json.optInt("redeemedThisWeek") else null,

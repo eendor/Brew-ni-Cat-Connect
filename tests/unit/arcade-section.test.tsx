@@ -12,7 +12,7 @@ describe("Arcade section (FR-123)", () => {
     window.localStorage.setItem("bnc-arcade-best-memory", "14");
     render(<ArcadeSection />);
     expect(
-      screen.getByText("Free play, no points. Beat your own best!"),
+      screen.getByText("Free play, no coins. Beat your own best!"),
     ).toBeInTheDocument();
     for (const name of [
       "Treat Catcher",
