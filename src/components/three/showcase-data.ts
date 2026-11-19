@@ -18,7 +18,8 @@ export type ShowcaseItem = Readonly<{
   menuNames: readonly string[];
   /** Rim-light color for the studio set while this item is on stage. */
   glow: string;
-  photo: string;
+  /** The shop's photo, or null while the item has none (an icon shows instead). */
+  photo: string | null;
   alt: string;
 }>;
 
@@ -56,8 +57,8 @@ export const showcaseItems: readonly ShowcaseItem[] = [
     nickname: "Cat Claws",
     menuNames: ["fries", "cat claws"],
     glow: "#FFD93B",
-    photo: "/images/menu/items/fries-cat-claws.jpg",
-    alt: "Fries served in a wire cone in front of the Brew ni Cat logo wall",
+    photo: null,
+    alt: "Fries (Cat Claws)",
   },
   {
     id: "buldak",

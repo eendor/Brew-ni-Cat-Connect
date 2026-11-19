@@ -70,6 +70,8 @@ fun Page(
     onBack: (() -> Unit)? = null,
     largeTitle: Boolean = true,
     trailing: (@Composable RowScope.() -> Unit)? = null,
+    /** Drawn just left of the large title, such as the shop's logo. */
+    titleLeading: (@Composable () -> Unit)? = null,
     pinned: (@Composable () -> Unit)? = null,
     bottomBar: (@Composable ColumnScope.() -> Unit)? = null,
     state: LazyListState = rememberLazyListState(),
@@ -115,10 +117,14 @@ fun Page(
                 // Always exactly one leading item, so callers can count on their own items starting at index 1.
                 item(key = "page-title") {
                     Column {
-                        Text(
-                            title, style = KitType.largeTitle, color = c.label,
-                            modifier = Modifier.onSizeChanged { titlePx = it.height }.padding(start = Gutter + 4.dp, end = Gutter, top = 4.dp, bottom = 6.dp).semantics { heading() },
-                        )
+                        Row(
+                            Modifier.onSizeChanged { titlePx = it.height }.padding(start = Gutter + 4.dp, end = Gutter, top = 4.dp, bottom = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        ) {
+                            titleLeading?.invoke()
+                            Text(title, style = KitType.largeTitle, color = c.label, modifier = Modifier.semantics { heading() })
+                        }
                         if (pinned != null) Spacer(Modifier.height(pinnedHeight))
                     }
                 }

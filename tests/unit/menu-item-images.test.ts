@@ -24,9 +24,8 @@ describe("getMenuItemImage", () => {
     expect(getMenuItemImage("Buldak Cheese")?.src).toBe(
       "/images/menu/items/buldak-cheese.jpg",
     );
-    expect(getMenuItemImage("Fries (Cat Claws)")?.src).toBe(
-      "/images/menu/items/fries-cat-claws.jpg",
-    );
+    // The old fries photo also showed a drink, so fries has no photo for now.
+    expect(getMenuItemImage("Fries (Cat Claws)")).toBeNull();
     expect(getMenuItemImage("Cat-Feine (Classic Coffee)")?.src).toBe(
       "/images/menu/items/cat-feine-iced-latte.jpg",
     );
@@ -35,6 +34,9 @@ describe("getMenuItemImage", () => {
     );
     expect(getMenuItemImage("Oreo (The Tuxedo Cat)")?.src).toBe(
       "/images/menu/items/vanilla-oreo-whisker.jpg",
+    );
+    expect(getMenuItemImage("Soda (Fizzy Felines)")?.src).toBe(
+      "/images/menu/items/blueberry-bite-soda.jpg",
     );
   });
 
@@ -52,7 +54,6 @@ describe("getMenuItemImage", () => {
       "Sedaap Original",
       "Sedaap Spicy Chicken",
       "Nachos",
-      "Soda",
       "Cat Association",
       "Couple of Cats",
       "Single-Paw-rtner Combos",
@@ -82,7 +83,20 @@ describe("getMenuFlavorImage", () => {
     expect(
       getMenuFlavorImage("Oreo (The Tuxedo Cat)", "Vanilla Oreo Whisker")?.src,
     ).toBe("/images/menu/items/vanilla-oreo-whisker.jpg");
-    expect(new Set(menuFlavorImageSources).size).toBe(4);
+    expect(
+      getMenuFlavorImage("Oreo (The Tuxedo Cat)", "Caramel Oreo Kitten")?.src,
+    ).toBe("/images/menu/items/caramel-oreo-kitten.jpg");
+    expect(
+      getMenuFlavorImage("Cat-Feine (Classic Coffee)", "Siamese Latte")?.src,
+    ).toBe("/images/menu/items/siamese-latte.jpg");
+    const soda = "Soda (Fizzy Felines)";
+    expect(getMenuFlavorImage(soda, "Blueberry Bite")?.src).toBe(
+      "/images/menu/items/blueberry-bite-soda.jpg",
+    );
+    expect(getMenuFlavorImage(soda, "Passion Fruit Purr")?.src).toBe(
+      "/images/menu/items/passion-fruit-purr-soda.jpg",
+    );
+    expect(new Set(menuFlavorImageSources).size).toBe(8);
     for (const src of [...menuItemImageSources, ...menuFlavorImageSources]) {
       expect(existsSync(path.join(process.cwd(), "public", src))).toBe(true);
     }
@@ -100,6 +114,9 @@ describe("getMenuFlavorImage", () => {
     ).toBeNull();
     expect(
       getMenuFlavorImage("Cat-Feine (Classic Coffee)", "Dirty Neko"),
+    ).toBeNull();
+    expect(
+      getMenuFlavorImage("Soda (Fizzy Felines)", "Grumpy Grapes"),
     ).toBeNull();
     expect(getMenuFlavorImage("Matcha", null)).toBeNull();
     expect(getMenuFlavorImage("Matcha", "")).toBeNull();

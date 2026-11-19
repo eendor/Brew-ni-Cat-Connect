@@ -36,6 +36,14 @@ object HomeRows {
     }
 
     /** The label on the coins chip at the top of the home screen (FR-124). */
+    /** The short text in the coins pill at the top of Home: "25", "2.5", or "Earn" when signed out. */
+    fun coinsPill(signedIn: Boolean, balance: Double?): String = when {
+        !signedIn -> "Earn"
+        balance == null -> "Coins"
+        else -> Coins.amount(balance)
+    }
+
+    /** What a screen reader says for the coins pill. */
     fun pointsLabel(signedIn: Boolean, balance: Double?): String = when {
         !signedIn -> "Sign in to earn coins"
         balance == null -> "Your coins"

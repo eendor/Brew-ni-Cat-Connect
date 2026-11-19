@@ -74,7 +74,7 @@ fun OrdersScreen(vm: AppViewModel) {
             item(key = "empty") {
                 EmptyState(
                     KitIcons.ReceiptText, "No orders yet", "Orders you place in the app show up here so you can follow them.",
-                    Modifier.fillParentMaxHeight(0.7f), "Browse the menu", { vm.selectTab(Screen.Menu) },
+                    Modifier.fillParentMaxHeight(0.7f), "Browse the menu", { vm.showMenu() },
                 )
             }
             return@Page

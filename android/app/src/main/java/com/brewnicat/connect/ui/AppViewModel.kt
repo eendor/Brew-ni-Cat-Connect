@@ -60,7 +60,6 @@ sealed interface Loadable<out T> {
 /** Where the customer is. Tabs sit at the bottom; the rest open over them. */
 sealed interface Screen {
     data object Home : Screen
-    data object Menu : Screen
     data object Orders : Screen
     data object Account : Screen
     data object Visit : Screen
@@ -74,6 +73,8 @@ sealed interface Screen {
     data object LoyaltyHistory : Screen
     data object Reviews : Screen
     data object DataRequests : Screen
+    data object About : Screen
+    data object Gallery : Screen
 }
 
 class AppViewModel(app: Application) : AndroidViewModel(app) {
@@ -88,6 +89,10 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     val current: Screen get() = stack.last()
 
     fun selectTab(tab: Screen) { stack.clear(); stack.add(tab) }
+
+    /** The menu lives on Home: go Home and scroll down to it. */
+    var menuScrollRequest by androidx.compose.runtime.mutableIntStateOf(0); private set
+    fun showMenu() { selectTab(Screen.Home); menuScrollRequest++ }
     fun open(screen: Screen) { if (stack.last() != screen) stack.add(screen) }
     fun back(): Boolean = if (stack.size > 1) { stack.removeAt(stack.lastIndex); true } else if (stack.last() != Screen.Home) { selectTab(Screen.Home); true } else false
 
@@ -95,6 +100,21 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     var menu by mutableStateOf<Loadable<MenuCatalog>>(Loadable.Loading); private set
     var hours by mutableStateOf<ShopHours?>(null); private set
     var cartNotice by mutableStateOf<String?>(null)
+
+    // About and Gallery, from the website's site_content rows
+    var sitePages by mutableStateOf<Loadable<com.brewnicat.connect.data.SitePages>>(Loadable.Loading); private set
+
+    fun loadSitePages() {
+        if (!api.isConfigured) { sitePages = Loadable.Failed(NOT_CONFIGURED); return }
+        if (sitePages is Loadable.Ready) return
+        sitePages = Loadable.Loading
+        viewModelScope.launch {
+            sitePages = runCatching { api.fetchSitePages() }.fold(
+                { Loadable.Ready(it) },
+                { Loadable.Failed("We couldn't load this page. Check your connection and try again.") },
+            )
+        }
+    }
 
     fun loadMenu() {
         if (!api.isConfigured) { menu = Loadable.Failed(NOT_CONFIGURED); return }
