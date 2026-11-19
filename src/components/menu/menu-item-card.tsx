@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import { StarIcon } from "@/components/reviews/star-rating";
 import { useAuth } from "@/context/auth-context";
 import { useCart } from "@/context/cart-context";
 import { getItemQuantityInCart } from "@/lib/ordering/cart-selectors";
@@ -11,6 +12,7 @@ import {
   getItemPrices,
   getLowestItemPrice,
 } from "@/lib/menu/format-price";
+import type { ItemRatingSummary } from "@/lib/menu/item-ratings";
 import type { MenuCatalog, MenuItem, MenuVariant } from "@/types/menu";
 
 import { FavoriteButton } from "./favorite-button";
@@ -21,6 +23,7 @@ type MenuItemCardProps = Readonly<{
   item: MenuItem;
   catalog?: MenuCatalog;
   categoryName?: string;
+  rating?: ItemRatingSummary;
 }>;
 
 /** "Fries (Cat Claws)" → name "Fries", nickname "Cat Claws". */
@@ -52,6 +55,7 @@ export function MenuItemCard({
   item,
   catalog,
   categoryName = "",
+  rating,
 }: MenuItemCardProps) {
   const [isOrderOpen, setIsOrderOpen] = useState(false);
   const { user } = useAuth();
@@ -105,6 +109,25 @@ export function MenuItemCard({
             </p>
           ) : null}
         </div>
+
+        {rating ? (
+          <p className="menu-card__rating">
+            <StarIcon filled className="size-4 text-amber-500" />
+            <span
+              aria-hidden="true"
+              className="font-semibold text-[var(--text-strong)] tabular-nums"
+            >
+              {rating.average.toFixed(1)}
+            </span>
+            <span aria-hidden="true" className="text-[var(--text-muted)]">
+              ({rating.count})
+            </span>
+            <span className="sr-only">
+              Rated {rating.average.toFixed(1)} out of 5 by {rating.count}{" "}
+              {rating.count === 1 ? "customer" : "customers"}
+            </span>
+          </p>
+        ) : null}
 
         {item.availability !== "available" ? (
           <p className="menu-card__status">

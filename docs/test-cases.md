@@ -1830,3 +1830,19 @@ FR-120. `/terms`, with the same section layout as the Privacy Policy.
 | --------- | ----------- | ---- | --------------- | ------ |
 | TC-P9-086 | FR-120      | Unit: render `TermsPage` with the fallback content | The "Terms of Use" heading; a `<time datetime="2026-11-19">` reading "November 19, 2026"; eight sections with ids and headings; links to `/privacy` and `/account/rewards` | Passed (automated) |
 | TC-P9-087 | FR-120      | Unit: render `SiteFooter` | A "Terms of Use" link to `/terms` with a 44 px tap target, next to "Privacy Policy" | Passed (automated) |
+
+## 68. Ratings For Each Menu Item (2026-11-19)
+
+FR-121. Migration `20261119120000_item_ratings.sql` (not applied live yet).
+
+| ID         | Requirement | Case | Expected result | Status |
+| ---------- | ----------- | ---- | --------------- | ------ |
+| TC-P9-088  | FR-121      | PGlite: a customer rates an item from a completed order 4, then 5; another customer rates it 2; a guest reads the summary | Both saves succeed and the second replaces the first; the summary is one row, average 3.5 from 2 ratings | Passed (automated) |
+| TC-P9-089  | FR-121      | PGlite: a guest rates; 0 and 6 stars; an item never ordered; an item in an order still preparing; tuna bites in Cat Treats, the take-out box, bottled water and an unknown item from a completed order | The guest is refused by the grants; `invalid_rating`, `not_ordered` twice, then `not_rateable` for the last four | Passed (automated) |
+| TC-P9-090  | FR-121      | PGlite: a customer and a guest read `item_ratings`; the customer inserts, updates and deletes directly | The customer sees only their own row; the guest can't read it; all three writes are refused | Passed (automated) |
+| TC-P9-091  | FR-121      | PGlite: apply the rollback, then the migration again | The table and functions are gone, then back | Passed (automated) |
+| TC-P9-092  | FR-121      | Unit: the ratings service reads the summary, saves a rating, gets `not_rateable`, `not_ordered` and a network error, and reads the customer's own ratings | Averages by item (empty rows skipped); `rate_item` gets the item and stars; a clear message for each refusal; own ratings read by `customer_id` | Passed (automated) |
+| TC-P9-093  | FR-121      | Unit: the menu with one rated item, then with ratings failing to load | "Rated 4.5 out of 5 by 12 customers" on that item only; the menu still shows, with no stars | Passed (automated) |
+| TC-P9-094  | FR-121      | Unit: order history with a completed order (latte, mocha, take-out box, bottled water, tuna bites) and an order still preparing; tap 4 stars on the latte | Stars only for the latte and mocha in the completed order; the mocha shows the customer's earlier 3; the latte saves 4 and shows it | Passed (automated) |
+| TC-P9-095  | FR-121      | Unit: a rating the server refuses | An alert with the message; the stars stay unchanged | Passed (automated) |
+| MAN-P9-008 | FR-121      | After the migration is applied live: rate an item from a completed order on the website, then open the menu signed out | The stars save; the menu shows the item's average and count; no stars on the take-out box, bottled water or cat treats | Not run |

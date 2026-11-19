@@ -1,7 +1,7 @@
 # Development Log
 
 **Document version:** 0.1 Draft\
-**Last updated:** 2026-11-18
+**Last updated:** 2026-11-19
 
 This log records completed work and observed evidence. Planned work is explicitly identified and is not reported as implemented or tested.
 
@@ -2203,3 +2203,15 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Update (same day):** The shop owner approved the wording and left the license to me. I kept the proprietary, all-rights-reserved terms with the copyright held by the project contributors, removed the "Interim" label and the TODO from `LICENSE`, and marked ADR-005 final (`LICENSE`, `README.md`, `docs/decisions.md`).
 - **Known limitations:** The Android app has no link to the terms yet.
 - **Next action:** Merge.
+
+---
+
+## 2026-11-19 — Ratings for each menu item
+
+- **Phase:** Phase 9 (FR-121, new).
+- **Task:** Trello "Ratings for each menu item". The take-out box, bottled water and cat treats must never be rateable.
+- **Summary:** I added `public.item_ratings` with one rating per customer per item, saved only through `public.rate_item`. It accepts 1 to 5 stars only for an item in one of the customer's completed online orders, and refuses the take-out box, bottled water and anything in or named Cat Treats with the same name rule the website menu already uses to hide them. `public.item_rating_summary()` gives everyone each item's average and count without who rated. The menu cards show a star, the average and the count when an item has ratings; if ratings fail to load, the menu shows without them. In order history, each item of a completed order that is on the website menu gets five star buttons that save on tap and show the customer's earlier rating. The page offers stars only for items on the website menu, so the shop-only items never get them, and the database refuses them anyway.
+- **Files:** `supabase/{migrations,rollbacks}/20261119120000_item_ratings.sql`, `src/lib/menu/item-ratings.ts`, `src/components/account/{item-rating-control,order-history-view}.tsx`, `src/components/menu/{menu-catalog,menu-item-card}.tsx`, `src/app/globals.css`, `tests/database/item-ratings.test.ts`, `tests/unit/item-ratings{,-service}.test.ts*`, `scripts/validate_phase0_docs.py`, `docs/{functional-requirements,test-cases,database-design,development-log}.md`.
+- **Testing:** TC-P9-088 to TC-P9-095 (new); all 98 unit test files (961 tests) and all 22 database test files (218 tests); `npm run typecheck`, `npm run lint`, `npx prettier --check .`, `npm run build`, `python3 -I scripts/validate_phase0_docs.py`.
+- **Known limitations:** The migration is not applied live yet, so the live site shows no stars and rating answers with an error until it is. The Android app doesn't show or take item ratings yet. MAN-P9-008 is not run.
+

@@ -575,3 +575,15 @@ Migration `20261117120000_shop_rewards_and_codes.sql` (FR-088, FR-091, ADR-037).
 
 Migration `20261117130000_counter_active_today.sql` (FR-112 update). `public.shop_counter_active_today()` is security definer and granted to `anon` and `authenticated`. It returns true when `public.orders` has a sale that isn't voided since midnight in Manila. It reveals only that yes or no, not counts or totals. The Messenger assistant uses it to word "are you open?" carefully on days the staff close without the Closed today switch. Undo: `supabase/rollbacks/20261117130000_counter_active_today.sql` drops the function. TC-P9-065.
 
+## 22. Ratings For Each Menu Item (2026-11-19)
+
+Migration `20261119120000_item_ratings.sql` (FR-121). **Not applied to the live database yet.** Undo: `supabase/rollbacks/20261119120000_item_ratings.sql` drops the functions and the table.
+
+- Table `public.item_ratings`: `customer_id` uuid references `auth.users(id)` on delete cascade; `item_id` text references `public.items(id)` on delete cascade; `rating` smallint checked 1 to 5; `created_at` and `updated_at` (kept by `private.stamp_row`). Primary key `(customer_id, item_id)`, so one rating per customer per item.
+- RLS is on. A signed-in customer reads only their own rows; `authenticated` may select `customer_id, item_id, rating, updated_at` and nothing else. No one inserts, updates or deletes directly; `anon` has no access.
+- `private.is_shop_only_name(text)`: lower-cases the name and drops everything but letters, then matches `takeoutbox`, `cattreats` or `bottledwater`, the same rule as `isShopOnlyName` in `src/lib/menu/map-menu-catalog.ts`.
+- `private.is_rateable_item(text)`: the item exists and neither its name nor its category's name is shop-only.
+- `public.rate_item(p_item_id text, p_rating integer)` returns jsonb, security definer with `set search_path = ''`, granted to `authenticated` only. It answers `{ok: false, error}` with `unauthorized`, `invalid_rating`, `not_rateable`, or `not_ordered` when the customer has no completed online order containing the item; otherwise it inserts or replaces the rating and answers `{ok: true}`.
+- `public.item_rating_summary()` returns `item_id`, `average` (numeric, one decimal) and `rating_count`, security definer, granted to `anon` and `authenticated`. It never returns who rated.
+- Tests: TC-P9-088 to TC-P9-091 (`tests/database/item-ratings.test.ts`).
+

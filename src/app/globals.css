@@ -1873,6 +1873,14 @@ textarea:focus-visible {
   line-height: 1.2;
 }
 
+.menu-card__rating {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+}
+
 .menu-card__status {
   display: inline-flex;
   align-self: flex-start;

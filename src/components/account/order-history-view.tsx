@@ -3,11 +3,13 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { ItemRatingControl } from "@/components/account/item-rating-control";
 import { Container } from "@/components/ui/container";
 import { useAuth } from "@/context/auth-context";
 import { useCart } from "@/context/cart-context";
 import { fetchPublicMenu } from "@/lib/menu/fetch-public-menu";
 import { formatPrice } from "@/lib/menu/format-price";
+import { fetchMyItemRatings, rateItem } from "@/lib/menu/item-ratings";
 import {
   fetchCustomerOrders,
   type CustomerOrderHistoryEntry,
@@ -67,6 +69,53 @@ export function OrderHistoryView({ initialPage = 1 }: OrderHistoryViewProps) {
     null,
   );
   const [reorderError, setReorderError] = useState<string | null>(null);
+
+  // The customer's own item ratings (FR-121), by item ID
+  const [myRatings, setMyRatings] = useState<ReadonlyMap<string, number>>(
+    () => new Map(),
+  );
+  const [ratingItemId, setRatingItemId] = useState<string | null>(null);
+  const [ratingError, setRatingError] = useState<string | null>(null);
+
+  // Items on the website menu can be rated; it already leaves out the
+  // shop-only take-out box, bottled water and cat treats
+  const [rateableIds, setRateableIds] = useState<ReadonlySet<string>>(
+    () => new Set(),
+  );
+
+  useEffect(() => {
+    if (isAuthLoading || !user) return;
+    let active = true;
+    Promise.all([fetchMyItemRatings(user.id), fetchPublicMenu()])
+      .then(([ratings, catalog]) => {
+        if (!active) return;
+        setMyRatings(ratings);
+        setRateableIds(
+          new Set(
+            catalog.categories.flatMap((category) =>
+              category.items.map((item) => item.id),
+            ),
+          ),
+        );
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, [user, isAuthLoading]);
+
+  const handleRate = async (itemId: string, rating: number) => {
+    if (ratingItemId !== null) return;
+    setRatingItemId(itemId);
+    setRatingError(null);
+    const result = await rateItem(itemId, rating);
+    if (result.ok) {
+      setMyRatings((current) => new Map(current).set(itemId, rating));
+    } else {
+      setRatingError(result.message);
+    }
+    setRatingItemId(null);
+  };
 
   const handleRetry = () => {
     if (!user) return;
@@ -248,6 +297,14 @@ export function OrderHistoryView({ initialPage = 1 }: OrderHistoryViewProps) {
         </div>
       )}
 
+      {ratingError ? (
+        <p
+          role="alert"
+          className="mb-4 rounded-xl border border-[var(--danger)] bg-[var(--danger-soft)] px-4 py-3 text-sm text-[var(--danger)]"
+        >
+          {ratingError}
+        </p>
+      ) : null}
       {reorderError && (
         <div
           role="region"
@@ -347,22 +404,32 @@ export function OrderHistoryView({ initialPage = 1 }: OrderHistoryViewProps) {
                   <section className="text-sm">
                     <ul className="divide-y divide-[var(--separator)]">
                       {order.items.map((item, idx) => (
-                        <li
-                          key={idx}
-                          className="py-2 flex items-center justify-between gap-2"
-                        >
-                          <div>
-                            <span className="font-medium text-[var(--text-strong)]">
-                              {item.quantity}x {item.itemName}
-                            </span>
-                            <span className="text-xs text-[var(--text-muted)] ml-2">
-                              ({item.variantName}
-                              {item.flavor ? ` • ${item.flavor}` : ""})
+                        <li key={idx} className="py-2">
+                          <div className="flex items-center justify-between gap-2">
+                            <div>
+                              <span className="font-medium text-[var(--text-strong)]">
+                                {item.quantity}x {item.itemName}
+                              </span>
+                              <span className="text-xs text-[var(--text-muted)] ml-2">
+                                ({item.variantName}
+                                {item.flavor ? ` • ${item.flavor}` : ""})
+                              </span>
+                            </div>
+                            <span className="text-xs text-[var(--text-muted)] font-mono">
+                              {formatPrice(item.lineTotal)}
                             </span>
                           </div>
-                          <span className="text-xs text-[var(--text-muted)] font-mono">
-                            {formatPrice(item.lineTotal)}
-                          </span>
+                          {order.status === "completed" &&
+                          rateableIds.has(item.itemId) ? (
+                            <ItemRatingControl
+                              itemName={item.itemName}
+                              value={myRatings.get(item.itemId) ?? 0}
+                              disabled={ratingItemId !== null}
+                              onRate={(rating) =>
+                                void handleRate(item.itemId, rating)
+                              }
+                            />
+                          ) : null}
                         </li>
                       ))}
                     </ul>
