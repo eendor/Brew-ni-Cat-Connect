@@ -7,6 +7,7 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import { roundCoins } from "@/lib/loyalty/format";
 import { getAuthSupabaseClient } from "@/lib/supabase/auth-client";
 import type {
   LoyaltyProgramSettings,
@@ -34,7 +35,7 @@ type RawTransactionRow = {
 };
 
 /**
- * Calculates current points balance for a customer.
+ * Calculates the customer's coin balance, to 0.1 of a coin.
  */
 export async function fetchLoyaltyBalance({
   userId,
@@ -51,7 +52,9 @@ export async function fetchLoyaltyBalance({
     throw new Error(`Failed to load loyalty balance: ${error.message}`);
   }
 
-  return (data ?? []).reduce((sum, row) => sum + (Number(row.points) || 0), 0);
+  return roundCoins(
+    (data ?? []).reduce((sum, row) => sum + (Number(row.points) || 0), 0),
+  );
 }
 
 /**

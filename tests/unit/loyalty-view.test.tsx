@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -148,21 +148,23 @@ describe("RewardsView component", () => {
     expect(screen.getByTestId("loyalty-loading")).toBeInTheDocument();
   });
 
-  it("displays current points balance and program rules in plain words", async () => {
+  it("displays current coin balance and program rules in plain words", async () => {
     render(<RewardsView />);
     await waitFor(() => {
       expect(screen.getByTestId("loyalty-balance")).toHaveTextContent("60");
     });
 
     expect(
-      screen.getByText("Earn 1 point for every ₱50 spent on completed orders."),
+      screen.getByText(
+        "Earn 1 coin for every ₱50 spent on completed orders, counted to 0.1 of a coin.",
+      ),
     ).toBeInTheDocument();
     expect(
       screen.getByText("Redeem up to 2 rewards per week."),
     ).toBeInTheDocument();
   });
 
-  it("displays rewards with enough and not enough points indicators", async () => {
+  it("displays rewards with enough and not enough coins indicators", async () => {
     // Balance is 60:
     // Spanish latte (50 pts) -> balance is enough
     // Takoyaki cheese (4 pcs) (70 pts) -> need 10 more pts
@@ -173,8 +175,8 @@ describe("RewardsView component", () => {
     });
 
     expect(screen.getAllByText("Balance is enough").length).toBeGreaterThan(0);
-    expect(screen.getByText("Need 10 more pts")).toBeInTheDocument();
-    expect(screen.getByText("Need 40 more pts")).toBeInTheDocument();
+    expect(screen.getByText("Need 10 more coins")).toBeInTheDocument();
+    expect(screen.getByText("Need 40 more coins")).toBeInTheDocument();
 
     const latteCard = screen.getByTestId("reward-card-reward-spanish-latte");
     const buldakCard = screen.getByTestId(
@@ -189,13 +191,13 @@ describe("RewardsView component", () => {
     ).toBeDisabled();
   });
 
-  it("links to the points history page and does not list history rows (added 2026-11-13)", async () => {
+  it("links to the coins history page and does not list history rows (added 2026-11-13)", async () => {
     render(<RewardsView />);
     await waitFor(() => {
       expect(screen.getByTestId("loyalty-balance")).toHaveTextContent("60");
     });
     expect(
-      screen.getByRole("link", { name: "See points history →" }),
+      screen.getByRole("link", { name: "See coins history →" }),
     ).toHaveAttribute("href", "/account/rewards/history");
     expect(screen.queryByTestId("history-row-1")).not.toBeInTheDocument();
     expect(fetchLoyaltyHistory).not.toHaveBeenCalled();
@@ -242,7 +244,9 @@ describe("RewardsView component", () => {
       screen.getByText(/Are you sure you want to redeem/i),
     ).toBeInTheDocument();
     expect(screen.getAllByText("Spanish latte").length).toBeGreaterThan(0);
-    expect(screen.getByText("50 points")).toBeInTheDocument();
+    expect(
+      within(screen.getByRole("dialog")).getByText("50 coins"),
+    ).toBeInTheDocument();
 
     const confirmBtn = screen.getByRole("button", { name: "Confirm Redeem" });
     await user.click(confirmBtn);
@@ -252,7 +256,7 @@ describe("RewardsView component", () => {
     });
 
     expect(screen.getByText("RWD-999888")).toBeInTheDocument();
-    expect(screen.getByText(/10 pts/i)).toBeInTheDocument(); // new balance
+    expect(screen.getByText(/10 coins/i)).toBeInTheDocument(); // new balance
 
     const closeBtn = screen.getByRole("button", { name: "Done" });
     await user.click(closeBtn);
@@ -284,11 +288,11 @@ describe("PointsHistoryView component", () => {
     const row1 = screen.getByTestId("history-row-1");
     expect(row1).toHaveTextContent("Order completed");
     expect(row1).toHaveTextContent("BNC-ABCDEF");
-    expect(row1).toHaveTextContent("+12 pts");
+    expect(row1).toHaveTextContent("+12 coins");
 
     const row2 = screen.getByTestId("history-row-2");
     expect(row2).toHaveTextContent("Redeemed: Spanish latte (RWD-123456)");
-    expect(row2).toHaveTextContent("−50 pts");
+    expect(row2).toHaveTextContent("−50 coins");
   });
 
   it("displays empty state when customer has no transactions", async () => {
@@ -297,11 +301,11 @@ describe("PointsHistoryView component", () => {
     render(<PointsHistoryView />);
 
     await waitFor(() => {
-      expect(screen.getByText("No Points Yet")).toBeInTheDocument();
+      expect(screen.getByText("No Coins Yet")).toBeInTheDocument();
     });
     expect(
       screen.getByText(
-        "No points yet. You earn points when an order is completed.",
+        "No coins yet. You earn coins when an order is completed.",
       ),
     ).toBeInTheDocument();
   });
@@ -310,11 +314,11 @@ describe("PointsHistoryView component", () => {
     render(<PointsHistoryView />);
     await waitFor(() => {
       expect(screen.getByTestId("history-balance")).toHaveTextContent(
-        "60 points",
+        "60 coins",
       );
     });
     expect(
-      screen.getByRole("heading", { level: 1, name: "Points History" }),
+      screen.getByRole("heading", { level: 1, name: "Coins History" }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: "← Back to Rewards" }),

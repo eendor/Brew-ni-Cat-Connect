@@ -8,7 +8,7 @@ import { Reveal } from "@/components/ui/reveal";
 const features = [
   ["Order ahead", "Pick from the full menu and pay when you pick it up."],
   ["Follow your order", "See when it's being made and when it's ready."],
-  ["Points and rewards", "Earn points, redeem rewards and keep your codes."],
+  ["Coins and rewards", "Earn coins, redeem rewards and keep your codes."],
   ["Games while you wait", "Play the cat arcade while your order is made."],
 ] as const;
 
@@ -37,8 +37,8 @@ export function AndroidAppSection() {
             Brew ni Cat on your phone
           </h2>
           <p className="mt-5 max-w-2xl text-lg leading-8 text-[var(--text-muted)]">
-            Order pickup, follow your order and collect points in the Brew ni
-            Cat app for Android.
+            Order pickup, follow your order and collect coins in the Brew ni Cat
+            app for Android.
           </p>
           <ul className="mt-8 grid gap-4 sm:grid-cols-2">
             {features.map(([title, text]) => (

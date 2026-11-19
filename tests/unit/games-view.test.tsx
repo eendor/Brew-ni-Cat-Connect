@@ -11,6 +11,7 @@ import {
   isMissingFunction,
   playErrorMessage,
   playMiniGame,
+  coinsLeftLabel,
   playsLeftLabel,
   pointsLabel,
 } from "@/lib/games/games";
@@ -73,7 +74,7 @@ beforeEach(() => {
 });
 
 describe("Cat games page (FR-089)", () => {
-  it("TC-P9-034 — Cat cups shows where the server hid Oreo and the points paid", async () => {
+  it("TC-P9-034 — Cat cups shows where the server hid Oreo and the coins paid", async () => {
     signIn("customer-1");
     vi.mocked(playMiniGame).mockResolvedValue({
       ok: true,
@@ -87,15 +88,15 @@ describe("Cat games page (FR-089)", () => {
     render(<GamesView />);
     const summary = await screen.findByTestId("games-summary");
     expect(summary).toHaveTextContent("3 plays left today");
-    expect(summary).toHaveTextContent("12 pts");
+    expect(summary).toHaveTextContent("12 coins");
 
     await userEvent.click(screen.getByRole("button", { name: "Cup 1" }));
     expect(playMiniGame).toHaveBeenCalledWith("cat-cups", 0);
     expect(
-      await screen.findByText("Oreo was under cup 3. +1 point for playing"),
+      await screen.findByText("Oreo was under cup 3. +1 coin for playing"),
     ).toBeInTheDocument();
     expect(summary).toHaveTextContent("2 plays left today");
-    expect(summary).toHaveTextContent("13 pts");
+    expect(summary).toHaveTextContent("13 coins");
     expect(screen.getByTestId("oreo-found")).toBeInTheDocument();
     // no second play from the same round
     expect(screen.getByRole("button", { name: "Cup 2" })).toBeDisabled();
@@ -129,13 +130,88 @@ describe("Cat games page (FR-089)", () => {
     );
     expect(playMiniGame).toHaveBeenCalledWith("lucky-paw", null);
     expect(
-      await screen.findByText("Latte pawed out 5 points!"),
+      await screen.findByText("Latte pawed out 5 coins!"),
     ).toBeInTheDocument();
     expect(screen.getByTestId("games-done")).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Shake the jar" }),
     ).toBeDisabled();
     expect(screen.getByRole("button", { name: "Cup 1" })).toBeDisabled();
+  });
+
+  it("TC-P9-103 — under the coins rules, plays never run out: the page shows coins left today and keeps the games on at the cap", async () => {
+    signIn("customer-1");
+    vi.mocked(fetchGameStatus).mockResolvedValue({
+      ...STATUS,
+      unlimited: true,
+      dailyCoins: 2,
+      coinsToday: 1.9,
+      coinsLeft: 0.1,
+      playsToday: 3,
+      playsLeft: 0,
+      prizes: [
+        {
+          id: "prize-cookie",
+          name: "Cookie",
+          description: "",
+          winChance: 20,
+          available: true,
+        },
+      ],
+    });
+    vi.mocked(fetchLoyaltyBalance).mockResolvedValue(12.4);
+    vi.mocked(playMiniGame).mockResolvedValue({
+      ok: true,
+      playId: 9,
+      game: "lucky-paw",
+      outcome: { treat: 0.2 },
+      points: 0.1,
+      playsLeft: 0,
+      coinsLeft: 0,
+      unlimited: true,
+      balance: 12.5,
+      prize: null,
+    });
+    render(<GamesView />);
+    const summary = await screen.findByTestId("games-summary");
+    expect(summary).toHaveTextContent("0.1 coins left today");
+    expect(summary).toHaveTextContent("12.4 coins");
+    expect(screen.queryByTestId("games-done")).not.toBeInTheDocument();
+    expect(
+      screen.getByText(/Your first 3 plays each day can also win/),
+    ).toBeInTheDocument();
+
+    // the treat was 0.2, but only 0.1 was left under the cap
+    await userEvent.click(
+      screen.getByRole("button", { name: "Shake the jar" }),
+    );
+    expect(
+      await screen.findByText("Latte pawed out 0.1 coins!"),
+    ).toBeInTheDocument();
+    expect(summary).toHaveTextContent("Today's coins earned");
+    expect(summary).toHaveTextContent("12.5 coins");
+
+    // past the cap, a play still works and says it's for fun
+    vi.mocked(playMiniGame).mockResolvedValue({
+      ok: true,
+      playId: 10,
+      game: "cat-cups",
+      outcome: { hiddenUnder: 0, won: true },
+      points: 0,
+      playsLeft: 0,
+      coinsLeft: 0,
+      unlimited: true,
+      balance: 12.5,
+      prize: null,
+    });
+    const cup = screen.getByRole("button", { name: "Cup 1" });
+    expect(cup).toBeEnabled();
+    await userEvent.click(cup);
+    expect(
+      await screen.findByText(
+        "You found Oreo! You've earned today's coins, so this one's for fun",
+      ),
+    ).toBeInTheDocument();
   });
 
   it("TC-P9-036 — a refused play says why and leaves the cups to pick again", async () => {
@@ -180,8 +256,11 @@ describe("Cat games page (FR-089)", () => {
   });
 
   it("TC-P9-039 — wording and missing-function detection", () => {
-    expect(pointsLabel(1)).toBe("1 point");
-    expect(pointsLabel(3)).toBe("3 points");
+    expect(pointsLabel(1)).toBe("1 coin");
+    expect(pointsLabel(3)).toBe("3 coins");
+    expect(pointsLabel(0.1 + 0.2)).toBe("0.3 coins");
+    expect(coinsLeftLabel(1.4)).toBe("1.4 coins left today");
+    expect(coinsLeftLabel(0)).toBe("Today's coins earned");
     expect(playsLeftLabel(1)).toBe("1 play left today");
     expect(playsLeftLabel(0)).toBe("No plays left today");
     expect(playErrorMessage("daily_limit_reached")).toMatch(/tomorrow/);

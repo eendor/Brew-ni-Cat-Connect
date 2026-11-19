@@ -11,6 +11,8 @@ import {
   fetchGameStatus,
   type GameId,
   type GameStatus,
+  canPlay,
+  coinsLeftLabel,
   GamesUnavailableError,
   playMiniGame,
   playsLeftLabel,
@@ -18,7 +20,11 @@ import {
   prizeChanceLabel,
   type WonPrize,
 } from "@/lib/games/games";
-import { formatLoyaltyDate } from "@/lib/loyalty/format";
+import {
+  formatCoins,
+  formatLoyaltyDate,
+  roundCoins,
+} from "@/lib/loyalty/format";
 import { fetchLoyaltyBalance } from "@/lib/loyalty/loyalty-client";
 
 import { ArcadeSection } from "./arcade-section";
@@ -46,11 +52,20 @@ type Load =
   | { state: "ready"; status: GameStatus; balance: number | null };
 
 /**
- * The mini-games page (FR-089, FR-090): two short games that earn loyalty
- * points, a few plays a day, and the site's only ad slot. Below them, the
+ * The mini-games page (FR-089, FR-090, FR-124): two short games that earn
+ * coins, up to 2 coins a day with no limit on plays, and the site's only ad
+ * slot. Only the first plays of the day can win a prize. Below them, the
  * free-play arcade (FR-123) works for everyone, signed in or not.
  */
 const noSubscribe = () => () => {};
+
+/** Coins left today under the coins rules; plays left on an older database. */
+function todayLabel(status: GameStatus): string {
+  if (status.unlimited && status.coinsLeft !== undefined) {
+    return coinsLeftLabel(status.coinsLeft);
+  }
+  return playsLeftLabel(status.playsLeft);
+}
 
 type GamesViewProps = Readonly<{
   /** Render compact game content for an order-page popup instead of the full page. */
@@ -103,7 +118,13 @@ export function GamesView({ embedded = false }: GamesViewProps = {}) {
             status: {
               ...current.status,
               playsLeft: result.playsLeft,
-              playsToday: current.status.dailyPlays - result.playsLeft,
+              playsToday: current.status.playsToday + 1,
+              coinsLeft: result.coinsLeft ?? current.status.coinsLeft,
+              coinsToday:
+                result.coinsLeft !== undefined &&
+                current.status.dailyCoins !== undefined
+                  ? roundCoins(current.status.dailyCoins - result.coinsLeft)
+                  : current.status.coinsToday,
             },
           };
         }
@@ -119,7 +140,7 @@ export function GamesView({ embedded = false }: GamesViewProps = {}) {
 
   const signedIn = Boolean(userId);
   const ready = load.state === "ready" ? load : null;
-  const outOfPlays = ready ? ready.status.playsLeft <= 0 : true;
+  const outOfPlays = ready ? !canPlay(ready.status) : true;
   const cannotPlay = !signedIn || outOfPlays;
   const waitingOrder = useSyncExternalStore(
     noSubscribe,
@@ -147,14 +168,15 @@ export function GamesView({ embedded = false }: GamesViewProps = {}) {
         <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
-              Play for points
+              Play for coins
             </p>
             <h1 className="font-display text-3xl font-bold tracking-tight text-[var(--text-strong)]">
               Cat games
             </h1>
             <p className="mt-2 max-w-prose text-sm text-[var(--text-muted)]">
-              Play with the café cats for loyalty points. Every play earns at
-              least one point, and you get a few plays each day.
+              Play with the café cats as often as you like. Each play earns 0.1
+              or 0.2 coins, up to 2 coins a day, and your first plays each day
+              can win a prize.
             </p>
           </div>
           {ready && signedIn ? (
@@ -165,14 +187,14 @@ export function GamesView({ embedded = false }: GamesViewProps = {}) {
               <div>
                 <p className="text-xs text-[var(--text-muted)]">Today</p>
                 <p className="font-semibold text-[var(--text-strong)]">
-                  {playsLeftLabel(ready.status.playsLeft)}
+                  {todayLabel(ready.status)}
                 </p>
               </div>
               {ready.balance !== null ? (
                 <div>
                   <p className="text-xs text-[var(--text-muted)]">Balance</p>
                   <p className="font-semibold text-[var(--text-strong)]">
-                    {ready.balance} pts
+                    {formatCoins(ready.balance)}
                   </p>
                 </div>
               ) : null}
@@ -185,11 +207,11 @@ export function GamesView({ embedded = false }: GamesViewProps = {}) {
           className="mb-4 flex items-center justify-between gap-4 rounded-[var(--shape-md)] bg-[var(--fill-secondary)] px-4 py-2.5 text-sm"
         >
           <span className="font-semibold text-[var(--text-strong)]">
-            {playsLeftLabel(ready.status.playsLeft)}
+            {todayLabel(ready.status)}
           </span>
           {ready.balance !== null ? (
             <span className="font-semibold text-[var(--text-strong)]">
-              {ready.balance} pts
+              {formatCoins(ready.balance)}
             </span>
           ) : null}
         </div>
@@ -214,7 +236,7 @@ export function GamesView({ embedded = false }: GamesViewProps = {}) {
             The cats are still setting up
           </h2>
           <p className="text-sm text-[var(--text-muted)]">
-            The games open soon. Your points from orders still count on the{" "}
+            The games open soon. Your coins from orders still count on the{" "}
             <Link
               href="/account/rewards"
               className="font-medium text-[var(--accent-solid)] hover:underline"
@@ -244,7 +266,7 @@ export function GamesView({ embedded = false }: GamesViewProps = {}) {
               >
                 Sign in
               </Link>{" "}
-              to play and keep your points.
+              to play and keep your coins.
             </p>
           ) : outOfPlays ? (
             <p
@@ -257,7 +279,7 @@ export function GamesView({ embedded = false }: GamesViewProps = {}) {
                 href="/account/rewards"
                 className="font-semibold text-[var(--accent-solid)] hover:underline"
               >
-                Spend your points
+                Spend your coins
               </Link>
             </p>
           ) : null}
@@ -302,8 +324,9 @@ export function GamesView({ embedded = false }: GamesViewProps = {}) {
                   {cups.name}
                 </h2>
                 <p className="mt-1 text-sm text-[var(--text-muted)]">
-                  {cups.description} The right cup earns {cups.winPoints}{" "}
-                  points; any other earns {cups.tryPoints}.
+                  {cups.description} The right cup earns{" "}
+                  {formatCoins(cups.winPoints ?? 0)}; any other earns{" "}
+                  {formatCoins(cups.tryPoints ?? 0)}.
                 </p>
                 <div className="mt-4">
                   <CatCups
@@ -326,7 +349,7 @@ export function GamesView({ embedded = false }: GamesViewProps = {}) {
                   {paw.name}
                 </h2>
                 <p className="mt-1 text-sm text-[var(--text-muted)]">
-                  {paw.description} Up to {paw.maxPoints} points.
+                  {paw.description} Up to {formatCoins(paw.maxPoints)}.
                 </p>
                 <div className="mt-4">
                   <LuckyPaw
@@ -347,7 +370,9 @@ export function GamesView({ embedded = false }: GamesViewProps = {}) {
                 Prizes you can win
               </h2>
               <p className="mt-1 text-xs text-[var(--text-muted)]">
-                Any play can also win one of these, on top of its points.
+                {ready.status.unlimited
+                  ? `Your first ${ready.status.dailyPlays} plays each day can also win one of these, on top of their coins.`
+                  : "Any play can also win one of these, on top of its points."}
               </p>
               <ul className="mt-3 space-y-2">
                 {(ready.status.prizes ?? []).map((prize) => (
@@ -377,10 +402,10 @@ export function GamesView({ embedded = false }: GamesViewProps = {}) {
             </section>
           ) : null}
           <p className="text-center text-xs text-[var(--text-muted)]">
-            The café decides every result fairly on its server. Points from
-            games show in your{" "}
+            The café decides every result fairly on its server. Coins from games
+            show in your{" "}
             <Link href="/account/rewards/history" className="underline">
-              points history
+              coins history
             </Link>
             .
           </p>

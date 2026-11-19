@@ -6,6 +6,7 @@
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import { formatCoins, roundCoins } from "@/lib/loyalty/format";
 import { getAuthSupabaseClient } from "@/lib/supabase/auth-client";
 
 export type GameId = "cat-cups" | "lucky-paw";
@@ -31,6 +32,16 @@ export type GamePrize = Readonly<{
 }>;
 
 export type GameStatus = Readonly<{
+  /**
+   * The coins rules (2026-11-19): plays never run out, and dailyPlays /
+   * playsLeft count only the plays that can still win a prize. Missing on a
+   * database without the coins migration, where playsLeft is the play limit.
+   */
+  unlimited?: boolean;
+  /** Coins games can earn per day, and how many are earned and left today. */
+  dailyCoins?: number;
+  coinsToday?: number;
+  coinsLeft?: number;
   dailyPlays: number;
   playsToday: number;
   playsLeft: number;
@@ -57,6 +68,9 @@ export type PlaySuccess = Readonly<{
   outcome: CatCupsOutcome | LuckyPawOutcome;
   points: number;
   playsLeft: number;
+  /** Coins games can still earn today; missing before the coins migration. */
+  coinsLeft?: number;
+  unlimited?: boolean;
   balance: number;
   /** A won prize, or null; missing before the prizes migration. */
   prize?: WonPrize | null;
@@ -123,7 +137,7 @@ export function playErrorMessage(error: PlayError): string {
     case "daily_limit_reached":
       return "That's all your plays for today. Come back tomorrow!";
     case "unauthorized":
-      return "Sign in to play for points.";
+      return "Sign in to play for coins.";
     case "unavailable":
       return "The games aren't open yet. Check back soon!";
     case "invalid_choice":
@@ -141,8 +155,20 @@ export function prizeChanceLabel(winChance: number): string {
   return `About 1 in ${oneIn} plays`;
 }
 
+/** "0.2 coins", "1 coin". */
 export function pointsLabel(points: number): string {
-  return `${points} ${points === 1 ? "point" : "points"}`;
+  return formatCoins(points);
+}
+
+/** Whether the customer can still play: always, under the coins rules. */
+export function canPlay(status: GameStatus): boolean {
+  return status.unlimited === true || status.playsLeft > 0;
+}
+
+/** "1.4 coins left today" or, at the cap, that the games are now just for fun. */
+export function coinsLeftLabel(coinsLeft: number): string {
+  if (roundCoins(coinsLeft) <= 0) return "Today's coins earned";
+  return `${formatCoins(coinsLeft)} left today`;
 }
 
 export function playsLeftLabel(left: number): string {

@@ -107,7 +107,11 @@ export function LuckyPaw({ disabled, reducedMotion, onPlay }: LuckyPawProps) {
     } else {
       const drawn = result.outcome as LuckyPawOutcome;
       setTreat(drawn.treat);
-      setMessage(`Latte pawed out ${pointsLabel(drawn.treat)}!`);
+      setMessage(
+        result.points > 0
+          ? `Latte pawed out ${pointsLabel(result.points)}!`
+          : "Latte pawed out a treat! You've earned today's coins, so this one's for fun.",
+      );
     }
     setBusy(false);
   };

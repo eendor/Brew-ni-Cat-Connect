@@ -149,7 +149,7 @@ describe("rewards the owner manages (FR-088)", () => {
     );
   });
 
-  it("TC-P9-062 — a redeemed code shows its use-by date; a reward that sells out meanwhile says no points were used", async () => {
+  it("TC-P9-062 — a redeemed code shows its use-by date; a reward that sells out meanwhile says no coins were used", async () => {
     vi.mocked(fetchLoyaltyRewards).mockResolvedValue([
       {
         id: "c",
@@ -174,7 +174,7 @@ describe("rewards the owner manages (FR-088)", () => {
       screen.getByRole("button", { name: "Confirm Redeem" }),
     );
     expect(await screen.findByRole("alert")).toHaveTextContent(
-      "just sold out. Your points weren't used.",
+      "just sold out. Your coins weren't used.",
     );
 
     vi.mocked(redeemReward).mockResolvedValueOnce({

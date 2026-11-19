@@ -7,15 +7,31 @@ import type {
 } from "./types";
 
 /**
- * Formats a point delta with an explicit leading sign:
+ * Coins keep one decimal place (decided 2026-11-19). Sums of 0.1s in
+ * JavaScript drift (0.1 + 0.2 = 0.30000000000000004), so every coin amount
+ * is rounded to 0.1 before it is shown or compared.
+ */
+export function roundCoins(coins: number): number {
+  return Math.round(coins * 10) / 10;
+}
+
+/** "1 coin", "2.5 coins", "0.1 coins". */
+export function formatCoins(coins: number): string {
+  const rounded = roundCoins(coins);
+  return `${rounded} ${rounded === 1 ? "coin" : "coins"}`;
+}
+
+/**
+ * Formats a coin delta with an explicit leading sign:
  * + for positive, − (minus sign) for negative.
  */
 export function formatPointsDelta(points: number): string {
-  if (points > 0) {
-    return `+${points}`;
+  const coins = roundCoins(points);
+  if (coins > 0) {
+    return `+${coins}`;
   }
-  if (points < 0) {
-    return `−${Math.abs(points)}`;
+  if (coins < 0) {
+    return `−${Math.abs(coins)}`;
   }
   return "0";
 }
@@ -35,9 +51,9 @@ export function formatReason(
     case "mini-game":
       return note && note.trim().length > 0 ? note.trim() : "Mini-game";
     case "adjustment":
-      return note && note.trim().length > 0 ? note.trim() : "Points adjustment";
+      return note && note.trim().length > 0 ? note.trim() : "Coins adjustment";
     default:
-      return "Points update";
+      return "Coins update";
   }
 }
 
@@ -57,14 +73,13 @@ export function formatLoyaltyDate(isoDate: string): string {
 }
 
 /**
- * Explains the points earning rule in plain words using formatPrice.
+ * Explains the coin earning rule in plain words using formatPrice.
  */
 export function formatEarningRule(
   currencyStep: number,
   pointsPerStep = 1,
 ): string {
-  const pointsLabel = pointsPerStep === 1 ? "point" : "points";
-  return `Earn ${pointsPerStep} ${pointsLabel} for every ${formatPrice(currencyStep)} spent on completed orders.`;
+  return `Earn ${formatCoins(pointsPerStep)} for every ${formatPrice(currencyStep)} spent on completed orders, counted to 0.1 of a coin.`;
 }
 
 /**
@@ -114,14 +129,14 @@ export function formatRedeemError(
     case "weekly_limit_reached":
       return `You have reached your weekly redemption limit (${details.weeklyLimit ?? 2} per week). Please try again next week.`;
     case "insufficient_points":
-      return `Insufficient points. You need ${details.required ?? "more"} points for this reward.`;
+      return `Not enough coins. You need ${details.required ?? "more"} coins for this reward.`;
     case "out_of_stock":
-      return "Sorry, this reward just sold out. Your points weren't used.";
+      return "Sorry, this reward just sold out. Your coins weren't used.";
     case "daily_limit_reached":
-      return "This reward is all claimed for today. Try again tomorrow. Your points weren't used.";
+      return "This reward is all claimed for today. Try again tomorrow. Your coins weren't used.";
     case "reward_inactive":
     case "reward_not_found":
-      return "This reward isn't available anymore. Your points weren't used.";
+      return "This reward isn't available anymore. Your coins weren't used.";
     default:
       return error || "Redemption could not be processed. Please try again.";
   }

@@ -8,7 +8,7 @@ const SECTIONS = [
   ["about-these-terms", "About these terms"],
   ["orders", "Orders and payment"],
   ["your-account", "Your account"],
-  ["points-and-rewards", "Points and rewards"],
+  ["points-and-rewards", "Coins and rewards"],
   ["games-and-ads", "Mini-games and ads"],
   ["reviews", "Reviews"],
   ["contact-us", "Contact us"],

@@ -41,7 +41,7 @@ async function balance(customer: string): Promise<number> {
   const outcome = await runAs<{ sum: number }>(
     db,
     signedIn(customer),
-    "select coalesce(sum(points), 0)::int as sum from public.loyalty_transactions",
+    "select coalesce(sum(points), 0)::float8 as sum from public.loyalty_transactions",
   );
   if (!outcome.ok) throw new Error(outcome.message);
   return outcome.rows[0]!.sum;
@@ -55,20 +55,21 @@ beforeAll(async () => {
 }, 60_000);
 
 describe("loyalty mini-games (FR-089)", () => {
-  it("TC-P9-028 — the server decides each result, records one play and one ledger row, and pays the points", async () => {
+  it("TC-P9-028 — the server decides each result, records one play and one ledger row, and pays the coins", async () => {
     const result = await play(CUSTOMER_A, "cat-cups", 1);
     expect(result.ok).toBe(true);
     const outcome = result.outcome as { hiddenUnder: number; won: boolean };
     expect([0, 1, 2]).toContain(outcome.hiddenUnder);
     expect(outcome.won).toBe(outcome.hiddenUnder === 1);
-    expect(result.points).toBe(outcome.won ? 3 : 1);
-    expect(result.playsLeft).toBe(2);
+    expect(result.points).toBe(outcome.won ? 0.2 : 0.1);
+    expect(result.unlimited).toBe(true);
+    expect(result.coinsLeft).toBeCloseTo(2 - Number(result.points));
     expect(result.balance).toBe(result.points);
 
     const plays = await runAs<{ game: string; points: number }>(
       db,
       signedIn(CUSTOMER_A),
-      "select game, points from public.game_plays",
+      "select game, points::float8 as points from public.game_plays",
     );
     if (!plays.ok) throw new Error(plays.message);
     expect(plays.rows).toEqual([{ game: "cat-cups", points: result.points }]);
@@ -91,26 +92,44 @@ describe("loyalty mini-games (FR-089)", () => {
 
     const paw = await play(CUSTOMER_A, "lucky-paw");
     expect(paw.ok).toBe(true);
-    expect([1, 2, 3, 5]).toContain(paw.points);
+    expect([0.1, 0.2]).toContain(paw.points);
     expect(paw.outcome).toEqual({ treat: paw.points });
-    expect(await balance(CUSTOMER_A)).toBe(
+    expect(await balance(CUSTOMER_A)).toBeCloseTo(
       Number(result.points) + Number(paw.points),
     );
   });
 
-  it("TC-P9-029 — three plays a day (Manila time), then refused with nothing recorded", async () => {
-    for (let i = 0; i < 3; i++) {
-      expect((await play(CUSTOMER_B, "lucky-paw")).ok).toBe(true);
+  it("TC-P9-029 — plays are unlimited, game coins stop at 2 a day (Manila time), and only the first 3 plays can win a prize", async () => {
+    // a prize every play would win, if it were drawn
+    await db.query(
+      `insert into public.shop_rewards (id, kind, name, win_chance)
+       values ('prize-test-cookie', 'prize', 'Test cookie', 1000)`,
+    );
+    const results: Answer[] = [];
+    for (let i = 0; i < 25; i++) {
+      const result = await play(CUSTOMER_B, "lucky-paw");
+      expect(result.ok).toBe(true);
+      results.push(result);
     }
-    const before = await balance(CUSTOMER_B);
-    const refused = await play(CUSTOMER_B, "cat-cups", 0);
-    expect(refused).toEqual({
-      ok: false,
-      error: "daily_limit_reached",
-      dailyPlays: 3,
-      playsLeft: 0,
-    });
-    expect(await balance(CUSTOMER_B)).toBe(before);
+    expect(results.map((r) => r.prize !== null)).toEqual(
+      results.map((_, i) => i < 3),
+    );
+    expect(results.map((r) => r.playsLeft).slice(0, 4)).toEqual([2, 1, 0, 0]);
+    const earned = results.reduce((sum, r) => sum + Number(r.points), 0);
+    expect(earned).toBeCloseTo(2);
+    expect(results.at(-1)).toMatchObject({ points: 0, coinsLeft: 0 });
+    expect(await balance(CUSTOMER_B)).toBeCloseTo(2);
+
+    // a play past the cap is recorded, with no ledger row
+    const counts = await runAs<{ plays: number; rows: number }>(
+      db,
+      signedIn(CUSTOMER_B),
+      `select (select count(*)::int from public.game_plays) as plays,
+              (select count(*)::int from public.loyalty_transactions) as rows`,
+    );
+    if (!counts.ok) throw new Error(counts.message);
+    expect(counts.rows[0]!.plays).toBe(25);
+    expect(counts.rows[0]!.rows).toBeLessThan(25);
 
     const status = await runAs<{ result: Answer }>(
       db,
@@ -119,8 +138,12 @@ describe("loyalty mini-games (FR-089)", () => {
     );
     if (!status.ok) throw new Error(status.message);
     expect(status.rows[0]!.result).toMatchObject({
+      unlimited: true,
+      dailyCoins: 2,
+      coinsToday: 2,
+      coinsLeft: 0,
       dailyPlays: 3,
-      playsToday: 3,
+      playsToday: 25,
       playsLeft: 0,
     });
 
@@ -135,7 +158,13 @@ describe("loyalty mini-games (FR-089)", () => {
     await db.exec(
       "alter table public.game_plays enable trigger game_plays_immutable",
     );
-    expect((await play(CUSTOMER_B, "lucky-paw")).playsLeft).toBe(2);
+    const fresh = await play(CUSTOMER_B, "lucky-paw");
+    expect(fresh.playsLeft).toBe(2);
+    expect(fresh.prize).not.toBeNull();
+    expect([0.1, 0.2]).toContain(fresh.points);
+    await db.query(
+      "delete from public.shop_rewards where id = 'prize-test-cookie'",
+    );
   });
 
   it("TC-P9-030 — bad games and choices are refused; guests can't play", async () => {
@@ -176,8 +205,8 @@ describe("loyalty mini-games (FR-089)", () => {
     };
     expect(result.playsLeft).toBe(3);
     expect(result.games.map((g) => [g.id, g.maxPoints])).toEqual([
-      ["cat-cups", 3],
-      ["lucky-paw", 5],
+      ["cat-cups", 0.2],
+      ["lucky-paw", 0.2],
     ]);
   });
 
