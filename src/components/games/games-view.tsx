@@ -21,6 +21,7 @@ import {
 import { formatLoyaltyDate } from "@/lib/loyalty/format";
 import { fetchLoyaltyBalance } from "@/lib/loyalty/loyalty-client";
 
+import { ArcadeSection } from "./arcade-section";
 import { CatCups } from "./cat-cups";
 import { CatSprite } from "./cat-sprite";
 import { LuckyPaw } from "./lucky-paw";
@@ -46,7 +47,8 @@ type Load =
 
 /**
  * The mini-games page (FR-089, FR-090): two short games that earn loyalty
- * points, a few plays a day, and the site's only ad slot.
+ * points, a few plays a day, and the site's only ad slot. Below them, the
+ * free-play arcade (FR-123) works for everyone, signed in or not.
  */
 const noSubscribe = () => () => {};
 
@@ -384,6 +386,8 @@ export function GamesView({ embedded = false }: GamesViewProps = {}) {
           </p>
         </div>
       )}
+
+      <ArcadeSection embedded={embedded} />
 
       {!embedded ? (
         <div className="mt-10">

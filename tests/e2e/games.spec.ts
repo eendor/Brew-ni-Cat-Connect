@@ -200,4 +200,66 @@ test.describe("Cat games", () => {
     );
     await capture(page, "games-coming-soon");
   });
+
+  test("TC-P9-102 — at 390 wide, a guest plays the free arcade games and a best score is kept", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await mockGames(page);
+    await page.goto("/games");
+    const arcade = page.getByTestId("arcade");
+    await arcade.scrollIntoViewIfNeeded();
+    for (const name of [
+      "Treat Catcher",
+      "Whack-a-Mouse",
+      "Cup Stack",
+      "Paw Says",
+      "Cat Match",
+    ]) {
+      await expect(arcade.getByText(name, { exact: true })).toBeVisible();
+    }
+    await capture(page, "arcade-list-phone");
+
+    await page.getByTestId("arcade-whack").click();
+    await page.getByRole("button", { name: "Start" }).click();
+    await expect(
+      page.getByRole("button", { name: /^(Hole|Mouse|Golden)/ }),
+    ).toHaveCount(9);
+    await expect(
+      page.getByRole("button", { name: /Mouse in hole/ }),
+    ).toBeVisible();
+    await page.getByRole("button", { name: "← All games" }).click();
+
+    await page.getByTestId("arcade-catch").click();
+    await page.getByRole("button", { name: "Start" }).click();
+    await page.getByTestId("catch-board").focus();
+    await page.keyboard.press("ArrowLeft");
+    await page.waitForTimeout(1500);
+    await capture(page, "arcade-catch-phone");
+    await page.getByRole("button", { name: "← All games" }).click();
+
+    // A real Cup Stack round: drop cups until one misses
+    await page.getByTestId("arcade-stack").click();
+    await page.getByRole("button", { name: "Start" }).click();
+    const board = page.getByTestId("stack-board");
+    await board.focus();
+    const result = page.getByTestId("arcade-result");
+    for (let i = 0; i < 60 && !(await result.isVisible()); i++) {
+      await page.keyboard.press("Space");
+      await page.waitForTimeout(170);
+    }
+    await expect(result).toBeVisible();
+    await capture(page, "arcade-stack-over-phone");
+    const best = await page.evaluate(() =>
+      window.localStorage.getItem("bnc-arcade-best-stack"),
+    );
+    await page.getByRole("button", { name: "← All games" }).click();
+    await expect(page.getByTestId("arcade-stack")).toHaveText(
+      best ? new RegExp(`Best ${best}`) : /Play/,
+    );
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - window.innerWidth,
+    );
+    expect(overflow).toBeLessThanOrEqual(0);
+  });
 });
