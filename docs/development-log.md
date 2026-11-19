@@ -2289,3 +2289,11 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Testing:** `./gradlew -q testDebugUnitTest lintDebug` with JDK 21 (passed, including TC-P9-105); `./gradlew -q testDebugUnitTest assembleRelease lintRelease` with the release key (passed); `apksigner verify --print-certs` shows the same certificate SHA-256 as the 1.0.3 APK, and `aapt2 dump badging` shows version code 7, 1.0.4; the release `BuildConfig` has the Supabase URL.
 - **Known limitations:** Not installed on a phone yet; the update check needs the merge. Spending coins at checkout and the POS are the next parts.
 - **Next action:** Run the website checks, apply the migration live, merge, and check the update on a phone.
+
+## 2026-11-19 — Coins applied to the live database, Android 1.0.4 released
+
+- **Task:** As the lead, apply `20261119130000_coins.sql` live and release the coins together with the website and Android 1.0.4.
+- **Summary:** I checked the live database first: the migration wasn't recorded, the ledger was `integer` with 15 rows totalling 25 points, and there were 15 game plays. I ran the migration once in a transaction that aborted itself. In that run the ledger and plays became `numeric(10,1)` and `numeric(4,1)`, the total stayed 25.0, and the game settings were 2 coins a day, 3 prize plays, cat cups 0.1/0.2 and lucky paw 0.1 or 0.2. A second look showed the live database unchanged. After CI passed on PR #185, I applied the migration in one transaction, recorded it in `supabase_migrations.schema_migrations` with its rollback, reloaded the PostgREST schema cache and merged #185.
+- **Testing:** live queries show the migration recorded and the 25.0 total. Through the public REST API as a guest, `mini_game_status` answered 200 with `unlimited: true`, `dailyCoins: 2` and `maxPoints` 0.2 for both games. The live site serves `latest.json` 1.0.4, the downloaded APK matches its SHA-256 (`1c26d737…0614`), and `/games` says "Free play, no coins".
+- **Known limitations:** The update on a phone from 1.0.3 is not checked yet. Spending coins at checkout and the POS (parts 3 and 4) are next.
+- **Next action:** Update the POS, then add spending coins at checkout.
