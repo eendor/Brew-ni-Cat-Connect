@@ -2190,3 +2190,16 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Testing:** `npx vitest run tests/unit/order-confirmation-page.test.tsx` 10 times in a row (11 of 11 passed each time); `eslint`, `prettier --check` and `tsc --noEmit`.
 - **Known limitations:** The failure was never reproduced locally, so the fix follows from reading the test, not from a failing run.
 - **Next action:** Watch CI on this PR and the next few.
+
+---
+
+## 2026-11-19 — Terms of Use page
+
+- **Phase:** Phase 9 (FR-120, new).
+- **Task:** Trello "Terms of use page and LICENSE owner". Privacy was covered; `/terms` was missing.
+- **Summary:** I added `/terms` with the same layout as the Privacy Policy and a "Terms of Use" link in the footer next to "Privacy Policy". It covers orders and payment, accounts, points and rewards, mini-games and ads, reviews, contact and changes. It states only what the site actually does: the website and app take no payments (cash or GCash at the shop), Place order checks prices against the current menu, rider delivery is arranged by the customer, and each reward or prize code works once and expires after 30 or 7 days. The points rule and weekly limit are owner settings, so the terms point to the rewards page instead of repeating numbers that can change. The section helpers moved from the privacy page to `src/components/legal/policy-parts.tsx` so both pages share them.
+- **Files:** `src/app/terms/page.tsx`, `src/config/terms.ts`, `src/components/legal/policy-parts.tsx`, `src/app/privacy/page.tsx`, `src/components/layout/site-footer.tsx`, `tests/unit/{terms-page,site-footer}.test.tsx`, `docs/{functional-requirements,test-cases,development-log}.md`, `scripts/validate_phase0_docs.py` (expects FR-120).
+- **Testing:** `npx vitest run tests/unit` (96 files, 957 tests passed, including TC-P9-086 and TC-P9-087); `tsc --noEmit`; `eslint` on the changed files; `prettier`; `python3 scripts/validate_phase0_docs.py`.
+- **Update (same day):** The shop owner approved the wording and left the license to me. I kept the proprietary, all-rights-reserved terms with the copyright held by the project contributors, removed the "Interim" label and the TODO from `LICENSE`, and marked ADR-005 final (`LICENSE`, `README.md`, `docs/decisions.md`).
+- **Known limitations:** The Android app has no link to the terms yet.
+- **Next action:** Merge.

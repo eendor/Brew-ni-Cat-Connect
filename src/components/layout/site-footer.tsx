@@ -18,6 +18,7 @@ import { InstallAppButton } from "@/components/pwa/install-app-button";
 import { JukeboxControl } from "@/components/sound/jukebox-control";
 import { PRIVACY_POLICY_PATH } from "@/config/privacy";
 import { siteConfig } from "@/config/site";
+import { TERMS_PATH } from "@/config/terms";
 import {
   emailHref,
   hoursNotice,
@@ -173,6 +174,12 @@ export function SiteFooter({ content }: SiteFooterProps) {
               className="inline-flex min-h-11 items-center rounded-sm underline-offset-4 transition-colors hover:text-[var(--footer-strong)] hover:underline"
             >
               Privacy Policy
+            </Link>
+            <Link
+              href={TERMS_PATH}
+              className="inline-flex min-h-11 items-center rounded-sm underline-offset-4 transition-colors hover:text-[var(--footer-strong)] hover:underline"
+            >
+              Terms of Use
             </Link>
           </div>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1">

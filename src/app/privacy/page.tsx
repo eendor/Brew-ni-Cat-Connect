@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import type { ReactNode } from "react";
 
 import { Container } from "@/components/ui/container";
+import { List, PolicySection, Term } from "@/components/legal/policy-parts";
 import { ExternalLink } from "@/components/ui/external-link";
 import { FacebookIcon, MailIcon, PhoneIcon } from "@/components/ui/icons";
 import { ScrollToHash } from "@/components/privacy/scroll-to-hash";
@@ -19,38 +19,6 @@ export const metadata: Metadata = {
 
 const contactLinkClass =
   "inline-flex min-h-11 items-center gap-2 rounded-sm font-semibold text-[var(--accent-solid)] underline-offset-4 hover:underline";
-
-function PolicySection({
-  id,
-  title,
-  children,
-}: Readonly<{ id: string; title: string; children: ReactNode }>) {
-  return (
-    <section id={id} aria-labelledby={`${id}-heading`} className="scroll-mt-28">
-      <h2
-        id={`${id}-heading`}
-        className="font-display text-3xl text-balance text-[var(--text-strong)] sm:text-4xl"
-      >
-        {title}
-      </h2>
-      <div className="mt-4 grid gap-4 text-base leading-7 text-[var(--text-muted)]">
-        {children}
-      </div>
-    </section>
-  );
-}
-
-function List({ children }: Readonly<{ children: ReactNode }>) {
-  return <ul className="grid list-disc gap-2 pl-5">{children}</ul>;
-}
-
-function Term({ children }: Readonly<{ children: ReactNode }>) {
-  return (
-    <strong className="font-semibold text-[var(--text-strong)]">
-      {children}
-    </strong>
-  );
-}
 
 export default async function PrivacyPage() {
   const { address, contact, social } = await getSiteContent();
