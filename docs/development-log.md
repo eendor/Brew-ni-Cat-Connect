@@ -1882,6 +1882,7 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Testing:** see the pull request.
 - **Branch / PR:** `fix/cat-parade`.
 - **Known limitations:** the cats are still built from three.js shapes, not drawn sprites.
+- **Phase 9:** with these checks, FR-088 to FR-091 are all implemented and checked on the live site, so I marked FR-088, FR-090 and FR-091 Implemented (FR-089 already was) and MAN-P9-001 superseded by MAN-P9-003. The owner left the prizes and limits to us. The Android app shows reward codes when redeeming but doesn't show won prizes or a My codes list; customers see those on the website.
 - **Next action:** none.
 
 ## 2026-11-13 — The parade cats are pixel art drawn in Aseprite
@@ -2170,6 +2171,16 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Files:** `src/components/three/engine/{runtime,renderer,post}.ts`, `src/components/three/scenes/{menu-hero,showcase,ambient}.ts`, `tests/unit/three-{frame-pacing,phone-tier}.test.ts*`, `docs/{decisions,test-cases,development-log}.md`.
 - **Testing:** TC-P4-278 and TC-P4-279 (new), TC-P4-186, TC-P4-190 and TC-P4-191 updated; all 955 unit tests; the 3D unit tests, `npm run typecheck`, `npm run lint`, `npm run build`; frame rates measured in Chromium on the laptop's GPU with a production build.
 - **Known limitations:** Not measured on a phone yet; there the frame budget steps effects down if frames run slow.
+
+## 2026-11-19 — Remaining manual checks and live migrations
+
+- **Task:** Close out the checks left open from Phase 9 and the 3D update.
+- **Summary:** I ran the remaining device and account checks and they all passed: MAN-P9-003 (Adsterra unit active, a real ad on `/games` on a phone), the rest of MAN-P9-005 (installing over 1.0.0 from the home page) and the rest of MAN-P9-006 (the POS tablet refuses an update with the wrong hash). I also checked the 3D scenes on my phone. On the live database, `20261117130000_counter_active_today.sql` and `20261117160000_order_box_and_messenger_phone.sql` are both applied.
+- **Files:** `docs/test-cases.md`, `docs/development-log.md`.
+- **Testing:** manual checks on real devices and the live database, done by me.
+- **Next action:** none.
+
+---
 
 ## 2026-11-19 — Fix the flaky order page test TC-P5-064
 
