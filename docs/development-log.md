@@ -2235,3 +2235,15 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Known limitations:** A signed-in customer tapping stars on the live site is still not observed.
 - **Next action:** Rate an item after the next completed online order from a signed-in customer.
 
+---
+
+## 2026-11-19 — Android: won prizes and My codes
+
+- **Phase:** Phase 9 (FR-091).
+- **Task:** Trello "Android: show won prizes and My codes".
+- **Summary:** After a Cat Cups or Lucky Paw play that wins a prize, the app now adds "You won {prize}! Code {code} · Use by {date}" to the result and says the code is saved in Rewards. Rewards has a new "My codes" list with the customer's reward and prize codes, newest first: each shows its name, the code, where it came from ("Won in a game" or "Redeemed with points"), the use-by date and "Ready to use", "Used" or "Expired"; used and expired codes are struck through. The status rule is the same as the website's. If the codes can't load, Rewards still shows points and rewards, and a database without the codes table gives an empty list.
+- **Files:** `android/app/src/main/java/com/brewnicat/connect/data/{Games,Account,Api}.kt`, `android/app/src/main/java/com/brewnicat/connect/ui/AppViewModel.kt`, `android/app/src/main/java/com/brewnicat/connect/ui/screens/{GamesDialog,RewardsScreen}.kt`, `android/app/src/test/java/com/brewnicat/connect/data/{GamesTest,AccountTest}.kt`, `docs/{functional-requirements,test-cases,development-log}.md`.
+- **Testing:** `./gradlew -q testDebugUnitTest lintDebug` with JDK 21 (78 JVM tests passed, including TC-P9-096 and TC-P9-097; lint clean).
+- **Known limitations:** The app version is still 1.0.3; this reaches phones with the next APK release.
+- **Next action:** Merge, then include it in the next Android release.
+

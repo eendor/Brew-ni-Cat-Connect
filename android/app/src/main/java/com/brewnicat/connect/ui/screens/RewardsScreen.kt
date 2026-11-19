@@ -21,6 +21,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.brewnicat.connect.data.LoyaltyFormat
+import com.brewnicat.connect.data.RewardCodeStatus
+import androidx.compose.ui.text.style.TextDecoration
 import com.brewnicat.connect.data.RewardItem
 import com.brewnicat.connect.ui.AppViewModel
 import com.brewnicat.connect.ui.Screen
@@ -94,6 +96,35 @@ fun RewardsScreen(vm: AppViewModel) {
                         )
                     }
                     ButtonRow("Dismiss", vm::dismissRedeemFeedback, centered = true)
+                }
+            }
+        }
+
+        if (vm.rewardCodes.isNotEmpty()) {
+            item(key = "codes-heading") {
+                Column(Modifier.padding(horizontal = Gutter).padding(top = 24.dp)) {
+                    SectionHeader("My codes")
+                    Text("Show a code at the counter. Each code works once.", style = KitType.footnote, color = c.label2)
+                }
+            }
+            groupItems(vm.rewardCodes, key = { "code-${it.code}" }) { code ->
+                val status = LoyaltyFormat.codeStatus(code)
+                val ready = status == RewardCodeStatus.READY
+                Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    IconTile(KitIcons.Gift, if (ready) c.orange else c.gray, size = 32.dp)
+                    Column(Modifier.weight(1f).padding(start = 12.dp)) {
+                        Text(code.rewardName, style = KitType.body, color = c.label)
+                        Text(
+                            code.code,
+                            style = KitType.headline.copy(textDecoration = if (ready) null else TextDecoration.LineThrough),
+                            color = if (ready) c.tint else c.label2,
+                        )
+                        Text(
+                            LoyaltyFormat.codeSourceLabel(code) + if (ready) " · Use by ${LoyaltyFormat.formatDate(code.expiresAt)}" else "",
+                            style = KitType.footnote, color = c.label2,
+                        )
+                    }
+                    Text(status.label, style = KitType.footnote.semibold, color = if (ready) c.green else c.label2)
                 }
             }
         }

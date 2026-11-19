@@ -4,6 +4,7 @@ import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -76,6 +77,28 @@ class GamesTest {
         assertTrue(limited is PlayMiniGameResult.Failure)
         assertTrue((limited as PlayMiniGameResult.Failure).message.contains("tomorrow"))
         assertEquals(0, limited.playsLeft)
+    }
+
+    @Test
+    fun parsesAWonPrizeAndTreatsAMissingOneAsNone() {
+        val won = GamesParsers.parsePlayResult(
+            JSONObject(
+                """{"ok":true,"playId":13,"game":"cat-cups","outcome":{"hiddenUnder":1,"won":true},"points":3,"playsLeft":1,"balance":20,""" +
+                    """"prize":{"id":"p1","name":"Free cookie","code":"RWD-ABCD2345","expiresAt":"2026-11-26T15:59:59+00:00"}}""",
+            ),
+        ) as PlayMiniGameResult.CatCupsSuccess
+        assertEquals(WonPrize("p1", "Free cookie", "RWD-ABCD2345", "2026-11-26T15:59:59+00:00"), won.prize)
+        assertTrue(GamesParsers.prizeLine(won.prize).contains("You won Free cookie! Code RWD-ABCD2345 · Use by Nov 26, 2026"))
+
+        val paw = GamesParsers.parsePlayResult(
+            JSONObject("""{"ok":true,"playId":14,"game":"lucky-paw","outcome":{"treat":2},"points":2,"playsLeft":0,"balance":22,"prize":null}"""),
+        ) as PlayMiniGameResult.LuckyPawSuccess
+        assertNull(paw.prize)
+        assertEquals("", GamesParsers.prizeLine(paw.prize))
+
+        // Before the prizes migration the field is absent; a prize without a code is ignored.
+        assertNull(GamesParsers.parsePrize(null))
+        assertNull(GamesParsers.parsePrize(JSONObject("""{"id":"p1","name":"Free cookie"}""")))
     }
 
     @Test

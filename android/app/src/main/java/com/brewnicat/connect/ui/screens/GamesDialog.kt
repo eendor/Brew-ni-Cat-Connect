@@ -259,7 +259,7 @@ private fun CatCupsCard(
                                             "You found Oreo! +${GamesParsers.pointsLabel(res.points)}"
                                         } else {
                                             "Oreo was under cup ${res.hiddenUnder + 1}. +${GamesParsers.pointsLabel(res.points)} for playing"
-                                        }
+                                        } + GamesParsers.prizeLine(res.prize)
                                     }
                                     is PlayMiniGameResult.Failure -> {
                                         picked = null
@@ -368,7 +368,7 @@ private fun LuckyPawCard(
                     when (val res = onShake()) {
                         is PlayMiniGameResult.LuckyPawSuccess -> {
                             treat = res.treat
-                            statusMessage = "Latte pawed out ${GamesParsers.pointsLabel(res.treat)}!"
+                            statusMessage = "Latte pawed out ${GamesParsers.pointsLabel(res.treat)}!" + GamesParsers.prizeLine(res.prize)
                         }
                         is PlayMiniGameResult.Failure -> statusMessage = res.message
                         else -> Unit

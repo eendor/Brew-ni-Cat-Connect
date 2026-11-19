@@ -1846,3 +1846,13 @@ FR-121. Migration `20261119120000_item_ratings.sql` (applied live 2026-11-19).
 | TC-P9-094  | FR-121      | Unit: order history with a completed order (latte, mocha, take-out box, bottled water, tuna bites) and an order still preparing; tap 4 stars on the latte | Stars only for the latte and mocha in the completed order; the mocha shows the customer's earlier 3; the latte saves 4 and shows it | Passed (automated) |
 | TC-P9-095  | FR-121      | Unit: a rating the server refuses | An alert with the message; the stars stay unchanged | Passed (automated) |
 | MAN-P9-008 | FR-121      | After the migration is applied live: rate an item from a completed order on the website, then open the menu signed out | The stars save; the menu shows the item's average and count; no stars on the take-out box, bottled water or cat treats | Partly passed 2026-11-19. Live database, in a transaction that was rolled back, as a customer with a temporary completed order: rating 4 then 5 saved one rating of 5; the customer read back only 5; guests saw average 5.0 from 1; Cat Treats answered `not_rateable` and an item never ordered `not_ordered`; nothing was kept. Live `/menu` as a guest at 390 and 1440 wide: `item_rating_summary` 200, 14 items, no stars yet, none of the three shop-only items, no console errors, no sideways scroll. Not yet done: a signed-in customer tapping stars on the live site, since the only completed order is a guest order |
+
+## 69. Won Prizes And My Codes In The Android App (2026-11-19)
+
+FR-091 (Android). The app shows a prize won on a play and lists the customer's codes on Rewards, like the website.
+
+| ID        | Requirement | Case | Expected result | Status |
+| --------- | ----------- | ---- | --------------- | ------ |
+| TC-P9-096 | FR-091      | JVM: parse a Cat Cups play that won a prize, a Lucky Paw play with `"prize": null`, a missing prize and a prize without a code | The prize's id, name, code and expiry; the result line "You won Free cookie! Code RWD-ABCD2345 · Use by Nov 26, 2026"; no prize and no extra line in the other cases | Passed (automated) |
+| TC-P9-097 | FR-091      | JVM: parse four `reward_codes` rows (ready game prize, used, expired with no name, no code) and check each status at a fixed time | Three codes, the one without a code dropped and the blank name shown as "Reward"; Ready to use, Used, Expired; expired exactly at the expiry time; "Won in a game" and "Redeemed with points"; "Nov 26, 2026" | Passed (automated) |
+

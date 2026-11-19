@@ -276,6 +276,26 @@ class Api(
             ),
         )
 
+    /** The customer's reward and prize codes, newest first; none before the codes migration (FR-091). */
+    suspend fun fetchRewardCodes(userId: String, accessToken: String): List<RewardCode> = try {
+        AccountParsers.parseRewardCodes(
+            JSONArray(
+                call(
+                    rest(
+                        "reward_codes?customer_id=eq.${enc(userId)}&select=code,reward_name,source,created_at,expires_at,redeemed_at&order=created_at.desc&limit=50",
+                        accessToken,
+                    ).get().build(),
+                ),
+            ),
+        )
+    } catch (e: ApiException) {
+        if (isMissingTable(e.statusCode, e.responseBody)) emptyList() else throw e
+    }
+
+    private fun isMissingTable(statusCode: Int, body: String): Boolean =
+        body.contains("PGRST205") || body.contains("42P01") ||
+            body.contains("could not find the table", ignoreCase = true) || statusCode == 404
+
     suspend fun fetchLoyaltyRewards(accessToken: String? = null): List<RewardItem> =
         AccountParsers.parseRewards(
             JSONArray(call(rest("rpc/loyalty_rewards", accessToken).post("{}".toRequestBody(JSON)).build())),

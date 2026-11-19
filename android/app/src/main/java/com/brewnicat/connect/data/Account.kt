@@ -127,6 +127,23 @@ data class LoyaltyTransaction(
     val createdAt: String,
 )
 
+/** A reward or prize code the customer owns, newest first (FR-091). */
+data class RewardCode(
+    val code: String,
+    val rewardName: String,
+    /** "mini-game" for a game prize, otherwise a reward redeemed with points. */
+    val source: String,
+    val createdAt: String,
+    val expiresAt: String,
+    val redeemedAt: String?,
+)
+
+enum class RewardCodeStatus(val label: String) {
+    READY("Ready to use"),
+    USED("Used"),
+    EXPIRED("Expired"),
+}
+
 sealed interface RedeemResult {
     data class Success(
         val code: String,
@@ -187,6 +204,22 @@ object LoyaltyFormat {
     }
 
     private val DATE_FMT = DateTimeFormatter.ofPattern("MMM d, yyyy · h:mm a", Locale.US)
+    private val DAY_FMT = DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.US)
+
+    fun formatDate(iso: String): String = runCatching {
+        OffsetDateTime.parse(iso).atZoneSameInstant(ShopHours.MANILA).format(DAY_FMT)
+    }.getOrDefault(iso)
+
+    /** Used once redeemed; expired once past its expiry; otherwise ready. Same rule as the website. */
+    fun codeStatus(code: RewardCode, now: java.time.Instant = java.time.Instant.now()): RewardCodeStatus {
+        if (!code.redeemedAt.isNullOrBlank()) return RewardCodeStatus.USED
+        val expires = runCatching { OffsetDateTime.parse(code.expiresAt).toInstant() }.getOrNull()
+            ?: return RewardCodeStatus.EXPIRED
+        return if (!expires.isAfter(now)) RewardCodeStatus.EXPIRED else RewardCodeStatus.READY
+    }
+
+    fun codeSourceLabel(code: RewardCode): String =
+        if (code.source == "mini-game") "Won in a game" else "Redeemed with points"
 
     fun formatDateTime(iso: String): String = runCatching {
         OffsetDateTime.parse(iso).atZoneSameInstant(ShopHours.MANILA).format(DATE_FMT)
@@ -381,6 +414,18 @@ object AccountParsers {
             orderReference = orderRef,
             note = o.optString("note").takeIf { it.isNotBlank() && it != "null" },
             createdAt = o.optString("created_at"),
+        )
+    }
+
+    fun parseRewardCodes(array: JSONArray): List<RewardCode> = array.objects().mapNotNull { o ->
+        val code = o.optString("code").takeIf { it.isNotBlank() && it != "null" } ?: return@mapNotNull null
+        RewardCode(
+            code = code,
+            rewardName = o.optString("reward_name").ifBlank { "Reward" },
+            source = o.optString("source"),
+            createdAt = o.optString("created_at"),
+            expiresAt = o.optString("expires_at"),
+            redeemedAt = o.optString("redeemed_at").takeIf { it.isNotBlank() && it != "null" },
         )
     }
 

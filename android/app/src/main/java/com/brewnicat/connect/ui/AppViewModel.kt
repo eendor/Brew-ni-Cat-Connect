@@ -302,6 +302,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     var rewardsError by mutableStateOf<String?>(null); private set
     var redeeming by mutableStateOf(false); private set
     var lastRedeem by mutableStateOf<RedeemResult.Success?>(null); private set
+    /** Reward and prize codes for "My codes" on Rewards (FR-091). */
+    var rewardCodes by mutableStateOf<List<com.brewnicat.connect.data.RewardCode>>(emptyList()); private set
     var redeemError by mutableStateOf<String?>(null); private set
 
     var orderHistory by mutableStateOf<Loadable<OrderHistoryPage>?>(null); private set
@@ -486,6 +488,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     private fun clearAccountState() {
+        rewardCodes = emptyList()
         profile = null
         favoriteIds = emptySet()
         loyaltyBalance = null
@@ -661,6 +664,10 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     val settings = api.fetchLoyaltySettings(token)
                     Triple(bal, catalog, settings)
                 }
+            }.also {
+                // The codes list is extra: if it fails, Rewards still shows points and rewards.
+                runCatching { withValidToken(active) { token -> api.fetchRewardCodes(active.userId, token) } }
+                    .onSuccess { rewardCodes = it }
             }.fold(
                 onSuccess = { (bal, cat, set) ->
                     loyaltyBalance = bal
