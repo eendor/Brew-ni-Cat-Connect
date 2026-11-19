@@ -6,12 +6,14 @@ import { useEffect, useState } from "react";
 import { Container } from "@/components/ui/container";
 import { useAuth } from "@/context/auth-context";
 import {
+  formatCoins,
   formatEarningRule,
   formatLoyaltyDate,
   formatRedeemError,
   formatRewardAvailability,
   formatWeeklyLimit,
   rewardCodeStatus,
+  roundCoins,
 } from "@/lib/loyalty/format";
 import {
   fetchLoyaltyBalance,
@@ -75,7 +77,7 @@ export function RewardsView() {
         setError(
           err instanceof Error
             ? err.message
-            : "Unable to load rewards and points. Please try again later.",
+            : "Unable to load rewards and coins. Please try again later.",
         );
         setIsLoading(false);
       });
@@ -145,7 +147,8 @@ export function RewardsView() {
           Loyalty & Rewards
         </h1>
         <p className="mt-2 text-sm text-[var(--text-muted)]">
-          Earn points on completed orders and redeem them for delicious treats.
+          Earn coins on completed orders and games, and redeem them for
+          delicious treats.
         </p>
       </header>
 
@@ -188,23 +191,23 @@ export function RewardsView() {
                     data-testid="loyalty-balance"
                     className="font-display text-4xl md:text-5xl font-extrabold text-[var(--text-strong)]"
                   >
-                    {balance}
+                    {roundCoins(balance)}
                   </span>
                   <span className="text-lg font-medium text-[var(--text-muted)]">
-                    points
+                    {roundCoins(balance) === 1 ? "coin" : "coins"}
                   </span>
                 </div>
                 <Link
                   href="/account/rewards/history"
                   className="mt-2 inline-block text-sm font-medium text-[var(--accent-solid)] hover:underline"
                 >
-                  See points history →
+                  See coins history →
                 </Link>
                 <Link
                   href="/games"
                   className="mt-2 ml-4 inline-block text-sm font-medium text-[var(--accent-solid)] hover:underline"
                 >
-                  Play for points →
+                  Play for coins →
                 </Link>
               </div>
 
@@ -253,7 +256,7 @@ export function RewardsView() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {rewards.map((reward) => {
                   const hasEnough = balance >= reward.points;
-                  const neededPoints = reward.points - balance;
+                  const neededPoints = roundCoins(reward.points - balance);
                   const availability = formatRewardAvailability(reward);
                   const canRedeem = hasEnough && !reward.unavailable;
 
@@ -269,7 +272,7 @@ export function RewardsView() {
                             {reward.name}
                           </h3>
                           <span className="shrink-0 px-2.5 py-1 text-xs font-bold rounded-full bg-[var(--fill-secondary)] text-[var(--text-strong)]">
-                            {reward.points} pts
+                            {formatCoins(reward.points)}
                           </span>
                         </div>
                         <p className="mt-1.5 text-xs text-[var(--text-muted)] leading-relaxed">
@@ -299,14 +302,14 @@ export function RewardsView() {
                         >
                           {hasEnough
                             ? "Balance is enough"
-                            : `Need ${neededPoints} more pts`}
+                            : `Need ${neededPoints} more ${neededPoints === 1 ? "coin" : "coins"}`}
                         </span>
 
                         <button
                           type="button"
                           onClick={() => handleStartRedeem(reward)}
                           disabled={!canRedeem}
-                          aria-label={`Redeem ${reward.name} for ${reward.points} points`}
+                          aria-label={`Redeem ${reward.name} for ${formatCoins(reward.points)}`}
                           className={
                             canRedeem
                               ? "button-primary"
@@ -350,7 +353,7 @@ export function RewardsView() {
                         <p className="text-xs text-[var(--text-muted)]">
                           {item.source === "mini-game"
                             ? "Won in a game"
-                            : "Redeemed with points"}
+                            : "Redeemed with coins"}
                           {status === "ready"
                             ? ` · Use by ${formatLoyaltyDate(item.expiresAt)}`
                             : null}
@@ -403,7 +406,7 @@ export function RewardsView() {
                   </strong>{" "}
                   for{" "}
                   <strong className="text-[var(--text-strong)]">
-                    {selectedReward.points} points
+                    {formatCoins(selectedReward.points)}
                   </strong>
                   ?
                 </p>
@@ -463,11 +466,12 @@ export function RewardsView() {
                     Reward: <strong>{redeemResult.rewardName}</strong>
                   </p>
                   <p>
-                    Points spent:{" "}
-                    <strong>{redeemResult.pointsSpent} pts</strong>
+                    Coins spent:{" "}
+                    <strong>{formatCoins(redeemResult.pointsSpent)}</strong>
                   </p>
                   <p>
-                    New balance: <strong>{redeemResult.newBalance} pts</strong>
+                    New balance:{" "}
+                    <strong>{formatCoins(redeemResult.newBalance)}</strong>
                   </p>
                   {redeemResult.expiresAt ? (
                     <p>

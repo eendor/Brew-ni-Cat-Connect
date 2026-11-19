@@ -233,7 +233,9 @@ test.describe("Customer loyalty and rewards", () => {
 
     // Check plain-word program rules
     await expect(
-      page.getByText("Earn 1 point for every ₱50 spent on completed orders."),
+      page.getByText(
+        "Earn 1 coin for every ₱50 spent on completed orders, counted to 0.1 of a coin.",
+      ),
     ).toBeVisible();
     await expect(
       page.getByText("Redeem up to 2 rewards per week."),
@@ -245,7 +247,7 @@ test.describe("Customer loyalty and rewards", () => {
     ).toBeVisible();
     await expect(page.getByText("Spanish latte")).toBeVisible();
     await expect(page.getByText("Balance is enough").first()).toBeVisible();
-    await expect(page.getByText("Need 10 more pts")).toBeVisible();
+    await expect(page.getByText("Need 10 more coins")).toBeVisible();
 
     // Updated 2026-11-13: the history is on its own page, linked from here.
     await expect(page.getByText("BNC-ABCDEF")).toHaveCount(0);
@@ -254,7 +256,7 @@ test.describe("Customer loyalty and rewards", () => {
 
     // Added 2026-11-11: the confirm dialog opens and Cancel closes it.
     await page
-      .getByRole("button", { name: "Redeem Spanish latte for 50 points" })
+      .getByRole("button", { name: "Redeem Spanish latte for 50 coins" })
       .click();
     const dialog = page.getByRole("dialog");
     await expect(
@@ -296,13 +298,13 @@ test.describe("Customer loyalty and rewards", () => {
 
     await page.goto("/account/rewards/history");
 
-    await expect(page.getByTestId("history-balance")).toHaveText("0 points");
+    await expect(page.getByTestId("history-balance")).toHaveText("0 coins");
     await expect(
-      page.getByRole("heading", { name: "No Points Yet" }),
+      page.getByRole("heading", { name: "No Coins Yet" }),
     ).toBeVisible();
     await expect(
       page.getByText(
-        "No points yet. You earn points when an order is completed.",
+        "No coins yet. You earn coins when an order is completed.",
       ),
     ).toBeVisible();
 
@@ -318,12 +320,12 @@ test.describe("Customer loyalty and rewards", () => {
     await signIn(page);
 
     await page.goto("/account/rewards");
-    await page.getByRole("link", { name: "See points history →" }).click();
+    await page.getByRole("link", { name: "See coins history →" }).click();
     await expect(page).toHaveURL(/\/account\/rewards\/history$/);
     await expect(
-      page.getByRole("heading", { level: 1, name: "Points History" }),
+      page.getByRole("heading", { level: 1, name: "Coins History" }),
     ).toBeVisible();
-    await expect(page.getByTestId("history-balance")).toHaveText("60 points");
+    await expect(page.getByTestId("history-balance")).toHaveText("60 coins");
     await expect(page.getByText("BNC-ABCDEF")).toBeVisible();
     await expect(page.getByText("BNC-GHKLMN")).toBeVisible();
 

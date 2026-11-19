@@ -29,7 +29,7 @@ ADR-035). It uses the same backend as the website:
   consent inside an opaque `data:` URL `WebView`.
 - **Arcade (free play):** the games popup also offers five on-device games
   (Treat Catcher, Whack-a-Mouse, Cup Stack, Paw Says, Cat Match). They award no
-  points and send nothing; personal bests stay in app preferences.
+  coins and send nothing; personal bests stay in app preferences.
 
 Package `com.brewnicat.connect`; Android 8.0 (API 26) and later; compiled
 against and targeting API 36. It asks only for internet access and backs up

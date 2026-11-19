@@ -14,7 +14,7 @@ import { getSiteContent } from "@/lib/site-content/load";
 
 export const metadata: Metadata = {
   title: "Terms of Use",
-  description: `The rules for ordering, points, rewards, games and reviews on ${siteConfig.productName}.`,
+  description: `The rules for ordering, coins, rewards, games and reviews on ${siteConfig.productName}.`,
 };
 
 const linkClass =
@@ -33,7 +33,7 @@ export default async function TermsPage() {
         title="Terms of Use"
         description={
           <p>
-            How ordering, points, rewards, games and reviews work on{" "}
+            How ordering, coins, rewards, games and reviews work on{" "}
             {siteConfig.productName}, in plain words.
           </p>
         }
@@ -104,16 +104,18 @@ export default async function TermsPage() {
               </p>
             </PolicySection>
 
-            <PolicySection id="points-and-rewards" title="Points and rewards">
+            <PolicySection id="points-and-rewards" title="Coins and rewards">
               <List>
                 <li>
-                  <Term>Earning and limits.</Term> You earn points and redeem
-                  rewards under the rules shown on the{" "}
+                  <Term>Earning and limits.</Term> You earn coins on completed
+                  orders and from the cat games, counted to 0.1 of a coin, and
+                  redeem rewards with them. Coins have no cash value. How many
+                  you earn, and how many rewards you can redeem each week,
+                  follow the rules shown on the{" "}
                   <Link href="/account/rewards" className={linkClass}>
                     rewards page
                   </Link>
-                  , including how many rewards you can redeem each week. A
-                  reward can sell out or reach its limit for the day.
+                  . A reward can sell out or reach its limit for the day.
                 </li>
                 <li>
                   <Term>Codes.</Term> Each redeemed reward and each won prize

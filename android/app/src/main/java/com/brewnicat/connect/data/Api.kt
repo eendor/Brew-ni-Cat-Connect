@@ -255,11 +255,11 @@ class Api(
         )
     }
 
-    suspend fun fetchLoyaltyBalance(userId: String, accessToken: String): Int {
+    suspend fun fetchLoyaltyBalance(userId: String, accessToken: String): Double {
         val rows = JSONArray(
             call(rest("loyalty_transactions?customer_id=eq.${enc(userId)}&select=points", accessToken).get().build()),
         ).objects()
-        return rows.sumOf { it.optInt("points", 0) }
+        return Coins.round(rows.sumOf { Coins.read(it, "points") })
     }
 
     suspend fun fetchLoyaltyHistory(userId: String, accessToken: String): List<LoyaltyTransaction> =

@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.brewnicat.connect.data.Coins
 import com.brewnicat.connect.data.LoyaltyFormat
 import com.brewnicat.connect.data.RewardCodeStatus
 import androidx.compose.ui.text.style.TextDecoration
@@ -57,19 +58,19 @@ fun RewardsScreen(vm: AppViewModel) {
 
     LaunchedEffect(Unit) { vm.loadRewards() }
 
-    Page("Rewards & points", onBack = { vm.back() }, trailing = { BarAction("History", { vm.open(Screen.LoyaltyHistory) }) }) {
+    Page("Rewards & coins", onBack = { vm.back() }, trailing = { BarAction("History", { vm.open(Screen.LoyaltyHistory) }) }) {
         if (vm.rewardsLoading && vm.rewards.isEmpty()) {
             item(key = "loading") { LoadingState(Modifier.fillParentMaxHeight(0.6f)) }
             return@Page
         }
-        val balance = vm.loyaltyBalance ?: 0
+        val balance = vm.loyaltyBalance ?: 0.0
         item(key = "balance") {
             Section {
                 Column(
                     Modifier.fillMaxWidth().background(Brush.linearGradient(listOf(Color(0xFF2A8156), Color(0xFF123F29)))).padding(20.dp),
                 ) {
                     Text("Your balance", style = KitType.footnote.semibold, color = Color.White.copy(alpha = 0.78f))
-                    Text("$balance points", style = KitType.largeTitle, color = Color.White, modifier = Modifier.padding(top = 2.dp))
+                    Text(Coins.label(balance), style = KitType.largeTitle, color = Color.White, modifier = Modifier.padding(top = 2.dp))
                     Text(
                         LoyaltyFormat.earningRule(vm.loyaltySettings.currencyStep, vm.loyaltySettings.pointsPerStep),
                         style = KitType.footnote, color = Color.White.copy(alpha = 0.85f), modifier = Modifier.padding(top = 8.dp),
@@ -91,7 +92,7 @@ fun RewardsScreen(vm: AppViewModel) {
                             Text(redeemed.code, style = KitType.title1.bold, color = c.tint, textAlign = TextAlign.Center)
                         }
                         Text(
-                            "Show this verification code at the counter. ${redeemed.pointsSpent} pts spent · New balance: ${redeemed.newBalance} pts.",
+                            "Show this verification code at the counter. ${Coins.label(redeemed.pointsSpent.toDouble())} spent · New balance: ${Coins.label(redeemed.newBalance)}.",
                             style = KitType.footnote, color = c.label2,
                         )
                     }
@@ -142,11 +143,11 @@ fun RewardsScreen(vm: AppViewModel) {
                 val affordable = balance >= reward.points
                 ListRow(
                     reward.name,
-                    subtitle = listOfNotNull(reward.description.takeIf { it.isNotBlank() }, "${reward.points} pts").joinToString("\n"),
+                    subtitle = listOfNotNull(reward.description.takeIf { it.isNotBlank() }, Coins.label(reward.points.toDouble())).joinToString("\n"),
                     leading = { IconTile(KitIcons.Gift, if (affordable) c.orange else c.gray, size = 36.dp) },
                     trailing = {
                         KitButton(
-                            if (affordable) "Redeem" else "Need ${reward.points - balance}",
+                            if (affordable) "Redeem" else "Need ${Coins.amount(reward.points - balance)} more",
                             { confirmReward = reward },
                             style = if (affordable) ButtonStyle.Prominent else ButtonStyle.Gray,
                             size = ButtonSize.Small,
@@ -161,7 +162,7 @@ fun RewardsScreen(vm: AppViewModel) {
     confirmReward?.let { target ->
         Alert(
             title = "Redeem ${target.name}?",
-            message = "This spends ${target.points} loyalty points and gives you a verification code to show at the café counter.",
+            message = "This spends ${Coins.label(target.points.toDouble())} and gives you a verification code to show at the café counter.",
             primary = "Confirm",
             onPrimary = {
                 vm.redeemReward(target.id)
@@ -178,7 +179,7 @@ fun LoyaltyHistoryScreen(vm: AppViewModel) {
     val c = Kit.colors
     LaunchedEffect(Unit) { vm.loadLoyaltyHistory() }
 
-    Page("Points history", onBack = { vm.back() }) {
+    Page("Coins history", onBack = { vm.back() }) {
         when {
             vm.rewardsLoading && vm.loyaltyHistory.isEmpty() -> item(key = "loading") { LoadingState(Modifier.fillParentMaxHeight(0.6f)) }
             vm.rewardsError != null && vm.loyaltyHistory.isEmpty() -> item(key = "failed") {
@@ -188,12 +189,12 @@ fun LoyaltyHistoryScreen(vm: AppViewModel) {
                 )
             }
             vm.loyaltyHistory.isEmpty() -> item(key = "empty") {
-                EmptyState(KitIcons.PawPrint, "No points activity yet", "Complete an online order while signed in to earn loyalty points.", Modifier.fillParentMaxHeight(0.7f))
+                EmptyState(KitIcons.PawPrint, "No coins activity yet", "Complete an online order while signed in to earn coins.", Modifier.fillParentMaxHeight(0.7f))
             }
             else -> {
                 item(key = "gap") { Box(Modifier.padding(top = 8.dp)) }
                 groupItems(vm.loyaltyHistory, key = { it.id }) { tx ->
-                    val earned = tx.points > 0
+                    val earned = tx.points > 0.0
                     Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                         IconTile(if (earned) KitIcons.Plus else KitIcons.Gift, if (earned) c.green else c.orange, size = 32.dp)
                         Column(Modifier.weight(1f).padding(start = 12.dp)) {

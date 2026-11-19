@@ -109,7 +109,8 @@ beforeAll(async () => {
     insert into public.categories (id, name) values ('coffee', 'Coffee'), ('snacks', 'Snacks');
     insert into public.items (id, category_id, name, flavors, variants_json, is_available) values
       ('latte', 'coffee', 'Latte', '', '[{"id":"latte-16","name":"16 oz","basePrice":120}]', true),
-      ('cheap', 'snacks', 'Candy', '', '[{"id":"cheap-1","name":"Single","basePrice":5}]', true),
+      ('cheap', 'snacks', 'Candy', '', '[{"id":"cheap-1","name":"Single","basePrice":4}]', true),
+      ('edge5', 'snacks', 'Mint', '', '[{"id":"edge5-1","name":"Single","basePrice":5}]', true),
       ('edge49', 'snacks', 'Cookie', '', '[{"id":"edge49-1","name":"Single","basePrice":49}]', true),
       ('edge50', 'snacks', 'Brownie', '', '[{"id":"edge50-1","name":"Single","basePrice":50}]', true),
       ('medium', 'coffee', 'Brew', '', '[{"id":"brew-16","name":"16 oz","basePrice":255}]', true);
@@ -121,8 +122,8 @@ beforeAll(async () => {
 }, 60_000);
 
 describe("Loyalty points earning and transactions (FR-050 to FR-054)", () => {
-  it("TC-P5-098 — earned points match the rule for known subtotals (1 pt per ₱50)", async () => {
-    // ₱120 -> 2 points
+  it("TC-P5-098 — earned coins match the rule for known subtotals (1 coin per ₱50, to 0.1)", async () => {
+    // ₱120 -> 2.4 coins
     const ref1 = await placeOrder({
       itemId: "latte",
       variantId: "latte-16",
@@ -136,10 +137,10 @@ describe("Loyalty points earning and transactions (FR-050 to FR-054)", () => {
       [ref1],
     );
     expect(txRes1.rows).toHaveLength(1);
-    expect(txRes1.rows[0]?.points).toBe(2);
+    expect(Number(txRes1.rows[0]?.points)).toBe(2.4);
     expect(txRes1.rows[0]?.reason).toBe("order-completed");
 
-    // ₱255 -> 5 points (floor(255 / 50))
+    // ₱255 -> 5.1 coins (255 / 50 = 5.1)
     const ref2 = await placeOrder({
       itemId: "medium",
       variantId: "brew-16",
@@ -153,7 +154,7 @@ describe("Loyalty points earning and transactions (FR-050 to FR-054)", () => {
       [ref2],
     );
     expect(txRes2.rows).toHaveLength(1);
-    expect(txRes2.rows[0]?.points).toBe(5);
+    expect(Number(txRes2.rows[0]?.points)).toBe(5.1);
   });
 
   it("TC-P5-099 — one award per order even when completion is retried", async () => {
@@ -278,11 +279,11 @@ describe("Loyalty points earning and transactions (FR-050 to FR-054)", () => {
 
   // Update 2026-11-11: the rate is 1 point per ₱50 (owner-confirmed), so the
   // title says ₱50 and the ₱49 and ₱50 edges are checked.
-  it("TC-P5-104 — a subtotal under ₱50 adds no row and does not block completion; ₱50 earns 1 point", async () => {
+  it("TC-P5-104 — a subtotal under ₱5 adds no row and does not block completion; ₱5, ₱49 and ₱50 earn 0.1, 0.9 and 1 coin", async () => {
     const ref = await placeOrder({
       itemId: "cheap",
       variantId: "cheap-1",
-      expectedSubtotal: 5,
+      expectedSubtotal: 4,
     });
     await completeOrder(ref);
 
@@ -305,7 +306,7 @@ describe("Loyalty points earning and transactions (FR-050 to FR-054)", () => {
          where order_id = (select id from public.online_orders where reference = $1)`,
         [reference],
       );
-      return res.rows.map((row) => row.points);
+      return res.rows.map((row) => Number(row.points));
     };
 
     const ref49 = await placeOrder({
@@ -314,7 +315,7 @@ describe("Loyalty points earning and transactions (FR-050 to FR-054)", () => {
       expectedSubtotal: 49,
     });
     await completeOrder(ref49);
-    expect(await pointsFor(ref49)).toEqual([]);
+    expect(await pointsFor(ref49)).toEqual([0.9]);
 
     const ref50 = await placeOrder({
       itemId: "edge50",
@@ -323,6 +324,14 @@ describe("Loyalty points earning and transactions (FR-050 to FR-054)", () => {
     });
     await completeOrder(ref50);
     expect(await pointsFor(ref50)).toEqual([1]);
+
+    const ref5 = await placeOrder({
+      itemId: "edge5",
+      variantId: "edge5-1",
+      expectedSubtotal: 5,
+    });
+    await completeOrder(ref5);
+    expect(await pointsFor(ref5)).toEqual([0.1]);
   });
 
   it("TC-P5-105 — customer reads only their own rows and cannot insert, update or delete", async () => {

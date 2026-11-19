@@ -587,3 +587,16 @@ Migration `20261119120000_item_ratings.sql` (FR-121). Applied to the live databa
 - `public.item_rating_summary()` returns `item_id`, `average` (numeric, one decimal) and `rating_count`, security definer, granted to `anon` and `authenticated`. It never returns who rated.
 - Tests: TC-P9-088 to TC-P9-091 (`tests/database/item-ratings.test.ts`).
 
+## 23. Coins Replace Points (2026-11-19)
+
+Migration `20261119130000_coins.sql` (FR-124). **Not applied to the live database yet**: it goes live together with the website merge and the Android 1.0.4 release. The table and column names stay (`points`), so the POS and the released app keep reading them.
+
+- `public.loyalty_transactions.points` becomes `numeric(10, 1)`; existing whole points become coins 1:1.
+- `public.game_plays.points` becomes `numeric(4, 1)` with `points >= 0`, so a play past the daily cap is recorded with 0.
+- `private.sync_online_order_loyalty()`: the target is `floor(subtotal × coins per step × 10 / step) / 10` (1 coin per ₱50, rounded down to 0.1). The rest is unchanged.
+- `public.redeem_reward()`: the balance is `numeric`. Reward prices stay whole (`points_cost`, `reward_codes.points_spent` integer).
+- `private.mini_game_settings()`: `daily_coins` 2 and `prize_plays` 3 replace `daily_plays`; Cat cups pays 0.2 for a find and 0.1 otherwise; Lucky paw pays 0.1 or 0.2 (weights 60, 40). **The values were chosen by the owner on 2026-11-19.**
+- `public.mini_game_status()` adds `unlimited` (true), `dailyCoins`, `coinsToday` and `coinsLeft`. `dailyPlays`, `playsToday` and `playsLeft` stay, with `dailyPlays` and `playsLeft` counting prize plays, so the Android app 1.0.3 (which stops at `playsLeft` 0) keeps working.
+- `public.play_mini_game()` no longer refuses plays. Under the per-customer lock it pays `least(drawn, 2 − coins today)`, writes the play, writes a ledger row only when the coins are above 0, and draws for a prize only on the first 3 plays of the Manila day. The answer adds `coinsLeft` and `unlimited`.
+- Undo: `supabase/rollbacks/20261119130000_coins.sql` puts back the earlier functions and turns amounts back into whole points. It loses data: amounts are rounded, ledger rows that round to 0 are deleted, and game plays are recorded as at least 1 point. TC-P9-060 runs it on PGlite.
+

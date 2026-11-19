@@ -75,7 +75,7 @@ fun VisitScreen(vm: AppViewModel) {
         item(key = "account") {
             Section(
                 header = "Account, loyalty and reviews",
-                footer = "Sign in with Google to earn loyalty points, redeem rewards, save favorites, and read or share shop reviews right here in the app.",
+                footer = "Sign in with Google to earn coins, redeem rewards, save favorites, and read or share shop reviews right here in the app.",
             ) {
                 ListRow("Open Account tab", leading = { IconTile(KitIcons.UserRound, c.gray) }, chevron = true, onClick = { vm.selectTab(Screen.Account) })
                 ListRow("Shop reviews", leading = { IconTile(KitIcons.MessageSquareText, c.indigo) }, chevron = true, onClick = { vm.open(Screen.Reviews) })

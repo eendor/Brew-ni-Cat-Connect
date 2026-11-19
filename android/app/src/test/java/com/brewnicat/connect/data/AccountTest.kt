@@ -61,8 +61,16 @@ class AccountTest {
 
     @Test
     fun loyaltyFormattingAndRedeemErrorsMatchRules() {
-        assertEquals("+12", LoyaltyFormat.pointsDelta(12))
-        assertEquals("\u221240", LoyaltyFormat.pointsDelta(-40))
+        assertEquals("+12", LoyaltyFormat.pointsDelta(12.0))
+        assertEquals("\u221240", LoyaltyFormat.pointsDelta(-40.0))
+        assertEquals("+2.5", LoyaltyFormat.pointsDelta(2.5))
+        assertEquals("\u22120.1", LoyaltyFormat.pointsDelta(-0.1))
+        assertEquals("0", LoyaltyFormat.pointsDelta(0.04))
+        assertEquals("Coins adjustment", LoyaltyFormat.reasonLabel("adjustment", null))
+        assertEquals(
+            "Earn 1 coin for every ₱50 spent on completed orders, counted to 0.1 of a coin.",
+            LoyaltyFormat.earningRule(50.0, 1),
+        )
         assertEquals("Order completed", LoyaltyFormat.reasonLabel("order-completed", null))
         assertEquals("Mini-game: Cat cups", LoyaltyFormat.reasonLabel("mini-game", "Mini-game: Cat cups"))
 
@@ -118,7 +126,7 @@ class AccountTest {
         assertEquals(RewardCodeStatus.EXPIRED, LoyaltyFormat.codeStatus(codes[0], java.time.Instant.parse("2026-11-26T15:59:59Z")))
 
         assertEquals("Won in a game", LoyaltyFormat.codeSourceLabel(codes[0]))
-        assertEquals("Redeemed with points", LoyaltyFormat.codeSourceLabel(codes[1]))
+        assertEquals("Redeemed with coins", LoyaltyFormat.codeSourceLabel(codes[1]))
         assertEquals("Nov 26, 2026", LoyaltyFormat.formatDate(codes[0].expiresAt))
     }
 }

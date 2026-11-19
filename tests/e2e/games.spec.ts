@@ -134,27 +134,27 @@ test.describe("Cat games", () => {
     ).toBeVisible();
     const summary = page.getByTestId("games-summary");
     await expect(summary).toContainText("3 plays left today");
-    await expect(summary).toContainText("12 pts");
+    await expect(summary).toContainText("12 coins");
     await expect(page.getByTestId("cat-sprite-latte")).toBeVisible();
     await capture(page, "games-desktop");
 
     await page.getByRole("button", { name: "Cup 2" }).click();
-    await expect(page.getByText("You found Oreo! +3 points")).toBeVisible();
+    await expect(page.getByText("You found Oreo! +3 coins")).toBeVisible();
     await expect(page.getByTestId("oreo-found")).toBeVisible();
     await expect(summary).toContainText("2 plays left today");
-    await expect(summary).toContainText("15 pts");
+    await expect(summary).toContainText("15 coins");
     await capture(page, "games-cat-cups-won");
 
     await page.getByRole("button", { name: "Hide him again" }).click();
     await page.getByRole("button", { name: "Cup 3" }).click();
     await expect(
-      page.getByText("Oreo was under cup 2. +1 point for playing"),
+      page.getByText("Oreo was under cup 2. +1 coin for playing"),
     ).toBeVisible();
 
     await page.getByRole("button", { name: "Shake the jar" }).click();
-    await expect(page.getByText("Latte pawed out 2 points!")).toBeVisible();
+    await expect(page.getByText("Latte pawed out 2 coins!")).toBeVisible();
     await expect(summary).toContainText("No plays left today");
-    await expect(summary).toContainText("18 pts");
+    await expect(summary).toContainText("18 coins");
     await expect(page.getByTestId("games-done")).toBeVisible();
     await expect(
       page.getByRole("button", { name: "Shake the jar" }),

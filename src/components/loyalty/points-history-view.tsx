@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { Container } from "@/components/ui/container";
 import { useAuth } from "@/context/auth-context";
 import {
+  formatCoins,
   formatLoyaltyDate,
   formatPointsDelta,
   formatReason,
@@ -16,7 +17,7 @@ import {
 } from "@/lib/loyalty/loyalty-client";
 import type { LoyaltyTransaction } from "@/lib/loyalty/types";
 
-/** The customer's points history, on its own page at /account/rewards/history. */
+/** The customer's coins history, on its own page at /account/rewards/history. */
 export function PointsHistoryView() {
   const { user, isLoading: isAuthLoading } = useAuth();
   const userId = user?.id ?? null;
@@ -46,7 +47,7 @@ export function PointsHistoryView() {
         setError(
           err instanceof Error
             ? err.message
-            : "Unable to load your points history. Please try again later.",
+            : "Unable to load your coins history. Please try again later.",
         );
         setIsLoading(false);
       });
@@ -66,10 +67,10 @@ export function PointsHistoryView() {
           ← Back to Rewards
         </Link>
         <h1 className="mt-3 font-display text-3xl font-bold text-[var(--text-strong)] tracking-tight">
-          Points History
+          Coins History
         </h1>
         <p className="mt-2 text-sm text-[var(--text-muted)]">
-          Every point you earned or spent, newest first.
+          Every coin you earned or spent, newest first.
         </p>
       </header>
 
@@ -99,17 +100,17 @@ export function PointsHistoryView() {
               data-testid="history-balance"
               className="text-[var(--text-strong)]"
             >
-              {balance} points
+              {formatCoins(balance)}
             </strong>
           </p>
 
           {history.length === 0 ? (
             <div className="ios-card p-8 text-center md:p-10">
               <h2 className="font-display text-lg font-semibold text-[var(--text-strong)]">
-                No Points Yet
+                No Coins Yet
               </h2>
               <p className="mt-2 text-sm text-[var(--text-muted)] max-w-md mx-auto">
-                No points yet. You earn points when an order is completed.
+                No coins yet. You earn coins when an order is completed.
               </p>
               <div className="mt-6">
                 <Link href="/menu" className="button-primary">
@@ -154,7 +155,7 @@ export function PointsHistoryView() {
                           : "text-[var(--text-muted)]"
                       }`}
                     >
-                      {formatPointsDelta(tx.points)} pts
+                      {formatPointsDelta(tx.points)} coins
                     </span>
                   </li>
                 );

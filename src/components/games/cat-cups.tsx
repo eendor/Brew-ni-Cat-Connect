@@ -100,10 +100,14 @@ export function CatCups({ disabled, reducedMotion, onPlay }: CatCupsProps) {
     setOutcome(drawn);
     await lift(choice, true);
     if (drawn.hiddenUnder !== choice) await lift(drawn.hiddenUnder, true);
+    const earned =
+      result.points > 0
+        ? `+${pointsLabel(result.points)}`
+        : "You've earned today's coins, so this one's for fun";
     setMessage(
       drawn.won
-        ? `You found Oreo! +${pointsLabel(result.points)}`
-        : `Oreo was under cup ${drawn.hiddenUnder + 1}. +${pointsLabel(result.points)} for playing`,
+        ? `You found Oreo! ${earned}`
+        : `Oreo was under cup ${drawn.hiddenUnder + 1}. ${earned}${result.points > 0 ? " for playing" : ""}`,
     );
     setBusy(false);
   };

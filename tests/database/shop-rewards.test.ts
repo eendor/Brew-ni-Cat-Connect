@@ -418,6 +418,8 @@ describe("one-time codes checked by staff (FR-091)", () => {
   }, 60_000);
 
   it("TC-P9-060 — the rollback puts the catalog back in settings and removes prizes and codes", async () => {
+    // the coins migration came later and replaced these functions
+    await applyRollback(db, "20261119130000_coins.sql");
     await applyRollback(db, MIGRATION);
     const restored = await catalog();
     expect(restored).toHaveLength(11);

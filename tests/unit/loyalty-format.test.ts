@@ -25,6 +25,13 @@ describe("Loyalty formatting utilities", () => {
     it("formats zero as '0'", () => {
       expect(formatPointsDelta(0)).toBe("0");
     });
+
+    it("keeps one decimal for coins and hides float drift", () => {
+      expect(formatPointsDelta(2.5)).toBe("+2.5");
+      expect(formatPointsDelta(0.1 + 0.2)).toBe("+0.3");
+      expect(formatPointsDelta(-0.1)).toBe("−0.1");
+      expect(formatPointsDelta(0.04)).toBe("0");
+    });
   });
 
   describe("formatReason", () => {
@@ -48,10 +55,10 @@ describe("Loyalty formatting utilities", () => {
       );
     });
 
-    it("falls back to 'Points adjustment' when note is empty or null", () => {
-      expect(formatReason("adjustment", null)).toBe("Points adjustment");
-      expect(formatReason("adjustment", "")).toBe("Points adjustment");
-      expect(formatReason("adjustment", "   ")).toBe("Points adjustment");
+    it("falls back to 'Coins adjustment' when note is empty or null", () => {
+      expect(formatReason("adjustment", null)).toBe("Coins adjustment");
+      expect(formatReason("adjustment", "")).toBe("Coins adjustment");
+      expect(formatReason("adjustment", "   ")).toBe("Coins adjustment");
     });
   });
 
@@ -70,10 +77,10 @@ describe("Loyalty formatting utilities", () => {
   describe("formatEarningRule", () => {
     it("formats earning rule sentence with formatted peso step", () => {
       expect(formatEarningRule(10, 1)).toBe(
-        "Earn 1 point for every ₱10 spent on completed orders.",
+        "Earn 1 coin for every ₱10 spent on completed orders, counted to 0.1 of a coin.",
       );
       expect(formatEarningRule(20, 2)).toBe(
-        "Earn 2 points for every ₱20 spent on completed orders.",
+        "Earn 2 coins for every ₱20 spent on completed orders, counted to 0.1 of a coin.",
       );
     });
   });

@@ -38,8 +38,8 @@ export function PlayWhileYouWait() {
             Play while you wait
           </h2>
           <p className="mt-1 text-sm text-[var(--text-muted)]">
-            Try Cat cups or Lucky paw with the café cats and earn a few loyalty
-            points. You can come back to this order any time.
+            Try Cat cups or Lucky paw with the café cats and earn a few coins.
+            You can come back to this order any time.
           </p>
         </div>
         <div className="flex shrink-0 flex-wrap gap-2">

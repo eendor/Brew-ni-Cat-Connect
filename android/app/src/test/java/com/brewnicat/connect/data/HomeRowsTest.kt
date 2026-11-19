@@ -44,9 +44,10 @@ class HomeRowsTest {
 
     @Test
     fun labelsThePointsChip() {
-        assertEquals("Sign in to earn points", HomeRows.pointsLabel(false, 40))
-        assertEquals("Your points", HomeRows.pointsLabel(true, null))
-        assertEquals("1 point", HomeRows.pointsLabel(true, 1))
-        assertEquals("25 points", HomeRows.pointsLabel(true, 25))
+        assertEquals("Sign in to earn coins", HomeRows.pointsLabel(false, 40.0))
+        assertEquals("Your coins", HomeRows.pointsLabel(true, null))
+        assertEquals("1 coin", HomeRows.pointsLabel(true, 1.0))
+        assertEquals("25 coins", HomeRows.pointsLabel(true, 25.0))
+        assertEquals("12.5 coins", HomeRows.pointsLabel(true, 12.5))
     }
 }

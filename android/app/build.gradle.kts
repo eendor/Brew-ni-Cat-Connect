@@ -59,8 +59,8 @@ android {
         applicationId = "com.brewnicat.connect"
         minSdk = 26
         targetSdk = 36
-        versionCode = 6
-        versionName = "1.0.3"
+        versionCode = 7
+        versionName = "1.0.4"
 
         buildConfigField("String", "SITE_URL", buildConfigString(siteUrl))
         buildConfigField("String", "SUPABASE_URL", buildConfigString(publicConfig("NEXT_PUBLIC_SUPABASE_URL")))
