@@ -5,6 +5,21 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.heightIn
+import android.content.Intent
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.text.style.TextAlign
+import androidx.core.net.toUri
+import com.brewnicat.connect.BuildConfig
+import com.brewnicat.connect.data.HomeProduct
+import com.brewnicat.connect.data.HomeRows
+import com.brewnicat.connect.ui.kit.Icon
+import com.brewnicat.connect.ui.kit.LoadingState
+import com.brewnicat.connect.ui.kit.Notice
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -60,9 +75,17 @@ import com.brewnicat.connect.ui.kit.softShadow
 @Composable
 fun HomeScreen(vm: AppViewModel, onItem: (MenuItem) -> Unit) {
     val c = Kit.colors
+    val context = LocalContext.current
+    fun openSite(path: String) = runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, (BuildConfig.SITE_URL + path).toUri())) }
+
     Page("Brew ni Cat", trailing = { Logo(36.dp) }) {
-        item(key = "hero") { Hero { vm.selectTab(Screen.Menu) } }
-        item(key = "status") { OpenStatus(vm.hours, Modifier.padding(start = Gutter + 4.dp, end = Gutter, top = 14.dp)) }
+        item(key = "points") {
+            val signedIn = vm.session != null
+            PointsChip(HomeRows.pointsLabel(signedIn, vm.loyaltyBalance)) {
+                if (signedIn) vm.open(Screen.Rewards) else vm.selectTab(Screen.Account)
+            }
+        }
+        item(key = "status") { OpenStatus(vm.hours, Modifier.padding(start = Gutter + 4.dp, end = Gutter, top = 12.dp)) }
 
         val latest = vm.savedOrders.firstOrNull()
         val latestView = latest?.let { (vm.orders[it.reference] as? Loadable.Ready)?.value }
@@ -78,21 +101,46 @@ fun HomeScreen(vm: AppViewModel, onItem: (MenuItem) -> Unit) {
             }
         }
 
-        val catalog = (vm.menu as? Loadable.Ready)?.value
-        val favorites = catalog?.categories?.flatMap { it.items }?.filter { MenuImages.forItem(it.name) != null }.orEmpty()
-        if (favorites.isNotEmpty()) {
-            item(key = "favorites") {
-                Column(Modifier.padding(top = 26.dp)) {
-                    Box(Modifier.padding(horizontal = Gutter)) {
-                        SectionHeader("Customer favorites", prominent = true, action = {
-                            KitButton("See all", { vm.selectTab(Screen.Menu) }, style = ButtonStyle.Plain, size = ButtonSize.Small)
-                        })
-                    }
-                    LazyRow(contentPadding = PaddingValues(horizontal = Gutter), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        items(favorites, key = { it.id }) { item -> FavoriteCard(item) { onItem(item) } }
+        item(key = "tiles") {
+            val tiles = listOf(
+                HomeTile("The Menu", KitIcons.Coffee, c.brown) { vm.selectTab(Screen.Menu) },
+                HomeTile("About", KitIcons.Info, c.tint, external = true) { openSite("/about") },
+                HomeTile("Gallery", KitIcons.Heart, c.pink, external = true) { openSite("/gallery") },
+                HomeTile("Games", KitIcons.Gamepad2, c.purple) { vm.openGamesPopup() },
+                HomeTile("Contact", KitIcons.MapPin, c.red) { vm.selectTab(Screen.Visit) },
+                HomeTile("Reviews", KitIcons.MessageSquareText, c.indigo) { vm.open(Screen.Reviews) },
+            )
+            Column(
+                Modifier.padding(horizontal = Gutter).padding(top = 18.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                tiles.chunked(3).forEach { row ->
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        row.forEach { tile -> TileButton(tile, Modifier.weight(1f)) }
                     }
                 }
             }
+        }
+
+        when (val menu = vm.menu) {
+            is Loadable.Ready -> HomeRows.build(menu.value).forEach { row ->
+                item(key = "row-${row.categoryId}") {
+                    Column(Modifier.padding(top = 26.dp)) {
+                        Box(Modifier.padding(horizontal = Gutter)) {
+                            SectionHeader(row.title, prominent = true, action = {
+                                KitButton("See all", { vm.selectTab(Screen.Menu) }, style = ButtonStyle.Plain, size = ButtonSize.Small)
+                            })
+                        }
+                        LazyRow(contentPadding = PaddingValues(horizontal = Gutter), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            items(row.products, key = { it.item.id }) { product -> ProductCard(product) { onItem(product.item) } }
+                        }
+                    }
+                }
+            }
+            is Loadable.Failed -> item(key = "menu-failed") {
+                Notice("We couldn't load the menu. Open The Menu to try again.", Modifier.padding(horizontal = Gutter).padding(top = 20.dp), warning = true)
+            }
+            else -> item(key = "menu-loading") { LoadingState(Modifier.padding(top = 24.dp)) }
         }
 
         item(key = "how") {
@@ -103,45 +151,77 @@ fun HomeScreen(vm: AppViewModel, onItem: (MenuItem) -> Unit) {
             }
         }
     }
+
+    if (vm.gamesPopupOpen && vm.current == Screen.Home) MiniGamesDialog(vm)
 }
 
+private data class HomeTile(
+    val label: String,
+    val icon: androidx.compose.ui.graphics.vector.ImageVector,
+    val color: Color,
+    /** Opens the website page in the browser. */
+    val external: Boolean = false,
+    val onClick: () -> Unit,
+)
+
 @Composable
-private fun Hero(onOrder: () -> Unit) {
-    val shape = RoundedCornerShape(30.dp)
-    Box(
+private fun PointsChip(label: String, onClick: () -> Unit) {
+    val shape = RoundedCornerShape(22.dp)
+    Row(
         Modifier.padding(horizontal = Gutter).padding(top = 6.dp).fillMaxWidth()
-            .softShadow(shape, Color(0x40123F29), 26.dp, 10.dp)
-            .clip(shape).background(Brush.linearGradient(listOf(Color(0xFF2A8156), Color(0xFF123F29)))),
+            .softShadow(shape, Color(0x40123F29), 18.dp, 6.dp)
+            .clip(shape).background(Brush.linearGradient(listOf(Color(0xFF2A8156), Color(0xFF123F29))))
+            .pressable(onClick = onClick, role = Role.Button)
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(Modifier.align(Alignment.TopEnd).offset(x = 48.dp, y = (-36).dp).size(190.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.07f)))
-        Photo(
-            R.drawable.menu_lucky_green_neko_matcha, null,
-            Modifier.align(Alignment.BottomEnd).offset(x = 28.dp, y = 28.dp).size(150.dp).rotate(-6f).clip(CircleShape)
-                .border(3.dp, Color.White.copy(alpha = 0.55f), CircleShape),
-        )
-        Column(Modifier.padding(22.dp).fillMaxWidth(0.66f)) {
-            Text("PICKUP IN KABACAN", style = KitType.caption1.semibold.copy(letterSpacing = 1.2.sp), color = Color(0xFFBFE3CE))
-            Spacer(Modifier.height(6.dp))
-            Text("Purr-fectly brewed, made for you", style = KitType.title2.bold, color = Color.White, modifier = Modifier.semantics { heading() })
-            Spacer(Modifier.height(18.dp))
-            Text(
-                "Order now", style = KitType.subhead.semibold, color = Color(0xFF123F29),
-                modifier = Modifier.pressable(onClick = onOrder).clip(CircleShape).background(Color.White).padding(horizontal = 20.dp, vertical = 11.dp),
-            )
-            Spacer(Modifier.height(10.dp))
+        Box(Modifier.size(36.dp).clip(CircleShape).background(Color(0xFFF5C84C)), contentAlignment = Alignment.Center) {
+            Icon(KitIcons.PawPrint, null, tint = Color(0xFF6B4A00), size = 20.dp)
         }
+        Column(Modifier.weight(1f).padding(start = 12.dp)) {
+            Text(label, style = KitType.headline, color = Color.White)
+            Text("Earn on every completed order and in the games", style = KitType.footnote, color = Color.White.copy(alpha = 0.8f))
+        }
+        Icon(KitIcons.ChevronRight, null, tint = Color.White.copy(alpha = 0.8f), size = 18.dp)
     }
 }
 
 @Composable
-private fun FavoriteCard(item: MenuItem, onClick: () -> Unit) {
+private fun TileButton(tile: HomeTile, modifier: Modifier) {
     val c = Kit.colors
+    val shape = RoundedCornerShape(20.dp)
+    Column(
+        modifier.heightIn(min = 96.dp).clip(shape).background(c.cell)
+            .pressable(onClick = tile.onClick, role = Role.Button)
+            .semantics(mergeDescendants = true) { if (tile.external) contentDescription = "${tile.label}, opens the website" }
+            .padding(vertical = 14.dp, horizontal = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        IconTile(tile.icon, tile.color, size = 44.dp)
+        Text(tile.label, style = KitType.subhead.semibold, color = c.label, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 8.dp), maxLines = 1)
+    }
+}
+
+@Composable
+private fun ProductCard(product: HomeProduct, onClick: () -> Unit) {
+    val c = Kit.colors
+    val item = product.item
     val shape = RoundedCornerShape(22.dp)
-    Column(Modifier.width(150.dp).pressable(onClick = onClick).clip(shape).background(c.cell)) {
-        Photo(MenuImages.forItem(item.name), item.name, Modifier.fillMaxWidth().aspectRatio(1f))
+    Column(Modifier.width(160.dp).pressable(onClick = onClick).clip(shape).background(c.cell)) {
+        Box {
+            Photo(MenuImages.forItem(item.name), item.name, Modifier.fillMaxWidth().aspectRatio(1f).alpha(if (product.soldOut) 0.5f else 1f))
+            if (product.soldOut) {
+                Text(
+                    "Sold out", style = KitType.caption1.semibold, color = Color.White,
+                    modifier = Modifier.padding(8.dp).clip(CircleShape).background(Color(0xCC1C1C1E)).padding(horizontal = 10.dp, vertical = 4.dp),
+                )
+            }
+        }
         Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
             Text(item.name, style = KitType.subhead.semibold, color = c.label, maxLines = 2, minLines = 2)
-            Pricing.fromPrice(item)?.let { Text("From ${Pricing.formatPeso(it)}", style = KitType.footnote, color = c.label2, modifier = Modifier.padding(top = 2.dp)) }
+            Text(product.flavors ?: " ", style = KitType.caption1, color = c.label2, maxLines = 2, minLines = 2, modifier = Modifier.padding(top = 2.dp))
+            product.fromPrice?.let { Text("From ${Pricing.formatPeso(it)}", style = KitType.footnote.semibold, color = c.tint, modifier = Modifier.padding(top = 4.dp)) }
         }
     }
 }
