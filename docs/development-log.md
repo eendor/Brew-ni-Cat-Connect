@@ -2170,3 +2170,13 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Files:** `src/components/three/engine/{runtime,renderer,post}.ts`, `src/components/three/scenes/{menu-hero,showcase,ambient}.ts`, `tests/unit/three-{frame-pacing,phone-tier}.test.ts*`, `docs/{decisions,test-cases,development-log}.md`.
 - **Testing:** TC-P4-278 and TC-P4-279 (new), TC-P4-186, TC-P4-190 and TC-P4-191 updated; all 955 unit tests; the 3D unit tests, `npm run typecheck`, `npm run lint`, `npm run build`; frame rates measured in Chromium on the laptop's GPU with a production build.
 - **Known limitations:** Not measured on a phone yet; there the frame budget steps effects down if frames run slow.
+
+## 2026-11-19 — Terms of Use page
+
+- **Phase:** Phase 9 (FR-120, new).
+- **Task:** Trello "Terms of use page and LICENSE owner". Privacy was covered; `/terms` was missing.
+- **Summary:** I added `/terms` with the same layout as the Privacy Policy and a "Terms of Use" link in the footer next to "Privacy Policy". It covers orders and payment, accounts, points and rewards, mini-games and ads, reviews, contact and changes. It states only what the site actually does: the website and app take no payments (cash or GCash at the shop), Place order checks prices against the current menu, rider delivery is arranged by the customer, and each reward or prize code works once and expires after 30 or 7 days. The points rule and weekly limit are owner settings, so the terms point to the rewards page instead of repeating numbers that can change. The section helpers moved from the privacy page to `src/components/legal/policy-parts.tsx` so both pages share them.
+- **Files:** `src/app/terms/page.tsx`, `src/config/terms.ts`, `src/components/legal/policy-parts.tsx`, `src/app/privacy/page.tsx`, `src/components/layout/site-footer.tsx`, `tests/unit/{terms-page,site-footer}.test.tsx`, `docs/{functional-requirements,test-cases,development-log}.md`, `scripts/validate_phase0_docs.py` (expects FR-120).
+- **Testing:** `npx vitest run tests/unit` (96 files, 957 tests passed, including TC-P9-086 and TC-P9-087); `tsc --noEmit`; `eslint` on the changed files; `prettier`; `python3 scripts/validate_phase0_docs.py`.
+- **Known limitations:** The owner should read the terms before they go live. The LICENSE owner (ADR-005) is still to be decided. The Android app has no link to the terms yet.
+- **Next action:** Owner review of the wording; decide the LICENSE owner.

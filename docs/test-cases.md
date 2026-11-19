@@ -1822,3 +1822,11 @@ FR-119. Migration `20261117150000_google_profile_photos.sql`. Android 1.0.2 (ver
 | TC-P9-085  | FR-087      | Database: the rollback, then the migration again after the owner changed other wording, then after the owner changed the date | Rollback restores June 12; the owner's wording stays; a date the owner already changed is left alone | Passed (automated) |
 | MAN-P9-007 | FR-119      | Sign in with Google on the website and in Android 1.0.2; post a review with the photo on, then off | The photo shows on the account, the header menu and the review, then the review shows initials | Passed 2026-11-17 by the lead developer on Android 1.0.3: sign-in and profile photos work |
 
+## 67. Terms Of Use Page (2026-11-19)
+
+FR-120. `/terms`, with the same section layout as the Privacy Policy.
+
+| ID        | Requirement | Case | Expected result | Status |
+| --------- | ----------- | ---- | --------------- | ------ |
+| TC-P9-086 | FR-120      | Unit: render `TermsPage` with the fallback content | The "Terms of Use" heading; a `<time datetime="2026-11-19">` reading "November 19, 2026"; eight sections with ids and headings; links to `/privacy` and `/account/rewards` | Passed (automated) |
+| TC-P9-087 | FR-120      | Unit: render `SiteFooter` | A "Terms of Use" link to `/terms` with a 44 px tap target, next to "Privacy Policy" | Passed (automated) |

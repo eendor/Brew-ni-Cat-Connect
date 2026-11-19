@@ -100,4 +100,11 @@ describe("Site footer", () => {
     // a full 44 px tap target, as the footer's other links
     expect(link.className).toContain("min-h-11");
   });
+
+  it("TC-P9-087 — links to the Terms of Use from every page's footer (FR-120)", () => {
+    render(<SiteFooter content={content} />);
+    const link = screen.getByRole("link", { name: "Terms of Use" });
+    expect(link).toHaveAttribute("href", "/terms");
+    expect(link.className).toContain("min-h-11");
+  });
 });
