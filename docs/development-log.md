@@ -2342,3 +2342,8 @@ This log records completed work and observed evidence. Planned work is explicitl
 
 - **Summary:** I added live deal badges, original and sale prices, and a conditional deals banner to the web and Android menus. Both carts apply the same centavo rounding as checkout and charge separately priced extras in full. The POS web catalog can configure and activate online deals through the staff-only policies.
 - **Known limitations:** Deals apply to Connect online orders and their POS sale records, not the separate walk-in cart. The migration and Android customer build must be released before staff activate offers. Take-out box pricing does not participate in deals.
+
+## 2026-11-20 — Connect Android 1.0.7: online deals
+
+- **Summary:** Prepared the signed Connect 1.0.7 APK (build 10) and updated the website update manifest for the coordinated deals rollout. No offers are enabled by default.
+- **Verification:** Signed release lint and assembly passed. The signer matches 1.0.6, and an emulator installed the update over 1.0.6 and launched it. Google sign-in and physical-device Play Protect behavior were not verified.

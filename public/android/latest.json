@@ -1,9 +1,9 @@
 {
-  "versionCode": 9,
-  "versionName": "1.0.6",
-  "url": "/android/brew-ni-cat-connect-1.0.6.apk",
-  "sha256": "7ca79de6cc0c1cf2b8a85ca8b21545381a1a56602a690c9681347585c0a63c4f",
-  "size": 2848151,
+  "versionCode": 10,
+  "versionName": "1.0.7",
+  "url": "/android/brew-ni-cat-connect-1.0.7.apk",
+  "sha256": "1fad57928a32b993c2d61731a3aba5b2bf0b6e844c948f0c433c52aa1556f958",
+  "size": 2848155,
   "minAndroid": "8.0",
-  "notes": "Spend coins on signed-in pickup orders and see the discount in order tracking."
+  "notes": "See online deals and sale prices before placing a pickup order."
 }
