@@ -1887,3 +1887,15 @@ FR-124. Points become coins kept to 0.1; orders earn 1 coin per ₱50 counted to
 | TC-P9-107 | FR-122      | Unit (Android `MenuPlaceholderTest`): the placeholder icon for each of the 15 live menu items and for an unknown name | Buldak and Sedaap get noodles, Fries fries, Nachos nachos, Bottled Water a bottle, Soda a soda cup, Cat-Feine coffee, Oreo and Matcha a milk tea, the three combos a basket, Take-out Box a box, Cat Treats a paw; Takoyaki and an unknown name get the general food icon | Passed (automated) |
 | TC-P9-108 | FR-122      | Unit (Android `HomeRowsTest`; website `menu-item-images.test.ts`): the coins pill text; the fries photo | Signed out "Earn", no balance yet "Coins", 25 coins "25", 2.46 coins "2.5"; Fries (Cat Claws) has no photo on the website | Passed (automated) |
 | TC-P9-109 | FR-122      | Unit (website `menu-item-images.test.ts`, TC-P3-048 and TC-P4-038 updated; Android `MenuImagesTest`): the new drink photos | Soda (Fizzy Felines) shows the Blueberry Bite photo; Blueberry Bite, Passion Fruit Purr, Caramel Oreo Kitten and Siamese Latte show their own photos; other flavors fall back to the item photo on Android, and on the website have no flavor photo | Passed (automated) |
+
+### Checkout coins: database storage and POS reporting
+
+| ID        | Automated database case                                               |
+| --------- | --------------------------------------------------------------------- |
+| TC-P9-110 | A completed order's coin discount and net total reach the POS sale.   |
+| TC-P9-111 | Negative, over-cap, and sub-tenth coin amounts fail the order check.  |
+| TC-P9-112 | Rollback removes discount fields if no order has used coins.          |
+| TC-P9-113 | Rollback refuses to erase a recorded order discount.                   |
+
+These cases run in `tests/database/online-order-status.test.ts` with synthetic
+data. They do not verify customer redemption or refunds.

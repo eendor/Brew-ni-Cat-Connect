@@ -888,3 +888,65 @@ describe("applying and undoing the status migration", () => {
     }
   }, 60_000);
 });
+
+describe("online-order coin discount storage and POS sales", () => {
+  const migration = "20261120120000_online_order_coin_discounts.sql";
+
+  it("TC-P9-110 — projects a stored discount to the completed sale", async () => {
+    const reference = await placeOrder();
+    // A privileged fixture only: customers cannot redeem coins in this migration.
+    await db.query(
+      "update public.online_orders set coins_spent = 12.5 where reference = $1",
+      [reference],
+    );
+
+    await bringTo(reference, "completed");
+
+    expect(await posSales(reference)).toMatchObject([
+      {
+        subtotal: 481.5,
+        discount: 12.5,
+        discount_label: "Coin discount",
+        total: 469,
+      },
+    ]);
+  });
+
+  it("TC-P9-111 — rejects negative, over-cap and sub-tenth coin amounts", async () => {
+    const reference = await placeOrder();
+    for (const coins of [-0.1, 96.4, 12.51]) {
+      await expect(
+        db.query(
+          "update public.online_orders set coins_spent = $1 where reference = $2",
+          [coins, reference],
+        ),
+      ).rejects.toMatchObject({ code: "23514" });
+    }
+  });
+
+  it("TC-P9-112 — rolls back on an unused database", async () => {
+    const database = await createMigratedDatabase(migration);
+    try {
+      await applyRollback(database, migration);
+      const result = await database.query(
+        `select column_name from information_schema.columns
+         where table_schema = 'public' and table_name = 'online_orders'
+           and column_name in ('coins_spent', 'coin_discount')`,
+      );
+      expect(result.rows).toEqual([]);
+    } finally {
+      await database.close();
+    }
+  });
+
+  it("TC-P9-113 — refuses a rollback that would erase a discount", async () => {
+    const reference = await placeOrder();
+    await db.query(
+      "update public.online_orders set coins_spent = 0.1 where reference = $1",
+      [reference],
+    );
+    await expect(applyRollback(db, migration)).rejects.toThrow(
+      "Cannot roll back while online orders have coin discounts",
+    );
+  });
+});

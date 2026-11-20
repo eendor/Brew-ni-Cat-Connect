@@ -2307,3 +2307,13 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Testing:** `./gradlew -q testDebugUnitTest lintDebug` with JDK 21 (passed, including TC-P9-106 to TC-P9-109); `./gradlew -q testDebugUnitTest assembleRelease lintRelease` with the release key (passed); `apksigner verify --print-certs` shows the same certificate SHA-256 as 1.0.4, and `aapt2 dump badging` shows version code 8, 1.0.5. Website: `npx tsc --noEmit` (no errors), `npm run lint` (clean), `npx vitest run tests/unit` (100 files, 972 tests passed).
 - **Known limitations:** Not installed on a phone yet. The other soda flavors and most items still have no photo. The arcade keeps its emoji until I draw sprites for it.
 - **Next action:** Merge, check the update on a phone, then the POS coins (part 3).
+
+## 2026-11-20 — Checkout coins: POS sale totals
+
+- **Phase:** 9
+- **Task:** Prepare the shared database to carry a checkout coin discount through to the POS after POS PR #38.
+- **Summary:** I added order discount storage, a database check for the 20% cap and tenth-coin precision, and the discount and net total on completed POS sales. Existing orders still use their full subtotal. The rollback refuses to erase a recorded discount.
+- **Files:** `supabase/{migrations,rollbacks}/20261120120000_online_order_coin_discounts.sql`, `tests/database/online-order-status.test.ts`, `docs/{database-design,test-cases,development-log}.md`.
+- **Testing:** Local PGlite status, undo, and loyalty suites (37 tests). The new tests cover discount projection, invalid discounts, and both rollback paths (TC-P9-110 to TC-P9-113).
+- **Known limitations:** No production migration was applied. Checkout cannot redeem coins yet.
+- **Next action:** Add an atomic balance debit and cancellation/rejection refunds, return the agreed discount to checkout and tracking, and release the Android POS before enabling redemption.
