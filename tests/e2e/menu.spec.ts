@@ -129,7 +129,12 @@ test("TC-P2-028 — Menu handles retrieval failure without fabricated fallback d
     hint: null,
   });
 
-  for (const resource of ["categories", "items", "menu_add_ons"]) {
+  for (const resource of [
+    "categories",
+    "items",
+    "menu_add_ons",
+    "menu_deals",
+  ]) {
     await page.route(`**/rest/v1/${resource}*`, async (route) => {
       await route.fulfill({
         status: 400,
