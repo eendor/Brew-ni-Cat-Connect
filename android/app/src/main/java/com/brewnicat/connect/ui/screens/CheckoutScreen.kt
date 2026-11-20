@@ -31,12 +31,14 @@ fun CheckoutScreen(vm: AppViewModel) {
     val d = vm.details
     val errors = vm.fieldErrors
     val subtotal = vm.confirmedSubtotal ?: vm.cart.subtotal
+    val maxCoins = vm.maxCheckoutCoins
+    val discount = if (vm.applyCheckoutCoins) maxCoins else 0.0
     Page(
         "Checkout", onBack = { vm.back() },
         bottomBar = {
             vm.placeNotice?.let { Notice(it, Modifier.padding(bottom = 10.dp), warning = true) }
             KitButton(
-                if (vm.placing) "Placing order…" else "Place order · ${Pricing.formatPeso(subtotal)}",
+                if (vm.placing) "Placing order…" else "Place order · ${Pricing.formatPeso(subtotal - discount)}",
                 vm::placeOrder, Modifier.fillMaxWidth(), enabled = !vm.cart.isEmpty, busy = vm.placing,
             )
         },
@@ -51,6 +53,18 @@ fun CheckoutScreen(vm: AppViewModel) {
                     ListRow("${l.quantity}× ${l.itemName}", subtitle = detail.ifEmpty { null }, detail = Pricing.formatPeso(l.lineTotal))
                 }
                 ListRow("Subtotal", trailing = { Text(Pricing.formatPeso(subtotal), style = KitType.headline, color = c.label) }, titleColor = c.label)
+                if (maxCoins > 0) {
+                    KitButton(
+                        if (vm.applyCheckoutCoins) "Remove coin discount" else "Use ${maxCoins} coins",
+                        vm::toggleCheckoutCoins,
+                        Modifier.fillMaxWidth(),
+                        enabled = !vm.placing,
+                    )
+                }
+                if (discount > 0) {
+                    ListRow("Coin discount", detail = "−${Pricing.formatPeso(discount)}")
+                    ListRow("Total", detail = Pricing.formatPeso(subtotal - discount))
+                }
             }
         }
         item(key = "details") {

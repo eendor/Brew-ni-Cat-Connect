@@ -54,6 +54,7 @@ import type { ShopFacts } from "@/lib/site-content/types";
 import { isOnlineOrderingEnabled } from "@/lib/orders/online-ordering";
 import { placeOrder, type PlaceOrder } from "@/lib/orders/order-client";
 import { buildOrderPath } from "@/lib/orders/order-link";
+import { fetchLoyaltyBalance } from "@/lib/loyalty/loyalty-client";
 import { getAuthSupabaseClient } from "@/lib/supabase/auth-client";
 import {
   buildOrderDraft,
@@ -225,6 +226,30 @@ export function CheckoutView({
 
   // Place order (pickup only; rider delivery always copies a summary)
   const placesOnline = onlineOrdering && !isRiderDelivery;
+  const checkoutCoinsEnabled =
+    process.env.NEXT_PUBLIC_CHECKOUT_COINS === "true";
+  const coinUserId =
+    checkoutCoinsEnabled && placesOnline ? user?.id : undefined;
+  const [applyCoins, setApplyCoins] = useState(false);
+  const [balance, setBalance] = useState<{
+    userId: string;
+    amount: number;
+  } | null>(null);
+  useEffect(() => {
+    if (!coinUserId) return;
+    let active = true;
+    void fetchLoyaltyBalance({ userId: coinUserId }).then(
+      (amount) => {
+        if (active) setBalance({ userId: coinUserId, amount });
+      },
+      () => {
+        if (active) setBalance(null);
+      },
+    );
+    return () => {
+      active = false;
+    };
+  }, [coinUserId]);
   // The owner's "Closed today" switch in the POS (FR-111).
   // Closed today, or outside the opening hours (FR-111, FR-112). Checked
   // after the page loads and every minute, so the server and browser agree.
@@ -477,17 +502,32 @@ export function CheckoutView({
     }
   }
 
+  const selection = selectionOf(lines);
+  const reviewedSubtotal =
+    newSubtotal?.selection === selection ? newSubtotal.subtotal : total;
+  const maxCoins =
+    coinUserId && balance?.userId === coinUserId
+      ? Math.max(
+          0,
+          Math.min(
+            Math.round(balance.amount * 10),
+            Math.floor(Math.round(reviewedSubtotal * 100) / 50),
+          ) / 10,
+        )
+      : 0;
+  const coinsToSpend = applyCoins ? maxCoins : 0;
+
   async function handlePlaceOrder() {
     if (placingRef.current) return;
     placingRef.current = true;
     setIsPlacing(true);
     setPlaceNotice(null);
 
-    const selection = selectionOf(lines);
     const draft = buildOrderDraft(
       customer,
       lines,
-      newSubtotal?.selection === selection ? newSubtotal.subtotal : total,
+      reviewedSubtotal,
+      coinsToSpend,
     );
     const draftJson = JSON.stringify(draft);
     if (attemptRef.current?.draft !== draftJson) {
@@ -532,6 +572,12 @@ export function CheckoutView({
     }
 
     switch (result.reason) {
+      case "invalid-coins":
+      case "insufficient-coins":
+      case "coins-sign-in-required":
+        setApplyCoins(false);
+        setPlaceNotice({ message: result.message, details: [] });
+        return;
       case "invalid-details": {
         setErrors({ ...result.fieldErrors });
         goToStep("details");
@@ -1381,6 +1427,21 @@ export function CheckoutView({
                       </span>
                     </div>
 
+                    {maxCoins > 0 && (
+                      <label className="flex min-h-11 items-center justify-between gap-3">
+                        <span>
+                          Use {maxCoins} coins (save {formatPrice(maxCoins)})
+                        </span>
+                        <input
+                          type="checkbox"
+                          checked={applyCoins}
+                          onChange={(event) =>
+                            setApplyCoins(event.target.checked)
+                          }
+                          disabled={isPlacing}
+                        />
+                      </label>
+                    )}
                     <div className="pt-3 border-t border-[var(--border-soft)] flex items-baseline justify-between">
                       <div>
                         <span className="block text-base font-semibold text-[var(--text-strong)]">
@@ -1393,7 +1454,11 @@ export function CheckoutView({
                         </span>
                       </div>
                       <span className="text-3xl font-bold text-[var(--accent-strong)] tabular-nums">
-                        {formatPrice(total)}
+                        {formatPrice(
+                          (Math.round(reviewedSubtotal * 100) -
+                            Math.round(coinsToSpend * 100)) /
+                            100,
+                        )}
                       </span>
                     </div>
                   </div>

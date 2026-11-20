@@ -372,3 +372,13 @@ describe("Place order database answers", () => {
     }
   });
 });
+
+it.each(["invalid-coins", "insufficient-coins", "coins-sign-in-required"])(
+  "returns a checkout-safe message for %s",
+  (reason) => {
+    expect(toPlaceOrderResponse({ ok: false, reason }, TOKEN)).toEqual({
+      status: 422,
+      result: { ok: false, reason, message: expect.any(String) },
+    });
+  },
+);

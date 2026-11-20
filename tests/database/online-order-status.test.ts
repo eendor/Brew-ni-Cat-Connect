@@ -85,6 +85,8 @@ function newCorrelationId(): string {
 async function placeOrder(
   database: PGlite = db,
   paymentPreference = "Cash",
+  actor: Actor = ANON,
+  coinsToSpend?: number,
 ): Promise<string> {
   const request = {
     idempotencyKey: newKey(),
@@ -106,10 +108,11 @@ async function placeOrder(
       },
     ],
     expectedSubtotal: 481.5,
+    coinsToSpend,
   };
   const outcome = await commitAs<{ result: Answer }>(
     database,
-    ANON,
+    actor,
     "select public.place_online_order($1::jsonb) as result",
     [JSON.stringify(request)],
   );
@@ -887,4 +890,113 @@ describe("applying and undoing the status migration", () => {
       await fresh.close();
     }
   }, 60_000);
+});
+
+describe("online-order coin discount storage and POS sales", () => {
+  const migration = "20261120120000_online_order_coin_discounts.sql";
+
+  it("TC-P9-110 — projects a stored discount to the completed sale", async () => {
+    const reference = await placeOrder();
+    // A privileged fixture only: customers cannot redeem coins in this migration.
+    await db.query(
+      "update public.online_orders set coins_spent = 12.5 where reference = $1",
+      [reference],
+    );
+
+    await bringTo(reference, "completed");
+
+    expect(await posSales(reference)).toMatchObject([
+      {
+        subtotal: 481.5,
+        discount: 12.5,
+        discount_label: "Coin discount",
+        total: 469,
+      },
+    ]);
+  });
+
+  it("TC-P9-111 — rejects negative, over-cap and sub-tenth coin amounts", async () => {
+    const reference = await placeOrder();
+    for (const coins of [-0.1, 96.4, 12.51]) {
+      await expect(
+        db.query(
+          "update public.online_orders set coins_spent = $1 where reference = $2",
+          [coins, reference],
+        ),
+      ).rejects.toMatchObject({ code: "23514" });
+    }
+  });
+
+  it("TC-P9-112 — rolls back on an unused database", async () => {
+    const database = await createMigratedDatabase(migration);
+    try {
+      await applyRollback(database, migration);
+      const result = await database.query(
+        `select column_name from information_schema.columns
+         where table_schema = 'public' and table_name = 'online_orders'
+           and column_name in ('coins_spent', 'coin_discount')`,
+      );
+      expect(result.rows).toEqual([]);
+    } finally {
+      await database.close();
+    }
+  }, 30_000);
+
+  it("TC-P9-113 — refuses a rollback that would erase a discount", async () => {
+    const reference = await placeOrder();
+    await db.query(
+      "update public.online_orders set coins_spent = 0.1 where reference = $1",
+      [reference],
+    );
+    await expect(applyRollback(db, migration)).rejects.toThrow(
+      "Cannot roll back while online orders have coin discounts",
+    );
+  });
+});
+
+describe("checkout coin ledger", () => {
+  it("TC-P9-114 — debits on placement and refunds on cancellation without changing the saved discount", async () => {
+    await db.query(
+      `insert into public.loyalty_transactions (customer_id, points, reason)
+       values ($1, 30, 'adjustment')`,
+      [CUSTOMER],
+    );
+
+    const reference = await placeOrder(db, "Cash", signedIn(CUSTOMER), 12.5);
+    const snapshot = async () =>
+      (
+        await db.query(
+          `select o.coin_discount::float8 as discount, (
+             select sum(l.points)::float8
+             from public.loyalty_transactions l where l.order_id = o.id
+           ) as debit
+           from public.online_orders o where o.reference = $1`,
+          [reference],
+        )
+      ).rows[0];
+
+    expect(await snapshot()).toEqual({ discount: 12.5, debit: -12.5 });
+    const tracking = await commitAs<{ result: Answer }>(
+      db,
+      ANON,
+      "select public.get_online_order($1, $2) as result",
+      [reference, TOKEN],
+    );
+    expect(tracking).toMatchObject({
+      ok: true,
+      rows: [
+        {
+          result: {
+            subtotal: 481.5,
+            coinDiscount: 12.5,
+            coinsSpent: 12.5,
+            total: 469,
+          },
+        },
+      ],
+    });
+    await move(reference, "pending", "accepted");
+    await move(reference, "accepted", "cancelled");
+    expect(await snapshot()).toEqual({ discount: 12.5, debit: 0 });
+  });
 });

@@ -600,3 +600,29 @@ Migration `20261119130000_coins.sql` (FR-124). **Not applied to the live databas
 - `public.play_mini_game()` no longer refuses plays. Under the per-customer lock it pays `least(drawn, 2 − coins today)`, writes the play, writes a ledger row only when the coins are above 0, and draws for a prize only on the first 3 plays of the Manila day. The answer adds `coinsLeft` and `unlimited`.
 - Undo: `supabase/rollbacks/20261119130000_coins.sql` puts back the earlier functions and turns amounts back into whole points. It loses data: amounts are rounded, ledger rows that round to 0 are deleted, and game plays are recorded as at least 1 point. TC-P9-060 runs it on PGlite.
 
+
+### Checkout coin discounts: order storage and sales
+
+Migration `20261120120000_online_order_coin_discounts.sql` adds
+`online_orders.coins_spent` (zero by default) and
+`online_orders.coin_discount` (generated in PHP at ₱1 per coin).
+The order subtotal remains the original price. The database rejects negative
+amounts, amounts finer than one tenth of a coin, and discounts greater than
+20% of subtotal. On completion, `private.record_online_sale` copies the
+discount into `orders.discount_deduction` and records the net sale total
+without changing line prices. Existing orders retain their original totals.
+
+This migration does not let customers spend coins. The checkout transaction
+must validate the signed-in balance, debit it atomically with order placement,
+and reverse the debit on cancellation or rejection. The paired rollback
+restores the previous sale function and drops the columns only if no order
+has a discount.
+
+The follow-up migration `20261120130000_checkout_coin_ledger.sql` accepts
+`coinsToSpend` on signed-in pickup orders. It rechecks the live subtotal and
+balances under the same per-account lock as reward redemption. A retry returns
+the existing order instead of debiting again. Status changes reconcile the
+debit: cancellation or rejection refunds it, and undoing a cancellation
+reapplies the debit only if the balance still covers it. The tracking RPC
+returns the saved discount and payable total. Order completion earnings remain
+separate from checkout debits and refunds.

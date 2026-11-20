@@ -252,6 +252,9 @@ export type OrderView = Readonly<{
   notes: string;
   items: readonly OrderItemSnapshot[];
   subtotal: number;
+  coinsSpent?: number;
+  coinDiscount?: number;
+  total?: number;
   itemCount: number;
   rejectionReason: string | null;
   createdAt: string;
@@ -299,6 +302,7 @@ export type PlaceOrderRequest = Readonly<{
    * and the customer confirms before placing the order again.
    */
   expectedSubtotal: number;
+  coinsToSpend?: number;
 }>;
 
 /** The order was saved, or a retry with the same key found it. */
@@ -337,7 +341,13 @@ type PlaceOrderFailureOf<TReason extends string> = Readonly<{
  */
 export type PlaceOrderFailure =
   | PlaceOrderFailureOf<
-      "invalid-request" | "empty-cart" | "server-error" | "session-expired"
+      | "invalid-request"
+      | "empty-cart"
+      | "server-error"
+      | "session-expired"
+      | "invalid-coins"
+      | "insufficient-coins"
+      | "coins-sign-in-required"
     >
   | (PlaceOrderFailureOf<"invalid-details"> &
       Readonly<{ fieldErrors: OrderFieldErrors }>)

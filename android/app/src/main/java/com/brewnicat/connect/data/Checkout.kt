@@ -71,6 +71,7 @@ object Checkout {
         details: Details,
         cart: Cart,
         expectedSubtotal: Double,
+        coinsToSpend: Double = 0.0,
     ): JSONObject = JSONObject()
         .put("idempotencyKey", idempotencyKey)
         .put("trackingToken", trackingToken)
@@ -87,6 +88,7 @@ object Checkout {
             }
         })
         .put("expectedSubtotal", expectedSubtotal)
+        .apply { if (coinsToSpend > 0) put("coinsToSpend", coinsToSpend) }
 }
 
 sealed interface PlaceOrderResult {
