@@ -118,6 +118,9 @@ test("TC-P1-009 — key public pages avoid horizontal viewport overflow", async 
   await page.route("**/rest/v1/menu_add_ons*", (route) =>
     route.fulfill({ json: [] }),
   );
+  await page.route("**/rest/v1/menu_deals*", (route) =>
+    route.fulfill({ json: [] }),
+  );
   await page.route("**/rest/v1/items*", async (route) => {
     await route.fulfill({
       status: 200,

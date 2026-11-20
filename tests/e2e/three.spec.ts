@@ -42,6 +42,9 @@ async function mockMenu(page: Page) {
   await page.route("**/rest/v1/menu_add_ons*", (route) =>
     route.fulfill({ json: [] }),
   );
+  await page.route("**/rest/v1/menu_deals*", (route) =>
+    route.fulfill({ json: [] }),
+  );
   await page.route("**/rest/v1/items*", (route) =>
     route.fulfill({ json: [item] }),
   );
@@ -463,6 +466,9 @@ async function openLiveMenu(
     route.fulfill({ json: liveCategories }),
   );
   await page.route("**/rest/v1/menu_add_ons*", (route) =>
+    route.fulfill({ json: [] }),
+  );
+  await page.route("**/rest/v1/menu_deals*", (route) =>
     route.fulfill({ json: [] }),
   );
   await page.route("**/rest/v1/items*", (route) =>

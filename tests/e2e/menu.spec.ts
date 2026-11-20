@@ -37,6 +37,9 @@ async function mockMenuResponses(
   await page.route("**/rest/v1/menu_add_ons*", (route) =>
     route.fulfill({ json: [] }),
   );
+  await page.route("**/rest/v1/menu_deals*", (route) =>
+    route.fulfill({ json: [] }),
+  );
   await page.route("**/rest/v1/items*", async (route) => {
     await route.fulfill({
       status: 200,
@@ -89,6 +92,9 @@ test("TC-P2-027 — Menu exposes truthful loading and empty states", async ({
     });
   });
   await page.route("**/rest/v1/menu_add_ons*", (route) =>
+    route.fulfill({ json: [] }),
+  );
+  await page.route("**/rest/v1/menu_deals*", (route) =>
     route.fulfill({ json: [] }),
   );
   await page.route("**/rest/v1/items*", async (route) => {
@@ -343,4 +349,25 @@ test("TC-P6-222 — fries mix up to 3 flavors in the order dialog, at the size p
     cart.getByText("Flavor: BBQ Scratch / Cheesy Purr / Sour Cream"),
   ).toBeVisible();
   await expect(cart.getByText("₱50").first()).toBeVisible();
+});
+
+test("an active online deal shows a banner, badge, and both prices", async ({
+  page,
+}) => {
+  await mockMenuResponses(
+    page,
+    [fixtureCategory],
+    [{ ...fixtureItem, is_available: true }],
+  );
+  await page.route("**/rest/v1/menu_deals*", (route) =>
+    route.fulfill({ json: [{ item_id: fixtureItem.id, percent_off: 20 }] }),
+  );
+  await page.goto("/menu");
+  await expect(page.getByText("Deals today")).toBeVisible();
+  const product = page
+    .getByRole("article")
+    .filter({ hasText: fixtureItem.name });
+  await expect(product.getByText("20% off")).toBeVisible();
+  await expect(product.getByText("₱75", { exact: true })).toBeVisible();
+  await expect(product.getByText("₱60", { exact: true }).first()).toBeVisible();
 });
