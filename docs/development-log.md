@@ -2330,3 +2330,10 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Phase:** 9
 - **Summary:** After PR #188 passed CI, I checked the two migrations in a transaction that was rolled back, then applied them together and recorded both rollbacks. I enabled checkout coins on the web and verified the production deployment rejects a guest coin request without creating an order. POS 1.1.0 build 10153 was already available.
 - **Android release:** The signed Connect 1.0.6 APK (build 9) matches the 1.0.5 signing certificate. It is staged for release, not published. The release procedure still requires a sign-in on the signed build before publication.
+
+## 2026-11-20 — Menu deals pricing
+
+- **Task:** Add staff-configured percentage deals, with coins still usable up to 20% of the discounted subtotal.
+- **Summary:** I added the database table and staff policies. Authoritative checkout pricing applies active deals to the resolved item price before optional extras and passes the resulting subtotal to the existing coin validation. Normal prices stay unchanged for other items.
+- **Verification:** Added database coverage for active and inactive prices, add-ons, and guest permissions in `tests/database/menu-add-ons.test.ts`.
+- **Next action:** Wire POS deal controls and the customer-facing web and Android price, badges, and banner. No migration applied or deals activated.
