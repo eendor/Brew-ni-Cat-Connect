@@ -27,7 +27,10 @@ data class OrderView(
     val rejectionReason: String?,
     val createdAt: String,
     val statusHistory: List<StatusEvent>,
+    val coinDiscount: Double = 0.0,
+    val coinsSpent: Double = 0.0,
 ) {
+    val total: Double get() = subtotal - coinDiscount
     val isFinal: Boolean get() = status in FINAL_STATUSES
 
     companion object {
@@ -73,6 +76,8 @@ data class OrderView(
                     )
                 },
                 subtotal = json.optDouble("subtotal"),
+                coinDiscount = json.optDouble("coinDiscount", 0.0),
+                coinsSpent = json.optDouble("coinsSpent", 0.0),
                 itemCount = json.optInt("itemCount"),
                 rejectionReason = if (json.isNull("rejectionReason")) null else json.optString("rejectionReason").ifBlank { null },
                 createdAt = json.optString("createdAt"),

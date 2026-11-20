@@ -1899,3 +1899,7 @@ FR-124. Points become coins kept to 0.1; orders earn 1 coin per ₱50 counted to
 
 These cases run in `tests/database/online-order-status.test.ts` with synthetic
 data. They do not verify customer redemption or refunds.
+
+- **TC-P9-114:** Place a signed-in pickup order with 12.5 coins, verify the
+  ledger debit and tracked total, then cancel and verify the net debit is zero.
+  The historical discount remains on the order.

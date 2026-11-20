@@ -222,6 +222,10 @@ export function toPlaceOrderResponse(
   if (data.ok !== false) return null;
 
   switch (data.reason) {
+    case "invalid-coins":
+    case "insufficient-coins":
+    case "coins-sign-in-required":
+      return { status: 422, result: placeOrderFailure(data.reason) };
     case "invalid-request":
       return { status: 400, result: placeOrderFailure("invalid-request") };
     case "empty-cart":

@@ -34,6 +34,11 @@ export const MAX_ORDER_NOTES_LENGTH = 500;
 export const PLACE_ORDER_MESSAGES: Readonly<
   Record<PlaceOrderFailureReason, string>
 > = {
+  "invalid-coins":
+    "Choose an available coin amount within 20% of your subtotal.",
+  "insufficient-coins":
+    "Your coin balance changed. Choose fewer coins and try again.",
+  "coins-sign-in-required": "Sign in to spend coins on a pickup order.",
   "invalid-request":
     "We couldn't read your order. Please refresh the page and try again.",
   "empty-cart": "Your cart is empty. Add items before placing an order.",
@@ -94,7 +99,14 @@ export function isRecord(value: unknown): value is Record<string, unknown> {
 
 /** A failure with its customer-safe message. */
 export function placeOrderFailure(
-  reason: "invalid-request" | "empty-cart" | "server-error" | "session-expired",
+  reason:
+    | "invalid-request"
+    | "empty-cart"
+    | "server-error"
+    | "session-expired"
+    | "invalid-coins"
+    | "insufficient-coins"
+    | "coins-sign-in-required",
   message: string = PLACE_ORDER_MESSAGES[reason],
 ): PlaceOrderFailure {
   return { ok: false, reason, message };
@@ -161,6 +173,7 @@ export function buildOrderDraft(
   customer: OrderCustomer,
   lines: readonly CartItem[],
   expectedSubtotal: number,
+  coinsToSpend = 0,
 ): OrderDraft {
   return {
     fulfillment: "pickup",
@@ -177,6 +190,7 @@ export function buildOrderDraft(
       quantity: line.quantity,
     })),
     expectedSubtotal,
+    ...(coinsToSpend > 0 ? { coinsToSpend } : {}),
   };
 }
 

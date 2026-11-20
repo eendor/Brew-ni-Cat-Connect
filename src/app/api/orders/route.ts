@@ -91,6 +91,19 @@ export async function POST(request: Request): Promise<Response> {
     return respond(placeOrderFailure("invalid-request"), body.status);
   }
 
+  if (
+    body.request.coinsToSpend !== undefined &&
+    process.env.NEXT_PUBLIC_CHECKOUT_COINS !== "true"
+  ) {
+    return respond(
+      placeOrderFailure(
+        "server-error",
+        "Spending coins at checkout isn't available yet.",
+      ),
+      503,
+    );
+  }
+
   const authHeader = request.headers.get("authorization");
   const token = authHeader
     ? authHeader.startsWith("Bearer ")

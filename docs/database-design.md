@@ -617,3 +617,12 @@ must validate the signed-in balance, debit it atomically with order placement,
 and reverse the debit on cancellation or rejection. The paired rollback
 restores the previous sale function and drops the columns only if no order
 has a discount.
+
+The follow-up migration `20261120130000_checkout_coin_ledger.sql` accepts
+`coinsToSpend` on signed-in pickup orders. It rechecks the live subtotal and
+balances under the same per-account lock as reward redemption. A retry returns
+the existing order instead of debiting again. Status changes reconcile the
+debit: cancellation or rejection refunds it, and undoing a cancellation
+reapplies the debit only if the balance still covers it. The tracking RPC
+returns the saved discount and payable total. Order completion earnings remain
+separate from checkout debits and refunds.

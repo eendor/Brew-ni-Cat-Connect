@@ -328,12 +328,18 @@ export default function OrderConfirmationPage() {
             ))}
           </ul>
 
+          {(order.coinDiscount ?? 0) > 0 && (
+            <div className="flex items-center justify-between">
+              <span>Coin discount ({order.coinsSpent} coins)</span>
+              <span>−{formatPrice(order.coinDiscount ?? 0)}</span>
+            </div>
+          )}
           <div className="mt-2 flex items-center justify-between border-t border-[var(--separator)] pt-5 text-xl font-bold">
             <span className="text-base font-semibold text-[var(--text-strong)]">
               {hasBox ? "Total" : "Subtotal"}
             </span>
             <span className="text-[var(--text-strong)] tabular-nums">
-              {formatPrice(order.subtotal)}
+              {formatPrice(order.total ?? order.subtotal)}
             </span>
           </div>
         </div>
@@ -352,8 +358,8 @@ export default function OrderConfirmationPage() {
                 {address.landmark ? ` (${address.landmark})` : null}.
               </li>
               <li>
-                Pay {formatPrice(order.subtotal)} via {order.paymentPreference}{" "}
-                at the counter.
+                Pay {formatPrice(order.total ?? order.subtotal)} via{" "}
+                {order.paymentPreference} at the counter.
                 {hasBox
                   ? null
                   : ` The ${takeoutBoxText(takeoutBoxPrice)} is not included in that amount.`}

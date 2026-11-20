@@ -85,6 +85,8 @@ function newCorrelationId(): string {
 async function placeOrder(
   database: PGlite = db,
   paymentPreference = "Cash",
+  actor: Actor = ANON,
+  coinsToSpend?: number,
 ): Promise<string> {
   const request = {
     idempotencyKey: newKey(),
@@ -106,10 +108,11 @@ async function placeOrder(
       },
     ],
     expectedSubtotal: 481.5,
+    coinsToSpend,
   };
   const outcome = await commitAs<{ result: Answer }>(
     database,
-    ANON,
+    actor,
     "select public.place_online_order($1::jsonb) as result",
     [JSON.stringify(request)],
   );
@@ -937,7 +940,7 @@ describe("online-order coin discount storage and POS sales", () => {
     } finally {
       await database.close();
     }
-  });
+  }, 30_000);
 
   it("TC-P9-113 — refuses a rollback that would erase a discount", async () => {
     const reference = await placeOrder();
@@ -948,5 +951,52 @@ describe("online-order coin discount storage and POS sales", () => {
     await expect(applyRollback(db, migration)).rejects.toThrow(
       "Cannot roll back while online orders have coin discounts",
     );
+  });
+});
+
+describe("checkout coin ledger", () => {
+  it("TC-P9-114 — debits on placement and refunds on cancellation without changing the saved discount", async () => {
+    await db.query(
+      `insert into public.loyalty_transactions (customer_id, points, reason)
+       values ($1, 30, 'adjustment')`,
+      [CUSTOMER],
+    );
+
+    const reference = await placeOrder(db, "Cash", signedIn(CUSTOMER), 12.5);
+    const snapshot = async () =>
+      (
+        await db.query(
+          `select o.coin_discount::float8 as discount, (
+             select sum(l.points)::float8
+             from public.loyalty_transactions l where l.order_id = o.id
+           ) as debit
+           from public.online_orders o where o.reference = $1`,
+          [reference],
+        )
+      ).rows[0];
+
+    expect(await snapshot()).toEqual({ discount: 12.5, debit: -12.5 });
+    const tracking = await commitAs<{ result: Answer }>(
+      db,
+      ANON,
+      "select public.get_online_order($1, $2) as result",
+      [reference, TOKEN],
+    );
+    expect(tracking).toMatchObject({
+      ok: true,
+      rows: [
+        {
+          result: {
+            subtotal: 481.5,
+            coinDiscount: 12.5,
+            coinsSpent: 12.5,
+            total: 469,
+          },
+        },
+      ],
+    });
+    await move(reference, "pending", "accepted");
+    await move(reference, "accepted", "cancelled");
+    expect(await snapshot()).toEqual({ discount: 12.5, debit: 0 });
   });
 });

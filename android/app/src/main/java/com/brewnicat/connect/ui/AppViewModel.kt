@@ -176,6 +176,21 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    var applyCheckoutCoins by mutableStateOf(false); private set
+
+    fun toggleCheckoutCoins() {
+        if (!placing) applyCheckoutCoins = !applyCheckoutCoins
+    }
+
+    val maxCheckoutCoins: Double
+        get() = if (session == null) 0.0 else maxOf(
+            0L,
+            minOf(
+                kotlin.math.round((loyaltyBalance ?: 0.0) * 10).toLong(),
+                kotlin.math.round((confirmedSubtotal ?: cart.subtotal) * 100).toLong() / 50,
+            ),
+        ) / 10.0
+
     fun placeOrder() {
         if (placing || cart.isEmpty) return
         val errors = Checkout.validate(details)
@@ -185,7 +200,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         if (status is ShopHours.Status.Closed) { placeNotice = status.message; return }
 
         val expected = confirmedSubtotal ?: cart.subtotal
-        val draft = Checkout.request("", "", details, cart, expected).toString()
+        val coins = if (applyCheckoutCoins) maxCheckoutCoins else 0.0
+        val draft = Checkout.request("", "", details, cart, expected, coins).toString()
         val (_, key, token) = attempt?.takeIf { it.first == draft }
             ?: Triple(draft, Checkout.newIdempotencyKey(), Checkout.newTrackingToken()).also { attempt = it }
         placing = true
@@ -197,7 +213,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     api.placeOrder(Checkout.request(key, token, details, cart, expected))
                 } else {
                     withValidToken(activeSession) { accessToken ->
-                        api.placeOrder(Checkout.request(key, token, details, cart, expected), accessToken)
+                        api.placeOrder(Checkout.request(key, token, details, cart, expected, coins), accessToken)
                     }
                 }
             } catch (_: ApiAuthException) {
@@ -210,6 +226,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 is PlaceOrderResult.Placed -> {
                     attempt = null
                     confirmedSubtotal = null
+                    applyCheckoutCoins = false
+                    if (coins > 0) loyaltyBalance = loyaltyBalance?.minus(coins)
                     store.saveDetails(details)
                     store.saveOrder(SavedOrder(result.reference, result.trackingToken, System.currentTimeMillis()))
                     savedOrders = store.loadOrders()
@@ -224,6 +242,10 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     when (result.reason) {
                         "price-changed" -> { confirmedSubtotal = result.newSubtotal; loadMenu() }
                         "line-unavailable" -> loadMenu()
+                        "invalid-coins", "insufficient-coins", "coins-sign-in-required" -> {
+                            applyCheckoutCoins = false
+                            attempt = null
+                        }
                         "server-error" -> Unit // Place order again sends the same key, so it can't order twice.
                         else -> attempt = null
                     }

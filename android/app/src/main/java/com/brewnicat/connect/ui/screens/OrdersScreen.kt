@@ -85,7 +85,7 @@ fun OrdersScreen(vm: AppViewModel) {
             ListRow(
                 saved.reference,
                 subtitle = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(Date(saved.placedAt)) +
-                    (view?.let { " · ${it.itemCount} ${if (it.itemCount == 1) "item" else "items"} · ${Pricing.formatPeso(it.subtotal)}" } ?: ""),
+                    (view?.let { " · ${it.itemCount} ${if (it.itemCount == 1) "item" else "items"} · ${Pricing.formatPeso(it.total)}" } ?: ""),
                 leading = { IconTile(statusIcon(view?.status ?: "pending"), c.statusColor(view?.status ?: "pending"), size = 36.dp) },
                 trailing = view?.let { v -> { StatusPill(v.status) } },
                 chevron = true,
@@ -171,7 +171,10 @@ private fun androidx.compose.foundation.lazy.LazyListScope.orderDetail(vm: AppVi
             }
             Row(Modifier.fillMaxWidth().heightIn(min = 52.dp).padding(horizontal = 16.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text("Total to pay at pickup", style = KitType.headline, color = c.label, modifier = Modifier.weight(1f))
-                Text(Pricing.formatPeso(order.subtotal), style = KitType.headline, color = c.label)
+                if (order.coinDiscount > 0) {
+                    Text("Coin discount (${order.coinsSpent} coins): −${Pricing.formatPeso(order.coinDiscount)}")
+                }
+                Text(Pricing.formatPeso(order.total), style = KitType.headline, color = c.label)
             }
         }
     }
