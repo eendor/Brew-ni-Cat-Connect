@@ -19,6 +19,7 @@ import { getMenuItemImage } from "@/config/menu-item-images";
 import { useCart } from "@/context/cart-context";
 import { useFocusTrap } from "@/lib/accessibility/focus-trap";
 import { formatOptionName } from "@/lib/menu/format-name";
+import { dealPrice } from "@/lib/ordering/cart-pricing";
 import { formatPrice } from "@/lib/menu/format-price";
 import {
   allowsFlavorMix,
@@ -478,7 +479,9 @@ export function MenuItemOrderDialog({
                         <span
                           className={`shrink-0 text-xs font-semibold text-[var(--accent-strong)] tabular-nums ${longOptions ? "" : "mt-1"}`}
                         >
-                          {formatPrice(variant.basePrice)}
+                          {formatPrice(
+                            dealPrice(variant.basePrice, item.dealPercent),
+                          )}
                         </span>
                       ) : (
                         <span
@@ -529,7 +532,11 @@ export function MenuItemOrderDialog({
                       {flavor}
                       {flavorPriceOverride !== undefined ? (
                         <span className="ml-1 opacity-90">
-                          ({formatPrice(flavorPriceOverride)})
+                          (
+                          {formatPrice(
+                            dealPrice(flavorPriceOverride, item.dealPercent),
+                          )}
+                          )
                         </span>
                       ) : null}
                     </button>

@@ -2337,3 +2337,8 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Summary:** I added the database table and staff policies. Authoritative checkout pricing applies active deals to the resolved item price before optional extras and passes the resulting subtotal to the existing coin validation. Normal prices stay unchanged for other items.
 - **Verification:** Added database coverage for active and inactive prices, add-ons, and guest permissions in `tests/database/menu-add-ons.test.ts`.
 - **Next action:** Wire POS deal controls and the customer-facing web and Android price, badges, and banner. No migration applied or deals activated.
+
+## 2026-11-20 — Deal display and checkout parity
+
+- **Summary:** I added live deal badges, original and sale prices, and a conditional deals banner to the web and Android menus. Both carts apply the same centavo rounding as checkout and charge separately priced extras in full. The POS web catalog can configure and activate online deals through the staff-only policies.
+- **Known limitations:** Deals apply to Connect online orders and their POS sale records, not the separate walk-in cart. The migration and Android customer build must be released before staff activate offers. Take-out box pricing does not participate in deals.

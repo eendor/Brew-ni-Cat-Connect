@@ -28,6 +28,7 @@ export type MenuItem = Readonly<{
   variants: readonly MenuVariant[];
   /** Extras offered for this item's category; empty or missing means none. */
   addOns?: readonly MenuAddOn[];
+  dealPercent?: number;
 }>;
 
 export type MenuCategory = Readonly<{

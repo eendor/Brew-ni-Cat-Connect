@@ -167,7 +167,8 @@ begin
 
           select d.percent_off into deal_percent
           from public.menu_deals as d
-          where d.item_id = menu_item.id and d.active;
+          where d.item_id = menu_item.id and d.active
+            and lower(regexp_replace(menu_item.name, '[^A-Za-z]', '', 'g')) <> 'takeoutbox';
           line_unit_price := case when resolved.failure is null then
             private.normalize_price(
               case when deal_percent is not null then

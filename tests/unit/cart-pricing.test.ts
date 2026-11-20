@@ -411,3 +411,22 @@ describe("cart quantity validation", () => {
     ).toThrow(RangeError);
   });
 });
+
+it("rounds an item deal before adding the full price of extras", () => {
+  const variant = makeVariant({
+    id: "regular",
+    name: "Regular",
+    basePrice: 129.05,
+  });
+  const item = makeItem({
+    id: "noodles",
+    name: "Noodles",
+    variants: [variant],
+    dealPercent: 30,
+    addOns: [{ id: "egg", label: "Egg", price: 15 }],
+  });
+  expect(resolveVariantUnitPrice(item, variant, "+ Egg")).toEqual({
+    ok: true,
+    unitPrice: 105.34,
+  });
+});

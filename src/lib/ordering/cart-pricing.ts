@@ -281,14 +281,27 @@ export function findCatalogVariant(
  *   variant flavor prices.
  * - No flavor with a zero base plus flavor prices requires a flavor choice.
  */
+export function dealPrice(price: number, percent = 0): number {
+  const cents = Math.round(price * 100);
+  return (
+    (percent === 0
+      ? cents
+      : Number((BigInt(cents) * BigInt(100 - percent) + 50n) / 100n)) / 100
+  );
+}
+
 export function resolveVariantUnitPrice(
   item: MenuItem,
   variant: MenuVariant,
   flavor: string | null | undefined,
 ): ResolvePriceResult {
   const parts = splitAddOns(flavor);
-  if (!parts.hasAddOnPart)
-    return resolveFlavorPrice(item, variant, parts.flavor);
+  if (!parts.hasAddOnPart) {
+    const base = resolveFlavorPrice(item, variant, parts.flavor);
+    return base.ok
+      ? { ok: true, unitPrice: dealPrice(base.unitPrice, item.dealPercent) }
+      : base;
+  }
 
   // Each add-on must be one of this item's extras, once.
   const offered = new Map(
@@ -307,7 +320,12 @@ export function resolveVariantUnitPrice(
     (sum, label) => sum + (offered.get(label) ?? 0),
     0,
   );
-  return { ok: true, unitPrice: normalizePrice(base.unitPrice + extras) };
+  return {
+    ok: true,
+    unitPrice: normalizePrice(
+      dealPrice(base.unitPrice, item.dealPercent) + extras,
+    ),
+  };
 }
 
 function resolveFlavorPrice(

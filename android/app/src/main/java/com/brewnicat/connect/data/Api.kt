@@ -80,7 +80,17 @@ class Api(
         val addOns = runCatching {
             JSONArray(call(rest("menu_add_ons?select=id,category_id,label,price,sort_order&is_available=eq.true").get().build()))
         }.getOrElse { JSONArray() }
-        return MenuMapper.map(categories, items, addOns)
+        val catalog = MenuMapper.map(categories, items, addOns)
+        val deals = runCatching {
+            JSONArray(call(rest("menu_deals?select=item_id,percent_off&active=eq.true").get().build())).objects()
+                .associate { it.optString("item_id") to it.optInt("percent_off") }
+                .filterValues { it in 1..99 }
+        }.getOrElse { emptyMap() }
+        return if (deals.isEmpty()) catalog else MenuCatalog(catalog.categories.map { category ->
+            category.copy(items = category.items.map { item ->
+                deals[item.id]?.let { item.copy(dealPercent = it) } ?: item
+            })
+        })
     }
 
     suspend fun fetchShopHours(): ShopHours? {
