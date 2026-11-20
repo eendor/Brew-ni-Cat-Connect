@@ -86,9 +86,18 @@ object Pricing {
     private fun findFlavorPrice(variant: MenuVariant, flavor: String): Double? =
         variant.flavorPrices.firstOrNull { it.flavor == flavor }?.price?.takeIf { it.isFinite() && it >= 0 }
 
+    fun dealPrice(price: Double, percent: Int): Double {
+        val cents = toCentavos(price)
+        val factor = 100 - percent.coerceIn(0, 99)
+        return fromCentavos(cents / 100 * factor + (cents % 100 * factor + 50) / 100)
+    }
+
     fun resolveUnitPrice(item: MenuItem, variant: MenuVariant, flavor: String?): PriceResult {
         val parts = splitAddOns(flavor)
-        if (!parts.hasAddOnPart) return resolveFlavorPrice(item, variant, parts.flavor)
+        if (!parts.hasAddOnPart) {
+            val normal = resolveFlavorPrice(item, variant, parts.flavor)
+            return if (normal is PriceResult.Ok) PriceResult.Ok(dealPrice(normal.unitPrice, item.dealPercent)) else normal
+        }
         val offered = item.addOns.associate { it.label to it.price }
         if (parts.addOns.isEmpty() || parts.addOns.toSet().size != parts.addOns.size || !parts.addOns.all { it in offered }) {
             return PriceResult.Failed("unknown-flavor")
@@ -96,7 +105,7 @@ object Pricing {
         val base = resolveFlavorPrice(item, variant, parts.flavor)
         if (base !is PriceResult.Ok) return base
         val extras = parts.addOns.sumOf { offered[it] ?: 0.0 }
-        return PriceResult.Ok(normalizePrice(base.unitPrice + extras))
+        return PriceResult.Ok(normalizePrice(dealPrice(base.unitPrice, item.dealPercent) + extras))
     }
 
     private fun resolveFlavorPrice(item: MenuItem, variant: MenuVariant, flavor: String?): PriceResult {
@@ -129,7 +138,9 @@ object Pricing {
         item.flavors.isNotEmpty() && resolveFlavorPrice(item, variant, null) !is PriceResult.Ok
 
     /** The lowest price on the item, for "From ₱49". */
-    fun fromPrice(item: MenuItem): Double? = item.variants.flatMap { v ->
+    fun fromPrice(item: MenuItem): Double? = originalFromPrice(item)?.let { dealPrice(it, item.dealPercent) }
+
+    fun originalFromPrice(item: MenuItem): Double? = item.variants.flatMap { v ->
         listOfNotNull(v.basePrice?.takeIf { toCentavos(it) > 0 }) +
             item.flavors.mapNotNull { f -> (resolveFlavorPrice(item, v, f) as? PriceResult.Ok)?.unitPrice }
     }.minOrNull()

@@ -106,6 +106,44 @@ describe("noodle add-ons in the database (TC-P4-259)", () => {
     ).toBe("unknown-flavor");
   });
 
+  it("prices an active percentage deal before add-ons and hides inactive deals from guests", async () => {
+    await db.exec(`
+      insert into public.menu_deals (item_id, percent_off, active)
+      values ('buldak_carbo', 30, true), ('sedaap_spicy', 10, false);
+    `);
+    try {
+      const result = await price(
+        "buldak_carbo",
+        "carbo_milk",
+        "+ Egg (Boiled)",
+      );
+      expect(result.lines[0]?.unitCentavos).toBe(10530);
+      const inactive = await price(
+        "sedaap_spicy",
+        "regular",
+        "2 Paws (Medium)",
+      );
+      expect(inactive.lines[0]?.unitCentavos).toBe(6900);
+      const visible = await runAs(
+        db,
+        ANON,
+        "select item_id from public.menu_deals",
+      );
+      expect(visible).toMatchObject({
+        ok: true,
+        rows: [{ item_id: "buldak_carbo" }],
+      });
+      const guestWrite = await runAs(
+        db,
+        ANON,
+        "update public.menu_deals set percent_off = 99",
+      );
+      expect(guestWrite.ok).toBe(false);
+    } finally {
+      await db.exec("delete from public.menu_deals");
+    }
+  });
+
   it("drops the table and add-on pricing after the rollback", async () => {
     await applyRollback(db, MENU_ADD_ONS_MIGRATION);
     const exists = await db.query<{ t: string | null }>(

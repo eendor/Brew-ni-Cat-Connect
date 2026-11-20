@@ -74,6 +74,10 @@ fun MenuRow(
             val sizeText = sizes.joinToString(" · ").let { if (it.length > 34) "${sizes.size} options" else it }
             val meta = listOfNotNull(sizeText.takeIf { sizes.isNotEmpty() }, item.flavors.size.takeIf { it > 0 }?.let { "$it flavors" }).joinToString(" · ")
             if (meta.isNotEmpty()) Text(meta, style = KitType.footnote, color = c.label2, maxLines = 1, modifier = Modifier.padding(top = 1.dp))
+            if (!unavailable && item.dealPercent > 0) {
+                val regular = Pricing.originalFromPrice(item)
+                Text("${item.dealPercent}% off" + (regular?.let { " · Was ${Pricing.formatPeso(it)}" } ?: ""), style = KitType.footnote.semibold, color = c.tint)
+            }
             Box(Modifier.padding(top = 5.dp)) {
                 when (item.availability) {
                     Availability.UNAVAILABLE -> Badge("Unavailable", color = c.gray)

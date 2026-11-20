@@ -2330,3 +2330,20 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Phase:** 9
 - **Summary:** After PR #188 passed CI, I checked the two migrations in a transaction that was rolled back, then applied them together and recorded both rollbacks. I enabled checkout coins on the web and verified the production deployment rejects a guest coin request without creating an order. POS 1.1.0 build 10153 was already available.
 - **Android release:** The signed Connect 1.0.6 APK (build 9) matches the 1.0.5 signing certificate. It is staged for release, not published. The release procedure still requires a sign-in on the signed build before publication.
+
+## 2026-11-20 — Menu deals pricing
+
+- **Task:** Add staff-configured percentage deals, with coins still usable up to 20% of the discounted subtotal.
+- **Summary:** I added the database table and staff policies. Authoritative checkout pricing applies active deals to the resolved item price before optional extras and passes the resulting subtotal to the existing coin validation. Normal prices stay unchanged for other items.
+- **Verification:** Added database coverage for active and inactive prices, add-ons, and guest permissions in `tests/database/menu-add-ons.test.ts`.
+- **Next action:** Wire POS deal controls and the customer-facing web and Android price, badges, and banner. No migration applied or deals activated.
+
+## 2026-11-20 — Deal display and checkout parity
+
+- **Summary:** I added live deal badges, original and sale prices, and a conditional deals banner to the web and Android menus. Both carts apply the same centavo rounding as checkout and charge separately priced extras in full. The POS web catalog can configure and activate online deals through the staff-only policies.
+- **Known limitations:** Deals apply to Connect online orders and their POS sale records, not the separate walk-in cart. The migration and Android customer build must be released before staff activate offers. Take-out box pricing does not participate in deals.
+
+## 2026-11-20 — Connect Android 1.0.7: online deals
+
+- **Summary:** Prepared the signed Connect 1.0.7 APK (build 10) and updated the website update manifest for the coordinated deals rollout. No offers are enabled by default.
+- **Verification:** Signed release lint and assembly passed. The signer matches 1.0.6, and an emulator installed the update over 1.0.6 and launched it. Google sign-in and physical-device Play Protect behavior were not verified.

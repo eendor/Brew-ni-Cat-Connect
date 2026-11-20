@@ -5,6 +5,7 @@ import { useState } from "react";
 import { StarIcon } from "@/components/reviews/star-rating";
 import { useAuth } from "@/context/auth-context";
 import { useCart } from "@/context/cart-context";
+import { dealPrice } from "@/lib/ordering/cart-pricing";
 import { getItemQuantityInCart } from "@/lib/ordering/cart-selectors";
 import { formatOptionName } from "@/lib/menu/format-name";
 import {
@@ -103,13 +104,23 @@ export function MenuItemCard({
               {singlePrice ? null : (
                 <span className="menu-card__price-from">From</span>
               )}
+              {item.dealPercent ? (
+                <del className="text-sm text-[var(--text-muted)]">
+                  {formatPrice(lowestPrice)}
+                </del>
+              ) : null}
               <span className="menu-card__price-value">
-                {formatPrice(lowestPrice)}
+                {formatPrice(dealPrice(lowestPrice, item.dealPercent))}
               </span>
             </p>
           ) : null}
         </div>
 
+        {item.dealPercent && !unavailable ? (
+          <p className="text-sm font-semibold text-[var(--accent-strong)]">
+            {item.dealPercent}% off
+          </p>
+        ) : null}
         {rating ? (
           <p className="menu-card__rating">
             <StarIcon filled className="size-4 text-amber-500" />
@@ -166,7 +177,9 @@ export function MenuItemCard({
                       {formatOptionName(variant.name)}
                     </span>
                     <span className="menu-card__size-price">
-                      {formatPrice(variant.basePrice ?? 0)}
+                      {formatPrice(
+                        dealPrice(variant.basePrice ?? 0, item.dealPercent),
+                      )}
                     </span>
                   </li>
                 ))}
@@ -181,7 +194,9 @@ export function MenuItemCard({
                       </span>
                       {hasBasePrice(variant) ? (
                         <span className="menu-card__row-price">
-                          {formatPrice(variant.basePrice ?? 0)}
+                          {formatPrice(
+                            dealPrice(variant.basePrice ?? 0, item.dealPercent),
+                          )}
                         </span>
                       ) : null}
                     </div>
@@ -199,7 +214,9 @@ export function MenuItemCard({
                           <li key={entry.flavor}>
                             <span>{entry.flavor}</span>
                             <span className="font-bold text-[var(--text-strong)] tabular-nums">
-                              {formatPrice(entry.price)}
+                              {formatPrice(
+                                dealPrice(entry.price, item.dealPercent),
+                              )}
                             </span>
                           </li>
                         ))}

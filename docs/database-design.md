@@ -626,3 +626,13 @@ debit: cancellation or rejection refunds it, and undoing a cancellation
 reapplies the debit only if the balance still covers it. The tracking RPC
 returns the saved discount and payable total. Order completion earnings remain
 separate from checkout debits and refunds.
+
+### Menu deals
+
+Migration `20261120140000_menu_deals.sql` adds one optional percentage deal
+per item. Staff manage deals; guests only read active deals. Checkout resolves
+the normal variant or flavour price, applies the percentage and rounds to
+centavos, then adds any separately priced extras. Coins can be spent on a sale
+order, with the existing 20% cap calculated on the server-priced subtotal
+after the deal. The rollback restores the prior pricing function before
+dropping the deals table.

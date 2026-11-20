@@ -21,6 +21,7 @@ import androidx.core.net.toUri
 import com.brewnicat.connect.BuildConfig
 import com.brewnicat.connect.data.HomeProduct
 import com.brewnicat.connect.data.HomeRows
+import com.brewnicat.connect.data.Availability
 import com.brewnicat.connect.ui.kit.Icon
 import com.brewnicat.connect.ui.kit.LoadingState
 import com.brewnicat.connect.ui.kit.Notice
@@ -142,6 +143,12 @@ fun HomeScreen(vm: AppViewModel, onItem: (MenuItem) -> Unit) {
                 Modifier.padding(horizontal = Gutter).padding(top = 18.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
+                val catalog = (vm.menu as? Loadable.Ready)?.value
+                if (catalog?.categories?.any { category ->
+                    category.items.any { it.dealPercent > 0 && it.availability == Availability.AVAILABLE }
+                } == true) {
+                    Notice("Deals today: look for the percentage-off badge on selected items.")
+                }
                 tiles.chunked(3).forEach { row ->
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         row.forEach { tile -> TileButton(tile, Modifier.weight(1f)) }
@@ -253,6 +260,10 @@ private fun ProductCard(product: HomeProduct, onClick: () -> Unit) {
         Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
             Text(item.name, style = KitType.subhead.semibold, color = c.label, maxLines = 2, minLines = 2)
             Text(product.flavors ?: " ", style = KitType.caption1, color = c.label2, maxLines = 2, minLines = 2, modifier = Modifier.padding(top = 2.dp))
+            if (product.item.dealPercent > 0 && !product.soldOut) {
+                Text("${product.item.dealPercent}% off", style = KitType.footnote.semibold, color = c.tint)
+                Pricing.originalFromPrice(product.item)?.let { Text("Was ${Pricing.formatPeso(it)}", style = KitType.footnote, color = c.label2) }
+            }
             product.fromPrice?.let { Text("From ${Pricing.formatPeso(it)}", style = KitType.footnote.semibold, color = c.tint, modifier = Modifier.padding(top = 4.dp)) }
         }
     }

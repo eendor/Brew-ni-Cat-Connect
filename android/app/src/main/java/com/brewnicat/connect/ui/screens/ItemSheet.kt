@@ -93,7 +93,7 @@ fun ItemSheet(
             Section(header = "Choose size / option") {
                 item.variants.forEach { v ->
                     val price = v.basePrice?.takeIf { Pricing.toCentavos(it) > 0 }
-                    CheckRow(v.name, v.id == variantId, { variantId = v.id; error = null }, detail = price?.let { Pricing.formatPeso(it) })
+                    CheckRow(v.name, v.id == variantId, { variantId = v.id; error = null }, detail = price?.let { Pricing.formatPeso(Pricing.dealPrice(it, item.dealPercent)) })
                 }
             }
         }
@@ -122,7 +122,7 @@ fun ItemSheet(
                                 else -> (picked + f).takeLast(Pricing.MAX_MIXED_FLAVORS)
                             }
                         },
-                        detail = override?.let { Pricing.formatPeso(it) },
+                        detail = override?.let { Pricing.formatPeso(Pricing.dealPrice(it, item.dealPercent)) },
                         role = if (mix) Role.Checkbox else Role.RadioButton,
                     )
                 }

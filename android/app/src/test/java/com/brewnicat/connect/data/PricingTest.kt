@@ -40,6 +40,14 @@ class PricingTest {
         assertEquals(PriceResult.Failed("unknown-flavor"), price(sedaap, "2 Paws (Medium) + Egg (Boiled), Egg (Boiled)"))
     }
 
+    @Test fun appliesDealBeforeAddOnsAndShowsTheSameStartingPrice() {
+        val offered = sedaap.copy(dealPercent = 30)
+        assertEquals(PriceResult.Ok(91.8), price(offered, "2 Paws (Medium) + 3pcs Seaweed, Egg (Boiled)"))
+        assertEquals(48.3, Pricing.fromPrice(offered)!!, 0.0)
+        assertEquals(69.0, Pricing.originalFromPrice(offered)!!, 0.0)
+        assertEquals(90.34, Pricing.dealPrice(129.05, 30), 0.0)
+    }
+
     @Test fun needsFlavorWhenOnlyFlavorsHavePrices() {
         assertTrue(Pricing.needsFlavor(fries, fries.variants.first()))
         assertFalse(Pricing.needsFlavor(carbo, carbo.variants.first()))

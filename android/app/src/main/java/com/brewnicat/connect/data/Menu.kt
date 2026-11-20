@@ -31,6 +31,7 @@ data class MenuItem(
     val flavors: List<String>,
     val variants: List<MenuVariant>,
     val addOns: List<MenuAddOn> = emptyList(),
+    val dealPercent: Int = 0,
 )
 
 data class MenuCategory(val id: String, val name: String, val items: List<MenuItem>)

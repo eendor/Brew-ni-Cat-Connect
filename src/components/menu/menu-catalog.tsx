@@ -290,6 +290,19 @@ export function MenuCatalog({
 
   return (
     <div ref={rootRef}>
+      {populatedCategories.some((category) =>
+        category.items.some(
+          (item) => item.availability === "available" && item.dealPercent,
+        ),
+      ) && (
+        <aside
+          className="glass-panel mb-4 rounded-2xl p-4"
+          aria-label="Menu deals"
+        >
+          <strong>Deals today</strong>
+          <p>Look for the percentage-off badge on selected items.</p>
+        </aside>
+      )}
       <nav
         ref={navRef}
         className="menu-tabs menu-tabs--bleed sticky top-[4.5rem] z-30 overflow-x-auto border-y border-[var(--separator)] bg-[var(--bar-fill)] py-3 backdrop-blur-md backdrop-saturate-[1.6] lg:top-[5rem]"
