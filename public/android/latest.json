@@ -1,9 +1,9 @@
 {
-  "versionCode": 8,
-  "versionName": "1.0.5",
-  "url": "/android/brew-ni-cat-connect-1.0.5.apk",
-  "sha256": "af1d372d3fb097ff872ffe952b261d410fb6ff2d5b684e55114c027566590bc6",
-  "size": 2848155,
+  "versionCode": 9,
+  "versionName": "1.0.6",
+  "url": "/android/brew-ni-cat-connect-1.0.6.apk",
+  "sha256": "7ca79de6cc0c1cf2b8a85ca8b21545381a1a56602a690c9681347585c0a63c4f",
+  "size": 2848151,
   "minAndroid": "8.0",
-  "notes": "About and Gallery open in the app, the menu is on Home, and coins sit at the top. Adds new drink photos, and items without a photo show an icon."
+  "notes": "Spend coins on signed-in pickup orders and see the discount in order tracking."
 }

@@ -2324,3 +2324,9 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Summary:** I wired opt-in redemption for signed-in pickup orders on web and Android. Customers can apply up to 20% of the priced subtotal in tenths of a coin. Order placement and the ledger debit commit together; cancellation and rejection refund the debit. The order detail and POS use the saved discount and payable total.
 - **Rollout:** Apply the storage migration and ledger migration in order, then set `NEXT_PUBLIC_CHECKOUT_COINS=true` on the website and deploy. The POS needs build 10153 or newer. The Android customer app changes require a separate signed APK release. Keep spending off before the migrations are applied.
 - **Scope:** No Messenger, guest, or rider-summary redemption. No manual end-to-end testing requested.
+
+## 2026-11-20 — Checkout coin redemption live on the web
+
+- **Phase:** 9
+- **Summary:** After PR #188 passed CI, I checked the two migrations in a transaction that was rolled back, then applied them together and recorded both rollbacks. I enabled checkout coins on the web and verified the production deployment rejects a guest coin request without creating an order. POS 1.1.0 build 10153 was already available.
+- **Android release:** The signed Connect 1.0.6 APK (build 9) matches the 1.0.5 signing certificate. It is staged for release, not published. The release procedure still requires a sign-in on the signed build before publication.
