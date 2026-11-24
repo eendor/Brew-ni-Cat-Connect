@@ -38,6 +38,13 @@ val keystoreProps = Properties().apply {
 }
 val hasReleaseKey = keystoreProps.getProperty("storeFile")?.isNotBlank() == true
 
+// The Google Play build (docs/play-store.md): `-Pbnc.store=play`. Play delivers its own updates
+// and doesn't allow an app to install APKs, so this build leaves out the website updater (FR-117)
+// and the install permission. It also leaves out the order-screen ads unless `-Pbnc.playAds=true`,
+// so a first review isn't held up by a third-party ad network.
+val playStore = providers.gradleProperty("bnc.store").orNull == "play"
+val playAds = providers.gradleProperty("bnc.playAds").orNull == "true"
+
 // A signed release without the Supabase settings installs fine but can't sign in
 // or load the menu (1.0.2 shipped that way). Refuse to build one.
 val buildsRelease = gradle.startParameter.taskNames.any { it.contains("Release", ignoreCase = true) }
@@ -69,7 +76,13 @@ android {
             "SUPABASE_PUBLISHABLE_KEY",
             buildConfigString(publicConfig("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY")),
         )
-        buildConfigField("String", "AD_KEY", buildConfigString(publicConfig("NEXT_PUBLIC_AD_KEY")))
+        buildConfigField(
+            "String",
+            "AD_KEY",
+            buildConfigString(if (playStore && !playAds) "" else publicConfig("NEXT_PUBLIC_AD_KEY")),
+        )
+        // False in the Play build: Google Play updates the app instead of the website (FR-117).
+        buildConfigField("boolean", "SELF_UPDATE", (!playStore).toString())
         buildConfigField("String", "AD_SCRIPT_HOST", buildConfigString("https://bauval.org/22/"))
         manifestPlaceholders["siteHost"] = siteHost
     }
@@ -111,6 +124,11 @@ android {
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             if (hasReleaseKey) signingConfig = signingConfigs.getByName("release")
         }
+    }
+
+    // The Play build's release manifest removes REQUEST_INSTALL_PACKAGES (see playStore above).
+    if (playStore) {
+        sourceSets.getByName("release").manifest.srcFile("src/play/AndroidManifest.xml")
     }
 
     compileOptions {

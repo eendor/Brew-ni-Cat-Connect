@@ -181,7 +181,16 @@ fun AccountScreen(vm: AppViewModel) {
                 )
                 val update = vm.availableUpdate
                 val progress = vm.updateProgress
-                ListRow(
+                if (!BuildConfig.SELF_UPDATE) {
+                    // The Google Play build: Play updates the app, so this opens its store page.
+                    ListRow(
+                        "App version ${BuildConfig.VERSION_NAME}",
+                        subtitle = "Updates come from Google Play.",
+                        leading = { IconTile(KitIcons.RefreshCw, c.orange) },
+                        trailing = { Icon(KitIcons.ArrowUpRight, null, tint = c.label3, size = 18.dp) },
+                        onClick = { openPlayListing(context) },
+                    )
+                } else ListRow(
                     "App version ${BuildConfig.VERSION_NAME}",
                     subtitle = when {
                         progress != null -> "Downloading the update… ${(progress * 100).toInt()}%"
@@ -198,6 +207,18 @@ fun AccountScreen(vm: AppViewModel) {
             item(key = "signout") {
                 Section { ButtonRow("Sign out", vm::signOut, destructive = true, centered = true) }
             }
+        }
+    }
+}
+
+/** The app's Google Play page: the Play Store app if it's there, otherwise the website. */
+private fun openPlayListing(context: Context) {
+    val id = context.packageName
+    runCatching {
+        context.startActivity(Intent(Intent.ACTION_VIEW, "market://details?id=$id".toUri()))
+    }.onFailure {
+        runCatching {
+            context.startActivity(Intent(Intent.ACTION_VIEW, "https://play.google.com/store/apps/details?id=$id".toUri()))
         }
     }
 }
