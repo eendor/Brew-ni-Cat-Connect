@@ -31,6 +31,20 @@ export type VisitFacts = Readonly<{
   street: string;
 }>;
 
+/**
+ * The sign's big word and the line under it. With no open day at all (the
+ * shop closed for a while, like a renovation), it says so instead of listing
+ * all seven days, and the open side has no hours to show.
+ */
+function signWords(open: boolean, facts: VisitFacts): [string, string] {
+  if (!facts.hours) return open ? ["OPENING", "SOON"] : ["CLOSED", "FOR NOW"];
+  if (open) return ["OPEN", facts.hours.toUpperCase()];
+  return [
+    "CLOSED",
+    facts.closedDay ? `EVERY ${facts.closedDay.toUpperCase()}` : "AFTER HOURS",
+  ];
+}
+
 /** Painted sign face: enamel paint on a dark board, lit by the studio rig. */
 function signFace(
   open: boolean,
@@ -56,25 +70,19 @@ function signFace(
   g.stroke();
   g.textAlign = "center";
   g.fillStyle = color;
+  const [word, line] = signWords(open, facts);
   g.font = `900 250px ${display}`;
-  g.fillText(open ? "OPEN" : "CLOSED", 512, 300);
+  g.fillText(word, 512, 300, 920);
   g.fillStyle = "#F4F1EA";
   g.font = `800 104px ${display}`;
-  g.fillText(
-    open
-      ? facts.hours.toUpperCase()
-      : facts.closedDay
-        ? `EVERY ${facts.closedDay.toUpperCase()}`
-        : "AFTER HOURS",
-    512,
-    438,
-    920,
-  );
+  g.fillText(line, 512, 438, 920);
   g.fillStyle = "#B9B3C2";
   g.font = `800 34px ${body}`;
-  const notes = open
-    ? [facts.days, facts.others]
-    : [`Open ${facts.days} ${facts.hours}`, facts.others];
+  const notes = !facts.hours
+    ? []
+    : open
+      ? [facts.days, facts.others]
+      : [`Open ${facts.days} ${facts.hours}`, facts.others];
   // maxWidth squeezes a long line instead of letting it run off the board
   notes.forEach((note, index) =>
     g.fillText(note.toUpperCase(), 512, 510 + index * 48, 920),

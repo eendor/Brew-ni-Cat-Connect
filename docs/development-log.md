@@ -2382,3 +2382,11 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Testing:** Checked that the app targets API 36 and that its only native library (`libandroidx.graphics.path.so`) has 16 KB-aligned segments. `npx vitest run tests/unit/terms-page.test.tsx tests/unit/site-content-source.test.ts` (TC-P9-086, TC-P9-118 and TC-P4-222, which caught a peso amount written as ₱1 in the Terms), `npx eslint` on the changed files, `python3 -I scripts/validate_phase0_docs.py` and `npx prettier --check .`. The Play bundle check (TC-P9-119) runs in CI.
 - **Known limitations:** The store screenshots aren't taken yet; they need a phone with the Play build. Play's user-generated content policy will likely want a Report button on reviews and a POS screen to hide them before the production review. The signed Play bundle hasn't been built on my machine yet.
 
+## 2026-11-25 — Android 1.0.8, and the sign while the shop is closed
+
+- **Phase:** 9
+- **Task:** Release the Android app with the pixel-art games, and fix the 3D sign while the shop is closed for renovation.
+- **Summary:** Connect for Android 1.0.8 (build 11) brings the games' new pixel-art look (#192) and the Terms link in Account (#194) to the app. The website hosts the APK and `latest.json` (ADR-038), so installed apps offer the update once this is deployed, and the GitHub release has it as `BrewNiCatConnect.apk`. The 3D sign on the home and contact pages is drawn from the saved hours. With every day turned off for the renovation, its closed side listed all seven days squeezed into one line, and its open side had no hours. When no day is open, the sign now reads "OPENING SOON" on the open side and "CLOSED FOR NOW" on the other, and the plain-text sign says "Opening soon".
+- **Testing:** The signed `./gradlew assembleRelease`, `apksigner verify --print-certs` (the release key), `sha256sum` and `stat -c %s` for `latest.json`, and `npx eslint` and `npx prettier --check` on the changed files.
+- **Known limitations:** I didn't install 1.0.8 on a phone or look at the fixed sign in a browser before publishing; CI runs the unit and browser tests.
+

@@ -3,7 +3,7 @@
 **Course:** ICT05a Applications Development & Emerging Technologies\
 **Development status:** Phase 3 — Menu and Ordering Experience is complete (closed on 2026-10-30 after a final check of `main`). Phase 4 — Cloud backend and customer accounts is complete (closed on 2026-11-06 after the integrated QA and a final check of `main`): online pickup orders, with Place order on for the live site since 2026-11-02 after the POS order screen was ready, customer accounts and profiles, live website content, and the POS product editor. Phase 5 — Order tracking and loyalty is in progress. Phase 6 — Existing POS integration is complete (closed on 2026-11-07 after the integrated QA and a final check of `main`): online orders reach the POS tablet live, staff move them through the order steps, and completed orders become POS sales. Phase 8 — Native Kotlin/Compose Android app (Phase 1 ordering [PR #150](https://github.com/eendor/Brew-ni-Cat-Connect/pull/150), Phase 2 Google PKCE sign-in & account journeys [PR #151](https://github.com/eendor/Brew-ni-Cat-Connect/pull/151), Phase 3 waiting mini-games & waiting/completed order ads). Update 2026-11-17: Android app [v1.0.0 released](https://github.com/eendor/Brew-ni-Cat-Connect/releases/tag/v1.0.0).\
 **Live site:** <https://brew-ni-cat-connect.vercel.app>\
-**Android app:** [BrewNiCatConnect.apk, latest release](https://github.com/eendor/Brew-ni-Cat-Connect/releases/latest) (v1.0.7; Android 8.0 or later)\
+**Android app:** [BrewNiCatConnect.apk, latest release](https://github.com/eendor/Brew-ni-Cat-Connect/releases/latest) (v1.0.8; Android 8.0 or later)\
 **Specification version:** 0.1 Draft (living specification)\
 **Last updated:** 2026-11-25
 

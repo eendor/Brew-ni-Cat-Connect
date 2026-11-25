@@ -41,9 +41,10 @@ export function VisitStage({
         </div>
       ) : (
         <div className="visit-stage__fallback" aria-hidden="true">
-          <b>OPEN</b>
-          <span>{facts.hours}</span>
-          <small>{facts.days}</small>
+          {/* no open day at all: the shop is closed for a while */}
+          <b>{facts.hours ? "OPEN" : "OPENING"}</b>
+          <span>{facts.hours || "Soon"}</span>
+          {facts.days ? <small>{facts.days}</small> : null}
           {facts.others ? <small>{facts.others}</small> : null}
         </div>
       )}
