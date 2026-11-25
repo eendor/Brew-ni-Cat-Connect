@@ -6,6 +6,8 @@
  * is covered by plain unit tests.
  */
 
+import type { GameIconName } from "./sprites";
+
 /** Returns a number in [0, 1), like Math.random. */
 export type Rnd = () => number;
 
@@ -16,7 +18,7 @@ export type ArcadeGameId = "catch" | "whack" | "stack" | "simon" | "memory";
 export type ArcadeGame = Readonly<{
   id: ArcadeGameId;
   name: string;
-  emoji: string;
+  icon: GameIconName;
   blurb: string;
   unit: string;
 }>;
@@ -25,14 +27,14 @@ export const ARCADE_GAMES: readonly ArcadeGame[] = [
   {
     id: "catch",
     name: "Treat Catcher",
-    emoji: "🐟",
+    icon: "fish",
     blurb: "Slide the cat to catch fish and milk tea. Dodge the chilis!",
     unit: "treats",
   },
   {
     id: "whack",
     name: "Whack-a-Mouse",
-    emoji: "🐭",
+    icon: "mouse",
     blurb:
       "Mice pop out of the holes. Tap them fast; golden ones are worth more.",
     unit: "points",
@@ -40,7 +42,7 @@ export const ARCADE_GAMES: readonly ArcadeGame[] = [
   {
     id: "stack",
     name: "Cup Stack",
-    emoji: "🥤",
+    icon: "cup",
     blurb:
       "Tap to drop each sliding cup. Line them up to build the tallest tower.",
     unit: "cups",
@@ -48,7 +50,7 @@ export const ARCADE_GAMES: readonly ArcadeGame[] = [
   {
     id: "simon",
     name: "Paw Says",
-    emoji: "🐾",
+    icon: "paw",
     blurb:
       "Watch the paws light up, then repeat the pattern. It gets longer each round.",
     unit: "rounds",
@@ -56,7 +58,7 @@ export const ARCADE_GAMES: readonly ArcadeGame[] = [
   {
     id: "memory",
     name: "Cat Match",
-    emoji: "🃏",
+    icon: "card",
     blurb:
       "Flip the cards and find all the matching pairs in the fewest moves.",
     unit: "moves",
@@ -91,7 +93,19 @@ export type MemoryState = Readonly<{
 }>;
 
 export const MEMORY_PAIRS = 8;
-export const MEMORY_FACES = ["🐱", "🧋", "🍟", "🐟", "🥛", "🍜", "🐾", "☕"];
+export const MEMORY_FACES: readonly Readonly<{
+  icon: GameIconName;
+  name: string;
+}>[] = [
+  { icon: "cat", name: "cat" },
+  { icon: "tea", name: "milk tea" },
+  { icon: "fries", name: "fries" },
+  { icon: "fish", name: "fish" },
+  { icon: "milk", name: "milk" },
+  { icon: "ramen", name: "ramen" },
+  { icon: "paw", name: "paw" },
+  { icon: "coffee", name: "coffee" },
+];
 
 export function memoryWon(s: MemoryState): boolean {
   return s.matched.length === s.faces.length;
@@ -226,11 +240,11 @@ export function whack(s: WhackState, hole: number, rnd: Rnd): WhackState {
 export type TreatKind = "fish" | "tea" | "chili";
 
 export const TREATS: Readonly<
-  Record<TreatKind, { emoji: string; points: number }>
+  Record<TreatKind, { icon: GameIconName; points: number }>
 > = {
-  fish: { emoji: "🐟", points: 1 },
-  tea: { emoji: "🧋", points: 3 },
-  chili: { emoji: "🌶️", points: 0 },
+  fish: { icon: "fish", points: 1 },
+  tea: { icon: "tea", points: 3 },
+  chili: { icon: "chili", points: 0 },
 };
 
 export type Faller = Readonly<{

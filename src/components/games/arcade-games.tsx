@@ -1,9 +1,14 @@
 "use client";
 
-import { useEffect, useRef, useState, type KeyboardEvent } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type ReactNode,
+} from "react";
 
 import {
-  CATCH_CAT_Y,
   catchOver,
   clearMemoryMismatch,
   dealMemory,
@@ -30,6 +35,11 @@ import {
   whackOver,
   type Rnd,
 } from "@/lib/games/arcade";
+import { WALK_FRAMES } from "@/lib/cats/sprites";
+import { STACK_BLOCK, type GameIconName } from "@/lib/games/sprites";
+
+import { CatSprite } from "./cat-sprite";
+import { GameIcon, nineSlice } from "./game-icon";
 
 export type ArcadeGameProps = Readonly<{
   onFinish: (score: number) => void;
@@ -65,18 +75,36 @@ function useFrames(running: boolean, onFrame: (dt: number) => void) {
   }, [running]);
 }
 
-function Hud({ items }: Readonly<{ items: readonly string[] }>) {
+type HudItem = Readonly<{ icon?: GameIconName; text: ReactNode }>;
+
+function Hud({ items }: Readonly<{ items: readonly HudItem[] }>) {
   return (
     <div className="flex flex-wrap gap-2" aria-live="off">
-      {items.map((text, i) => (
+      {items.map(({ icon, text }, i) => (
         <span
           key={i}
-          className="rounded-full bg-[var(--fill-secondary)] px-3 py-1.5 text-sm font-semibold text-[var(--text-strong)]"
+          className="inline-flex items-center gap-1.5 rounded-full bg-[var(--fill-secondary)] px-3 py-1.5 text-sm font-semibold text-[var(--text-strong)]"
         >
+          {icon ? <GameIcon name={icon} scale={1} /> : null}
           {text}
         </span>
       ))}
     </div>
+  );
+}
+
+/** Three hearts, the lost ones empty. */
+function Lives({ lives }: Readonly<{ lives: number }>) {
+  const left = Math.max(0, lives);
+  return (
+    <span className="inline-flex gap-0.5">
+      {[0, 1, 2].map((i) => (
+        <GameIcon key={i} name={i < left ? "heart" : "heart-empty"} scale={1} />
+      ))}
+      <span className="sr-only">
+        {left} {left === 1 ? "life" : "lives"} left
+      </span>
+    </span>
   );
 }
 
@@ -86,6 +114,7 @@ export function CatchGame({ onFinish, rnd = Math.random }: ArcadeGameProps) {
   const [s, setS] = useState(newCatch);
   const done = useRef(false);
   const board = useRef<HTMLDivElement>(null);
+  const [facing, setFacing] = useState(1);
 
   useFrames(!catchOver(s), (dt) => setS((cur) => stepCatch(cur, dt, rnd)));
   useEffect(() => {
@@ -99,12 +128,14 @@ export function CatchGame({ onFinish, rnd = Math.random }: ArcadeGameProps) {
     const rect = board.current?.getBoundingClientRect();
     if (!rect || rect.width === 0) return;
     const x = (clientX - rect.left) / rect.width;
+    if (Math.abs(x - s.catX) > 0.005) setFacing(x < s.catX ? -1 : 1);
     setS((cur) => moveCat(cur, x));
   };
   const onKey = (event: KeyboardEvent) => {
     if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
       event.preventDefault();
       const step = event.key === "ArrowLeft" ? -0.08 : 0.08;
+      setFacing(Math.sign(step));
       setS((cur) => moveCat(cur, cur.catX + step));
     }
   };
@@ -113,9 +144,9 @@ export function CatchGame({ onFinish, rnd = Math.random }: ArcadeGameProps) {
     <div className="flex flex-col gap-3">
       <Hud
         items={[
-          `${s.score} treats`,
-          `${"❤️".repeat(Math.max(0, s.lives))}${"🤍".repeat(3 - Math.max(0, s.lives))}`,
-          `${Math.ceil(s.timeLeftSec)}s left`,
+          { icon: "fish", text: `${s.score} treats` },
+          { text: <Lives lives={s.lives} /> },
+          { icon: "clock", text: `${Math.ceil(s.timeLeftSec)}s left` },
         ]}
       />
       <div
@@ -133,22 +164,29 @@ export function CatchGame({ onFinish, rnd = Math.random }: ArcadeGameProps) {
           <span
             key={f.id}
             aria-hidden="true"
-            className="absolute -translate-x-1/2 -translate-y-1/2 text-3xl"
+            className="absolute flex -translate-x-1/2 -translate-y-1/2"
             style={{ left: `${f.x * 100}%`, top: `${f.y * 100}%` }}
           >
-            {TREATS[f.kind].emoji}
+            <GameIcon name={TREATS[f.kind].icon} />
           </span>
         ))}
         <span
           aria-hidden="true"
-          className="absolute -translate-x-1/2 -translate-y-1/2 text-5xl"
-          style={{ left: `${s.catX * 100}%`, top: `${CATCH_CAT_Y * 100 + 4}%` }}
+          className="absolute bottom-0 flex -translate-x-1/2"
+          style={{ left: `${s.catX * 100}%` }}
         >
-          🐱
+          <CatSprite
+            cat="kulas"
+            mode="walk"
+            frame={Math.floor(s.catX * 40) % WALK_FRAMES}
+            className={facing < 0 ? "-scale-x-100" : ""}
+          />
         </span>
       </div>
       <p className="text-center text-xs text-[var(--text-muted)]">
-        🐟 1 · 🧋 3 · 🌶️ costs a life
+        <GameIcon name="fish" scale={1} /> fish 1 ·{" "}
+        <GameIcon name="tea" scale={1} /> milk tea 3 ·{" "}
+        <GameIcon name="chili" scale={1} /> chili costs a life
       </p>
     </div>
   );
@@ -174,9 +212,9 @@ export function WhackGame({ onFinish, rnd = Math.random }: ArcadeGameProps) {
     <div className="flex flex-col gap-3">
       <Hud
         items={[
-          `${s.score} points`,
-          `x${s.combo} streak`,
-          `${Math.ceil(s.timeLeftMs / 1000)}s left`,
+          { icon: "mouse", text: `${s.score} points` },
+          { icon: "flame", text: `x${s.combo} streak` },
+          { icon: "clock", text: `${Math.ceil(s.timeLeftMs / 1000)}s left` },
         ]}
       />
       <div className="grid grid-cols-3 gap-3" data-testid="whack-board">
@@ -201,7 +239,7 @@ export function WhackGame({ onFinish, rnd = Math.random }: ArcadeGameProps) {
                   setS((cur) => whack(cur, hole, rnd));
                 }
               }}
-              className={`flex aspect-square min-h-11 items-center justify-center rounded-full text-4xl transition-colors ${
+              className={`flex aspect-square min-h-11 items-center justify-center rounded-full transition-colors ${
                 up
                   ? s.golden
                     ? "bg-amber-300"
@@ -209,7 +247,9 @@ export function WhackGame({ onFinish, rnd = Math.random }: ArcadeGameProps) {
                   : "bg-[var(--fill-secondary)]"
               }`}
             >
-              <span aria-hidden="true">{up ? "🐭" : ""}</span>
+              {up ? (
+                <GameIcon name={s.golden ? "mouse-gold" : "mouse"} scale={3} />
+              ) : null}
             </button>
           );
         })}
@@ -239,7 +279,12 @@ export function StackGame({ onFinish }: ArcadeGameProps) {
 
   return (
     <div className="flex flex-col gap-3">
-      <Hud items={[`${stackHeight(s)} cups`, `${s.perfects} perfect`]} />
+      <Hud
+        items={[
+          { icon: "cup", text: `${stackHeight(s)} cups` },
+          { icon: "sparkle", text: `${s.perfects} perfect` },
+        ]}
+      />
       <button
         type="button"
         data-testid="stack-board"
@@ -260,8 +305,9 @@ export function StackGame({ onFinish }: ArcadeGameProps) {
           <span
             key={s.tower.length - shown.length + i}
             aria-hidden="true"
-            className="absolute rounded-md border-2 border-[var(--text-strong)] bg-[var(--accent-fill)]"
+            className="absolute"
             style={{
+              ...nineSlice(STACK_BLOCK.sheet, STACK_BLOCK.slice, 3),
               left: `${x * 100}%`,
               width: `${w * 100}%`,
               bottom: `${i * rowPct}%`,
@@ -272,8 +318,9 @@ export function StackGame({ onFinish }: ArcadeGameProps) {
         {!s.over ? (
           <span
             aria-hidden="true"
-            className="absolute rounded-md border-2 border-[var(--text-strong)] bg-orange-400"
+            className="absolute"
             style={{
+              ...nineSlice(STACK_BLOCK.lit, STACK_BLOCK.slice, 3),
               left: `${s.x * 100}%`,
               width: `${s.width * 100}%`,
               bottom: `${(shown.length + 0.6) * rowPct}%`,
@@ -350,7 +397,10 @@ export function SimonGame({ onFinish, rnd = Math.random }: ArcadeGameProps) {
   return (
     <div className="flex flex-col gap-3">
       <Hud
-        items={[`Round ${length}`, showing ? "Watch the paws…" : "Your turn!"]}
+        items={[
+          { icon: "paw", text: `Round ${length}` },
+          { text: showing ? "Watch the paws…" : "Your turn!" },
+        ]}
       />
       <p role="status" className="text-center text-sm text-[var(--text-muted)]">
         {showing
@@ -365,13 +415,15 @@ export function SimonGame({ onFinish, rnd = Math.random }: ArcadeGameProps) {
             aria-label={pad.name}
             disabled={showing || s.over}
             onClick={() => tap(i)}
-            className={`flex aspect-square items-center justify-center rounded-[1.75rem] text-5xl transition-colors duration-100 disabled:cursor-default ${
+            className={`flex aspect-square items-center justify-center rounded-[1.75rem] transition-colors duration-100 disabled:cursor-default ${
               lit === i ? pad.on : pad.off
             }`}
           >
-            <span aria-hidden="true" className={lit === i ? "" : "opacity-70"}>
-              🐾
-            </span>
+            <GameIcon
+              name="paw-white"
+              scale={4}
+              className={lit === i ? "" : "opacity-70"}
+            />
           </button>
         ))}
       </div>
@@ -402,24 +454,32 @@ export function MemoryGame({ onFinish, rnd = Math.random }: ArcadeGameProps) {
     <div className="flex flex-col gap-3">
       <Hud
         items={[
-          `${s.moves} moves`,
-          `${s.matched.length / 2}/${s.faces.length / 2} pairs`,
+          {
+            icon: "card",
+            text: `${s.moves} ${s.moves === 1 ? "move" : "moves"}`,
+          },
+          {
+            icon: "heart",
+            text: `${s.matched.length / 2}/${s.faces.length / 2} pairs`,
+          },
         ]}
       />
       <div className="grid grid-cols-4 gap-2" data-testid="memory-board">
         {s.faces.map((face, i) => {
           const open = s.revealed.includes(i) || s.matched.includes(i);
-          const emoji = MEMORY_FACES[face] ?? "?";
+          const card = MEMORY_FACES[face];
           return (
             <button
               key={i}
               type="button"
               aria-label={
-                open ? `Card ${i + 1}: ${emoji}` : `Card ${i + 1}, face down`
+                open
+                  ? `Card ${i + 1}: ${card?.name ?? "?"}`
+                  : `Card ${i + 1}, face down`
               }
               aria-pressed={open}
               onClick={() => setS((cur) => flipMemory(cur, i))}
-              className={`flex aspect-square min-h-11 items-center justify-center rounded-xl text-3xl transition-colors ${
+              className={`flex aspect-square min-h-11 items-center justify-center rounded-xl transition-colors ${
                 s.matched.includes(i)
                   ? "bg-[var(--fill-secondary)] opacity-60"
                   : open
@@ -427,7 +487,11 @@ export function MemoryGame({ onFinish, rnd = Math.random }: ArcadeGameProps) {
                     : "bg-[var(--accent-fill)]"
               }`}
             >
-              <span aria-hidden="true">{open ? emoji : "🐾"}</span>
+              {open && card ? (
+                <GameIcon name={card.icon} scale={3} />
+              ) : (
+                <GameIcon name="paw-white" scale={2} className="opacity-70" />
+              )}
             </button>
           );
         })}

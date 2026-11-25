@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 
 /**
  * Loyalty mini-games (FR-089). Supabase Auth and the game RPCs are mocked
@@ -108,6 +108,11 @@ async function mockGames(page: Page) {
     });
   });
   return played;
+}
+
+async function captureElement(element: Locator, name: string) {
+  if (!CAPTURE_EVIDENCE) return;
+  await element.screenshot({ path: `${EVIDENCE_DIR}/${name}.png` });
 }
 
 async function capture(page: Page, name: string) {
@@ -261,5 +266,110 @@ test.describe("Cat games", () => {
       () => document.documentElement.scrollWidth - window.innerWidth,
     );
     expect(overflow).toBeLessThanOrEqual(0);
+  });
+});
+
+test.describe("Pixel art", () => {
+  test("TC-P9-116 — at 390 wide, every game draws its Aseprite pixel art and no emoji", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await signIn(page);
+    await mockGames(page);
+    for (const sheet of [
+      "icons",
+      "hiding-cup",
+      "treat-jar",
+      "stack-block",
+      "stack-block-lit",
+    ]) {
+      const res = await page.request.get(`/games/sprites/${sheet}.png`);
+      expect(res.ok()).toBe(true);
+    }
+    const noEmoji = async (testId: string) =>
+      expect(await page.getByTestId(testId).innerText()).not.toMatch(
+        /\p{Extended_Pictographic}/u,
+      );
+
+    await page.goto("/games");
+    const cups = page.getByTestId("cat-cups");
+    await expect(cups.locator(".pixel-sprite")).toHaveCount(3);
+    await expect(
+      page.getByTestId("lucky-paw").locator(".pixel-sprite"),
+    ).toHaveCount(2);
+    await page.getByRole("button", { name: "Cup 2" }).click();
+    await expect(page.getByText("You found Oreo! +3 coins")).toBeVisible();
+    await cups.scrollIntoViewIfNeeded();
+    await captureElement(cups.locator("xpath=../.."), "pixel-cat-cups-phone");
+    await captureElement(
+      page.getByTestId("lucky-paw").locator("xpath=../.."),
+      "pixel-lucky-paw-phone",
+    );
+
+    const arcade = page.getByTestId("arcade");
+    await arcade.scrollIntoViewIfNeeded();
+    await expect(arcade.locator("[data-icon]")).toHaveCount(5);
+    await noEmoji("arcade");
+    await captureElement(arcade, "pixel-arcade-list-phone");
+
+    const open = async (id: string) => {
+      await page.getByTestId(`arcade-${id}`).click();
+      await page.getByRole("button", { name: "Start" }).click();
+    };
+    const back = () =>
+      page.getByRole("button", { name: "← All games" }).click();
+
+    await open("catch");
+    const board = page.getByTestId("catch-board");
+    await board.focus();
+    await page.keyboard.press("ArrowLeft");
+    await expect(board.getByTestId("cat-sprite-kulas")).toBeVisible();
+    await page.waitForTimeout(1500);
+    await expect(board.locator("[data-icon]").first()).toBeVisible();
+    await noEmoji("arcade");
+    await captureElement(arcade, "pixel-catch-phone");
+    await back();
+
+    await open("whack");
+    await expect(
+      page.getByRole("button", { name: /Mouse in hole/ }),
+    ).toBeVisible();
+    await expect(
+      page.getByTestId("whack-board").locator('[data-icon^="mouse"]'),
+    ).toHaveCount(1);
+    await noEmoji("arcade");
+    await captureElement(arcade, "pixel-whack-phone");
+    await back();
+
+    await open("stack");
+    await page.waitForTimeout(600);
+    const blocks = await page
+      .getByTestId("stack-board")
+      .locator("span")
+      .evaluateAll((spans) =>
+        spans.map((span) => getComputedStyle(span).borderImageSource),
+      );
+    expect(blocks.length).toBeGreaterThan(1);
+    for (const block of blocks) expect(block).toContain("stack-block");
+    await captureElement(arcade, "pixel-stack-phone");
+    await back();
+
+    await open("simon");
+    await expect(
+      page.getByTestId("simon-board").locator('[data-icon="paw-white"]'),
+    ).toHaveCount(4);
+    await page.waitForTimeout(900);
+    await noEmoji("arcade");
+    await captureElement(arcade, "pixel-simon-phone");
+    await back();
+
+    await open("memory");
+    await page.getByRole("button", { name: /^Card 1\b/ }).click();
+    await page.getByRole("button", { name: /^Card 2\b/ }).click();
+    await expect(
+      page.getByRole("button", { name: /^Card 1: [a-z ]+$/ }),
+    ).toBeVisible();
+    await noEmoji("arcade");
+    await captureElement(arcade, "pixel-memory-phone");
   });
 });

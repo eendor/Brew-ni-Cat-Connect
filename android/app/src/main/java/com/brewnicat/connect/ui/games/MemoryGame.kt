@@ -12,8 +12,6 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
-import com.brewnicat.connect.ui.kit.KitType
-import com.brewnicat.connect.ui.kit.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -24,20 +22,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.brewnicat.connect.data.Memory
 import com.brewnicat.connect.data.MemoryState
 import com.brewnicat.connect.ui.kit.pressable
-import com.brewnicat.connect.ui.kit.Icon
 import com.brewnicat.connect.ui.kit.Kit
-import com.brewnicat.connect.ui.kit.KitIcons
 import kotlin.random.Random
 import kotlinx.coroutines.delay
 
@@ -61,8 +55,8 @@ fun MemoryGame(paused: Boolean, onFinish: (Int) -> Unit) {
 
     Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(14.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            HudChip("Moves ${s.moves}")
-            HudChip("Pairs ${s.matched.size / 2}/${s.faces.size / 2}", strong = true)
+            HudChip("Moves ${s.moves}", icon = "card")
+            HudChip("Pairs ${s.matched.size / 2}/${s.faces.size / 2}", strong = true, icon = "heart")
         }
         val cols = 4
         Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -103,13 +97,13 @@ private fun MemoryCard(face: String, up: Boolean, matched: Boolean, onClick: () 
             )
             .border(1.dp, Kit.colors.separator, shape)
             .pressable(enabled = !up, onClick = onClick)
-            .semantics { contentDescription = if (up) "Card $face" else "Face-down card" },
+            .semantics { contentDescription = if (up) "Card ${Memory.faceName(face)}" else "Face-down card" },
         contentAlignment = Alignment.Center,
     ) {
         if (turn > 90f) {
-            Text(face, style = KitType.body.copy(fontSize = 34.sp), modifier = Modifier.graphicsLayer { rotationY = 180f })
+            PixelIcon(face, 44.dp, Modifier.graphicsLayer { rotationY = 180f })
         } else {
-            Icon(KitIcons.PawPrint, null, tint = Color.White.copy(alpha = 0.6f), size = 30.dp)
+            PixelIcon("paw-white", 32.dp, alpha = 0.6f)
         }
     }
 }

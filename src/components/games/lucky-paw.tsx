@@ -9,8 +9,10 @@ import {
   playErrorMessage,
   pointsLabel,
 } from "@/lib/games/games";
+import { TREAT_JAR } from "@/lib/games/sprites";
 
 import { CatSprite } from "./cat-sprite";
+import { SheetSprite } from "./game-icon";
 
 type LuckyPawProps = Readonly<{
   disabled: boolean;
@@ -20,55 +22,12 @@ type LuckyPawProps = Readonly<{
 
 function Jar() {
   return (
-    <svg
-      viewBox="0 0 96 112"
-      width="96"
-      height="112"
-      aria-hidden="true"
-      focusable="false"
-    >
-      <rect
-        x="22"
-        y="4"
-        width="52"
-        height="14"
-        rx="4"
-        fill="var(--text-strong)"
-      />
-      <path
-        d="M18 22 H78 Q86 22 86 32 V98 Q86 108 76 108 H20 Q10 108 10 98 V32 Q10 22 18 22 Z"
-        fill="var(--fill-secondary)"
-        stroke="var(--text-strong)"
-        strokeWidth="3"
-      />
-      {[
-        [30, 84],
-        [48, 92],
-        [64, 82],
-        [38, 66],
-        [58, 64],
-        [46, 76],
-      ].map(([cx, cy]) => (
-        <circle
-          key={`${cx}-${cy}`}
-          cx={cx}
-          cy={cy}
-          r="7"
-          fill="var(--accent-fill)"
-          stroke="var(--text-strong)"
-          strokeWidth="2"
-        />
-      ))}
-      <rect
-        x="30"
-        y="40"
-        width="36"
-        height="14"
-        rx="3"
-        fill="var(--surface-overlay)"
-        opacity="0.8"
-      />
-    </svg>
+    <SheetSprite
+      sheet={TREAT_JAR.sheet}
+      width={TREAT_JAR.width}
+      height={TREAT_JAR.height}
+      className="block"
+    />
   );
 }
 

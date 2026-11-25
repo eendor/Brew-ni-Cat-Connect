@@ -21,6 +21,8 @@ import {
   type Rnd,
 } from "@/lib/games/arcade";
 
+import { GameIcon } from "./game-icon";
+
 import {
   CatchGame,
   MemoryGame,
@@ -129,9 +131,7 @@ export function ArcadeSection({
                   }}
                   className="ios-card flex min-h-11 w-full items-center gap-4 p-4 text-left"
                 >
-                  <span aria-hidden="true" className="text-4xl">
-                    {game.emoji}
-                  </span>
+                  <GameIcon name={game.icon} scale={3} />
                   <span className="min-w-0 flex-1">
                     <span className="block font-semibold text-[var(--text-strong)]">
                       {game.name}
@@ -185,8 +185,8 @@ function GamePanel({
           {best === null ? "No best yet" : `Best: ${amount(best, game.unit)}`}
         </span>
       </div>
-      <h3 className="font-display text-xl font-semibold text-[var(--text-strong)]">
-        <span aria-hidden="true">{game.emoji} </span>
+      <h3 className="flex items-center gap-2 font-display text-xl font-semibold text-[var(--text-strong)]">
+        <GameIcon name={game.icon} scale={2} />
         {game.name}
       </h3>
 
@@ -201,7 +201,14 @@ function GamePanel({
             data-testid="arcade-result"
             className="font-display text-2xl font-bold text-[var(--text-strong)]"
           >
-            {phase.newBest ? "🏆 New best!" : "Nice try!"}
+            {phase.newBest ? (
+              <>
+                <GameIcon name="trophy" scale={2} className="mr-2" />
+                New best!
+              </>
+            ) : (
+              "Nice try!"
+            )}
           </p>
           <p className="text-sm text-[var(--text-muted)]">
             You got {amount(phase.score, game.unit)}.

@@ -33,7 +33,6 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogWindowProvider
@@ -82,7 +81,7 @@ private fun GameTile(game: ArcadeGame, size: Int) {
         Modifier.size(size.dp).clip(RoundedCornerShape((size * 0.27f).dp))
             .background(Brush.verticalGradient(listOf(color.copy(alpha = 0.55f), color))),
         contentAlignment = Alignment.Center,
-    ) { Text(game.emoji, style = KitType.body.copy(fontSize = (size * 0.5f).sp)) }
+    ) { PixelIcon(game.icon, (size * 0.6f).dp) }
 }
 
 /** The "Just for fun" section of the games sheet. Free play: nothing is sent or earned. */
@@ -221,7 +220,7 @@ private fun Panel(
                 ) {
                     if (trophy) {
                         Box(Modifier.size(84.dp).clip(RoundedCornerShape(23.dp)).background(c.yellow), contentAlignment = Alignment.Center) {
-                            Text("🏆", style = KitType.body.copy(fontSize = 44.sp))
+                            PixelIcon("trophy", 56.dp)
                         }
                     } else {
                         GameTile(game, 84)
@@ -253,14 +252,17 @@ fun rememberAppPaused(): Boolean {
     return paused
 }
 
-/** A small capsule for a game's score line. */
+/** A small capsule for a game's score line, with an optional pixel-art [icon]. */
 @Composable
-fun HudChip(text: String, modifier: Modifier = Modifier, strong: Boolean = false) {
+fun HudChip(text: String, modifier: Modifier = Modifier, strong: Boolean = false, icon: String? = null) {
     val c = Kit.colors
-    Text(
-        text, style = KitType.subhead.semibold,
-        color = if (strong) c.onTint else c.label,
-        modifier = modifier.clip(CircleShape).background(if (strong) c.tintFill else c.cell)
+    Row(
+        modifier.clip(CircleShape).background(if (strong) c.tintFill else c.cell)
             .padding(horizontal = 14.dp, vertical = 8.dp),
-    )
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (icon != null) PixelIcon(icon, 16.dp)
+        Text(text, style = KitType.subhead.semibold, color = if (strong) c.onTint else c.label)
+    }
 }

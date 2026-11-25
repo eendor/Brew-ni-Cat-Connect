@@ -17,7 +17,8 @@
     "test:e2e": "npm run build && playwright test",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "cats:sprites": "node scripts/cat-sprites.mts"
+    "cats:sprites": "node scripts/cat-sprites.mts",
+    "games:sprites": "node scripts/game-sprites.mts"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.112.3",

@@ -12,15 +12,16 @@ import kotlin.random.Random
  * and an injected Random, so it is covered by plain JVM tests.
  */
 
-data class ArcadeGame(val id: String, val name: String, val emoji: String, val blurb: String, val unit: String)
+/** [icon] names the game's pixel-art icon (GameSprites.ICONS). */
+data class ArcadeGame(val id: String, val name: String, val icon: String, val blurb: String, val unit: String)
 
 object Arcade {
     val GAMES = listOf(
-        ArcadeGame("catch", "Treat Catcher", "🐟", "Slide the cat to catch fish and milk tea. Dodge the chilis!", "treats"),
-        ArcadeGame("whack", "Whack-a-Mouse", "🐭", "Mice pop out of the holes. Tap them fast; golden ones are worth more.", "points"),
-        ArcadeGame("stack", "Cup Stack", "🥤", "Tap to drop each sliding cup. Line them up to build the tallest tower.", "cups"),
-        ArcadeGame("simon", "Paw Says", "🐾", "Watch the paws light up, then repeat the pattern. It gets longer each round.", "rounds"),
-        ArcadeGame("memory", "Cat Match", "🃏", "Flip the cards and find all the matching pairs in the fewest moves.", "moves"),
+        ArcadeGame("catch", "Treat Catcher", "fish", "Slide the cat to catch fish and milk tea. Dodge the chilis!", "treats"),
+        ArcadeGame("whack", "Whack-a-Mouse", "mouse", "Mice pop out of the holes. Tap them fast; golden ones are worth more.", "points"),
+        ArcadeGame("stack", "Cup Stack", "cup", "Tap to drop each sliding cup. Line them up to build the tallest tower.", "cups"),
+        ArcadeGame("simon", "Paw Says", "paw", "Watch the paws light up, then repeat the pattern. It gets longer each round.", "rounds"),
+        ArcadeGame("memory", "Cat Match", "card", "Flip the cards and find all the matching pairs in the fewest moves.", "moves"),
     )
 
     fun byId(id: String): ArcadeGame? = GAMES.firstOrNull { it.id == id }
@@ -45,7 +46,11 @@ data class MemoryState(
 
 object Memory {
     const val PAIRS = 8
-    val FACES = listOf("🐱", "🧋", "🍟", "🐟", "🥛", "🍜", "🐾", "☕")
+    /** The cards' faces, by pixel-art icon. */
+    val FACES = listOf("cat", "tea", "fries", "fish", "milk", "ramen", "paw", "coffee")
+
+    /** What a screen reader calls a face. */
+    fun faceName(face: String): String = if (face == "tea") "milk tea" else face
 
     fun deal(rnd: Random, pairs: Int = PAIRS): MemoryState =
         MemoryState(faces = (0 until pairs).flatMap { listOf(it, it) }.shuffled(rnd))
@@ -129,7 +134,7 @@ object Whack {
 
 /* ---------- Treat Catcher (catching) ---------- */
 
-enum class TreatKind(val emoji: String, val points: Int) { FISH("🐟", 1), TEA("🧋", 3), CHILI("🌶️", 0) }
+enum class TreatKind(val icon: String, val points: Int) { FISH("fish", 1), TEA("tea", 3), CHILI("chili", 0) }
 
 data class Faller(val x: Float, val y: Float, val kind: TreatKind)
 

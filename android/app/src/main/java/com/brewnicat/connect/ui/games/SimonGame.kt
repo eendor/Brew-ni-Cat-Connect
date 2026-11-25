@@ -30,13 +30,10 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.brewnicat.connect.data.Simon
 import com.brewnicat.connect.data.SimonState
 import com.brewnicat.connect.ui.kit.pressable
-import com.brewnicat.connect.ui.kit.Icon
 import com.brewnicat.connect.ui.kit.Kit
-import com.brewnicat.connect.ui.kit.KitIcons
 import kotlin.random.Random
 import kotlinx.coroutines.delay
 
@@ -67,7 +64,7 @@ fun SimonGame(paused: Boolean, onFinish: (Int) -> Unit) {
 
     Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(14.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            HudChip("Round ${s.sequence.size}")
+            HudChip("Round ${s.sequence.size}", icon = "paw")
             HudChip(if (showing) "Watch the paws…" else "Your turn!", strong = !showing)
         }
         Text(
@@ -92,7 +89,7 @@ fun SimonGame(paused: Boolean, onFinish: (Int) -> Unit) {
                                 }
                                 .semantics { contentDescription = PAD_NAMES[pad] },
                             contentAlignment = Alignment.Center,
-                        ) { Icon(KitIcons.PawPrint, null, tint = Color.White.copy(alpha = if (lit == pad) 1f else 0.7f), size = 52.dp) }
+                        ) { PixelIcon("paw-white", 64.dp, alpha = if (lit == pad) 1f else 0.7f) }
                     }
                 }
             }

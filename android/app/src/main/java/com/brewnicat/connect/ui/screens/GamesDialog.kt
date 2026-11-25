@@ -28,14 +28,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.semantics.Role
@@ -47,6 +41,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.brewnicat.connect.R
+import com.brewnicat.connect.ui.games.PixelImage
 import com.brewnicat.connect.data.ArcadeGame
 import com.brewnicat.connect.data.Coins
 import com.brewnicat.connect.data.GamesParsers
@@ -291,7 +286,7 @@ private fun CatCupsCard(
                             }
                             .alpha(if (disabled && hiddenUnder == null) 0.55f else 1f),
                     ) {
-                        CupGraphic(cup + 1, picked == cup)
+                        CupGraphic(picked == cup)
                     }
                 }
             }
@@ -340,7 +335,9 @@ private fun LuckyPawCard(
             verticalAlignment = Alignment.Bottom,
             horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally),
         ) {
-            Box(Modifier.graphicsLayer { rotationZ = shakeAngle.value }) { JarGraphic() }
+            Box(Modifier.graphicsLayer { rotationZ = shakeAngle.value }) {
+                PixelImage(R.drawable.game_treat_jar, 72.dp, 84.dp)
+            }
             CatPixelSprite(
                 resId = R.drawable.cat_latte,
                 mode = if (treat != null) CatMode.MEOW else CatMode.LOOK,
@@ -392,52 +389,8 @@ private fun LuckyPawCard(
     }
 }
 
+/** Cat Cups' pixel-art cup (ADR-032); the picked one is lit. */
 @Composable
-private fun CupGraphic(number: Int, highlighted: Boolean) {
-    val c = Kit.colors
-    val fill = if (highlighted) c.orange else c.tintFill
-    val outline = c.label
-    val stripe = Color.White
-    Box(Modifier.size(64.dp, 60.dp), contentAlignment = Alignment.Center) {
-        Canvas(Modifier.size(64.dp, 60.dp)) {
-            val w = size.width
-            val h = size.height
-            val path = Path().apply {
-                moveTo(w * 0.14f, h * 0.90f)
-                lineTo(w * 0.25f, h * 0.12f)
-                lineTo(w * 0.75f, h * 0.12f)
-                lineTo(w * 0.86f, h * 0.90f)
-                close()
-            }
-            drawPath(path, color = fill)
-            drawPath(path, color = outline.copy(alpha = 0.85f), style = Stroke(width = 4f))
-            drawRoundRect(
-                color = outline,
-                topLeft = Offset(w * 0.08f, h * 0.86f),
-                size = Size(w * 0.84f, h * 0.12f),
-                cornerRadius = CornerRadius(6f, 6f),
-            )
-            drawLine(stripe.copy(alpha = 0.6f), Offset(w * 0.30f, h * 0.38f), Offset(w * 0.70f, h * 0.38f), strokeWidth = 5f)
-        }
-        Text("$number", style = KitType.headline, color = Color.White, modifier = Modifier.padding(top = 8.dp))
-    }
-}
-
-@Composable
-private fun JarGraphic() {
-    val c = Kit.colors
-    val glass = c.fill
-    val outline = c.label2
-    val lid = c.brown
-    val treat = c.orange
-    Canvas(Modifier.size(72.dp, 84.dp)) {
-        val w = size.width
-        val h = size.height
-        drawRoundRect(lid, topLeft = Offset(w * 0.22f, h * 0.04f), size = Size(w * 0.56f, h * 0.12f), cornerRadius = CornerRadius(8f, 8f))
-        drawRoundRect(glass, topLeft = Offset(w * 0.12f, h * 0.18f), size = Size(w * 0.76f, h * 0.78f), cornerRadius = CornerRadius(18f, 18f))
-        drawRoundRect(outline, topLeft = Offset(w * 0.12f, h * 0.18f), size = Size(w * 0.76f, h * 0.78f), cornerRadius = CornerRadius(18f, 18f), style = Stroke(width = 4f))
-        for ((cx, cy) in listOf(0.32f to 0.76f, 0.50f to 0.82f, 0.66f to 0.74f, 0.42f to 0.62f, 0.58f to 0.60f)) {
-            drawCircle(treat, radius = w * 0.08f, center = Offset(w * cx, h * cy))
-        }
-    }
+private fun CupGraphic(highlighted: Boolean) {
+    PixelImage(if (highlighted) R.drawable.game_hiding_cup_lit else R.drawable.game_hiding_cup, 72.dp, 65.dp)
 }
