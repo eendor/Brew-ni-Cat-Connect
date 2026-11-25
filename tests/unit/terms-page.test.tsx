@@ -56,7 +56,7 @@ describe("Terms of Use page", () => {
 
     const coins = text("points-and-rewards");
     expect(coins).toContain("You can't buy coins");
-    expect(coins).toContain("Each coin takes ₱1 off");
+    expect(coins).toContain("Each coin takes one peso off");
     expect(coins).toContain("up to 20% of the order's subtotal");
 
     const games = text("games-and-ads");

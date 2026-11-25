@@ -119,8 +119,8 @@ export default async function TermsPage() {
                   . A reward can sell out or reach its limit for the day.
                 </li>
                 <li>
-                  <Term>Spending at checkout.</Term> Each coin takes ₱1 off an
-                  order, in steps of 0.1 of a coin, up to 20% of the
+                  <Term>Spending at checkout.</Term> Each coin takes one peso
+                  off an order, in steps of 0.1 of a coin, up to 20% of the
                   order&apos;s subtotal.
                 </li>
                 <li>
