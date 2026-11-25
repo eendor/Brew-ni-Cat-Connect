@@ -145,10 +145,13 @@ jobs:
         working-directory: android
         run: |
           config=app/build/generated/source/buildConfig/release/com/brewnicat/connect/BuildConfig.java
+          manifest="$RUNNER_TEMP/play-manifest.pb"
           grep -q 'SELF_UPDATE = true' "$config"
           ./gradlew --no-daemon bundleRelease -Pbnc.store=play
           grep -q 'SELF_UPDATE = false' "$config"
-          if unzip -p app/build/outputs/bundle/release/app-release.aab base/manifest/AndroidManifest.xml | grep -a -q REQUEST_INSTALL_PACKAGES; then
+          unzip -p app/build/outputs/bundle/release/app-release.aab base/manifest/AndroidManifest.xml > "$manifest"
+          grep -a -q 'android.permission.INTERNET' "$manifest"
+          if grep -a -q REQUEST_INSTALL_PACKAGES "$manifest"; then
             echo "::error::The Play bundle asks for REQUEST_INSTALL_PACKAGES"
             exit 1
           fi
