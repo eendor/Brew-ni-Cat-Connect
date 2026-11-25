@@ -179,6 +179,13 @@ fun AccountScreen(vm: AppViewModel) {
                     trailing = { Icon(KitIcons.ArrowUpRight, null, tint = c.label3, size = 18.dp) },
                     onClick = { runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, (BuildConfig.SITE_URL + "/privacy").toUri())) } },
                 )
+                // The coins and games rules, with the games' odds (FR-120).
+                ListRow(
+                    "Read Terms of Use",
+                    leading = { IconTile(KitIcons.Info, c.indigo) },
+                    trailing = { Icon(KitIcons.ArrowUpRight, null, tint = c.label3, size = 18.dp) },
+                    onClick = { runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, (BuildConfig.SITE_URL + "/terms").toUri())) } },
+                )
                 val update = vm.availableUpdate
                 val progress = vm.updateProgress
                 if (!BuildConfig.SELF_UPDATE) {

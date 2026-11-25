@@ -147,6 +147,7 @@ The suite builds the production application, starts it locally and runs two Play
 - [`docs/evidence/phase-6-verification.md`](docs/evidence/phase-6-verification.md) — Phase 6 evidence for each pull request
 - [`docs/evidence/phase-7-verification.md`](docs/evidence/phase-7-verification.md) — Phase 7 evidence for each pull request
 - [`docs/evidence/phase-8-verification.md`](docs/evidence/phase-8-verification.md) — Phase 8 evidence for each pull request
+- [`docs/play-store.md`](docs/play-store.md) — the Google Play build, signing, the Play Console answers and the store listing
 - [`docs/decisions.md`](docs/decisions.md) — architecture decision records
 - [`docs/development-log.md`](docs/development-log.md) — truthful milestone history
 

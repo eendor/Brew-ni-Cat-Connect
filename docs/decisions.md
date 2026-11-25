@@ -592,3 +592,16 @@ This manual state is a temporary functional-verification condition, not a revisi
 - Customers on 1.0.0 have to install 1.0.1 by hand once; from 1.0.1 on, updates are offered in the app.
 - Each release commits a new APK of about 3 MB to the repository and removes the old one. If the store builds come, they update through their own stores and this check only offers the website build to website installs.
 
+## ADR-039 — A Google Play Build Without The Website Updater
+
+**Decision:** The Android app gets a Google Play build, `./gradlew bundleRelease -Pbnc.store=play`, next to the website APK (ADR-038). The Play build has the same package name, key and version, but leaves out the website updater (`BuildConfig.SELF_UPDATE` is false, and Account opens the Play page instead), removes `REQUEST_INSTALL_PACKAGES` with a release-only manifest (`android/app/src/play/AndroidManifest.xml`), and leaves the order-screen ads out unless `-Pbnc.playAds=true`. The Terms give the games' odds and the checkout coin rate, and the app links to them. The steps and the Play Console answers are in [`play-store.md`](play-store.md).\
+**Date:** 2026-11-25\
+**Status:** Accepted. The owner agreed to pay for the Play account; the account is being made.\
+**Context:** Customers find apps on Google Play, and the owner wants the app there. Play updates the apps it installs itself and restricts apps that install other APKs, so the website updater and its permission can't ship there. Play allows chance-based rewards in a loyalty program only if the program's terms give the odds.\
+**Alternatives considered:** one build for both (Play would flag the install permission, and both updaters would compete); a separate Play app with its own package name and key (website installs couldn't move to Play without losing their sign-in); keeping the ads in the first Play build (a third-party ad network to explain in the first review).\
+**Consequences:**
+
+- Play must sign with the existing release key (Play App Signing with an uploaded key), so website installs can update to the Play version in place.
+- Each release builds twice: the website APK and the Play bundle.
+- A personal Play account needs a closed test with 12 testers for 14 days before the app is public.
+- The Terms must change the same day as the game odds in `private.mini_game_settings()`.
