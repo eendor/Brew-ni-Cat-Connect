@@ -941,7 +941,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     var updateMessage by mutableStateOf<String?>(null); private set
 
     fun checkForUpdate(manual: Boolean = false) {
-        if (updateChecking || updateProgress != null) return
+        // The Google Play build is updated by Play (docs/play-store.md).
+        if (!BuildConfig.SELF_UPDATE || updateChecking || updateProgress != null) return
         updateChecking = true
         viewModelScope.launch {
             val latest = updateClient.latest()

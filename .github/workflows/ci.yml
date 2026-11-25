@@ -139,6 +139,23 @@ jobs:
         working-directory: android
         run: ./gradlew --no-daemon testDebugUnitTest assembleRelease lintRelease
 
+      # The Google Play build (ADR-039, TC-P9-119) leaves out the website
+      # updater and the install permission; the website APK above keeps them.
+      - name: Build the Google Play bundle and check what it leaves out
+        working-directory: android
+        run: |
+          config=app/build/generated/source/buildConfig/release/com/brewnicat/connect/BuildConfig.java
+          manifest="$RUNNER_TEMP/play-manifest.pb"
+          grep -q 'SELF_UPDATE = true' "$config"
+          ./gradlew --no-daemon bundleRelease -Pbnc.store=play
+          grep -q 'SELF_UPDATE = false' "$config"
+          unzip -p app/build/outputs/bundle/release/app-release.aab base/manifest/AndroidManifest.xml > "$manifest"
+          grep -a -q 'android.permission.INTERNET' "$manifest"
+          if grep -a -q REQUEST_INSTALL_PACKAGES "$manifest"; then
+            echo "::error::The Play bundle asks for REQUEST_INSTALL_PACKAGES"
+            exit 1
+          fi
+
       - name: Upload Android lint report
         if: ${{ failure() }}
         uses: actions/upload-artifact@v7

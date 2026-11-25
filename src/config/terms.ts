@@ -2,4 +2,4 @@
 export const TERMS_PATH = "/terms";
 
 /** The terms' version: change it whenever their wording changes. */
-export const TERMS_UPDATED = "2026-11-19";
+export const TERMS_UPDATED = "2026-11-25";

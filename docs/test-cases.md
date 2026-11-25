@@ -1838,7 +1838,7 @@ FR-120. `/terms`, with the same section layout as the Privacy Policy.
 
 | ID        | Requirement | Case | Expected result | Status |
 | --------- | ----------- | ---- | --------------- | ------ |
-| TC-P9-086 | FR-120      | Unit: render `TermsPage` with the fallback content | The "Terms of Use" heading; a `<time datetime="2026-11-19">` reading "November 19, 2026"; eight sections with ids and headings; links to `/privacy` and `/account/rewards` | Passed (automated) |
+| TC-P9-086 | FR-120      | Unit: render `TermsPage` with the fallback content | The "Terms of Use" heading; a `<time datetime="2026-11-25">` reading "November 25, 2026"; eight sections with ids and headings; links to `/privacy` and `/account/rewards` | Passed (automated) |
 | TC-P9-087 | FR-120      | Unit: render `SiteFooter` | A "Terms of Use" link to `/terms` with a 44 px tap target, next to "Privacy Policy" | Passed (automated) |
 
 ## 68. Ratings For Each Menu Item (2026-11-19)
@@ -1923,3 +1923,12 @@ FR-123, FR-089 and ADR-032. Every game, on the website and in the Android app, i
 | TC-P9-115 | FR-123, FR-089 | Unit (`game-sprites.test.ts`): the Aseprite sources, the exported sheets and frame data, the Android frames and the games' data | The four `art/games/*.aseprite` sources exist; `icons.png` is 320 × 16 with one tag per icon in `GAME_ICONS` order; the cup sheet is 80 × 36 with `cup` and `cup-lit`; the jar is 48 × 56 and both stack blocks 16 × 12; every icon has its `game_*.png` in the app (`game_fish.png` 16 × 16); no arcade game, Cat Match face or treat is an emoji | Passed (automated) |
 | TC-P9-116 | FR-123, FR-089 | Browser (`games.spec.ts`, 390 px wide, signed in with mocked games): the games page's Cat Cups and Lucky Paw, then each arcade game | The sprite sheets load; Cat Cups shows three pixel cups and cup 2 still finds Oreo (+3 coins); Lucky Paw shows the pixel jar; the arcade list shows five pixel icons and no emoji; Treat Catcher shows Kulas and a falling treat, Whack-a-Mouse a pixel mouse, Cup Stack 9-slice blocks, Paw Says four white paws and Cat Match cards named for their face (for example "Card 1: milk tea"); screenshots in `docs/evidence/phase-9/games/pixel-*-phone.png` | Passed (automated) |
 | TC-P9-117 | FR-123, FR-089 | JVM (Android `GameSpritesTest`): the icons the games use, the app's frames against the website's `GAME_ICONS`, emoji in the games' code, whole-pixel scaling | Every game, Cat Match face, treat and score-chip icon has a sprite; the app's icon names equal the website's, in order; every icon frame is 16 × 16, the cups 40 × 36, the jar 48 × 56 and the blocks 16 × 12; no emoji in `ui/games/`, `Arcade.kt` or `GamesDialog.kt`; a scale of 2.75 rounds to 3 and anything under 1 to 1 | Passed (automated) |
+
+## 74. Google Play Readiness (2026-11-25)
+
+FR-117, FR-120 and ADR-039. The Google Play build of the Android app, and the Terms that Play's rules for chance-based loyalty rewards need ([`play-store.md`](play-store.md)).
+
+| ID        | Requirement    | Case | Expected result | Status |
+| --------- | -------------- | ---- | --------------- | ------ |
+| TC-P9-118 | FR-120 | Unit (`terms-page.test.tsx`): the Coins and Mini-games sections of `/terms` | The coins section gives the checkout rate (₱1 off a coin, up to 20% of the subtotal) and says coins can't be bought; the games section gives Cat cups' 1 in 3 chance, Lucky paw's 60 in 100 and 40 in 100, the 2-coin daily limit and the 3 prize plays a day | Passed (automated) |
+| TC-P9-119 | FR-117 | CI (Android job): the default `assembleRelease`, then `bundleRelease -Pbnc.store=play` | The website release's `BuildConfig` has `SELF_UPDATE = true`; after the Play build it has `SELF_UPDATE = false`, and the bundle's manifest asks for `INTERNET` but not for `REQUEST_INSTALL_PACKAGES` | Automated in CI |

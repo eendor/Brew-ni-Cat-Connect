@@ -109,13 +109,19 @@ export default async function TermsPage() {
                 <li>
                   <Term>Earning and limits.</Term> You earn coins on completed
                   orders and from the cat games, counted to 0.1 of a coin, and
-                  redeem rewards with them. Coins have no cash value. How many
-                  you earn, and how many rewards you can redeem each week,
-                  follow the rules shown on the{" "}
+                  redeem rewards or spend them at checkout. You can&apos;t buy
+                  coins, and they have no cash value. How many you earn, and how
+                  many rewards you can redeem each week, follow the rules shown
+                  on the{" "}
                   <Link href="/account/rewards" className={linkClass}>
                     rewards page
                   </Link>
                   . A reward can sell out or reach its limit for the day.
+                </li>
+                <li>
+                  <Term>Spending at checkout.</Term> Each coin takes one peso
+                  off an order, in steps of 0.1 of a coin, up to 20% of the
+                  order&apos;s subtotal.
                 </li>
                 <li>
                   <Term>Codes.</Term> Each redeemed reward and each won prize
@@ -129,10 +135,19 @@ export default async function TermsPage() {
             <PolicySection id="games-and-ads" title="Mini-games and ads">
               <List>
                 <li>
-                  <Term>Games.</Term> The games are free. Our server decides
-                  every result, and the number of plays each day is limited.
-                  Don&apos;t use tricks, scripts or extra accounts to get more
-                  plays or prizes.
+                  {/* The odds and limits are set in private.mini_game_settings()
+                  (supabase/migrations/20261119130000_coins.sql): change both
+                  together, with the date above. */}
+                  <Term>Games.</Term> The games are free, and you can play as
+                  often as you like. Our server decides every result, with these
+                  odds: in Cat cups, Oreo is under one of three cups, so a pick
+                  has a 1 in 3 chance of winning 0.2 coins, and a miss earns
+                  0.1; in Lucky paw, a shake gives 0.1 coins (60 in 100) or 0.2
+                  coins (40 in 100). Games earn up to 2 coins a day (Philippine
+                  time); after that, a play is just for fun. Your first 3 plays
+                  each day can also win one of the shop&apos;s prizes, and the
+                  games page shows each prize&apos;s chance. Don&apos;t use
+                  tricks, scripts or extra accounts to get more plays or prizes.
                 </li>
                 <li>
                   <Term>Ads.</Term> An ad shows only after you tap Show ads, and
