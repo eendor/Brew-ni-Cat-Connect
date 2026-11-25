@@ -9,8 +9,10 @@ import {
   playErrorMessage,
   pointsLabel,
 } from "@/lib/games/games";
+import { HIDING_CUP } from "@/lib/games/sprites";
 
 import { CatSprite } from "./cat-sprite";
+import { SheetSprite } from "./game-icon";
 
 type CatCupsProps = Readonly<{
   disabled: boolean;
@@ -20,37 +22,16 @@ type CatCupsProps = Readonly<{
 
 const CUPS = [0, 1, 2] as const;
 
-function Cup() {
+function Cup({ lit }: Readonly<{ lit: boolean }>) {
   return (
-    <svg
-      viewBox="0 0 80 72"
-      width="80"
-      height="72"
-      aria-hidden="true"
-      focusable="false"
-    >
-      <path
-        d="M14 66 L22 10 Q23 6 27 6 L53 6 Q57 6 58 10 L66 66 Z"
-        fill="var(--accent-fill)"
-        stroke="var(--text-strong)"
-        strokeWidth="3"
-        strokeLinejoin="round"
-      />
-      <rect
-        x="8"
-        y="62"
-        width="64"
-        height="8"
-        rx="3"
-        fill="var(--text-strong)"
-      />
-      <path
-        d="M26 30 H54"
-        stroke="var(--surface-overlay)"
-        strokeWidth="4"
-        opacity="0.6"
-      />
-    </svg>
+    <SheetSprite
+      sheet={HIDING_CUP.sheet}
+      width={HIDING_CUP.width}
+      height={HIDING_CUP.height}
+      frames={HIDING_CUP.tags.length}
+      frame={lit ? 1 : 0}
+      className="block"
+    />
   );
 }
 
@@ -152,7 +133,7 @@ export function CatCups({ disabled, reducedMotion, onPlay }: CatCupsProps) {
                 onClick={() => void pick(i)}
                 className="flex min-h-11 items-end rounded-[var(--shape-md)] p-1 transition-transform hover:-translate-y-1 focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-default disabled:hover:translate-y-0"
               >
-                <Cup />
+                <Cup lit={picked === i} />
               </button>
             </div>
           </div>

@@ -1,0 +1,33 @@
+{ "frames": [
+   {
+    "filename": "hiding-cup 0.aseprite",
+    "frame": { "x": 0, "y": 0, "w": 40, "h": 36 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 36 },
+    "sourceSize": { "w": 40, "h": 36 },
+    "duration": 100
+   },
+   {
+    "filename": "hiding-cup 1.aseprite",
+    "frame": { "x": 40, "y": 0, "w": 40, "h": 36 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 40, "h": 36 },
+    "sourceSize": { "w": 40, "h": 36 },
+    "duration": 100
+   }
+ ],
+ "meta": {
+  "app": "http://www.aseprite.org/",
+  "version": "1.3.18.6-dev",
+  "image": "hiding-cup.png",
+  "format": "RGBA8888",
+  "size": { "w": 80, "h": 36 },
+  "scale": "1",
+  "frameTags": [
+   { "name": "cup", "from": 0, "to": 0, "direction": "forward", "color": "#000000ff" },
+   { "name": "cup-lit", "from": 1, "to": 1, "direction": "forward", "color": "#000000ff" }
+  ]
+ }
+}

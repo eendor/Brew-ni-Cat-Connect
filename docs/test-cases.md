@@ -1911,3 +1911,13 @@ data. They do not verify customer redemption or refunds.
 - **TC-P9-114:** Place a signed-in pickup order with 12.5 coins, verify the
   ledger debit and tracked total, then cancel and verify the net debit is zero.
   The historical discount remains on the order.
+
+## 73. Pixel-Art Games (2026-11-25)
+
+FR-123, FR-089 and ADR-032. Every game, on the website and in the Android app, is drawn in Aseprite pixel art instead of emoji and simple shapes.
+
+| ID        | Requirement    | Case | Expected result | Status |
+| --------- | -------------- | ---- | --------------- | ------ |
+| TC-P9-115 | FR-123, FR-089 | Unit (`game-sprites.test.ts`): the Aseprite sources, the exported sheets and frame data, the Android frames and the games' data | The four `art/games/*.aseprite` sources exist; `icons.png` is 320 × 16 with one tag per icon in `GAME_ICONS` order; the cup sheet is 80 × 36 with `cup` and `cup-lit`; the jar is 48 × 56 and both stack blocks 16 × 12; every icon has its `game_*.png` in the app (`game_fish.png` 16 × 16); no arcade game, Cat Match face or treat is an emoji | Passed (automated) |
+| TC-P9-116 | FR-123, FR-089 | Browser (`games.spec.ts`, 390 px wide, signed in with mocked games): the games page's Cat Cups and Lucky Paw, then each arcade game | The sprite sheets load; Cat Cups shows three pixel cups and cup 2 still finds Oreo (+3 coins); Lucky Paw shows the pixel jar; the arcade list shows five pixel icons and no emoji; Treat Catcher shows Kulas and a falling treat, Whack-a-Mouse a pixel mouse, Cup Stack 9-slice blocks, Paw Says four white paws and Cat Match cards named for their face (for example "Card 1: milk tea"); screenshots in `docs/evidence/phase-9/games/pixel-*-phone.png` | Passed (automated) |
+| TC-P9-117 | FR-123, FR-089 | JVM (Android `GameSpritesTest`): the icons the games use, the app's frames against the website's `GAME_ICONS`, emoji in the games' code, whole-pixel scaling | Every game, Cat Match face, treat and score-chip icon has a sprite; the app's icon names equal the website's, in order; every icon frame is 16 × 16, the cups 40 × 36, the jar 48 × 56 and the blocks 16 × 12; no emoji in `ui/games/`, `Arcade.kt` or `GamesDialog.kt`; a scale of 2.75 rounds to 3 and anything under 1 to 1 | Passed (automated) |

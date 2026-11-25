@@ -19,8 +19,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
-import com.brewnicat.connect.ui.kit.KitType
-import com.brewnicat.connect.ui.kit.Text
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,7 +30,6 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.brewnicat.connect.data.Whack
 import com.brewnicat.connect.data.WhackState
 import com.brewnicat.connect.ui.kit.pressable
@@ -59,9 +56,9 @@ fun WhackGame(paused: Boolean, onFinish: (Int) -> Unit) {
 
     Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(14.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            HudChip("⏱ ${(s.timeLeftMs + 999) / 1000}s")
-            HudChip("Score ${s.score}", strong = true)
-            if (s.combo >= 2) HudChip("🔥 x${s.combo}")
+            HudChip("${(s.timeLeftMs + 999) / 1000}s", icon = "clock")
+            HudChip("Score ${s.score}", strong = true, icon = "mouse")
+            if (s.combo >= 2) HudChip("x${s.combo}", icon = "flame")
         }
         Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             for (row in 0..2) {
@@ -93,9 +90,9 @@ private fun Hole(up: Boolean, golden: Boolean, onTap: () -> Unit) {
             .pressable(onClick = onTap).semantics { contentDescription = if (up) "Mouse" else "Empty hole" },
         contentAlignment = Alignment.Center,
     ) {
-        Text(
-            if (golden) "🐹" else "🐭", style = KitType.body.copy(fontSize = 40.sp),
-            modifier = Modifier.graphicsLayer { scaleX = rise; scaleY = rise; translationY = (1f - rise) * 40f; alpha = rise },
+        PixelIcon(
+            if (golden) "mouse-gold" else "mouse", 48.dp,
+            Modifier.graphicsLayer { scaleX = rise; scaleY = rise; translationY = (1f - rise) * 40f; alpha = rise },
         )
     }
 }
