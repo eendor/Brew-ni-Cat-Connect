@@ -591,7 +591,7 @@ test("TC-P4-002 — every page mounts its 3D layer without console or hydration 
   expect(errors).toEqual([]);
 });
 
-test("TC-P4-197 — a desktop with an integrated or software GPU gets the lite tier and the small HDRI; ?quality=high brings back the full tier", async ({
+test("TC-P4-197 — a desktop, even one with a software GPU, gets the full tier with the small HDRI; ?quality=lite gives the lite tier", async ({
   page,
 }) => {
   const errors = collectErrors(page);
@@ -606,15 +606,15 @@ test("TC-P4-197 — a desktop with an integrated or software GPU gets the lite t
   // the test browser draws with SwiftShader, a software GPU
   await page.goto("/");
   await expect(ready).toBeVisible({ timeout: 45_000 });
-  await expect(stage).toHaveAttribute("data-tier", "lite");
+  await expect(stage).toHaveAttribute("data-tier", "full");
   expect(await pixelSpread(stage)).toBeGreaterThan(12);
+  // every device downloads only the half-size HDRI, for a faster first visit
   expect(hdris).toEqual(["/three/hdri/studio_small_09_512.hdr"]);
 
-  hdris.length = 0;
-  await page.goto("/?quality=high");
+  await page.goto("/?quality=lite");
   await expect(ready).toBeVisible({ timeout: 45_000 });
-  await expect(stage).toHaveAttribute("data-tier", "full");
-  expect(hdris).toEqual(["/three/hdri/studio_small_09_1k.hdr"]);
+  await expect(stage).toHaveAttribute("data-tier", "lite");
+  expect([...new Set(hdris)]).toEqual(["/three/hdri/studio_small_09_512.hdr"]);
   expect(errors).toEqual([]);
 });
 
@@ -1199,7 +1199,7 @@ test.describe("phone", () => {
     expect(problems).toEqual([]);
   });
 
-  test("TC-P4-128 — a phone gets the lite showcase at 1× with the small HDRI", async ({
+  test("TC-P4-128 — a phone gets the full showcase at up to 2× with the small HDRI", async ({
     page,
   }) => {
     const errors = collectErrors(page);
@@ -1213,14 +1213,13 @@ test.describe("phone", () => {
       timeout: 45_000,
     });
     const stage = page.locator(".showcase__stage canvas");
-    await expect(stage).toHaveAttribute("data-tier", "lite");
+    await expect(stage).toHaveAttribute("data-tier", "full");
     await page.waitForTimeout(1500);
-    // no post effects, shadows or refraction, and still a drawn scene
     expect(await pixelSpread(stage)).toBeGreaterThan(12);
     const ratio = await stage.evaluate(
       (canvas: HTMLCanvasElement) => canvas.width / canvas.clientWidth,
     );
-    expect(ratio).toBeLessThanOrEqual(1.01);
+    expect(ratio).toBeLessThanOrEqual(2.01);
     // the phone downloads only the half-size HDRI
     expect(hdris).toEqual(["/three/hdri/studio_small_09_512.hdr"]);
     expect(errors).toEqual([]);

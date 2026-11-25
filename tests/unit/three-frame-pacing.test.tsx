@@ -21,10 +21,10 @@ import {
   warmUp,
 } from "@/components/three/engine/renderer";
 import {
+  getQuality,
   FRAME_BUDGET_MS,
   FrameBudget,
-  getQuality,
-  resetFrameBudgets,
+  resetRuntimeCaches,
   watchVisible,
   type Quality,
 } from "@/components/three/engine/runtime";
@@ -67,10 +67,6 @@ const pause = () =>
     await new Promise((resolve) => setTimeout(resolve, 20));
   });
 
-function frames(budget: FrameBudget, count: number, ms: number) {
-  for (let i = 0; i < count; i += 1) budget.push(ms);
-}
-
 /** A desktop-sized screen with a fine pointer. */
 function desktopScreen() {
   vi.stubGlobal("matchMedia", (query: string) => ({
@@ -88,14 +84,18 @@ const desktop: Quality = {
 
 afterEach(() => {
   setCurtainSettled();
-  resetFrameBudgets();
+  resetRuntimeCaches();
   window.localStorage.clear();
   vi.unstubAllGlobals();
   vi.unstubAllEnvs();
   vi.restoreAllMocks();
 });
 
-describe("3D frame pacing (TC-P4-180 – TC-P4-186, TC-P4-191 – TC-P4-196)", () => {
+function frames(budget: FrameBudget, count: number, ms: number) {
+  for (let i = 0; i < count; i += 1) budget.push(ms);
+}
+
+describe("3D frame pacing (TC-P4-180 – TC-P4-186, TC-P4-191 – TC-P4-196, TC-P4-278, TC-P4-279)", () => {
   it("TC-P4-180 — the curtain counts as moving from the moment it starts closing until it has fully opened", () => {
     const opened = vi.fn();
     const settled = vi.fn();
@@ -218,7 +218,7 @@ describe("3D frame pacing (TC-P4-180 – TC-P4-186, TC-P4-191 – TC-P4-196)", (
     for (let i = 0; i < 90; i += 1) uneven.push(i % 3 === 0 ? 24 : 16);
     expect(missed).toHaveBeenCalledTimes(1);
     // the cases below start as fresh visits
-    resetFrameBudgets();
+    resetRuntimeCaches();
 
     // `?quality=high` keeps every effect on
     const kept = vi.fn();
@@ -294,6 +294,28 @@ describe("3D frame pacing (TC-P4-180 – TC-P4-186, TC-P4-191 – TC-P4-196)", (
     ]);
   });
 
+  it("TC-P4-278 — a slow scene lowers its pixel ratio a step at a time and never below 1×", () => {
+    let ratio = 2;
+    const renderer = {
+      getPixelRatio: () => ratio,
+      setPixelRatio: (next: number) => {
+        ratio = next;
+      },
+    };
+    const resize = vi.fn();
+    const steps = pixelSteps(renderer, resize);
+    expect(steps).toHaveLength(3);
+    const seen = steps.map((step) => {
+      step();
+      return ratio;
+    });
+    expect(seen).toEqual([1.5, 1.25, 1]);
+    expect(resize).toHaveBeenCalledTimes(3);
+
+    // a 1× laptop screen has nothing to lower: it stays sharp
+    expect(pixelSteps(renderer, resize)).toEqual([]);
+  });
+
   it("TC-P4-186 — a canvas drawn through post-processing doesn't multisample; every other canvas does, phones included", () => {
     const phone: Quality = {
       mobile: true,
@@ -315,15 +337,24 @@ describe("3D frame pacing (TC-P4-180 – TC-P4-186, TC-P4-191 – TC-P4-196)", (
     expect(antialias(phone, true)).toBe(false);
   });
 
-  it("TC-P4-191 — a device still too slow with every step taken keeps the effects it has left and never switches to the lite tier", () => {
+  it("TC-P4-191 — every device starts with full effects at full sharpness: no lite tier, and phones draw at up to 2×", () => {
     desktopScreen();
-    const step = vi.fn();
-    const slow = new FrameBudget(FRAME_BUDGET_MS, [step]);
-    for (let i = 0; i < 6; i++) frames(slow, 90, 40);
-    expect(step).toHaveBeenCalledTimes(1);
-    expect(slow.level).toBe(1);
-    expect(getQuality().lite).toBe(false);
-    resetFrameBudgets();
+    expect(getQuality()).toMatchObject({
+      mobile: false,
+      lite: false,
+      maxDpr: 1.5,
+    });
+    vi.stubGlobal("matchMedia", (query: string) => ({
+      matches: true,
+      media: query,
+    }));
+    expect(getQuality()).toMatchObject({
+      mobile: true,
+      lite: false,
+      maxDpr: 2,
+    });
+    // a new visit learns nothing that turns effects down
+    resetRuntimeCaches();
     expect(getQuality().lite).toBe(false);
   });
 
@@ -470,28 +501,6 @@ describe("3D frame pacing (TC-P4-180 – TC-P4-186, TC-P4-191 – TC-P4-196)", (
 
     vi.stubEnv("NODE_ENV", "development");
     expect(make().debug.checkShaderErrors).toBe(true);
-  });
-
-  it("TC-P4-278 — a slow scene lowers its pixel ratio a step at a time and never below 1×", () => {
-    let ratio = 2;
-    const renderer = {
-      getPixelRatio: () => ratio,
-      setPixelRatio: (next: number) => {
-        ratio = next;
-      },
-    };
-    const resize = vi.fn();
-    const steps = pixelSteps(renderer, resize);
-    expect(steps).toHaveLength(3);
-    const seen = steps.map((step) => {
-      step();
-      return ratio;
-    });
-    expect(seen).toEqual([1.5, 1.25, 1]);
-    expect(resize).toHaveBeenCalledTimes(3);
-
-    // a 1× laptop screen has nothing to lower: it stays sharp
-    expect(pixelSteps(renderer, resize)).toEqual([]);
   });
 
   it("TC-P4-279 — a device older versions remembered as slow gets full effects, and the old note is cleared", () => {

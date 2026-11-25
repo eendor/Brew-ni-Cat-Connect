@@ -60,7 +60,6 @@ export async function initMenuHero(
     post: !lite,
   });
   const shadows = shadowPacer(renderer);
-  renderer.transmissionResolutionScale = quality.mobile ? 0.5 : 1;
   const env = await studioEnvironment(renderer);
   const scene = new THREE.Scene();
   scene.environment = env;
@@ -192,12 +191,7 @@ export async function initMenuHero(
     FRAME_BUDGET_MS,
     post
       ? [
-          // first what hardly shows: shadows redrawn less often and the
-          // glass refraction drawn at half size
-          () => {
-            renderer.transmissionResolutionScale = 0.5;
-            shadows.slowDown();
-          },
+          () => shadows.slowDown(),
           () => post.dropDepthOfField(),
           ...pixelSteps(renderer, resize),
           () => post.degrade(),

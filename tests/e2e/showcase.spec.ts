@@ -239,3 +239,17 @@ test("TC-P4-198 — a button's icon sits on the first line of its label, also wh
     ).toBeLessThanOrEqual(wrapped.lineHeight / 4);
   }
 });
+
+test("TC-P4-287 — a first visit's HTML asks for the 3D lighting file straight away, where the 3D can show", async ({
+  request,
+}) => {
+  const html = await (await request.get("/")).text();
+  const links = html.match(/<link[^>]*studio_small_09_512\.hdr[^>]*>/g) ?? [];
+  expect(links.length).toBeGreaterThan(0);
+  const link = links[0]!;
+  expect(link).toContain('rel="preload"');
+  expect(link).toContain('as="fetch"');
+  // the same request three.js makes, so the browser reuses the download
+  expect(link).toMatch(/crossorigin="(anonymous)?"/i);
+  expect(link).toContain('media="(prefers-reduced-motion: no-preference)"');
+});

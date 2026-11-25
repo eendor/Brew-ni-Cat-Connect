@@ -63,7 +63,6 @@ export async function initAmbient(
   // field, bloom or refraction
   const lite = quality.lite;
   const renderer = makeRenderer(canvas, quality, { post: !lite });
-  renderer.transmissionResolutionScale = 0.5;
   const env = await studioEnvironment(renderer);
   const scene = new THREE.Scene();
   scene.environment = env;
@@ -163,6 +162,7 @@ export async function initAmbient(
         focus: 11.5,
         aperture: 0.0012,
         bloom: 0.3,
+        transmissionScale: 0.5,
       });
   // slow frames give up the depth of field first, then lower the pixel ratio
   // a step at a time (never below 1×), and only then the glow
