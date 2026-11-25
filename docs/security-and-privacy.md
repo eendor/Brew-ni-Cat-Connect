@@ -454,7 +454,7 @@ Before commit/PR, inspect staged and unstaged diffs, verify `.env.local` is untr
 
 ### 20.4 Known limits
 
-- The owner has not confirmed the wording, how long orders are kept, or the deletion steps (MAN-P5-003). **TODO: Confirm with Brew ni Cat owner.** Update 2026-11-10 (PR #113): the wording for orders placed in Messenger (§21.6) is not confirmed either.
+- The owner has not confirmed the wording, how long orders are kept, or the deletion steps (MAN-P5-022). **TODO: Confirm with Brew ni Cat owner.** Update 2026-11-10 (PR #113): the wording for orders placed in Messenger (§21.6) is not confirmed either.
 - There is no self-service delete button or in-app request form yet.
 - The policy is in English only.
 
@@ -492,7 +492,7 @@ Before commit/PR, inspect staged and unstaged diffs, verify `.env.local` is untr
 
 ### 21.6 Privacy policy
 
-- `/privacy` has a new item, "Orders placed in Messenger", and the assistant item no longer says it saves nothing without exception. It says what is kept, that the Facebook ID isn't, and that the order stays in the shop's sales records. The version is 2026-11-10 (TC-P5-088, TC-P5-090, TC-P5-097). The owner has not confirmed the wording (MAN-P5-003). **TODO: Confirm with Brew ni Cat owner.**
+- `/privacy` has a new item, "Orders placed in Messenger", and the assistant item no longer says it saves nothing without exception. It says what is kept, that the Facebook ID isn't, and that the order stays in the shop's sales records. The version is 2026-11-10 (TC-P5-088, TC-P5-090, TC-P5-097). The owner has not confirmed the wording (MAN-P5-022). **TODO: Confirm with Brew ni Cat owner.**
 
 ### 21.7 Known limits
 

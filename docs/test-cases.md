@@ -1251,13 +1251,15 @@ The page is the privacy policy URL and the data deletion instructions URL in the
 | TC-P5-094 | FR-042, NFR-026 | Footer and `/privacy` | The footer opens the policy, and the data deletion link lands on its section | Production build, 1440×900 | Click the footer's Privacy Policy link; then open `/privacy#delete-your-data` fresh | `/privacy` loads with the heading and the "Privacy Policy" title; the deletion URL answers 200 and its heading is in view, below the sticky header | Matched. | Passed | `tests/e2e/privacy.spec.ts`, `docs/evidence/phase-5/privacy-policy/privacy-page-1440x900.png` |
 | TC-P5-095 | NFR-026 | `/privacy` | Reads on a phone | Production build, 390×844 | Open `/privacy`, then `/privacy#delete-your-data` | No sideways scroll; every contact link is at least 44 px tall; the deletion heading is in view | Matched. | Passed | `tests/e2e/privacy.spec.ts`, `docs/evidence/phase-5/privacy-policy/privacy-page-390x844.png`, `docs/evidence/phase-5/privacy-policy/delete-your-data-390x844.png` |
 
-### 41c. Manual checks (MAN-P5-001 to MAN-P5-003)
+### 41c. Manual checks (MAN-P5-020 to MAN-P5-022)
+
+Renumbered on 2026-11-25 from MAN-P5-001 to MAN-P5-003, which the review checks in §39f also use.
 
 | ID | Requirement ID(s) | Scenario | Expected result | Status |
 |---|---|---|---|---|
-| MAN-P5-001 | FR-042, NFR-026 | After the merge, open `https://brew-ni-cat-connect.vercel.app/privacy` and `…/privacy#delete-your-data` | Both answer 200 and show the policy with the saved contact details | Not run yet |
-| MAN-P5-002 | FR-042 | Save both URLs in the Meta app's Basic settings | Meta accepts them, and the app can be published | Not run yet |
-| MAN-P5-003 | FR-042, NFR-026 | The owner reads the policy | The owner confirms the wording, the order retention and the deletion steps, or asks for changes | Not run yet |
+| MAN-P5-020 | FR-042, NFR-026 | After the merge, open `https://brew-ni-cat-connect.vercel.app/privacy` and `…/privacy#delete-your-data` | Both answer 200 and show the policy with the saved contact details | Passed 2026-11-25: `/privacy` answered 200 with the policy, the data deletion section and the shop's email, phone and Facebook links |
+| MAN-P5-021 | FR-042 | Save both URLs in the Meta app's Basic settings | Meta accepts them, and the app can be published | Not run yet |
+| MAN-P5-022 | FR-042, NFR-026 | The owner reads the policy | The owner confirms the wording, the order retention and the deletion steps, or asks for changes | Not run yet |
 
 ## 42. Messenger Reply Buttons and Sign-up Screen Cases (2026-11-10)
 
@@ -1394,12 +1396,12 @@ Update 2026-11-11 (FR-112): run again with the opening hours cases: 86 test file
 | TC-P7-077 | FR-111 | The `closure` section in the database | Starts open like the website's copy; anyone reads it; staff can close it with a note; others change nothing; broken content is refused; other sections keep their checks; the undo removes it and the migration applies again | Passed (automated) |
 | TC-P7-078 | FR-111 | `POST /api/orders` while the shop is closed | 503 with the closed message; the database is not called | Passed (automated) |
 | TC-P7-079 | FR-111 | The line above every page | "We're closed today." with the note, then the notice; nothing extra while open | Passed (automated) |
-| MAN-P7-006 | FR-111 | The owner turns Closed today on and off in the POS, then checks the website and Messenger | The banner and closed replies appear while on and go away when off | Not run (needs the live migration and the POS release) |
+| MAN-P7-006 | FR-111 | The owner turns Closed today on and off in the POS, then checks the website and Messenger | The banner and closed replies appear while on and go away when off | Not run yet. It can run now: the migration is applied and the POS is released. Seen live on 2026-11-25: with the shop closed from the POS, the website's line said it was closed today with the note; turning it off and Messenger weren't checked |
 | TC-P7-082 | FR-112 | The time is before opening, during the hours, after closing, on a closed day, or just after midnight in Manila | Open only inside the saved hours, in Philippine time; the closed message says when ordering opens today | Passed (automated) |
 | TC-P7-083 | FR-112 | Closed today was turned on yesterday, or earlier today | Yesterday's switch no longer closes the shop; today's still does; the loader applies this | Passed (automated) |
 | TC-P7-084 | FR-112 | `POST /api/orders` on a closed day | 503 with the closed message; the database is not called | Passed (automated) |
 | TC-P7-085 | FR-112 | Order here in Messenger before opening | Says "We're not open yet." with the hours and no phone button; no order is placed | Passed (automated) |
-| MAN-P7-007 | FR-112 | The owner checks the POS top bar during and outside the hours, and turns Closed today on | The bar shows Open, Outside hours or Closed today; the next morning it shows Open again | Not run (needs the live app) |
+| MAN-P7-007 | FR-112 | The owner checks the POS top bar during and outside the hours, and turns Closed today on | The bar shows Open, Outside hours or Closed today; the next morning it shows Open again | Not run yet. It can run now: the POS app is released |
 | TC-P7-086 | FR-101 | The customer replies with only their mobile number, without "order" | Update 2026-11-11: the order starts as with "order 09XXXXXXXXX"; a landline or short number on its own is still left to the staff (TC-P7-057 updated) | Passed (automated) |
 
 ## 48. Cat Characters Cases (2026-11-10)

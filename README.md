@@ -3,9 +3,9 @@
 **Course:** ICT05a Applications Development & Emerging Technologies\
 **Development status:** Phase 3 — Menu and Ordering Experience is complete (closed on 2026-10-30 after a final check of `main`). Phase 4 — Cloud backend and customer accounts is complete (closed on 2026-11-06 after the integrated QA and a final check of `main`): online pickup orders, with Place order on for the live site since 2026-11-02 after the POS order screen was ready, customer accounts and profiles, live website content, and the POS product editor. Phase 5 — Order tracking and loyalty is in progress. Phase 6 — Existing POS integration is complete (closed on 2026-11-07 after the integrated QA and a final check of `main`): online orders reach the POS tablet live, staff move them through the order steps, and completed orders become POS sales. Phase 8 — Native Kotlin/Compose Android app (Phase 1 ordering [PR #150](https://github.com/eendor/Brew-ni-Cat-Connect/pull/150), Phase 2 Google PKCE sign-in & account journeys [PR #151](https://github.com/eendor/Brew-ni-Cat-Connect/pull/151), Phase 3 waiting mini-games & waiting/completed order ads). Update 2026-11-17: Android app [v1.0.0 released](https://github.com/eendor/Brew-ni-Cat-Connect/releases/tag/v1.0.0).\
 **Live site:** <https://brew-ni-cat-connect.vercel.app>\
-**Android app:** [BrewNiCatConnect.apk, v1.0.0](https://github.com/eendor/Brew-ni-Cat-Connect/releases/tag/v1.0.0) (Android 8.0 or later)\
+**Android app:** [BrewNiCatConnect.apk, latest release](https://github.com/eendor/Brew-ni-Cat-Connect/releases/latest) (v1.0.7; Android 8.0 or later)\
 **Specification version:** 0.1 Draft (living specification)\
-**Last updated:** 2026-11-15
+**Last updated:** 2026-11-25
 
 Brew ni Cat Connect is the customer-facing omnichannel platform for Brew ni Cat Coffee Shop in Kabacan, Cotabato. It complements the existing Brew ni Cat POS; it does not recreate or expose the POS.
 
@@ -152,18 +152,19 @@ The suite builds the production application, starts it locally and runs two Play
 
 ## Current Limitations
 
-The current site does not include:
+The current release does not include:
 
-- server-side order creation: the customer sends the prepared summary to the shop, and server revalidation, single order creation and order references (FR-021, FR-024, FR-025) are planned (PR #41 adds them for pickup, but Place order was turned on for the live site on 2026-11-02, after the POS order screen was ready);
-- account closure, loyalty corrections by staff and points expiry (profiles, order history, tracking, favorites, loyalty points and rewards, reviews and the in-app data request form are done; sign-up, sign-in and password reset arrived in PR #58);
 - online payment processing or direct rider booking;
-- Android and POS synchronization changes;
-- database migrations, production-data mutations, or administrative functions;
-- the owner's Shop settings screen in the POS web app (Stage 3): until then the saved website content is changed in the Supabase dashboard, and the content table from PR #69 isn't on the live database yet;
-- restored RLS with catalog-only read policies, which remains a production security blocker (done on 2026-10-24 in PR #41); and
-- a steady 60 fps for the 3D scenes on integrated GPUs at desktop widths (tuning is planned). The click-through on a physical phone (MAN-P4-007) passed on 2026-10-28 in PR #60.
+- account closure, coin corrections by staff and coin expiry (profiles, order history, tracking, favorites, coins and rewards, reviews and the in-app data request form are done);
+- audit records for menu and price edits (FR-079, FR-087); order status changes and website content edits are audited;
+- a POS screen for reviews: staff can hide a review only in the database;
+- a closure longer than a day: the POS's Closed today switch turns off at midnight, so a longer closure turns every day off in the POS hours;
+- Messenger replies for every customer: while the Meta app has Standard Access, only people with a role on the app get replies, and reaching everyone needs Meta App Review;
+- the Android app on Google Play: it is installed and updated from the website;
+- frame rates measured on real phones with the 3D frame-rate safeguard (PR #191); and
+- an end-to-end test of a POS or network outage (FR-077), and the manual checks still marked Not run yet in the test cases, which need a real phone, the Messenger Page or the Meta app.
 
-The shop is open 11 AM to 9 PM Monday to Friday and 1 PM to 9 PM on Sunday, and closed every Saturday. Customers are directed to the official Facebook page or the shop contact details for any schedule changes. Since PR #69 these are the fallback hours; the site shows the hours saved by the shop once the content table is live.
+The website, the app and Messenger show the hours saved in the POS. The built-in fallback is 11 AM to 9 PM Monday to Friday and 1 PM to 9 PM on Sunday, closed every Saturday. Customers are directed to the official Facebook page or the shop contact details for any schedule changes.
 
 ## Contributing
 
