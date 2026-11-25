@@ -1136,7 +1136,7 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Testing:** Vitest 412/412 in 47 files (new TC-P4-206 – TC-P4-222; the database cases run on PGlite with every migration). Playwright with the CI settings: `chromium` 22 passed and 1 skipped (TC-P4-173); `chromium-3d` 20 passed, and TC-P4-021 failed only on the placeholder key's 401s from the cart's menu read, then passed against a build with the real key. Before and after screenshots are in `docs/evidence/phase-4/live-site-content/`.
 - **Branch / PR:** `feat/live-site-content`, PR #69.
 - **Known limitations:** The migration isn't applied to the live database yet, so the site shows its fallback copy (the same facts as before) until it is. Owner changes go through the Supabase dashboard until the POS Shop settings screen (Stage 3); "owner only" means staff accounts for now. Photos must be ones that ship with the site under `/images/`. Menu price changes aren't in the history table yet; that comes with the POS work. While the table is missing, the server logs one fallback line per render.
-- **Next action:** Apply the migration on the live database once approved, then the washed-out 3D and footer text fixes the user reported, then the iOS 27 restyle.
+- **Next action:** Apply the migration on the live database once approved, then the washed-out 3D and footer text fixes I reported, then the iOS 27 restyle.
 
 ## 2026-10-30 — Washed-out 3D colors and the footer's dark text
 
@@ -1201,7 +1201,7 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Files:** `supabase/migrations/20261031120000_item_icon_and_image.sql`, `supabase/rollbacks/20261031120000_item_icon_and_image.sql`, `tests/database/item-icon-and-image.test.ts`, `docs/database-design.md`, `docs/functional-requirements.md`, `docs/test-cases.md`, `docs/development-log.md`, `README.md`.
 - **Testing:** Vitest 444/444 in 50 files (`npm test`), `python3 -I scripts/validate_phase0_docs.py` (PASS), `npm run format:check` (PASS), `npm run lint` (PASS), `npm run typecheck` (PASS).
 - **Branch / PR:** `feat/pos-item-icon-columns`, PR #75.
-- **Known limitations:** The migration is not applied to the live database until approved by the user.
+- **Known limitations:** The migration is not applied to the live database until I approve it.
 - **Next action:** Build the Android POS product and category editor behind the owner PIN with the icon picker and safe menu seeding, then the web POS product editor icon picker, then the Android Supabase config cleanup.
 
 ## 2026-10-31 — Stage 3 POS product and category editor, 30-icon picker, and Android BuildConfig cleanup (POS PRs #4, #5, #6)
@@ -1215,13 +1215,13 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Files:** In `Brew-ni-Cat-POS`: `app/build.gradle.kts`, `app/src/main/java/com/example/cattasticpos/data/local/*`, `data/repository/*`, `data/remote/AppUpdateManager.kt`, `domain/model/MenuModels.kt`, `domain/repository/MenuRepository.kt`, `sync/SyncWorker.kt`, `ui/components/FluentIcons.kt`, `ui/components/ParallaxNavigation.kt`, `ui/dashboard/*`, `ui/history/HistoryScreen.kt`, `ui/inventory/InventoryScreen.kt`, `ui/menu/MenuEditorScreen.kt`, `ui/menu/MenuEditorViewModel.kt`, `ui/pin/PinScreen.kt`, `MainActivity.kt`, `app/src/test/java/com/example/cattasticpos/MenuCatalogEditorTest.kt`, `web/src/lib/product-icons.ts`, `web/src/components/product-icon.tsx`, `web/src/app/page.tsx`, `web/tests/product-icons.test.mjs`, `docs/screenshots/web-product-icon-picker/`, `README.md`. In `Brew-ni-Cat-Connect`: `docs/functional-requirements.md`, `docs/system-architecture.md`, `docs/test-cases.md`, `docs/development-log.md`, `README.md`.
 - **Testing:** In `Brew-ni-Cat-POS`: `bash gradlew testDebugUnitTest` (PASS, `TC-P4-248` to `TC-P4-250`) and in `web/`: `npm test` (7/7 passed, `TC-P4-240` to `TC-P4-242` and `TC-P4-251`), `npm run lint` (0 warnings), `npm run build` (PASS). In `Brew-ni-Cat-Connect`: `python3 -I scripts/validate_phase0_docs.py` (PASS) and `npm run format:check` (PASS).
 - **Branch / PR:** `Brew-ni-Cat-POS` `feat/android-product-editor` (POS PR #4), `feat/web-product-icon-picker` (POS PR #5), `chore/android-supabase-buildconfig` (POS PR #6), and `Brew-ni-Cat-Connect` `docs/stage3-pos-product-editor-evidence` (Connect PR #76).
-- **Known limitations:** `20261031120000_item_icon_and_image.sql` remains unapplied on the live database until approved by the user; both POS apps automatically fall back if the remote `icon` column is absent.
-- **Next action:** Ask the user before applying `20261031120000_item_icon_and_image.sql` to live Supabase or publishing a new Android POS APK release.
+- **Known limitations:** `20261031120000_item_icon_and_image.sql` remains unapplied on the live database until I approve it; both POS apps automatically fall back if the remote `icon` column is absent.
+- **Next action:** Wait for my approval before applying `20261031120000_item_icon_and_image.sql` to live Supabase or publishing a new Android POS APK release.
 
 ## 2026-11-01 — Live migrations applied and Android POS build 10136 released (FR-027, FR-093)
 
 - **Phase:** Phase 9 (Stage 3 release).
-- **Task:** With the user's approval, apply the two pending migrations to the live database and send the new Android POS build to the shop tablet.
+- **Task:** With my approval, apply the two pending migrations to the live database and send the new Android POS build to the shop tablet.
 - **Summary:** Applied `20261028153552_online_order_status.sql` and `20261031120000_item_icon_and_image.sql` to the live database; both are recorded in `supabase_migrations.schema_migrations`. Released Android POS build 10136 (version 1.1.0) with the product and category editor (`Brew-ni-Cat-POS` PR #7), uploaded the signed APK to the 1.1.0 GitHub release, and added the matching `public.app_release` row so the tablet shows an optional update prompt. Updated the POS README badge (`Brew-ni-Cat-POS` PR #8).
 - **Files:** `docs/database-design.md`, `docs/development-log.md`. In `Brew-ni-Cat-POS`: `app/build.gradle.kts`, `README.md`.
 - **Testing:** The live `items` table has the `icon` and `image_url` columns, `public.set_online_order_status` exists, and the public menu read returns 200. The update feed returns build 10136 to the publishable key, the same request the tablet makes. `gradlew :app:testDebugUnitTest :app:assembleRelease` passes. The Room 19 → 20 upgrade only adds columns with defaults and has no destructive fallback, so unsynced tablet sales are kept.
@@ -1237,7 +1237,7 @@ This log records completed work and observed evidence. Planned work is explicitl
 - **Files:** `src/lib/ordering/cart-pricing.ts`, `src/components/menu/menu-item-order-dialog.tsx`, `supabase/migrations/20261101120000_mixed_flavors.sql`, `supabase/rollbacks/20261101120000_mixed_flavors.sql`, `tests/unit/mixed-flavors.test.ts`, `tests/database/mixed-flavors.test.ts`, `docs/*`. In `Brew-ni-Cat-POS`: `CartLineSelection.kt`, `MenuModels.kt`, `RecipeDeductionResolver.kt`, `DashboardScreen.kt`, `MixedFlavorTest.kt`.
 - **Testing:** TC-P4-252 to TC-P4-256 pass; the full Vitest suite, type check, lint, Prettier and the docs validator pass.
 - **Branch / PR:** `feat/mix-flavors-online`; `Brew-ni-Cat-POS` PR #11.
-- **Known limitations:** Each flavor in a mix deducts a full recipe portion from stock. The migration is applied to the live database with the user's approval after merge.
+- **Known limitations:** Each flavor in a mix deducts a full recipe portion from stock. The migration is applied to the live database with my approval after merge.
 - **Next action:** After screenshots of the POS mix option once build 10138 is on the tablet.
 
 ## 2026-11-01 — Noodle add-ons online and fries-only mixing (FR-027, FR-082)
@@ -1561,13 +1561,13 @@ This log records completed work and observed evidence. Planned work is explicitl
   - `NODE_OPTIONS=--no-experimental-webstorage npx vitest run`: 80 test files, 728 tests, all passed.
   - `CAPTURE_EVIDENCE=1 npx playwright test tests/e2e/privacy.spec.ts --project=chromium`: 2 passed; the three screenshots are in `docs/evidence/phase-5/privacy-policy/`.
 - **Branch / PR:** `feat/privacy-policy`, PR #107.
-- **Known limitations:** The owner has not confirmed the wording, how long orders are kept or the deletion steps (MAN-P5-003). Deletion is a request to the shop; there is no self-service delete button or request form yet. The policy is in English only.
-- **Next action:** After the merge, check `/privacy` on production (MAN-P5-001), save the two URLs in the Meta app and publish it (MAN-P5-002), then rerun the Messenger live checks TC-P7-044 to TC-P7-049.
+- **Known limitations:** The owner has not confirmed the wording, how long orders are kept or the deletion steps (MAN-P5-022). Deletion is a request to the shop; there is no self-service delete button or request form yet. The policy is in English only.
+- **Next action:** After the merge, check `/privacy` on production (MAN-P5-020), save the two URLs in the Meta app and publish it (MAN-P5-021), then rerun the Messenger live checks TC-P7-044 to TC-P7-049.
 
 ## 2026-11-10 — Buttons inside Messenger replies and a clearer sign-up screen
 
 - **Phase:** Phase 7 (Messenger) and Phase 4 (accounts).
-- **Task:** The user found the Messenger buttons showing only as quick replies under the latest reply, and asked for them inside the replies. The user also found that signing up with an email that already has an account showed "Confirm your email", as if the account were new.
+- **Task:** I found the Messenger buttons showing only as quick replies under the latest reply, and asked for them inside the replies. I also found that signing up with an email that already has an account showed "Confirm your email", as if the account were new.
 - **Summary:** `sendApiBody` now sends a reply of up to 640 characters as Meta's button message, with its first three choices as postback buttons and the rest as quick replies. Longer replies stay as text with quick replies. The sign-up screen still doesn't say whether an account exists (FR-031, FR-032), but its wording now covers both cases and links to the password reset.
 - **Files:** `src/lib/messenger/send.ts`, `src/components/account/sign-up-view.tsx`, `tests/unit/messenger-send.test.ts`, `tests/unit/account-forms.test.tsx`, `docs/test-cases.md` (section 42).
 - **Testing:** `NODE_OPTIONS=--no-experimental-webstorage npx vitest run`: 80 test files, 730 tests, all passed. `npx eslint . --max-warnings=0`, `npx tsc --noEmit -p .` and `npx prettier --check .` passed.
@@ -1578,7 +1578,7 @@ This log records completed work and observed evidence. Planned work is explicitl
 ## 2026-11-10 — Ordering and order status inside Messenger (FR-100 to FR-110)
 
 - **Phase:** Phase 7 (Messenger).
-- **Task:** The user asked for an ordering system of its own inside Messenger, with pictures and buttons, a button (not a pasted link) for the website, and a notification in the POS app. The user then said it must be standalone, not dependent on the browser or the website, and that the order status must be handled in the chat, not with a website order number.
+- **Task:** I asked for an ordering system of its own inside Messenger, with pictures and buttons, a button (not a pasted link) for the website, and a notification in the POS app. I then said it must be standalone, not dependent on the browser or the website, and that the order status must be handled in the chat, not with a website order number.
 - **Summary:** "🛒 Order here" now takes a pickup order in the chat: the phone number (Messenger's phone-number button, or the typed words "order 09XXXXXXXXX"), a category with its menu board, item cards with photos, a size, flavors (up to three for fries), add-ons and a quantity, a payment preference and a pickup time, then a summary with the total, the saved hours and any shop notice, and Place order. The order so far travels in the buttons' payloads, so nothing is saved before Place order. Place order calls the website's `place_online_order` database function as a guest, so the order lands in the same queue the POS app already listens to, and a double tap returns the same order. "📦 Order status" lists the customer's last three Messenger orders, found by who is asking (a token made from their Messenger ID and the app secret) through the new `list_online_orders_by_token` function, with no order number or link to type. The Messenger ID is never stored. Website links are buttons, the five menu boards are shown with a note that their prices may be older, each Cat Association option's contents are spelled out, and the replies use emojis. Pasting a website order link still works. The privacy policy page and its date say what a Messenger order keeps. The docs validator now expects FR-001 to FR-110.
 - **Files:** `src/lib/messenger/` (`order-flow.ts`, `order-ids.ts`, `order-state.ts`, `ordering.ts`, `deps.ts`, `events.ts`, `intents.ts`, `profile.ts`, `replies.ts`, `send.ts`), `src/config/menu-boards.ts`, `src/app/api/messenger/route.ts`, `src/app/privacy/page.tsx`, `src/config/privacy.ts`, `public/images/messenger/no-photo.jpg`, `supabase/migrations/20261110120000_messenger_order_status.sql` and its rollback, `scripts/validate_phase0_docs.py`, `tests/unit/messenger-*.test.ts`, `tests/unit/privacy-page.test.tsx`, `tests/database/messenger-order-status.test.ts`, and the docs (functional requirements FR-100 to FR-110, ADR-029, database design §15, system architecture §24, security and privacy §21, test cases section 44, software and APIs, SRS, execution paths, the business content register and the Phase 2 evidence note). Section 43 of the test cases is left free for the Phase 7 integrated QA.
 - **Testing:**
@@ -1587,13 +1587,13 @@ This log records completed work and observed evidence. Planned work is explicitl
   - `python3 scripts/validate_phase0_docs.py`: `PHASE0_DOC_VALIDATION=PASS`, FR_IDS=110, 0 errors.
   - `npm run build`, then `CI=1 npx playwright test --project=chromium`: 46 passed, 3 skipped, the same as on `main`.
 - **Branch / PR:** `feat/messenger-ordering`, PR #113.
-- **Known limitations:** The migration is NOT applied to the live database yet, so Order status says it can't check orders until it is; ordering is unaffected. Order status answers only when asked; the customer is not messaged when the status changes. Messenger orders share the website's order queue (no separate table) and show in the POS app as online orders whose note starts "Messenger order." Nothing checks that the phone number belongs to the customer. The per-person limits are kept per server instance. The live Messenger and POS checks (MAN-P7-001 to MAN-P7-005) are Not run yet. The Meta app has Standard Access, so only people with a role on the app get replies until Meta App Review. The owner has not confirmed the new privacy wording (MAN-P5-003), the closure-day behaviour or whether orders outside shop hours should be allowed.
+- **Known limitations:** The migration is NOT applied to the live database yet, so Order status says it can't check orders until it is; ordering is unaffected. Order status answers only when asked; the customer is not messaged when the status changes. Messenger orders share the website's order queue (no separate table) and show in the POS app as online orders whose note starts "Messenger order." Nothing checks that the phone number belongs to the customer. The per-person limits are kept per server instance. The live Messenger and POS checks (MAN-P7-001 to MAN-P7-005) are Not run yet. The Meta app has Standard Access, so only people with a role on the app get replies until Meta App Review. The owner has not confirmed the new privacy wording (MAN-P5-022), the closure-day behaviour or whether orders outside shop hours should be allowed.
 - **Next action:** Get the team's OK to apply the migration (database design §8.7), then run MAN-P7-001 to MAN-P7-005 with the shop's staff told beforehand.
 
 ## 2026-11-10 — Messenger order choice fixes
 
 - **Phase:** Phase 7 (Messenger).
-- **Task:** The user tried the order steps on a phone and reported cut-off choice names, a "No flavor" choice on drinks that need one, no Back button on the flavor step, and Buldak & Sedaap inside the Menu reply next to Full menu and Order here. A tap on the phone-number button also showed the welcome again.
+- **Task:** I tried the order steps on a phone and found cut-off choice names, a "No flavor" choice on drinks that need one, no Back button on the flavor step, and Buldak & Sedaap inside the Menu reply next to Full menu and Order here. A tap on the phone-number button also showed the welcome again.
 - **Summary:** When any choice name is longer than a Messenger button (20 characters), the choices are numbered in the message with their full names and prices, and the buttons show the numbers. "No flavor" is gone. The flavor, extras and how-many steps all have "🔙 Back" (to the sizes, or to the category when there is one size). The Menu and category replies keep only Full menu and Order here inside the message. A phone-number tap without a usable number now asks for the number again.
 - **Files:** `src/lib/messenger/` (`ordering.ts`, `order-flow.ts`, `intents.ts`, `replies.ts`, `send.ts`), `tests/unit/messenger-{order-flow,send,intents,replies}.test.ts`, `docs/test-cases.md` §45.
 - **Testing:**
@@ -1605,7 +1605,7 @@ This log records completed work and observed evidence. Planned work is explicitl
 ## 2026-11-10 — Phone number button with no number, and the order status migration applied
 
 - **Phase:** Phase 7 (Messenger).
-- **Task:** On a phone, the phone number button showed "Phone number" and its tap gave no number, so the chat asked again with the same button. The user also approved applying the order status migration and re-applying the Page's menu.
+- **Task:** On a phone, the phone number button showed "Phone number" and its tap gave no number, so the chat asked again with the same button. I also approved applying the order status migration and re-applying the Page's menu.
 - **Summary:** A tap without a number now gets its own reply: Messenger didn't share a number, so type "order 09XXXXXXXXX". The button isn't offered again there. Separately, `20261110120000_messenger_order_status.sql` was applied to the live database on 2026-11-10 (database design §8.7): first with its checks and a forced rollback, then for real, and recorded in `supabase_migrations.schema_migrations`. A guest call to `list_online_orders_by_token` with an unknown token returned `[]`. The Page's persistent menu was re-applied with Order here first; Meta's API no longer accepts the greeting, so it stays as set in Business Suite.
 - **Files:** `src/lib/messenger/` (`intents.ts`, `events.ts`, `order-flow.ts`, `ordering.ts`), `tests/unit/messenger-{intents,order-flow}.test.ts`, `docs/test-cases.md` §45.
 - **Testing:** `NODE_OPTIONS=--no-experimental-webstorage npx vitest run` with the CI settings: 84 test files, 921 tests, all passed. `npx tsc --noEmit` reported nothing.
@@ -2149,9 +2149,9 @@ This log records completed work and observed evidence. Planned work is explicitl
 
 ## 2026-11-18 — Opening date applied to the live database
 
-- **Task:** With the user's approval, apply `20261118120000_opening_date_june_8.sql` live.
+- **Task:** With my approval, apply `20261118120000_opening_date_june_8.sql` live.
 - **Summary:** Ran it once inside a transaction that was rolled back, then applied it and recorded it in `supabase_migrations.schema_migrations`. The live About content says June 8, 2026, and the live About page shows it once the 60-second cache refreshed. No other app (Android, POS) stores the opening date.
-- **Testing:** live query of `public.site_content` (`openedOn` 2026-06-08, story updated, audit row written); the user checked the live site.
+- **Testing:** live query of `public.site_content` (`openedOn` 2026-06-08, story updated, audit row written); I checked the live site.
 - **Next action:** none.
 
 ## 2026-11-18 — Next.js 16.4.5 security update
@@ -2322,41 +2322,54 @@ This log records completed work and observed evidence. Planned work is explicitl
 
 - **Phase:** 9
 - **Summary:** I wired opt-in redemption for signed-in pickup orders on web and Android. Customers can apply up to 20% of the priced subtotal in tenths of a coin. Order placement and the ledger debit commit together; cancellation and rejection refund the debit. The order detail and POS use the saved discount and payable total.
-- **Rollout:** Apply the storage migration and ledger migration in order, then set `NEXT_PUBLIC_CHECKOUT_COINS=true` on the website and deploy. The POS needs build 10153 or newer. The Android customer app changes require a separate signed APK release. Keep spending off before the migrations are applied.
-- **Scope:** No Messenger, guest, or rider-summary redemption. No manual end-to-end testing requested.
+- **Next action:** Apply the storage migration and ledger migration in order, then set `NEXT_PUBLIC_CHECKOUT_COINS=true` on the website and deploy. The POS needs build 10153 or newer. The Android customer app changes require a separate signed APK release. Keep spending off before the migrations are applied.
+- **Known limitations:** No Messenger, guest, or rider-summary redemption. No manual end-to-end testing requested.
 
 ## 2026-11-20 — Checkout coin redemption live on the web
 
 - **Phase:** 9
 - **Summary:** After PR #188 passed CI, I checked the two migrations in a transaction that was rolled back, then applied them together and recorded both rollbacks. I enabled checkout coins on the web and verified the production deployment rejects a guest coin request without creating an order. POS 1.1.0 build 10153 was already available.
-- **Android release:** The signed Connect 1.0.6 APK (build 9) matches the 1.0.5 signing certificate. It is staged for release, not published. The release procedure still requires a sign-in on the signed build before publication.
+- **Known limitations:** The signed Connect 1.0.6 APK (build 9) matches the 1.0.5 signing certificate. It is staged for release, not published. The release procedure still requires a sign-in on the signed build before publication.
 
 ## 2026-11-20 — Menu deals pricing
 
+- **Phase:** 9
 - **Task:** Add staff-configured percentage deals, with coins still usable up to 20% of the discounted subtotal.
 - **Summary:** I added the database table and staff policies. Authoritative checkout pricing applies active deals to the resolved item price before optional extras and passes the resulting subtotal to the existing coin validation. Normal prices stay unchanged for other items.
-- **Verification:** Added database coverage for active and inactive prices, add-ons, and guest permissions in `tests/database/menu-add-ons.test.ts`.
+- **Testing:** Added database coverage for active and inactive prices, add-ons, and guest permissions in `tests/database/menu-add-ons.test.ts`.
 - **Next action:** Wire POS deal controls and the customer-facing web and Android price, badges, and banner. No migration applied or deals activated.
 
 ## 2026-11-20 — Deal display and checkout parity
 
+- **Phase:** 9
 - **Summary:** I added live deal badges, original and sale prices, and a conditional deals banner to the web and Android menus. Both carts apply the same centavo rounding as checkout and charge separately priced extras in full. The POS web catalog can configure and activate online deals through the staff-only policies.
 - **Known limitations:** Deals apply to Connect online orders and their POS sale records, not the separate walk-in cart. The migration and Android customer build must be released before staff activate offers. Take-out box pricing does not participate in deals.
 
 ## 2026-11-20 — Connect Android 1.0.7: online deals
 
+- **Phase:** 9
 - **Summary:** Prepared the signed Connect 1.0.7 APK (build 10) and updated the website update manifest for the coordinated deals rollout. No offers are enabled by default.
-- **Verification:** Signed release lint and assembly passed. The signer matches 1.0.6, and an emulator installed the update over 1.0.6 and launched it. Google sign-in and physical-device Play Protect behavior were not verified.
+- **Testing:** Signed release lint and assembly passed. The signer matches 1.0.6, and an emulator installed the update over 1.0.6 and launched it. Google sign-in and physical-device Play Protect behavior were not verified.
 
 ## 2026-11-25 — Home 3D: faster first visit and a 60 fps safeguard
 
+- **Phase:** 9
 - **Summary:** I got feedback that the home page's 3D took too long to show on a first visit from a new device, on PCs and phones alike. The showcase now builds and compiles only what its first view needs (the cup, the first two titles and three floaters) and builds the other products, titles and floaters after the stage has faded in, once the page is idle. Every device lights with the half-size HDRI, which the home page's HTML now preloads, and the page starts downloading the 3D code as soon as its script runs instead of after hydration. The effects draw the scene once a frame instead of three times, and lit materials use leaner shaders that draw the same pixels. Every device still starts with full effects at full sharpness. I brought back the frame budget so a device that can't hold 60 fps eases the least visible effects first: shadows redrawn every third frame, then no depth of field, then the pixel ratio a step at a time down to 1×, and only then no glow. `?quality=high` keeps every effect.
 - **Testing:** TC-P4-128, TC-P4-191 and TC-P4-197 updated; TC-P4-183 to TC-P4-185 and TC-P4-278 restored; TC-P4-280 to TC-P4-287 new. `npx eslint . --max-warnings=0` and `npm run typecheck` passed, and `npx vitest run` passed 1207/1207 in 123 files. `npm run build` passed, then `npx playwright test --project=chromium tests/e2e/showcase.spec.ts` passed 7/7 and the two updated `chromium-3d` cases passed 2/2.
 - **Measured:** In my cold first-visit check on a production build (fresh browser profile, emulated 4G), the showcase was ready after about 4.3 s on a laptop profile (7.6 s before) and 4.2 s on a phone profile with a 4× slower CPU (5.8 s before). That check ran before I added the preload and the early 3D download, which I didn't measure.
-- **Not verified:** Frame rates on real phones and PCs with the budget back in place.
+- **Known limitations:** Not verified: frame rates on real phones and PCs with the budget back in place.
 
 ## 2026-11-25 — Pixel-art games
 
+- **Phase:** 9
 - **Summary:** As planned on Trello, every game is now drawn in Aseprite pixel art instead of emoji and simple shapes, on the website and in the Android app. `scripts/aseprite/game-sprites.lua`, run by `npm run games:sprites`, draws twenty 16 × 16 icons (treats, mice, cups, paws, cards, the Cat Match faces, hearts, a trophy, a flame, a sparkle and a clock), Cat Cups' cup with a lit version, Lucky Paw's treat jar and Cup Stack's block. It saves the editable sources in `art/games/`, the website's sheets in `public/games/sprites/` and one PNG per frame in the app's `res/drawable-nodpi/`. The website draws them crisp with `image-rendering: pixelated` and stretches Cup Stack's blocks as a 9-slice; the app draws the same frames unfiltered at a whole number of screen pixels per art pixel (`ui/games/PixelArt.kt`). Treat Catcher's cat is Kulas walking, facing the way he moves, and the score chips have icons. Cat Match now says "1 move" instead of "1 moves". The games' rules and scores are unchanged.
 - **Testing:** TC-P9-115 to TC-P9-117 new. Running `npm run games:sprites` again gave byte-identical files (same SHA-256). In `android/` with JDK 21, `./gradlew --no-daemon testDebugUnitTest assembleRelease lintRelease` passed, with 96 unit tests. `npm run lint` and `npm run typecheck` passed, and `npx vitest run --maxWorkers=4` passed 1208/1208 in 124 files. `npm run build` passed, then `npx playwright test tests/e2e/games.spec.ts --project=chromium --workers=2` passed 4/4, and I re-captured the screenshots with `CAPTURE_EVIDENCE=1` (TC-P9-116). `python3 -I scripts/validate_phase0_docs.py` and `npx prettier --check .` passed.
-- **Not verified:** The Android games on a phone or emulator.
+- **Known limitations:** Not verified: the Android games on a phone or emulator.
+
+## 2026-11-25 — Shop closure and docs polish
+
+- **Phase:** 9
+- **Task:** Close the shop live for the owner's renovation, and bring the README and docs up to date with what is live.
+- **Summary:** The owner is closing the shop for a renovation, maybe until January. The POS's Closed today switch only lasts the day it is turned on, so with my approval I turned every day off in the saved hours and set the banner to "Closed for renovation until January." The old hours are on the Trello card, and reopening means setting the hours again and clearing the banner in the POS web Settings. In the docs, the ordering requirements (FR-013, FR-014, FR-017, FR-019, FR-020, FR-022), the content editor (FR-072), reviews (FR-098) and the Android app (FR-065 to FR-069) now say Implemented, with what is still missing. The privacy policy checks are renumbered MAN-P5-020 to MAN-P5-022, because the review checks also used MAN-P5-001 to MAN-P5-003. Notes that said a migration was not live yet now say it is applied. The README's limitations list now matches the current release, and its app link points to the latest release. Old entries in this log now speak in my voice, and the 2026-11-20 entries use the usual labels.
+- **Testing:** Read the live site after the closure: the hours line said the shop is closed, with the banner. `/privacy` answered 200 (MAN-P5-020). Compared the migration notes with the live database's migration list. `python3 -I scripts/validate_phase0_docs.py` and `npx prettier --check .`.
+- **Known limitations:** The closure has no end date in the system; someone has to reopen it in the POS. The manual checks still marked Not run yet stay open.

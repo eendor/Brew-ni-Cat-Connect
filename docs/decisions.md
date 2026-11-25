@@ -1,7 +1,7 @@
 # Architecture Decision Records
 
 **Document version:** 0.1 Draft\
-**Last updated:** 2026-10-30
+**Last updated:** 2026-11-25
 
 Statuses used here are `Proposed`, `Accepted`, `Superseded`, and `Deferred`. Acceptance records a direction; it does not claim implementation.
 
@@ -359,7 +359,7 @@ This manual state is a temporary functional-verification condition, not a revisi
 **Decision:** Any product with flavors can mix up to 2 different listed flavors on one line, stored in the existing flavor field as `"A / B"`. A mix costs the size price; when a size prices flavors differently, the dearest flavor in the mix applies.\
 **Date:** 2026-11-01\
 **Status:** Accepted. Its 2-flavor limit is superseded by ADR-027; the size price rule stays.\
-**Context:** The shop sells 2-flavor fries and similar mixes. The user chose all products with flavors, the size price, and the same limit for every size.\
+**Context:** The shop sells 2-flavor fries and similar mixes. I chose all products with flavors, the size price, and the same limit for every size.\
 **Alternatives considered:** averaging the flavor prices (could undercharge and give odd centavos); a separate mix column (a schema change across both POS apps and the website); allowing more than 2 flavors (not asked for).\
 **Consequences:**
 
@@ -372,7 +372,7 @@ This manual state is a temporary functional-verification condition, not a revisi
 **Decision:** Paid extras live in `public.menu_add_ons` per category, and an order line stores them in the existing flavor text the way the POS does. Mixing 2 flavors (ADR-025) is limited to fries.\
 **Date:** 2026-11-01\
 **Status:** Accepted\
-**Context:** The printed menu sells noodle add-ons, which the POS already supports. Prices must come from data, not code. The user asked that takoyaki, drinks and soda not mix.\
+**Context:** The printed menu sells noodle add-ons, which the POS already supports. Prices must come from data, not code. I asked that takoyaki, drinks and soda not mix.\
 **Alternatives considered:** hard-coding add-ons on the website (prices would not be data); a separate order column for add-ons (a change to every order reader on both POS apps); a per-item mixing switch in the POS editor (kept for later; fries only for now).\
 **Consequences:**
 
@@ -385,8 +385,8 @@ This manual state is a temporary functional-verification condition, not a revisi
 **Decision:** A fries line can mix up to 3 different listed flavors instead of 2, stored as `"A / B / C"`. A mix still costs the size price, or the dearest flavor in the mix when the size prices flavors differently. Mixing stays limited to fries (ADR-026).\
 **Date:** 2026-11-05\
 **Status:** Accepted and implemented (PR #98, POS PR #24)\
-**Context:** The shop sells fries with 2 or 3 flavors, and the user asked to allow 3. ADR-025 limited a mix to 2.\
-**Alternatives considered:** keeping 2 flavors (does not match how the shop sells fries); charging more for a third flavor (not asked for); letting drinks and other items mix too (the user asked that only fries mix).\
+**Context:** The shop sells fries with 2 or 3 flavors, and I asked to allow 3. ADR-025 limited a mix to 2.\
+**Alternatives considered:** keeping 2 flavors (does not match how the shop sells fries); charging more for a third flavor (not asked for); letting drinks and other items mix too (I asked that only fries mix).\
 **Consequences:**
 
 - ADR-025's 2-flavor limit is superseded. Its size price and dearest-flavor rules stay.
@@ -399,7 +399,7 @@ This manual state is a temporary functional-verification condition, not a revisi
 **Decision:** The Messenger assistant answers only its five main buttons (Menu & prices, Hours & location, How to order, Order status and Talk to staff), the menu's category buttons, typed button names and full order links. Every other message gets no automated reply and is never marked as seen, so the staff answer it in the same chat. It shows an order's status only from the order's tracking link, sets no ice breakers, and replies in English.\
 **Date:** 2026-11-09\
 **Status:** Accepted and implemented (PR #106). The Meta app stays in Development mode until the owner approves Meta App Review. Update 2026-11-09: Meta sends no production webhooks to an app in Development mode, so the app is being published with Standard Access, which needs no App Review and still answers only people with a role on the app. Publishing needs the privacy policy page from PR #107. Update 2026-11-10 (PR #113): ADR-029 lets the assistant take orders and show their status inside the chat, so the parts of this decision that say it takes no orders and shows status only from a link are superseded for Messenger orders. They still describe how website orders are checked. Update 2026-11-11: one typed question is now answered too. A short message (60 characters or fewer) that asks whether the shop is open or about its hours, such as "open po ba kayo today?", gets the Hours & location reply. In the last 40 chats this was 26 of 159 typed messages, and today one of them waited with no reply. The word list is small and fixed, and a message that also names an order, a delivery, a reservation or another topic still goes to the staff.\
-**Context:** FR-058 to FR-063 ask for a secured webhook that answers common questions, helps with the menu, explains ordering, says it is automated, hands off to people and shows order status without exposing orders. The staff already answer the shop's Messenger by hand and rely on its unread-message alerts. Customers write in Taglish, so guessing what a typed message means would give wrong answers to orders and questions, and an order reference alone is not a secret (security and privacy §18.3). The user chose buttons and asked that the staff still get notified.\
+**Context:** FR-058 to FR-063 ask for a secured webhook that answers common questions, helps with the menu, explains ordering, says it is automated, hands off to people and shows order status without exposing orders. The staff already answer the shop's Messenger by hand and rely on its unread-message alerts. Customers write in Taglish, so guessing what a typed message means would give wrong answers to orders and questions, and an order reference alone is not a secret (security and privacy §18.3). I chose buttons and asked that the staff still get notified.\
 **Alternatives considered:** reading every message and guessing its meaning from keywords (wrong answers to orders and questions; rider and order-summary detection was dropped); an AI model (FR-064 needs a value and risk review first and stays Deferred); marking answered chats as seen (the staff could miss a customer's next message); looking up an order by its reference or the customer's phone number (anyone who knows or guesses it could see another customer's order); ice breakers set through the API (Get Started and the ☰ menu already offer the buttons); replies in English and Tagalog (the Messenger card asks for both; the first version keeps one set of replies to review).\
 **Consequences:**
 
@@ -566,7 +566,7 @@ This manual state is a temporary functional-verification condition, not a revisi
 
 **Decision:** The rewards catalog and the game prizes move from SQL settings to one table, `public.shop_rewards`, that only staff accounts can write, and the owner edits it in a Rewards screen of the POS web app. Each redeemed reward and won prize gets a one-time code in `public.reward_codes` that staff check and mark used through `public.verify_reward_code()` in the same screen.\
 **Date:** 2026-11-17\
-**Status:** Accepted. Built in Connect (migration, website) and in `Brew-ni-Cat-POS` (Rewards screen). The migration is not applied to the live database yet.\
+**Status:** Accepted. Built in Connect (migration, website) and in `Brew-ni-Cat-POS` (Rewards screen). The migration is not applied to the live database yet. Update 2026-11-25: applied; it is in the live database's migration list.\
 **Context:** FR-088 asks that the owner manage rewards and prizes with a cost, stock and daily limit; FR-091 asks for codes that work once. ADR-017 keeps owner writes in the POS. Until now the catalog was written in `private.loyalty_settings()`, so a change needed a migration, and the `RWD-` codes lived only in the points history note, so staff had nothing to check them against. The owner left the reward rules to the team.\
 **Alternatives considered:** an owner area in Connect (ruled out by ADR-017); keeping the catalog in SQL settings (needs a developer for each change); separate tables for rewards and prizes (the same fields and rules twice); codes that never expire (old screenshots could be used for months); a prize chosen by the browser (the server must decide every result, ADR-034).\
 **Consequences:**

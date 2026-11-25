@@ -1,7 +1,7 @@
 # Brew ni Cat Connect — Database Design
 
 **Version:** 0.1 Draft
-**Last updated:** 2026-10-18
+**Last updated:** 2026-11-25
 **Status:** Phase 2 read-only catalog discovery and live public verification; no schema implementation or migration. RLS is currently manually disabled on the relevant catalog tables, which is a production security blocker.
 
 ## 1. Scope
@@ -560,7 +560,7 @@ Migration `20261113140000_mini_games.sql` (FR-089, ADR-034). Needs `202611131200
 
 ## 20. Owner Rewards, Prizes and One-Time Codes (Phase 9 — 2026-11-17)
 
-Migration `20261117120000_shop_rewards_and_codes.sql` (FR-088, FR-091, ADR-037). Needs the loyalty and mini-game migrations first. **Not applied to the live database yet.** Rodnee applies migrations after review (§8.7).
+Migration `20261117120000_shop_rewards_and_codes.sql` (FR-088, FR-091, ADR-037). Needs the loyalty and mini-game migrations first. **Not applied to the live database yet.** Rodnee applies migrations after review (§8.7). Update 2026-11-25: applied; it is in the live database's migration list.
 
 - Table `public.shop_rewards`: `id` text slug, `kind` (`reward` or `prize`), `name` (1–60), `description` (≤ 200), `points_cost` (rewards, 1–10000), `win_chance` (prizes, 1–1000 out of 1000 plays), `stock` (null for no limit), `daily_limit` (codes per Manila day for everyone, null for no limit), `active`, `sort_order`, `created_at`, `updated_at`, `updated_by` (set by a trigger). A check ties the cost to rewards and the chance to prizes. RLS: guests read active rows, signed-in users read active rows and staff read all; only staff (`private.is_staff()`) insert, update and delete. Seeded with the 11 rewards from `private.loyalty_settings()`, with no stock or limit. No prizes are seeded.
 - Table `public.reward_codes`: `code` unique (`RWD-` or `PRZ-` and 6–8 characters), `customer_id` → `auth.users` on delete cascade, `reward_id` → `shop_rewards` on delete set null, `reward_name` (kept when the reward is deleted), `source` (`points` or `mini-game`), `points_spent`, `game_play_id` (no foreign key, so the games can be undone alone), `issued_on` (Manila), `expires_at`, `redeemed_at`, `redeemed_by`. RLS: a customer reads their own codes and staff read all. Nobody writes it except the functions below. Codes already in the points history (`Redeemed: name (RWD-XXXXXX)`) are copied in, valid for 30 days from when they were made.
@@ -589,7 +589,7 @@ Migration `20261119120000_item_ratings.sql` (FR-121). Applied to the live databa
 
 ## 23. Coins Replace Points (2026-11-19)
 
-Migration `20261119130000_coins.sql` (FR-124). **Not applied to the live database yet**: it goes live together with the website merge and the Android 1.0.4 release. The table and column names stay (`points`), so the POS and the released app keep reading them.
+Migration `20261119130000_coins.sql` (FR-124). **Not applied to the live database yet**: it goes live together with the website merge and the Android 1.0.4 release. Update 2026-11-19: applied to the live database with the Android 1.0.4 release. The table and column names stay (`points`), so the POS and the released app keep reading them.
 
 - `public.loyalty_transactions.points` becomes `numeric(10, 1)`; existing whole points become coins 1:1.
 - `public.game_plays.points` becomes `numeric(4, 1)` with `points >= 0`, so a play past the daily cap is recorded with 0.
