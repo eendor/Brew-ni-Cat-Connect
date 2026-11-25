@@ -13,13 +13,14 @@ import {
   warmUp,
 } from "../engine/renderer";
 import {
-  FRAME_BUDGET_MS,
-  FrameBudget,
   clamp01,
   damp,
+  FRAME_BUDGET_MS,
+  FrameBudget,
   fontFamilies,
   nextTask,
   pointer,
+  whenIdle,
   smooth,
   type Quality,
 } from "../engine/runtime";
@@ -267,7 +268,6 @@ export async function initShowcase(
     post: !lite,
   });
   const shadows = shadowPacer(renderer);
-  renderer.transmissionResolutionScale = quality.mobile ? 0.5 : 1;
   // the HDRI and the cup sticker download while the textures below are
   // generated; the catches only stop an early failure counting as unhandled,
   // the awaits further down still throw
@@ -288,9 +288,10 @@ export async function initShowcase(
     themeBackdrop(backdropMaterial, theme);
   };
   recolor(currentTheme());
-  const titles = items.map((item) =>
-    titleTexture(item.name.toUpperCase(), display, lite ? 0.5 : 1),
-  );
+  // the first two names now, the rest after the scene shows
+  const makeTitle = (item: ShowcaseItem) =>
+    titleTexture(item.name.toUpperCase(), display, lite ? 0.5 : 1);
+  const titles: THREE.Texture[] = items.slice(0, 2).map(makeTitle);
   const last = items.length - 1;
   backdropMaterial.uniforms.uA!.value = titles[0] ?? null;
   backdropMaterial.uniforms.uB!.value = titles[1] ?? null;
@@ -322,16 +323,14 @@ export async function initShowcase(
 
   const stage = new THREE.Group();
   scene.add(stage);
-  // the cup finishes once its sticker arrives (awaited below); the setup
-  // yields between the heavy steps so the page keeps responding meanwhile
+  // the cup finishes once its sticker arrives (awaited below). Only the
+  // first view is built before the scene shows: the later products start as
+  // empty groups and are built after it (see `buildLater`)
   const cupReady = makeCup(STICKER, { lite });
   cupReady.catch(() => {});
-  await nextTask();
-  const takoyaki = makeTakoyaki(quality.mobile, { lite });
-  await nextTask();
-  const fries = makeFries(quality.mobile);
-  const buldak = makeBuldak(quality.mobile);
-  [takoyaki, fries, buldak].forEach((g) => (g.visible = false));
+  let takoyaki: THREE.Object3D = new THREE.Group();
+  let fries: THREE.Object3D = new THREE.Group();
+  let buldak: THREE.Object3D = new THREE.Group();
 
   // soft shadow catcher (the lite tier has no shadows) plus a contact
   // occlusion blob under the product
@@ -414,7 +413,9 @@ export async function initShowcase(
       quality.mobile,
     ),
   ];
-  floaters.forEach((f) => scene.add(f.mesh));
+  // matcha's and cat-feine's floaters now, the rest with their products
+  const firstFloaters = floaters.slice(0, 3);
+  firstFloaters.forEach((f) => scene.add(f.mesh));
 
   const cup = await cupReady;
   stage.add(cup.group, takoyaki, fries, buldak);
@@ -426,25 +427,6 @@ export async function initShowcase(
   const post = lite
     ? null
     : makePost(renderer, scene, camera, quality, { focus: 11 });
-  // slow frames give up the effects that show least first, then lower the
-  // pixel ratio a step at a time (never below 1×), and only then the glow
-  const budget = new FrameBudget(
-    FRAME_BUDGET_MS,
-    post
-      ? [
-          // first what hardly shows: shadows redrawn less often and the
-          // glass refraction drawn at half size
-          () => {
-            renderer.transmissionResolutionScale = 0.5;
-            shadows.slowDown();
-          },
-          () => post.dropDepthOfField(),
-          ...pixelSteps(renderer, resize),
-          () => post.degrade(),
-        ]
-      : pixelSteps(renderer, resize),
-    quality.forceHigh,
-  );
 
   let width = 1;
   let height = 1;
@@ -478,12 +460,29 @@ export async function initShowcase(
   const observer = new ResizeObserver(resize);
   if (canvas.parentElement) observer.observe(canvas.parentElement);
 
+  // a device that can't hold 60 frames a second gives up what shows least
+  // first: shadows redrawn less often, then the depth of field, then the
+  // pixel ratio a step at a time (never below 1×), and only then the glow
+  const budget = new FrameBudget(
+    FRAME_BUDGET_MS,
+    post
+      ? [
+          () => shadows.slowDown(),
+          () => post.dropDepthOfField(),
+          ...pixelSteps(renderer, resize),
+          () => post.degrade(),
+        ]
+      : pixelSteps(renderer, resize),
+    quality.forceHigh,
+  );
+
   const glowColors = items.map((item) => new THREE.Color(item.glow));
   const glow = new THREE.Color();
   const rim = new THREE.Color();
   const daylight = new THREE.Color("#fff4e6");
   const v3 = new THREE.Vector3();
   const state = { intro: 0, p: 0, tx: 0, ty: 0, time: 0, lastIndex: -1 };
+  let warmPending = false;
   const m4 = new THREE.Matrix4();
   const q = new THREE.Quaternion();
   const euler = new THREE.Euler();
@@ -648,27 +647,78 @@ export async function initShowcase(
     rimRight.target.position.set(0, stage.position.y, 0);
 
     shadows.beforeFrame();
+    if (warmPending) {
+      warmPending = false;
+      warmUp(renderer, scene, draw);
+      // redrawn without the products the warm-up showed
+      renderer.shadowMap.needsUpdate = true;
+    }
     if (post) post.render(dt, state.time);
     else renderer.render(scene, camera);
   }
 
-  // every product's shaders compile, and every texture uploads while they
+  // the first view's shaders compile, and its textures upload while they
   // do, before the scene is shown
-  const compiled = post
-    ? post.precompile()
-    : renderer.compileAsync(scene, camera);
+  const draw = () =>
+    post ? post.render(0, 0) : renderer.render(scene, camera);
+  const compile = () =>
+    post ? post.precompile() : renderer.compileAsync(scene, camera);
+  const compiled = compile();
   uploadTextures(renderer, scene, titles);
   await compiled;
-  // products or pieces shown later have their first draw now, out of sight
-  warmUp(renderer, scene, () =>
-    post ? post.render(0, 0) : renderer.render(scene, camera),
-  );
+  // pieces shown later in the first view have their first draw now, out
+  // of sight
+  warmUp(renderer, scene, draw);
+
+  /**
+   * Builds the later products, their floaters and names once the scene is
+   * showing, then compiles them, so a first visit waits for the first view
+   * only. Their first draw happens in the next frame, before that frame's
+   * own draw, so it never shows.
+   */
+  const abort = new AbortController();
+  async function buildLater() {
+    // after the stage's fade-in (globals.css), so it never stutters
+    await new Promise((resolve) => setTimeout(resolve, 1200));
+    await whenIdle(abort.signal, 1500);
+    if (abort.signal.aborted) return;
+    const later = new THREE.Group();
+    later.add(makeTakoyaki(quality.mobile, { lite }));
+    await nextTask();
+    later.add(makeFries(quality.mobile), makeBuldak(quality.mobile));
+    for (const item of items.slice(2)) titles.push(makeTitle(item));
+    await nextTask();
+    if (abort.signal.aborted) {
+      disposeScene(later);
+      titles.forEach((t) => t.dispose());
+      return;
+    }
+    const [t, f, b] = later.children as [
+      THREE.Object3D,
+      THREE.Object3D,
+      THREE.Object3D,
+    ];
+    for (const product of [t, f, b]) product.visible = false;
+    stage.remove(takoyaki, fries, buldak);
+    takoyaki = t;
+    fries = f;
+    buldak = b;
+    stage.add(t, f, b);
+    floaters.slice(3).forEach((floater) => scene.add(floater.mesh));
+    if (lite) liteMaterials(scene);
+    const done = compile();
+    uploadTextures(renderer, scene, titles);
+    await done;
+    if (!abort.signal.aborted) warmPending = true;
+  }
+  buildLater().catch(() => {});
 
   const stopTheme = followTheme(recolor);
   return {
     frame,
     state,
     dispose() {
+      abort.abort();
       stopTheme();
       observer.disconnect();
       post?.dispose();

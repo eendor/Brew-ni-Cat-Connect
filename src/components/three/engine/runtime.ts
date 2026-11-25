@@ -83,15 +83,15 @@ export function getQuality(): Quality {
   const forced = new URLSearchParams(window.location.search).get("quality");
   const forceHigh = forced === "high";
   clearOldLiteNotes();
-  // every device gets full effects (the lead's call, 2026-11-18); a slow one
+  // every device starts with full effects at full sharpness (the lead's
+  // call, 2026-11-18 and 2026-11-24); one that can't hold 60 frames a second
   // eases the least visible effects while it runs (`FrameBudget`). The lite
   // tier is only for `?quality=lite`.
   const lite = forced === "lite";
   return {
     mobile,
     // sharp on every tier: phone screens are 2–3×, and drawing them at 1×
-    // looked blurry. Slow devices step the pixel ratio down while they run
-    // (`pixelSteps`), never below 1×.
+    // looked blurry
     maxDpr: mobile ? 2 : 1.5,
     forceHigh,
     lite,
@@ -225,7 +225,7 @@ export class FrameBudget {
 }
 
 /** Forgets what this visit learned about the device (for tests). */
-export function resetFrameBudgets() {
+export function resetRuntimeCaches() {
   visitLevel = 0;
   oldNotesCleared = false;
   webglCache = null;

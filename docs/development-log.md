@@ -1,7 +1,7 @@
 # Development Log
 
 **Document version:** 0.1 Draft\
-**Last updated:** 2026-11-19
+**Last updated:** 2026-11-25
 
 This log records completed work and observed evidence. Planned work is explicitly identified and is not reported as implemented or tested.
 
@@ -2347,3 +2347,10 @@ This log records completed work and observed evidence. Planned work is explicitl
 
 - **Summary:** Prepared the signed Connect 1.0.7 APK (build 10) and updated the website update manifest for the coordinated deals rollout. No offers are enabled by default.
 - **Verification:** Signed release lint and assembly passed. The signer matches 1.0.6, and an emulator installed the update over 1.0.6 and launched it. Google sign-in and physical-device Play Protect behavior were not verified.
+
+## 2026-11-25 — Home 3D: faster first visit and a 60 fps safeguard
+
+- **Summary:** I got feedback that the home page's 3D took too long to show on a first visit from a new device, on PCs and phones alike. The showcase now builds and compiles only what its first view needs (the cup, the first two titles and three floaters) and builds the other products, titles and floaters after the stage has faded in, once the page is idle. Every device lights with the half-size HDRI, which the home page's HTML now preloads, and the page starts downloading the 3D code as soon as its script runs instead of after hydration. The effects draw the scene once a frame instead of three times, and lit materials use leaner shaders that draw the same pixels. Every device still starts with full effects at full sharpness. I brought back the frame budget so a device that can't hold 60 fps eases the least visible effects first: shadows redrawn every third frame, then no depth of field, then the pixel ratio a step at a time down to 1×, and only then no glow. `?quality=high` keeps every effect.
+- **Testing:** TC-P4-128, TC-P4-191 and TC-P4-197 updated; TC-P4-183 to TC-P4-185 and TC-P4-278 restored; TC-P4-280 to TC-P4-287 new. `npx eslint . --max-warnings=0` and `npm run typecheck` passed, and `npx vitest run` passed 1207/1207 in 123 files. `npm run build` passed, then `npx playwright test --project=chromium tests/e2e/showcase.spec.ts` passed 7/7 and the two updated `chromium-3d` cases passed 2/2.
+- **Measured:** In my cold first-visit check on a production build (fresh browser profile, emulated 4G), the showcase was ready after about 4.3 s on a laptop profile (7.6 s before) and 4.2 s on a phone profile with a 4× slower CPU (5.8 s before). That check ran before I added the preload and the early 3D download, which I didn't measure.
+- **Not verified:** Frame rates on real phones and PCs with the budget back in place.

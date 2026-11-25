@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
   getQuality,
-  resetFrameBudgets,
+  resetRuntimeCaches,
 } from "@/components/three/engine/runtime";
 import { condensationMaps } from "@/components/three/engine/textures";
 import {
@@ -71,7 +71,7 @@ describe("Phone and integrated GPU tier (TC-P4-124 – TC-P4-126, TC-P4-190)", (
   afterEach(() => {
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
-    resetFrameBudgets();
+    resetRuntimeCaches();
     window.history.replaceState(null, "", "/");
   });
 
@@ -187,7 +187,7 @@ describe("Phone and integrated GPU tier (TC-P4-124 – TC-P4-126, TC-P4-190)", (
           key === UNMASKED_RENDERER ? gpu : "WebGL 2",
       } as never);
       window.history.replaceState(null, "", `/${search}`);
-      resetFrameBudgets();
+      resetRuntimeCaches();
       return getQuality();
     };
     const intel =

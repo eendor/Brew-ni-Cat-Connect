@@ -4,17 +4,28 @@ import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useRef, useState, type CSSProperties } from "react";
+import { preload } from "react-dom";
 
 import { useCurtainHold } from "@/components/motion/use-curtain-hold";
 import { FriesIcon } from "@/components/ui/icons";
 import { formatPrice } from "@/lib/menu/format-price";
 
+import { STUDIO_HDRI } from "./engine/assets";
 import { showcaseItems, type ShowcasePrices } from "./showcase-data";
 import { useThreeEnabled } from "./use-three-enabled";
 
 const ShowcaseCanvas = dynamic(() => import("./canvas/showcase-canvas"), {
   ssr: false,
 });
+
+/** Where the 3D can show, the user's motion setting allows it. */
+const MOTION_OK = "(prefers-reduced-motion: no-preference)";
+
+// a first visit starts downloading the 3D code as soon as this script runs,
+// not once the page has hydrated
+if (typeof window !== "undefined" && window.matchMedia?.(MOTION_OK).matches) {
+  import("./canvas/showcase-canvas").catch(() => {});
+}
 
 const SECTION_ID = "home-showcase";
 
@@ -42,6 +53,13 @@ export function HomeShowcase({
   lede,
   prices,
 }: HomeShowcaseProps) {
+  // the studio lighting downloads from the first HTML, alongside the page's
+  // own code, so the 3D isn't left waiting for it
+  preload(STUDIO_HDRI, {
+    as: "fetch",
+    crossOrigin: "anonymous",
+    media: MOTION_OK,
+  });
   const enabled = useThreeEnabled();
   const [failed, setFailed] = useState(false);
   const [ready, setReady] = useState(false);
